@@ -1,6 +1,8 @@
 import tornado.ioloop
 import tornado.web
 import tornado.locks
+import dateutil.parser
+from datetime import datetime, timedelta
 from datetime import datetime
 from pymongo import MongoClient
 
@@ -29,7 +31,7 @@ class PostHandler(BaseHandler):
     def post(self):
         if self.current_user:
             author = self.current_user
-            creation_date = datetime.now()
+            creation_date = datetime.utcnow()
             http_body = tornado.escape.json_decode(self.request.body)
             text = http_body['text']
             tags = http_body['tags']
@@ -49,10 +51,26 @@ class PostHandler(BaseHandler):
 class TimelineHandler(BaseHandler):
 
     def get(self):
-        self.write({"posts": [post for post in self.db.posts.find(projection={'_id': False, 'creation_date': False})]})
-        # TODO sort by creation date
-        # TODO include creation date in response (JSON serialize)
-        # TODO make parameter with a time range for what posts to return (all is way too much)
+        time_from = self.get_argument("from", (datetime.utcnow() - timedelta(days=1)).isoformat())  # default value is 24h ago
+        time_to = self.get_argument("to", datetime.utcnow().isoformat())  # default value is now
+
+        # parse time strings into datetime objects (dateutil is able to guess format)
+        # however safe way is to use ISO 8601 format
+        time_from = dateutil.parser.parse(time_from)
+        time_to = dateutil.parser.parse(time_to)
+
+        result = self.db.posts.find(
+                        filter={"creation_date": {"$gte": time_from, "$lte": time_to}},
+                        projection={'_id': False})
+
+        # parse datetime objects into ISO 8601 strings for JSON serializability
+        posts = []
+        for post in result:
+            post['creation_date'] = post['creation_date'].isoformat()
+            posts.append(post)
+
+        self.set_status(200)
+        self.write({"posts": posts})
 
 
 def make_app():
