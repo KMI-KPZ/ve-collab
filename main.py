@@ -2,6 +2,7 @@ import tornado.ioloop
 import tornado.web
 import tornado.locks
 import dateutil.parser
+from bson.objectid import ObjectId
 from datetime import datetime, timedelta
 from datetime import datetime
 from pymongo import MongoClient
@@ -48,6 +49,31 @@ class PostHandler(BaseHandler):
                         'success': True})
 
 
+class CommentHandler(BaseHandler):
+
+    def get(self):
+        pass
+
+    def post(self):
+        if self.current_user:
+            author = self.current_user
+            creation_date = datetime.utcnow()
+            http_body = tornado.escape.json_decode(self.request.body)
+            text = http_body['text']
+            post_ref = ObjectId(http_body['post_id'])
+
+            self.db.posts.update_one(
+                {"_id": post_ref},
+                {
+                    "$push": {
+                        "comments": {"author": author, "creation_date": creation_date, "text": text}
+                    }
+                }
+            )
+
+            self.set_status(200)
+
+
 class TimelineHandler(BaseHandler):
 
     def get(self):
@@ -60,13 +86,18 @@ class TimelineHandler(BaseHandler):
         time_to = dateutil.parser.parse(time_to)
 
         result = self.db.posts.find(
-                        filter={"creation_date": {"$gte": time_from, "$lte": time_to}},
-                        projection={'_id': False})
+                        filter={"creation_date": {"$gte": time_from, "$lte": time_to}})
 
         # parse datetime objects into ISO 8601 strings for JSON serializability
         posts = []
         for post in result:
+            # post creation date
             post['creation_date'] = post['creation_date'].isoformat()
+            if 'comments' in post:
+                # creation date of each comment
+                for i in range(len(post['comments'])):
+                    post['comments'][i]['creation_date'] = post['comments'][i]['creation_date'].isoformat()
+            post['_id'] = str(post['_id'])
             posts.append(post)
 
         self.set_status(200)
@@ -77,6 +108,7 @@ def make_app():
     return tornado.web.Application([
         (r"/", MainHandler),
         (r"/posts", PostHandler),
+        (r"/comment", CommentHandler),
         (r"/timeline", TimelineHandler)
     ])
 
