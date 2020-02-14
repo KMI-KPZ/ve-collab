@@ -36,6 +36,7 @@ class PostHandler(BaseHandler):
             text = http_body['text']
             tags = http_body['tags']
             # if space is set, this post belongs to a space (only visible inside)
+            # TODO check if space exists
             if 'space' in http_body:
                 space = http_body['space']
             else:
@@ -140,11 +141,59 @@ class SpaceTimelineHandler(BaseHandler):
         self.write({"posts": posts})
 
 
+class SpaceHandler(BaseHandler):
+
+    def get(self, slug):
+        if slug == "list":
+            result = self.db.spaces.find({})
+
+            spaces = []
+            for space in result:
+                space['_id'] = str(space['_id'])
+                spaces.append(space)
+
+            self.write({"spaces": spaces})
+
+    def post(self, slug):
+        if self.current_user:
+            space_name = self.get_argument("name")
+
+            if slug == "create":  # create new space
+                members = [self.current_user]
+
+                # only create space if no other space with the same name exists
+                if space_name not in self.db.spaces.find(projection={"name": True, "_id": False}):
+                    space = {"name": space_name,
+                             "members": members}
+                    self.db.spaces.insert_one(space)
+
+                    self.set_status(200)
+                    self.write({'status': 200,
+                                'success': True})
+                else:
+                    self.set_status(409)
+                    self.write({"status": 409,
+                                "reason": "space_name_already_exists"})
+
+            elif slug == "join":  # add current user to space members
+                self.db.spaces.update_one(
+                    {"name": space_name},  # filter
+                    {
+                        "$push": {"members": self.current_user}
+                    }
+                )
+
+                self.set_status(200)
+                self.write({'status': 200,
+                            'success': True})
+
+
 def make_app():
     return tornado.web.Application([
         (r"/", MainHandler),
         (r"/posts", PostHandler),
         (r"/comment", CommentHandler),
+        (r"/space/([a-zA-Z\-0-9\.:,_]+)", SpaceHandler),
         (r"/timeline", TimelineHandler),
         (r"/timeline/space/([a-zA-Z\-0-9\.:,_]+)", SpaceTimelineHandler)
     ])
