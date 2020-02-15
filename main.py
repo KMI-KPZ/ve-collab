@@ -14,7 +14,21 @@ class BaseHandler(tornado.web.RequestHandler):
         self.db = self.client['social_serv']  # TODO make this generic via config
 
     def prepare(self):
-        self.current_user = -1
+        self.current_user = 2
+
+    def json_serialize_posts(self, query_result):
+        # parse datetime objects into ISO 8601 strings for JSON serializability
+        posts = []
+        for post in query_result:
+            # post creation date
+            post['creation_date'] = post['creation_date'].isoformat()
+            if 'comments' in post:
+                # creation date of each comment
+                for i in range(len(post['comments'])):
+                    post['comments'][i]['creation_date'] = post['comments'][i]['creation_date'].isoformat()
+            post['_id'] = str(post['_id'])
+            posts.append(post)
+        return posts
 
 
 class MainHandler(BaseHandler):
@@ -24,6 +38,9 @@ class MainHandler(BaseHandler):
 
 
 class PostHandler(BaseHandler):
+    """
+    Make a new post
+    """
 
     def get(self):
         pass
@@ -56,6 +73,9 @@ class PostHandler(BaseHandler):
 
 
 class CommentHandler(BaseHandler):
+    """
+    Make a new comment to a certain post
+    """
 
     def get(self):
         pass
@@ -81,6 +101,10 @@ class CommentHandler(BaseHandler):
 
 
 class TimelineHandler(BaseHandler):
+    """
+    Timeline of all posts (all users and all spaces)
+    no use case in production, maybe use case for moderators?
+    """
 
     def get(self):
         time_from = self.get_argument("from", (datetime.utcnow() - timedelta(days=1)).isoformat())  # default value is 24h ago
@@ -94,23 +118,16 @@ class TimelineHandler(BaseHandler):
         result = self.db.posts.find(
                         filter={"creation_date": {"$gte": time_from, "$lte": time_to}})
 
-        # parse datetime objects into ISO 8601 strings for JSON serializability
-        posts = []
-        for post in result:
-            # post creation date
-            post['creation_date'] = post['creation_date'].isoformat()
-            if 'comments' in post:
-                # creation date of each comment
-                for i in range(len(post['comments'])):
-                    post['comments'][i]['creation_date'] = post['comments'][i]['creation_date'].isoformat()
-            post['_id'] = str(post['_id'])
-            posts.append(post)
+        posts = self.json_serialize_posts(result)
 
         self.set_status(200)
         self.write({"posts": posts})
 
 
 class SpaceTimelineHandler(BaseHandler):
+    """
+    Timeline of a certain space
+    """
 
     def get(self, space_name):
         time_from = self.get_argument("from", (datetime.utcnow() - timedelta(days=1)).isoformat())  # default value is 24h ago
@@ -121,27 +138,47 @@ class SpaceTimelineHandler(BaseHandler):
         time_from = dateutil.parser.parse(time_from)
         time_to = dateutil.parser.parse(time_to)
 
+        # TODO check if current_user is in the space
+
         result = self.db.posts.find(
                         filter={"creation_date": {"$gte": time_from, "$lte": time_to},
                                 "space":         {"$eq": space_name}})
 
-        # parse datetime objects into ISO 8601 strings for JSON serializability
-        posts = []
-        for post in result:
-            # post creation date
-            post['creation_date'] = post['creation_date'].isoformat()
-            if 'comments' in post:
-                # creation date of each comment
-                for i in range(len(post['comments'])):
-                    post['comments'][i]['creation_date'] = post['comments'][i]['creation_date'].isoformat()
-            post['_id'] = str(post['_id'])
-            posts.append(post)
+        posts = self.json_serialize_posts(result)
+
+        self.set_status(200)
+        self.write({"posts": posts})
+
+
+class UserTimelineHandler(BaseHandler):
+    """
+    Timeline of a user
+    """
+
+    def get(self, author):
+        time_from = self.get_argument("from", (datetime.utcnow() - timedelta(days=1)).isoformat())  # default value is 24h ago
+        time_to = self.get_argument("to", datetime.utcnow().isoformat())  # default value is now
+
+        # parse time strings into datetime objects (dateutil is able to guess format)
+        # however safe way is to use ISO 8601 format
+        time_from = dateutil.parser.parse(time_from)
+        time_to = dateutil.parser.parse(time_to)
+
+        # TODO what about posts in spaces? include? exclude? include only those that current user is also in?
+        result = self.db.posts.find(
+                        filter={"creation_date": {"$gte": time_from, "$lte": time_to},
+                                "author":         {"$eq": int(author)}})
+
+        posts = self.json_serialize_posts(result)
 
         self.set_status(200)
         self.write({"posts": posts})
 
 
 class SpaceHandler(BaseHandler):
+    """
+    handle existing and creation of new spaces
+    """
 
     def get(self, slug):
         if slug == "list":
@@ -188,6 +225,14 @@ class SpaceHandler(BaseHandler):
                             'success': True})
 
 
+class UserHandler(BaseHandler):
+
+    def get(self):
+        # get a list of all users
+        # TODO need communication to platform because platform does user handling
+        pass
+
+
 def make_app():
     return tornado.web.Application([
         (r"/", MainHandler),
@@ -195,7 +240,9 @@ def make_app():
         (r"/comment", CommentHandler),
         (r"/space/([a-zA-Z\-0-9\.:,_]+)", SpaceHandler),
         (r"/timeline", TimelineHandler),
-        (r"/timeline/space/([a-zA-Z\-0-9\.:,_]+)", SpaceTimelineHandler)
+        (r"/timeline/space/([a-zA-Z\-0-9\.:,_]+)", SpaceTimelineHandler),
+        (r"/timeline/user/([a-zA-Z\-0-9\.:,_]+)", UserTimelineHandler),
+        (r"/users", UserHandler)
     ])
 
 
