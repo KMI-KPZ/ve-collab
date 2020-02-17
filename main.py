@@ -40,12 +40,29 @@ class MainHandler(BaseHandler):
 class PostHandler(BaseHandler):
     """
     Make a new post
+
     """
 
     def get(self):
         pass
 
     def post(self):
+        """
+        POST /posts
+
+        http body:
+            {
+                "text": "text_of_post",
+                "tags": ["tag1", "tag2"],
+                "space": "optional, post this post into a space, not directly into your profile"
+            }
+
+
+        return:
+            200 OK,
+            {"status": 200,
+             "success": True}
+        """
         if self.current_user:
             author = self.current_user
             creation_date = datetime.utcnow()
@@ -81,6 +98,18 @@ class CommentHandler(BaseHandler):
         pass
 
     def post(self):
+        """
+        POST /comment
+
+        http body:
+            {
+                "text": "content_of_comment",
+                "post_id": "id_von_post"
+            }
+
+        return:
+            200 OK
+        """
         if self.current_user:
             author = self.current_user
             creation_date = datetime.utcnow()
@@ -107,6 +136,19 @@ class TimelineHandler(BaseHandler):
     """
 
     def get(self):
+        """
+        GET /timeline
+
+        query params:
+            "from" : ISO timestamp string (fetch posts not older than this), default: now-24h
+            "to" : ISO timestamp string (fetch posts younger than this), default: now
+
+        return:
+            200 OK,
+            {"posts": [post1, post2,...]}
+
+        """
+
         time_from = self.get_argument("from", (datetime.utcnow() - timedelta(days=1)).isoformat())  # default value is 24h ago
         time_to = self.get_argument("to", datetime.utcnow().isoformat())  # default value is now
 
@@ -130,6 +172,18 @@ class SpaceTimelineHandler(BaseHandler):
     """
 
     def get(self, space_name):
+        """
+        GET /timeline/space/[name]
+
+        query params:
+            "from" : ISO timestamp string (fetch posts not older than this), default: now-24h
+            "to" : ISO timestamp string (fetch posts younger than this), default: now
+
+        return:
+            200 OK,
+            {"posts": [post1, post2,...]}
+
+        """
         time_from = self.get_argument("from", (datetime.utcnow() - timedelta(days=1)).isoformat())  # default value is 24h ago
         time_to = self.get_argument("to", datetime.utcnow().isoformat())  # default value is now
 
@@ -156,6 +210,18 @@ class UserTimelineHandler(BaseHandler):
     """
 
     def get(self, author):
+        """
+        GET /timeline/user/[user_id]         FUTURE: USERNAME INSTEAD OF USER ID
+
+        query params:
+            "from" : ISO timestamp string (fetch posts not older than this), default: now-24h
+            "to" : ISO timestamp string (fetch posts younger than this), default: now
+
+        return:
+            200 OK,
+            {"posts": [post1, post2,...]}
+
+        """
         time_from = self.get_argument("from", (datetime.utcnow() - timedelta(days=1)).isoformat())  # default value is 24h ago
         time_to = self.get_argument("to", datetime.utcnow().isoformat())  # default value is now
 
@@ -181,6 +247,13 @@ class SpaceHandler(BaseHandler):
     """
 
     def get(self, slug):
+        """
+        GET /space/list
+
+        return:
+            200 OK,
+            {"spaces": [space1, space2,...]}
+        """
         if slug == "list":
             result = self.db.spaces.find({})
 
@@ -192,6 +265,17 @@ class SpaceHandler(BaseHandler):
             self.write({"spaces": spaces})
 
     def post(self, slug):
+        """
+        POST /space/create
+
+            query param:
+                "name" : space name to create, mandatory argument
+
+        POST /space/join
+            (currently authed user joins space)
+            query param:
+                "name" : space name of which space to join, mandatory argument
+        """
         if self.current_user:
             space_name = self.get_argument("name")
 
