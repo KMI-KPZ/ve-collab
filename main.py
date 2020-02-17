@@ -34,8 +34,12 @@ class BaseHandler(tornado.web.RequestHandler):
 class MainHandler(BaseHandler):
 
     def get(self):
-        pass
+        self.render("html/newsfeed.html")
 
+class ProfileHandler(BaseHandler):
+
+    def get(self):
+        self.render("html/profileFeed.html")
 
 class PostHandler(BaseHandler):
     """
@@ -349,7 +353,8 @@ class UserHandler(BaseHandler):
 
 def make_app():
     return tornado.web.Application([
-        (r"/", MainHandler),
+        (r"/main", MainHandler),
+        (r"/profile", ProfileHandler),
         (r"/posts", PostHandler),
         (r"/comment", CommentHandler),
         (r"/like", LikePostHandler),
@@ -357,7 +362,10 @@ def make_app():
         (r"/timeline", TimelineHandler),
         (r"/timeline/space/([a-zA-Z\-0-9\.:,_]+)", SpaceTimelineHandler),
         (r"/timeline/user/([a-zA-Z\-0-9\.:,_]+)", UserTimelineHandler),
-        (r"/users", UserHandler)
+        (r"/users", UserHandler),
+        (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
+        (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./html/"}),
+        (r"/javascripts/(.*)", tornado.web.StaticFileHandler, {"path": "./javascripts/"})
     ])
 
 
