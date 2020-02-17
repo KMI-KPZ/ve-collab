@@ -129,6 +129,36 @@ class CommentHandler(BaseHandler):
             self.set_status(200)
 
 
+class LikePostHandler(BaseHandler):
+
+    def post(self):
+        """
+        POST /like
+
+        http body:
+            {
+                "post_id": "id_of_post_to_like"
+            }
+
+        """
+        if self.current_user:
+            http_body = tornado.escape.json_decode(self.request.body)
+            post_ref = ObjectId(http_body['post_id'])
+
+            self.db.posts.update_one(
+                {"_id": post_ref},  # filter
+                {                   # update
+                    "$push": {
+                        "likers": self.current_user
+                    }
+                }
+            )
+
+            self.set_status(200)
+            self.write({"status": 200,
+                        "success": True})
+
+
 class TimelineHandler(BaseHandler):
     """
     Timeline of all posts (all users and all spaces)
@@ -322,6 +352,7 @@ def make_app():
         (r"/", MainHandler),
         (r"/posts", PostHandler),
         (r"/comment", CommentHandler),
+        (r"/like", LikePostHandler),
         (r"/space/([a-zA-Z\-0-9\.:,_]+)", SpaceHandler),
         (r"/timeline", TimelineHandler),
         (r"/timeline/space/([a-zA-Z\-0-9\.:,_]+)", SpaceTimelineHandler),
