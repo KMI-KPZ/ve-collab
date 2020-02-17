@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Social Network</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"
+    integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ"
+    crossorigin="anonymous">
+    </script>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link href="http://netdna.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="../css/newsfeed.css">
+
+</head>
+<body>
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <div class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2">
+          <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+              <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+
+            </li>
+            <li class="nav-item">
+                <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+            </li>
+              </li>
+          </ul>
+      </div>
+      <div class="mx-auto order-0">
+          <a class="navbar-brand mx-auto" href="newsfeed.html">Social Network</a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".dual-collapse2">
+              <span class="navbar-toggler-icon"></span>
+          </button>
+      </div>
+      <div class="navbar-collapse collapse w-100 order-3 dual-collapse2">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="newsfeed.html">Home</a>
+            </li>
+
+            <li class="nav-item active">
+                <a class="nav-link" href="profileFeed.html">Profile</a>
+            </li>
+
+          </ul>
+      </div>
+  </nav>
+
+  <div class="container">
+  <div class="row">
+      <div class="col-sm-8 col-sm-offset-2">
+          <div class="panel panel-white profile-widget">
+              <div class="row">
+                  <div class="col-sm-12">
+                      <div class="image-container bg2" style="background:url(https://via.placeholder.com/400x200)">
+                          <img src="https://i.pinimg.com/originals/cd/87/3e/cd873ea81fb0089fc9ae813e8f438d22.jpg" class="avatar" alt="avatar">
+                      </div>
+                  </div>
+                  <div class="col-sm-12">
+                      <div class="details">
+                          <h4>Mr. Cat <i class="fa fa-sheild"></i></h4>
+                          <div>Works at Infai</div>
+                          <div>Attended University of Leipzig</div>
+                          <div>Lives in Leipzig, Germany</div>
+                          <div class="mg-top-10">
+                              <a href="#" class="btn btn-default">About Cat</a>
+                              <a href="#" class="btn btn-success">Add Cat</a>
+                          </div>
+                      </div>
+                  </div>
+
+              </div>
+          </div>
+
+          <div class="row">
+
+            <div class="col-sm-12">
+                <div class="panel panel-white post">
+                    <div class="post-heading">
+                        <div class="pull-left image">
+                            <img src="https://i.pinimg.com/originals/cd/87/3e/cd873ea81fb0089fc9ae813e8f438d22.jpg" class="img-circle avatar" alt="user profile image">
+                        </div>
+                        <div class="pull-left meta">
+                            <div class="title h5">
+                                <a href="profileFeed.html"><b>Mr. Cat</b></a>
+                                uploaded a photo.
+                            </div>
+                            <h6 class="text-muted time">5 seconds ago</h6>
+                        </div>
+                    </div>
+                    <div class="post-image">
+                        <img src="https://i.pinimg.com/originals/cd/87/3e/cd873ea81fb0089fc9ae813e8f438d22.jpg" class="image" alt="image post">
+                    </div>
+                    <div class="post-description">
+                        <h4>Cat Shoot</h4>
+                        <p>Here is a picture of a gentle cat.</p>
+                        <div class="stats">
+                            <a href="javascript:void(0);" class="btn btn-default stat-item">
+                                <i class="fa fa-thumbs-up icon"></i>228
+                            </a>
+                            <a href="javascript:void(0);" class="btn btn-default stat-item">
+                                <i class="fa fa-share icon"></i>128
+                            </a>
+                        </div>
+                    </div>
+                    <div class="post-footer">
+                        <div class="input-group">
+                            <input class="form-control" placeholder="Add a comment" type="text">
+                            <span class="input-group-addon">
+                                <a href="javascript:void(0);"><i class="fa fa-edit"></i></a>
+                            </span>
+                        </div>
+                        <ul class="comments-list">
+                            <li class="comment">
+                                <a class="pull-left" href="javascript:void(0);">
+                                    <img class="avatar" src="https://i.pinimg.com/originals/cd/87/3e/cd873ea81fb0089fc9ae813e8f438d22.jpg" alt="avatar">
+                                </a>
+                                <div class="comment-body">
+                                    <div class="comment-heading">
+                                        <h4 class="user">Cat A.</h4>
+                                        <h5 class="time">7 minutes ago</h5>
+                                    </div>
+                                    <p>Nice hair bro.</p>
+                                </div>
+                            </li>
+                            <li class="comment">
+                                <a class="pull-left" href="javascript:void(0);">
+                                    <img class="avatar" src="https://i.pinimg.com/originals/cd/87/3e/cd873ea81fb0089fc9ae813e8f438d22.jpg" alt="avatar">
+                                </a>
+                                <div class="comment-body">
+                                    <div class="comment-heading">
+                                        <h4 class="user">Cat B.</h4>
+                                        <h5 class="time">3 minutes ago</h5>
+                                    </div>
+                                    <p>Look at that wow!</p>
+                                </div>
+                            </li>
+                            <li class="comment">
+                                <a class="pull-left" href="javascript:void(0);">
+                                    <img class="avatar" src="https://i.pinimg.com/originals/cd/87/3e/cd873ea81fb0089fc9ae813e8f438d22.jpg" alt="avatar">
+                                </a>
+                                <div class="comment-body">
+                                    <div class="comment-heading">
+                                        <h4 class="user">Cat C.</h4>
+                                        <h5 class="time">10 seconds ago</h5>
+                                    </div>
+                                    <p>Wow! This is gorgeous.</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-12">
+                <div class="panel panel-white post">
+                    <div class="post-heading">
+                        <div class="pull-left image">
+                            <img src="https://i.pinimg.com/originals/cd/87/3e/cd873ea81fb0089fc9ae813e8f438d22.jpg" class="img-circle avatar" alt="user profile image">
+                        </div>
+                        <div class="pull-left meta">
+                            <div class="title h5">
+                                <a href="#"><b>Kitty Cat</b></a>
+                                made a post.
+                            </div>
+                            <h6 class="text-muted time">1 minute ago</h6>
+                        </div>
+                    </div>
+                    <div class="post-description">
+                        <p>I catched new Food, join me!</p>
+                        <div class="stats">
+                            <a href="javascript:void(0);" class="btn btn-default stat-item">
+                                <i class="fa fa-thumbs-up icon"></i>2
+                            </a>
+                            <a href="javascript:void(0);" class="btn btn-default stat-item">
+                                <i class="fa fa-share icon"></i>12
+                            </a>
+                        </div>
+                    </div>
+                    <div class="post-footer">
+                        <div class="input-group">
+                            <input class="form-control" placeholder="Add a comment" type="text">
+                            <span class="input-group-addon">
+                                <a href="javascript:void(0);"><i class="fa fa-edit"></i></a>
+                            </span>
+                        </div>
+                        <ul class="comments-list">
+                            <li class="comment">
+                                <a class="pull-left" href="javascript:void(0);">
+                                    <img class="avatar" src="https://i.pinimg.com/originals/cd/87/3e/cd873ea81fb0089fc9ae813e8f438d22.jpg" alt="avatar">
+                                </a>
+                                <div class="comment-body">
+                                    <div class="comment-heading">
+                                        <h4 class="user">Mr. Cat</h4>
+                                        <h5 class="time">5 minutes ago</h5>
+                                    </div>
+                                    <p>Sure, I'd help out.</p>
+                                </div>
+                                <ul class="comments-list">
+                                    <li class="comment">
+                                        <a class="pull-left" href="javascript:void(0);">
+                                            <img class="avatar" src="https://i.pinimg.com/originals/cd/87/3e/cd873ea81fb0089fc9ae813e8f438d22.jpg" alt="avatar">
+                                        </a>
+                                        <div class="comment-body">
+                                            <div class="comment-heading">
+                                                <h4 class="user">Kitty Cat</h4>
+                                                <h5 class="time">3 minutes ago</h5>
+                                            </div>
+                                            <p>I will email you the details.</p>
+                                        </div>
+                                    </li>
+                                    <li class="comment">
+                                        <a class="pull-left" href="javascript:void(0);">
+                                            <img class="avatar" src="https://i.pinimg.com/originals/cd/87/3e/cd873ea81fb0089fc9ae813e8f438d22.jpg" alt="avatar">
+                                        </a>
+                                        <div class="comment-body">
+                                            <div class="comment-heading">
+                                                <h4 class="user">Mr. Cat</h4>
+                                                <h5 class="time">3 minutes ago</h5>
+                                            </div>
+                                            <p>Ok, cool.</p>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-12">
+                <div class="panel panel-white post">
+                    <div class="post-heading">
+                        <div class="pull-left image">
+                            <img src="https://i.pinimg.com/originals/cd/87/3e/cd873ea81fb0089fc9ae813e8f438d22.jpg" class="img-circle avatar" alt="user profile image">
+                        </div>
+                        <div class="pull-left meta">
+                            <div class="title h5">
+                                <a href="#"><b>Cat D.</b></a>
+                                shared a video.
+                            </div>
+                            <h6 class="text-muted time">1 minute ago</h6>
+                        </div>
+                    </div>
+                    <div class="post-video">
+                        <div class="fluid-width-video-wrapper" style="padding-top: 56.2%;"><iframe src="https://player.vimeo.com/video/98417189" id="fitvid369523"></iframe></div>
+                    </div>
+                    <div class="post-description">
+                        <div class="stats">
+                            <a href="javascript:void(0);" class="btn btn-default stat-item">
+                                <i class="fa fa-thumbs-up icon"></i>2
+                            </a>
+                            <a href="javascript:void(0);" class="btn btn-default stat-item">
+                                <i class="fa fa-share icon"></i>12
+                            </a>
+                        </div>
+                    </div>
+                    <div class="post-footer">
+                        <div class="input-group">
+                            <input class="form-control" placeholder="Add a comment" type="text">
+                            <span class="input-group-addon">
+                                <a href="javascript:void(0);"><i class="fa fa-edit"></i></a>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            </div>
+
+            </div>
+
+  </div>
+  </div>
+
+  <script src="http://netdna.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+<script src="../javascripts/newsfeed.js"></script>
+</body>
+</html>
