@@ -285,7 +285,7 @@
 
 <script id="postTemplate" type="text/html">
   <div class="col-sm-12">
-      <div class="panel panel-white post">
+      <div class="panel panel-white post" id = {{!_id}}>
           <div class="post-heading">
               <div class="pull-left image">
                   <img src="https://i.pinimg.com/originals/cd/87/3e/cd873ea81fb0089fc9ae813e8f438d22.jpg" class="img-circle avatar" alt="user profile image">
@@ -301,8 +301,8 @@
           <div class="post-description">
               <p>{{!text}}</p>
               <div class="stats">
-                  <a href="javascript:void(0);" class="btn btn-default stat-item">
-                      <i class="fa fa-thumbs-up icon"></i>0
+                  <a href="javascript:postLike('{{!_id}}');" class="btn btn-default stat-item">
+                      <i class="fa fa-thumbs-up icon"></i>{{!likes}}
                   </a>
                   <a href="javascript:void(0);" class="btn btn-default stat-item">
                       <i class="fa fa-share icon"></i>0
@@ -310,13 +310,30 @@
               </div>
           </div>
           <div class="post-footer">
-              <div class="input-group">
-                  <input class="form-control" placeholder="Add a comment" type="text">
+              <div class="input-group" id = "commentBox">
+                  <input class="form-control" id = "commentInput"  placeholder="Add a comment" type="text">
                   <span class="input-group-addon">
-                      <a href="javascript:void(0);"><i class="fa fa-edit"></i></a>
+                      <a href="javascript:void(0);"><i class="fa fa-edit" id = "postComment"></i></a>
                   </span>
               </div>
+            <ul class="comments-list">
+            </ul>
             </div></div></div>
+  </script>
+
+<script id = "commentTemplate" type="text/html">
+  <li class="comment">
+      <a class="pull-left" href="javascript:void(0);">
+          <img class="avatar" src="https://i.pinimg.com/originals/cd/87/3e/cd873ea81fb0089fc9ae813e8f438d22.jpg" alt="avatar">
+      </a>
+      <div class="comment-body">
+          <div class="comment-heading">
+              <h4 class="user">{{!author}}</h4>
+              <h5 class="time">{{!ago}}</h5>
+          </div>
+          <p>{{!text}}</p>
+      </div>
+  </li>
 </script>
 <script src="http://netdna.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>

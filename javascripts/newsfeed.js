@@ -2,19 +2,36 @@ baseUrl = 'http://localhost:8889';
 var $body = $('body');
 var $feedContainer = $('#feedContainer');
 
-$(document).ready(function () {
-  var today = new Date();
-  var now = today.toLocaleString();
-  var yesterday = new Date(new Date().getTime() - (24 * 60 * 60 * 1000)); //24 hours ago
-  var from = yesterday.toLocaleString();
-  getTimeline(from, now);
+var today = new Date();
+var now = today.toLocaleString();
+var yesterday = new Date(new Date().getTime() - (24 * 60 * 60 * 1000)); //24 hours ago
+var from = yesterday.toLocaleString();
 
+$(document).ready(function () {
+  getTimeline(from, now);
   getSpaces();
 });
 
 $body.delegate('#post', 'click', function () {
     post(String($('#postFeed').val()), ["tagTest", "tagTest2"], null);
   });
+
+$body.delegate('#postComment', 'click', function () {
+    var $inputBox = $(this).closest('#commentBox');
+    var $inputText = $inputBox.find('#commentInput').val();
+    var $id = $inputBox.closest('.panel').attr('id');
+    postComment($inputText, $id);
+});
+
+function calculateAgoTime(creationDate) {
+  var ago = new Date() - new Date(creationDate); // in milliseconds
+  var mins = Math.floor((ago/1000)/60) + new Date().getTimezoneOffset(); // minutes + timezone offset
+  if (Math.floor(mins / 60) == 0){
+    return "" + mins % 60 + " mins ago";
+  } else {
+    return "" + Math.floor(mins / 60) + " hours " + mins % 60 + " mins ago";
+  }
+}
 
 function getTimeline(from, to) {
   $.ajax({
@@ -23,19 +40,29 @@ function getTimeline(from, to) {
     dataType: 'json',
     success: function (timeline) {
       console.log("get timeline success");
+      var postTemplate = document.getElementById('postTemplate').innerHTML;
+      var commentTemplate = document.getElementById('commentTemplate').innerHTML;
 
       $.each(timeline.posts, function (i, post) {
-        console.log(post);
-        var template = document.getElementById('postTemplate').innerHTML;
-        var ago = new Date() - new Date(post.creation_date); // in milliseconds
-        var mins = Math.floor((ago/1000)/60) + new Date().getTimezoneOffset(); // minutes + timezone offset
-        if (Math.floor(mins / 60) == 0){
-          post["ago"] = "" + mins % 60 + " mins ago";
-        } else {
-          post["ago"] = "" + Math.floor(mins / 60) + " hours " + mins % 60 + " mins ago";
+        post["ago"] = calculateAgoTime(post.creation_date);
+        if (post.hasOwnProperty('likers')) {
+          var countLikes = post.likers.length;
+          console.log(post.likers);
+          post["likes"] = countLikes;
         }
 
-        $feedContainer.prepend(Mustache.render(template, post));
+        $feedContainer.prepend(Mustache.render(postTemplate, post));
+
+        if (post.hasOwnProperty('comments')) {
+          var $feed = $('#' + post._id);
+          var $commentsList = $feed.find('.comments-list');
+          $.each(post.comments, function (j, comment) {
+            comment["ago"] = calculateAgoTime(comment.creation_date);
+            $commentsList.prepend(Mustache.render(commentTemplate, comment));
+          });
+        }
+
+
       });
 
       $feedContainer.prepend(Mustache.render(document.getElementById('newPostTemplate').innerHTML, post));
@@ -114,8 +141,9 @@ function post(text, tags, space) {
     url: baseUrl + '/posts',
     data: dataBody,
     success: function (data) {
-      console.log("posted " + text)
-      console.log(data);
+      console.log("posted " + text);
+      $feedContainer.empty();
+      getTimeline(from, now);
     },
 
     error: function (xhr, status, error) {
@@ -136,13 +164,16 @@ function postComment(text, id) {
     'text': text,
     'post_id': id
   };
+
+  dataBody = JSON.stringify(dataBody);
   $.ajax({
     type: 'POST',
     url: baseUrl + '/comment',
     data: dataBody,
     success: function (data) {
       console.log("posted " + text);
-      console.log(data);
+      $feedContainer.empty();
+      getTimeline(from, now);
     },
 
     error: function (xhr, status, error) {
@@ -162,13 +193,16 @@ function postLike(id) {
   dataBody = {
     'post_id': id
   };
+
+  dataBody = JSON.stringify(dataBody);
   $.ajax({
     type: 'POST',
     url: baseUrl + '/like',
     data: dataBody,
     success: function (data) {
       console.log("posted like");
-      console.log(data);
+      $feedContainer.empty();
+      getTimeline(from, now);
     },
 
     error: function (xhr, status, error) {
