@@ -152,7 +152,7 @@ class LikePostHandler(BaseHandler):
             self.db.posts.update_one(
                 {"_id": post_ref},  # filter
                 {                   # update
-                    "$push": {
+                    "$addToSet": {
                         "likers": self.current_user
                     }
                 }
