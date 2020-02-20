@@ -5,6 +5,9 @@ import dateutil.parser
 from bson.objectid import ObjectId
 from datetime import datetime, timedelta
 from pymongo import MongoClient
+from socket_client import Client
+
+client = None
 
 
 class BaseHandler(tornado.web.RequestHandler):
@@ -345,10 +348,13 @@ class SpaceHandler(BaseHandler):
 
 class UserHandler(BaseHandler):
 
-    def get(self):
+    async def get(self):
         # get a list of all users
         # TODO need communication to platform because platform does user handling
-        pass
+
+        global client
+        user_result = await client.write({"type": "get_user"})
+        print(user_result)
 
 
 def make_app():
@@ -373,6 +379,9 @@ async def main():
     app = make_app()
     server = tornado.httpserver.HTTPServer(app)
     server.listen(8889)
+
+    global client
+    client = Client("ws://localhost:88810/websocket", 10)
 
     shutdown_event = tornado.locks.Event()
     await shutdown_event.wait()
