@@ -30,10 +30,9 @@ class Client(object):
         await self.connect()
         PeriodicCallback(self.keep_alive, 20000).start()
 
-    @gen.coroutine
-    def connect(self):
+    async def connect(self):
         print("trying to connect to platform")
-        self.ws = yield websocket_connect(self.url)
+        self.ws = await websocket_connect(self.url)
         print("connected to platform")
         self.run()
 
