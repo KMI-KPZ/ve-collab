@@ -1,6 +1,6 @@
 import tornado
 import uuid
-from tornado.ioloop import IOLoop, PeriodicCallback
+from tornado.ioloop import PeriodicCallback
 from tornado import gen
 from tornado.websocket import websocket_connect
 from asyncio import get_event_loop
