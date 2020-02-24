@@ -346,15 +346,63 @@ class SpaceHandler(BaseHandler):
                             'success': True})
 
 
+class NewPostsSinceTimestampHandler(BaseHandler):
+    """
+    check for new posts
+    """
+
+    def get(self):
+        """
+        GET /updates
+
+            query param: from (timestamp string), default now - 24h
+
+            return:
+                200 OK --> new posts, use timeline handlers to retrieve
+                304 Not Modified --> no new posts since timestamp, no need to query timeline handlers
+        """
+
+        timestamp = self.get_argument("from", (datetime.utcnow() - timedelta(days=1)).isoformat())
+        timestamp = dateutil.parser.parse(timestamp)
+
+        # TODO refine query: check only the valid posts for the current user (i.e. the spaces he's in, users he is following)
+        new_posts_count = self.db.posts.count_documents(filter={"creation_date": {"$gte": timestamp}})
+
+        if new_posts_count != 0:  # new posts since timestamp, user has to query the timeline handlers
+            self.set_status(200)
+            self.write({"status": 200,
+                        "new_posts": True,
+                        "since_timestamp": timestamp.isoformat()})
+        else:  # no new posts since timestamp, return 304 not changed
+            self.set_status(304)
+
+
 class UserHandler(BaseHandler):
+    """
+    User management
+    """
 
     async def get(self):
-        # get a list of all users
-        # for now just one dummy user
+        """
+        GET /users
+
+            query param: user_id : int
+
+            return:
+                200 OK
+                {"user_id": <int>,
+                 "username": <string>,
+                 "email": <string>}
+        """
+
+        user_id = self.get_argument("user_id", 1)
 
         client = await get_socket_instance()
-        user_result = await client.write({"type": "get_user"})
-        print(user_result)
+        user_result = await client.write({"type": "get_user",
+                                          "user_id": user_id})
+
+        self.set_status(200)
+        self.write(user_result["user"])
 
 
 def make_app():
@@ -364,6 +412,7 @@ def make_app():
         (r"/posts", PostHandler),
         (r"/comment", CommentHandler),
         (r"/like", LikePostHandler),
+        (r"/updates", NewPostsSinceTimestampHandler),
         (r"/space/([a-zA-Z\-0-9\.:,_]+)", SpaceHandler),
         (r"/timeline", TimelineHandler),
         (r"/timeline/space/([a-zA-Z\-0-9\.:,_]+)", SpaceTimelineHandler),

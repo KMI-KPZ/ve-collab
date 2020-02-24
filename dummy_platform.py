@@ -3,6 +3,25 @@ import tornado.websocket
 import asyncio
 
 
+dummy_users = {
+    1: {
+        "user_id": 1,
+        "username": "test_user1",
+        "email": "test_user1@mail.com"
+    },
+    2: {
+        "user_id": 2,
+        "username": "test_user2",
+        "email": "test_user2@mail.com"
+    },
+    3: {
+        "user_id": 3,
+        "username": "test_user3",
+        "email": "test_user3@mail.com"
+    }
+}
+
+
 class WebsocketHandler(tornado.websocket.WebSocketHandler):
 
     connections = set()
@@ -19,10 +38,12 @@ class WebsocketHandler(tornado.websocket.WebSocketHandler):
         await asyncio.sleep(3)
 
         if json_message['type'] == "get_user":
-            self.write_message({"type": "get_user_response",
-                                "username": "dummy_user123",
-                                "email": "dummy@mail.de",
-                                "resolve_id": json_message['resolve_id']})
+            user_id = int(json_message['user_id'])
+            global dummy_users
+            if user_id in dummy_users:
+                self.write_message({"type": "get_user_response",
+                                    "user": dummy_users[user_id],
+                                    "resolve_id": json_message['resolve_id']})
 
     def on_close(self):
         self.connections.remove(self)
