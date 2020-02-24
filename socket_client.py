@@ -10,20 +10,18 @@ the_websocket_client = None
 async def get_socket_instance():
     global the_websocket_client
     if the_websocket_client is None:
-        the_websocket_client = Client("ws://localhost:88810/websocket", 10)
+        the_websocket_client = Client("ws://localhost:88810/websocket")
         await the_websocket_client._await_init()
     return the_websocket_client
 
 
 class Client(object):
-    def __init__(self, url, timeout):
+    def __init__(self, url):
         """
         Do not create an instance of this class yourself, use the provided function "get_socket_instance()" instead!
         """
         self.url = url
-        self.timeout = timeout
-        self.ioloop = IOLoop.current()
-        self.futures = {}  # TODO make this a dict of futures, on each write call create a new one, put in in dict with resolve id, when message from server: resolve the future with the fitting id
+        self.futures = {}
         self.ws = None
 
     async def _await_init(self):
