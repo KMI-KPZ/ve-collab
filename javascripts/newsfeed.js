@@ -10,6 +10,7 @@ var from = yesterday.toLocaleString();
 $(document).ready(function () {
   getTimeline(from, now);
   getSpaces();
+
 });
 
 $body.delegate('#post', 'click', function () {
@@ -66,6 +67,9 @@ function getTimeline(from, to) {
       });
 
       $feedContainer.prepend(Mustache.render(document.getElementById('newPostTemplate').innerHTML, post));
+      $('input[data-role=tagsinput]').tagsinput({
+        allowDuplicates: false
+      });
     },
 
     error: function (xhr, status, error) {
