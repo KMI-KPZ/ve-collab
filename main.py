@@ -382,9 +382,9 @@ class UserHandler(BaseHandler):
     User management
     """
 
-    async def get(self):
+    async def get(self, slug):
         """
-        GET /users
+        GET /users/user_data
 
             query param: user_id : int
 
@@ -394,15 +394,23 @@ class UserHandler(BaseHandler):
                  "username": <string>,
                  "email": <string>}
         """
+        if self.current_user:
+            if slug == "user_data":
+                user_id = self.get_argument("user_id", 1)
 
-        user_id = self.get_argument("user_id", 1)
+                client = await get_socket_instance()
+                user_result = await client.write({"type": "get_user",
+                                                  "user_id": user_id})
 
-        client = await get_socket_instance()
-        user_result = await client.write({"type": "get_user",
-                                          "user_id": user_id})
+                self.set_status(200)
+                self.write(user_result["user"])
 
-        self.set_status(200)
-        self.write(user_result["user"])
+            elif slug == "list":
+                client = await get_socket_instance()
+                user_list = await client.write({"type": "get_user_list"})
+
+                self.set_status(200)
+                self.write(user_list["users"])
 
 
 def make_app():
@@ -417,7 +425,7 @@ def make_app():
         (r"/timeline", TimelineHandler),
         (r"/timeline/space/([a-zA-Z\-0-9\.:,_]+)", SpaceTimelineHandler),
         (r"/timeline/user/([a-zA-Z\-0-9\.:,_]+)", UserTimelineHandler),
-        (r"/users", UserHandler),
+        (r"/users/([a-zA-Z\-0-9\.:,_]+)", UserHandler),
         (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
         (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./html/"}),
         (r"/javascripts/(.*)", tornado.web.StaticFileHandler, {"path": "./javascripts/"})

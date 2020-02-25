@@ -45,6 +45,11 @@ class WebsocketHandler(tornado.websocket.WebSocketHandler):
                                     "user": dummy_users[user_id],
                                     "resolve_id": json_message['resolve_id']})
 
+        elif json_message['type'] == "get_user_list":
+            self.write_message({"type": "get_user_list_response",
+                                "users": dummy_users,
+                                "resolve_id": json_message['resolve_id']})
+
     def on_close(self):
         self.connections.remove(self)
 
