@@ -4,17 +4,17 @@ import asyncio
 
 
 dummy_users = {
-    1: {
+    "test_user1": {
         "user_id": 1,
         "username": "test_user1",
         "email": "test_user1@mail.com"
     },
-    2: {
+    "test_user2": {
         "user_id": 2,
         "username": "test_user2",
         "email": "test_user2@mail.com"
     },
-    3: {
+    "test_user3": {
         "user_id": 3,
         "username": "test_user3",
         "email": "test_user3@mail.com"
@@ -38,11 +38,11 @@ class WebsocketHandler(tornado.websocket.WebSocketHandler):
         await asyncio.sleep(3)
 
         if json_message['type'] == "get_user":
-            user_id = int(json_message['user_id'])
+            username = json_message['username']
             global dummy_users
-            if user_id in dummy_users:
+            if username in dummy_users:
                 self.write_message({"type": "get_user_response",
-                                    "user": dummy_users[user_id],
+                                    "user": dummy_users[username],
                                     "resolve_id": json_message['resolve_id']})
 
         elif json_message['type'] == "get_user_list":

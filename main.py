@@ -386,7 +386,7 @@ class UserHandler(BaseHandler):
         """
         GET /users/user_data
 
-            query param: user_id : int
+            query param: username : string
 
             return:
                 200 OK
@@ -396,11 +396,11 @@ class UserHandler(BaseHandler):
         """
         if self.current_user:
             if slug == "user_data":
-                user_id = self.get_argument("user_id", 1)
+                username = self.get_argument("username", 1)
 
                 client = await get_socket_instance()
                 user_result = await client.write({"type": "get_user",
-                                                  "user_id": user_id})
+                                                  "username": username})
 
                 self.set_status(200)
                 self.write(user_result["user"])
