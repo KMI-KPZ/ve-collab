@@ -6,6 +6,7 @@ from bson.objectid import ObjectId
 from datetime import datetime, timedelta
 from pymongo import MongoClient
 from socket_client import get_socket_instance
+from model import User
 
 
 class BaseHandler(tornado.web.RequestHandler):
@@ -15,7 +16,7 @@ class BaseHandler(tornado.web.RequestHandler):
         self.db = self.client['social_serv']  # TODO make this generic via config
 
     def prepare(self):
-        self.current_user = 2
+        self.current_user = User("test_user1", 1, "test_user1@mail.com")
 
     def json_serialize_posts(self, query_result):
         # parse datetime objects into ISO 8601 strings for JSON serializability
@@ -71,7 +72,7 @@ class PostHandler(BaseHandler):
              "success": True}
         """
         if self.current_user:
-            author = self.current_user
+            author = self.current_user.username
             creation_date = datetime.utcnow()
             http_body = tornado.escape.json_decode(self.request.body)
             text = http_body['text']
@@ -118,7 +119,7 @@ class CommentHandler(BaseHandler):
             200 OK
         """
         if self.current_user:
-            author = self.current_user
+            author = self.current_user.username
             creation_date = datetime.utcnow()
             http_body = tornado.escape.json_decode(self.request.body)
             text = http_body['text']
@@ -156,7 +157,7 @@ class LikePostHandler(BaseHandler):
                 {"_id": post_ref},  # filter
                 {                   # update
                     "$addToSet": {
-                        "likers": self.current_user
+                        "likers": self.current_user.username
                     }
                 }
             )
@@ -317,7 +318,7 @@ class SpaceHandler(BaseHandler):
             space_name = self.get_argument("name")
 
             if slug == "create":  # create new space
-                members = [self.current_user]
+                members = [self.current_user.username]
 
                 # only create space if no other space with the same name exists
                 if space_name not in self.db.spaces.find(projection={"name": True, "_id": False}):
@@ -337,7 +338,7 @@ class SpaceHandler(BaseHandler):
                 self.db.spaces.update_one(
                     {"name": space_name},  # filter
                     {
-                        "$push": {"members": self.current_user}
+                        "$push": {"members": self.current_user.username}
                     }
                 )
 
@@ -396,7 +397,7 @@ class UserHandler(BaseHandler):
         """
         if self.current_user:
             if slug == "user_data":
-                username = self.get_argument("username", 1)
+                username = self.get_argument("username", "test_user1")
 
                 client = await get_socket_instance()
                 user_result = await client.write({"type": "get_user",
