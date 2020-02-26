@@ -7,6 +7,8 @@ var now = today.toLocaleString();
 var yesterday = new Date(new Date().getTime() - (24 * 60 * 60 * 1000)); //24 hours ago
 var from = yesterday.toLocaleString();
 
+var spaces;
+
 $(document).ready(function () {
   getTimeline(from, now);
   getSpaces();
@@ -16,7 +18,8 @@ $(document).ready(function () {
 $body.delegate('#post', 'click', function () {
     var text = String($('#postFeed').val());
     var tags = $("input[id=addTag]").tagsinput('items');
-    post(text, tags, null);
+    var space = $( "#selectSpace option:selected" ).text();
+    post(text, tags, space);
   });
 
 $body.delegate('#postComment', 'click', function () {
@@ -24,6 +27,16 @@ $body.delegate('#postComment', 'click', function () {
     var $inputText = $inputBox.find('#commentInput').val();
     var $id = $inputBox.closest('.panel').attr('id');
     postComment($inputText, $id);
+});
+
+$body.delegate('#createSpace', 'click', function () {
+    var name = $body.find('#newSpaceName').val();
+    if (name != '') createSpace(name);
+});
+
+$body.delegate('button[id="joinSpace"]', 'click', function () {
+    var name = $(this).attr('name');
+    joinSpace(name);
 });
 
 function calculateAgoTime(creationDate) {
@@ -48,13 +61,19 @@ function getTimeline(from, to) {
       var tagTemplate = document.getElementById('tagTemplate').innerHTML;
 
       $.each(timeline.posts, function (i, post) {
+        //console.log(post);
         post["ago"] = calculateAgoTime(post.creation_date);
         if (post.hasOwnProperty('likers')) {
           var countLikes = post.likers.length;
           console.log(post.likers);
           post["likes"] = countLikes;
-        }
+        } else post["likes"] = 0;
+
         post["tags"] = post["tags"].toString();
+
+        if (post.space == null) {
+          post["hasSpace"] = false;
+        } else post["hasSpace"] = true;
         $feedContainer.prepend(Mustache.render(postTemplate, post));
 
         var $feed = $('#' + post._id);
@@ -238,9 +257,15 @@ function getSpaces() {
     type: 'GET',
     url: baseUrl + '/space/list',
     dataType: 'json',
-    success: function (spaces) {
+    success: function (data) {
       console.log("get Spaces success");
-      console.log(spaces);
+      console.log(data.spaces);
+      spaces = data.spaces;
+      var $dropdown = $body.find('#spaceDropdown');
+      $.each(data.spaces, function (i, space) {
+        $dropdown.prepend(Mustache.render(document.getElementById('spaceTemplate').innerHTML, space));
+        $('#selectSpace').append(Mustache.render(document.getElementById('spaceTemplateSelect').innerHTML, space));
+    });
     },
 
     error: function (xhr, status, error) {
@@ -261,8 +286,8 @@ function createSpace(name) {
     type: 'POST',
     url: baseUrl + '/space/create?name=' + name,
     success: function (data) {
-      console.log("created space");
-      console.log(data);
+      console.log("created space " + name);
+
     },
 
     error: function (xhr, status, error) {
@@ -283,7 +308,7 @@ function joinSpace(name) {
     type: 'POST',
     url: baseUrl + '/space/join?name=' + name,
     success: function (data) {
-      console.log("joined spaces");
+      console.log("joined space" + name);
       console.log(data);
     },
 

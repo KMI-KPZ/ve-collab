@@ -47,6 +47,22 @@
                 <a class="nav-link" href="http://localhost:8889/profile">Profile</a>
             </li>
 
+            <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                      Spaces
+                    </a>
+                  <div id="spaceDropdown" class="dropdown-menu" aria-labelledby="navbarDropdown">
+
+                      <div class="dropdown-divider"></div>
+                    <form class="px-4 py-3">
+                      <div class="form-group">
+                        <label for="newSpaceName">New Space name</label>
+                        <input type="text" class="form-control" id="newSpaceName" placeholder="Enter name">
+                      </div>
+                      <button type="submit" id="createSpace" class="btn btn-primary">Create Space</button>
+                    </form>
+                  </div>
+            </li>
           </ul>
       </div>
   </nav>
@@ -269,6 +285,10 @@
                     <b>Hello User</b>
                 </h2>
                 <input type="text" value="" id="addTag" data-role="tagsinput" placeholder="Add Tags">
+                <select id ="selectSpace" class="custom-select">
+                    <option value="" selected disabled>Post into Space..</option>
+
+                </select>
             </div>
         </div>
 
@@ -290,6 +310,14 @@
     <span class="label label-pill label-primary">{{!text}}</span>
 </script>
 
+<script id=spaceTemplate type="text/html">
+    <a class="dropdown-item" id={{!_id}} href="#">{{!name}} <button type="button" id = "joinSpace" name={{!name}} class="btn btn-outline-success">Join</button></a>
+</script>
+
+<script id="spaceTemplateSelect" type="text/html">
+    <option value={{!_id}}>{{!name}}</option>
+</script>
+
 <script id="postTemplate" type="text/html">
   <div class="col-sm-12">
       <div class="panel panel-white post" id = {{!_id}}>
@@ -301,6 +329,10 @@
                   <div class="title h5">
                       <a href="#"><b>{{!author}}</b></a>
                       made a post.
+                      {{!#hasSpace}}
+                      <b>></b>
+                      {{!space}}
+                      {{!/hasSpace}}
                   </div>
                   <h6 class="text-muted time">{{!ago}}</h6>
               </div>
