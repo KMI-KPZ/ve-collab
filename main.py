@@ -167,6 +167,57 @@ class LikePostHandler(BaseHandler):
                         "success": True})
 
 
+class FollowHandler(BaseHandler):
+
+    def get(self):
+        """
+        GET /follow
+
+            get list of followers of a user
+
+            query param: user : string (required)
+        """
+        if self.current_user:
+            username = self.get_argument("user")
+
+            result = self.db.follows.find(
+                filter={"user": username},
+                projection={"_id": False}
+            )
+
+            follows = []  # need to instantiate it because if user follows nobody the iteration wont be run "follows" would get unassigned
+            for user in result:  # even though there is only one item in result set we need to iterate because query returns a cursor instance
+                follows = user["follows"]
+
+            self.set_status(200)
+            self.write({"user": username,
+                        "follows": follows})
+
+    def post(self):
+        """
+        POST /follow
+
+            follow a user
+
+            query param: user : string (required; the username u want to follow)
+        """
+        if self.current_user:
+            username = self.current_user.username
+            user_to_follow = self.get_argument("user")
+
+            self.db.follows.update_one(
+                {"user": username},  # fitler
+                {
+                    "$addToSet": {  # update
+                        "follows": user_to_follow
+                    }
+                },
+                upsert=True  # if no document already present, create one (i.e. user follows somebody for first time)
+            )
+
+            self.set_status(200)
+
+
 class TimelineHandler(BaseHandler):
     """
     Timeline of all posts (all users and all spaces)
@@ -421,6 +472,7 @@ def make_app():
         (r"/posts", PostHandler),
         (r"/comment", CommentHandler),
         (r"/like", LikePostHandler),
+        (r"/follow", FollowHandler),
         (r"/updates", NewPostsSinceTimestampHandler),
         (r"/space/([a-zA-Z\-0-9\.:,_]+)", SpaceHandler),
         (r"/timeline", TimelineHandler),
