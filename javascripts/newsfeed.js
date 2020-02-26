@@ -14,7 +14,9 @@ $(document).ready(function () {
 });
 
 $body.delegate('#post', 'click', function () {
-    post(String($('#postFeed').val()), ["tagTest", "tagTest2"], null);
+    var text = String($('#postFeed').val());
+    var tags = $("input[id=addTag]").tagsinput('items');
+    post(text, tags, null);
   });
 
 $body.delegate('#postComment', 'click', function () {
@@ -43,6 +45,7 @@ function getTimeline(from, to) {
       console.log("get timeline success");
       var postTemplate = document.getElementById('postTemplate').innerHTML;
       var commentTemplate = document.getElementById('commentTemplate').innerHTML;
+      var tagTemplate = document.getElementById('tagTemplate').innerHTML;
 
       $.each(timeline.posts, function (i, post) {
         post["ago"] = calculateAgoTime(post.creation_date);
@@ -51,11 +54,11 @@ function getTimeline(from, to) {
           console.log(post.likers);
           post["likes"] = countLikes;
         }
-
+        post["tags"] = post["tags"].toString();
         $feedContainer.prepend(Mustache.render(postTemplate, post));
 
+        var $feed = $('#' + post._id);
         if (post.hasOwnProperty('comments')) {
-          var $feed = $('#' + post._id);
           var $commentsList = $feed.find('.comments-list');
           $.each(post.comments, function (j, comment) {
             comment["ago"] = calculateAgoTime(comment.creation_date);
@@ -63,6 +66,13 @@ function getTimeline(from, to) {
           });
         }
 
+        //add tags
+        var $dom = $feed.find('.meta');
+        var tags = post.tags;
+        var tagArray = (typeof tags != 'undefined' && tags instanceof Array ) ? tags : tags.split(",");
+        tagArray.forEach(function (tag, index) {
+            $dom.append(Mustache.render(tagTemplate, { text: '' + tag + '' }));
+        });
 
       });
 
@@ -145,7 +155,7 @@ function post(text, tags, space) {
     url: baseUrl + '/posts',
     data: dataBody,
     success: function (data) {
-      console.log("posted " + text);
+      console.log("posted " + dataBody);
       $feedContainer.empty();
       getTimeline(from, now);
     },

@@ -268,7 +268,7 @@
                 <h2>
                     <b>Hello User</b>
                 </h2>
-                <input type="text" value="" data-role="tagsinput" class="tagInput" placeholder="Add Tags">
+                <input type="text" value="" id="addTag" data-role="tagsinput" placeholder="Add Tags">
             </div>
         </div>
 
@@ -284,6 +284,10 @@
 
   </div>
 </div>
+</script>
+
+<script id="tagTemplate" type="text/html">
+    <span class="label label-pill label-primary">{{!text}}</span>
 </script>
 
 <script id="postTemplate" type="text/html">

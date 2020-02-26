@@ -377,3 +377,7 @@ left: 0;
 width: 100%;
 height: 100%;
 }
+
+.label-as-badge {
+    border-radius: 1em;
+}
