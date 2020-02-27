@@ -320,7 +320,10 @@ class SpaceHandler(BaseHandler):
                 members = [self.current_user]
 
                 # only create space if no other space with the same name exists
-                if space_name not in self.db.spaces.find(projection={"name": True, "_id": False}):
+                existing_spaces = []
+                for existing_space in self.db.spaces.find(projection={"name": True, "_id": False}):
+                    existing_spaces.append(existing_space["name"])
+                if space_name not in existing_spaces:
                     space = {"name": space_name,
                              "members": members}
                     self.db.spaces.insert_one(space)
@@ -337,7 +340,8 @@ class SpaceHandler(BaseHandler):
                 self.db.spaces.update_one(
                     {"name": space_name},  # filter
                     {
-                        "$push": {"members": self.current_user}
+
+                        "$addToSet": {"members": self.current_user.username}
                     }
                 )
 
@@ -375,6 +379,39 @@ class NewPostsSinceTimestampHandler(BaseHandler):
                         "since_timestamp": timestamp.isoformat()})
         else:  # no new posts since timestamp, return 304 not changed
             self.set_status(304)
+
+
+class ProfileInformationHandler(BaseHandler):
+
+    async def get(self):
+        if self.current_user:
+            # get account information from platform
+            client = await get_socket_instance()
+            user_result = await client.write({"type": "get_user",
+                                              "username": self.current_user.username})
+
+            # grab spaces
+            spaces_cursor = self.db.spaces.find(
+                filter={"members": self.current_user.username}
+            )
+            spaces = []
+            for space in spaces_cursor:
+                spaces.append(space["name"])
+
+            # grab users that the current_user follows
+            follows_cursor = self.db.follows.find(
+                filter={"user": self.current_user.username}
+            )
+            follows = []
+            for user in follows_cursor:
+                follows = user["follows"]
+
+            user_information = {key: user_result["user"][key] for key in user_result["user"]}
+            user_information["spaces"] = spaces
+            user_information["follows"] = follows
+
+            self.set_status(200)
+            self.write(user_information)
 
 
 class UserHandler(BaseHandler):
@@ -417,7 +454,9 @@ def make_app():
         (r"/timeline", TimelineHandler),
         (r"/timeline/space/([a-zA-Z\-0-9\.:,_]+)", SpaceTimelineHandler),
         (r"/timeline/user/([a-zA-Z\-0-9\.:,_]+)", UserTimelineHandler),
-        (r"/users", UserHandler),
+        (r"/timeline/you", PersonalTimelineHandler),
+        (r"/profileinformation", ProfileInformationHandler),
+        (r"/users/([a-zA-Z\-0-9\.:,_]+)", UserHandler),
         (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
         (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./html/"}),
         (r"/javascripts/(.*)", tornado.web.StaticFileHandler, {"path": "./javascripts/"})
