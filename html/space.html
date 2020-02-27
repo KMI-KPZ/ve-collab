@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Social Network</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"
+    integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ"
+    crossorigin="anonymous">
+    </script>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link href="http://netdna.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="../css/newsfeed.css">
+    <link rel="stylesheet" href="../css/tagsinput.css">
+
+</head>
+<body>
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
+
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <div class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2">
+          <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+              <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+
+            </li>
+            <li class="nav-item">
+                <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+            </li>
+              </li>
+          </ul>
+      </div>
+      <div class="mx-auto order-0">
+          <a class="navbar-brand mx-auto" href="http://localhost:8889/main">Social Network</a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".dual-collapse2">
+              <span class="navbar-toggler-icon"></span>
+          </button>
+      </div>
+      <div class="navbar-collapse collapse w-100 order-3 dual-collapse2">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item active">
+                <a class="nav-link" href="http://localhost:8889/main">Home</a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="http://localhost:8889/profile">Profile</a>
+            </li>
+
+            <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                      Spaces
+                    </a>
+                  <div id="spaceDropdown" class="dropdown-menu" aria-labelledby="navbarDropdown">
+
+                      <div class="dropdown-divider"></div>
+                    <form class="px-4 py-3">
+                      <div class="form-group">
+                        <label for="newSpaceName">New Space name</label>
+                        <input type="text" class="form-control" id="newSpaceName" placeholder="Enter name">
+                      </div>
+                      <button type="submit" id="createSpace" class="btn btn-primary">Create Space</button>
+                    </form>
+                  </div>
+            </li>
+          </ul>
+      </div>
+  </nav>
+
+
+  <div class="container">
+  <div class="row">
+      <div class="col-sm-8 col-sm-offset-2" id="feedContainer">
+
+      </div>
+
+  </div>
+  </div>
+
+<script id="newPostTemplate" type="text/html">
+  <div class="col-sm-12">
+
+    <div class="panel panel-white post">
+
+        <div class="post-heading">
+            <div class="pull-left image">
+                <img src="https://i.pinimg.com/originals/cd/87/3e/cd873ea81fb0089fc9ae813e8f438d22.jpg" class="img-circle avatar" alt="user profile image">
+            </div>
+            <div class="pull-left meta">
+                <h2>
+                    <b>Hello User</b>
+                </h2>
+                <input type="text" value="" id="addTag" data-role="tagsinput" placeholder="Add Tags">
+            </div>
+        </div>
+
+        <div class="post-description">
+            <textarea class="form-control" id="postFeed" rows="2" placeholder="What are you thinking?"></textarea>
+            <div class="mar-top clearfix">
+              <button class="btn btn-sm btn-primary pull-right" id="post"><i class="fa fa-pencil fa-fw"></i> Post</button>
+              <a class="btn btn-trans btn-icon fa fa-video-camera add-tooltip" href="#" data-original-title="Add Video" data-toggle="tooltip"></a>
+              <a class="btn btn-trans btn-icon fa fa-camera add-tooltip" href="#" data-original-title="Add Photo" data-toggle="tooltip"></a>
+              <a class="btn btn-trans btn-icon fa fa-file add-tooltip" href="#" data-original-title="Add File" data-toggle="tooltip"></a>
+            </div>
+        </div>
+
+  </div>
+</div>
+</script>
+
+<script id="tagTemplate" type="text/html">
+    <span class="label label-pill label-info">{{!text}}</span>
+</script>
+
+<script id=spaceTemplate type="text/html">
+    <a class="dropdown-item" id={{!_id}} href="http://localhost:8889/space">{{!name}} <button type="button" id = "joinSpace" name={{!name}} class="btn btn-outline-success">Join</button></a>
+</script>
+
+<script id="postTemplate" type="text/html">
+  <div class="col-sm-12">
+      <div class="panel panel-white post" id = {{!_id}}>
+          <div class="post-heading">
+              <div class="pull-left image">
+                  <img src="https://i.pinimg.com/originals/cd/87/3e/cd873ea81fb0089fc9ae813e8f438d22.jpg" class="img-circle avatar" alt="user profile image">
+              </div>
+              <div class="pull-left meta">
+                  <div class="title h5">
+                      <a href="#"><b>{{!author}}</b></a>
+                      made a post.
+                      {{!#hasSpace}}
+                      <b>></b>
+                      <span class="label label-pill label-primary">{{!space}}</span>
+                      {{!/hasSpace}}
+                  </div>
+                  <h6 class="text-muted time">{{!ago}}</h6>
+              </div>
+          </div>
+          <div class="post-description">
+              <p>{{!text}}</p>
+              <div class="stats">
+                  <a href="javascript:postLike('{{!_id}}');" class="btn btn-default stat-item">
+                      <i class="fa fa-thumbs-up icon"></i>{{!likes}}
+                  </a>
+                  <a href="javascript:void(0);" class="btn btn-default stat-item">
+                      <i class="fa fa-share icon"></i>0
+                  </a>
+              </div>
+          </div>
+          <div class="post-footer">
+              <div class="input-group" id = "commentBox">
+                  <input class="form-control" id = "commentInput"  placeholder="Add a comment" type="text">
+                  <span class="input-group-addon">
+                      <a href="javascript:void(0);"><i class="fa fa-edit" id = "postComment"></i></a>
+                  </span>
+              </div>
+            <ul class="comments-list">
+            </ul>
+            </div></div></div>
+  </script>
+
+<script id = "commentTemplate" type="text/html">
+  <li class="comment">
+      <a class="pull-left" href="javascript:void(0);">
+          <img class="avatar" src="https://i.pinimg.com/originals/cd/87/3e/cd873ea81fb0089fc9ae813e8f438d22.jpg" alt="avatar">
+      </a>
+      <div class="comment-body">
+          <div class="comment-heading">
+              <h4 class="user">{{!author}}</h4>
+              <h5 class="time">{{!ago}}</h5>
+          </div>
+          <p>{{!text}}</p>
+      </div>
+  </li>
+</script>
+
+<script src="http://netdna.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+<script src="../javascripts/newsfeed.js"></script>
+<script src="../javascripts/space.js"></script>
+<script src="../javascripts/mustache.js"></script>
+<script src="../javascripts/tagsinput.js"></script>
+</body>
+</html>

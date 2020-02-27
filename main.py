@@ -6,7 +6,6 @@ from bson.objectid import ObjectId
 from datetime import datetime, timedelta
 from pymongo import MongoClient
 from socket_client import get_socket_instance
-from model import User
 
 
 class BaseHandler(tornado.web.RequestHandler):
@@ -16,7 +15,7 @@ class BaseHandler(tornado.web.RequestHandler):
         self.db = self.client['social_serv']  # TODO make this generic via config
 
     def prepare(self):
-        self.current_user = User("test_user1", 1, "test_user1@mail.com")
+        self.current_user = 2
 
     def json_serialize_posts(self, query_result):
         # parse datetime objects into ISO 8601 strings for JSON serializability
@@ -72,7 +71,7 @@ class PostHandler(BaseHandler):
              "success": True}
         """
         if self.current_user:
-            author = self.current_user.username
+            author = self.current_user
             creation_date = datetime.utcnow()
             http_body = tornado.escape.json_decode(self.request.body)
             text = http_body['text']
@@ -119,7 +118,7 @@ class CommentHandler(BaseHandler):
             200 OK
         """
         if self.current_user:
-            author = self.current_user.username
+            author = self.current_user
             creation_date = datetime.utcnow()
             http_body = tornado.escape.json_decode(self.request.body)
             text = http_body['text']
@@ -157,7 +156,7 @@ class LikePostHandler(BaseHandler):
                 {"_id": post_ref},  # filter
                 {                   # update
                     "$addToSet": {
-                        "likers": self.current_user.username
+                        "likers": self.current_user
                     }
                 }
             )
@@ -165,57 +164,6 @@ class LikePostHandler(BaseHandler):
             self.set_status(200)
             self.write({"status": 200,
                         "success": True})
-
-
-class FollowHandler(BaseHandler):
-
-    def get(self):
-        """
-        GET /follow
-
-            get list of followers of a user
-
-            query param: user : string (required)
-        """
-        if self.current_user:
-            username = self.get_argument("user")
-
-            result = self.db.follows.find(
-                filter={"user": username},
-                projection={"_id": False}
-            )
-
-            follows = []  # need to instantiate it because if user follows nobody the iteration wont be run "follows" would get unassigned
-            for user in result:  # even though there is only one item in result set we need to iterate because query returns a cursor instance
-                follows = user["follows"]
-
-            self.set_status(200)
-            self.write({"user": username,
-                        "follows": follows})
-
-    def post(self):
-        """
-        POST /follow
-
-            follow a user
-
-            query param: user : string (required; the username u want to follow)
-        """
-        if self.current_user:
-            username = self.current_user.username
-            user_to_follow = self.get_argument("user")
-
-            self.db.follows.update_one(
-                {"user": username},  # fitler
-                {
-                    "$addToSet": {  # update
-                        "follows": user_to_follow
-                    }
-                },
-                upsert=True  # if no document already present, create one (i.e. user follows somebody for first time)
-            )
-
-            self.set_status(200)
 
 
 class TimelineHandler(BaseHandler):
@@ -295,12 +243,12 @@ class SpaceTimelineHandler(BaseHandler):
 
 class UserTimelineHandler(BaseHandler):
     """
-    Timeline of a user (e.g. for his profile)
+    Timeline of a user
     """
 
     def get(self, author):
         """
-        GET /timeline/user/[username]
+        GET /timeline/user/[user_id]         FUTURE: USERNAME INSTEAD OF USER ID
 
         query params:
             "from" : ISO timestamp string (fetch posts not older than this), default: now-24h
@@ -322,70 +270,12 @@ class UserTimelineHandler(BaseHandler):
         # TODO what about posts in spaces? include? exclude? include only those that current user is also in?
         result = self.db.posts.find(
                         filter={"creation_date": {"$gte": time_from, "$lte": time_to},
-                                "author":         {"$eq": author}})
+                                "author":         {"$eq": int(author)}})
 
         posts = self.json_serialize_posts(result)
 
         self.set_status(200)
         self.write({"posts": posts})
-
-
-class PersonalTimelineHandler(BaseHandler):
-    """
-    the timeline of the currently authenticated user.
-    i.e. your posts, posts of users you follow, posts in spaces you are in
-    """
-
-    def get(self):
-        """
-        GET /timeline/you
-
-            query params:
-                "from" : ISO timestamp string (fetch posts not older than this), default: now-24h
-                "to" : ISO timestamp string (fetch posts younger than this), default: now
-
-            return:
-                200 OK,
-                {"posts": [post1, post2,...]}
-        """
-        if self.current_user:
-            time_from = self.get_argument("from", (datetime.utcnow() - timedelta(days=1)).isoformat())  # default value is 24h ago
-            time_to = self.get_argument("to", datetime.utcnow().isoformat())  # default value is now
-
-            # parse time strings into datetime objects (dateutil is able to guess format)
-            # however safe way is to use ISO 8601 format
-            time_from = dateutil.parser.parse(time_from)
-            time_to = dateutil.parser.parse(time_to)
-
-            spaces_cursor = self.db.spaces.find(
-                filter={"members": self.current_user.username}
-            )
-            spaces = []
-            for space in spaces_cursor:
-                spaces.append(space["name"])
-
-            follows_cursor = self.db.follows.find(
-                filter={"user": self.current_user.username},
-                projection={"_id": False}
-            )
-            follows = []
-            for user in follows_cursor:
-                follows = user["follows"]
-            follows.append(self.current_user.username)  # append yourself for easier query of posts
-
-            result = self.db.posts.find(
-                filter={"creation_date": {"$gte": time_from, "$lte": time_to}}
-            )
-
-            posts_to_keep = []
-            for post in result:
-                if post["author"] in follows or post["space"] in spaces:
-                    posts_to_keep.append(post)
-
-            posts = self.json_serialize_posts(posts_to_keep)
-
-            self.set_status(200)
-            self.write({"posts": posts})
 
 
 class SpaceHandler(BaseHandler):
@@ -427,7 +317,7 @@ class SpaceHandler(BaseHandler):
             space_name = self.get_argument("name")
 
             if slug == "create":  # create new space
-                members = [self.current_user.username]
+                members = [self.current_user]
 
                 # only create space if no other space with the same name exists
                 if space_name not in self.db.spaces.find(projection={"name": True, "_id": False}):
@@ -447,7 +337,7 @@ class SpaceHandler(BaseHandler):
                 self.db.spaces.update_one(
                     {"name": space_name},  # filter
                     {
-                        "$push": {"members": self.current_user.username}
+                        "$push": {"members": self.current_user}
                     }
                 )
 
@@ -492,11 +382,11 @@ class UserHandler(BaseHandler):
     User management
     """
 
-    async def get(self, slug):
+    async def get(self):
         """
-        GET /users/user_data
+        GET /users
 
-            query param: username : string
+            query param: user_id : int
 
             return:
                 200 OK
@@ -504,23 +394,15 @@ class UserHandler(BaseHandler):
                  "username": <string>,
                  "email": <string>}
         """
-        if self.current_user:
-            if slug == "user_data":
-                username = self.get_argument("username", "test_user1")
 
-                client = await get_socket_instance()
-                user_result = await client.write({"type": "get_user",
-                                                  "username": username})
+        user_id = self.get_argument("user_id", 1)
 
-                self.set_status(200)
-                self.write(user_result["user"])
+        client = await get_socket_instance()
+        user_result = await client.write({"type": "get_user",
+                                          "user_id": user_id})
 
-            elif slug == "list":
-                client = await get_socket_instance()
-                user_list = await client.write({"type": "get_user_list"})
-
-                self.set_status(200)
-                self.write(user_list["users"])
+        self.set_status(200)
+        self.write(user_result["user"])
 
 
 def make_app():
@@ -530,14 +412,12 @@ def make_app():
         (r"/posts", PostHandler),
         (r"/comment", CommentHandler),
         (r"/like", LikePostHandler),
-        (r"/follow", FollowHandler),
         (r"/updates", NewPostsSinceTimestampHandler),
         (r"/space/([a-zA-Z\-0-9\.:,_]+)", SpaceHandler),
         (r"/timeline", TimelineHandler),
         (r"/timeline/space/([a-zA-Z\-0-9\.:,_]+)", SpaceTimelineHandler),
         (r"/timeline/user/([a-zA-Z\-0-9\.:,_]+)", UserTimelineHandler),
-        (r"/timeline/you", PersonalTimelineHandler),
-        (r"/users/([a-zA-Z\-0-9\.:,_]+)", UserHandler),
+        (r"/users", UserHandler),
         (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
         (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./html/"}),
         (r"/javascripts/(.*)", tornado.web.StaticFileHandler, {"path": "./javascripts/"})
