@@ -6,6 +6,7 @@ from bson.objectid import ObjectId
 from datetime import datetime, timedelta
 from pymongo import MongoClient
 from socket_client import get_socket_instance
+from model import User
 
 
 class BaseHandler(tornado.web.RequestHandler):
@@ -15,7 +16,7 @@ class BaseHandler(tornado.web.RequestHandler):
         self.db = self.client['social_serv']  # TODO make this generic via config
 
     def prepare(self):
-        self.current_user = 2
+        self.current_user = User("test_user1", 1, "test_user1@mail.com")
 
     def json_serialize_posts(self, query_result):
         # parse datetime objects into ISO 8601 strings for JSON serializability
@@ -47,7 +48,6 @@ class ProfileHandler(BaseHandler):
 class PostHandler(BaseHandler):
     """
     Make a new post
-
     """
 
     def get(self):
@@ -56,22 +56,19 @@ class PostHandler(BaseHandler):
     def post(self):
         """
         POST /posts
-
         http body:
             {
                 "text": "text_of_post",
                 "tags": ["tag1", "tag2"],
                 "space": "optional, post this post into a space, not directly into your profile"
             }
-
-
         return:
             200 OK,
             {"status": 200,
              "success": True}
         """
         if self.current_user:
-            author = self.current_user
+            author = self.current_user.username
             creation_date = datetime.utcnow()
             http_body = tornado.escape.json_decode(self.request.body)
             text = http_body['text']
@@ -107,18 +104,16 @@ class CommentHandler(BaseHandler):
     def post(self):
         """
         POST /comment
-
         http body:
             {
                 "text": "content_of_comment",
                 "post_id": "id_von_post"
             }
-
         return:
             200 OK
         """
         if self.current_user:
-            author = self.current_user
+            author = self.current_user.username
             creation_date = datetime.utcnow()
             http_body = tornado.escape.json_decode(self.request.body)
             text = http_body['text']
@@ -141,12 +136,10 @@ class LikePostHandler(BaseHandler):
     def post(self):
         """
         POST /like
-
         http body:
             {
                 "post_id": "id_of_post_to_like"
             }
-
         """
         if self.current_user:
             http_body = tornado.escape.json_decode(self.request.body)
@@ -156,7 +149,7 @@ class LikePostHandler(BaseHandler):
                 {"_id": post_ref},  # filter
                 {                   # update
                     "$addToSet": {
-                        "likers": self.current_user
+                        "likers": self.current_user.username
                     }
                 }
             )
@@ -164,6 +157,53 @@ class LikePostHandler(BaseHandler):
             self.set_status(200)
             self.write({"status": 200,
                         "success": True})
+
+
+class FollowHandler(BaseHandler):
+
+    def get(self):
+        """
+        GET /follow
+            get list of followers of a user
+            query param: user : string (required)
+        """
+        if self.current_user:
+            username = self.get_argument("user")
+
+            result = self.db.follows.find(
+                filter={"user": username},
+                projection={"_id": False}
+            )
+
+            follows = []  # need to instantiate it because if user follows nobody the iteration wont be run "follows" would get unassigned
+            for user in result:  # even though there is only one item in result set we need to iterate because query returns a cursor instance
+                follows = user["follows"]
+
+            self.set_status(200)
+            self.write({"user": username,
+                        "follows": follows})
+
+    def post(self):
+        """
+        POST /follow
+            follow a user
+            query param: user : string (required; the username u want to follow)
+        """
+        if self.current_user:
+            username = self.current_user.username
+            user_to_follow = self.get_argument("user")
+
+            self.db.follows.update_one(
+                {"user": username},  # fitler
+                {
+                    "$addToSet": {  # update
+                        "follows": user_to_follow
+                    }
+                },
+                upsert=True  # if no document already present, create one (i.e. user follows somebody for first time)
+            )
+
+            self.set_status(200)
 
 
 class TimelineHandler(BaseHandler):
@@ -175,15 +215,12 @@ class TimelineHandler(BaseHandler):
     def get(self):
         """
         GET /timeline
-
         query params:
             "from" : ISO timestamp string (fetch posts not older than this), default: now-24h
             "to" : ISO timestamp string (fetch posts younger than this), default: now
-
         return:
             200 OK,
             {"posts": [post1, post2,...]}
-
         """
 
         time_from = self.get_argument("from", (datetime.utcnow() - timedelta(days=1)).isoformat())  # default value is 24h ago
@@ -211,15 +248,12 @@ class SpaceTimelineHandler(BaseHandler):
     def get(self, space_name):
         """
         GET /timeline/space/[name]
-
         query params:
             "from" : ISO timestamp string (fetch posts not older than this), default: now-24h
             "to" : ISO timestamp string (fetch posts younger than this), default: now
-
         return:
             200 OK,
             {"posts": [post1, post2,...]}
-
         """
         time_from = self.get_argument("from", (datetime.utcnow() - timedelta(days=1)).isoformat())  # default value is 24h ago
         time_to = self.get_argument("to", datetime.utcnow().isoformat())  # default value is now
@@ -243,21 +277,18 @@ class SpaceTimelineHandler(BaseHandler):
 
 class UserTimelineHandler(BaseHandler):
     """
-    Timeline of a user
+    Timeline of a user (e.g. for his profile)
     """
 
     def get(self, author):
         """
-        GET /timeline/user/[user_id]         FUTURE: USERNAME INSTEAD OF USER ID
-
+        GET /timeline/user/[username]
         query params:
             "from" : ISO timestamp string (fetch posts not older than this), default: now-24h
             "to" : ISO timestamp string (fetch posts younger than this), default: now
-
         return:
             200 OK,
             {"posts": [post1, post2,...]}
-
         """
         time_from = self.get_argument("from", (datetime.utcnow() - timedelta(days=1)).isoformat())  # default value is 24h ago
         time_to = self.get_argument("to", datetime.utcnow().isoformat())  # default value is now
@@ -270,12 +301,68 @@ class UserTimelineHandler(BaseHandler):
         # TODO what about posts in spaces? include? exclude? include only those that current user is also in?
         result = self.db.posts.find(
                         filter={"creation_date": {"$gte": time_from, "$lte": time_to},
-                                "author":         {"$eq": int(author)}})
+                                "author":         {"$eq": author}})
 
         posts = self.json_serialize_posts(result)
 
         self.set_status(200)
         self.write({"posts": posts})
+
+
+class PersonalTimelineHandler(BaseHandler):
+    """
+    the timeline of the currently authenticated user.
+    i.e. your posts, posts of users you follow, posts in spaces you are in
+    """
+
+    def get(self):
+        """
+        GET /timeline/you
+            query params:
+                "from" : ISO timestamp string (fetch posts not older than this), default: now-24h
+                "to" : ISO timestamp string (fetch posts younger than this), default: now
+            return:
+                200 OK,
+                {"posts": [post1, post2,...]}
+        """
+        if self.current_user:
+            time_from = self.get_argument("from", (datetime.utcnow() - timedelta(days=1)).isoformat())  # default value is 24h ago
+            time_to = self.get_argument("to", datetime.utcnow().isoformat())  # default value is now
+
+            # parse time strings into datetime objects (dateutil is able to guess format)
+            # however safe way is to use ISO 8601 format
+            time_from = dateutil.parser.parse(time_from)
+            time_to = dateutil.parser.parse(time_to)
+
+            spaces_cursor = self.db.spaces.find(
+                filter={"members": self.current_user.username}
+            )
+            spaces = []
+            for space in spaces_cursor:
+                spaces.append(space["name"])
+
+            follows_cursor = self.db.follows.find(
+                filter={"user": self.current_user.username},
+                projection={"_id": False}
+            )
+            follows = []
+            for user in follows_cursor:
+                follows = user["follows"]
+            follows.append(self.current_user.username)  # append yourself for easier query of posts
+
+            result = self.db.posts.find(
+                filter={"creation_date": {"$gte": time_from, "$lte": time_to}}
+            )
+
+            posts_to_keep = []
+            for post in result:
+                if post["author"] in follows or post["space"] in spaces:
+                    posts_to_keep.append(post)
+
+            posts = self.json_serialize_posts(posts_to_keep)
+
+            self.set_status(200)
+            self.write({"posts": posts})
 
 
 class SpaceHandler(BaseHandler):
@@ -286,7 +373,6 @@ class SpaceHandler(BaseHandler):
     def get(self, slug):
         """
         GET /space/list
-
         return:
             200 OK,
             {"spaces": [space1, space2,...]}
@@ -304,10 +390,8 @@ class SpaceHandler(BaseHandler):
     def post(self, slug):
         """
         POST /space/create
-
             query param:
                 "name" : space name to create, mandatory argument
-
         POST /space/join
             (currently authed user joins space)
             query param:
@@ -317,7 +401,7 @@ class SpaceHandler(BaseHandler):
             space_name = self.get_argument("name")
 
             if slug == "create":  # create new space
-                members = [self.current_user]
+                members = [self.current_user.username]
 
                 # only create space if no other space with the same name exists
                 existing_spaces = []
@@ -340,7 +424,6 @@ class SpaceHandler(BaseHandler):
                 self.db.spaces.update_one(
                     {"name": space_name},  # filter
                     {
-
                         "$addToSet": {"members": self.current_user.username}
                     }
                 )
@@ -358,9 +441,7 @@ class NewPostsSinceTimestampHandler(BaseHandler):
     def get(self):
         """
         GET /updates
-
             query param: from (timestamp string), default now - 24h
-
             return:
                 200 OK --> new posts, use timeline handlers to retrieve
                 304 Not Modified --> no new posts since timestamp, no need to query timeline handlers
@@ -419,27 +500,33 @@ class UserHandler(BaseHandler):
     User management
     """
 
-    async def get(self):
+    async def get(self, slug):
         """
-        GET /users
-
-            query param: user_id : int
-
+        GET /users/user_data
+            query param: username : string
             return:
                 200 OK
                 {"user_id": <int>,
                  "username": <string>,
                  "email": <string>}
         """
+        if self.current_user:
+            if slug == "user_data":
+                username = self.get_argument("username", "test_user1")
 
-        user_id = self.get_argument("user_id", 1)
+                client = await get_socket_instance()
+                user_result = await client.write({"type": "get_user",
+                                                  "username": username})
 
-        client = await get_socket_instance()
-        user_result = await client.write({"type": "get_user",
-                                          "user_id": user_id})
+                self.set_status(200)
+                self.write(user_result["user"])
 
-        self.set_status(200)
-        self.write(user_result["user"])
+            elif slug == "list":
+                client = await get_socket_instance()
+                user_list = await client.write({"type": "get_user_list"})
+
+                self.set_status(200)
+                self.write(user_list["users"])
 
 
 def make_app():
@@ -449,6 +536,7 @@ def make_app():
         (r"/posts", PostHandler),
         (r"/comment", CommentHandler),
         (r"/like", LikePostHandler),
+        (r"/follow", FollowHandler),
         (r"/updates", NewPostsSinceTimestampHandler),
         (r"/space/([a-zA-Z\-0-9\.:,_]+)", SpaceHandler),
         (r"/timeline", TimelineHandler),
