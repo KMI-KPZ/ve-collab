@@ -10,6 +10,7 @@ var from = yesterday.toLocaleString();
 var spaces;
 
 $(document).ready(function () {
+
   var currURL = window.location.href;
   if (currURL == baseUrl + '/main') {
     getTimeline(from, now);
