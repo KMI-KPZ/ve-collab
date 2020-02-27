@@ -1,29 +1,61 @@
 baseUrl = 'http://localhost:8889';
+var currURL = window.location.href;
 var $body = $('body');
 var $feedContainer = $('#feedContainer');
 
 var today = new Date();
-var now = today.toLocaleString();
 var yesterday = new Date(new Date().getTime() - (24 * 60 * 60 * 1000)); //24 hours ago
-var from = yesterday.toLocaleString();
 
-var spaces;
-
+var postTemplate = document.getElementById('postTemplate').innerHTML;
+var commentTemplate = document.getElementById('commentTemplate').innerHTML;
+var tagTemplate = document.getElementById('tagTemplate').innerHTML;
+var inSpace = false;
+var spacename;
+var timeout;
 $(document).ready(function () {
 
-  var currURL = window.location.href;
-  if (currURL == baseUrl + '/main') {
-    getTimeline(from, now);
+  function initializeNewsFeed(){
+      getSpaces();
+      var now = today.toLocaleString();
+      var from = yesterday.toLocaleString();
+
+      if (currURL == baseUrl + '/main') {
+        getTimeline(from, now);
+
+      } else if (currURL.indexOf(baseUrl + '/space') !== -1) {
+        inSpace = true;
+        spacename = currURL.substring(currURL.lastIndexOf('/') + 1);
+        document.title = spacename + ' - Social Network';
+        getTimelineSpace(spacename, from, now);
+      }
   }
 
-  getSpaces();
+  initializeNewsFeed();
 
+  $(window).scroll(function() {
+    //check if page has a scrollbar
+    if($("body").height() > $(window).height()){
+        var nearToBottom = 10;
+
+        if ($(window).scrollTop() + $(window).height() >
+          $(document).height() - nearToBottom) {
+               // ajax call get data from server and append to the div
+               console.log("TRIGGERED");
+               $feedContainer.empty();
+
+               yesterday = new Date(yesterday - (24 * 60 * 60 * 1000));
+               initializeNewsFeed();
+        }
+    }
+  });
 });
+
+
 
 $body.delegate('#post', 'click', function () {
     var text = String($('#postFeed').val());
     var tags = $("input[id=addTag]").tagsinput('items');
-    var space = $( "#selectSpace option:selected" ).text();
+    var space = (inSpace) ? spacename : $( "#selectSpace option:selected" ).text();
     post(text, tags, space);
   });
 
@@ -61,9 +93,6 @@ function getTimeline(from, to) {
     dataType: 'json',
     success: function (timeline) {
       console.log("get timeline success");
-      var postTemplate = document.getElementById('postTemplate').innerHTML;
-      var commentTemplate = document.getElementById('commentTemplate').innerHTML;
-      var tagTemplate = document.getElementById('tagTemplate').innerHTML;
 
       $.each(timeline.posts, function (i, post) {
         //console.log(post);
@@ -126,7 +155,49 @@ function getTimelineSpace(spacename, from, to) {
     dataType: 'json',
     success: function (timeline) {
       console.log("get timeline Space success");
-      console.log(timeline);
+
+      var spaceHeaderTemplate = document.getElementById('spaceHeaderTemplate').innerHTML;
+      $.each(timeline.posts, function (i, post) {
+        //console.log(post);
+        post["ago"] = calculateAgoTime(post.creation_date);
+        if (post.hasOwnProperty('likers')) {
+          var countLikes = post.likers.length;
+          console.log(post.likers);
+          post["likes"] = countLikes;
+        } else post["likes"] = 0;
+
+        post["tags"] = post["tags"].toString();
+
+        if (post.space == null) {
+          post["hasSpace"] = false;
+        } else post["hasSpace"] = true;
+        $feedContainer.prepend(Mustache.render(postTemplate, post));
+
+        var $feed = $('#' + post._id);
+        if (post.hasOwnProperty('comments')) {
+          var $commentsList = $feed.find('.comments-list');
+          $.each(post.comments, function (j, comment) {
+            comment["ago"] = calculateAgoTime(comment.creation_date);
+            $commentsList.prepend(Mustache.render(commentTemplate, comment));
+          });
+        }
+
+        //add tags
+        var $dom = $feed.find('.meta');
+        var tags = post.tags;
+        var tagArray = (typeof tags != 'undefined' && tags instanceof Array ) ? tags : tags.split(",");
+        tagArray.forEach(function (tag, index) {
+            $dom.append(Mustache.render(tagTemplate, { text: '' + tag + '' }));
+        });
+
+      });
+
+      $feedContainer.prepend(Mustache.render(document.getElementById('newPostTemplate').innerHTML, post));
+      var members = localStorage.getItem(spacename).split(",");
+      $feedContainer.prepend(Mustache.render(document.getElementById('spaceHeaderTemplate').innerHTML, {spacename: '' + spacename + '', members : members, memberSize : members.length}));
+      $('input[data-role=tagsinput]').tagsinput({
+        allowDuplicates: false
+      });
     },
 
     error: function (xhr, status, error) {
@@ -181,7 +252,9 @@ function post(text, tags, space) {
     success: function (data) {
       console.log("posted " + dataBody);
       $feedContainer.empty();
-      getTimeline(from, now);
+      if(inSpace){
+        getTimelineSpace(spacename, from, now);
+      } else getTimeline(from, now);
     },
 
     error: function (xhr, status, error) {
@@ -211,7 +284,10 @@ function postComment(text, id) {
     success: function (data) {
       console.log("posted " + text);
       $feedContainer.empty();
-      getTimeline(from, now);
+      if(inSpace){
+        getTimelineSpace(spacename, from, now);
+      } else getTimeline(from, now);
+
     },
 
     error: function (xhr, status, error) {
@@ -240,7 +316,9 @@ function postLike(id) {
     success: function (data) {
       console.log("posted like");
       $feedContainer.empty();
-      getTimeline(from, now);
+      if(inSpace){
+        getTimelineSpace(spacename, from, now);
+      } else getTimeline(from, now);
     },
 
     error: function (xhr, status, error) {
@@ -264,12 +342,13 @@ function getSpaces() {
     dataType: 'json',
     success: function (data) {
       console.log("get Spaces success");
-      console.log(data.spaces);
-      spaces = data.spaces;
       var $dropdown = $body.find('#spaceDropdown');
       $.each(data.spaces, function (i, space) {
         $dropdown.prepend(Mustache.render(document.getElementById('spaceTemplate').innerHTML, space));
-        $('#selectSpace').append(Mustache.render(document.getElementById('spaceTemplateSelect').innerHTML, space));
+        localStorage.setItem(space.name, space.members);
+        if (currURL.indexOf(baseUrl + '/space') == -1) {
+          $('#selectSpace').append(Mustache.render(document.getElementById('spaceTemplateSelect').innerHTML, space));
+        }
     });
     },
 

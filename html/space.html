@@ -39,7 +39,7 @@
       </div>
       <div class="navbar-collapse collapse w-100 order-3 dual-collapse2">
           <ul class="navbar-nav ml-auto">
-            <li class="nav-item active">
+            <li class="nav-item ">
                 <a class="nav-link" href="../main">Home</a>
             </li>
 
@@ -47,7 +47,7 @@
                 <a class="nav-link" href="../profile">Profile</a>
             </li>
 
-            <li class="nav-item dropdown">
+            <li class="nav-item dropdown active">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                       Spaces
                     </a>
@@ -76,6 +76,54 @@
 
   </div>
   </div>
+<script id="spaceHeaderTemplate" type="text/html">
+  <div class="panel panel-white profile-widget">
+      <div class="row">
+          <div class="col-sm-12">
+              <div class="image-container bg2" style="background:url(https://via.placeholder.com/400x200)">
+                  <img src="https://i.pinimg.com/originals/cd/87/3e/cd873ea81fb0089fc9ae813e8f438d22.jpg" class="avatar" alt="avatar">
+              </div>
+          </div>
+          <div class="col-sm-12">
+              <div class="details">
+                  <h1>{{!spacename}}<i class="fa fa-sheild"></i></h1>
+                  <!-- Button trigger modal -->
+                  <button type="button" class="btn btn-info" data-toggle="modal" data-target="#memberModal">
+                    Members ({{!memberSize}})
+                  </button>
+
+                  <!-- Modal -->
+                  <div class="modal fade" id="memberModal" tabindex="-1" role="dialog" aria-labelledby="memberModalLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="memberModalLabel">Members</h5>
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-body">
+                          <ul class="list-group">
+                              {{!#members}}
+                              <li class="list-group-item">{{!.}}</li>
+                              {{!/members}}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div>Description of Space</div>
+                  <div>This is a cool Space.</div>
+                  <div class="mg-top-10">
+                      <a href='#' class="btn btn-primary">Invite</a>
+                      <a href='#' class="btn btn-danger">Leave</a>
+                  </div>
+              </div>
+          </div>
+
+      </div>
+  </div>
+</script>
 
 <script id="newPostTemplate" type="text/html">
   <div class="col-sm-12">
@@ -175,7 +223,6 @@
 
 <script src="http://netdna.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
 <script src="../javascripts/newsfeed.js"></script>
 <script src="../javascripts/space.js"></script>
 <script src="../javascripts/mustache.js"></script>
