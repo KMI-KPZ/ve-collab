@@ -70,6 +70,12 @@
 
   <div class="container">
   <div class="row">
+      <div class="col-sm-8 col-sm-offset-2" id="spaceProfileContainer">
+
+      </div>
+      <div class="col-sm-8 col-sm-offset-2" id="newPostContainer">
+
+      </div>
       <div class="col-sm-8 col-sm-offset-2" id="feedContainer">
 
       </div>
@@ -77,7 +83,7 @@
   </div>
   </div>
 <script id="spaceHeaderTemplate" type="text/html">
-  <div class="panel panel-white profile-widget">
+  <div class="panel panel-white profile-widget" id="spaceProfilePanel">
       <div class="row">
           <div class="col-sm-12">
               <div class="image-container bg2" style="background:url(https://via.placeholder.com/400x200)">
@@ -126,9 +132,7 @@
 </script>
 
 <script id="newPostTemplate" type="text/html">
-  <div class="col-sm-12">
-
-    <div class="panel panel-white post">
+    <div class="panel panel-white post" id="newPostPanel">
 
         <div class="post-heading">
             <div class="pull-left image">
@@ -153,7 +157,6 @@
         </div>
 
   </div>
-</div>
 </script>
 
 <script id="tagTemplate" type="text/html">
@@ -165,7 +168,6 @@
 </script>
 
 <script id="postTemplate" type="text/html">
-  <div class="col-sm-12">
       <div class="panel panel-white post" id = {{!_id}}>
           <div class="post-heading">
               <div class="pull-left image">
@@ -203,7 +205,7 @@
               </div>
             <ul class="comments-list">
             </ul>
-            </div></div></div>
+            </div></div>
   </script>
 
 <script id = "commentTemplate" type="text/html">
