@@ -14,7 +14,7 @@ $(document).ready(function () {
   if (currURL == baseUrl + '/main') {
     getTimeline(from, now);
   }
-  
+
   getSpaces();
 
 });
@@ -259,7 +259,7 @@ function postLike(id) {
 function getSpaces() {
   $.ajax({
     type: 'GET',
-    url: baseUrl + '/space/list',
+    url: baseUrl + '/spaceadministration/list',
     dataType: 'json',
     success: function (data) {
       console.log("get Spaces success");
@@ -288,7 +288,7 @@ function getSpaces() {
 function createSpace(name) {
   $.ajax({
     type: 'POST',
-    url: baseUrl + '/space/create?name=' + name,
+    url: baseUrl + '/spaceadministration/create?name=' + name,
     success: function (data) {
       console.log("created space " + name);
 
@@ -310,7 +310,7 @@ function createSpace(name) {
 function joinSpace(name) {
   $.ajax({
     type: 'POST',
-    url: baseUrl + '/space/join?name=' + name,
+    url: baseUrl + '/spaceadministration/join?name=' + name,
     success: function (data) {
       console.log("joined space" + name);
       console.log(data);

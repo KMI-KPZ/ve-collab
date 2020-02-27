@@ -44,6 +44,11 @@ class ProfileHandler(BaseHandler):
     def get(self):
         self.render("html/profileFeed.html")
 
+class SpaceRenderHandler(BaseHandler):
+
+    def get(self, slug):
+        self.render("html/space.html")
+
 
 class PostHandler(BaseHandler):
     """
@@ -372,7 +377,7 @@ class SpaceHandler(BaseHandler):
 
     def get(self, slug):
         """
-        GET /space/list
+        GET /spaceadministration/list
         return:
             200 OK,
             {"spaces": [space1, space2,...]}
@@ -389,10 +394,10 @@ class SpaceHandler(BaseHandler):
 
     def post(self, slug):
         """
-        POST /space/create
+        POST /spaceadministration/create
             query param:
                 "name" : space name to create, mandatory argument
-        POST /space/join
+        POST /spaceadministration/join
             (currently authed user joins space)
             query param:
                 "name" : space name of which space to join, mandatory argument
@@ -538,7 +543,8 @@ def make_app():
         (r"/like", LikePostHandler),
         (r"/follow", FollowHandler),
         (r"/updates", NewPostsSinceTimestampHandler),
-        (r"/space/([a-zA-Z\-0-9\.:,_]+)", SpaceHandler),
+        (r"/spaceadministration/([a-zA-Z\-0-9\.:,_]+)", SpaceHandler),
+        (r"/space/([a-zA-Z\-0-9\.:,_]+)", SpaceRenderHandler),
         (r"/timeline", TimelineHandler),
         (r"/timeline/space/([a-zA-Z\-0-9\.:,_]+)", SpaceTimelineHandler),
         (r"/timeline/user/([a-zA-Z\-0-9\.:,_]+)", UserTimelineHandler),
