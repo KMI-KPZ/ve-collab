@@ -430,7 +430,10 @@ class SpaceHandler(BaseHandler):
                 members = [self.current_user.username]
 
                 # only create space if no other space with the same name exists
-                if space_name not in self.db.spaces.find(projection={"name": True, "_id": False}):
+                existing_spaces = []
+                for existing_space in self.db.spaces.find(projection={"name": True, "_id": False}):
+                    existing_spaces.append(existing_space["name"])
+                if space_name not in existing_spaces:
                     space = {"name": space_name,
                              "members": members}
                     self.db.spaces.insert_one(space)
@@ -447,7 +450,7 @@ class SpaceHandler(BaseHandler):
                 self.db.spaces.update_one(
                     {"name": space_name},  # filter
                     {
-                        "$push": {"members": self.current_user.username}
+                        "$addToSet": {"members": self.current_user.username}
                     }
                 )
 
