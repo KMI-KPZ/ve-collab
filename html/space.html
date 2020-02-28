@@ -188,12 +188,9 @@
           <div class="post-description">
               <p>{{!text}}</p>
               <div class="stats">
-                  <a href="javascript:postLike('{{!_id}}');" class="btn btn-default stat-item">
-                      <i class="fa fa-thumbs-up icon"></i>{{!likes}}
-                  </a>
-                  <a href="javascript:void(0);" class="btn btn-default stat-item">
-                      <i class="fa fa-share icon"></i>0
-                  </a>
+                <button type="button" onclick="postLike('{{!_id}}');" class="btn btn-primary" data-toggle="tooltip" data-placement="right" data-html="true" title="{{!#likers}}<li>{{!.}}</li>{{!/likers}}">
+                  <i class="fa fa-thumbs-up icon"></i> {{!likes}}
+                </button>
               </div>
           </div>
           <div class="post-footer">

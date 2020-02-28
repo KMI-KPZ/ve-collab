@@ -20,6 +20,7 @@ $(document).ready(function () {
       if(!document.body.contains(document.getElementById('newPostPanel'))) {
         $('#newPostContainer').prepend(Mustache.render(document.getElementById('newPostTemplate').innerHTML, {}));
       }
+      today = new Date();
       now = today.toLocaleString();
       from = yesterday.toLocaleString();
 
@@ -84,8 +85,12 @@ $body.delegate('button[id="joinSpace"]', 'click', function () {
 function calculateAgoTime(creationDate) {
   var ago = new Date() - new Date(creationDate); // in milliseconds
   var mins = Math.floor((ago/1000)/60) + new Date().getTimezoneOffset(); // minutes + timezone offset
+  var postDate = new Date(creationDate);
+  //console.log(postDate);
   if (Math.floor(mins / 60) == 0){
     return "" + mins % 60 + " mins ago";
+  } else if (Math.floor(mins / 60) > 24) {
+    return '' + postDate.getDate() + '.' + (postDate.getMonth()+1) + '.' + postDate.getFullYear() + ' - ' + postDate.getHours() + ':' + postDate.getMinutes();
   } else {
     return "" + Math.floor(mins / 60) + " hours " + mins % 60 + " mins ago";
   }
@@ -110,7 +115,7 @@ function getTimeline(from, to) {
         post["ago"] = calculateAgoTime(post.creation_date);
         if (post.hasOwnProperty('likers')) {
           var countLikes = post.likers.length;
-          console.log(post.likers);
+          //console.log(post.likers);
           post["likes"] = countLikes;
         } else post["likes"] = 0;
 
@@ -144,6 +149,7 @@ function getTimeline(from, to) {
       $('input[data-role=tagsinput]').tagsinput({
         allowDuplicates: false
       });
+      $('[data-toggle="tooltip"]').tooltip();
     },
 
     error: function (xhr, status, error) {
@@ -176,7 +182,7 @@ function getTimelineSpace(spacename, from, to) {
         post["ago"] = calculateAgoTime(post.creation_date);
         if (post.hasOwnProperty('likers')) {
           var countLikes = post.likers.length;
-          console.log(post.likers);
+          //console.log(post.likers);
           post["likes"] = countLikes;
         } else post["likes"] = 0;
 
@@ -214,6 +220,8 @@ function getTimelineSpace(spacename, from, to) {
       $('input[data-role=tagsinput]').tagsinput({
         allowDuplicates: false
       });
+      $('[data-toggle="tooltip"]').tooltip();
+
     },
 
     error: function (xhr, status, error) {
