@@ -39,6 +39,10 @@ $(document).ready(function () {
 
   initNewsFeed();
 
+  const interval  = setInterval(function() {
+    checkUpdate();
+  }, 10000);
+
   $(window).scroll(function() {
         var nearToBottom = 10;
 
@@ -53,7 +57,9 @@ $(document).ready(function () {
 
 $body.delegate('#post', 'click', function () {
     var text = String($('#postFeed').val());
+    $('#postFeed').val('');
     var tags = $("input[id=addTag]").tagsinput('items');
+    $("input[id=addTag]").tagsinput('removeAll');
     var selectedValue = ($( "#selectSpace option:selected" ).val() === "null") ? null : $( "#selectSpace option:selected" ).val();
     var space = (inSpace) ? spacename : selectedValue;
     post(text, tags, space);
@@ -62,6 +68,7 @@ $body.delegate('#post', 'click', function () {
 $body.delegate('#postComment', 'click', function () {
     var $inputBox = $(this).closest('#commentBox');
     var $inputText = $inputBox.find('#commentInput').val();
+    $inputBox.find('#commentInput').val('');
     var $id = $inputBox.closest('.panel').attr('id');
     postComment($inputText, $id);
 });
@@ -109,15 +116,33 @@ function getTimeline(from, to) {
       var sortPostsByDateArray = timeline.posts.sort(comp);
       //console.log(sortPostsByDateArray);
       $.each(sortPostsByDateArray, function (i, post) {
-        if(document.body.contains(document.getElementById(post._id))) $('#' + post._id).remove();
+        var countLikes = 0;
+        if (post.hasOwnProperty('likers')) {
+          countLikes = post.likers.length;
+        }
+
+        if(document.body.contains(document.getElementById(post._id))){
+          $('#' + post._id).remove();
+        /*  var $existingPost = $('#' + post._id);
+          var $likeCounter = $existingPost.find('#likeCounter');
+          $likeCounter.text(countLikes);
+          var $commentsList = $existingPost.find('.comments-list');
+          if (post.hasOwnProperty('comments')) {
+            $.each(post.comments, function (j, comment) {
+              var existingComment = document.getElementById(comment.author + '' + comment.creation_date);
+              //console.log(document.body.contains(existingComment));
+              if(!document.body.contains(existingComment)) {
+                  comment["ago"] = calculateAgoTime(comment.creation_date);
+                  $commentsList.prepend(Mustache.render(commentTemplate, comment));
+            }
+            });
+          }
+          return;*/
+        }
         //console.log(post);
         post["ago"] = calculateAgoTime(post.creation_date);
-        if (post.hasOwnProperty('likers')) {
-          var countLikes = post.likers.length;
-          //console.log(post.likers);
-          post["likes"] = countLikes;
-        } else post["likes"] = 0;
 
+        post["likes"] = countLikes;
         post["tags"] = post["tags"].toString();
 
         if (post.space == null) {
@@ -181,14 +206,12 @@ function getTimelineSpace(spacename, from, to) {
       //console.log(sortPostsByDateArray);
       $.each(sortPostsByDateArray, function (i, post) {
         if(document.body.contains(document.getElementById(post._id))) $('#' + post._id).remove();
-        //console.log(post);
-        post["ago"] = calculateAgoTime(post.creation_date);
+        var countLikes = 0;
         if (post.hasOwnProperty('likers')) {
-          var countLikes = post.likers.length;
-          //console.log(post.likers);
-          post["likes"] = countLikes;
-        } else post["likes"] = 0;
-
+          countLikes = post.likers.length;
+        }
+        post["ago"] = calculateAgoTime(post.creation_date);
+        post["likes"] = countLikes;
         post["tags"] = post["tags"].toString();
 
         if (post.space == null) {
@@ -420,6 +443,28 @@ function joinSpace(name) {
 
       } else {
         alert('error joining Space');
+        console.log(error);
+        console.log(status);
+        console.log(xhr);
+      }
+    },
+  });
+}
+
+function checkUpdate() {
+  $.ajax({
+    type: 'GET',
+    url: baseUrl + '/updates?from=' + from,
+    dataType: 'json',
+    success: function (data) {
+      initNewsFeed();
+    },
+
+    error: function (xhr, status, error) {
+      if (xhr.status == 304) {
+        console.log("there are no new post updates...")
+      } else {
+        alert('error get update');
         console.log(error);
         console.log(status);
         console.log(xhr);

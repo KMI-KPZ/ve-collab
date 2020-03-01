@@ -147,7 +147,7 @@
 
               <div class="stats">
                 <button type="button" onclick="postLike('{{!_id}}');" class="btn btn-primary" data-toggle="tooltip" data-placement="right" data-html="true" title="{{!#likers}}<li>{{!.}}</li>{{!/likers}}">
-                  <i class="fa fa-thumbs-up icon"></i> {{!likes}}
+                  <i class="fa fa-thumbs-up icon" ></i> <span id="likeCounter">{{!likes}}</span>
                 </button>
               </div>
           </div>
@@ -164,7 +164,7 @@
   </script>
 
 <script id = "commentTemplate" type="text/html">
-  <li class="comment">
+  <li class="comment" id={{!author}}{{!creation_date}}>
       <a class="pull-left" href="javascript:void(0);">
           <img class="avatar" src="https://i.pinimg.com/originals/cd/87/3e/cd873ea81fb0089fc9ae813e8f438d22.jpg" alt="avatar">
       </a>
