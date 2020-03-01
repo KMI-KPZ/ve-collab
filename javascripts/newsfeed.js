@@ -14,33 +14,32 @@ var tagTemplate = document.getElementById('tagTemplate').innerHTML;
 var inSpace = false;
 var spacename;
 var timeout;
+
+function initNewsFeed() {
+  if(!document.body.contains(document.getElementById('newPostPanel'))) {
+    $('#newPostContainer').prepend(Mustache.render(document.getElementById('newPostTemplate').innerHTML, {}));
+  }
+  today = new Date();
+  now = today.toISOString();
+  from = yesterday.toISOString();
+
+  if (currURL == baseUrl + '/main') {
+    getTimeline(from, now);
+
+  } else if (currURL.indexOf(baseUrl + '/space') !== -1) {
+    inSpace = true;
+    spacename = currURL.substring(currURL.lastIndexOf('/') + 1);
+    document.title = spacename + ' - Social Network';
+    getTimelineSpace(spacename, from, now);
+  }
+  getSpaces();
+}
+
 $(document).ready(function () {
 
-  function initializeNewsFeed(){
-      if(!document.body.contains(document.getElementById('newPostPanel'))) {
-        $('#newPostContainer').prepend(Mustache.render(document.getElementById('newPostTemplate').innerHTML, {}));
-      }
-      today = new Date();
-      now = today.toISOString();
-      from = yesterday.toISOString();
-
-      if (currURL == baseUrl + '/main') {
-        getTimeline(from, now);
-
-      } else if (currURL.indexOf(baseUrl + '/space') !== -1) {
-        inSpace = true;
-        spacename = currURL.substring(currURL.lastIndexOf('/') + 1);
-        document.title = spacename + ' - Social Network';
-        getTimelineSpace(spacename, from, now);
-      }
-      getSpaces();
-  }
-
-  initializeNewsFeed();
+  initNewsFeed();
 
   $(window).scroll(function() {
-    //check if page has a scrollbar
-    if($("body").height() > $(window).height()){
         var nearToBottom = 10;
 
         if ($(window).scrollTop() + $(window).height() >
@@ -50,9 +49,8 @@ $(document).ready(function () {
                //$feedContainer.empty();
                //window.scrollTo(0,0);
                yesterday = new Date(yesterday - (24 * 60 * 60 * 1000));
-               initializeNewsFeed();
+               initNewsFeed();
         }
-    }
   });
 });
 
@@ -107,6 +105,11 @@ function getTimeline(from, to) {
     url: baseUrl + '/timeline?from=' + from + '&to=' + to,
     dataType: 'json',
     success: function (timeline) {
+      if(timeline.posts.length === 0) {
+        yesterday = new Date(yesterday - (24 * 60 * 60 * 1000));
+        initNewsFeed();
+        return;
+      }
       console.log("get timeline success");
       var sortPostsByDateArray = timeline.posts.sort(comp);
       //console.log(sortPostsByDateArray);
@@ -167,15 +170,17 @@ function getTimeline(from, to) {
 }
 
 function getTimelineSpace(spacename, from, to) {
-  console.log(from);
-  console.log(to);
   $.ajax({
     type: 'GET',
     url: baseUrl + '/timeline/space/' + spacename + '?from=' + from + '&to=' + to,
     dataType: 'json',
     success: function (timeline) {
       console.log("get timeline Space success");
-      console.log(timeline);
+      if(timeline.posts.length === 0) {
+        yesterday = new Date(yesterday - (24 * 60 * 60 * 1000));
+        initNewsFeed();
+        return;
+      }
       var spaceHeaderTemplate = document.getElementById('spaceHeaderTemplate').innerHTML;
       var sortPostsByDateArray = timeline.posts.sort(comp);
       //console.log(sortPostsByDateArray);
