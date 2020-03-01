@@ -42,12 +42,7 @@ $(document).ready(function () {
   $(window).scroll(function() {
         var nearToBottom = 10;
 
-        if ($(window).scrollTop() + $(window).height() >
-          $(document).height() - nearToBottom) {
-               // ajax call get data from server and append to the div
-               console.log("TRIGGERED");
-               //$feedContainer.empty();
-               //window.scrollTo(0,0);
+        if ($(window).scrollTop() + $(window).height() > $(document).height() - nearToBottom) {
                yesterday = new Date(yesterday - (24 * 60 * 60 * 1000));
                initNewsFeed();
         }
@@ -283,10 +278,7 @@ function post(text, tags, space) {
     data: dataBody,
     success: function (data) {
       console.log("posted " + dataBody);
-      $feedContainer.empty();
-      if(inSpace){
-        getTimelineSpace(spacename, from, now);
-      } else getTimeline(from, now);
+      initNewsFeed();
     },
 
     error: function (xhr, status, error) {
@@ -315,10 +307,7 @@ function postComment(text, id) {
     data: dataBody,
     success: function (data) {
       console.log("posted " + text);
-      $feedContainer.empty();
-      if(inSpace){
-        getTimelineSpace(spacename, from, now);
-      } else getTimeline(from, now);
+      initNewsFeed();
 
     },
 
@@ -347,10 +336,7 @@ function postLike(id) {
     data: dataBody,
     success: function (data) {
       console.log("posted like");
-      $feedContainer.empty();
-      if(inSpace){
-        getTimelineSpace(spacename, from, now);
-      } else getTimeline(from, now);
+      initNewsFeed();
     },
 
     error: function (xhr, status, error) {
