@@ -5,8 +5,8 @@ var $feedContainer = $('#feedContainer');
 
 var today = new Date();
 var yesterday = new Date(new Date().getTime() - (24 * 60 * 60 * 1000)); //24 hours ago
-var now = today.toLocaleString();
-var from = yesterday.toLocaleString();
+var now = today.toISOString();
+var from = yesterday.toISOString();
 
 var postTemplate = document.getElementById('postTemplate').innerHTML;
 var commentTemplate = document.getElementById('commentTemplate').innerHTML;
@@ -21,8 +21,8 @@ $(document).ready(function () {
         $('#newPostContainer').prepend(Mustache.render(document.getElementById('newPostTemplate').innerHTML, {}));
       }
       today = new Date();
-      now = today.toLocaleString();
-      from = yesterday.toLocaleString();
+      now = today.toISOString();
+      from = yesterday.toISOString();
 
       if (currURL == baseUrl + '/main') {
         getTimeline(from, now);
@@ -61,7 +61,8 @@ $(document).ready(function () {
 $body.delegate('#post', 'click', function () {
     var text = String($('#postFeed').val());
     var tags = $("input[id=addTag]").tagsinput('items');
-    var space = (inSpace) ? spacename : $( "#selectSpace option:selected" ).text();
+    var selectedValue = ($( "#selectSpace option:selected" ).val() === "null") ? null : $( "#selectSpace option:selected" ).val();
+    var space = (inSpace) ? spacename : selectedValue;
     post(text, tags, space);
   });
 
@@ -166,13 +167,15 @@ function getTimeline(from, to) {
 }
 
 function getTimelineSpace(spacename, from, to) {
+  console.log(from);
+  console.log(to);
   $.ajax({
     type: 'GET',
     url: baseUrl + '/timeline/space/' + spacename + '?from=' + from + '&to=' + to,
     dataType: 'json',
     success: function (timeline) {
       console.log("get timeline Space success");
-
+      console.log(timeline);
       var spaceHeaderTemplate = document.getElementById('spaceHeaderTemplate').innerHTML;
       var sortPostsByDateArray = timeline.posts.sort(comp);
       //console.log(sortPostsByDateArray);
