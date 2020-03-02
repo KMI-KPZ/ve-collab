@@ -53,13 +53,9 @@ $(document).ready(function () {
   });
 });
 
-
-
 $body.delegate('#post', 'click', function () {
     var text = String($('#postFeed').val());
-    $('#postFeed').val('');
     var tags = $("input[id=addTag]").tagsinput('items');
-    $("input[id=addTag]").tagsinput('removeAll');
     var selectedValue = ($( "#selectSpace option:selected" ).val() === "null") ? null : $( "#selectSpace option:selected" ).val();
     var space = (inSpace) ? spacename : selectedValue;
     post(text, tags, space);
@@ -98,7 +94,7 @@ function calculateAgoTime(creationDate) {
 }
 
 function comp(a, b) {
-    return new Date(a.creation_date).getTime() - new Date(b.creation_date).getTime();
+    return new Date(b.creation_date).getTime() - new Date(a.creation_date).getTime();
 }
 
 function getTimeline(from, to) {
@@ -107,6 +103,7 @@ function getTimeline(from, to) {
     url: baseUrl + '/timeline?from=' + from + '&to=' + to,
     dataType: 'json',
     success: function (timeline) {
+      //loading posts => set from Date until there are posts in interval from - to
       if(timeline.posts.length === 0) {
         yesterday = new Date(yesterday - (24 * 60 * 60 * 1000));
         initNewsFeed();
@@ -117,39 +114,58 @@ function getTimeline(from, to) {
       //console.log(sortPostsByDateArray);
       $.each(sortPostsByDateArray, function (i, post) {
         var countLikes = 0;
+        var likerHTML = '';
         if (post.hasOwnProperty('likers')) {
           countLikes = post.likers.length;
+          post.likers.forEach(function (liker, index){
+            likerHTML +='<li>' + liker + '</li>';
+          });
         }
-
+        // case if post already displayed => update values of post
         if(document.body.contains(document.getElementById(post._id))){
-          $('#' + post._id).remove();
-        /*  var $existingPost = $('#' + post._id);
+          //$('#' + post._id).remove();
+          // updating values
+          var $existingPost = $('#' + post._id);
           var $likeCounter = $existingPost.find('#likeCounter');
+          var $likers = $existingPost.find('#likers');
+          var $agoPost = $existingPost.find('#agoPost');
+          $agoPost.text(calculateAgoTime(post.creation_date));
+          $likers.attr("data-original-title",likerHTML);
           $likeCounter.text(countLikes);
           var $commentsList = $existingPost.find('.comments-list');
           if (post.hasOwnProperty('comments')) {
             $.each(post.comments, function (j, comment) {
               var existingComment = document.getElementById(comment.author + '' + comment.creation_date);
               //console.log(document.body.contains(existingComment));
+              // case if comments doesn't exist => render Comment (postComment)
               if(!document.body.contains(existingComment)) {
                   comment["ago"] = calculateAgoTime(comment.creation_date);
                   $commentsList.prepend(Mustache.render(commentTemplate, comment));
+            } else {
+              //update values of comments
+              existingComment.querySelector('#agoComment').innerHTML = calculateAgoTime(comment.creation_date);
             }
             });
           }
-          return;*/
+          return;
         }
         //console.log(post);
         post["ago"] = calculateAgoTime(post.creation_date);
-
         post["likes"] = countLikes;
         post["tags"] = post["tags"].toString();
-
+        //check if it was postet in a space
         if (post.space == null) {
           post["hasSpace"] = false;
         } else post["hasSpace"] = true;
         //$('#feedContainer').children('.post').last().prepend(Mustache.render(postTemplate, post));
-        $feedContainer.prepend(Mustache.render(postTemplate, post));
+        var firstPostDate = $feedContainer.find('.post:first').attr('name');
+        //console.log(firstPostDate);
+        // check if there is a new post (more present datetime) => prepend to feedContainer
+        // else post is older => append to feedContainer
+        if(!(firstPostDate === null) && post.creation_date > firstPostDate) {
+          $feedContainer.prepend(Mustache.render(postTemplate, post));
+        } else $feedContainer.append(Mustache.render(postTemplate, post));
+        //in both case render comments to post and tags
         var $feed = $('#' + post._id);
         if (post.hasOwnProperty('comments')) {
           var $commentsList = $feed.find('.comments-list');
@@ -166,8 +182,6 @@ function getTimeline(from, to) {
         tagArray.forEach(function (tag, index) {
             $dom.append(Mustache.render(tagTemplate, { text: '' + tag + '' }));
         });
-
-
       });
 
       $('input[data-role=tagsinput]').tagsinput({
@@ -205,10 +219,38 @@ function getTimelineSpace(spacename, from, to) {
       var sortPostsByDateArray = timeline.posts.sort(comp);
       //console.log(sortPostsByDateArray);
       $.each(sortPostsByDateArray, function (i, post) {
-        if(document.body.contains(document.getElementById(post._id))) $('#' + post._id).remove();
         var countLikes = 0;
+        var likerHTML = '';
         if (post.hasOwnProperty('likers')) {
           countLikes = post.likers.length;
+          post.likers.forEach(function (liker, index){
+            likerHTML +='<li>' + liker + '</li>';
+          });
+        }
+
+        if(document.body.contains(document.getElementById(post._id))){
+          //$('#' + post._id).remove();
+          var $existingPost = $('#' + post._id);
+          var $likeCounter = $existingPost.find('#likeCounter');
+          var $likers = $existingPost.find('#likers');
+          var $agoPost = $existingPost.find('#agoPost');
+          $agoPost.text(calculateAgoTime(post.creation_date));
+          $likers.attr("data-original-title",likerHTML);
+          $likeCounter.text(countLikes);
+          var $commentsList = $existingPost.find('.comments-list');
+          if (post.hasOwnProperty('comments')) {
+            $.each(post.comments, function (j, comment) {
+              var existingComment = document.getElementById(comment.author + '' + comment.creation_date);
+              //console.log(document.body.contains(existingComment));
+              if(!document.body.contains(existingComment)) {
+                  comment["ago"] = calculateAgoTime(comment.creation_date);
+                  $commentsList.prepend(Mustache.render(commentTemplate, comment));
+            } else {
+              existingComment.querySelector('#agoComment').innerHTML = calculateAgoTime(comment.creation_date);
+            }
+            });
+          }
+          return;
         }
         post["ago"] = calculateAgoTime(post.creation_date);
         post["likes"] = countLikes;
@@ -218,7 +260,11 @@ function getTimelineSpace(spacename, from, to) {
           post["hasSpace"] = false;
         } else post["hasSpace"] = true;
         //$('#feedContainer').children('.post').last().prepend(Mustache.render(postTemplate, post));
-        $feedContainer.prepend(Mustache.render(postTemplate, post));
+        var firstPostDate = $feedContainer.find('.post:first').attr('name');
+        //console.log(firstPostDate);
+        if(!(firstPostDate ===null) && post.creation_date > firstPostDate) {
+          $feedContainer.prepend(Mustache.render(postTemplate, post));
+        } else $feedContainer.append(Mustache.render(postTemplate, post));
         var $feed = $('#' + post._id);
         if (post.hasOwnProperty('comments')) {
           var $commentsList = $feed.find('.comments-list');
@@ -302,6 +348,8 @@ function post(text, tags, space) {
     success: function (data) {
       console.log("posted " + dataBody);
       initNewsFeed();
+      $('#postFeed').val('');
+      $("input[id=addTag]").tagsinput('removeAll');
     },
 
     error: function (xhr, status, error) {
@@ -331,7 +379,6 @@ function postComment(text, id) {
     success: function (data) {
       console.log("posted " + text);
       initNewsFeed();
-
     },
 
     error: function (xhr, status, error) {

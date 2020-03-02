@@ -125,7 +125,7 @@
 </script>
 
 <script id="postTemplate" type="text/html">
-      <div class="panel panel-white post" id = {{!_id}}>
+      <div class="panel panel-white post" id = {{!_id}} name={{!creation_date}}>
           <div class="post-heading">
               <div class="pull-left image">
                   <img src="https://i.pinimg.com/originals/cd/87/3e/cd873ea81fb0089fc9ae813e8f438d22.jpg" class="img-circle avatar" alt="user profile image">
@@ -139,14 +139,14 @@
                       <span class="label label-pill label-primary">{{!space}}</span>
                       {{!/hasSpace}}
                   </div>
-                  <h6 class="text-muted time">{{!ago}}</h6>
+                  <h6 class="text-muted time" id="agoPost">{{!ago}}</h6>
               </div>
           </div>
           <div class="post-description">
               <p>{{!text}}</p>
 
               <div class="stats">
-                <button type="button" onclick="postLike('{{!_id}}');" class="btn btn-primary" data-toggle="tooltip" data-placement="right" data-html="true" title="{{!#likers}}<li>{{!.}}</li>{{!/likers}}">
+                <button type="button" onclick="postLike('{{!_id}}');" id="likers" class="btn btn-primary" data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="{{!#likers}}<li>{{!.}}</li>{{!/likers}}">
                   <i class="fa fa-thumbs-up icon" ></i> <span id="likeCounter">{{!likes}}</span>
                 </button>
               </div>
@@ -171,7 +171,7 @@
       <div class="comment-body">
           <div class="comment-heading">
               <h4 class="user">{{!author}}</h4>
-              <h5 class="time">{{!ago}}</h5>
+              <h5 class="time" id="agoComment">{{!ago}}</h5>
           </div>
           <p>{{!text}}</p>
       </div>
