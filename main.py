@@ -36,14 +36,22 @@ class BaseHandler(tornado.web.RequestHandler):
 class MainHandler(BaseHandler):
 
     def get(self):
+        self.render("html/main.html")
+
+class AdminHandler(BaseHandler):
+
+    def get(self):
         self.render("html/newsfeed.html")
 
+class MyProfileHandler(BaseHandler):
+
+    def get(self):
+        self.render("html/myProfile.html")
 
 class ProfileHandler(BaseHandler):
 
-    def get(self):
+    def get(self, slug):
         self.render("html/profile.html")
-
 
 class SpaceRenderHandler(BaseHandler):
 
@@ -615,7 +623,9 @@ class TaskHandler(BaseHandler):
 def make_app():
     return tornado.web.Application([
         (r"/main", MainHandler),
-        (r"/profile", ProfileHandler),
+        (r"/admin", AdminHandler),
+        (r"/myprofile", MyProfileHandler),
+        (r"/profile/([a-zA-Z\-0-9\.:,_]+)", ProfileHandler),
         (r"/posts", PostHandler),
         (r"/comment", CommentHandler),
         (r"/like", LikePostHandler),

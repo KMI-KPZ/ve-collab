@@ -32,19 +32,19 @@
           </ul>
       </div>
       <div class="mx-auto order-0">
-          <a class="navbar-brand mx-auto" href="main">Social Network</a>
+          <a class="navbar-brand mx-auto" href="admin">Social Network</a>
           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".dual-collapse2">
               <span class="navbar-toggler-icon"></span>
           </button>
       </div>
       <div class="navbar-collapse collapse w-100 order-3 dual-collapse2">
           <ul class="navbar-nav ml-auto">
-            <li class="nav-item active">
+            <li class="nav-item">
                 <a class="nav-link" href="main">Home</a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link" href="profile">Profile</a>
+                <a class="nav-link" href="myprofile">Profile</a>
             </li>
 
             <li class="nav-item dropdown">
@@ -131,7 +131,7 @@
               </div>
               <div class="pull-left meta">
                   <div class="title h5">
-                      <a href="#"><b>{{!author}}</b></a>
+                      <a href="profile/{{!author}}"><b>{{!author}}</b></a>
                       made a post.
                       {{!#hasSpace}}
                       <b>></b>
@@ -169,7 +169,7 @@
       </a>
       <div class="comment-body">
           <div class="comment-heading">
-              <h4 class="user">{{!author}}</h4>
+              <a href="profile/{{!author}}"><h4 class="user">{{!author}}</h4></a>
               <h5 class="time" id="agoComment">{{!ago}}</h5>
           </div>
           <p>{{!text}}</p>

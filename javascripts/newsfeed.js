@@ -14,30 +14,43 @@ var tagTemplate = document.getElementById('tagTemplate').innerHTML;
 var inSpace = false;
 var spacename;
 var currentUser = {};
+var user = {};
 
 function initNewsFeed() {
   if(!document.body.contains(document.getElementById('newPostPanel'))) {
-    console.log(currentUser);
+    //console.log(currentUser);
     $('#newPostContainer').prepend(Mustache.render(document.getElementById('newPostTemplate').innerHTML, currentUser));
   }
   today = new Date();
   now = today.toISOString();
   from = yesterday.toISOString();
 
-  if (currURL == baseUrl + '/main') {
+  if (currURL == baseUrl + '/admin') {
     inSpace = false;
     getTimeline(from, now);
 
+  } else if (currURL == baseUrl + '/main') {
+    inSpace = false;
+    getPersonalTimeline(from,now);
   } else if (currURL.indexOf(baseUrl + '/space') !== -1) {
     inSpace = true;
     spacename = currURL.substring(currURL.lastIndexOf('/') + 1);
     document.title = spacename + ' - Social Network';
     getTimelineSpace(spacename, from, now);
-  } else if (currURL.indexOf(baseUrl + '/profile') !== -1) {
+  } else if (currURL == baseUrl + '/myprofile') {
+    document.title = currentUser.username + ' - Social Network';
     getTimelineUser(currentUser.username, from, now);
     currentUser['followSize'] = currentUser['follows'].length;
     currentUser['spaceSize'] = currentUser['spaces'].length;
     if(!document.body.contains(document.getElementById('profilePanel'))) $('#profileContainer').prepend(Mustache.render(document.getElementById('profileTemplate').innerHTML, currentUser));
+  } else if (currURL.indexOf(baseUrl + '/profile') !== -1) {
+    name = currURL.substring(currURL.lastIndexOf('/') + 1);
+    if(name !== currentUser.username){
+      window.location.href = baseUrl + '/myprofile';
+    } else {
+    document.title = name + ' - Social Network';
+    getUserInfo(name);
+    }
   }
   getSpaces();
 }
@@ -204,6 +217,28 @@ function getTimeline(from, to) {
 
       } else {
         alert('error get timeline');
+        console.log(error);
+        console.log(status);
+        console.log(xhr);
+    }
+    },
+  });
+}
+
+function getPersonalTimeline(from, to) {
+  $.ajax({
+    type: 'GET',
+    url: baseUrl + '/timeline/you?from=' + from + '&to=' + to,
+    dataType: 'json',
+    success: function (timeline) {
+      displayTimeline(timeline);
+    },
+
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+
+      } else {
+        alert('error get Personal timeline');
         console.log(error);
         console.log(status);
         console.log(xhr);
@@ -464,7 +499,76 @@ function getCurrentUserInfo() {
       if (xhr.status == 304) {
 
       } else {
+        alert('error get current user info');
+        console.log(error);
+        console.log(status);
+        console.log(xhr);
+      }
+    },
+  });
+}
+
+function getUserInfo(name){
+  $.ajax({
+    type: 'GET',
+    url: baseUrl + '/users/user_data?=username=' + name,
+    dataType: 'json',
+    success: function (data) {
+      user = data;
+      getFollows(name);
+    },
+
+    error: function (xhr, status, error) {
+      if (xhr.status == 304) {
+
+      } else {
         alert('error get user info');
+        console.log(error);
+        console.log(status);
+        console.log(xhr);
+      }
+    },
+  });
+}
+
+function getFollows(name) {
+  $.ajax({
+    type: 'GET',
+    url: baseUrl + '/follow?user=' + name,
+    dataType: 'json',
+    success: function (data) {
+      user['follows'] = data.follows;
+      user['followSize'] = data.follows.length;
+      if(!document.body.contains(document.getElementById('profilePanel'))) $('#profileContainer').prepend(Mustache.render(document.getElementById('profileTemplate').innerHTML, user));
+      getTimelineUser(name, from, now);
+    },
+
+    error: function (xhr, status, error) {
+      if (xhr.status == 304) {
+
+      } else {
+        alert('error get user follows');
+        console.log(error);
+        console.log(status);
+        console.log(xhr);
+      }
+    },
+  });
+}
+
+function postFollow(name) {
+  $.ajax({
+    type: 'POST',
+    url: baseUrl + '/follow?user=' + name,
+    success: function (data) {
+      console.log("followed" + name);
+    },
+
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+
+      } else {
+        alert('error post follow');
         console.log(error);
         console.log(status);
         console.log(xhr);

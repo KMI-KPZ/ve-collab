@@ -32,7 +32,7 @@
           </ul>
       </div>
       <div class="mx-auto order-0">
-          <a class="navbar-brand mx-auto" href="../main">Social Network</a>
+          <a class="navbar-brand mx-auto" href="../admin">Social Network</a>
           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".dual-collapse2">
               <span class="navbar-toggler-icon"></span>
           </button>
@@ -44,7 +44,7 @@
             </li>
 
             <li class="nav-item">
-                <a class="nav-link" href="../profile">Profile</a>
+                <a class="nav-link" href="../myprofile">Profile</a>
             </li>
 
             <li class="nav-item dropdown active">
@@ -164,7 +164,7 @@
 </script>
 
 <script id=spaceTemplate type="text/html">
-    <a class="dropdown-item" id={{!_id}} href="space/{{!name}}">{{!name}} {{!^inSpace}}<button type="button" id = "joinSpace" name={{!name}} class="btn btn-outline-success">Join</button>{{!/inSpace}}</a>
+    <a class="dropdown-item" id={{!_id}} href="../space/{{!name}}">{{!name}} {{!^inSpace}}<button type="button" id = "joinSpace" name={{!name}} class="btn btn-outline-success">Join</button>{{!/inSpace}}</a>
 </script>
 
 <script id="postTemplate" type="text/html">
@@ -175,7 +175,7 @@
               </div>
               <div class="pull-left meta">
                   <div class="title h5">
-                      <a href="#"><b>{{!author}}</b></a>
+                      <a href="href="profile/{{!author}}""><b>{{!author}}</b></a>
                       made a post.
                       {{!#hasSpace}}
                       <b>></b>
@@ -212,7 +212,7 @@
       </a>
       <div class="comment-body">
           <div class="comment-heading">
-              <h4 class="user">{{!author}}</h4>
+              <a href="profile/{{!author}}"><h4 class="user">{{!author}}</h4></a>
               <h5 class="time" id="agoComment">{{!ago}}</h5>
           </div>
           <p>{{!text}}</p>

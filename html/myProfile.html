@@ -32,7 +32,7 @@
           </ul>
       </div>
       <div class="mx-auto order-0">
-          <a class="navbar-brand mx-auto" href="../admin">Social Network</a>
+          <a class="navbar-brand mx-auto" href="admin">Social Network</a>
           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".dual-collapse2">
               <span class="navbar-toggler-icon"></span>
           </button>
@@ -40,11 +40,11 @@
       <div class="navbar-collapse collapse w-100 order-3 dual-collapse2">
           <ul class="navbar-nav ml-auto">
             <li class="nav-item ">
-                <a class="nav-link" href="../main">Home</a>
+                <a class="nav-link" href="main">Home</a>
             </li>
 
-            <li class="nav-item">
-                <a class="nav-link" href="../myprofile">Profile</a>
+            <li class="nav-item active">
+                <a class="nav-link" href="myprofile">Profile</a>
             </li>
 
             <li class="nav-item dropdown">
@@ -93,13 +93,7 @@
           <div class="col-sm-12">
               <div class="details">
                   <h4>{{!username}}<i class="fa fa-sheild"></i></h4>
-                  <div>{{!email}}</div>
-                  <div class="mg-top-10">
-                      <a href="javascript:postFollow('{{!username}}');" class="btn btn-warning">Follow</a>
-                      <button type="button" class="btn btn-info" data-toggle="modal" data-target="#followModal">
-                        Follows ({{!followSize}})
-                      </button>
-                  </div>
+
 
                   <!-- Modal -->
                   <div class="modal fade" id="followModal" tabindex="-1" role="dialog" aria-labelledby="followModalLabel" aria-hidden="true">
@@ -121,6 +115,38 @@
                       </div>
                     </div>
                   </div>
+                  <!-- Modal -->
+                  <div class="modal fade" id="spaceModal" tabindex="-1" role="dialog" aria-labelledby="spaceModalLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="spaceModalLabel">Spaces</h5>
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-body">
+                          <ul class="list-group">
+                              {{!#spaces}}
+                              <li class="list-group-item">{{!.}}</li>
+                              {{!/spaces}}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div>{{!email}}</div>
+                  <div class="mg-top-10">
+                      <a href='#' class="btn btn-warning">Settings</a>
+                      <!-- Button trigger modal -->
+                      <button type="button" class="btn btn-info" data-toggle="modal" data-target="#followModal">
+                        Follows ({{!followSize}})
+                      </button>
+
+                      <button type="button" class="btn btn-info" data-toggle="modal" data-target="#spaceModal">
+                        Spaces ({{!spaceSize}})
+                      </button>
+                  </div>
               </div>
           </div>
 
@@ -129,7 +155,31 @@
 </script>
 
 <script id="newPostTemplate" type="text/html">
+    <div class="panel panel-white post" id="newPostPanel">
 
+        <div class="post-heading">
+
+            <div class="pull-left meta">
+
+                <input type="text" value="" id="addTag" data-role="tagsinput" placeholder="Add Tags">
+                <select id ="selectSpace" class="custom-select">
+                    <option value=null selected disabled>Post into Space..</option>
+
+                </select>
+            </div>
+        </div>
+
+        <div class="post-description">
+            <textarea class="form-control" id="postFeed" rows="2" placeholder="What are you thinking?"></textarea>
+            <div class="mar-top clearfix">
+              <button class="btn btn-sm btn-primary pull-right" id="post"><i class="fa fa-pencil fa-fw"></i> Post</button>
+              <a class="btn btn-trans btn-icon fa fa-video-camera add-tooltip" href="#" data-original-title="Add Video" data-toggle="tooltip"></a>
+              <a class="btn btn-trans btn-icon fa fa-camera add-tooltip" href="#" data-original-title="Add Photo" data-toggle="tooltip"></a>
+              <a class="btn btn-trans btn-icon fa fa-file add-tooltip" href="#" data-original-title="Add File" data-toggle="tooltip"></a>
+            </div>
+        </div>
+
+  </div>
 </script>
 
 <script id="tagTemplate" type="text/html">
@@ -152,7 +202,7 @@
               </div>
               <div class="pull-left meta">
                   <div class="title h5">
-                      <a href="../profile/{{!author}}"><b>{{!author}}</b></a>
+                      <a href="profile/{{!author}}"><b>{{!author}}</b></a>
                       made a post.
                       {{!#hasSpace}}
                       <b>></b>
@@ -189,7 +239,7 @@
       </a>
       <div class="comment-body">
           <div class="comment-heading">
-              <a href="../profile/{{!author}}"><h4 class="user">{{!author}}</h4></a>
+              <a href="profile/{{!author}}"><h4 class="user">{{!author}}</h4></a>
               <h5 class="time" id="agoComment">{{!ago}}</h5>
           </div>
           <p>{{!text}}</p>
