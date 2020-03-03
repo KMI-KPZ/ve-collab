@@ -35,8 +35,6 @@ class WebsocketHandler(tornado.websocket.WebSocketHandler):
         print("got message:")
         print(json_message)
 
-        await asyncio.sleep(3)
-
         if json_message['type'] == "get_user":
             username = json_message['username']
             global dummy_users

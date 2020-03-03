@@ -42,7 +42,7 @@ class MainHandler(BaseHandler):
 class ProfileHandler(BaseHandler):
 
     def get(self):
-        self.render("html/profileFeed.html")
+        self.render("html/profile.html")
 
 class SpaceRenderHandler(BaseHandler):
 
