@@ -45,7 +45,7 @@ function initNewsFeed() {
     if(!document.body.contains(document.getElementById('profilePanel'))) $('#profileContainer').prepend(Mustache.render(document.getElementById('profileTemplate').innerHTML, currentUser));
   } else if (currURL.indexOf(baseUrl + '/profile') !== -1) {
     name = currURL.substring(currURL.lastIndexOf('/') + 1);
-    if(name !== currentUser.username){
+    if(name == currentUser.username){
       window.location.href = baseUrl + '/myprofile';
     } else {
     document.title = name + ' - Social Network';
