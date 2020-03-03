@@ -44,6 +44,7 @@ class ProfileHandler(BaseHandler):
     def get(self):
         self.render("html/profile.html")
 
+
 class SpaceRenderHandler(BaseHandler):
 
     def get(self, slug):
@@ -492,12 +493,55 @@ class ProfileInformationHandler(BaseHandler):
             for user in follows_cursor:
                 follows = user["follows"]
 
+            profile_cursor = self.db.profiles.find(
+                filter={"user": self.current_user.username}
+            )
+            for user_profile in profile_cursor:
+                profile = {}
+                profile["bio"] = user_profile["bio"]
+                profile["institution"] = user_profile["institution"]
+                profile["projects"] = user_profile["projects"]
+
             user_information = {key: user_result["user"][key] for key in user_result["user"]}
             user_information["spaces"] = spaces
             user_information["follows"] = follows
+            user_information["profile"] = profile
 
             self.set_status(200)
             self.write(user_information)
+
+    def post(self):
+        """
+        POST /profileinformation
+
+            update the profile information (bio, institution and projects)
+
+            http body:
+                {
+                    "bio": <string>,
+                    "institution": <string>,
+                    "projects": [<string1>, <string2>, ...]
+                }
+        """
+
+        if self.current_user:
+            http_body = tornado.escape.json_decode(self.request.body)
+            if all(key in http_body for key in ("bio", "institution", "projects")):
+                self.db.profiles.update_one(
+                    {"user": self.current_user.username},
+                    {"$set":
+                        {
+                            "bio": http_body["bio"],
+                            "institution": http_body["institution"],
+                            "projects": http_body["projects"]
+                        }
+                    },
+                    upsert=True
+                )
+
+            self.set_status(200)
+            self.write({"status": 200,
+                        "success": True})
 
 
 class UserHandler(BaseHandler):
