@@ -115,12 +115,36 @@
                       </div>
                     </div>
                   </div>
+                  <!-- Modal -->
+                  <div class="modal fade" id="spaceModal" tabindex="-1" role="dialog" aria-labelledby="spaceModalLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="spaceModalLabel">Spaces</h5>
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-body">
+                          <ul class="list-group">
+                              {{!#spaces}}
+                              <li class="list-group-item">{{!.}}</li>
+                              {{!/spaces}}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                   <div>{{!email}}</div>
                   <div class="mg-top-10">
                       <a href='#' class="btn btn-warning">Settings</a>
                       <!-- Button trigger modal -->
                       <button type="button" class="btn btn-info" data-toggle="modal" data-target="#followModal">
                         Follows ({{!followSize}})
+                      </button>
+
+                      <button type="button" class="btn btn-info" data-toggle="modal" data-target="#spaceModal">
+                        Spaces ({{!spaceSize}})
                       </button>
                   </div>
               </div>
