@@ -578,6 +578,40 @@ class UserHandler(BaseHandler):
                 self.write(user_list["users"])
 
 
+class TaskHandler(BaseHandler):
+
+    def get(self):
+        if self.current_user:
+            task_cursor = self.db.tasks.find({})
+
+            tasks = []
+            for task in task_cursor:
+                task["_id"] = str(task["_id"])
+                if task["deadline"] is not None:
+                    task["deadline"] = task["deadline"].isoformat()
+                tasks.append(task)
+
+            self.set_status(200)
+            self.write({"tasks": tasks})
+
+    def post(self):
+        if self.current_user:
+            http_body = tornado.escape.json_decode(self.request.body)
+
+            if "deadline" in http_body:  # if deadline is set, parse time string into datetime object
+                http_body["deadline"] = dateutil.parser.parse(http_body["deadline"])
+            else:
+                http_body["deadline"] = None
+
+            if all(key in http_body for key in ("creator", "text", "deadline", "status")):
+                task = {key: http_body[key] for key in ("creator", "text", "deadline", "status")}
+                self.db.tasks.insert_one(task)
+
+                self.set_status(200)
+                self.write({"status": 200,
+                            "success": True})
+
+
 def make_app():
     return tornado.web.Application([
         (r"/main", MainHandler),
@@ -595,6 +629,7 @@ def make_app():
         (r"/timeline/you", PersonalTimelineHandler),
         (r"/profileinformation", ProfileInformationHandler),
         (r"/users/([a-zA-Z\-0-9\.:,_]+)", UserHandler),
+        (r"/tasks", TaskHandler),
         (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
         (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./html/"}),
         (r"/javascripts/(.*)", tornado.web.StaticFileHandler, {"path": "./javascripts/"})
