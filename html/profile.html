@@ -83,7 +83,7 @@
   </div>
   </div>
 <script id="profileTemplate" type="text/html">
-  <div class="panel panel-white profile-widget" id="ProfilePanel">
+  <div class="panel panel-white profile-widget" id="profilePanel">
       <div class="row">
           <div class="col-sm-12">
               <div class="image-container bg2" style="background:url(https://via.placeholder.com/400x200)">
@@ -92,37 +92,36 @@
           </div>
           <div class="col-sm-12">
               <div class="details">
-                  <h1>{{!spacename}}<i class="fa fa-sheild"></i></h1>
-                  <!-- Button trigger modal -->
-                  <button type="button" class="btn btn-info" data-toggle="modal" data-target="#memberModal">
-                    Members ({{!memberSize}})
-                  </button>
+                  <h4>{{!username}}<i class="fa fa-sheild"></i></h4>
+
 
                   <!-- Modal -->
-                  <div class="modal fade" id="memberModal" tabindex="-1" role="dialog" aria-labelledby="memberModalLabel" aria-hidden="true">
+                  <div class="modal fade" id="followModal" tabindex="-1" role="dialog" aria-labelledby="followModalLabel" aria-hidden="true">
                     <div class="modal-dialog" role="document">
                       <div class="modal-content">
                         <div class="modal-header">
-                          <h5 class="modal-title" id="memberModalLabel">Members</h5>
+                          <h5 class="modal-title" id="followModalLabel">Follows</h5>
                           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                           </button>
                         </div>
                         <div class="modal-body">
                           <ul class="list-group">
-                              {{!#members}}
+                              {{!#follows}}
                               <li class="list-group-item">{{!.}}</li>
-                              {{!/members}}
+                              {{!/follows}}
                           </ul>
                         </div>
                       </div>
                     </div>
                   </div>
-                  <div>Description of Space</div>
-                  <div>This is a cool Space.</div>
+                  <div>{{!email}}</div>
                   <div class="mg-top-10">
-                      <a href='#' class="btn btn-primary">Invite</a>
-                      <a href='#' class="btn btn-danger">Leave</a>
+                      <a href='#' class="btn btn-warning">Settings</a>
+                      <!-- Button trigger modal -->
+                      <button type="button" class="btn btn-info" data-toggle="modal" data-target="#followModal">
+                        Follows ({{!followSize}})
+                      </button>
                   </div>
               </div>
           </div>

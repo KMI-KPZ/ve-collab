@@ -496,8 +496,8 @@ class ProfileInformationHandler(BaseHandler):
             profile_cursor = self.db.profiles.find(
                 filter={"user": self.current_user.username}
             )
+            profile = {}
             for user_profile in profile_cursor:
-                profile = {}
                 profile["bio"] = user_profile["bio"]
                 profile["institution"] = user_profile["institution"]
                 profile["projects"] = user_profile["projects"]

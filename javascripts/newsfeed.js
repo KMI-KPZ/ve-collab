@@ -35,6 +35,8 @@ function initNewsFeed() {
     getTimelineSpace(spacename, from, now);
   } else if (currURL.indexOf(baseUrl + '/profile') !== -1) {
     getTimelineUser(currentUser.username, from, now);
+    currentUser['followSize'] = currentUser['follows'].length;
+    if(!document.body.contains(document.getElementById('profilePanel'))) $('#profileContainer').prepend(Mustache.render(document.getElementById('profileTemplate').innerHTML, currentUser));
   }
   getSpaces();
 }
