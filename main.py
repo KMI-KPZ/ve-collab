@@ -28,6 +28,7 @@ class BaseHandler(tornado.web.RequestHandler):
                 # creation date of each comment
                 for i in range(len(post['comments'])):
                     post['comments'][i]['creation_date'] = post['comments'][i]['creation_date'].isoformat()
+                    post['comments'][i]['_id'] = str(post['comments'][i]['_id'])
             post['_id'] = str(post['_id'])
             posts.append(post)
         return posts
@@ -38,20 +39,24 @@ class MainHandler(BaseHandler):
     def get(self):
         self.render("html/main.html")
 
+
 class AdminHandler(BaseHandler):
 
     def get(self):
         self.render("html/newsfeed.html")
+
 
 class MyProfileHandler(BaseHandler):
 
     def get(self):
         self.render("html/myProfile.html")
 
+
 class ProfileHandler(BaseHandler):
 
     def get(self, slug):
         self.render("html/profile.html")
+
 
 class SpaceRenderHandler(BaseHandler):
 
@@ -137,7 +142,7 @@ class CommentHandler(BaseHandler):
                 {"_id": post_ref},  # filter
                 {                   # update
                     "$push": {
-                        "comments": {"author": author, "creation_date": creation_date, "text": text}
+                        "comments": {"_id": ObjectId(), "author": author, "creation_date": creation_date, "text": text}
                     }
                 }
             )
