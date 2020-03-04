@@ -111,6 +111,17 @@ class PostHandler(BaseHandler):
             self.write({'status': 200,
                         'success': True})
 
+    def delete(self):
+        if self.current_user:
+            http_body = tornado.escape.json_decode(self.request.body)
+
+            if "post_id" in http_body:
+                self.db.posts.delete_one({"_id": ObjectId(http_body["post_id"])})
+
+                self.set_status(200)
+                self.write({"status": 200,
+                            "success": True})
+
 
 class CommentHandler(BaseHandler):
     """
@@ -149,6 +160,24 @@ class CommentHandler(BaseHandler):
 
             self.set_status(200)
 
+    def delete(self):
+        if self.current_user:
+            http_body = tornado.escape.json_decode(self.request.body)
+
+            if "comment_id" in http_body:
+                self.db.posts.update_many(
+                    {},  # filter
+                    {    # update
+                        "$pull": {
+                            "comments": {"_id": ObjectId(http_body["comment_id"])}
+                        }
+                    }
+                )
+
+                self.set_status(200)
+                self.write({"status": 200,
+                            "success": True})
+
 
 class LikePostHandler(BaseHandler):
 
@@ -176,6 +205,24 @@ class LikePostHandler(BaseHandler):
             self.set_status(200)
             self.write({"status": 200,
                         "success": True})
+
+    def delete(self):
+        if self.current_user:
+            http_body = tornado.escape.json_decode(self.request.body)
+
+            if "post_id" in http_body:
+                self.db.posts.update_one(
+                    {"_id": ObjectId(http_body["post_id"])},
+                    {
+                        "$pull": {
+                            "likers": self.current_user.username
+                        }
+                    }
+                )
+
+                self.set_status(200)
+                self.write({"status": 200,
+                            "success": True})
 
 
 class FollowHandler(BaseHandler):
@@ -223,6 +270,23 @@ class FollowHandler(BaseHandler):
             )
 
             self.set_status(200)
+
+    def delete(self):
+        if self.current_user:
+            username = self.get_argument("user")
+
+            self.db.follows.update_one(
+                {"user": self.current_user.username},
+                {
+                    "$pull": {
+                        "follows": username
+                    }
+                }
+            )
+
+            self.set_status(200)
+            self.write({"status": 200,
+                        "success": True})
 
 
 class TimelineHandler(BaseHandler):
