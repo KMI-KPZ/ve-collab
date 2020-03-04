@@ -15,6 +15,7 @@ var inSpace = false;
 var spacename;
 var currentUser = {};
 var user = {};
+var users = {};
 
 function initNewsFeed() {
   if(!document.body.contains(document.getElementById('newPostPanel'))) {
@@ -98,6 +99,14 @@ $body.delegate('button[id="joinSpace"]', 'click', function () {
     joinSpace(name);
 });
 
+$body.delegate('#result', 'click', 'li', function () {
+    var click_text = $(this).text().split('|');
+    var selectedUser = $.trim(click_text[0]);
+    $('#search').val(selectedUser);
+    $("#result").html('');
+    window.location.href = baseUrl + '/profile/' + selectedUser;
+});
+
 function calculateAgoTime(creationDate) {
   var ago = new Date() - new Date(creationDate); // in milliseconds
   var mins = Math.floor((ago/1000)/60) + new Date().getTimezoneOffset(); // minutes + timezone offset
@@ -149,7 +158,7 @@ function displayTimeline(timeline) {
       var $commentsList = $existingPost.find('.comments-list');
       if (post.hasOwnProperty('comments')) {
         $.each(post.comments, function (j, comment) {
-          var existingComment = document.getElementById(comment.author + '' + comment.creation_date);
+          var existingComment = document.getElementById(comment._id);
           //console.log(document.body.contains(existingComment));
           // case if comments doesn't exist => render Comment (postComment)
           if(!document.body.contains(existingComment)) {
@@ -492,6 +501,7 @@ function getCurrentUserInfo() {
     dataType: 'json',
     success: function (data) {
       currentUser = data;
+      getAllUsers();
       initNewsFeed();
     },
 
@@ -523,6 +533,47 @@ function getUserInfo(name){
 
       } else {
         alert('error get user info');
+        console.log(error);
+        console.log(status);
+        console.log(xhr);
+      }
+    },
+  });
+}
+
+function searchUser(users) {
+  $.ajaxSetup({ cache: false });
+  $('#search').keyup(function(){
+    $('#result').html('');
+    $('#state').val('');
+    var searchField = $('#search').val();
+    var expression = new RegExp(searchField, "i");
+    if(searchField != '') {
+     $.each(users, function(key, user){
+      if (user.username.search(expression) != -1 || user.email.search(expression) != -1)
+      {
+       $('#result').append('<li class="list-group-item link-class"><img src="https://i.pinimg.com/originals/cd/87/3e/cd873ea81fb0089fc9ae813e8f438d22.jpg" height="40" width="40" class="img-thumbnail" /> '+user.username+' | <span class="text-muted">'+user.email+'</span></li>');
+      }
+     });
+   }
+    });
+}
+function getAllUsers(){
+  $.ajax({
+    type: 'GET',
+    url: baseUrl + '/users/list',
+    dataType: 'json',
+    success: function (data) {
+      users = data;
+      //console.log(users);
+      searchUser(users);
+    },
+
+    error: function (xhr, status, error) {
+      if (xhr.status == 304) {
+
+      } else {
+        alert('error get all users');
         console.log(error);
         console.log(status);
         console.log(xhr);

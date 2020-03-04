@@ -19,18 +19,14 @@
   <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
 
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
-      <div class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2">
-          <ul class="navbar-nav mr-auto">
-            <li class="nav-item">
-              <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
-
-            </li>
-            <li class="nav-item">
-                <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
-            </li>
-              </li>
-          </ul>
-      </div>
+    <div class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item">
+            <input type="text" name="search" id="search" placeholder="Search for User" class="form-control" />
+            <ul class="list-group" id="result"></ul>
+          </li>
+        </ul>
+    </div>
       <div class="mx-auto order-0">
           <a class="navbar-brand mx-auto" href="admin">Social Network</a>
           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".dual-collapse2">
@@ -163,7 +159,7 @@
   </script>
 
 <script id = "commentTemplate" type="text/html">
-  <li class="comment" id={{!author}}{{!creation_date}}>
+  <li class="comment" id={{!_id}}>
       <a class="pull-left" href="javascript:void(0);">
           <img class="avatar" src="https://i.pinimg.com/originals/cd/87/3e/cd873ea81fb0089fc9ae813e8f438d22.jpg" alt="avatar">
       </a>
