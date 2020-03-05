@@ -85,6 +85,14 @@ class PostHandler(BaseHandler):
             200 OK,
             {"status": 200,
              "success": True}
+
+            400 Bad Request,
+            {"status": 400,
+             "reason": "space_does_not_exist"}
+
+            401 Unauthorized,
+            {"status": 401,
+             "reason": "no_logged_in_user"}
         """
         if self.current_user:
             author = self.current_user.username
@@ -93,9 +101,19 @@ class PostHandler(BaseHandler):
             text = http_body['text']
             tags = http_body['tags']
             # if space is set, this post belongs to a space (only visible inside)
-            # TODO check if space exists
             if 'space' in http_body:
                 space = http_body['space']
+
+                # check if space exists, if not, end with 400 Bad Request
+                existing_spaces = []
+                for existing_space in self.db.spaces.find(projection={"name": True, "_id": False}):
+                    existing_spaces.append(existing_space["name"])
+                if space not in existing_spaces:
+                    self.set_status(400)
+                    self.write({"status": 400,
+                                "reason": "space_does_not_exist"})
+                    self.finish()
+                    return
             else:
                 space = None
 
@@ -110,6 +128,11 @@ class PostHandler(BaseHandler):
             self.set_status(200)
             self.write({'status': 200,
                         'success': True})
+
+        else:
+            self.set_status(401)
+            self.write({"status": 401,
+                        "reason": "no_logged_in_user"})
 
     def delete(self):
         if self.current_user:
