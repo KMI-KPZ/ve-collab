@@ -60,7 +60,7 @@ $(document).ready(function () {
   getCurrentUserInfo();
 
   const interval  = setInterval(function() {
-    checkUpdate();
+     checkUpdate();
   }, 10000);
 
   $(window).scroll(function() {
@@ -128,6 +128,11 @@ function comp(a, b) {
 function displayTimeline(timeline) {
   //loading posts => set from Date until there are posts in interval from - to
   console.log("get timeline success");
+  $('input[data-role=tagsinput]').tagsinput({
+    allowDuplicates: false
+  });
+  $('[data-toggle="tooltip"]').tooltip();
+
   if(timeline.posts.length === 0) {
     yesterday = new Date(yesterday - (24 * 60 * 60 * 1000));
     initNewsFeed();
@@ -206,10 +211,6 @@ function displayTimeline(timeline) {
         $dom.append(Mustache.render(tagTemplate, { text: '' + tag + '' }));
     });
   });
-  $('input[data-role=tagsinput]').tagsinput({
-    allowDuplicates: false
-  });
-  $('[data-toggle="tooltip"]').tooltip();
 }
 
 function getTimeline(from, to) {
@@ -434,7 +435,8 @@ function createSpace(name) {
     url: baseUrl + '/spaceadministration/create?name=' + name,
     success: function (data) {
       console.log("created space " + name);
-
+      $body.find('#newSpaceName').val('');
+      getSpaces();
     },
 
     error: function (xhr, status, error) {
@@ -475,22 +477,11 @@ function joinSpace(name) {
 function checkUpdate() {
   $.ajax({
     type: 'GET',
-    url: baseUrl + '/updates?from=' + from,
-    dataType: 'json',
-    success: function (data) {
-      initNewsFeed();
-    },
-
-    error: function (xhr, status, error) {
-      if (xhr.status == 304) {
-        console.log("there are no new post updates...")
-      } else {
-        alert('error get update');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
-      }
-    },
+    url: baseUrl + '/updates?from=' + now,
+    dataType: 'json'
+  }).done(function (data, statusText, xhr) {
+    //console.log(xhr.status);
+    if (xhr.status == 200) initNewsFeed();
   });
 }
 
@@ -521,7 +512,7 @@ function getCurrentUserInfo() {
 function getUserInfo(name){
   $.ajax({
     type: 'GET',
-    url: baseUrl + '/users/user_data?=username=' + name,
+    url: baseUrl + '/users/user_data?username=' + name,
     dataType: 'json',
     success: function (data) {
       user = data;
