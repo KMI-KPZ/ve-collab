@@ -337,25 +337,47 @@ class SpaceTimelineHandler(BaseHandler):
         return:
             200 OK,
             {"posts": [post1, post2,...]}
+
+            403 Conflict,
+            {"status": 403,
+             "reason": "user_not_member_of_space"}
+
+             401 Unauthorized,
+             {"status": 401,
+              "reason": "no_logged_in_user"}
         """
-        time_from = self.get_argument("from", (datetime.utcnow() - timedelta(days=1)).isoformat())  # default value is 24h ago
-        time_to = self.get_argument("to", datetime.utcnow().isoformat())  # default value is now
+        if self.current_user:
+            time_from = self.get_argument("from", (datetime.utcnow() - timedelta(days=1)).isoformat())  # default value is 24h ago
+            time_to = self.get_argument("to", datetime.utcnow().isoformat())  # default value is now
 
-        # parse time strings into datetime objects (dateutil is able to guess format)
-        # however safe way is to use ISO 8601 format
-        time_from = dateutil.parser.parse(time_from)
-        time_to = dateutil.parser.parse(time_to)
+            # parse time strings into datetime objects (dateutil is able to guess format)
+            # however safe way is to use ISO 8601 format
+            time_from = dateutil.parser.parse(time_from)
+            time_to = dateutil.parser.parse(time_to)
 
-        # TODO check if current_user is in the space
+            # check if current_user is in the space and only query for posts if yes
+            space_data = self.db.spaces.find(
+                {"name": space_name}
+            )
+            for space in space_data:
+                if self.current_user.username in space["members"]:
+                    result = self.db.posts.find(
+                                    filter={"creation_date": {"$gte": time_from, "$lte": time_to},
+                                            "space":         {"$eq": space_name}})
 
-        result = self.db.posts.find(
-                        filter={"creation_date": {"$gte": time_from, "$lte": time_to},
-                                "space":         {"$eq": space_name}})
+                    posts = self.json_serialize_posts(result)
 
-        posts = self.json_serialize_posts(result)
+                    self.set_status(200)
+                    self.write({"posts": posts})
 
-        self.set_status(200)
-        self.write({"posts": posts})
+                else:
+                    self.set_status(403)
+                    self.write({"status": 403,
+                                "reason": "user_not_member_of_space"})
+        else:
+            self.set_status(401)
+            self.write({"status": 401,
+                        "reason": "no_logged_in_user"})
 
 
 class UserTimelineHandler(BaseHandler):
