@@ -17,6 +17,10 @@ var currentUser = {};
 var user = {};
 var users = {};
 
+/**
+ * initNewsFeed - renders the timeline depending on the current URL
+ * update Datetimes and get information about all Spaces
+ */
 function initNewsFeed() {
   if(!document.body.contains(document.getElementById('newPostPanel'))) {
     //console.log(currentUser);
@@ -39,12 +43,14 @@ function initNewsFeed() {
     document.title = spacename + ' - Social Network';
     getTimelineSpace(spacename, from, now);
   } else if (currURL == baseUrl + '/myprofile') {
+    inSpace = false;
     document.title = currentUser.username + ' - Social Network';
     getTimelineUser(currentUser.username, from, now);
     currentUser['followSize'] = currentUser['follows'].length;
     currentUser['spaceSize'] = currentUser['spaces'].length;
     if(!document.body.contains(document.getElementById('profilePanel'))) $('#profileContainer').prepend(Mustache.render(document.getElementById('profileTemplate').innerHTML, currentUser));
   } else if (currURL.indexOf(baseUrl + '/profile') !== -1) {
+    inSpace = false;
     name = currURL.substring(currURL.lastIndexOf('/') + 1);
     if(name == currentUser.username){
       window.location.href = baseUrl + '/myprofile';
@@ -56,6 +62,11 @@ function initNewsFeed() {
   getSpaces();
 }
 
+/**
+ * document ready - basically initialize all Data about the current User and the page
+ * calls getCurrentUserInfo, checkUpdate (every x seconds)
+ * while scrolling down the page: updates "from" - Datetime and Timeline (depending on URL)
+ */
 $(document).ready(function () {
   getCurrentUserInfo();
 
@@ -64,6 +75,7 @@ $(document).ready(function () {
   }, 10000);
 
   $(window).scroll(function() {
+        // vertical amount of pixel before event should trigger
         var nearToBottom = 10;
 
         if ($(window).scrollTop() + $(window).height() > $(document).height() - nearToBottom) {
@@ -73,14 +85,22 @@ $(document).ready(function () {
   });
 });
 
+/**
+ * on new post - click - get all the values which should be postet and calls post function
+ */
 $body.delegate('#post', 'click', function () {
     var text = String($('#postFeed').val());
     var tags = $("input[id=addTag]").tagsinput('items');
+    //check if there is a space selected to post into
     var selectedValue = ($( "#selectSpace option:selected" ).val() === "null") ? null : $( "#selectSpace option:selected" ).val();
+    //while in space page: post in this space
     var space = (inSpace) ? spacename : selectedValue;
     post(text, tags, space);
   });
 
+/**
+ * on new comment post - click - get the text and postID to call postComment
+ */
 $body.delegate('#postComment', 'click', function () {
     var $inputBox = $(this).closest('#commentBox');
     var $inputText = $inputBox.find('#commentInput').val();
@@ -89,16 +109,25 @@ $body.delegate('#postComment', 'click', function () {
     postComment($inputText, $id);
 });
 
+/**
+ * on create Space button - click - get name and call createSpace if not empty
+ */
 $body.delegate('#createSpace', 'click', function () {
     var name = $body.find('#newSpaceName').val();
     if (name != '') createSpace(name);
 });
 
+/**
+ * on join Space button - click - get name and call joinSpace
+ */
 $body.delegate('button[id="joinSpace"]', 'click', function () {
     var name = $(this).attr('name');
     joinSpace(name);
 });
 
+/**
+ * triggers when searchresult is clicked - get his username and redirect to his profile
+ */
 $body.delegate('#result', 'click', 'li', function () {
     var click_text = $(this).text().split('|');
     var selectedUser = $.trim(click_text[0]);
@@ -107,11 +136,17 @@ $body.delegate('#result', 'click', 'li', function () {
     window.location.href = baseUrl + '/profile/' + selectedUser;
 });
 
+/**
+ * calculateAgoTime
+ *
+ * @param  {String} creationDate Date of the Post
+ * @return {String} Output String with ago time
+ */
 function calculateAgoTime(creationDate) {
   var ago = new Date() - new Date(creationDate); // in milliseconds
   var mins = Math.floor((ago/1000)/60) + new Date().getTimezoneOffset(); // minutes + timezone offset
   var postDate = new Date(creationDate);
-  //console.log(postDate);
+
   if (Math.floor(mins / 60) == 0){
     return "" + mins % 60 + " mins ago";
   } else if (Math.floor(mins / 60) > 24) {
@@ -121,25 +156,36 @@ function calculateAgoTime(creationDate) {
   }
 }
 
+/**
+ * comp - compare function for sorting Dates of Posts
+ * @param  {JSON} a Post a
+ * @param  {JSON} b Post b
+ * @return {Float}   timevalue
+ */
 function comp(a, b) {
     return new Date(b.creation_date).getTime() - new Date(a.creation_date).getTime();
 }
 
+/**
+ * displayTimeline - renders Timeline
+ * initialize tagsinput and tooltip
+ * @param  {JSON} timeline description
+ */
 function displayTimeline(timeline) {
-  //loading posts => set from Date until there are posts in interval from - to
+
   console.log("get timeline success");
   $('input[data-role=tagsinput]').tagsinput({
     allowDuplicates: false
   });
   $('[data-toggle="tooltip"]').tooltip();
-
+  //loading posts => set from-Date until there is a post in interval from - to
   if(timeline.posts.length === 0) {
     yesterday = new Date(yesterday - (24 * 60 * 60 * 1000));
     initNewsFeed();
     return;
   }
+  //sort posts based on creation_date from new to older
   var sortPostsByDateArray = timeline.posts.sort(comp);
-  //console.log(sortPostsByDateArray);
   $.each(sortPostsByDateArray, function (i, post) {
     var countLikes = 0;
     var likerHTML = '';
@@ -151,7 +197,6 @@ function displayTimeline(timeline) {
     }
     // case if post already displayed => update values of post
     if(document.body.contains(document.getElementById(post._id))){
-      //$('#' + post._id).remove();
       // updating values
       var $existingPost = $('#' + post._id);
       var $likeCounter = $existingPost.find('#likeCounter');
@@ -164,7 +209,6 @@ function displayTimeline(timeline) {
       if (post.hasOwnProperty('comments')) {
         $.each(post.comments, function (j, comment) {
           var existingComment = document.getElementById(comment._id);
-          //console.log(document.body.contains(existingComment));
           // case if comments doesn't exist => render Comment (postComment)
           if(!document.body.contains(existingComment)) {
               comment["ago"] = calculateAgoTime(comment.creation_date);
@@ -177,7 +221,7 @@ function displayTimeline(timeline) {
       }
       return;
     }
-    //console.log(post);
+    //add additional values to post JSON
     post["ago"] = calculateAgoTime(post.creation_date);
     post["likes"] = countLikes;
     post["tags"] = post["tags"].toString();
@@ -185,9 +229,8 @@ function displayTimeline(timeline) {
     if (post.space == null) {
       post["hasSpace"] = false;
     } else post["hasSpace"] = true;
-    //$('#feedContainer').children('.post').last().prepend(Mustache.render(postTemplate, post));
+
     var firstPostDate = $feedContainer.find('.post:first').attr('name');
-    //console.log(firstPostDate);
     // check if there is a new post (more present datetime) => prepend to feedContainer
     // else post is older => append to feedContainer
     if(!(firstPostDate === null) && post.creation_date > firstPostDate) {
@@ -213,6 +256,12 @@ function displayTimeline(timeline) {
   });
 }
 
+/**
+ * getTimeline - get Admin timeline and call displayTimeline
+ *
+ * @param  {String} from DateTime String (ISO)
+ * @param  {String} to   DateTime String (ISO)
+ */
 function getTimeline(from, to) {
   $.ajax({
     type: 'GET',
@@ -235,6 +284,12 @@ function getTimeline(from, to) {
   });
 }
 
+/**
+ * getPersonalTimeline - get Personal timeline and call displayTimeline
+ *
+ * @param  {String} from DateTime String (ISO)
+ * @param  {String} to   DateTime String (ISO)
+ */
 function getPersonalTimeline(from, to) {
   $.ajax({
     type: 'GET',
@@ -257,6 +312,12 @@ function getPersonalTimeline(from, to) {
   });
 }
 
+/**
+ * getTimelineSpace - get Space timeline and call displayTimeline
+ * renders spaceProfilePanel - gets the spacemembers out of localStorage
+ * @param  {String} from DateTime String (ISO)
+ * @param  {String} to   DateTime String (ISO)
+ */
 function getTimelineSpace(spacename, from, to) {
   $.ajax({
     type: 'GET',
@@ -282,6 +343,13 @@ function getTimelineSpace(spacename, from, to) {
   });
 }
 
+/**
+ * getTimelineUser - get a User timeline (profile) and call displayTimeline
+ *
+ * @param  {String} username Name of the User
+ * @param  {String} from DateTime String (ISO)
+ * @param  {String} to   DateTime String (ISO)
+ */
 function getTimelineUser(username, from, to) {
   $.ajax({
     type: 'GET',
@@ -304,6 +372,13 @@ function getTimelineUser(username, from, to) {
   });
 }
 
+/**
+ * post - post Feed and resets Values for Input
+ * calls InitNewsFeed for update
+ * @param  {String} text
+ * @param  {String} tags
+ * @param  {String} space
+ */
 function post(text, tags, space) {
 
   var dataBody = {
@@ -337,6 +412,12 @@ function post(text, tags, space) {
   });
 }
 
+/**
+ * postComment - calls initNewsFeed for update after success
+ *
+ * @param  {String} text comment Text
+ * @param  {String} id   id of the Post
+ */
 function postComment(text, id) {
   dataBody = {
     'text': text,
@@ -366,6 +447,11 @@ function postComment(text, id) {
   });
 }
 
+/**
+ * postLike - calls initNewsFeed for update after success
+ *
+ * @param  {String} id id of the Post
+ */
 function postLike(id) {
   dataBody = {
     'post_id': id
@@ -377,7 +463,7 @@ function postLike(id) {
     url: baseUrl + '/like',
     data: dataBody,
     success: function (data) {
-      console.log("posted like");
+      console.log("liked post " + id);
       initNewsFeed();
     },
 
@@ -394,7 +480,11 @@ function postLike(id) {
   });
 }
 
-
+/**
+ * getSpaces - gets a list of all Spaces from Server
+ * renders Space-Dropdown and Select Space at new Post (spaceTemplate & spaceTemplateSelect)
+ * store to localStorage key:spacename, value: [members]
+ */
 function getSpaces() {
   $.ajax({
     type: 'GET',
@@ -405,11 +495,15 @@ function getSpaces() {
       var $dropdown = $body.find('#spaceDropdown');
 
       $.each(data.spaces, function (i, space) {
+        //return if already rendered
         if(document.body.contains(document.getElementById(space._id))) return;
+        // inSpace as local var (not the global)
         var inSpace = (currentUser.spaces.indexOf(space.name) > -1) ? true : false;
+        // needed for displaying "join" button
         space['inSpace'] = inSpace;
         $dropdown.prepend(Mustache.render(document.getElementById('spaceTemplate').innerHTML, space));
         localStorage.setItem(space.name, space.members);
+        // if not in Space render spaceTemplateSelect
         if (currURL.indexOf(baseUrl + '/space') == -1) {
           $('#selectSpace').append(Mustache.render(document.getElementById('spaceTemplateSelect').innerHTML, space));
         }
@@ -429,6 +523,11 @@ function getSpaces() {
   });
 }
 
+/**
+ * createSpace - creates new Space
+ * resets input value and calls getSpaces for update
+ * @param  {String} name name of new Space
+ */
 function createSpace(name) {
   $.ajax({
     type: 'POST',
@@ -452,13 +551,17 @@ function createSpace(name) {
   });
 }
 
+/**
+ * joinSpace - joins Space
+ *
+ * @param  {String} name Spacename
+ */
 function joinSpace(name) {
   $.ajax({
     type: 'POST',
     url: baseUrl + '/spaceadministration/join?name=' + name,
     success: function (data) {
-      console.log("joined space" + name);
-      console.log(data);
+      console.log("joined space " + name);
     },
 
     error: function (xhr, status, error) {
@@ -474,17 +577,25 @@ function joinSpace(name) {
   });
 }
 
+/**
+ * checkUpdate - if response is 200 there is a new post => call initNewsFeed for update
+ * now is datetime of last checking the timeline (ISO String)
+ */
 function checkUpdate() {
   $.ajax({
     type: 'GET',
     url: baseUrl + '/updates?from=' + now,
     dataType: 'json'
   }).done(function (data, statusText, xhr) {
-    //console.log(xhr.status);
     if (xhr.status == 200) initNewsFeed();
   });
 }
 
+/**
+ * getCurrentUserInfo - saves currenUser information
+ * first time calling InitNewsFeed (on document load)
+ * calls getAllUser for Search
+ */
 function getCurrentUserInfo() {
   $.ajax({
     type: 'GET',
@@ -509,6 +620,12 @@ function getCurrentUserInfo() {
   });
 }
 
+/**
+ * getUserInfo - get basic information about a user
+ * because we dont get every information right now, we need to call getFollows
+ * store user information in "user"
+ * @param  {String} name username
+ */
 function getUserInfo(name){
   $.ajax({
     type: 'GET',
@@ -532,13 +649,20 @@ function getUserInfo(name){
   });
 }
 
+/**
+ * searchUser - search for a username or email in users JSON
+ * renders search results
+ * @param  {JSON} users all Users from getAllUsers()
+ */
 function searchUser(users) {
   $.ajaxSetup({ cache: false });
+  //triggers if a char is changed at input
   $('#search').keyup(function(){
     $('#result').html('');
     $('#state').val('');
     var searchField = $('#search').val();
     var expression = new RegExp(searchField, "i");
+    //only search if input isn't empty
     if(searchField != '') {
      $.each(users, function(key, user){
       if (user.username.search(expression) != -1 || user.email.search(expression) != -1)
@@ -549,6 +673,11 @@ function searchUser(users) {
    }
     });
 }
+
+/**
+ * getAllUsers - stores all Users in "users" and calls searchUser
+ *
+ */
 function getAllUsers(){
   $.ajax({
     type: 'GET',
@@ -573,6 +702,12 @@ function getAllUsers(){
   });
 }
 
+/**
+ * getFollows - get JSON of who the user is following
+ * renders profileTemplate
+ * calls getTimelineUser
+ * @param  {String} name username
+ */
 function getFollows(name) {
   $.ajax({
     type: 'GET',
@@ -598,6 +733,11 @@ function getFollows(name) {
   });
 }
 
+/**
+ * postFollow - follow the user
+ *
+ * @param  {String} name username
+ */
 function postFollow(name) {
   $.ajax({
     type: 'POST',
