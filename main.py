@@ -105,15 +105,16 @@ class PostHandler(BaseHandler):
                 space = http_body['space']
 
                 # check if space exists, if not, end with 400 Bad Request
-                existing_spaces = []
-                for existing_space in self.db.spaces.find(projection={"name": True, "_id": False}):
-                    existing_spaces.append(existing_space["name"])
-                if space not in existing_spaces:
-                    self.set_status(400)
-                    self.write({"status": 400,
-                                "reason": "space_does_not_exist"})
-                    self.finish()
-                    return
+                if space is not None:
+                    existing_spaces = []
+                    for existing_space in self.db.spaces.find(projection={"name": True, "_id": False}):
+                        existing_spaces.append(existing_space["name"])
+                    if space not in existing_spaces:
+                        self.set_status(400)
+                        self.write({"status": 400,
+                                    "reason": "space_does_not_exist"})
+                        self.finish()
+                        return
             else:
                 space = None
 
