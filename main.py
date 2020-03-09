@@ -726,13 +726,21 @@ class TaskHandler(BaseHandler):
             else:
                 http_body["deadline"] = None
 
-            if all(key in http_body for key in ("creator", "text", "deadline", "status")):
-                task = {key: http_body[key] for key in ("creator", "text", "deadline", "status")}
+            if "assigned" not in http_body:
+                http_body["assigned"] = []
+
+            if all(key in http_body for key in ("headline", "text", "deadline", "status", "assigned")):
+                task = {key: http_body[key] for key in ("headline", "text", "deadline", "status", "assigned")}
+                task["creator"] = self.current_user.username
                 self.db.tasks.insert_one(task)
 
                 self.set_status(200)
                 self.write({"status": 200,
                             "success": True})
+            else:
+                self.set_status(400)
+                self.write({"status": 400,
+                            "reason": "missing_key_in_http_body"})
 
 
 def make_app():
