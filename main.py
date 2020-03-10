@@ -721,7 +721,8 @@ class TaskHandler(BaseHandler):
         if self.current_user:
             http_body = tornado.escape.json_decode(self.request.body)
 
-            if "deadline" in http_body:  # if deadline is set, parse time string into datetime object
+            # parse values or set defaults
+            if "deadline" in http_body:  # parse time string into datetime object
                 http_body["deadline"] = dateutil.parser.parse(http_body["deadline"])
             else:
                 http_body["deadline"] = None
@@ -729,10 +730,29 @@ class TaskHandler(BaseHandler):
             if "assigned" not in http_body:
                 http_body["assigned"] = []
 
-            if all(key in http_body for key in ("headline", "text", "deadline", "status", "assigned")):
-                task = {key: http_body[key] for key in ("headline", "text", "deadline", "status", "assigned")}
-                task["creator"] = self.current_user.username
-                self.db.tasks.insert_one(task)
+            if "task_id" in http_body:
+                http_body["task_id"] = ObjectId(http_body["task_id"])
+            else:
+                http_body["task_id"] = ObjectId()
+
+            if all(key in http_body for key in ("task_id", "headline", "text", "deadline", "status", "assigned")):
+                self.db.tasks.update_one(
+                    {"_id": http_body["task_id"]},
+                    {"$set":
+                        {
+                            "headline": http_body["headline"],
+                            "text": http_body["text"],
+                            "deadline": http_body["deadline"],
+                            "status": http_body["status"],
+                            "assigned": http_body["assigned"]
+                        },
+                    "$setOnInsert":
+                        {
+                            "creator": self.current_user.username
+                        }
+                    },
+                    upsert=True
+                )
 
                 self.set_status(200)
                 self.write({"status": 200,
