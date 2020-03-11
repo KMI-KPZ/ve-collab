@@ -99,6 +99,7 @@ class PostHandler(BaseHandler):
             {"status": 401,
              "reason": "no_logged_in_user"}
         """
+
         if self.current_user:
             author = self.current_user.username
             creation_date = datetime.utcnow()
@@ -141,6 +142,27 @@ class PostHandler(BaseHandler):
                         "reason": "no_logged_in_user"})
 
     def delete(self):
+        """
+        DELETE /posts
+            http_body:
+                {
+                    "post_id": <string>
+                }
+
+            returns:
+                200 OK,
+                {"status": 200,
+                 "success": True}
+
+                400 Bad Request,
+                {"status": 400,
+                 "reason": <string>}
+
+                 401 Unauthorized
+                 {"status": 401,
+                  "reason": "no_logged_in_user"}
+        """
+
         if self.current_user:
             http_body = tornado.escape.json_decode(self.request.body)
 
@@ -150,6 +172,15 @@ class PostHandler(BaseHandler):
                 self.set_status(200)
                 self.write({"status": 200,
                             "success": True})
+            else:
+                self.set_status(400)
+                self.write({"status": 400,
+                            "reason": "missing_key_in_http_body"})
+
+        else:
+            self.set_status(401)
+            self.write({"status": 401,
+                        "reason": "no_logged_in_user"})
 
 
 class CommentHandler(BaseHandler):
@@ -170,11 +201,28 @@ class CommentHandler(BaseHandler):
             }
         return:
             200 OK
+
+            400 Bad Request
+            {"status": 400,
+             "reason": "missing_key_in_http_body"}
+
+            401 Unauthorized
+            {"status": 401,
+             "reason": "no_logged_in_user"}
         """
+
         if self.current_user:
+            http_body = tornado.escape.json_decode(self.request.body)
+
+            if "post_id" not in http_body:  # exit if there is no post_id to associate the comment to
+                self.set_status(400)
+                self.write({"status": 400,
+                            "reason": "missing_key_in_http_body"})
+                self.finish()
+                return
+
             author = self.current_user.username
             creation_date = datetime.utcnow()
-            http_body = tornado.escape.json_decode(self.request.body)
             text = http_body['text']
             post_ref = ObjectId(http_body['post_id'])
 
@@ -189,7 +237,33 @@ class CommentHandler(BaseHandler):
 
             self.set_status(200)
 
+        else:
+            self.set_status(401)
+            self.write({"status": 401,
+                        "reason": "no_logged_in_user"})
+
     def delete(self):
+        """
+        DELETE /comment
+            http_body:
+                {
+                    "comment_id": <string>
+                }
+
+            returns:
+                200 OK
+                {"status": 200,
+                 "success": True}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": "missing_key_in_http_body"}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
+        """
+
         if self.current_user:
             http_body = tornado.escape.json_decode(self.request.body)
 
@@ -206,6 +280,15 @@ class CommentHandler(BaseHandler):
                 self.set_status(200)
                 self.write({"status": 200,
                             "success": True})
+            else:
+                self.set_status(400)
+                self.write({"status": 400,
+                            "reason": "missing_key_in_http_body"})
+
+        else:
+            self.set_status(401)
+            self.write({"status": 401,
+                        "reason": "no_logged_in_user"})
 
 
 class LikePostHandler(BaseHandler):
@@ -213,13 +296,35 @@ class LikePostHandler(BaseHandler):
     def post(self):
         """
         POST /like
-        http body:
-            {
-                "post_id": "id_of_post_to_like"
-            }
+            http body:
+                {
+                    "post_id": "id_of_post_to_like"
+                }
+
+            returns:
+                200 OK,
+                {"status": 200,
+                 "success": True}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": "missing_key_in_http_body"}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
         """
+
         if self.current_user:
             http_body = tornado.escape.json_decode(self.request.body)
+
+            if "post_id" not in http_body:
+                self.set_status(400)
+                self.write({"status": 400,
+                            "reason": "missing_key_in_http_body"})
+                self.finish()
+                return
+
             post_ref = ObjectId(http_body['post_id'])
 
             self.db.posts.update_one(
@@ -234,8 +339,33 @@ class LikePostHandler(BaseHandler):
             self.set_status(200)
             self.write({"status": 200,
                         "success": True})
+        else:
+            self.set_status(401)
+            self.write({"status": 401,
+                        "reason": "no_logged_in_user"})
 
     def delete(self):
+        """
+        DELETE /like
+            http_body:
+                {
+                    "post_id": <string>
+                }
+
+            returns:
+                200 OK,
+                {"status": 200,
+                 "success": True}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": "missing_key_in_http_body"}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
+        """
+
         if self.current_user:
             http_body = tornado.escape.json_decode(self.request.body)
 
@@ -252,6 +382,15 @@ class LikePostHandler(BaseHandler):
                 self.set_status(200)
                 self.write({"status": 200,
                             "success": True})
+            else:
+                self.set_status(400)
+                self.write({"status": 400,
+                            "reason": "missing_key_in_http_body"})
+
+        else:
+            self.set_status(401)
+            self.write({"status": 401,
+                        "reason": "no_logged_in_user"})
 
 
 class FollowHandler(BaseHandler):
