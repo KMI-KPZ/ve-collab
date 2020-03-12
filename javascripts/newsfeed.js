@@ -189,10 +189,12 @@ function displayTimeline(timeline) {
   $.each(sortPostsByDateArray, function (i, post) {
     var countLikes = 0;
     var likerHTML = '';
+    var liked = false;
     if (post.hasOwnProperty('likers')) {
       countLikes = post.likers.length;
       post.likers.forEach(function (liker, index){
         likerHTML +='<li>' + liker + '</li>';
+        if(currentUser.username == liker) liked = true;
       });
     }
     // case if post already displayed => update values of post
@@ -201,10 +203,17 @@ function displayTimeline(timeline) {
       var $existingPost = $('#' + post._id);
       var $likeCounter = $existingPost.find('#likeCounter');
       var $likers = $existingPost.find('#likers');
+      var $likeIcon = $likers.find('#likeIcon');
       var $agoPost = $existingPost.find('#agoPost');
       $agoPost.text(calculateAgoTime(post.creation_date));
       $likers.attr("data-original-title",likerHTML);
       $likeCounter.text(countLikes);
+      //toggle class if liked
+     if(liked && $likeIcon.hasClass('fa-thumbs-up')) {
+        $likeIcon.removeClass('fa-thumbs-up').addClass('fa-thumbs-down');
+      } else if(!liked && $likeIcon.hasClass('fa-thumbs-down')) {
+        $likeIcon.removeClass('fa-thumbs-down').addClass('fa-thumbs-up');
+      }
       var $commentsList = $existingPost.find('.comments-list');
       if (post.hasOwnProperty('comments')) {
         $.each(post.comments, function (j, comment) {
@@ -238,6 +247,8 @@ function displayTimeline(timeline) {
     } else $feedContainer.append(Mustache.render(postTemplate, post));
     //in both case render comments to post and tags
     var $feed = $('#' + post._id);
+    var $likeIcon = $feed.find('#likeIcon');
+    if(liked) $likeIcon.removeClass('fa-thumbs-up').addClass('fa-thumbs-down');
     if (post.hasOwnProperty('comments')) {
       var $commentsList = $feed.find('.comments-list');
       $.each(post.comments, function (j, comment) {
@@ -472,6 +483,34 @@ function postLike(id) {
 
       } else {
         alert('error posting like');
+        console.log(error);
+        console.log(status);
+        console.log(xhr);
+      }
+    },
+  });
+}
+
+function deleteLike(id) {
+  dataBody = {
+    'post_id': id
+  };
+
+  dataBody = JSON.stringify(dataBody);
+  $.ajax({
+    type: 'DELETE',
+    url: baseUrl + '/like',
+    data: dataBody,
+    success: function (data) {
+      console.log("disliked post " + id);
+      initNewsFeed();
+    },
+
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+
+      } else {
+        alert('error posting dislike');
         console.log(error);
         console.log(status);
         console.log(xhr);
@@ -757,4 +796,13 @@ function postFollow(name) {
       }
     },
   });
+}
+
+function likeDislike(e, id) {
+  var likeIcon = e.firstElementChild;
+  if(likeIcon.classList.contains("fa-thumbs-down")) {
+    deleteLike(id);
+  } else {
+    postLike(id);
+  }
 }

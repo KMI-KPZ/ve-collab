@@ -161,8 +161,8 @@
           <div class="post-description">
               <p>{{!text}}</p>
               <div class="stats">
-                <button type="button" onclick="postLike('{{!_id}}');" id="likers" class="btn btn-primary" data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="{{!#likers}}<li>{{!.}}</li>{{!/likers}}">
-                  <i class="fa fa-thumbs-up icon"></i> <span id="likeCounter">{{!likes}}</span>
+                <button type="button" onclick="likeDislike(this,'{{!_id}}');" id="likers" class="btn btn-primary" data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="{{!#likers}}<li>{{!.}}</li>{{!/likers}}">
+                  <i id="likeIcon" class="fa fa-thumbs-up" ></i> <span id="likeCounter">{{!likes}}</span>
                 </button>
               </div>
           </div>
