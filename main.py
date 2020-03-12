@@ -201,6 +201,8 @@ class CommentHandler(BaseHandler):
             }
         return:
             200 OK
+            {"status": 200,
+             "success": True}
 
             400 Bad Request
             {"status": 400,
@@ -236,6 +238,8 @@ class CommentHandler(BaseHandler):
             )
 
             self.set_status(200)
+            self.write({"status": 200,
+                        "success": True})
 
         else:
             self.set_status(401)
@@ -398,8 +402,17 @@ class FollowHandler(BaseHandler):
     def get(self):
         """
         GET /follow
-            get list of followers of a user
+            get list of usernames that the current user follows
             query param: user : string (required)
+
+            returns:
+                200 OK,
+                {"user": <string>,
+                 "follows": ["username1", "username2", ...]}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
         """
         if self.current_user:
             username = self.get_argument("user")
@@ -416,13 +429,27 @@ class FollowHandler(BaseHandler):
             self.set_status(200)
             self.write({"user": username,
                         "follows": follows})
+        else:
+            self.set_status(401)
+            self.write({"status": 401,
+                        "reason": "no_logged_in_user"})
 
     def post(self):
         """
         POST /follow
             follow a user
             query param: user : string (required; the username u want to follow)
+
+            returns:
+                200 OK
+                {"status": 200,
+                 "success": True}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
         """
+
         if self.current_user:
             username = self.current_user.username
             user_to_follow = self.get_argument("user")
@@ -438,8 +465,30 @@ class FollowHandler(BaseHandler):
             )
 
             self.set_status(200)
+            self.write({"status": 200,
+                        "success": True})
+
+        else:
+            self.set_status(401)
+            self.write({"status": 401,
+                        "reason": "no_logged_in_user"})
 
     def delete(self):
+        """
+        DELETE /follow
+            unfollow a user
+            query param: user : the user to unfollow
+
+            returns:
+                200 OK,
+                {"status": 200,
+                 "success": True}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
+        """
+
         if self.current_user:
             username = self.get_argument("user")
 
@@ -455,6 +504,11 @@ class FollowHandler(BaseHandler):
             self.set_status(200)
             self.write({"status": 200,
                         "success": True})
+
+        else:
+            self.set_status(401)
+            self.write({"status": 401,
+                        "reason": "no_logged_in_user"})
 
 
 class TimelineHandler(BaseHandler):
@@ -506,14 +560,15 @@ class SpaceTimelineHandler(BaseHandler):
             200 OK,
             {"posts": [post1, post2,...]}
 
-            403 Conflict,
-            {"status": 403,
+            409 Conflict,
+            {"status": 409,
              "reason": "user_not_member_of_space"}
 
              401 Unauthorized,
              {"status": 401,
               "reason": "no_logged_in_user"}
         """
+
         if self.current_user:
             time_from = self.get_argument("from", (datetime.utcnow() - timedelta(days=1)).isoformat())  # default value is 24h ago
             time_to = self.get_argument("to", datetime.utcnow().isoformat())  # default value is now
@@ -539,8 +594,8 @@ class SpaceTimelineHandler(BaseHandler):
                     self.write({"posts": posts})
 
                 else:
-                    self.set_status(403)
-                    self.write({"status": 403,
+                    self.set_status(409)
+                    self.write({"status": 409,
                                 "reason": "user_not_member_of_space"})
         else:
             self.set_status(401)
@@ -562,24 +617,35 @@ class UserTimelineHandler(BaseHandler):
         return:
             200 OK,
             {"posts": [post1, post2,...]}
+
+            401 Unauthorized
+            {"status": 401,
+             "reason": "no_logged_in_user"}
         """
-        time_from = self.get_argument("from", (datetime.utcnow() - timedelta(days=1)).isoformat())  # default value is 24h ago
-        time_to = self.get_argument("to", datetime.utcnow().isoformat())  # default value is now
 
-        # parse time strings into datetime objects (dateutil is able to guess format)
-        # however safe way is to use ISO 8601 format
-        time_from = dateutil.parser.parse(time_from)
-        time_to = dateutil.parser.parse(time_to)
+        if self.current_user:
+            time_from = self.get_argument("from", (datetime.utcnow() - timedelta(days=1)).isoformat())  # default value is 24h ago
+            time_to = self.get_argument("to", datetime.utcnow().isoformat())  # default value is now
 
-        # TODO what about posts in spaces? include? exclude? include only those that current user is also in?
-        result = self.db.posts.find(
-                        filter={"creation_date": {"$gte": time_from, "$lte": time_to},
-                                "author":         {"$eq": author}})
+            # parse time strings into datetime objects (dateutil is able to guess format)
+            # however safe way is to use ISO 8601 format
+            time_from = dateutil.parser.parse(time_from)
+            time_to = dateutil.parser.parse(time_to)
 
-        posts = self.json_serialize_posts(result)
+            # TODO what about posts in spaces? include? exclude? include only those that current user is also in?
+            result = self.db.posts.find(
+                            filter={"creation_date": {"$gte": time_from, "$lte": time_to},
+                                    "author":         {"$eq": author}})
 
-        self.set_status(200)
-        self.write({"posts": posts})
+            posts = self.json_serialize_posts(result)
+
+            self.set_status(200)
+            self.write({"posts": posts})
+
+        else:
+            self.set_status(401)
+            self.write({"status": 401,
+                        "reason": "no_logged_in_user"})
 
 
 class PersonalTimelineHandler(BaseHandler):
@@ -597,7 +663,12 @@ class PersonalTimelineHandler(BaseHandler):
             return:
                 200 OK,
                 {"posts": [post1, post2,...]}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
         """
+
         if self.current_user:
             time_from = self.get_argument("from", (datetime.utcnow() - timedelta(days=1)).isoformat())  # default value is 24h ago
             time_to = self.get_argument("to", datetime.utcnow().isoformat())  # default value is now
@@ -637,6 +708,11 @@ class PersonalTimelineHandler(BaseHandler):
             self.set_status(200)
             self.write({"posts": posts})
 
+        else:
+            self.set_status(401)
+            self.write({"status": 401,
+                        "reason": "no_logged_in_user"})
+
 
 class SpaceHandler(BaseHandler):
     """
@@ -649,27 +725,61 @@ class SpaceHandler(BaseHandler):
         return:
             200 OK,
             {"spaces": [space1, space2,...]}
+
+            401 Unauthorized
+            {"status": 401,
+             "reason": "no_logged_in_user"}
         """
-        if slug == "list":
-            result = self.db.spaces.find({})
 
-            spaces = []
-            for space in result:
-                space['_id'] = str(space['_id'])
-                spaces.append(space)
+        if self.current_user:
+            if slug == "list":
+                result = self.db.spaces.find({})
 
-            self.write({"spaces": spaces})
+                spaces = []
+                for space in result:
+                    space['_id'] = str(space['_id'])
+                    spaces.append(space)
+
+                self.write({"spaces": spaces})
+        else:
+            self.set_status(401)
+            self.write({"status": 401,
+                        "reason": "no_logged_in_user"})
 
     def post(self, slug):
         """
         POST /spaceadministration/create
             query param:
                 "name" : space name to create, mandatory argument
+
+            returns:
+                200 OK,
+                {"status": 200,
+                 "success": True}
+
+                409 Conflict
+                {"status": 409,
+                 "reason": "space_name_already_exists"}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
+
         POST /spaceadministration/join
             (currently authed user joins space)
             query param:
                 "name" : space name of which space to join, mandatory argument
+
+            returns:
+                200 OK,
+                {"status": 200,
+                 "success": True}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
         """
+
         if self.current_user:
             space_name = self.get_argument("name")
 
@@ -705,6 +815,11 @@ class SpaceHandler(BaseHandler):
                 self.write({'status': 200,
                             'success': True})
 
+        else:
+            self.set_status(401)
+            self.write({"status": 401,
+                        "reason": "no_logged_in_user"})
+
 
 class NewPostsSinceTimestampHandler(BaseHandler):
     """
@@ -738,6 +853,31 @@ class NewPostsSinceTimestampHandler(BaseHandler):
 class ProfileInformationHandler(BaseHandler):
 
     async def get(self):
+        """
+        GET /profileinformation
+            request full information about the current user
+
+            returns:
+                200 OK
+                {user: {
+                    "user_id": <int>,
+                    "username": <string>,
+                    "email": <string>,
+                 },
+                 "profile": {
+                    "bio": <string>,
+                    "institution": <string>,
+                    "projects": [<string1>, <string2>, ...],
+                 },
+                 "spaces": [<string1>, <string2>, ...],
+                 "follows": [<string1>, <string2>, ...]
+                }
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
+        """
+
         if self.current_user:
             # get account information from platform
             client = await get_socket_instance()
@@ -777,6 +917,11 @@ class ProfileInformationHandler(BaseHandler):
             self.set_status(200)
             self.write(user_information)
 
+        else:
+            self.set_status(401)
+            self.write({"status": 401,
+                        "reason": "no_logged_in_user"})
+
     def post(self):
         """
         POST /profileinformation
@@ -789,6 +934,19 @@ class ProfileInformationHandler(BaseHandler):
                     "institution": <string>,
                     "projects": [<string1>, <string2>, ...]
                 }
+
+            returns:
+                200 OK,
+                {"status": 200,
+                 "success": True}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": "missing_key_in_http_body"}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
         """
 
         if self.current_user:
@@ -805,10 +963,18 @@ class ProfileInformationHandler(BaseHandler):
                     },
                     upsert=True
                 )
+                self.set_status(200)
+                self.write({"status": 200,
+                            "success": True})
+            else:
+                self.set_status(400)
+                self.write({"status": 400,
+                            "reason": "missing_key_in_http_body"})
 
-            self.set_status(200)
-            self.write({"status": 200,
-                        "success": True})
+        else:
+            self.set_status(401)
+            self.write({"status": 401,
+                        "reason": "no_logged_in_user"})
 
 
 class UserHandler(BaseHandler):
@@ -825,7 +991,21 @@ class UserHandler(BaseHandler):
                 {"user_id": <int>,
                  "username": <string>,
                  "email": <string>}
+
+                 401 Unauthorized
+                 {"status": 401,
+                  "reason": "no_logged_in_user"}
+
+        GET /users/list
+            returns:
+                200 OK,
+                [user_data (look above)]
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
         """
+
         if self.current_user:
             if slug == "user_data":
                 username = self.get_argument("username", "test_user1")
@@ -844,10 +1024,26 @@ class UserHandler(BaseHandler):
                 self.set_status(200)
                 self.write(user_list["users"])
 
+        else:
+            self.set_status(401)
+            self.write({"status": 401,
+                        "reason": "no_logged_in_user"})
+
 
 class TaskHandler(BaseHandler):
 
     def get(self):
+        """
+        GET /tasks
+            returns:
+                200 OK
+                {"tasks": [{task1}, {task2}, ...]}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
+        """
+
         if self.current_user:
             task_cursor = self.db.tasks.find({})
 
@@ -861,7 +1057,40 @@ class TaskHandler(BaseHandler):
             self.set_status(200)
             self.write({"tasks": tasks})
 
+        else:
+            self.set_status(401)
+            self.write({"status": 401,
+                        "reason": "no_logged_in_user"})
+
     def post(self):
+        """
+        POST /tasks
+            add a new task or update existing one
+
+            http_body:
+            {
+                "task_id" : <string>,                       # optional, if set, updates the existing task, if not set creates one
+                "headline": <string>,
+                "text": <string>,
+                "status": <"todo"/"doing"/"done">,
+                "assigned": [<string1>, <string2>, ...],    # optional
+                "deadline": <iso8601 string>,               # optional
+            }
+
+            returns:
+                200 OK
+                {"status": 200,
+                 "success": True}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": "missing_key_in_http_body"}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
+        """
+
         if self.current_user:
             http_body = tornado.escape.json_decode(self.request.body)
 
@@ -905,6 +1134,11 @@ class TaskHandler(BaseHandler):
                 self.set_status(400)
                 self.write({"status": 400,
                             "reason": "missing_key_in_http_body"})
+
+        else:
+            self.set_status(401)
+            self.write({"status": 401,
+                        "reason": "no_logged_in_user"})
 
 
 def make_app():
