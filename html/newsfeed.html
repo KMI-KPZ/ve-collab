@@ -136,6 +136,16 @@
                   </div>
                   <h6 class="text-muted time" id="agoPost">{{!ago}}</h6>
               </div>
+              <div class="pull-right">
+                {{!#isAuthor}}
+                <div class="dropdown">
+                  <div class="dot" id="moreOptionMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></div>
+                  <div class="dropdown-menu" aria-labelledby="moreOptionMenu">
+                    <a class="dropdown-item" href="javascript:deletePost('{{!_id}}');">Delete</a>
+                  </div>
+                </div>
+                {{!/isAuthor}}
+            </div>
           </div>
           <div class="post-description">
               <p>{{!text}}</p>

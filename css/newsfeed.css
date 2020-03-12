@@ -398,3 +398,8 @@ body{
 .link-class:hover{
  background-color:#f1f1f1;
 }
+
+.dot:after {
+  content: '\2807';
+  font-size: 25px;
+  }

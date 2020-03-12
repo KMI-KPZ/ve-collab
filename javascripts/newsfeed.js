@@ -230,7 +230,9 @@ function displayTimeline(timeline) {
       }
       return;
     }
+    var isAuthor = (currentUser.username == post.author) ? true : false;
     //add additional values to post JSON
+    post["isAuthor"] = isAuthor;
     post["ago"] = calculateAgoTime(post.creation_date);
     post["likes"] = countLikes;
     post["tags"] = post["tags"].toString();
@@ -415,6 +417,35 @@ function post(text, tags, space) {
 
       } else {
         alert('error posting');
+        console.log(error);
+        console.log(status);
+        console.log(xhr);
+      }
+    },
+  });
+}
+
+function deletePost(id) {
+  dataBody = {
+    'post_id': id
+  };
+
+  dataBody = JSON.stringify(dataBody);
+  $.ajax({
+    type: 'DELETE',
+    url: baseUrl + '/posts',
+    data: dataBody,
+    success: function (data) {
+      console.log("deleted post " + id);
+      $('#'+id).remove();
+      initNewsFeed();
+    },
+
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+
+      } else {
+        alert('error deleting post');
         console.log(error);
         console.log(status);
         console.log(xhr);
