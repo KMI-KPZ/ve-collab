@@ -49,7 +49,14 @@ function initNewsFeed() {
     currentUser['followSize'] = currentUser['follows'].length;
     currentUser['spaceSize'] = currentUser['spaces'].length;
     if(currentUser.hasOwnProperty('projects')) currentUser['projectSize'] = currentUser['projects'].length;
-    if(!document.body.contains(document.getElementById('profilePanel'))) $('#profileContainer').prepend(Mustache.render(document.getElementById('profileTemplate').innerHTML, currentUser));
+    if(!document.body.contains(document.getElementById('profilePanel'))){
+      $('#profileContainer').prepend(Mustache.render(document.getElementById('profileTemplate').innerHTML, currentUser));
+    } else {
+      var template = document.getElementById('profileTemplate').innerHTML;
+      Mustache.parse(template);
+      var render = Mustache.to_html(template, currentUser);
+      $("#profileContainer").empty().html(render);
+    }
   } else if (currURL.indexOf(baseUrl + '/profile') !== -1) {
     inSpace = false;
     name = currURL.substring(currURL.lastIndexOf('/') + 1);

@@ -35,7 +35,12 @@ function postProfileInformation(bio, institution, projects) {
       console.log("posted User information" + dataBody);
       $("#saveAlert").html('Successfully updated!');
       $("#saveAlert").addClass("alert alert-success");
-      getCurrentUserInfo();
+      $('#settingsModal').modal('toggle');
+
+      setTimeout(function () {
+        getCurrentUserInfo();
+      }, 1000);
+
 
       //TODO clean code
       /*$('#bioProfile').text( "<b>Bio: </b>" + bio);
