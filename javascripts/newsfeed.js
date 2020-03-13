@@ -48,6 +48,7 @@ function initNewsFeed() {
     getTimelineUser(currentUser.username, from, now);
     currentUser['followSize'] = currentUser['follows'].length;
     currentUser['spaceSize'] = currentUser['spaces'].length;
+    if(currentUser.hasOwnProperty('projects')) currentUser['projectSize'] = currentUser['projects'].length;
     if(!document.body.contains(document.getElementById('profilePanel'))) $('#profileContainer').prepend(Mustache.render(document.getElementById('profileTemplate').innerHTML, currentUser));
   } else if (currURL.indexOf(baseUrl + '/profile') !== -1) {
     inSpace = false;

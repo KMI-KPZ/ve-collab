@@ -131,16 +131,102 @@
                       </div>
                     </div>
                   </div>
-                  <div>{{!email}}</div>
+                  <!-- Modal -->
+                  <div class="modal fade" id="projectModal" tabindex="-1" role="dialog" aria-labelledby="projectModalLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="projectModalLabel">Projects</h5>
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-body">
+                          <ul class="list-group">
+                              {{!#projects}}
+                              <li class="list-group-item">{{!.}}</li>
+                              {{!/projects}}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Modal -->
+                  <div class="modal fade" id="settingsModal" tabindex="-1" role="dialog" aria-labelledby="settingsModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-xl" role="document">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h2 class="modal-title" id="settingsModalLabel">Settings</h2>
+                          <div id="saveAlert"></div>
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-body">
+                          <ul class="nav nav-tabs" id="settingsTab" role="tablist">
+                            <li class="nav-item">
+                              <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">General</a>
+                            </li>
+                            <li class="nav-item">
+                              <a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false">Account</a>
+                            </li>
+                          </ul>
+                          <div class="tab-content" id="myTabContent">
+                            <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab"><li>
+
+                              <div class="input-group mb-3">
+                                <div class="input-group-prepend">
+                                  <span class="input-group-text" id="about">About you</span>
+                                </div>
+                                <textarea id="bio" class="form-control" aria-describedby="about" name="bio">{{!profile.bio}}</textarea>
+                              </div>
+                              <div class="input-group mb-3">
+                                <div class="input-group-prepend">
+                                  <span class="input-group-text" id="institution">Institution</span>
+                                </div>
+                                <input id="institutionInput" type="text" class="form-control" aria-describedby="institution" value="{{!profile.institution}}">
+                              </div>
+
+                            </div>
+                            <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+                              HI
+                            </div>
+                          </div>
+
+
+                        </div>
+
+                        <div class="modal-footer">
+                          <button type="button" onclick="saveProfileInformation();"class="btn btn-primary">Save changes</button>
+                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+
+                        </div>
+
+                      </div>
+                    </div>
+                  </div>
+
+                  <div id="bioProfile"><b>Bio: </b>{{!profile.bio}}</div>
+                  <div id="institutionProfile"><b>Institution: </b>{{!profile.institution}}</div>
+                  <div><b>Mail: </b>{{!email}}</div>
+
                   <div class="mg-top-10">
-                      <a href='#' class="btn btn-warning">Settings</a>
                       <!-- Button trigger modal -->
+                      <button type="button" onclick="initSettingTabs();" class="btn btn-warning" data-toggle="modal" data-target="#settingsModal">
+                        Settings
+                      </button>
+
                       <button type="button" class="btn btn-info" data-toggle="modal" data-target="#followModal">
                         Follows ({{!followSize}})
                       </button>
 
                       <button type="button" class="btn btn-info" data-toggle="modal" data-target="#spaceModal">
                         Spaces ({{!spaceSize}})
+                      </button>
+
+                      <button type="button" class="btn btn-info" data-toggle="modal" data-target="#projectModal">
+                        Projects ({{!projectSize}})
                       </button>
                   </div>
               </div>
@@ -266,6 +352,7 @@
 <script src="http://netdna.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
 <script src="../javascripts/newsfeed.js"></script>
+<script src="../javascripts/myprofile.js"></script>
 <script src="../javascripts/mustache.js"></script>
 <script src="../javascripts/tagsinput.js"></script>
 </body>
