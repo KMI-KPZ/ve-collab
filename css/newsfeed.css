@@ -403,3 +403,7 @@ body{
   content: '\2807';
   font-size: 25px;
   }
+.dotComment:after {
+    content: '\2807';
+    font-size: 15px;
+}

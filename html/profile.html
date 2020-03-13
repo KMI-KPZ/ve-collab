@@ -194,6 +194,16 @@
       <a class="pull-left" href="javascript:void(0);">
           <img class="avatar" src="https://i.pinimg.com/originals/cd/87/3e/cd873ea81fb0089fc9ae813e8f438d22.jpg" alt="avatar">
       </a>
+      <div class="pull-right">
+        {{!#isCommentAuthor}}
+        <div class="dropdown">
+          <div class="dotComment" id="moreOptionMenuComment" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></div>
+          <div class="dropdown-menu" aria-labelledby="moreOptionMenuComment">
+            <a class="dropdown-item" href="javascript:deleteComment('{{!_id}}');">Delete</a>
+          </div>
+        </div>
+        {{!/isCommentAuthor}}
+      </div>
       <div class="comment-body">
           <div class="comment-heading">
               <a href="../profile/{{!author}}"><h4 class="user">{{!author}}</h4></a>

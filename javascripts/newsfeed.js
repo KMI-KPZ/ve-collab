@@ -220,6 +220,8 @@ function displayTimeline(timeline) {
           var existingComment = document.getElementById(comment._id);
           // case if comments doesn't exist => render Comment (postComment)
           if(!document.body.contains(existingComment)) {
+              var isCommentAuthor = (currentUser.username == comment.author) ? true : false;
+              comment["isCommentAuthor"] = isCommentAuthor;
               comment["ago"] = calculateAgoTime(comment.creation_date);
               $commentsList.prepend(Mustache.render(commentTemplate, comment));
         } else {
@@ -254,6 +256,8 @@ function displayTimeline(timeline) {
     if (post.hasOwnProperty('comments')) {
       var $commentsList = $feed.find('.comments-list');
       $.each(post.comments, function (j, comment) {
+        var isCommentAuthor = (currentUser.username == comment.author) ? true : false;
+        comment["isCommentAuthor"] = isCommentAuthor;
         comment["ago"] = calculateAgoTime(comment.creation_date);
         $commentsList.prepend(Mustache.render(commentTemplate, comment));
       });
@@ -481,6 +485,35 @@ function postComment(text, id) {
 
       } else {
         alert('error posting comment');
+        console.log(error);
+        console.log(status);
+        console.log(xhr);
+      }
+    },
+  });
+}
+
+function deleteComment(id) {
+  dataBody = {
+    'comment_id': id
+  };
+
+  dataBody = JSON.stringify(dataBody);
+  $.ajax({
+    type: 'DELETE',
+    url: baseUrl + '/comment',
+    data: dataBody,
+    success: function (data) {
+      console.log("deleted comment " + id);
+      $('#'+id).remove();
+      initNewsFeed();
+    },
+
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+
+      } else {
+        alert('error deleting comment');
         console.log(error);
         console.log(status);
         console.log(xhr);
