@@ -1,4 +1,6 @@
+import os
 import sys
+sys.path.append(os.path.dirname(__file__))
 import asyncio
 if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
@@ -7,6 +9,7 @@ import tornado.ioloop
 import tornado.web
 import tornado.locks
 import dateutil.parser
+import CONSTANTS
 from bson.objectid import ObjectId
 from datetime import datetime, timedelta
 from pymongo import MongoClient
@@ -1139,6 +1142,19 @@ class TaskHandler(BaseHandler):
             self.set_status(401)
             self.write({"status": 401,
                         "reason": "no_logged_in_user"})
+
+
+def inherit_platform_port(port):  # invoked by platform
+    CONSTANTS.PLATFORM_PORT = port
+
+
+def apply_config(config):  # invoked by platform, but we do not need a config for now
+    pass
+
+
+def stop_signal():  # invoked by platform
+    # TODO
+    pass
 
 
 def make_app():

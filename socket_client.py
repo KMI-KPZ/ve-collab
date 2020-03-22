@@ -1,5 +1,6 @@
 import tornado
 import uuid
+import CONSTANTS
 from tornado.ioloop import PeriodicCallback
 from tornado import gen
 from tornado.websocket import websocket_connect
@@ -10,7 +11,7 @@ the_websocket_client = None
 async def get_socket_instance():
     global the_websocket_client
     if the_websocket_client is None:
-        the_websocket_client = Client("ws://localhost:88810/websocket")
+        the_websocket_client = Client("ws://localhost:" + str(CONSTANTS.PLATFORM_PORT) + "/websocket")
         await the_websocket_client._await_init()
     return the_websocket_client
 
