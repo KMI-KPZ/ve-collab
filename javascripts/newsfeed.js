@@ -1,4 +1,5 @@
-baseUrl = 'http://localhost:8889';
+var loc = new URL(window.location.href);
+var baseUrl = 'http://localhost:' + loc.port;
 var currURL = window.location.href;
 var $body = $('body');
 var $feedContainer = $('#feedContainer');

@@ -1157,34 +1157,59 @@ def stop_signal():  # invoked by platform
     pass
 
 
-def make_app():
-    return tornado.web.Application([
-        (r"/main", MainHandler),
-        (r"/admin", AdminHandler),
-        (r"/myprofile", MyProfileHandler),
-        (r"/profile/([a-zA-Z\-0-9\.:,_]+)", ProfileHandler),
-        (r"/posts", PostHandler),
-        (r"/comment", CommentHandler),
-        (r"/like", LikePostHandler),
-        (r"/follow", FollowHandler),
-        (r"/updates", NewPostsSinceTimestampHandler),
-        (r"/spaceadministration/([a-zA-Z\-0-9\.:,_]+)", SpaceHandler),
-        (r"/space/([a-zA-Z\-0-9\.:,_]+)", SpaceRenderHandler),
-        (r"/timeline", TimelineHandler),
-        (r"/timeline/space/([a-zA-Z\-0-9\.:,_]+)", SpaceTimelineHandler),
-        (r"/timeline/user/([a-zA-Z\-0-9\.:,_]+)", UserTimelineHandler),
-        (r"/timeline/you", PersonalTimelineHandler),
-        (r"/profileinformation", ProfileInformationHandler),
-        (r"/users/([a-zA-Z\-0-9\.:,_]+)", UserHandler),
-        (r"/tasks", TaskHandler),
-        (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
-        (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./html/"}),
-        (r"/javascripts/(.*)", tornado.web.StaticFileHandler, {"path": "./javascripts/"})
-    ])
+def make_app(called_by_platform):
+    if called_by_platform:
+        return tornado.web.Application([
+            (r"/main", MainHandler),
+            (r"/admin", AdminHandler),
+            (r"/myprofile", MyProfileHandler),
+            (r"/profile/([a-zA-Z\-0-9\.:,_]+)", ProfileHandler),
+            (r"/posts", PostHandler),
+            (r"/comment", CommentHandler),
+            (r"/like", LikePostHandler),
+            (r"/follow", FollowHandler),
+            (r"/updates", NewPostsSinceTimestampHandler),
+            (r"/spaceadministration/([a-zA-Z\-0-9\.:,_]+)", SpaceHandler),
+            (r"/space/([a-zA-Z\-0-9\.:,_]+)", SpaceRenderHandler),
+            (r"/timeline", TimelineHandler),
+            (r"/timeline/space/([a-zA-Z\-0-9\.:,_]+)", SpaceTimelineHandler),
+            (r"/timeline/user/([a-zA-Z\-0-9\.:,_]+)", UserTimelineHandler),
+            (r"/timeline/you", PersonalTimelineHandler),
+            (r"/profileinformation", ProfileInformationHandler),
+            (r"/users/([a-zA-Z\-0-9\.:,_]+)", UserHandler),
+            (r"/tasks", TaskHandler),
+            (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./modules/SocialServ/css/"}),
+            (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./modules/SocialServ/html/"}),
+            (r"/javascripts/(.*)", tornado.web.StaticFileHandler, {"path": "./modules/SocialServ/javascripts/"})
+        ])
+    else:
+        return tornado.web.Application([
+            (r"/main", MainHandler),
+            (r"/admin", AdminHandler),
+            (r"/myprofile", MyProfileHandler),
+            (r"/profile/([a-zA-Z\-0-9\.:,_]+)", ProfileHandler),
+            (r"/posts", PostHandler),
+            (r"/comment", CommentHandler),
+            (r"/like", LikePostHandler),
+            (r"/follow", FollowHandler),
+            (r"/updates", NewPostsSinceTimestampHandler),
+            (r"/spaceadministration/([a-zA-Z\-0-9\.:,_]+)", SpaceHandler),
+            (r"/space/([a-zA-Z\-0-9\.:,_]+)", SpaceRenderHandler),
+            (r"/timeline", TimelineHandler),
+            (r"/timeline/space/([a-zA-Z\-0-9\.:,_]+)", SpaceTimelineHandler),
+            (r"/timeline/user/([a-zA-Z\-0-9\.:,_]+)", UserTimelineHandler),
+            (r"/timeline/you", PersonalTimelineHandler),
+            (r"/profileinformation", ProfileInformationHandler),
+            (r"/users/([a-zA-Z\-0-9\.:,_]+)", UserHandler),
+            (r"/tasks", TaskHandler),
+            (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
+            (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./html/"}),
+            (r"/javascripts/(.*)", tornado.web.StaticFileHandler, {"path": "./javascripts/"})
+        ])
 
 
 async def main():
-    app = make_app()
+    app = make_app(False)
     server = tornado.httpserver.HTTPServer(app)
     server.listen(8889)
 
