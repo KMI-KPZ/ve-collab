@@ -15,6 +15,7 @@ from datetime import datetime, timedelta
 from pymongo import MongoClient
 from socket_client import get_socket_instance
 from model import User
+from socialserv_token_cache import get_token_cache
 
 
 class BaseHandler(tornado.web.RequestHandler):
@@ -23,8 +24,30 @@ class BaseHandler(tornado.web.RequestHandler):
         self.client = MongoClient('localhost', 27017)
         self.db = self.client['social_serv']  # TODO make this generic via config
 
-    def prepare(self):
-        self.current_user = User("test_user1", 1, "test_user1@mail.com")
+    async def prepare(self):
+        # TODO check if standalone or started by platform. do cookie validation and updates to platform only if started by platform
+        token = self.get_secure_cookie("access_token")
+        if token is not None:
+            token = token.decode("utf-8")
+
+        # first look in own cache
+        cached_user = get_token_cache().get(token)
+        if cached_user is not None:
+            self.current_user = User(cached_user["username"], cached_user["id"], cached_user["email"])
+            print(self.current_user.username)
+        else:  # not found in own cache -> ask platform and put into own cache if valid
+            client = await get_socket_instance()
+            result = await client.write({"type": "token_validation",
+                                         "access_token": token})
+            if result["success"]:
+                self.current_user = User(result["user"]["username"], result["user"]["user_id"], result["user"]["email"])
+                get_token_cache().insert(token, self.current_user.username, self.current_user.user_id, self.current_user.email)
+
+            else:  # not valid in own cache and not valid in platform --> no user logged in
+                self.current_user = None
+                print("no logged in user")
+
+        # TODO if validation succeeds to periodic callback with ttl to tell platform that token is still valid (action taken here) and instruct platform to update their ttl too
 
     def json_serialize_posts(self, query_result):
         # parse datetime objects into ISO 8601 strings for JSON serializability
@@ -703,7 +726,7 @@ class PersonalTimelineHandler(BaseHandler):
 
             posts_to_keep = []
             for post in result:
-                if post["author"] in follows or post["space"] in spaces:
+                if ("author" in post and post["author"] in follows) or ("space" in post and post["space"] in spaces):
                     posts_to_keep.append(post)
 
             posts = self.json_serialize_posts(posts_to_keep)

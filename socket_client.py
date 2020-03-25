@@ -5,6 +5,7 @@ from tornado.ioloop import PeriodicCallback
 from tornado import gen
 from tornado.websocket import websocket_connect
 from asyncio import get_event_loop
+from socialserv_token_cache import get_token_cache
 
 
 the_websocket_client = None
@@ -48,10 +49,20 @@ class Client(object):
 
     def on_message(self, msg):
         json_message = tornado.escape.json_decode(msg)
+        print("SocialServ received message: ")
+        print(json_message)
 
-        resolve_id = json_message['resolve_id']
-        if resolve_id in self.futures:
-            self.futures[resolve_id].set_result(json_message)
+        if "type" in json_message:
+            if json_message["type"] == "user_login":
+                get_token_cache().insert(json_message["access_token"], json_message["username"], json_message["email"], json_message["id"])
+
+            elif json_message["type"] == "user_logout":
+                get_token_cache().remove(json_message["access_token"])
+
+            else:
+                resolve_id = json_message['resolve_id']
+                if resolve_id in self.futures:
+                    self.futures[resolve_id].set_result(json_message)
 
     def write(self, message):
         message['origin'] = "SocialServ"
