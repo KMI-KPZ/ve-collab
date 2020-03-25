@@ -2,22 +2,38 @@ $(document).ready(function () {
 
 });
 
+/**
+ * on settingsTab - click - show the Tab Content
+ */
 $body.delegate('#settingsTab a', 'click', function () {
   $(this).tab('show');
   });
 
 
+/**
+ * saveProfileInformation
+ * get Values from input fields & calls postProfileInformation
+ */
 function saveProfileInformation() {
   var bio = String($('#bio').val());
   var institution = $('#institutionInput').val();
   postProfileInformation(bio, institution, null);
-
 }
 
+/**
+ * initSettingTabs - shows the first settingsTab
+ */
 function initSettingTabs(){
   $('#settingsTab li:first-child a').tab('show');
 }
 
+/**
+ * postProfileInformation - after success closes Modal
+ *
+ * @param  {String} bio       about yourself information
+ * @param  {String} institution
+ * @param  {Array} projects
+ */
 function postProfileInformation(bio, institution, projects) {
 
   var dataBody = {
@@ -41,15 +57,11 @@ function postProfileInformation(bio, institution, projects) {
         getCurrentUserInfo();
       }, 1000);
 
-
-      //TODO clean code
-      /*$('#bioProfile').text( "<b>Bio: </b>" + bio);
-      $('#institutionProfile').text("<b>Institution: </b>" + institution);*/
     },
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-
+        window.location.href = loginURL;
       } else {
         alert('error posting user information');
         console.log(error);

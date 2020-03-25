@@ -1,17 +1,23 @@
+//URL's
 var loc = new URL(window.location.href);
 var baseUrl = 'http://localhost:' + loc.port;
+var loginURL = 'https://localhost:8888/login';
 var currURL = window.location.href;
-var $body = $('body');
-var $feedContainer = $('#feedContainer');
 
+//Datetimes
 var today = new Date();
 var yesterday = new Date(new Date().getTime() - (24 * 60 * 60 * 1000)); //24 hours ago
 var now = today.toISOString();
 var from = yesterday.toISOString();
 
+//HTML & JQuery
+var $body = $('body');
+var $feedContainer = $('#feedContainer');
 var postTemplate = document.getElementById('postTemplate').innerHTML;
 var commentTemplate = document.getElementById('commentTemplate').innerHTML;
 var tagTemplate = document.getElementById('tagTemplate').innerHTML;
+
+//Boolean & Data
 var inSpace = false;
 var spacename;
 var currentUser = {};
@@ -299,7 +305,7 @@ function getTimeline(from, to) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-
+        window.location.href = loginURL;
       } else {
         alert('error get timeline');
         console.log(error);
@@ -327,7 +333,7 @@ function getPersonalTimeline(from, to) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-
+        window.location.href = loginURL;
       } else {
         alert('error get Personal timeline');
         console.log(error);
@@ -358,7 +364,7 @@ function getTimelineSpace(spacename, from, to) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-
+        window.location.href = loginURL;
       } else {
         alert('error get timeline space');
         console.log(error);
@@ -387,7 +393,7 @@ function getTimelineUser(username, from, to) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-
+        window.location.href = loginURL;
       } else {
         alert('error get timeline user');
         console.log(error);
@@ -427,7 +433,7 @@ function post(text, tags, space) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-
+        window.location.href = loginURL;
       } else {
         alert('error posting');
         console.log(error);
@@ -438,6 +444,11 @@ function post(text, tags, space) {
   });
 }
 
+/**
+ * deletePost - removes HTML element
+ * calls InitNewsFeed for update
+ * @param  {String} id id of the Post
+ */
 function deletePost(id) {
   dataBody = {
     'post_id': id
@@ -456,7 +467,7 @@ function deletePost(id) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-
+        window.location.href = loginURL;
       } else {
         alert('error deleting post');
         console.log(error);
@@ -491,7 +502,7 @@ function postComment(text, id) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-
+        window.location.href = loginURL;
       } else {
         alert('error posting comment');
         console.log(error);
@@ -502,6 +513,11 @@ function postComment(text, id) {
   });
 }
 
+/**
+ * deleteComment - removes HTML element
+ * calls initNewsFeed after success for update
+ * @param  {String} id id of the Comment
+ */
 function deleteComment(id) {
   dataBody = {
     'comment_id': id
@@ -520,7 +536,7 @@ function deleteComment(id) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-
+        window.location.href = loginURL;
       } else {
         alert('error deleting comment');
         console.log(error);
@@ -553,7 +569,7 @@ function postLike(id) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-
+        window.location.href = loginURL;
       } else {
         alert('error posting like');
         console.log(error);
@@ -564,6 +580,11 @@ function postLike(id) {
   });
 }
 
+/**
+ * deleteLike - removes your own like on a post
+ * calls initNewsFeed for update after success
+ * @param  {String} id id of the post
+ */
 function deleteLike(id) {
   dataBody = {
     'post_id': id
@@ -581,7 +602,7 @@ function deleteLike(id) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-
+        window.location.href = loginURL;
       } else {
         alert('error posting dislike');
         console.log(error);
@@ -624,7 +645,7 @@ function getSpaces() {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-
+        window.location.href = loginURL;
       } else {
         alert('error get spaces');
         console.log(error);
@@ -652,7 +673,7 @@ function createSpace(name) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-
+        window.location.href = loginURL;
       } else {
         alert('error creating Space');
         console.log(error);
@@ -678,7 +699,7 @@ function joinSpace(name) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-
+        window.location.href = loginURL;
       } else {
         alert('error joining Space');
         console.log(error);
@@ -720,8 +741,8 @@ function getCurrentUserInfo() {
     },
 
     error: function (xhr, status, error) {
-      if (xhr.status == 304) {
-
+      if (xhr.status == 401) {
+        window.location.href = loginURL;
       } else {
         alert('error get current user info');
         console.log(error);
@@ -749,8 +770,8 @@ function getUserInfo(name){
     },
 
     error: function (xhr, status, error) {
-      if (xhr.status == 304) {
-
+      if (xhr.status == 401) {
+        window.location.href = loginURL;
       } else {
         alert('error get user info');
         console.log(error);
@@ -802,8 +823,8 @@ function getAllUsers(){
     },
 
     error: function (xhr, status, error) {
-      if (xhr.status == 304) {
-
+      if (xhr.status == 401) {
+        window.location.href = loginURL;
       } else {
         alert('error get all users');
         console.log(error);
@@ -833,8 +854,8 @@ function getFollows(name) {
     },
 
     error: function (xhr, status, error) {
-      if (xhr.status == 304) {
-
+      if (xhr.status == 401) {
+        window.location.href = loginURL;
       } else {
         alert('error get user follows');
         console.log(error);
@@ -860,7 +881,7 @@ function postFollow(name) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-
+        window.location.href = loginURL;
       } else {
         alert('error post follow');
         console.log(error);
@@ -871,6 +892,12 @@ function postFollow(name) {
   });
 }
 
+/**
+ * likeDislike - toggle function for html update on like & dislike
+ * calls deleteLike or postLike depending on elements html class
+ * @param  {HTML} e  html element
+ * @param  {String} id id of the post
+ */
 function likeDislike(e, id) {
   var likeIcon = e.firstElementChild;
   if(likeIcon.classList.contains("fa-thumbs-down")) {
