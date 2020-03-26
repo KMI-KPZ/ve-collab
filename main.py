@@ -9,13 +9,16 @@ import tornado.ioloop
 import tornado.web
 import tornado.locks
 import dateutil.parser
-import CONSTANTS
+import SOCIALSERV_CONSTANTS
 from bson.objectid import ObjectId
 from datetime import datetime, timedelta
 from pymongo import MongoClient
 from socket_client import get_socket_instance
 from model import User
 from socialserv_token_cache import get_token_cache
+from tornado.options import define, options
+
+define("standalone_dev", default=False, type=bool, help="start in standalone dev mode (no auth)")
 
 
 class BaseHandler(tornado.web.RequestHandler):
@@ -25,7 +28,11 @@ class BaseHandler(tornado.web.RequestHandler):
         self.db = self.client['social_serv']  # TODO make this generic via config
 
     async def prepare(self):
-        # TODO check if standalone or started by platform. do cookie validation and updates to platform only if started by platform
+        # standalone dev mode: no auth, dummy platform
+        if options.standalone_dev:
+            self.current_user = User("test_user1", -1, "dev@test.de")
+            return
+
         token = self.get_secure_cookie("access_token")
         if token is not None:
             token = token.decode("utf-8")
@@ -1168,7 +1175,7 @@ class TaskHandler(BaseHandler):
 
 
 def inherit_platform_port(port):  # invoked by platform
-    CONSTANTS.PLATFORM_PORT = port
+    SOCIALSERV_CONSTANTS.PLATFORM_PORT = port
 
 
 def apply_config(config):  # invoked by platform, but we do not need a config for now
@@ -1232,6 +1239,7 @@ def make_app(called_by_platform):
 
 
 async def main():
+    tornado.options.parse_command_line()
     app = make_app(False)
     server = tornado.httpserver.HTTPServer(app)
     server.listen(8889)
