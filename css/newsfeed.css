@@ -407,3 +407,20 @@ body{
     content: '\2807';
     font-size: 15px;
 }
+
+input[type=file] {
+  display: none;
+}
+
+.element {
+  display: inline-flex;
+  align-items: center;
+}
+i.fa-file {
+  margin: 10px;
+  cursor: pointer;
+  font-size: 30px;
+}
+i:hover {
+  opacity: 0.6;
+}

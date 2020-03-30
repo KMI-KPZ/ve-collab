@@ -24,6 +24,7 @@ var currentUser = {};
 var user = {};
 var users = {};
 
+var fileList = [];
 /**
  * initNewsFeed - renders the timeline depending on the current URL
  * update Datetimes and get information about all Spaces
@@ -149,6 +150,22 @@ $body.delegate('#result', 'click', 'li', function () {
     $('#search').val(selectedUser);
     $("#result").html('');
     window.location.href = baseUrl + '/profile/' + selectedUser;
+});
+
+$body.delegate('.element i', 'click', function () {
+  $("input[type='file']").trigger('click');
+});
+
+$body.delegate('#files', 'change', function () {
+  var fileInput = document.getElementById('files');
+  fileList = [];
+  $('#postdiv span').remove();
+  $('#postdiv br').remove();
+  for(var i=0; i < fileInput.files.length; i++) {
+    console.log(fileInput.files[i]);
+    fileList.push(fileInput.files[i]);
+    $('#postdiv').append('<span class="name">'+fileInput.files[i].name+'</span></br>');
+  }
 });
 
 /**
@@ -412,23 +429,41 @@ function getTimelineUser(username, from, to) {
  * @param  {String} space
  */
 function post(text, tags, space) {
+  var formData = new FormData();
+  fileList.forEach(function (file, i) {
+    formData.append("file"+i, file);
+  });
 
+  formData.append("text", text);
+  formData.append("tags", tags);
+  formData.append("space", space);
+  // Display the key/value pairs
+  for (var pair of formData.entries()) {
+      console.log(pair[0]+ ', ' + pair[1]);
+  }
+  /*
   var dataBody = {
     "text": text,
     "tags": tags,
     "space": space
   };
-
-  dataBody = JSON.stringify(dataBody);
+  dataBody = JSON.stringify(dataBody);*/
   $.ajax({
     type: 'POST',
     url: baseUrl + '/posts',
-    data: dataBody,
+    data: formData,
+    //important for upload
+    contentType: false,
+    processData: false,
     success: function (data) {
-      console.log("posted " + dataBody);
+      //console.log("posted " + form);
       initNewsFeed();
       $('#postFeed').val('');
       $("input[id=addTag]").tagsinput('removeAll');
+
+      fileList = [];
+      $('#postdiv span').remove();
+      $('#postdiv br').remove();
     },
 
     error: function (xhr, status, error) {
