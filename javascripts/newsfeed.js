@@ -434,6 +434,7 @@ function post(text, tags, space) {
     formData.append("file"+i, file);
   });
 
+  formData.append("file_amount", fileList.length);
   formData.append("text", text);
   formData.append("tags", tags);
   formData.append("space", space);

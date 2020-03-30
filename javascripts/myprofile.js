@@ -9,6 +9,11 @@ $body.delegate('#settingsTab a', 'click', function () {
   $(this).tab('show');
   });
 
+$body.delegate('#photoFile', 'change', function () {
+  var fileInput = document.getElementById('photoFile');
+  var name = fileInput.files[0].name;
+  $('#photoLabel').html(name);
+});
 
 /**
  * saveProfileInformation
