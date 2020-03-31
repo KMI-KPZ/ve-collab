@@ -10,6 +10,7 @@ import tornado.web
 import tornado.locks
 import dateutil.parser
 import SOCIALSERV_CONSTANTS
+import re
 from bson.objectid import ObjectId
 from datetime import datetime, timedelta
 from pymongo import MongoClient
@@ -17,6 +18,7 @@ from socket_client import get_socket_instance
 from model import User
 from socialserv_token_cache import get_token_cache
 from tornado.options import define, options
+from base64 import b64encode
 
 define("standalone_dev", default=False, type=bool, help="start in standalone dev mode (no auth)")
 
@@ -136,32 +138,49 @@ class PostHandler(BaseHandler):
         if self.current_user:
             author = self.current_user.username
             creation_date = datetime.utcnow()
-            http_body = tornado.escape.json_decode(self.request.body)
-            text = http_body['text']
-            tags = http_body['tags']
-            # if space is set, this post belongs to a space (only visible inside)
-            if 'space' in http_body:
-                space = http_body['space']
+            text = self.get_body_argument("text")  # http_body['text']
+            tags = self.get_body_argument("tags")  # http_body['tags']
+            space = self.get_body_argument("space", None)  # if space is set, this post belongs to a space (only visible inside)
+            print(space)
 
-                # check if space exists, if not, end with 400 Bad Request
-                if space is not None:
-                    existing_spaces = []
-                    for existing_space in self.db.spaces.find(projection={"name": True, "_id": False}):
-                        existing_spaces.append(existing_space["name"])
-                    if space not in existing_spaces:
-                        self.set_status(400)
-                        self.write({"status": 400,
-                                    "reason": "space_does_not_exist"})
-                        self.finish()
-                        return
-            else:
-                space = None
+            # check if space exists, if not, end with 400 Bad Request
+            if space is not None:
+                existing_spaces = []
+                for existing_space in self.db.spaces.find(projection={"name": True, "_id": False}):
+                    existing_spaces.append(existing_space["name"])
+                if space not in existing_spaces:
+                    self.set_status(400)
+                    self.write({"status": 400,
+                                "reason": "space_does_not_exist"})
+                    self.finish()
+                    return
+
+            # handle files
+            file_amount = self.get_body_argument("file_amount", None)
+            files = []
+            if file_amount:
+                # check if uploads folder exists
+                if not os.path.isdir("uploads"):
+                    os.mkdir("uploads")
+                # save every file
+                for i in range(0, int(file_amount)):
+                    file_obj = self.request.files["file" + str(i)][0]
+                    file_ext = os.path.splitext(file_obj["filename"])[1]
+                    new_file_name = b64encode(os.urandom(32)).decode("utf-8")
+                    new_file_name = re.sub('[^0-9a-zäöüßA-ZÄÖÜ]+', '_', new_file_name).lower() + file_ext
+                    print(new_file_name)
+
+                    with open("uploads/" + new_file_name, "wb") as fp:
+                        fp.write(file_obj["body"])
+
+                    files.append(new_file_name)
 
             post = {"author": author,
                     "creation_date": creation_date,
                     "text": text,
                     "space": space,
-                    "tags": tags}
+                    "tags": tags,
+                    "files": files}
 
             self.db.posts.insert_one(post)
 
@@ -1210,7 +1229,8 @@ def make_app(called_by_platform):
             (r"/tasks", TaskHandler),
             (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./modules/SocialServ/css/"}),
             (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./modules/SocialServ/html/"}),
-            (r"/javascripts/(.*)", tornado.web.StaticFileHandler, {"path": "./modules/SocialServ/javascripts/"})
+            (r"/javascripts/(.*)", tornado.web.StaticFileHandler, {"path": "./modules/SocialServ/javascripts/"}),
+            (r"/uploads(.*)", tornado.web.StaticFileHandler, {"path": "./uploads/"})
         ])
     else:
         return tornado.web.Application([
@@ -1234,7 +1254,8 @@ def make_app(called_by_platform):
             (r"/tasks", TaskHandler),
             (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
             (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./html/"}),
-            (r"/javascripts/(.*)", tornado.web.StaticFileHandler, {"path": "./javascripts/"})
+            (r"/javascripts/(.*)", tornado.web.StaticFileHandler, {"path": "./javascripts/"}),
+            (r"/uploads/(.*)", tornado.web.StaticFileHandler, {"path": "./uploads/"})
         ])
 
 

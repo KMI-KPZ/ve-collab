@@ -111,7 +111,7 @@ $body.delegate('#post', 'click', function () {
     var selectedValue = ($( "#selectSpace option:selected" ).val() === "null") ? null : $( "#selectSpace option:selected" ).val();
     //while in space page: post in this space
     var space = (inSpace) ? spacename : selectedValue;
-    post(text, tags, space);
+    if(text!='') post(text, tags, space);
   });
 
 /**
@@ -122,7 +122,7 @@ $body.delegate('#postComment', 'click', function () {
     var $inputText = $inputBox.find('#commentInput').val();
     $inputBox.find('#commentInput').val('');
     var $id = $inputBox.closest('.panel').attr('id');
-    postComment($inputText, $id);
+    if($inputText != '') postComment($inputText, $id);
 });
 
 /**
@@ -162,7 +162,7 @@ $body.delegate('#files', 'change', function () {
   $('#postdiv span').remove();
   $('#postdiv br').remove();
   for(var i=0; i < fileInput.files.length; i++) {
-    console.log(fileInput.files[i]);
+    //console.log(fileInput.files[i]);
     fileList.push(fileInput.files[i]);
     $('#postdiv').append('<span class="name">'+fileInput.files[i].name+'</span></br>');
   }
@@ -437,11 +437,15 @@ function post(text, tags, space) {
   formData.append("file_amount", fileList.length);
   formData.append("text", text);
   formData.append("tags", tags);
-  formData.append("space", space);
+  if(space != null){
+    formData.append("space", space);
+  }
   // Display the key/value pairs
+  /*
   for (var pair of formData.entries()) {
       console.log(pair[0]+ ', ' + pair[1]);
   }
+  */
   /*
   var dataBody = {
     "text": text,
