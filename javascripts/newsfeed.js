@@ -168,6 +168,47 @@ $body.delegate('#files', 'change', function () {
   }
 });
 
+function getExtension(filename) {
+  var parts = filename.split('.');
+  return parts[parts.length - 1];
+}
+
+function isImage(filename) {
+  var ext = getExtension(filename);
+  switch (ext.toLowerCase()) {
+    case 'jpg':
+    case 'gif':
+    case 'bmp':
+    case 'png':
+      //etc
+      return true;
+  }
+  return false;
+}
+
+function isVideo(filename) {
+  var ext = getExtension(filename);
+  switch (ext.toLowerCase()) {
+    case 'm4v':
+    case 'avi':
+    case 'mpg':
+    case 'mp4':
+      // etc
+      return true;
+  }
+  return false;
+}
+
+function nextSlide(id) {
+  $("#" + id +'.carousel.slide').carousel("next");
+  $("#" + id +'.carousel.slide').carousel("pause");
+}
+
+function previousSlide(id) {
+  $("#" + id +'.carousel.slide').carousel("prev");
+  $("#" + id +'.carousel.slide').carousel("pause");
+}
+
 /**
  * calculateAgoTime
  *
@@ -210,6 +251,7 @@ function displayTimeline(timeline) {
     allowDuplicates: false
   });
   $('[data-toggle="tooltip"]').tooltip();
+  $('.carousel').carousel();
   //loading posts => set from-Date until there is a post in interval from - to
   if(timeline.posts.length === 0) {
     yesterday = new Date(yesterday - (24 * 60 * 60 * 1000));
@@ -264,6 +306,17 @@ function displayTimeline(timeline) {
       }
       return;
     }
+    var fileImages = [];
+    var fileImagesCountTail = [];
+    $.each(post.files, function (j, file) {
+      if(isImage(file)) fileImages.push(baseUrl + '/uploads/' + file);
+    });
+    post["hasImages"] = (fileImages.length > 0) ? true : false;
+    post["multipleImages"] = (fileImages.length > 1) ? true : false;
+    post["firstImageURL"] = fileImages.shift();
+    post["imagesURL"] = fileImages;
+    for(var i=0; i<fileImages.length; i++) fileImagesCountTail.push(i+1);
+    post["fileImagesCountTail"] = fileImagesCountTail;
     var isAuthor = (currentUser.username == post.author) ? true : false;
     //add additional values to post JSON
     post["isAuthor"] = isAuthor;
@@ -281,6 +334,7 @@ function displayTimeline(timeline) {
     if(!(firstPostDate === null) && post.creation_date > firstPostDate) {
       $feedContainer.prepend(Mustache.render(postTemplate, post));
     } else $feedContainer.append(Mustache.render(postTemplate, post));
+    //console.log(post);
     //in both case render comments to post and tags
     var $feed = $('#' + post._id);
     var $likeIcon = $feed.find('#likeIcon');
