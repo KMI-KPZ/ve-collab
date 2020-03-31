@@ -177,7 +177,6 @@ function isImage(filename) {
   var ext = getExtension(filename);
   switch (ext.toLowerCase()) {
     case 'jpg':
-    case 'gif':
     case 'bmp':
     case 'png':
       //etc
@@ -193,6 +192,10 @@ function isVideo(filename) {
     case 'avi':
     case 'mpg':
     case 'mp4':
+    case 'webm':
+    case 'ogg':
+    case 'gif':
+    case 'ogv':
       // etc
       return true;
   }
@@ -306,17 +309,35 @@ function displayTimeline(timeline) {
       }
       return;
     }
-    var fileImages = [];
-    var fileImagesCountTail = [];
-    $.each(post.files, function (j, file) {
-      if(isImage(file)) fileImages.push(baseUrl + '/uploads/' + file);
-    });
-    post["hasImages"] = (fileImages.length > 0) ? true : false;
-    post["multipleImages"] = (fileImages.length > 1) ? true : false;
-    post["firstImageURL"] = fileImages.shift();
-    post["imagesURL"] = fileImages;
-    for(var i=0; i<fileImages.length; i++) fileImagesCountTail.push(i+1);
-    post["fileImagesCountTail"] = fileImagesCountTail;
+    //check if there are files to display
+    if(post.hasOwnProperty('files')) {
+        var fileImages = [];
+        var fileVideos = [];
+        var fileMediaCountTail = [];
+
+        var otherfiles = [];
+        $.each(post.files, function (j, file) {
+          if(isImage(file)) fileImages.push(baseUrl + '/uploads/' + file);
+          else if (isVideo(file)) fileVideos.push(baseUrl + '/uploads/' + file);
+          else {
+            otherfiles.push({"path": baseUrl + '/uploads/' + file, "name" : file});
+          }
+        });
+
+        post["hasMedia"] = ((fileImages.length + fileVideos.length) > 0) ? true : false;
+        post["multipleMedia"] = ((fileImages.length + fileVideos.length) > 1) ? true : false;
+        var media = fileImages.concat(fileVideos); //concatenation of 2 arrays
+        var firstMediaURL = media.shift();  //removes first element of media
+        post["firstMediaURL"] = firstMediaURL;
+        post["firstMediaIsImage"] = (isImage(firstMediaURL)) ? true : false;
+        post["tailImagesURL"] = fileImages.filter(value => media.includes(value)); //intersection of 2 arrays => fileImages and media
+        post["tailVideosURL"] = fileVideos.filter(value => media.includes(value));
+
+        for(var i=0; i<media.length; i++) fileMediaCountTail.push(i+1);
+        post["fileMediaCountTail"] = fileMediaCountTail;
+        post["otherfiles"] = otherfiles;
+    }
+
     var isAuthor = (currentUser.username == post.author) ? true : false;
     //add additional values to post JSON
     post["isAuthor"] = isAuthor;
