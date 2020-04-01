@@ -22,7 +22,9 @@ $body.delegate('#photoFile', 'change', function () {
 function saveProfileInformation() {
   var bio = String($('#bio').val());
   var institution = $('#institutionInput').val();
-  postProfileInformation(bio, institution, null);
+  var fileInput = document.getElementById('photoFile');
+  var photo = (isImage(fileInput.files[0].name)) ? fileInput.files[0] : null;
+  postProfileInformation(photo, bio, institution, null);
 }
 
 /**
@@ -39,21 +41,25 @@ function initSettingTabs(){
  * @param  {String} institution
  * @param  {Array} projects
  */
-function postProfileInformation(bio, institution, projects) {
+function postProfileInformation(photo, bio, institution, projects) {
 
-  var dataBody = {
-    "bio": bio,
-    "institution": institution,
-    "projects": projects
-  };
+  var formData = new FormData();
+  formData.append("profile_pic", photo);
+  formData.append("bio", bio);
+  formData.append("institution", institution);
+  formData.append("projects", projects);
 
-  dataBody = JSON.stringify(dataBody);
+  for (var pair of formData.entries()) {
+      console.log(pair[0]+ ', ' + pair[1]);
+  }
   $.ajax({
     type: 'POST',
     url: baseUrl + '/profileinformation',
-    data: dataBody,
+    data: formData,
+    //important for upload
+    contentType: false,
+    processData: false,
     success: function (data) {
-      console.log("posted User information" + dataBody);
       $("#saveAlert").html('Successfully updated!');
       $("#saveAlert").addClass("alert alert-success");
       $('#settingsModal').modal('toggle');

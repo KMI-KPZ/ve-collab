@@ -592,6 +592,12 @@ class TimelineHandler(BaseHandler):
                         filter={"creation_date": {"$gte": time_from, "$lte": time_to}})
 
         posts = self.json_serialize_posts(result)
+        for post in posts:
+            author_name = post["author"]
+            profile = self.db.profiles.find_one({"user": author_name})
+            if "profile_pic" in profile:
+                post["author"] = {"username": author_name,
+                                  "profile_pic": profile["profile_pic"]}
 
         self.set_status(200)
         self.write({"posts": posts})
@@ -641,6 +647,12 @@ class SpaceTimelineHandler(BaseHandler):
                                             "space":         {"$eq": space_name}})
 
                     posts = self.json_serialize_posts(result)
+                    for post in posts:
+                        author_name = post["author"]
+                        profile = self.db.profiles.find_one({"user": author_name})
+                        if "profile_pic" in profile:
+                            post["author"] = {"username": author_name,
+                                              "profile_pic": profile["profile_pic"]}
 
                     self.set_status(200)
                     self.write({"posts": posts})
@@ -690,6 +702,12 @@ class UserTimelineHandler(BaseHandler):
                                     "author":         {"$eq": author}})
 
             posts = self.json_serialize_posts(result)
+            for post in posts:
+                author_name = post["author"]
+                profile = self.db.profiles.find_one({"user": author_name})
+                if "profile_pic" in profile:
+                    post["author"] = {"username": author_name,
+                                      "profile_pic": profile["profile_pic"]}
 
             self.set_status(200)
             self.write({"posts": posts})
@@ -756,6 +774,12 @@ class PersonalTimelineHandler(BaseHandler):
                     posts_to_keep.append(post)
 
             posts = self.json_serialize_posts(posts_to_keep)
+            for post in posts:
+                author_name = post["author"]
+                profile = self.db.profiles.find_one({"user": author_name})
+                if "profile_pic" in profile:
+                    post["author"] = {"username": author_name,
+                                      "profile_pic": profile["profile_pic"]}
 
             self.set_status(200)
             self.write({"posts": posts})
@@ -931,14 +955,18 @@ class ProfileInformationHandler(BaseHandler):
         """
 
         if self.current_user:
+            username = self.get_argument("username", None)
+            if not username:
+                username = self.current_user.username
+
             # get account information from platform
             client = await get_socket_instance()
             user_result = await client.write({"type": "get_user",
-                                              "username": self.current_user.username})
+                                              "username": username})
 
             # grab spaces
             spaces_cursor = self.db.spaces.find(
-                filter={"members": self.current_user.username}
+                filter={"members": username}
             )
             spaces = []
             for space in spaces_cursor:
@@ -946,20 +974,21 @@ class ProfileInformationHandler(BaseHandler):
 
             # grab users that the current_user follows
             follows_cursor = self.db.follows.find(
-                filter={"user": self.current_user.username}
+                filter={"user": username}
             )
             follows = []
             for user in follows_cursor:
                 follows = user["follows"]
 
             profile_cursor = self.db.profiles.find(
-                filter={"user": self.current_user.username}
+                filter={"user": username}
             )
             profile = {}
             for user_profile in profile_cursor:
                 profile["bio"] = user_profile["bio"]
                 profile["institution"] = user_profile["institution"]
                 profile["projects"] = user_profile["projects"]
+                profile["profile_pic"] = user_profile["profile_pic"]
 
             user_information = {key: user_result["user"][key] for key in user_result["user"]}
             user_information["spaces"] = spaces
@@ -1002,26 +1031,58 @@ class ProfileInformationHandler(BaseHandler):
         """
 
         if self.current_user:
-            http_body = tornado.escape.json_decode(self.request.body)
-            if all(key in http_body for key in ("bio", "institution", "projects")):
+            bio = self.get_body_argument("bio", None)
+            institution = self.get_body_argument("institution", None)
+            projects = self.get_body_argument("projects", None)
+
+            # handle profile pic
+            new_file_name = None
+            if "profile_pic" in self.request.files:
+                print("in file handling")
+                profile_pic_obj = self.request.files["profile_pic"][0]
+
+                # check if uploads folder exists
+                if not os.path.isdir("uploads"):
+                    os.mkdir("uploads")
+
+                # save file
+                file_ext = os.path.splitext(profile_pic_obj["filename"])[1]
+                new_file_name = b64encode(os.urandom(32)).decode("utf-8")
+                new_file_name = re.sub('[^0-9a-zäöüßA-ZÄÖÜ]+', '_', new_file_name).lower() + file_ext
+                print(new_file_name)
+
+                with open("uploads/" + new_file_name, "wb") as fp:
+                    fp.write(profile_pic_obj["body"])
+
+            if new_file_name:
                 self.db.profiles.update_one(
                     {"user": self.current_user.username},
                     {"$set":
                         {
-                            "bio": http_body["bio"],
-                            "institution": http_body["institution"],
-                            "projects": http_body["projects"]
+                            "bio": bio,
+                            "institution": institution,
+                            "projects": projects,
+                            "profile_pic": new_file_name
                         }
                     },
                     upsert=True
                 )
-                self.set_status(200)
-                self.write({"status": 200,
-                            "success": True})
             else:
-                self.set_status(400)
-                self.write({"status": 400,
-                            "reason": "missing_key_in_http_body"})
+                self.db.profiles.update_one(
+                    {"user": self.current_user.username},
+                    {"$set":
+                        {
+                            "bio": bio,
+                            "institution": institution,
+                            "projects": projects
+                        }
+                    },
+                    upsert=True
+                )
+
+            self.set_status(200)
+            self.write({"status": 200,
+                        "success": True})
 
         else:
             self.set_status(401)

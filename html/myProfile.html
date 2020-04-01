@@ -83,7 +83,7 @@
       <div class="row">
           <div class="col-sm-12">
               <div class="image-container bg2" style="background:url(https://via.placeholder.com/400x200)">
-                  <img src="https://i.pinimg.com/originals/cd/87/3e/cd873ea81fb0089fc9ae813e8f438d22.jpg" class="avatar" alt="avatar">
+                  <img src="{{!profile_pic_URL}}" class="avatar" alt="avatar">
               </div>
           </div>
           <div class="col-sm-12">
@@ -250,7 +250,7 @@
     <div class="panel panel-white post" id="newPostPanel">
 
         <div class="post-heading">
-
+            <div id="postAlert"></div>
             <div class="pull-left meta">
 
                 <input type="text" value="" id="addTag" data-role="tagsinput" placeholder="Add Tags">
@@ -291,11 +291,11 @@
       <div class="panel panel-white post" id = {{!_id}} name={{!creation_date}}>
           <div class="post-heading">
               <div class="pull-left image">
-                  <img src="https://i.pinimg.com/originals/cd/87/3e/cd873ea81fb0089fc9ae813e8f438d22.jpg" class="img-circle avatar" alt="user profile image">
+                  <img src="{{!authorPicURL}}" class="img-circle avatar" alt="user profile image">
               </div>
               <div class="pull-left meta">
                   <div class="title h5">
-                      <a href="profile/{{!author}}"><b>{{!author}}</b></a>
+                      <a href="profile/{{!author.username}}"><b>{{!author.username}}</b></a>
                       made a post.
                       {{!#hasSpace}}
                       <b>></b>

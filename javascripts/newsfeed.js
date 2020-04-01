@@ -32,6 +32,7 @@ var fileList = [];
 function initNewsFeed() {
   if(!document.body.contains(document.getElementById('newPostPanel'))) {
     //console.log(currentUser);
+    currentUser["profile_pic_URL"] = baseUrl + '/uploads/' + currentUser["profile"]["profile_pic"];
     $('#newPostContainer').prepend(Mustache.render(document.getElementById('newPostTemplate').innerHTML, currentUser));
   }
   today = new Date();
@@ -56,6 +57,7 @@ function initNewsFeed() {
     getTimelineUser(currentUser.username, from, now);
     currentUser['followSize'] = currentUser['follows'].length;
     currentUser['spaceSize'] = currentUser['spaces'].length;
+    currentUser["profile_pic_URL"] = baseUrl + '/uploads/' + currentUser["profile"]["profile_pic"];
     if(currentUser.hasOwnProperty('projects')) currentUser['projectSize'] = currentUser['projects'].length;
     if(!document.body.contains(document.getElementById('profilePanel'))){
       $('#profileContainer').prepend(Mustache.render(document.getElementById('profileTemplate').innerHTML, currentUser));
@@ -112,6 +114,10 @@ $body.delegate('#post', 'click', function () {
     //while in space page: post in this space
     var space = (inSpace) ? spacename : selectedValue;
     if(text!='') post(text, tags, space);
+    else {
+      $("#postAlert").html('Add some text to your post!');
+      $("#postAlert").addClass("alert alert-danger");
+    }
   });
 
 /**
@@ -310,7 +316,7 @@ function displayTimeline(timeline) {
       return;
     }
     //check if there are files to display
-    if(post.hasOwnProperty('files')) {
+    if(post.hasOwnProperty('files') && post.files.length > 0) {
         var fileImages = [];
         var fileVideos = [];
         var fileMediaCountTail = [];
@@ -338,9 +344,10 @@ function displayTimeline(timeline) {
         post["otherfiles"] = otherfiles;
     }
 
-    var isAuthor = (currentUser.username == post.author) ? true : false;
+    var isAuthor = (currentUser.username == post.author.username) ? true : false;
     //add additional values to post JSON
     post["isAuthor"] = isAuthor;
+    post["authorPicURL"] = baseUrl + '/uploads/' + post.author.profile_pic;
     post["ago"] = calculateAgoTime(post.creation_date);
     post["likes"] = countLikes;
     post["tags"] = post["tags"].toString();
@@ -521,13 +528,6 @@ function post(text, tags, space) {
       console.log(pair[0]+ ', ' + pair[1]);
   }
   */
-  /*
-  var dataBody = {
-    "text": text,
-    "tags": tags,
-    "space": space
-  };
-  dataBody = JSON.stringify(dataBody);*/
   $.ajax({
     type: 'POST',
     url: baseUrl + '/posts',
@@ -544,6 +544,9 @@ function post(text, tags, space) {
       fileList = [];
       $('#postdiv span').remove();
       $('#postdiv br').remove();
+
+      $("#postAlert").html('');
+      $("#postAlert").removeClass("alert alert-danger");
     },
 
     error: function (xhr, status, error) {
