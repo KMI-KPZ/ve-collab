@@ -391,7 +391,7 @@
 <script id = "commentTemplate" type="text/html">
   <li class="comment" id={{!_id}}>
       <a class="pull-left" href="javascript:void(0);">
-          <img class="avatar" src="https://i.pinimg.com/originals/cd/87/3e/cd873ea81fb0089fc9ae813e8f438d22.jpg" alt="avatar">
+          <img class="avatar" src="{{!authorPicURL}}" alt="avatar">
       </a>
       <div class="pull-right">
         {{!#isCommentAuthor}}
@@ -405,7 +405,7 @@
       </div>
       <div class="comment-body">
           <div class="comment-heading">
-              <a href="profile/{{!author}}"><h4 class="user">{{!author}}</h4></a>
+              <a href="profile/{{!author.username}}"><h4 class="user">{{!author.username}}</h4></a>
               <h5 class="time" id="agoComment">{{!ago}}</h5>
           </div>
           <p>{{!text}}</p>

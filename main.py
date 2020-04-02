@@ -592,12 +592,20 @@ class TimelineHandler(BaseHandler):
                         filter={"creation_date": {"$gte": time_from, "$lte": time_to}})
 
         posts = self.json_serialize_posts(result)
+        # TODO more efficient
         for post in posts:
             author_name = post["author"]
             profile = self.db.profiles.find_one({"user": author_name})
             if "profile_pic" in profile:
                 post["author"] = {"username": author_name,
                                   "profile_pic": profile["profile_pic"]}
+            if "comments" in post:
+                for comment in post["comments"]:
+                    comment_author_name = comment["author"]
+                    comment_author_profile = self.db.profiles.find_one({"user": comment_author_name})
+                    if "profile_pic" in comment_author_profile:
+                        comment["author"] = {"username": comment_author_name,
+                                             "profile_pic": comment_author_profile["profile_pic"]}
 
         self.set_status(200)
         self.write({"posts": posts})
@@ -647,12 +655,20 @@ class SpaceTimelineHandler(BaseHandler):
                                             "space":         {"$eq": space_name}})
 
                     posts = self.json_serialize_posts(result)
+                    # TODO more efficient
                     for post in posts:
                         author_name = post["author"]
                         profile = self.db.profiles.find_one({"user": author_name})
                         if "profile_pic" in profile:
                             post["author"] = {"username": author_name,
                                               "profile_pic": profile["profile_pic"]}
+                        if "comments" in post:
+                            for comment in post["comments"]:
+                                comment_author_name = comment["author"]
+                                comment_author_profile = self.db.profiles.find_one({"user": comment_author_name})
+                                if "profile_pic" in comment_author_profile:
+                                    comment["author"] = {"username": comment_author_name,
+                                                         "profile_pic": comment_author_profile["profile_pic"]}
 
                     self.set_status(200)
                     self.write({"posts": posts})
@@ -702,12 +718,20 @@ class UserTimelineHandler(BaseHandler):
                                     "author":         {"$eq": author}})
 
             posts = self.json_serialize_posts(result)
+            # TODO more efficient
             for post in posts:
                 author_name = post["author"]
                 profile = self.db.profiles.find_one({"user": author_name})
                 if "profile_pic" in profile:
                     post["author"] = {"username": author_name,
                                       "profile_pic": profile["profile_pic"]}
+                if "comments" in post:
+                    for comment in post["comments"]:
+                        comment_author_name = comment["author"]
+                        comment_author_profile = self.db.profiles.find_one({"user": comment_author_name})
+                        if "profile_pic" in comment_author_profile:
+                            comment["author"] = {"username": comment_author_name,
+                                                 "profile_pic": comment_author_profile["profile_pic"]}
 
             self.set_status(200)
             self.write({"posts": posts})
@@ -774,12 +798,20 @@ class PersonalTimelineHandler(BaseHandler):
                     posts_to_keep.append(post)
 
             posts = self.json_serialize_posts(posts_to_keep)
+            # TODO more efficient
             for post in posts:
                 author_name = post["author"]
                 profile = self.db.profiles.find_one({"user": author_name})
                 if "profile_pic" in profile:
                     post["author"] = {"username": author_name,
                                       "profile_pic": profile["profile_pic"]}
+                if "comments" in post:
+                    for comment in post["comments"]:
+                        comment_author_name = comment["author"]
+                        comment_author_profile = self.db.profiles.find_one({"user": comment_author_name})
+                        if "profile_pic" in comment_author_profile:
+                            comment["author"] = {"username": comment_author_name,
+                                                 "profile_pic": comment_author_profile["profile_pic"]}
 
             self.set_status(200)
             self.write({"posts": posts})
@@ -1120,6 +1152,7 @@ class UserHandler(BaseHandler):
         """
 
         if self.current_user:
+            print("in user handler")
             if slug == "user_data":
                 username = self.get_argument("username", "test_user1")
 
@@ -1127,12 +1160,24 @@ class UserHandler(BaseHandler):
                 user_result = await client.write({"type": "get_user",
                                                   "username": username})
 
+                profile = self.db.profiles.find_one({"user": username})
+                if "profile_pic" in profile:
+                    user_result["user"]["profile_pic"] = profile["profile_pic"]
+
                 self.set_status(200)
                 self.write(user_result["user"])
 
             elif slug == "list":
                 client = await get_socket_instance()
                 user_list = await client.write({"type": "get_user_list"})
+
+                for user in user_list["users"]:
+                    print(user)
+                    profile = self.db.profiles.find_one({"user": user})
+                    print(profile)
+                    if profile:
+                        if "profile_pic" in profile:
+                            user_list["users"][user]["profile_pic"] = profile["profile_pic"]
 
                 self.set_status(200)
                 self.write(user_list["users"])

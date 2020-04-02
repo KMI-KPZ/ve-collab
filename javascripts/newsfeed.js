@@ -71,7 +71,7 @@ function initNewsFeed() {
     inSpace = false;
     name = currURL.substring(currURL.lastIndexOf('/') + 1);
     if(name == currentUser.username){
-      window.location.href = baseUrl + '/myprofile';
+      //window.location.href = baseUrl + '/myprofile';
     } else {
     document.title = name + ' - Social Network';
     getUserInfo(name);
@@ -153,9 +153,10 @@ $body.delegate('button[id="joinSpace"]', 'click', function () {
 $body.delegate('#result', 'click', 'li', function () {
     var click_text = $(this).text().split('|');
     var selectedUser = $.trim(click_text[0]);
+    console.log(selectedUser);
     $('#search').val(selectedUser);
     $("#result").html('');
-    window.location.href = baseUrl + '/profile/' + selectedUser;
+    //window.location.href = baseUrl + '/profile/' + selectedUser;
 });
 
 $body.delegate('.element i', 'click', function () {
@@ -303,8 +304,9 @@ function displayTimeline(timeline) {
           var existingComment = document.getElementById(comment._id);
           // case if comments doesn't exist => render Comment (postComment)
           if(!document.body.contains(existingComment)) {
-              var isCommentAuthor = (currentUser.username == comment.author) ? true : false;
+              var isCommentAuthor = (currentUser.username == comment.author.username) ? true : false;
               comment["isCommentAuthor"] = isCommentAuthor;
+              comment["authorPicURL"] = baseUrl + '/uploads/' + comment.author.profile_pic;
               comment["ago"] = calculateAgoTime(comment.creation_date);
               $commentsList.prepend(Mustache.render(commentTemplate, comment));
         } else {
@@ -370,8 +372,9 @@ function displayTimeline(timeline) {
     if (post.hasOwnProperty('comments')) {
       var $commentsList = $feed.find('.comments-list');
       $.each(post.comments, function (j, comment) {
-        var isCommentAuthor = (currentUser.username == comment.author) ? true : false;
+        var isCommentAuthor = (currentUser.username == comment.author.username) ? true : false;
         comment["isCommentAuthor"] = isCommentAuthor;
+        comment["authorPicURL"] = baseUrl + '/uploads/' + comment.author.profile_pic;
         comment["ago"] = calculateAgoTime(comment.creation_date);
         $commentsList.prepend(Mustache.render(commentTemplate, comment));
       });
@@ -918,7 +921,8 @@ function searchUser(users) {
      $.each(users, function(key, user){
       if (user.username.search(expression) != -1 || user.email.search(expression) != -1)
       {
-       $('#result').append('<li class="list-group-item link-class"><img src="https://i.pinimg.com/originals/cd/87/3e/cd873ea81fb0089fc9ae813e8f438d22.jpg" height="40" width="40" class="img-thumbnail" /> '+user.username+' | <span class="text-muted">'+user.email+'</span></li>');
+       user["profile_pic_URL"] = baseUrl + '/uploads/' + user["profile_pic"];
+       $('#result').append('<li class="list-group-item link-class"><img src="' + user["profile_pic_URL"] + '" height="40" width="40" class="img-thumbnail" /> '+user.username+' | <span class="text-muted">'+user.email+'</span></li>');
       }
      });
    }
