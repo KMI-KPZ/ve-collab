@@ -1020,7 +1020,8 @@ class ProfileInformationHandler(BaseHandler):
                 profile["bio"] = user_profile["bio"]
                 profile["institution"] = user_profile["institution"]
                 profile["projects"] = user_profile["projects"]
-                profile["profile_pic"] = user_profile["profile_pic"]
+                if "profile_pic" in user_profile:
+                    profile["profile_pic"] = user_profile["profile_pic"]
 
             user_information = {key: user_result["user"][key] for key in user_result["user"]}
             user_information["spaces"] = spaces

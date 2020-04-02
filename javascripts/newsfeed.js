@@ -71,7 +71,7 @@ function initNewsFeed() {
     inSpace = false;
     name = currURL.substring(currURL.lastIndexOf('/') + 1);
     if(name == currentUser.username){
-      //window.location.href = baseUrl + '/myprofile';
+      window.location.href = baseUrl + '/myprofile';
     } else {
     document.title = name + ' - Social Network';
     getUserInfo(name);
@@ -150,13 +150,12 @@ $body.delegate('button[id="joinSpace"]', 'click', function () {
 /**
  * triggers when searchresult is clicked - get his username and redirect to his profile
  */
-$body.delegate('#result', 'click', 'li', function () {
+$body.delegate('.link-class', 'click', function () {
     var click_text = $(this).text().split('|');
     var selectedUser = $.trim(click_text[0]);
-    console.log(selectedUser);
     $('#search').val(selectedUser);
     $("#result").html('');
-    //window.location.href = baseUrl + '/profile/' + selectedUser;
+    window.location.href = baseUrl + '/profile/' + selectedUser;
 });
 
 $body.delegate('.element i', 'click', function () {
