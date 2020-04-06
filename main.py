@@ -595,10 +595,12 @@ class TimelineHandler(BaseHandler):
         # TODO more efficient
         for post in posts:
             author_name = post["author"]
+            post["author"] = {}
             profile = self.db.profiles.find_one({"user": author_name})
-            if "profile_pic" in profile:
-                post["author"] = {"username": author_name,
-                                  "profile_pic": profile["profile_pic"]}
+            if profile:
+                if "profile_pic" in profile:
+                    post["author"]["profile_pic"] = profile["profile_pic"]
+            post["author"]["username"] = author_name
             if "comments" in post:
                 for comment in post["comments"]:
                     comment_author_name = comment["author"]
@@ -658,10 +660,12 @@ class SpaceTimelineHandler(BaseHandler):
                     # TODO more efficient
                     for post in posts:
                         author_name = post["author"]
+                        post["author"] = {}
                         profile = self.db.profiles.find_one({"user": author_name})
-                        if "profile_pic" in profile:
-                            post["author"] = {"username": author_name,
-                                              "profile_pic": profile["profile_pic"]}
+                        if profile:
+                            if "profile_pic" in profile:
+                                post["author"]["profile_pic"] = profile["profile_pic"]
+                        post["author"]["username"] = author_name
                         if "comments" in post:
                             for comment in post["comments"]:
                                 comment_author_name = comment["author"]
@@ -721,10 +725,12 @@ class UserTimelineHandler(BaseHandler):
             # TODO more efficient
             for post in posts:
                 author_name = post["author"]
+                post["author"] = {}
                 profile = self.db.profiles.find_one({"user": author_name})
-                if "profile_pic" in profile:
-                    post["author"] = {"username": author_name,
-                                      "profile_pic": profile["profile_pic"]}
+                if profile:
+                    if "profile_pic" in profile:
+                        post["author"]["profile_pic"] = profile["profile_pic"]
+                post["author"]["username"] = author_name
                 if "comments" in post:
                     for comment in post["comments"]:
                         comment_author_name = comment["author"]
@@ -801,10 +807,12 @@ class PersonalTimelineHandler(BaseHandler):
             # TODO more efficient
             for post in posts:
                 author_name = post["author"]
+                post["author"] = {}
                 profile = self.db.profiles.find_one({"user": author_name})
-                if "profile_pic" in profile:
-                    post["author"] = {"username": author_name,
-                                      "profile_pic": profile["profile_pic"]}
+                if profile:
+                    if "profile_pic" in profile:
+                        post["author"]["profile_pic"] = profile["profile_pic"]
+                post["author"]["username"] = author_name
                 if "comments" in post:
                     for comment in post["comments"]:
                         comment_author_name = comment["author"]
@@ -1162,8 +1170,9 @@ class UserHandler(BaseHandler):
                                                   "username": username})
 
                 profile = self.db.profiles.find_one({"user": username})
-                if "profile_pic" in profile:
-                    user_result["user"]["profile_pic"] = profile["profile_pic"]
+                if profile:
+                    if "profile_pic" in profile:
+                        user_result["user"]["profile_pic"] = profile["profile_pic"]
 
                 self.set_status(200)
                 self.write(user_result["user"])
