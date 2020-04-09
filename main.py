@@ -11,6 +11,7 @@ import tornado.locks
 import dateutil.parser
 import SOCIALSERV_CONSTANTS
 import re
+import shutil
 from bson.objectid import ObjectId
 from datetime import datetime, timedelta
 from pymongo import MongoClient
@@ -28,6 +29,11 @@ class BaseHandler(tornado.web.RequestHandler):
     def initialize(self):
         self.client = MongoClient('localhost', 27017)
         self.db = self.client['social_serv']  # TODO make this generic via config
+
+        if not os.path.isdir("uploads"):
+            os.mkdir("uploads")
+
+        shutil.copy2("assets/default_profile_pic.jpg", "uploads")
 
     async def prepare(self):
         # standalone dev mode: no auth, dummy platform
@@ -596,6 +602,7 @@ class TimelineHandler(BaseHandler):
         for post in posts:
             author_name = post["author"]
             post["author"] = {}
+            post["author"]["profile_pic"] = "default_profile_pic.jpg"
             profile = self.db.profiles.find_one({"user": author_name})
             if profile:
                 if "profile_pic" in profile:
@@ -604,10 +611,13 @@ class TimelineHandler(BaseHandler):
             if "comments" in post:
                 for comment in post["comments"]:
                     comment_author_name = comment["author"]
+                    comment["author"] = {}
+                    comment["author"]["profile_pic"] = "default_profile_pic.jpg"
                     comment_author_profile = self.db.profiles.find_one({"user": comment_author_name})
-                    if "profile_pic" in comment_author_profile:
-                        comment["author"] = {"username": comment_author_name,
-                                             "profile_pic": comment_author_profile["profile_pic"]}
+                    if comment_author_profile:
+                        if "profile_pic" in comment_author_profile:
+                            comment["author"]["profile_pic"] = comment_author_profile["profile_pic"]
+                    comment["author"]["username"] = comment_author_name
 
         self.set_status(200)
         self.write({"posts": posts})
@@ -661,6 +671,7 @@ class SpaceTimelineHandler(BaseHandler):
                     for post in posts:
                         author_name = post["author"]
                         post["author"] = {}
+                        post["author"]["profile_pic"] = "default_profile_pic.jpg"
                         profile = self.db.profiles.find_one({"user": author_name})
                         if profile:
                             if "profile_pic" in profile:
@@ -669,10 +680,13 @@ class SpaceTimelineHandler(BaseHandler):
                         if "comments" in post:
                             for comment in post["comments"]:
                                 comment_author_name = comment["author"]
+                                comment["author"] = {}
+                                comment["author"]["profile_pic"] = "default_profile_pic.jpg"
                                 comment_author_profile = self.db.profiles.find_one({"user": comment_author_name})
-                                if "profile_pic" in comment_author_profile:
-                                    comment["author"] = {"username": comment_author_name,
-                                                         "profile_pic": comment_author_profile["profile_pic"]}
+                                if comment_author_profile:
+                                    if "profile_pic" in comment_author_profile:
+                                        comment["author"]["profile_pic"] = comment_author_profile["profile_pic"]
+                                comment["author"]["username"] = comment_author_name
 
                     self.set_status(200)
                     self.write({"posts": posts})
@@ -726,6 +740,7 @@ class UserTimelineHandler(BaseHandler):
             for post in posts:
                 author_name = post["author"]
                 post["author"] = {}
+                post["author"]["profile_pic"] = "default_profile_pic.jpg"
                 profile = self.db.profiles.find_one({"user": author_name})
                 if profile:
                     if "profile_pic" in profile:
@@ -734,10 +749,13 @@ class UserTimelineHandler(BaseHandler):
                 if "comments" in post:
                     for comment in post["comments"]:
                         comment_author_name = comment["author"]
+                        comment["author"] = {}
+                        comment["author"]["profile_pic"] = "default_profile_pic.jpg"
                         comment_author_profile = self.db.profiles.find_one({"user": comment_author_name})
-                        if "profile_pic" in comment_author_profile:
-                            comment["author"] = {"username": comment_author_name,
-                                                 "profile_pic": comment_author_profile["profile_pic"]}
+                        if comment_author_profile:
+                            if "profile_pic" in comment_author_profile:
+                                comment["author"]["profile_pic"] = comment_author_profile["profile_pic"]
+                        comment["author"]["username"] = comment_author_name
 
             self.set_status(200)
             self.write({"posts": posts})
@@ -808,6 +826,7 @@ class PersonalTimelineHandler(BaseHandler):
             for post in posts:
                 author_name = post["author"]
                 post["author"] = {}
+                post["author"]["profile_pic"] = "default_profile_pic.jpg"
                 profile = self.db.profiles.find_one({"user": author_name})
                 if profile:
                     if "profile_pic" in profile:
@@ -816,10 +835,13 @@ class PersonalTimelineHandler(BaseHandler):
                 if "comments" in post:
                     for comment in post["comments"]:
                         comment_author_name = comment["author"]
+                        comment["author"] = {}
+                        comment["author"]["profile_pic"] = "default_profile_pic.jpg"
                         comment_author_profile = self.db.profiles.find_one({"user": comment_author_name})
-                        if "profile_pic" in comment_author_profile:
-                            comment["author"] = {"username": comment_author_name,
-                                                 "profile_pic": comment_author_profile["profile_pic"]}
+                        if comment_author_profile:
+                            if "profile_pic" in comment_author_profile:
+                                comment["author"]["profile_pic"] = comment_author_profile["profile_pic"]
+                        comment["author"]["username"] = comment_author_name
 
             self.set_status(200)
             self.write({"posts": posts})
@@ -1024,6 +1046,7 @@ class ProfileInformationHandler(BaseHandler):
                 filter={"user": username}
             )
             profile = {}
+            profile["profile_pic"] = "default_profile_pic.jpg"
             for user_profile in profile_cursor:
                 profile["bio"] = user_profile["bio"]
                 profile["institution"] = user_profile["institution"]
@@ -1168,7 +1191,7 @@ class UserHandler(BaseHandler):
                 client = await get_socket_instance()
                 user_result = await client.write({"type": "get_user",
                                                   "username": username})
-
+                user_result["user"]["profile_pic"] = "default_profile_pic.jpg"
                 profile = self.db.profiles.find_one({"user": username})
                 if profile:
                     if "profile_pic" in profile:
@@ -1182,9 +1205,8 @@ class UserHandler(BaseHandler):
                 user_list = await client.write({"type": "get_user_list"})
 
                 for user in user_list["users"]:
-                    print(user)
+                    user_list["users"][user]["profile_pic"] = "default_profile_pic.jpg"
                     profile = self.db.profiles.find_one({"user": user})
-                    print(profile)
                     if profile:
                         if "profile_pic" in profile:
                             user_list["users"][user]["profile_pic"] = profile["profile_pic"]
