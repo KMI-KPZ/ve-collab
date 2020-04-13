@@ -30,10 +30,19 @@ class BaseHandler(tornado.web.RequestHandler):
         self.client = MongoClient('localhost', 27017)
         self.db = self.client['social_serv']  # TODO make this generic via config
 
-        if not os.path.isdir("uploads"):
-            os.mkdir("uploads")
+        self.upload_dir = "uploads/"
+        if SOCIALSERV_CONSTANTS.STARTED_BY_PLATFORM:
+            self.upload_dir = "modules/SocialServ/uploads/"
 
-        shutil.copy2("assets/default_profile_pic.jpg", "uploads")
+        if not os.path.isdir(self.upload_dir):
+            os.mkdir(self.upload_dir)
+
+        if SOCIALSERV_CONSTANTS.STARTED_BY_PLATFORM:
+            if not os.path.isfile(self.upload_dir + "default_profile_pic.jpg"):
+                shutil.copy2("modules/SocialServ/assets/default_profile_pic.jpg", self.upload_dir)
+        else:
+            if not os.path.isfile(self.upload_dir + "default_profile_pic.jpg"):
+                shutil.copy2("assets/default_profile_pic.jpg", self.upload_dir)
 
     async def prepare(self):
         # standalone dev mode: no auth, dummy platform
@@ -165,9 +174,7 @@ class PostHandler(BaseHandler):
             file_amount = self.get_body_argument("file_amount", None)
             files = []
             if file_amount:
-                # check if uploads folder exists
-                if not os.path.isdir("uploads"):
-                    os.mkdir("uploads")
+
                 # save every file
                 for i in range(0, int(file_amount)):
                     file_obj = self.request.files["file" + str(i)][0]
@@ -176,7 +183,7 @@ class PostHandler(BaseHandler):
                     new_file_name = re.sub('[^0-9a-zäöüßA-ZÄÖÜ]+', '_', new_file_name).lower() + file_ext
                     print(new_file_name)
 
-                    with open("uploads/" + new_file_name, "wb") as fp:
+                    with open(self.upload_dir + new_file_name, "wb") as fp:
                         fp.write(file_obj["body"])
 
                     files.append(new_file_name)
@@ -1105,17 +1112,13 @@ class ProfileInformationHandler(BaseHandler):
                 print("in file handling")
                 profile_pic_obj = self.request.files["profile_pic"][0]
 
-                # check if uploads folder exists
-                if not os.path.isdir("uploads"):
-                    os.mkdir("uploads")
-
                 # save file
                 file_ext = os.path.splitext(profile_pic_obj["filename"])[1]
                 new_file_name = b64encode(os.urandom(32)).decode("utf-8")
                 new_file_name = re.sub('[^0-9a-zäöüßA-ZÄÖÜ]+', '_', new_file_name).lower() + file_ext
                 print(new_file_name)
 
-                with open("uploads/" + new_file_name, "wb") as fp:
+                with open(self.upload_dir + new_file_name, "wb") as fp:
                     fp.write(profile_pic_obj["body"])
 
             if new_file_name:
@@ -1346,6 +1349,7 @@ def stop_signal():  # invoked by platform
 
 def make_app(called_by_platform):
     if called_by_platform:
+        SOCIALSERV_CONSTANTS.STARTED_BY_PLATFORM = True
         return tornado.web.Application([
             (r"/main", MainHandler),
             (r"/admin", AdminHandler),
@@ -1368,7 +1372,7 @@ def make_app(called_by_platform):
             (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./modules/SocialServ/css/"}),
             (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./modules/SocialServ/html/"}),
             (r"/javascripts/(.*)", tornado.web.StaticFileHandler, {"path": "./modules/SocialServ/javascripts/"}),
-            (r"/uploads(.*)", tornado.web.StaticFileHandler, {"path": "./uploads/"})
+            (r"/uploads/(.*)", tornado.web.StaticFileHandler, {"path": "./modules/SocialServ/uploads/"})
         ])
     else:
         return tornado.web.Application([

@@ -398,7 +398,7 @@ function displayTimeline(timeline) {
 function getTimeline(from, to) {
   $.ajax({
     type: 'GET',
-    url: baseUrl + '/timeline?from=' + from + '&to=' + to,
+    url: '/timeline?from=' + from + '&to=' + to,
     dataType: 'json',
     success: function (timeline) {
       displayTimeline(timeline);
@@ -426,7 +426,7 @@ function getTimeline(from, to) {
 function getPersonalTimeline(from, to) {
   $.ajax({
     type: 'GET',
-    url: baseUrl + '/timeline/you?from=' + from + '&to=' + to,
+    url: '/timeline/you?from=' + from + '&to=' + to,
     dataType: 'json',
     success: function (timeline) {
       displayTimeline(timeline);
@@ -454,7 +454,7 @@ function getPersonalTimeline(from, to) {
 function getTimelineSpace(spacename, from, to) {
   $.ajax({
     type: 'GET',
-    url: baseUrl + '/timeline/space/' + spacename + '?from=' + from + '&to=' + to,
+    url: '/timeline/space/' + spacename + '?from=' + from + '&to=' + to,
     dataType: 'json',
     success: function (timeline) {
       displayTimeline(timeline);
@@ -486,7 +486,7 @@ function getTimelineSpace(spacename, from, to) {
 function getTimelineUser(username, from, to) {
   $.ajax({
     type: 'GET',
-    url: baseUrl + '/timeline/user/' + username + '?from=' + from + '&to=' + to,
+    url: '/timeline/user/' + username + '?from=' + from + '&to=' + to,
     dataType: 'json',
     success: function (timeline) {
       displayTimeline(timeline);
@@ -532,7 +532,7 @@ function post(text, tags, space) {
   */
   $.ajax({
     type: 'POST',
-    url: baseUrl + '/posts',
+    url: '/posts',
     data: formData,
     //important for upload
     contentType: false,
@@ -577,7 +577,7 @@ function deletePost(id) {
   dataBody = JSON.stringify(dataBody);
   $.ajax({
     type: 'DELETE',
-    url: baseUrl + '/posts',
+    url: '/posts',
     data: dataBody,
     success: function (data) {
       console.log("deleted post " + id);
@@ -613,7 +613,7 @@ function postComment(text, id) {
   dataBody = JSON.stringify(dataBody);
   $.ajax({
     type: 'POST',
-    url: baseUrl + '/comment',
+    url: '/comment',
     data: dataBody,
     success: function (data) {
       console.log("posted " + text);
@@ -646,7 +646,7 @@ function deleteComment(id) {
   dataBody = JSON.stringify(dataBody);
   $.ajax({
     type: 'DELETE',
-    url: baseUrl + '/comment',
+    url: '/comment',
     data: dataBody,
     success: function (data) {
       console.log("deleted comment " + id);
@@ -680,7 +680,7 @@ function postLike(id) {
   dataBody = JSON.stringify(dataBody);
   $.ajax({
     type: 'POST',
-    url: baseUrl + '/like',
+    url: '/like',
     data: dataBody,
     success: function (data) {
       console.log("liked post " + id);
@@ -713,7 +713,7 @@ function deleteLike(id) {
   dataBody = JSON.stringify(dataBody);
   $.ajax({
     type: 'DELETE',
-    url: baseUrl + '/like',
+    url: '/like',
     data: dataBody,
     success: function (data) {
       console.log("disliked post " + id);
@@ -741,7 +741,7 @@ function deleteLike(id) {
 function getSpaces() {
   $.ajax({
     type: 'GET',
-    url: baseUrl + '/spaceadministration/list',
+    url: '/spaceadministration/list',
     dataType: 'json',
     success: function (data) {
       console.log("get Spaces success");
@@ -784,7 +784,7 @@ function getSpaces() {
 function createSpace(name) {
   $.ajax({
     type: 'POST',
-    url: baseUrl + '/spaceadministration/create?name=' + name,
+    url: '/spaceadministration/create?name=' + name,
     success: function (data) {
       console.log("created space " + name);
       $body.find('#newSpaceName').val('');
@@ -812,7 +812,7 @@ function createSpace(name) {
 function joinSpace(name) {
   $.ajax({
     type: 'POST',
-    url: baseUrl + '/spaceadministration/join?name=' + name,
+    url: '/spaceadministration/join?name=' + name,
     success: function (data) {
       console.log("joined space " + name);
     },
@@ -837,7 +837,7 @@ function joinSpace(name) {
 function checkUpdate() {
   $.ajax({
     type: 'GET',
-    url: baseUrl + '/updates?from=' + now,
+    url: '/updates?from=' + now,
     dataType: 'json'
   }).done(function (data, statusText, xhr) {
     if (xhr.status == 200) initNewsFeed();
@@ -852,7 +852,7 @@ function checkUpdate() {
 function getCurrentUserInfo() {
   $.ajax({
     type: 'GET',
-    url: baseUrl + '/profileinformation',
+    url: '/profileinformation',
     dataType: 'json',
     success: function (data) {
       currentUser = data;
@@ -882,7 +882,7 @@ function getCurrentUserInfo() {
 function getUserInfo(name){
   $.ajax({
     type: 'GET',
-    url: baseUrl + '/users/user_data?username=' + name,
+    url: '/users/user_data?username=' + name,
     dataType: 'json',
     success: function (data) {
       user = data;
@@ -935,7 +935,7 @@ function searchUser(users) {
 function getAllUsers(){
   $.ajax({
     type: 'GET',
-    url: baseUrl + '/users/list',
+    url: '/users/list',
     dataType: 'json',
     success: function (data) {
       users = data;
@@ -965,7 +965,7 @@ function getAllUsers(){
 function getFollows(name) {
   $.ajax({
     type: 'GET',
-    url: baseUrl + '/follow?user=' + name,
+    url: '/follow?user=' + name,
     dataType: 'json',
     success: function (data) {
       user['follows'] = data.follows;
@@ -995,7 +995,7 @@ function getFollows(name) {
 function postFollow(name) {
   $.ajax({
     type: 'POST',
-    url: baseUrl + '/follow?user=' + name,
+    url: '/follow?user=' + name,
     success: function (data) {
       console.log("followed" + name);
     },

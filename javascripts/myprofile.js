@@ -54,7 +54,7 @@ function postProfileInformation(photo, bio, institution, projects) {
   }
   $.ajax({
     type: 'POST',
-    url: baseUrl + '/profileinformation',
+    url: '/profileinformation',
     data: formData,
     //important for upload
     contentType: false,
