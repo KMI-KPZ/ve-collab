@@ -1,8 +1,8 @@
 //URL's
 var loc = new URL(window.location.href);
-var baseUrl = 'http://localhost:' + loc.port;
-var loginURL = 'https://localhost:8888/login';
-var currURL = window.location.href;
+var baseUrl = window.location.origin; // Returns base URL (https://example.com)
+var loginURL = baseUrl + '/login';
+var currURL = window.location.href; // Returns full URL (https://example.com/path/example.html)
 
 //Datetimes
 var today = new Date();
