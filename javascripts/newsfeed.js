@@ -9,6 +9,7 @@ var today = new Date();
 var yesterday = new Date(new Date().getTime() - (24 * 60 * 60 * 1000)); //24 hours ago
 var now = today.toISOString();
 var from = yesterday.toISOString();
+var daysAgo = 0;
 
 //HTML & JQuery
 var $body = $('body');
@@ -54,7 +55,7 @@ function initNewsFeed() {
   } else if (currURL == baseUrl + '/myprofile') {
     inSpace = false;
     document.title = currentUser.username + ' - Social Network';
-    getTimelineUser(currentUser.username, from, now);
+
     currentUser['followSize'] = currentUser['follows'].length;
     currentUser['spaceSize'] = currentUser['spaces'].length;
     currentUser["profile_pic_URL"] = baseUrl + '/uploads/' + currentUser["profile"]["profile_pic"];
@@ -67,6 +68,8 @@ function initNewsFeed() {
       var render = Mustache.to_html(template, currentUser);
       $("#profileContainer").empty().html(render);
     }
+    getTimelineUser(currentUser.username, from, now);
+
   } else if (currURL.indexOf(baseUrl + '/profile') !== -1) {
     inSpace = false;
     name = currURL.substring(currURL.lastIndexOf('/') + 1);
@@ -74,7 +77,21 @@ function initNewsFeed() {
       window.location.href = baseUrl + '/myprofile';
     } else {
     document.title = name + ' - Social Network';
+
     getUserInfo(name);
+    user["profile_pic_URL"] = baseUrl + '/uploads/' + user.profile_pic;
+    getFollows(name);
+    user["isFollowed"] = (currentUser.follows.includes(name)) ? true : false;
+
+    if(!document.body.contains(document.getElementById('profilePanel'))){
+      $('#profileContainer').prepend(Mustache.render(document.getElementById('profileTemplate').innerHTML, user));
+    } else {
+      var template = document.getElementById('profileTemplate').innerHTML;
+      Mustache.parse(template);
+      var render = Mustache.to_html(template, user);
+      $("#profileContainer").empty().html(render);
+    }
+    getTimelineUser(name, from, now);
     }
   }
   getSpaces();
@@ -262,11 +279,13 @@ function displayTimeline(timeline) {
   $('[data-toggle="tooltip"]').tooltip();
   $('.carousel').carousel();
   //loading posts => set from-Date until there is a post in interval from - to
-  if(timeline.posts.length === 0) {
+  if(timeline.posts.length === 0 && daysAgo < 30) {
     yesterday = new Date(yesterday - (24 * 60 * 60 * 1000));
+    daysAgo += 1;
     initNewsFeed();
     return;
   }
+  daysAgo = 0;
   //sort posts based on creation_date from new to older
   var sortPostsByDateArray = timeline.posts.sort(comp);
   $.each(sortPostsByDateArray, function (i, post) {
@@ -884,9 +903,9 @@ function getUserInfo(name){
     type: 'GET',
     url: '/users/user_data?username=' + name,
     dataType: 'json',
+    async: false,
     success: function (data) {
       user = data;
-      getFollows(name);
     },
 
     error: function (xhr, status, error) {
@@ -959,7 +978,6 @@ function getAllUsers(){
 /**
  * getFollows - get JSON of who the user is following
  * renders profileTemplate
- * calls getTimelineUser
  * @param  {String} name username
  */
 function getFollows(name) {
@@ -967,11 +985,10 @@ function getFollows(name) {
     type: 'GET',
     url: '/follow?user=' + name,
     dataType: 'json',
+    async: false,
     success: function (data) {
       user['follows'] = data.follows;
       user['followSize'] = data.follows.length;
-      if(!document.body.contains(document.getElementById('profilePanel'))) $('#profileContainer').prepend(Mustache.render(document.getElementById('profileTemplate').innerHTML, user));
-      getTimelineUser(name, from, now);
     },
 
     error: function (xhr, status, error) {
@@ -979,32 +996,6 @@ function getFollows(name) {
         window.location.href = loginURL;
       } else {
         alert('error get user follows');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
-      }
-    },
-  });
-}
-
-/**
- * postFollow - follow the user
- *
- * @param  {String} name username
- */
-function postFollow(name) {
-  $.ajax({
-    type: 'POST',
-    url: '/follow?user=' + name,
-    success: function (data) {
-      console.log("followed" + name);
-    },
-
-    error: function (xhr, status, error) {
-      if (xhr.status == 401) {
-        window.location.href = loginURL;
-      } else {
-        alert('error post follow');
         console.log(error);
         console.log(status);
         console.log(xhr);
