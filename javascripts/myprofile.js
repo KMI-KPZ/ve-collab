@@ -1,5 +1,6 @@
 $(document).ready(function () {
-
+  document.title = currentUser.username + ' - Social Network';
+  updateProfileContainer();
 });
 
 /**
@@ -15,6 +16,22 @@ $body.delegate('#photoFile', 'change', function () {
   $('#photoLabel').html(name);
 });
 
+function updateProfileContainer(){
+  currentUser['followSize'] = currentUser['follows'].length;
+  currentUser['spaceSize'] = currentUser['spaces'].length;
+  currentUser["profile_pic_URL"] = baseUrl + '/uploads/' + currentUser["profile"]["profile_pic"];
+  if(currentUser.hasOwnProperty('projects')) currentUser['projectSize'] = currentUser['projects'].length;
+
+  if(!document.body.contains(document.getElementById('profilePanel'))){
+    $('#profileContainer').prepend(Mustache.render(document.getElementById('profileTemplate').innerHTML, currentUser));
+  } else {
+    var template = document.getElementById('profileTemplate').innerHTML;
+    Mustache.parse(template);
+    var render = Mustache.to_html(template, currentUser);
+    $("#profileContainer").empty().html(render);
+  }
+}
+
 /**
  * saveProfileInformation
  * get Values from input fields & calls postProfileInformation
@@ -23,7 +40,10 @@ function saveProfileInformation() {
   var bio = String($('#bio').val());
   var institution = $('#institutionInput').val();
   var fileInput = document.getElementById('photoFile');
-  var photo = (isImage(fileInput.files[0].name)) ? fileInput.files[0] : null;
+  var photo = null;
+  if(fileInput.files.length > 0){
+    photo = (isImage(fileInput.files[0].name)) ? fileInput.files[0] : null;
+  }
   postProfileInformation(photo, bio, institution, null);
 }
 
@@ -63,10 +83,8 @@ function postProfileInformation(photo, bio, institution, projects) {
       $("#saveAlert").html('Successfully updated!');
       $("#saveAlert").addClass("alert alert-success");
       $('#settingsModal').modal('toggle');
-
-      setTimeout(function () {
-        getCurrentUserInfo();
-      }, 1000);
+      getCurrentUserInfo();
+      updateProfileContainer();
 
     },
 
