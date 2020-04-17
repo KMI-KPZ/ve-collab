@@ -193,7 +193,7 @@
                         <img class="d-block w-100" src="{{!firstMediaURL}}" alt="post image">
                         {{!/firstMediaIsImage}}
                         {{!^firstMediaIsImage}}
-                        <video width="100%" height="100%" autoplay="false" controls>
+                        <video width="100%" height="100%" autostart="false" controls>
                             <source src="{{!firstMediaURL}}">
                             Your browser does not support the video tag.
                         </video>
@@ -201,7 +201,7 @@
                       </div>
                       {{!#tailVideosURL}}
                       <div class="carousel-item">
-                      <video width="100%" height="100%" autoplay="false" controls>
+                      <video width="100%" height="100%" autostart="false" controls>
                           <source src="{{!.}}">
                           Your browser does not support the video tag.
                         </video>
@@ -225,7 +225,9 @@
                     {{!/multipleMedia}}
                 </div>
               {{!/hasMedia}}
-
+              {{!#audiosURL}}
+              <p><audio id=voiceInput src={{!.}} controls=true autostart="false"></audio></p>
+              {{!/audiosURL}}
               {{!#otherfiles}}
                 <i class="fa fa-download"></i> <a href="{{!path}}" download>{{!name}}</a>
               {{!/otherfiles}}

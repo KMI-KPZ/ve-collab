@@ -26,6 +26,7 @@ var user = {};
 var users = {};
 
 var fileList = [];
+
 /**
  * initNewsFeed - renders the timeline depending on the current URL
  * update Datetimes and get information about all Spaces
@@ -147,17 +148,54 @@ $body.delegate('.link-class', 'click', function () {
     window.location.href = baseUrl + '/profile/' + selectedUser;
 });
 
-$body.delegate('.element i', 'click', function () {
+$body.delegate('i.fa-file', 'click', function () {
   $("input[type='file']").trigger('click');
 });
 
+$body.delegate('#record', 'click', function () {
+  if($(this).hasClass('btn-success')){
+    navigator.mediaDevices.getUserMedia({audio:true}).then(stream => {
+      handlerFunction(stream);
+      console.log("recording");
+      $(this).removeClass('btn-success');
+      $(this).addClass('btn-danger');
+      audioChunks = [];
+      rec.start();
+    });
+  } else {
+    console.log("stopped recording");
+    $(this).removeClass('btn-danger');
+    $(this).addClass('btn-success');
+    rec.stop();
+  }
+});
+
+function handlerFunction(stream){
+  rec = new MediaRecorder(stream);
+  rec.ondataavailable = e => {
+    audioChunks.push(e.data);
+    if (rec.state == "inactive"){
+      let blob = new Blob(audioChunks,{type:'audio/mpeg-3'});
+      recordedAudio.src = URL.createObjectURL(blob);
+      recordedAudio.controls=true;
+      recordedAudio.autoplay=true;
+      for (var pair of fileList.entries()) {
+          if(pair[1].name == "VoiceInput.mpeg") fileList.splice(pair[0], 1);
+      }
+      fileList.push(new File([blob], "VoiceInput.mpeg"));
+    }
+  }
+}
+
 $body.delegate('#files', 'change', function () {
   var fileInput = document.getElementById('files');
-  fileList = [];
+  for (var pair of fileList.entries()) {
+      if(pair[1].name != "VoiceInput.mpeg") fileList.splice(pair[0], 1);
+  }
   $('#postdiv span').remove();
   $('#postdiv br').remove();
   for(var i=0; i < fileInput.files.length; i++) {
-    //console.log(fileInput.files[i]);
+    console.log(fileInput.files[i]);
     fileList.push(fileInput.files[i]);
     $('#postdiv').append('<span class="name">'+fileInput.files[i].name+'</span></br>');
   }
@@ -192,6 +230,16 @@ function isVideo(filename) {
     case 'gif':
     case 'ogv':
       // etc
+      return true;
+  }
+  return false;
+}
+
+function isAudio(filename) {
+  var ext = getExtension(filename);
+  switch (ext.toLowerCase()) {
+    case 'mpeg':
+      //etc
       return true;
   }
   return false;
@@ -311,12 +359,14 @@ function displayTimeline(timeline) {
     if(post.hasOwnProperty('files') && post.files.length > 0) {
         var fileImages = [];
         var fileVideos = [];
+        var fileAudios = [];
         var fileMediaCountTail = [];
-
         var otherfiles = [];
+
         $.each(post.files, function (j, file) {
           if(isImage(file)) fileImages.push(baseUrl + '/uploads/' + file);
           else if (isVideo(file)) fileVideos.push(baseUrl + '/uploads/' + file);
+          else if (isAudio(file)) fileAudios.push(baseUrl + '/uploads/' + file);
           else {
             otherfiles.push({"path": baseUrl + '/uploads/' + file, "name" : file});
           }
@@ -324,15 +374,17 @@ function displayTimeline(timeline) {
 
         post["hasMedia"] = ((fileImages.length + fileVideos.length) > 0) ? true : false;
         post["multipleMedia"] = ((fileImages.length + fileVideos.length) > 1) ? true : false;
-        var media = fileImages.concat(fileVideos); //concatenation of 2 arrays
-        var firstMediaURL = media.shift();  //removes first element of media
-        post["firstMediaURL"] = firstMediaURL;
-        post["firstMediaIsImage"] = (isImage(firstMediaURL)) ? true : false;
-        post["tailImagesURL"] = fileImages.filter(value => media.includes(value)); //intersection of 2 arrays => fileImages and media
-        post["tailVideosURL"] = fileVideos.filter(value => media.includes(value));
-
-        for(var i=0; i<media.length; i++) fileMediaCountTail.push(i+1);
-        post["fileMediaCountTail"] = fileMediaCountTail;
+        if(post["hasMedia"] == true){
+          var media = fileImages.concat(fileVideos); //concatenation of 2 arrays
+          var firstMediaURL = media.shift();  //removes first element of media
+          post["firstMediaURL"] = firstMediaURL;
+          post["firstMediaIsImage"] = (isImage(firstMediaURL)) ? true : false;
+          post["tailImagesURL"] = fileImages.filter(value => media.includes(value)); //intersection of 2 arrays => fileImages and media
+          post["tailVideosURL"] = fileVideos.filter(value => media.includes(value));
+          for(var i=0; i<media.length; i++) fileMediaCountTail.push(i+1);
+          post["fileMediaCountTail"] = fileMediaCountTail;
+      }
+        post["audiosURL"] = fileAudios;
         post["otherfiles"] = otherfiles;
     }
 
@@ -537,6 +589,8 @@ function post(text, tags, space) {
       fileList = [];
       $('#postdiv span').remove();
       $('#postdiv br').remove();
+      var audio = document.getElementById("recordedAudio");
+      audio.removeAttribute("controls");
 
       $("#postAlert").html('');
       $("#postAlert").removeClass("alert alert-danger");

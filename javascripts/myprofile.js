@@ -11,8 +11,8 @@ $body.delegate('#settingsTab a', 'click', function () {
   });
 
 $body.delegate('#photoFile', 'change', function () {
-  var fileInput = document.getElementById('photoFile');
-  var name = fileInput.files[0].name;
+  var photoFile = document.getElementById('photoFile');
+  var name = photoFile.files[0].name;
   $('#photoLabel').html(name);
 });
 
@@ -39,10 +39,10 @@ function updateProfileContainer(){
 function saveProfileInformation() {
   var bio = String($('#bio').val());
   var institution = $('#institutionInput').val();
-  var fileInput = document.getElementById('photoFile');
+  var photoFile = document.getElementById('photoFile');
   var photo = null;
-  if(fileInput.files.length > 0){
-    photo = (isImage(fileInput.files[0].name)) ? fileInput.files[0] : null;
+  if(photoFile.files.length > 0){
+    photo = (isImage(photoFile.files[0].name)) ? photoFile.files[0] : null;
   }
   postProfileInformation(photo, bio, institution, null);
 }
