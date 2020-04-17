@@ -82,7 +82,7 @@ class Client(object):
 
         return fut
 
-    def keep_alive(self):
+    async def keep_alive(self):
         if self.ws is None:
             print("reconnecting")
-            self.connect()
+            await self.connect()

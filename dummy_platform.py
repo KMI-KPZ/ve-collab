@@ -52,6 +52,12 @@ class WebsocketHandler(tornado.websocket.WebSocketHandler):
                                 "users": dummy_users,
                                 "resolve_id": json_message['resolve_id']})
 
+        elif json_message['type'] == "check_permission":  # dummy platform always returns admin permissions
+            self.write_message({"type": "check_permission_response",
+                                "username": json_message["username"],
+                                "role": "admin",
+                                "resolve_id": json_message['resolve_id']})
+
     def on_close(self):
         self.connections.remove(self)
 

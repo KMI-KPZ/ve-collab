@@ -12,6 +12,7 @@ import dateutil.parser
 import SOCIALSERV_CONSTANTS
 import re
 import shutil
+import util
 from bson.objectid import ObjectId
 from datetime import datetime, timedelta
 from pymongo import MongoClient
@@ -582,7 +583,7 @@ class TimelineHandler(BaseHandler):
     no use case in production, maybe use case for moderators?
     """
 
-    def get(self):
+    async def get(self):
         """
         GET /timeline
         query params:
@@ -592,42 +593,47 @@ class TimelineHandler(BaseHandler):
             200 OK,
             {"posts": [post1, post2,...]}
         """
+        if await util.is_admin(self.current_user.username):
+            time_from = self.get_argument("from", (datetime.utcnow() - timedelta(days=1)).isoformat())  # default value is 24h ago
+            time_to = self.get_argument("to", datetime.utcnow().isoformat())  # default value is now
 
-        time_from = self.get_argument("from", (datetime.utcnow() - timedelta(days=1)).isoformat())  # default value is 24h ago
-        time_to = self.get_argument("to", datetime.utcnow().isoformat())  # default value is now
+            # parse time strings into datetime objects (dateutil is able to guess format)
+            # however safe way is to use ISO 8601 format
+            time_from = dateutil.parser.parse(time_from)
+            time_to = dateutil.parser.parse(time_to)
 
-        # parse time strings into datetime objects (dateutil is able to guess format)
-        # however safe way is to use ISO 8601 format
-        time_from = dateutil.parser.parse(time_from)
-        time_to = dateutil.parser.parse(time_to)
+            result = self.db.posts.find(
+                            filter={"creation_date": {"$gte": time_from, "$lte": time_to}})
 
-        result = self.db.posts.find(
-                        filter={"creation_date": {"$gte": time_from, "$lte": time_to}})
+            posts = self.json_serialize_posts(result)
+            # TODO more efficient
+            for post in posts:
+                author_name = post["author"]
+                post["author"] = {}
+                post["author"]["profile_pic"] = "default_profile_pic.jpg"
+                profile = self.db.profiles.find_one({"user": author_name})
+                if profile:
+                    if "profile_pic" in profile:
+                        post["author"]["profile_pic"] = profile["profile_pic"]
+                post["author"]["username"] = author_name
+                if "comments" in post:
+                    for comment in post["comments"]:
+                        comment_author_name = comment["author"]
+                        comment["author"] = {}
+                        comment["author"]["profile_pic"] = "default_profile_pic.jpg"
+                        comment_author_profile = self.db.profiles.find_one({"user": comment_author_name})
+                        if comment_author_profile:
+                            if "profile_pic" in comment_author_profile:
+                                comment["author"]["profile_pic"] = comment_author_profile["profile_pic"]
+                        comment["author"]["username"] = comment_author_name
 
-        posts = self.json_serialize_posts(result)
-        # TODO more efficient
-        for post in posts:
-            author_name = post["author"]
-            post["author"] = {}
-            post["author"]["profile_pic"] = "default_profile_pic.jpg"
-            profile = self.db.profiles.find_one({"user": author_name})
-            if profile:
-                if "profile_pic" in profile:
-                    post["author"]["profile_pic"] = profile["profile_pic"]
-            post["author"]["username"] = author_name
-            if "comments" in post:
-                for comment in post["comments"]:
-                    comment_author_name = comment["author"]
-                    comment["author"] = {}
-                    comment["author"]["profile_pic"] = "default_profile_pic.jpg"
-                    comment_author_profile = self.db.profiles.find_one({"user": comment_author_name})
-                    if comment_author_profile:
-                        if "profile_pic" in comment_author_profile:
-                            comment["author"]["profile_pic"] = comment_author_profile["profile_pic"]
-                    comment["author"]["username"] = comment_author_name
+            self.set_status(200)
+            self.write({"posts": posts})
 
-        self.set_status(200)
-        self.write({"posts": posts})
+        else:
+            self.set_status(401)
+            self.write({"status": 401,
+                        "reason": "not_admin"})
 
 
 class SpaceTimelineHandler(BaseHandler):
@@ -1334,6 +1340,21 @@ class TaskHandler(BaseHandler):
                         "reason": "no_logged_in_user"})
 
 
+class PermissionHandler(BaseHandler):
+
+    async def get(self):
+        if self.current_user:
+            role = await util.request_role(self.current_user.username)
+            self.set_status(200)
+            self.write({"status": 200,
+                        "role": role})
+
+        else:
+            self.set_status(401)
+            self.write({"status": 401,
+                        "reason": "no_logged_in_user"})
+
+
 def inherit_platform_port(port):  # invoked by platform
     SOCIALSERV_CONSTANTS.PLATFORM_PORT = port
 
@@ -1369,6 +1390,7 @@ def make_app(called_by_platform):
             (r"/profileinformation", ProfileInformationHandler),
             (r"/users/([a-zA-Z\-0-9\.:,_]+)", UserHandler),
             (r"/tasks", TaskHandler),
+            (r"/permissions", PermissionHandler),
             (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./modules/SocialServ/css/"}),
             (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./modules/SocialServ/html/"}),
             (r"/javascripts/(.*)", tornado.web.StaticFileHandler, {"path": "./modules/SocialServ/javascripts/"}),
@@ -1394,6 +1416,7 @@ def make_app(called_by_platform):
             (r"/profileinformation", ProfileInformationHandler),
             (r"/users/([a-zA-Z\-0-9\.:,_]+)", UserHandler),
             (r"/tasks", TaskHandler),
+            (r"/permissions", PermissionHandler),
             (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
             (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./html/"}),
             (r"/javascripts/(.*)", tornado.web.StaticFileHandler, {"path": "./javascripts/"}),
