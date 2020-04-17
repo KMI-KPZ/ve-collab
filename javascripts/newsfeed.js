@@ -24,7 +24,7 @@ var spacename;
 var currentUser = {};
 var user = {};
 var users = {};
-
+var userRole;
 var fileList = [];
 
 /**
@@ -42,9 +42,11 @@ function initNewsFeed() {
   from = yesterday.toISOString();
 
   if (currURL == baseUrl + '/admin') {
-    inSpace = false;
-    getTimeline(from, now);
-
+    if(userRole != 'admin') window.location.href = baseUrl + '/main';
+    else {
+      inSpace = false;
+      getTimeline(from, now);
+    }
   } else if (currURL == baseUrl + '/main') {
     inSpace = false;
     getPersonalTimeline(from,now);
@@ -76,6 +78,7 @@ function initNewsFeed() {
  */
 $(document).ready(function () {
   getCurrentUserInfo();
+  getUserRole();
   getAllUsers();
   initNewsFeed();
   const interval  = setInterval(function() {
@@ -889,6 +892,29 @@ function checkUpdate() {
   });
 }
 
+function getUserRole(){
+  $.ajax({
+    type: 'GET',
+    url: '/permissions',
+    dataType: 'json',
+    async: false,
+    success: function (data) {
+      userRole = data.role;
+      if(userRole != 'admin') $('#adminLink').attr("href", baseUrl + '/main');
+    },
+
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = loginURL;
+      } else {
+        alert('error get current user role');
+        console.log(error);
+        console.log(status);
+        console.log(xhr);
+      }
+    },
+  });
+}
 /**
  * getCurrentUserInfo - saves currenUser information
  * first time calling InitNewsFeed (on document load)
