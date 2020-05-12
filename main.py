@@ -157,7 +157,6 @@ class PostHandler(BaseHandler):
             text = self.get_body_argument("text")  # http_body['text']
             tags = self.get_body_argument("tags")  # http_body['tags']
             space = self.get_body_argument("space", None)  # if space is set, this post belongs to a space (only visible inside)
-            print(space)
 
             # check if space exists, if not, end with 400 Bad Request
             if space is not None:
@@ -462,6 +461,59 @@ class LikePostHandler(BaseHandler):
             self.write({"status": 401,
                         "reason": "no_logged_in_user"})
 
+class RepostHandler(BaseHandler):
+    """
+    POST /repost
+        http body:
+            {
+                "post_id": "id_of_post",
+                "text": "new text for the repost"
+            }
+
+        returns:
+            200 OK,
+            {"status": 200,
+             "success": True}
+
+            400 Bad Request
+            {"status": 400,
+             "reason": "missing_key_in_http_body"}
+
+            401 Unauthorized
+            {"status": 401,
+             "reason": "no_logged_in_user"}
+    """
+
+    def post(self):
+        if self.current_user:
+            http_body = tornado.escape.json_decode(self.request.body)
+
+            if "post_id" not in http_body:
+                self.set_status(400)
+                self.write({"status": 400,
+                            "reason": "missing_key_in_http_body"})
+                self.finish()
+                return
+
+            post_ref = ObjectId(http_body['post_id'])
+            text = http_body['text']
+
+            post = self.db.posts.find_one(
+                {"_id": post_ref}
+            )
+            post["isRepost"] = True;
+            post["repostText"] = text
+            del post["_id"]
+            
+            self.db.posts.insert_one(post)
+
+            self.set_status(200)
+            self.write({"status": 200,
+                        "success": True})
+        else:
+            self.set_status(401)
+            self.write({"status": 401,
+                        "reason": "no_logged_in_user"})
 
 class FollowHandler(BaseHandler):
 
@@ -1379,6 +1431,7 @@ def make_app(called_by_platform):
             (r"/posts", PostHandler),
             (r"/comment", CommentHandler),
             (r"/like", LikePostHandler),
+            (r"/repost", RepostHandler),
             (r"/follow", FollowHandler),
             (r"/updates", NewPostsSinceTimestampHandler),
             (r"/spaceadministration/([a-zA-Z\-0-9\.:,_]+)", SpaceHandler),
@@ -1405,6 +1458,7 @@ def make_app(called_by_platform):
             (r"/posts", PostHandler),
             (r"/comment", CommentHandler),
             (r"/like", LikePostHandler),
+            (r"/repost", RepostHandler),
             (r"/follow", FollowHandler),
             (r"/updates", NewPostsSinceTimestampHandler),
             (r"/spaceadministration/([a-zA-Z\-0-9\.:,_]+)", SpaceHandler),
