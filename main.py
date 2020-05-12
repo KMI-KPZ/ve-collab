@@ -504,7 +504,7 @@ class RepostHandler(BaseHandler):
             post["isRepost"] = True;
             post["repostText"] = text
             del post["_id"]
-            
+
             self.db.posts.insert_one(post)
 
             self.set_status(200)
