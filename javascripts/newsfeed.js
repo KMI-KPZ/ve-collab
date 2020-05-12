@@ -1012,3 +1012,32 @@ function likeDislike(e, id) {
     postLike(id);
   }
 }
+
+function repost(id){
+  dataBody = {
+    'post_id': id,
+    'text': String($('#shareText').val())
+  };
+
+  dataBody = JSON.stringify(dataBody);
+  $.ajax({
+    type: 'POST',
+    url: '/repost',
+    data: dataBody,
+    success: function (data) {
+      console.log("repost" + id);
+      initNewsFeed();
+    },
+
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = loginURL;
+      } else {
+        alert('error reposting');
+        console.log(error);
+        console.log(status);
+        console.log(xhr);
+      }
+    },
+  });
+}

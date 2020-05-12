@@ -497,14 +497,18 @@ class RepostHandler(BaseHandler):
 
             post_ref = ObjectId(http_body['post_id'])
             text = http_body['text']
+            creation_date = datetime.utcnow()
 
             post = self.db.posts.find_one(
                 {"_id": post_ref}
             )
-            post["isRepost"] = True;
+            post["isRepost"] = True
+            post["repostAuthor"] = self.current_user
+            post["repostCreationDate"] = creation_date
             post["repostText"] = text
             del post["_id"]
 
+            print(post)
             self.db.posts.insert_one(post)
 
             self.set_status(200)
