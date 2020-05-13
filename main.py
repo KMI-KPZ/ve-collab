@@ -80,6 +80,9 @@ class BaseHandler(tornado.web.RequestHandler):
         for post in query_result:
             # post creation date
             post['creation_date'] = post['creation_date'].isoformat()
+            if('repostCreationDate' in post):
+                post['repostCreationDate'] = post['repostCreationDate'].isoformat()
+
             if 'comments' in post:
                 # creation date of each comment
                 for i in range(len(post['comments'])):
@@ -503,7 +506,7 @@ class RepostHandler(BaseHandler):
                 {"_id": post_ref}
             )
             post["isRepost"] = True
-            post["repostAuthor"] = self.current_user
+            post["repostAuthor"] = self.current_user.username
             post["repostCreationDate"] = creation_date
             post["repostText"] = text
             del post["_id"]

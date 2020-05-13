@@ -15,6 +15,7 @@ var daysAgo = 0;
 var $body = $('body');
 var $feedContainer = $('#feedContainer');
 var postTemplate = document.getElementById('postTemplate').innerHTML;
+var repostTemplate = document.getElementById('repostTemplate').innerHTML;
 var commentTemplate = document.getElementById('commentTemplate').innerHTML;
 var tagTemplate = document.getElementById('tagTemplate').innerHTML;
 
@@ -333,6 +334,10 @@ function displayTimeline(timeline) {
       $agoPost.text(calculateAgoTime(post.creation_date));
       $likers.attr("data-original-title",likerHTML);
       $likeCounter.text(countLikes);
+      if(post.hasOwnProperty('isRepost') && (post.isRepost == true)){
+        var $repostAgo = $existingPost.find('#repostAgo');
+        $repostAgo.text(calculateAgoTime(post.repostCreationDate));
+      }
       //toggle class if liked
      if(liked && $likeIcon.hasClass('fa-thumbs-up')) {
         $likeIcon.removeClass('fa-thumbs-up').addClass('fa-thumbs-down');
@@ -392,6 +397,7 @@ function displayTimeline(timeline) {
     }
 
     var isAuthor = (currentUser.username == post.author.username) ? true : false;
+    var isRepostAuthor = (currentUser.username == post.repostAuthor) ? true : false;
     //add additional values to post JSON
     post["isAuthor"] = isAuthor;
     post["authorPicURL"] = baseUrl + '/uploads/' + post.author.profile_pic;
@@ -404,11 +410,22 @@ function displayTimeline(timeline) {
     } else post["hasSpace"] = true;
 
     var firstPostDate = $feedContainer.find('.post:first').attr('name');
-    // check if there is a new post (more present datetime) => prepend to feedContainer
-    // else post is older => append to feedContainer
-    if(!(firstPostDate === null) && post.creation_date > firstPostDate) {
-      $feedContainer.prepend(Mustache.render(postTemplate, post));
-    } else $feedContainer.append(Mustache.render(postTemplate, post));
+
+
+    post["isRepostAuthor"] = isRepostAuthor;
+    post["repostAgo"] = calculateAgoTime(post.repostCreationDate);
+
+    if(post['isRepost'] == true){
+      if(!(firstPostDate === null) && post.repostCreationDate > firstPostDate) {
+          $feedContainer.prepend(Mustache.render(repostTemplate, post));
+      } else $feedContainer.append(Mustache.render(repostTemplate, post));
+    } else{
+      // check if there is a new post (more present datetime) => prepend to feedContainer
+      // else post is older => append to feedContainer
+      if(!(firstPostDate === null) && post.creation_date > firstPostDate) {
+          $feedContainer.prepend(Mustache.render(postTemplate, post));
+      } else $feedContainer.append(Mustache.render(postTemplate, post));
+    }
     //console.log(post);
     //in both case render comments to post and tags
     var $feed = $('#' + post._id);
@@ -1016,7 +1033,7 @@ function likeDislike(e, id) {
 function repost(id){
   dataBody = {
     'post_id': id,
-    'text': String($('#shareText').val())
+    'text': String($('#shareText'+id).val())
   };
 
   dataBody = JSON.stringify(dataBody);
