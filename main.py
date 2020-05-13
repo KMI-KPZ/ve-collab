@@ -470,7 +470,8 @@ class RepostHandler(BaseHandler):
         http body:
             {
                 "post_id": "id_of_post",
-                "text": "new text for the repost"
+                "text": "new text for the repost",
+                "space": "the space where to post"
             }
 
         returns:
@@ -512,7 +513,21 @@ class RepostHandler(BaseHandler):
             post["repostAuthor"] = self.current_user.username
             post["repostCreationDate"] = datetime.utcnow()
             post["repostText"] = text
-            post["space"] = None
+
+            space = http_body['space']
+
+            # check if space exists, if not, end with 400 Bad Request
+            if space is not None:
+                existing_spaces = []
+                for existing_space in self.db.spaces.find(projection={"name": True, "_id": False}):
+                    existing_spaces.append(existing_space["name"])
+                if space not in existing_spaces:
+                    self.set_status(400)
+                    self.write({"status": 400,
+                                "reason": "space_does_not_exist"})
+                    self.finish()
+                    return
+            post["space"] = space
 
             del post["_id"]
             if "likers" in post:

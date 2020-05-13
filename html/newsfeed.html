@@ -14,6 +14,7 @@
     <link rel="stylesheet" type="text/css" href="../css/newsfeed.css">
     <link rel="stylesheet" href="../css/tagsinput.css">
     <link rel="stylesheet" type="text/css" href="../css/modal.css">
+    <link rel="stylesheet" type="text/css" href="../css/notifications.css">
 
 </head>
 <body>
@@ -230,11 +231,12 @@
                                   <i class="fa fa-envelope"></i>
                               </div>
                               <div class="modal-title"></div>
-                              <select id ="selectRepostSpace{{!_id}}" class="custom-select">
-                                  <option value=null>Share into your timeline</option>
 
-                              </select>
                               <div class="modal-body">
+                                <select id ="selectRepostSpace{{!_id}}" class="custom-select">
+                                    <option value=null>Share into your timeline</option>
+
+                                </select>
                                 <textarea class="form-control" id="shareText{{!_id}}" rows="2" placeholder="What are your thoughts?"></textarea>
 
                                 <div class="panel panel-default">
@@ -341,10 +343,10 @@
                 <div class="title h5">
                     <a href="profile/{{!repostAuthor}}"><b>{{!repostAuthor}}</b></a>
                     shared a post.
-                    {{!#hasRepostSpace}}
+                    {{!#hasSpace}}
                     <b>></b>
-                    <span class="label label-pill label-primary">{{!repostSpace}}</span>
-                    {{!/hasRepostSpace}}
+                    <span class="label label-pill label-primary">{{!space}}</span>
+                    {{!/hasSpace}}
                 </div>
                 <h6 class="text-muted time" id="repostAgo">{{!repostAgo}}</h6>
             </div>
@@ -372,10 +374,12 @@
                     <div class="title h5">
                         <a href="profile/{{!author.username}}"><b>{{!author.username}}</b></a>
                         made a post.
+                        {{!^isRepost}}
                         {{!#hasSpace}}
                         <b>></b>
                         <span class="label label-pill label-primary">{{!space}}</span>
                         {{!/hasSpace}}
+                        {{!/isRepost}}
                     </div>
                     <h6 class="text-muted time" id="agoPost">{{!ago}}</h6>
                 </div>
@@ -449,8 +453,106 @@
                 <i id="shareIcon" class="fa fa-share" ></i>
               </button>
               <div class="dropdown-menu" aria-labelledby="shareBtn">
-                <button class="dropdown-item" data-toggle="modal" data-target="#shareModal{{!_id}}">Share...</button>
+                <button class="dropdown-item" data-toggle="modal" onclick="loadSpacesRepost('{{!_id}}');" data-target="#shareModal{{!_id}}">Share...</button>
               </div>
+
+                <!-- Modal -->
+                <div id="shareModal{{!_id}}" class="modal modal-message modal-info" style="display: none;" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <i class="fa fa-envelope"></i>
+                            </div>
+                            <div class="modal-title"></div>
+
+                            <div class="modal-body">
+                              <select id ="selectRepostSpace{{!_id}}" class="custom-select">
+                                  <option value=null>Share into your timeline</option>
+
+                              </select>
+                              <textarea class="form-control" id="shareText{{!_id}}" rows="2" placeholder="What are your thoughts?"></textarea>
+
+                              <div class="panel panel-default">
+                              <div class="post-heading">
+
+                                      <div class="title h5">
+                                          <a><b>{{!author.username}}</b></a>
+                                          made a post.
+                                          {{!#hasSpace}}
+                                          <b>></b>
+                                          <span class="label label-pill label-primary">{{!space}}</span>
+                                          {{!/hasSpace}}
+                                      </div>
+                                      <h6 class="text-muted time" id="agoPost">{{!ago}}</h6>
+
+                              </div>
+
+                              <div class="post-description">
+                                  <p>{{!text}}</p>
+
+                                  {{!#hasMedia}}
+                                    <div id="{{!_id}}" class="carousel slide">
+                                      {{!#multipleMedia}}
+                                        <ol class="carousel-indicators">
+                                          <li data-slide-to="0" class="active"></li>
+                                          {{!#fileMediaCountTail}}
+                                          <li  data-slide-to="{{!.}}"></li>
+                                          {{!/fileMediaCountTail}}
+                                        </ol>
+                                      {{!/multipleMedia}}
+                                        <div class="carousel-inner">
+                                          <div class="carousel-item active">
+                                            {{!#firstMediaIsImage}}
+                                            <img class="d-block w-100" src="{{!firstMediaURL}}" alt="post image">
+                                            {{!/firstMediaIsImage}}
+                                            {{!^firstMediaIsImage}}
+                                            <video width="100%" height="100%" autostart="false" controls>
+                                                <source src="{{!firstMediaURL}}">
+                                                Your browser does not support the video tag.
+                                            </video>
+                                            {{!/firstMediaIsImage}}
+                                          </div>
+                                          {{!#tailVideosURL}}
+                                          <div class="carousel-item">
+                                          <video width="100%" height="100%" autostart="false" controls>
+                                              <source src="{{!.}}">
+                                              Your browser does not support the video tag.
+                                            </video>
+                                          </div>
+                                          {{!/tailVideosURL}}
+
+                                          {{!#tailImagesURL}}
+                                          <div class="carousel-item">
+                                            <img class="d-block w-100" src="{{!.}}" alt="post image">
+                                          </div>
+                                          {{!/tailImagesURL}}
+
+                                        </div>
+                                        {{!#multipleMedia}}
+                                        <a class="carousel-control-prev" href="javascript:previousSlide('{{!_id}}');" type="button">
+                                          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                        </a>
+                                        <a class="carousel-control-next" href="javascript:nextSlide('{{!_id}}');" type="button">
+                                          <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                        </a>
+                                        {{!/multipleMedia}}
+                                    </div>
+                                  {{!/hasMedia}}
+                                  {{!#audiosURL}}
+                                  <p><audio id=voiceInput src={{!.}} controls=true autostart="false"></audio></p>
+                                  {{!/audiosURL}}
+                                  {{!#otherfiles}}
+                                    <i class="fa fa-download"></i> <a href="{{!path}}" download>{{!name}}</a>
+                                  {{!/otherfiles}}
+                            </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" id="repost" onclick="javascript:repost('{{!_id}}');"class="btn btn-info" data-dismiss="modal">Post</button>
+                            </div>
+                        </div> <!-- / .modal-content -->
+                    </div> <!-- / .modal-dialog -->
+                </div>
+            </div>
 
             <div class="post-footer">
                 <div class="input-group" id = "commentBox">
@@ -495,5 +597,6 @@
 <script src="../javascripts/newsfeed.js"></script>
 <script src="../javascripts/mustache.js"></script>
 <script src="../javascripts/tagsinput.js"></script>
+<script src="../javascripts/notifications.js"></script>
 </body>
 </html>

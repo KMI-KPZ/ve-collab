@@ -412,6 +412,7 @@ function displayTimeline(timeline) {
 
     var firstPostDate = $feedContainer.find('.post:first').attr('name');
 
+    //console.log(post)
     if(post['isRepost'] == true){
 
       post["isRepostAuthor"] = isRepostAuthor;
@@ -1033,9 +1034,12 @@ function likeDislike(e, id) {
 }
 
 function repost(id){
+  var space = ($( '#selectRepostSpace'+id +' option:selected' ).val() === "null") ? null : $( '#selectRepostSpace'+id +' option:selected' ).val();
+
   dataBody = {
     'post_id': id,
-    'text': String($('#shareText'+id).val())
+    'text': String($('#shareText'+id).val()),
+    'space': space
   };
 
   dataBody = JSON.stringify(dataBody);
@@ -1045,6 +1049,13 @@ function repost(id){
     data: dataBody,
     success: function (data) {
       console.log("repost" + id);
+      var msg = (space != null) ? space : "your timeline.";
+      window.createNotification({
+          theme: 'success',
+          showDuration: 5000
+      })({
+          message: 'You shared into ' + msg
+      });
       initNewsFeed();
     },
 
@@ -1063,6 +1074,11 @@ function repost(id){
 
 function loadSpacesRepost(id){
   $.each(Spaces, function(key, space){
+    for (i = 0; i < document.getElementById('selectRepostSpace'+id).length; ++i){
+    if (document.getElementById('selectRepostSpace'+id).options[i].value == space.name){
+      return;
+        }
+    }
     $('#selectRepostSpace'+id).append(Mustache.render(document.getElementById('spaceTemplateSelect').innerHTML, space));
   });
 }
