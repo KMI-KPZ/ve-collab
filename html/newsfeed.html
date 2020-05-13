@@ -219,7 +219,7 @@
                   <i id="shareIcon" class="fa fa-share" ></i>
                 </button>
                 <div class="dropdown-menu" aria-labelledby="shareBtn">
-                  <button class="dropdown-item" data-toggle="modal" data-target="#shareModal{{!_id}}">Share...</button>
+                  <button class="dropdown-item" data-toggle="modal" onclick="loadSpacesRepost('{{!_id}}');" data-target="#shareModal{{!_id}}">Share...</button>
                 </div>
 
                   <!-- Modal -->
@@ -227,10 +227,13 @@
                       <div class="modal-dialog">
                           <div class="modal-content">
                               <div class="modal-header">
-                                  Share into your timeline <i class="fa fa-envelope"></i>
+                                  <i class="fa fa-envelope"></i>
                               </div>
                               <div class="modal-title"></div>
+                              <select id ="selectRepostSpace{{!_id}}" class="custom-select">
+                                  <option value=null>Share into your timeline</option>
 
+                              </select>
                               <div class="modal-body">
                                 <textarea class="form-control" id="shareText{{!_id}}" rows="2" placeholder="What are your thoughts?"></textarea>
 
@@ -331,6 +334,9 @@
   <script id="repostTemplate" type="text/html">
     <div class="panel panel-white post" id = {{!_id}} name={{!repostCreationDate}}>
         <div class="post-heading">
+          <div class="pull-left image">
+              <img src="{{!repostAuthorPicURL}}" class="img-circle avatar" alt="user profile image">
+          </div>
             <div class="pull-left meta">
                 <div class="title h5">
                     <a href="profile/{{!repostAuthor}}"><b>{{!repostAuthor}}</b></a>
@@ -434,6 +440,28 @@
                 {{!/otherfiles}}
               </div>
             </div>
+
+            <div class="stats">
+              <button type="button" onclick="likeDislike(this,'{{!_id}}');" id="likers" class="btn btn-primary" data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="{{!#likers}}<li>{{!.}}</li>{{!/likers}}">
+                <i id="likeIcon" class="fa fa-thumbs-up" ></i> <span id="likeCounter">{{!likes}}</span>
+              </button>
+              <button class="btn btn-info dropdown-toggle" type="button" id="shareBtn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i id="shareIcon" class="fa fa-share" ></i>
+              </button>
+              <div class="dropdown-menu" aria-labelledby="shareBtn">
+                <button class="dropdown-item" data-toggle="modal" data-target="#shareModal{{!_id}}">Share...</button>
+              </div>
+
+            <div class="post-footer">
+                <div class="input-group" id = "commentBox">
+                    <input class="form-control" id = "commentInput"  placeholder="Add a comment" type="text">
+                    <span class="input-group-addon">
+                        <a href="javascript:void(0);"><i class="fa fa-edit" id = "postComment"></i></a>
+                    </span>
+                </div>
+              <ul class="comments-list">
+              </ul>
+              </div>
           </div>
     </script>
 

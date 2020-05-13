@@ -500,16 +500,25 @@ class RepostHandler(BaseHandler):
 
             post_ref = ObjectId(http_body['post_id'])
             text = http_body['text']
-            creation_date = datetime.utcnow()
 
             post = self.db.posts.find_one(
                 {"_id": post_ref}
             )
+            profile = self.db.profiles.find_one({"user": self.current_user.username})
+            if profile:
+                if "profile_pic" in profile:
+                    post["repostAuthorProfilePic"] = profile["profile_pic"]
             post["isRepost"] = True
             post["repostAuthor"] = self.current_user.username
-            post["repostCreationDate"] = creation_date
+            post["repostCreationDate"] = datetime.utcnow()
             post["repostText"] = text
+            post["space"] = None
+
             del post["_id"]
+            if "likers" in post:
+                del post["likers"]
+            if "comments" in post:
+                del post["comments"]
 
             print(post)
             self.db.posts.insert_one(post)

@@ -21,6 +21,7 @@ var tagTemplate = document.getElementById('tagTemplate').innerHTML;
 
 //Boolean & Data
 var inSpace = false;
+var Spaces = [];
 var spacename;
 var currentUser = {};
 var user = {};
@@ -411,20 +412,20 @@ function displayTimeline(timeline) {
 
     var firstPostDate = $feedContainer.find('.post:first').attr('name');
 
-
-    post["isRepostAuthor"] = isRepostAuthor;
-    post["repostAgo"] = calculateAgoTime(post.repostCreationDate);
-
     if(post['isRepost'] == true){
+
+      post["isRepostAuthor"] = isRepostAuthor;
+      post["repostAgo"] = calculateAgoTime(post.repostCreationDate);
+      post["repostAuthorPicURL"] = baseUrl + '/uploads/' + post.repostAuthorProfilePic;
+      // check if there is a new post (more present datetime) => prepend to feedContainer
+      // else post is older => append to feedContainer
       if(!(firstPostDate === null) && post.repostCreationDate > firstPostDate) {
           $feedContainer.prepend(Mustache.render(repostTemplate, post));
       } else $feedContainer.append(Mustache.render(repostTemplate, post));
     } else{
-      // check if there is a new post (more present datetime) => prepend to feedContainer
-      // else post is older => append to feedContainer
-      if(!(firstPostDate === null) && post.creation_date > firstPostDate) {
-          $feedContainer.prepend(Mustache.render(postTemplate, post));
-      } else $feedContainer.append(Mustache.render(postTemplate, post));
+        if(!(firstPostDate === null) && post.creation_date > firstPostDate) {
+            $feedContainer.prepend(Mustache.render(postTemplate, post));
+        } else $feedContainer.append(Mustache.render(postTemplate, post));
     }
     //console.log(post);
     //in both case render comments to post and tags
@@ -821,6 +822,7 @@ function getSpaces() {
         space['inSpace'] = inSpace;
         $dropdown.prepend(Mustache.render(document.getElementById('spaceTemplate').innerHTML, space));
         localStorage.setItem(space.name, space.members);
+        Spaces.push(space);
         // if not in Space render spaceTemplateSelect
         if (currURL.indexOf(baseUrl + '/space') == -1) {
           $('#selectSpace').append(Mustache.render(document.getElementById('spaceTemplateSelect').innerHTML, space));
@@ -1056,5 +1058,11 @@ function repost(id){
         console.log(xhr);
       }
     },
+  });
+}
+
+function loadSpacesRepost(id){
+  $.each(Spaces, function(key, space){
+    $('#selectRepostSpace'+id).append(Mustache.render(document.getElementById('spaceTemplateSelect').innerHTML, space));
   });
 }
