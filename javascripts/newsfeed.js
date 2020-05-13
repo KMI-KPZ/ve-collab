@@ -336,8 +336,8 @@ function displayTimeline(timeline) {
       $likers.attr("data-original-title",likerHTML);
       $likeCounter.text(countLikes);
       if(post.hasOwnProperty('isRepost') && (post.isRepost == true)){
-        var $repostAgo = $existingPost.find('#repostAgo');
-        $repostAgo.text(calculateAgoTime(post.repostCreationDate));
+        var $originalAgo = $existingPost.find('#originalAgo');
+        $originalAgo.text(calculateAgoTime(post.originalCreationDate));
       }
       //toggle class if liked
      if(liked && $likeIcon.hasClass('fa-thumbs-up')) {
@@ -416,11 +416,11 @@ function displayTimeline(timeline) {
     if(post['isRepost'] == true){
 
       post["isRepostAuthor"] = isRepostAuthor;
-      post["repostAgo"] = calculateAgoTime(post.repostCreationDate);
+      post["originalAgo"] = calculateAgoTime(post.originalCreationDate);
       post["repostAuthorPicURL"] = baseUrl + '/uploads/' + post.repostAuthorProfilePic;
       // check if there is a new post (more present datetime) => prepend to feedContainer
       // else post is older => append to feedContainer
-      if(!(firstPostDate === null) && post.repostCreationDate > firstPostDate) {
+      if(!(firstPostDate === null) && post.creation_date > firstPostDate) {
           $feedContainer.prepend(Mustache.render(repostTemplate, post));
       } else $feedContainer.append(Mustache.render(repostTemplate, post));
     } else{

@@ -80,8 +80,8 @@ class BaseHandler(tornado.web.RequestHandler):
         for post in query_result:
             # post creation date
             post['creation_date'] = post['creation_date'].isoformat()
-            if('repostCreationDate' in post):
-                post['repostCreationDate'] = post['repostCreationDate'].isoformat()
+            if('originalCreationDate' in post):
+                post['originalCreationDate'] = post['originalCreationDate'].isoformat()
 
             if 'comments' in post:
                 # creation date of each comment
@@ -511,7 +511,8 @@ class RepostHandler(BaseHandler):
                     post["repostAuthorProfilePic"] = profile["profile_pic"]
             post["isRepost"] = True
             post["repostAuthor"] = self.current_user.username
-            post["repostCreationDate"] = datetime.utcnow()
+            post["originalCreationDate"] = post['creation_date']
+            post["creation_date"] = datetime.utcnow()
             post["repostText"] = text
 
             space = http_body['space']
@@ -534,6 +535,8 @@ class RepostHandler(BaseHandler):
                 del post["likers"]
             if "comments" in post:
                 del post["comments"]
+            if "tags" in post:
+                post["tags"] = ""
 
             print(post)
             self.db.posts.insert_one(post)
@@ -785,6 +788,7 @@ class SpaceTimelineHandler(BaseHandler):
                                 comment["author"]["username"] = comment_author_name
 
                     self.set_status(200)
+                    print(posts)
                     self.write({"posts": posts})
 
                 else:

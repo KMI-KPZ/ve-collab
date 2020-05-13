@@ -168,6 +168,10 @@
     <a class="dropdown-item" id={{!_id}} href="../space/{{!name}}">{{!name}} {{!^inSpace}}<button type="button" id = "joinSpace" name={{!name}} class="btn btn-outline-success">Join</button>{{!/inSpace}}</a>
 </script>
 
+<script id="spaceTemplateSelect" type="text/html">
+    <option value={{!name}}>{{!name}}</option>
+</script>
+
 <script id="postTemplate" type="text/html">
       <div class="panel panel-white post" id = {{!_id}} name={{!creation_date}}>
           <div class="post-heading">
@@ -377,7 +381,7 @@
   </script>
 
   <script id="repostTemplate" type="text/html">
-    <div class="panel panel-white post" id = {{!_id}} name={{!repostCreationDate}}>
+    <div class="panel panel-white post" id = {{!_id}} name={{!creation_date}}>
         <div class="post-heading">
           <div class="pull-left image">
               <img src="{{!repostAuthorPicURL}}" class="img-circle avatar" alt="user profile image">
@@ -391,7 +395,7 @@
                     <span class="label label-pill label-primary">{{!space}}</span>
                     {{!/hasSpace}}
                 </div>
-                <h6 class="text-muted time" id="repostAgo">{{!repostAgo}}</h6>
+                <h6 class="text-muted time" id="agoPost">{{!ago}}</h6>
             </div>
             <div class="pull-right">
               {{!#isRepostAuthor}}
@@ -424,7 +428,7 @@
                         {{!/hasSpace}}
                         {{!/isRepost}}
                     </div>
-                    <h6 class="text-muted time" id="agoPost">{{!ago}}</h6>
+                    <h6 class="text-muted time" id="originalAgo">{{!originalAgo}}</h6>
                 </div>
             </div>
 
@@ -526,7 +530,7 @@
                                           <span class="label label-pill label-primary">{{!space}}</span>
                                           {{!/hasSpace}}
                                       </div>
-                                      <h6 class="text-muted time" id="agoPost">{{!ago}}</h6>
+                                      <h6 class="text-muted time" id="originalAgo">{{!originalAgo}}</h6>
 
                               </div>
 
