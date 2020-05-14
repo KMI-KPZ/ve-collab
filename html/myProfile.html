@@ -21,14 +21,14 @@
   <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
 
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
-      <div class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2">
-          <ul class="navbar-nav mr-auto">
-            <li class="nav-item">
-              <input type="text" name="search" id="search" placeholder="Search for User" class="form-control" />
-              <ul class="list-group" id="result"></ul>
-            </li>
-          </ul>
-      </div>
+    <div class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item">
+            <input type="text" name="search" id="search" placeholder="Search for User" class="form-control" />
+            <ul class="list-group" id="result"></ul>
+          </li>
+        </ul>
+    </div>
       <div class="mx-auto order-0">
           <a class="navbar-brand mx-auto" id='adminLink' href="admin">Social Network</a>
           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".dual-collapse2">
@@ -37,11 +37,11 @@
       </div>
       <div class="navbar-collapse collapse w-100 order-3 dual-collapse2">
           <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
+            <li class="nav-item ">
                 <a class="nav-link" href="main">Home</a>
             </li>
 
-            <li class="nav-item">
+            <li class="nav-item active">
                 <a class="nav-link" href="myprofile">Profile</a>
             </li>
 
@@ -68,27 +68,193 @@
 
   <div class="container">
   <div class="row">
-    <div class="col-sm-8 col-sm-offset-2" id="newPostContainer">
+      <div class="col-sm-8 col-sm-offset-2" id="profileContainer">
 
-    </div>
-    <div class="col-sm-8 col-sm-offset-2" id="feedContainer">
+      </div>
+      <div class="col-sm-8 col-sm-offset-2" id="newPostContainer">
 
-    </div>
+      </div>
+      <div class="col-sm-8 col-sm-offset-2" id="feedContainer">
+
+      </div>
 
   </div>
   </div>
+<script id="profileTemplate" type="text/html">
+  <div class="panel panel-white profile-widget" id="profilePanel">
+      <div class="row">
+          <div class="col-sm-12">
+              <div class="image-container bg2" style="background:url(https://via.placeholder.com/400x200)">
+                  <img src="{{!profile_pic_URL}}" class="avatar" alt="avatar">
+              </div>
+          </div>
+          <div class="col-sm-12">
+              <div class="details">
+                  <h4>{{!username}}<i class="fa fa-sheild"></i></h4>
+
+                  <div id="bioProfile"><b>Bio: </b>{{!profile.bio}}</div>
+                  <div id="institutionProfile"><b>Institution: </b>{{!profile.institution}}</div>
+                  <div><b>Mail: </b>{{!email}}</div>
+
+                  <div class="mg-top-10">
+                      <!-- Button trigger modal -->
+                      <button type="button" onclick="initSettingTabs();" class="btn btn-warning" data-toggle="modal" data-target="#settingsModal">
+                        Settings
+                      </button>
+
+                      <button type="button" class="btn btn-info" data-toggle="modal" data-target="#followModal">
+                        Follows ({{!followSize}})
+                      </button>
+
+                      <button type="button" class="btn btn-info" data-toggle="modal" data-target="#spaceModal">
+                        Spaces ({{!spaceSize}})
+                      </button>
+
+                      <button type="button" class="btn btn-info" data-toggle="modal" data-target="#projectModal">
+                        Projects ({{!projectSize}})
+                      </button>
+                  </div>
+                  <!-- Modal -->
+                  <div class="modal" id="followModal" tabindex="-1" role="dialog" aria-labelledby="followModalLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="followModalLabel">Follows</h5>
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-body">
+                          <ul class="list-group">
+                              {{!#follows}}
+                              <li class="list-group-item">{{!.}}</li>
+                              {{!/follows}}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Modal -->
+                  <div class="modal" id="spaceModal" tabindex="-1" role="dialog" aria-labelledby="spaceModalLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="spaceModalLabel">Spaces</h5>
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-body">
+                          <ul class="list-group">
+                              {{!#spaces}}
+                              <li class="list-group-item">{{!.}}</li>
+                              {{!/spaces}}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Modal -->
+                  <div class="modal" id="projectModal" tabindex="-1" role="dialog" aria-labelledby="projectModalLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="projectModalLabel">Projects</h5>
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-body">
+                          <ul class="list-group">
+                              {{!#projects}}
+                              <li class="list-group-item">{{!.}}</li>
+                              {{!/projects}}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Modal -->
+                  <div class="modal" id="settingsModal" tabindex="-1" role="dialog" aria-labelledby="settingsModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-xl" role="document">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h2 class="modal-title" id="settingsModalLabel">Settings</h2>
+                          <div id="saveAlert"></div>
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-body">
+                          <ul class="nav nav-tabs" id="settingsTab" role="tablist">
+                            <li class="nav-item">
+                              <a class="nav-link active" data-toggle="tab" href="#general">General</a>
+                            </li>
+                            <li class="nav-item">
+                              <a class="nav-link" data-toggle="tab" href="#account" >Account</a>
+                            </li>
+                          </ul>
+
+                          <div class="tab-content" id="myTabContent">
+                            <div class="tab-pane active" id="general">
+                              <div class="input-group mb-3">
+                                <div class="input-group-prepend">
+                                  <span class="input-group-text" id="inputGroupFileAddon01">Photo</span>
+                                </div>
+                                <div class="custom-file">
+                                  <input type="file" class="custom-file-input" id="photoFile" aria-describedby="inputGroupFileAddon01">
+                                  <label id="photoLabel" class="custom-file-label" for="photoFile">Choose file</label>
+                                </div>
+                              </div>
+
+                              <div class="input-group mb-3">
+                                <div class="input-group-prepend">
+                                  <span class="input-group-text" id="about">About you</span>
+                                </div>
+                                <textarea id="bio" class="form-control" aria-describedby="about" name="bio">{{!profile.bio}}</textarea>
+                              </div>
+                              <div class="input-group mb-3">
+                                <div class="input-group-prepend">
+                                  <span class="input-group-text" id="institution">Institution</span>
+                                </div>
+                                <input id="institutionInput" type="text" class="form-control" aria-describedby="institution" value="{{!profile.institution}}">
+                              </div>
+
+                            </div>
+                            <div class="tab-pane" id="account">
+                              HI
+                            </div>
+                          </div>
+
+
+                        </div>
+
+                        <div class="modal-footer">
+                          <button type="button" onclick="saveProfileInformation();"class="btn btn-primary">Save changes</button>
+                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+
+                        </div>
+
+                      </div>
+                    </div>
+                  </div>
+
+
+              </div>
+          </div>
+
+      </div>
+  </div>
+</script>
+
 <script id="newPostTemplate" type="text/html">
     <div class="panel panel-white post" id="newPostPanel">
 
         <div class="post-heading">
-            <div class="pull-left image">
-                <img src="{{!profile_pic_URL}}" class="img-circle avatar" alt="user profile image">
-            </div>
+            <div id="postAlert"></div>
             <div class="pull-left meta">
-                <h2>
-                    <b>Hello {{!username}}</b>
-                </h2>
-                <div id="postAlert"></div>
+
                 <input type="text" value="" id="addTag" data-role="tagsinput" placeholder="Add Tags">
                 <select id ="selectSpace" class="custom-select">
                     <option value=null selected disabled>Post into Space..</option>
@@ -153,7 +319,6 @@
                 {{!/isAuthor}}
             </div>
           </div>
-
           <div class="post-description">
               <p>{{!text}}</p>
 
@@ -211,7 +376,6 @@
               {{!#otherfiles}}
                 <i class="fa fa-download"></i> <a href="{{!path}}" download>{{!name}}</a>
               {{!/otherfiles}}
-
               <div class="stats">
                 <button type="button" onclick="likeDislike(this,'{{!_id}}');" id="likers" class="btn btn-primary" data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="{{!#likers}}<li>{{!.}}</li>{{!/likers}}">
                   <i id="likeIcon" class="fa fa-thumbs-up" ></i> <span id="likeCounter">{{!likes}}</span>
@@ -321,6 +485,7 @@
                   </div>
               </div>
           </div>
+          </div>
           <div class="post-footer">
               <div class="input-group" id = "commentBox">
                   <input class="form-control" id = "commentInput"  placeholder="Add a comment" type="text">
@@ -332,7 +497,6 @@
             </ul>
             </div></div>
   </script>
-
   <script id="repostTemplate" type="text/html">
     <div class="panel panel-white post" id = {{!_id}} name={{!creation_date}}>
         <div class="post-heading">
@@ -592,10 +756,12 @@
   </li>
 </script>
 
+
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
-<script src="../javascripts/newsfeed.js"></script>
 <script src="../javascripts/mustache.js"></script>
+<script src="../javascripts/newsfeed.js"></script>
+<script src="../javascripts/myprofile.js"></script>
 <script src="../javascripts/tagsinput.js"></script>
 <script src="../javascripts/notifications.js"></script>
 </body>

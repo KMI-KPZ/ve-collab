@@ -15,34 +15,33 @@
     <link rel="stylesheet" href="../css/tagsinput.css">
     <link rel="stylesheet" type="text/css" href="../css/modal.css">
     <link rel="stylesheet" type="text/css" href="../css/notifications.css">
-
 </head>
 <body>
   <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
 
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
-      <div class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2">
-          <ul class="navbar-nav mr-auto">
-            <li class="nav-item">
-              <input type="text" name="search" id="search" placeholder="Search for User" class="form-control" />
-              <ul class="list-group" id="result"></ul>
-            </li>
-          </ul>
-      </div>
+    <div class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item">
+            <input type="text" name="search" id="search" placeholder="Search for User" class="form-control" />
+            <ul class="list-group" id="result"></ul>
+          </li>
+        </ul>
+    </div>
       <div class="mx-auto order-0">
-          <a class="navbar-brand mx-auto" id='adminLink' href="admin">Social Network</a>
+          <a class="navbar-brand mx-auto" id='adminLink' href="../admin">Social Network</a>
           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".dual-collapse2">
               <span class="navbar-toggler-icon"></span>
           </button>
       </div>
       <div class="navbar-collapse collapse w-100 order-3 dual-collapse2">
           <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
-                <a class="nav-link" href="main">Home</a>
+            <li class="nav-item ">
+                <a class="nav-link" href="../main">Home</a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link" href="myprofile">Profile</a>
+                <a class="nav-link" href="../myprofile">Profile</a>
             </li>
 
             <li class="nav-item dropdown">
@@ -68,49 +67,71 @@
 
   <div class="container">
   <div class="row">
-    <div class="col-sm-8 col-sm-offset-2" id="newPostContainer">
+      <div class="col-sm-8 col-sm-offset-2" id="profileContainer">
 
-    </div>
-    <div class="col-sm-8 col-sm-offset-2" id="feedContainer">
+      </div>
+      <div class="col-sm-8 col-sm-offset-2" id="newPostContainer">
 
-    </div>
+      </div>
+      <div class="col-sm-8 col-sm-offset-2" id="feedContainer">
+
+      </div>
 
   </div>
   </div>
-<script id="newPostTemplate" type="text/html">
-    <div class="panel panel-white post" id="newPostPanel">
-
-        <div class="post-heading">
-            <div class="pull-left image">
-                <img src="{{!profile_pic_URL}}" class="img-circle avatar" alt="user profile image">
-            </div>
-            <div class="pull-left meta">
-                <h2>
-                    <b>Hello {{!username}}</b>
-                </h2>
-                <div id="postAlert"></div>
-                <input type="text" value="" id="addTag" data-role="tagsinput" placeholder="Add Tags">
-                <select id ="selectSpace" class="custom-select">
-                    <option value=null selected disabled>Post into Space..</option>
-
-                </select>
-            </div>
-        </div>
-
-        <div class="post-description">
-            <textarea class="form-control" id="postFeed" rows="2" placeholder="What are you thinking?"></textarea>
-            <div id="postdiv" class="mar-top clearfix">
-              <button class="btn btn-sm btn-primary pull-right" id="post"><i class="fa fa-pencil fa-fw"></i> Post</button>
-              <div class="element">
-                <i class="fa fa-file"></i>
-                <button class="btn btn-sm btn-success" id="record"><i class="fa fa-microphone"></i></button>
-                <input type="file" name="files" id="files" multiple>
+<script id="profileTemplate" type="text/html">
+  <div class="panel panel-white profile-widget" id="profilePanel">
+      <div class="row">
+          <div class="col-sm-12">
+              <div class="image-container bg2" style="background:url(https://via.placeholder.com/400x200)">
+                  <img src={{!profile_pic_URL}} class="avatar" alt="avatar">
               </div>
-              <p><audio id=recordedAudio></audio></p>
-            </div>
-        </div>
+          </div>
+          <div class="col-sm-12">
+              <div class="details">
+                  <h4>{{!username}}<i class="fa fa-sheild"></i></h4>
+                  <div>{{!email}}</div>
+                  <div class="mg-top-10">
+                      {{!#isFollowed}}
+                      <a href="javascript:deleteFollow('{{!username}}');" class="btn btn-danger">Unfollow</a>
+                      {{!/isFollowed}}
+                      {{!^isFollowed}}
+                      <a href="javascript:postFollow('{{!username}}');" class="btn btn-warning">Follow</a>
+                      {{!/isFollowed}}
+                      <button type="button" class="btn btn-info" data-toggle="modal" data-target="#followModal">
+                        Follows ({{!followSize}})
+                      </button>
+                  </div>
 
+                  <!-- Modal -->
+                  <div class="modal" id="followModal" tabindex="-1" role="dialog" aria-labelledby="followModalLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="followModalLabel">Follows</h5>
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-body">
+                          <ul class="list-group">
+                              {{!#follows}}
+                              <li class="list-group-item">{{!.}}</li>
+                              {{!/follows}}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+              </div>
+          </div>
+
+      </div>
   </div>
+</script>
+
+<script id="newPostTemplate" type="text/html">
+
 </script>
 
 <script id="tagTemplate" type="text/html">
@@ -133,7 +154,7 @@
               </div>
               <div class="pull-left meta">
                   <div class="title h5">
-                      <a href="profile/{{!author.username}}"><b>{{!author.username}}</b></a>
+                      <a href="../profile/{{!author.username}}"><b>{{!author.username}}</b></a>
                       made a post.
                       {{!#hasSpace}}
                       <b>></b>
@@ -142,6 +163,7 @@
                   </div>
                   <h6 class="text-muted time" id="agoPost">{{!ago}}</h6>
               </div>
+
               <div class="pull-right">
                 {{!#isAuthor}}
                 <div class="dropdown">
@@ -153,7 +175,6 @@
                 {{!/isAuthor}}
             </div>
           </div>
-
           <div class="post-description">
               <p>{{!text}}</p>
 
@@ -320,6 +341,7 @@
                       </div> <!-- / .modal-dialog -->
                   </div>
               </div>
+          </div>
           </div>
           <div class="post-footer">
               <div class="input-group" id = "commentBox">
@@ -584,7 +606,7 @@
       </div>
       <div class="comment-body">
           <div class="comment-heading">
-              <a href="profile/{{!author.username}}"><h4 class="user">{{!author.username}}</h4></a>
+              <a href="../profile/{{!author.username}}"><h4 class="user">{{!author.username}}</h4></a>
               <h5 class="time" id="agoComment">{{!ago}}</h5>
           </div>
           <p>{{!text}}</p>
@@ -595,6 +617,7 @@
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
 <script src="../javascripts/newsfeed.js"></script>
+<script src="../javascripts/profile.js"></script>
 <script src="../javascripts/mustache.js"></script>
 <script src="../javascripts/tagsinput.js"></script>
 <script src="../javascripts/notifications.js"></script>

@@ -377,3 +377,50 @@ left: 0;
 width: 100%;
 height: 100%;
 }
+
+.label-as-badge {
+    border-radius: 1em;
+}
+body{
+  overflow-y:scroll;
+}
+
+#result {
+ position: absolute;
+ width: 100%;
+ max-width:870px;
+ cursor: pointer;
+ overflow-y: auto;
+ max-height: 400px;
+ box-sizing: border-box;
+ z-index: 1001;
+}
+.link-class:hover{
+ background-color:#f1f1f1;
+}
+
+.dot:after {
+  content: '\2807';
+  font-size: 25px;
+  }
+.dotComment:after {
+    content: '\2807';
+    font-size: 15px;
+}
+
+input[type=file] {
+  display: none;
+}
+
+.element {
+  display: inline-flex;
+  align-items: center;
+}
+i.fa-file {
+  margin: 10px;
+  cursor: pointer;
+  font-size: 30px;
+}
+i:hover {
+  opacity: 0.6;
+}
