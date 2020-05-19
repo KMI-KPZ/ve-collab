@@ -35,9 +35,10 @@ This is a simple implementation of a social network. It provides all standard fu
   - If you have done everything correctly, you should see a list of available modules. Hit download on SocialServ. If it does not work on the first go, try again after some time, the Github API is mean sometimes.
   - after it is downloaded a "start" button should appear. Click it, and SocialServ will get started. Click on the port number to get redirected.
   - Now all users can see upon logging in to the platform the SocialServ is running and can redirect to it and use it.
-  Login to Platform            |  Admin View | User View
-  :-------------------------:|:-------------------------:|:-------------------------:
-  ![login](Features/platform/login.png "login")  | ![Admin Platform](Features/platform/admin.png) | ![user](Features/platform/user.png)
+
+ Login to Platform | Admin View | User View
+ :-------------------------:|:-------------------------:|:-------------------------:
+ ![login](Features/platform/login.png)  | ![Admin Platform](Features/platform/admin.png) | ![Admin Platform](Features/platform/user.png)
 
 
 ## Features
