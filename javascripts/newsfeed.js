@@ -473,10 +473,13 @@ function getTimeline(from, to) {
       if (xhr.status == 401) {
         window.location.href = loginURL;
       } else {
-        alert('error get timeline');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request for admin timeline failed.'
+        });
     }
     },
   });
@@ -501,10 +504,13 @@ function getPersonalTimeline(from, to) {
       if (xhr.status == 401) {
         window.location.href = loginURL;
       } else {
-        alert('error get Personal timeline');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request for personal timeline failed'
+        });
     }
     },
   });
@@ -532,10 +538,13 @@ function getTimelineSpace(spacename, from, to) {
       if (xhr.status == 401) {
         window.location.href = loginURL;
       } else {
-        alert('error get timeline space');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request for spacetimeline failed.'
+        });
       }
     },
   });
@@ -561,10 +570,13 @@ function getTimelineUser(username, from, to) {
       if (xhr.status == 401) {
         window.location.href = loginURL;
       } else {
-        alert('error get timeline user');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request for Usertimeline failed.'
+        });
       }
     },
   });
@@ -622,10 +634,13 @@ function post(text, tags, space) {
       if (xhr.status == 401) {
         window.location.href = loginURL;
       } else {
-        alert('error posting');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'posting to timeline failed.'
+        });
       }
     },
   });
@@ -656,10 +671,13 @@ function deletePost(id) {
       if (xhr.status == 401) {
         window.location.href = loginURL;
       } else {
-        alert('error deleting post');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request to delete the post failed.'
+        });
       }
     },
   });
@@ -691,10 +709,13 @@ function postComment(text, id) {
       if (xhr.status == 401) {
         window.location.href = loginURL;
       } else {
-        alert('error posting comment');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'post comment failed.'
+        });
       }
     },
   });
@@ -725,10 +746,13 @@ function deleteComment(id) {
       if (xhr.status == 401) {
         window.location.href = loginURL;
       } else {
-        alert('error deleting comment');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request to delete comment failed.'
+        });
       }
     },
   });
@@ -758,10 +782,13 @@ function postLike(id) {
       if (xhr.status == 401) {
         window.location.href = loginURL;
       } else {
-        alert('error posting like');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'like failed.'
+        });
       }
     },
   });
@@ -791,10 +818,13 @@ function deleteLike(id) {
       if (xhr.status == 401) {
         window.location.href = loginURL;
       } else {
-        alert('error posting dislike');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'delete like failed.'
+        });
       }
     },
   });
@@ -835,10 +865,13 @@ function getSpaces() {
       if (xhr.status == 401) {
         window.location.href = loginURL;
       } else {
-        alert('error get spaces');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request all spaces failed.'
+        });
       }
     },
   });
@@ -863,10 +896,13 @@ function createSpace(name) {
       if (xhr.status == 401) {
         window.location.href = loginURL;
       } else {
-        alert('error creating Space');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request to create a space failed.'
+        });
       }
     },
   });
@@ -889,10 +925,13 @@ function joinSpace(name) {
       if (xhr.status == 401) {
         window.location.href = loginURL;
       } else {
-        alert('error joining Space');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request to join a space'
+        });
       }
     },
   });
@@ -927,10 +966,13 @@ function getUserRole(){
       if (xhr.status == 401) {
         window.location.href = loginURL;
       } else {
-        alert('error get current user role');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request users role'
+        });
       }
     },
   });
@@ -954,15 +996,17 @@ function getCurrentUserInfo() {
       if (xhr.status == 401) {
         window.location.href = loginURL;
       } else {
-        alert('error get current user info');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request current user information'
+        });
       }
-    },
+    }
   });
 }
-
 
 /**
  * searchUser - search for a username or email in users JSON
@@ -1009,10 +1053,13 @@ function getAllUsers(){
       if (xhr.status == 401) {
         window.location.href = loginURL;
       } else {
-        alert('error get all users');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request all user information'
+        });
       }
     },
   });
@@ -1063,10 +1110,13 @@ function repost(id){
       if (xhr.status == 401) {
         window.location.href = loginURL;
       } else {
-        alert('error reposting');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'reposting failed.'
+        });
       }
     },
   });
