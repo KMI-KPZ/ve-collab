@@ -13,6 +13,9 @@ import SOCIALSERV_CONSTANTS
 import re
 import shutil
 import util
+import socket
+import json
+from contextlib import closing
 from bson.objectid import ObjectId
 from datetime import datetime, timedelta
 from pymongo import MongoClient
@@ -1455,7 +1458,7 @@ def stop_signal():  # invoked by platform
     pass
 
 
-def make_app(called_by_platform):
+def make_app(called_by_platform, cookie_secret):
     if called_by_platform:
         SOCIALSERV_CONSTANTS.STARTED_BY_PLATFORM = True
         return tornado.web.Application([
@@ -1510,14 +1513,38 @@ def make_app(called_by_platform):
             (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./html/"}),
             (r"/javascripts/(.*)", tornado.web.StaticFileHandler, {"path": "./javascripts/"}),
             (r"/uploads/(.*)", tornado.web.StaticFileHandler, {"path": "./uploads/"})
-        ])
+        ], cookie_secret=cookie_secret)
+
+def determine_free_port():
+    """
+    determines a free port number to which a module can later be bound. The port number is determined by the OS
+
+    :returns: a free port number
+    :rtype: int
+
+    """
+    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
+        s.bind(('', 0))  # binding a socket to 0 lets the OS assign a port
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # for threading scenario: the determined port can be used before this function returns
+        return s.getsockname()[1]
 
 
 async def main():
     tornado.options.parse_command_line()
-    app = make_app(False)
+    with open("config.json", "r") as fp:
+        cookie_secret = json.load(fp)["cookie_secret"]
+    app = make_app(False, cookie_secret)
     server = tornado.httpserver.HTTPServer(app)
-    server.listen(8889)
+    port = determine_free_port()
+    print("Starting server on port: " + str(port))
+    server.listen(port)
+
+    client = await get_socket_instance()
+    response = await client.write({"type": "module_start",
+                                   "module_name": "SocialServ",
+                                   "port": port})
+    if response["status"] == "recognized":
+        print("recognized by platform")
 
     shutdown_event = tornado.locks.Event()
     await shutdown_event.wait()

@@ -1,0 +1,3 @@
+{
+  "cookie_secret":"<32byte_random_string_goes_here>"
+}
