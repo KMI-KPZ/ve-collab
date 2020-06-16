@@ -9,7 +9,6 @@ import tornado.ioloop
 import tornado.web
 import tornado.locks
 import dateutil.parser
-import SOCIALSERV_CONSTANTS
 import re
 import shutil
 import util
@@ -25,7 +24,7 @@ from socialserv_token_cache import get_token_cache
 from tornado.options import define, options
 from base64 import b64encode
 
-define("standalone_dev", default=False, type=bool, help="start in standalone dev mode (no auth)")
+define("dev", default=False, type=bool, help="start in dev mode (no auth) with dummy platform")
 
 
 class BaseHandler(tornado.web.RequestHandler):
@@ -35,22 +34,14 @@ class BaseHandler(tornado.web.RequestHandler):
         self.db = self.client['social_serv']  # TODO make this generic via config
 
         self.upload_dir = "uploads/"
-        if SOCIALSERV_CONSTANTS.STARTED_BY_PLATFORM:
-            self.upload_dir = "modules/SocialServ/uploads/"
-
         if not os.path.isdir(self.upload_dir):
             os.mkdir(self.upload_dir)
-
-        if SOCIALSERV_CONSTANTS.STARTED_BY_PLATFORM:
-            if not os.path.isfile(self.upload_dir + "default_profile_pic.jpg"):
-                shutil.copy2("modules/SocialServ/assets/default_profile_pic.jpg", self.upload_dir)
-        else:
-            if not os.path.isfile(self.upload_dir + "default_profile_pic.jpg"):
-                shutil.copy2("assets/default_profile_pic.jpg", self.upload_dir)
+        if not os.path.isfile(self.upload_dir + "default_profile_pic.jpg"):
+            shutil.copy2("assets/default_profile_pic.jpg", self.upload_dir)
 
     async def prepare(self):
         # standalone dev mode: no auth, dummy platform
-        if options.standalone_dev:
+        if options.dev:
             self.current_user = User("test_user1", -1, "dev@test.de")
             return
 
@@ -75,7 +66,7 @@ class BaseHandler(tornado.web.RequestHandler):
                 self.current_user = None
                 print("no logged in user")
 
-        # TODO if validation succeeds to periodic callback with ttl to tell platform that token is still valid (action taken here) and instruct platform to update their ttl too
+        # TODO if validation succeeds do periodic callback with ttl to tell platform that token is still valid (action taken here) and instruct platform to update their ttl too
 
     def json_serialize_posts(self, query_result):
         # parse datetime objects into ISO 8601 strings for JSON serializability
@@ -1445,49 +1436,7 @@ class PermissionHandler(BaseHandler):
                         "reason": "no_logged_in_user"})
 
 
-def inherit_platform_port(port):  # invoked by platform
-    SOCIALSERV_CONSTANTS.PLATFORM_PORT = port
-
-
-def apply_config(config):  # invoked by platform, but we do not need a config for now
-    pass
-
-
-def stop_signal():  # invoked by platform
-    # TODO
-    pass
-
-
-def make_app(called_by_platform, cookie_secret):
-    if called_by_platform:
-        SOCIALSERV_CONSTANTS.STARTED_BY_PLATFORM = True
-        return tornado.web.Application([
-            (r"/main", MainHandler),
-            (r"/admin", AdminHandler),
-            (r"/myprofile", MyProfileHandler),
-            (r"/profile/([a-zA-Z\-0-9\.:,_]+)", ProfileHandler),
-            (r"/posts", PostHandler),
-            (r"/comment", CommentHandler),
-            (r"/like", LikePostHandler),
-            (r"/repost", RepostHandler),
-            (r"/follow", FollowHandler),
-            (r"/updates", NewPostsSinceTimestampHandler),
-            (r"/spaceadministration/([a-zA-Z\-0-9\.:,_]+)", SpaceHandler),
-            (r"/space/([a-zA-Z\-0-9\.:,_]+)", SpaceRenderHandler),
-            (r"/timeline", TimelineHandler),
-            (r"/timeline/space/([a-zA-Z\-0-9\.:,_]+)", SpaceTimelineHandler),
-            (r"/timeline/user/([a-zA-Z\-0-9\.:,_]+)", UserTimelineHandler),
-            (r"/timeline/you", PersonalTimelineHandler),
-            (r"/profileinformation", ProfileInformationHandler),
-            (r"/users/([a-zA-Z\-0-9\.:,_]+)", UserHandler),
-            (r"/tasks", TaskHandler),
-            (r"/permissions", PermissionHandler),
-            (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./modules/SocialServ/css/"}),
-            (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./modules/SocialServ/html/"}),
-            (r"/javascripts/(.*)", tornado.web.StaticFileHandler, {"path": "./modules/SocialServ/javascripts/"}),
-            (r"/uploads/(.*)", tornado.web.StaticFileHandler, {"path": "./modules/SocialServ/uploads/"})
-        ])
-    else:
+def make_app(cookie_secret):
         return tornado.web.Application([
             (r"/main", MainHandler),
             (r"/admin", AdminHandler),
@@ -1533,7 +1482,7 @@ async def main():
     tornado.options.parse_command_line()
     with open("config.json", "r") as fp:
         cookie_secret = json.load(fp)["cookie_secret"]
-    app = make_app(False, cookie_secret)
+    app = make_app(cookie_secret)
     server = tornado.httpserver.HTTPServer(app)
     port = determine_free_port()
     print("Starting server on port: " + str(port))
