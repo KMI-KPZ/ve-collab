@@ -2,6 +2,8 @@ import tornado
 import uuid
 import json
 import SOCIALSERV_CONSTANTS
+import signing
+import nacl.signing
 from tornado.ioloop import PeriodicCallback
 from tornado import gen
 from tornado.websocket import websocket_connect
@@ -59,7 +61,9 @@ class Client(object):
         print(json_message)
 
         if "type" in json_message:
-            if json_message["type"] == "user_login":
+            if json_message["type"] == "signature_verification_error":
+                raise RuntimeError("Platform could not validate signature")
+            elif json_message["type"] == "user_login":
                 get_token_cache().insert(json_message["access_token"], json_message["username"], json_message["email"], json_message["id"])
 
             elif json_message["type"] == "user_logout":
@@ -72,11 +76,18 @@ class Client(object):
 
     def write(self, message):
         message['origin'] = "SocialServ"
-
         resolve_id = str(uuid.uuid4())
         message['resolve_id'] = resolve_id
+        sign_key = signing.get_signing_key()
+        msg_str = tornado.escape.json_encode(message)
+        signed = sign_key.sign(msg_str.encode("utf8"), encoder=nacl.encoding.Base64Encoder)
+        signed_str = signed.decode("utf8")
 
-        self.ws.write_message(tornado.escape.json_encode(message))
+        wrapped_message = {"signed_msg": signed_str,
+                           "origin": "SocialServ",
+                           "resolve_id": resolve_id}
+
+        self.ws.write_message(tornado.escape.json_encode(wrapped_message))
 
         loop = get_event_loop()
         fut = loop.create_future()

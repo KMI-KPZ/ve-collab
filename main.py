@@ -14,6 +14,7 @@ import shutil
 import util
 import socket
 import json
+import signing
 from contextlib import closing
 from bson.objectid import ObjectId
 from datetime import datetime, timedelta
@@ -1479,6 +1480,8 @@ def determine_free_port():
 
 
 async def main():
+    signing.create_signing_key_if_not_exists()
+
     tornado.options.parse_command_line()
     with open("config.json", "r") as fp:
         cookie_secret = json.load(fp)["cookie_secret"]
@@ -1494,9 +1497,11 @@ async def main():
                                    "port": port})
     if response["status"] == "recognized":
         print("recognized by platform")
-
-    shutdown_event = tornado.locks.Event()
-    await shutdown_event.wait()
+        shutdown_event = tornado.locks.Event()
+        await shutdown_event.wait()
+    else:
+        print("not recognized by platform")
+        print("exiting...")
 
 if __name__ == '__main__':
     tornado.ioloop.IOLoop.current().run_sync(main)

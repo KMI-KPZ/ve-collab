@@ -32,6 +32,11 @@ This is a simple implementation of a social network. It provides all standard fu
 - for production situation:
   - fire up the platform application (please refer to the guide in the repo)
   - check the port you started the platform on. If it is not 8888, change the value of PLATFORM_PORT in SOCIALSERV_CONSTANTS.py to your port
+  - run
+    ```sh
+    $ python signing.py
+    ```
+    once to generate the files "signing_key.key" and "verify_key.key". Keep the signing key secret AT ALL COST. Take the verify_key and insert "SocialServ": "\<verify_key_here\>", into the verify_keys.json file over at the platform
   - run the following to start the network:
     ```sh
     $ python3 main.py
