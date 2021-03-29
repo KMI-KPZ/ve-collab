@@ -99,6 +99,12 @@ class MainHandler(BaseHandler):
             self.redirect(CONSTANTS.ROUTING_TABLE["platform"])  # redirect to platform if there is no logged in user
 
 
+class MainRedirectHandler(BaseHandler):
+
+    def get(self):
+        self.redirect("/main")
+
+
 class AdminHandler(BaseHandler):
 
     def get(self):
@@ -1467,6 +1473,7 @@ class RoutingHandler(BaseHandler):
 
 def make_app(cookie_secret):
         return tornado.web.Application([
+            (r"/", MainRedirectHandler),
             (r"/main", MainHandler),
             (r"/admin", AdminHandler),
             (r"/myprofile", MyProfileHandler),
