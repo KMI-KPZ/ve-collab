@@ -8,6 +8,7 @@ if sys.platform == 'win32':
 import tornado.ioloop
 import tornado.web
 import tornado.locks
+import tornado.escape
 import dateutil.parser
 import re
 import shutil
@@ -15,6 +16,7 @@ import util
 import socket
 import json
 import signing
+import SOCIALSERV_CONSTANTS as CONSTANTS
 from contextlib import closing
 from bson.objectid import ObjectId
 from datetime import datetime, timedelta
@@ -31,7 +33,7 @@ define("dev", default=False, type=bool, help="start in dev mode (no auth) with d
 class BaseHandler(tornado.web.RequestHandler):
 
     def initialize(self):
-        self.client = MongoClient('localhost', 27017)
+        self.client = MongoClient('localhost', 27017, username=CONSTANTS.MONGODB_USERNAME, password=CONSTANTS.MONGODB_PASSWORD)
         self.db = self.client['social_serv']  # TODO make this generic via config
 
         self.upload_dir = "uploads/"
@@ -91,31 +93,46 @@ class BaseHandler(tornado.web.RequestHandler):
 class MainHandler(BaseHandler):
 
     def get(self):
-        self.render("html/main.html")
+        if self.current_user:
+            self.render("html/main.html")
+        else:
+            self.redirect(CONSTANTS.ROUTING_TABLE["platform"])  # redirect to platform if there is no logged in user
 
 
 class AdminHandler(BaseHandler):
 
     def get(self):
-        self.render("html/newsfeed.html")
+        if self.current_user:
+            self.render("html/newsfeed.html")
+        else:
+            self.redirect(CONSTANTS.ROUTING_TABLE["platform"])  # redirect to platform if there is no logged in user
 
 
 class MyProfileHandler(BaseHandler):
 
     def get(self):
-        self.render("html/myProfile.html")
+        if self.current_user:
+            self.render("html/myProfile.html")
+        else:
+            self.redirect(CONSTANTS.ROUTING_TABLE["platform"])  # redirect to platform if there is no logged in user
 
 
 class ProfileHandler(BaseHandler):
 
     def get(self, slug):
-        self.render("html/profile.html")
+        if self.current_user:
+            self.render("html/profile.html")
+        else:
+            self.redirect(CONSTANTS.ROUTING_TABLE["platform"])  # redirect to platform if there is no logged in user
 
 
 class SpaceRenderHandler(BaseHandler):
 
     def get(self, slug):
-        self.render("html/space.html")
+        if self.current_user:
+            self.render("html/space.html")
+        else:
+            self.redirect(CONSTANTS.ROUTING_TABLE["platform"])  # redirect to platform if there is no logged in user
 
 
 class PostHandler(BaseHandler):
@@ -1437,6 +1454,17 @@ class PermissionHandler(BaseHandler):
                         "reason": "no_logged_in_user"})
 
 
+class RoutingHandler(BaseHandler):
+
+    def get(self):
+        """
+        /routing
+        """
+
+        self.set_status(200)
+        self.write({"routing": CONSTANTS.ROUTING_TABLE})
+
+
 def make_app(cookie_secret):
         return tornado.web.Application([
             (r"/main", MainHandler),
@@ -1459,6 +1487,7 @@ def make_app(cookie_secret):
             (r"/users/([a-zA-Z\-0-9\.:,_]+)", UserHandler),
             (r"/tasks", TaskHandler),
             (r"/permissions", PermissionHandler),
+            (r"/routing", RoutingHandler),
             (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
             (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./html/"}),
             (r"/javascripts/(.*)", tornado.web.StaticFileHandler, {"path": "./javascripts/"}),
@@ -1484,10 +1513,16 @@ async def main():
 
     tornado.options.parse_command_line()
     with open("config.json", "r") as fp:
-        cookie_secret = json.load(fp)["cookie_secret"]
+        conf = json.load(fp)
+        cookie_secret = conf["cookie_secret"]
+
+        if ("mongodb_username" in conf) and ("mongodb_password" in conf):
+            CONSTANTS.MONGODB_USERNAME = conf["mongodb_username"]
+            CONSTANTS.MONGODB_PASSWORD = conf["mongodb_password"]
+
     app = make_app(cookie_secret)
     server = tornado.httpserver.HTTPServer(app)
-    port = determine_free_port()
+    port = 8903  # determine_free_port()
     print("Starting server on port: " + str(port))
     server.listen(port)
 

@@ -19,7 +19,7 @@ async def get_socket_instance():
         if options.dev:
             the_websocket_client = Client("ws://localhost:88810/websocket")
         else:
-            the_websocket_client = Client(tornado.httpclient.HTTPRequest("wss://localhost:" + str(SOCIALSERV_CONSTANTS.PLATFORM_PORT) + "/websocket", validate_cert=False,
+            the_websocket_client = Client(tornado.httpclient.HTTPRequest("ws://localhost:" + str(SOCIALSERV_CONSTANTS.PLATFORM_PORT) + "/websocket", validate_cert=False,
                                           body=json.dumps({"type": "module_socket_connect", "module": "SocialServ"}), allow_nonstandard_methods=True))
         await the_websocket_client._await_init()
     return the_websocket_client

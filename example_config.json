@@ -1,3 +1,5 @@
 {
-  "cookie_secret":"<32byte_random_string_goes_here>"
+  "cookie_secret":"<32byte_random_string_goes_here>",
+  "mongodb_username": "",
+  "mongodb_password": ""
 }

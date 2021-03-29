@@ -110,8 +110,8 @@ class SocialServ_Token_Cache:
         """
         if token in self._data:
             self._data[token]["expires"] = datetime.now() + timedelta(seconds=3600)
-            print("updated SocialServ token ttl to: ")
-            print(self._data[token])
+            #print("updated SocialServ token ttl to: ")
+            #print(self._data[token])
 
     def _remove_expired(self):
         """

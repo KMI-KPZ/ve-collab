@@ -29,6 +29,8 @@ var users = {};
 var userRole;
 var fileList = [];
 
+
+var routingTable = {};
 /**
  * initNewsFeed - renders the timeline depending on the current URL
  * update Datetimes and get information about all Spaces
@@ -79,6 +81,7 @@ function initNewsFeed() {
  * while scrolling down the page: updates "from" - Datetime and Timeline (depending on URL)
  */
 $(document).ready(function () {
+  getRouting();
   getCurrentUserInfo();
   getUserRole();
   getAllUsers();
@@ -471,7 +474,7 @@ function getTimeline(from, to) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
         window.createNotification({
             theme: 'error',
@@ -502,7 +505,7 @@ function getPersonalTimeline(from, to) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
         window.createNotification({
             theme: 'error',
@@ -536,7 +539,7 @@ function getTimelineSpace(spacename, from, to) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
         window.createNotification({
             theme: 'error',
@@ -568,7 +571,7 @@ function getTimelineUser(username, from, to) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
         window.createNotification({
             theme: 'error',
@@ -632,7 +635,7 @@ function post(text, tags, space) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
         window.createNotification({
             theme: 'error',
@@ -669,7 +672,7 @@ function deletePost(id) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
         window.createNotification({
             theme: 'error',
@@ -707,7 +710,7 @@ function postComment(text, id) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
         window.createNotification({
             theme: 'error',
@@ -744,7 +747,7 @@ function deleteComment(id) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
         window.createNotification({
             theme: 'error',
@@ -780,7 +783,7 @@ function postLike(id) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
         window.createNotification({
             theme: 'error',
@@ -816,7 +819,7 @@ function deleteLike(id) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
         window.createNotification({
             theme: 'error',
@@ -863,7 +866,7 @@ function getSpaces() {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
         window.createNotification({
             theme: 'error',
@@ -894,7 +897,7 @@ function createSpace(name) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
         window.createNotification({
             theme: 'error',
@@ -923,7 +926,7 @@ function joinSpace(name) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
         window.createNotification({
             theme: 'error',
@@ -964,7 +967,7 @@ function getUserRole(){
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
         window.createNotification({
             theme: 'error',
@@ -994,7 +997,7 @@ function getCurrentUserInfo() {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
         window.createNotification({
             theme: 'error',
@@ -1051,7 +1054,7 @@ function getAllUsers(){
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
         window.createNotification({
             theme: 'error',
@@ -1108,7 +1111,7 @@ function repost(id){
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
         window.createNotification({
             theme: 'error',
@@ -1131,4 +1134,17 @@ function loadSpacesRepost(id){
     }
     $('#selectRepostSpace'+id).append(Mustache.render(document.getElementById('spaceTemplateSelect').innerHTML, space));
   });
+}
+
+function getRouting(){
+  $.ajax({
+    type: "GET",
+    url: "/routing",
+    success: function(response){
+      routingTable = response.routing;
+    },
+    error: function(){
+      alert("Critical Server Error, Please visit the Platform Page!");
+    }
+  })
 }

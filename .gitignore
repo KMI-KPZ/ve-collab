@@ -1,6 +1,8 @@
 signing_key.key
 verify_key.key
 
+.idea
+
 schema.txt
 uploads
 uploads/
