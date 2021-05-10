@@ -1483,7 +1483,7 @@ def make_app(called_by_platform):
             (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./modules/SocialServ/html/"}),
             (r"/javascripts/(.*)", tornado.web.StaticFileHandler, {"path": "./modules/SocialServ/javascripts/"}),
             (r"/uploads/(.*)", tornado.web.StaticFileHandler, {"path": "./modules/SocialServ/uploads/"})
-        ])
+        ], cookie_secret='somekey')
     else:
         return tornado.web.Application([
             (r"/main", MainHandler),
@@ -1510,7 +1510,7 @@ def make_app(called_by_platform):
             (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./html/"}),
             (r"/javascripts/(.*)", tornado.web.StaticFileHandler, {"path": "./javascripts/"}),
             (r"/uploads/(.*)", tornado.web.StaticFileHandler, {"path": "./uploads/"})
-        ])
+        ],cookie_secret='somekey')
 
 
 async def main():
@@ -1518,6 +1518,15 @@ async def main():
     app = make_app(False)
     server = tornado.httpserver.HTTPServer(app)
     server.listen(8889)
+    import socket_client
+    client = await socket_client.get_socket_instance()
+    response = await client.write({"type": "module_start",
+                                   "module_name": "SocialServ",
+                                   "port": 8889})
+
+    # server.start()
+
+    # webbrowser.open_new("http://localhost:{}/".format(5006))
 
     shutdown_event = tornado.locks.Event()
     await shutdown_event.wait()
