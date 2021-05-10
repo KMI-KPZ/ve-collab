@@ -29,6 +29,8 @@ var users = {};
 var userRole;
 var fileList = [];
 
+
+var routingTable = {};
 /**
  * initNewsFeed - renders the timeline depending on the current URL
  * update Datetimes and get information about all Spaces
@@ -79,6 +81,7 @@ function initNewsFeed() {
  * while scrolling down the page: updates "from" - Datetime and Timeline (depending on URL)
  */
 $(document).ready(function () {
+  getRouting();
   getCurrentUserInfo();
   getUserRole();
   getAllUsers();
@@ -471,12 +474,15 @@ function getTimeline(from, to) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
-        alert('error get timeline');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request for admin timeline failed.'
+        });
     }
     },
   });
@@ -499,12 +505,15 @@ function getPersonalTimeline(from, to) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
-        alert('error get Personal timeline');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request for personal timeline failed'
+        });
     }
     },
   });
@@ -530,12 +539,15 @@ function getTimelineSpace(spacename, from, to) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
-        alert('error get timeline space');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request for spacetimeline failed.'
+        });
       }
     },
   });
@@ -559,12 +571,15 @@ function getTimelineUser(username, from, to) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
-        alert('error get timeline user');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request for Usertimeline failed.'
+        });
       }
     },
   });
@@ -620,12 +635,15 @@ function post(text, tags, space) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
-        alert('error posting');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'posting to timeline failed.'
+        });
       }
     },
   });
@@ -654,12 +672,15 @@ function deletePost(id) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
-        alert('error deleting post');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request to delete the post failed.'
+        });
       }
     },
   });
@@ -689,12 +710,15 @@ function postComment(text, id) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
-        alert('error posting comment');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'post comment failed.'
+        });
       }
     },
   });
@@ -723,12 +747,15 @@ function deleteComment(id) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
-        alert('error deleting comment');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request to delete comment failed.'
+        });
       }
     },
   });
@@ -756,12 +783,15 @@ function postLike(id) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
-        alert('error posting like');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'like failed.'
+        });
       }
     },
   });
@@ -789,12 +819,15 @@ function deleteLike(id) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
-        alert('error posting dislike');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'delete like failed.'
+        });
       }
     },
   });
@@ -833,12 +866,15 @@ function getSpaces() {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
-        alert('error get spaces');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request all spaces failed.'
+        });
       }
     },
   });
@@ -861,12 +897,15 @@ function createSpace(name) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
-        alert('error creating Space');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request to create a space failed.'
+        });
       }
     },
   });
@@ -887,12 +926,15 @@ function joinSpace(name) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
-        alert('error joining Space');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request to join a space'
+        });
       }
     },
   });
@@ -925,12 +967,15 @@ function getUserRole(){
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
-        alert('error get current user role');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request users role'
+        });
       }
     },
   });
@@ -952,17 +997,19 @@ function getCurrentUserInfo() {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
-        alert('error get current user info');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request current user information'
+        });
       }
-    },
+    }
   });
 }
-
 
 /**
  * searchUser - search for a username or email in users JSON
@@ -1007,12 +1054,15 @@ function getAllUsers(){
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
-        alert('error get all users');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request all user information'
+        });
       }
     },
   });
@@ -1061,12 +1111,15 @@ function repost(id){
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
-        alert('error reposting');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'reposting failed.'
+        });
       }
     },
   });
@@ -1081,4 +1134,17 @@ function loadSpacesRepost(id){
     }
     $('#selectRepostSpace'+id).append(Mustache.render(document.getElementById('spaceTemplateSelect').innerHTML, space));
   });
+}
+
+function getRouting(){
+  $.ajax({
+    type: "GET",
+    url: "/routing",
+    success: function(response){
+      routingTable = response.routing;
+    },
+    error: function(){
+      alert("Critical Server Error, Please visit the Platform Page!");
+    }
+  })
 }

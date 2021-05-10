@@ -1,4 +1,5 @@
 $(document).ready(function () {
+  getRouting();
   document.title = currentUser.username + ' - Social Network';
   updateProfileContainer();
 });
@@ -90,7 +91,7 @@ function postProfileInformation(photo, bio, institution, projects) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
         alert('error posting user information');
         console.log(error);

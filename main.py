@@ -8,11 +8,16 @@ if sys.platform == 'win32':
 import tornado.ioloop
 import tornado.web
 import tornado.locks
+import tornado.escape
 import dateutil.parser
-import SOCIALSERV_CONSTANTS
 import re
 import shutil
 import util
+import socket
+import json
+import signing
+import SOCIALSERV_CONSTANTS as CONSTANTS
+from contextlib import closing
 from bson.objectid import ObjectId
 from datetime import datetime, timedelta
 from pymongo import MongoClient
@@ -22,32 +27,24 @@ from socialserv_token_cache import get_token_cache
 from tornado.options import define, options
 from base64 import b64encode
 
-define("standalone_dev", default=False, type=bool, help="start in standalone dev mode (no auth)")
+define("dev", default=False, type=bool, help="start in dev mode (no auth) with dummy platform")
 
 
 class BaseHandler(tornado.web.RequestHandler):
 
     def initialize(self):
-        self.client = MongoClient('localhost', 27017)
+        self.client = MongoClient('localhost', 27017, username=CONSTANTS.MONGODB_USERNAME, password=CONSTANTS.MONGODB_PASSWORD)
         self.db = self.client['social_serv']  # TODO make this generic via config
 
         self.upload_dir = "uploads/"
-        if SOCIALSERV_CONSTANTS.STARTED_BY_PLATFORM:
-            self.upload_dir = "modules/SocialServ/uploads/"
-
         if not os.path.isdir(self.upload_dir):
             os.mkdir(self.upload_dir)
-
-        if SOCIALSERV_CONSTANTS.STARTED_BY_PLATFORM:
-            if not os.path.isfile(self.upload_dir + "default_profile_pic.jpg"):
-                shutil.copy2("modules/SocialServ/assets/default_profile_pic.jpg", self.upload_dir)
-        else:
-            if not os.path.isfile(self.upload_dir + "default_profile_pic.jpg"):
-                shutil.copy2("assets/default_profile_pic.jpg", self.upload_dir)
+        if not os.path.isfile(self.upload_dir + "default_profile_pic.jpg"):
+            shutil.copy2("assets/default_profile_pic.jpg", self.upload_dir)
 
     async def prepare(self):
         # standalone dev mode: no auth, dummy platform
-        if options.standalone_dev:
+        if options.dev:
             self.current_user = User("test_user1", -1, "dev@test.de")
             return
 
@@ -72,7 +69,7 @@ class BaseHandler(tornado.web.RequestHandler):
                 self.current_user = None
                 print("no logged in user")
 
-        # TODO if validation succeeds to periodic callback with ttl to tell platform that token is still valid (action taken here) and instruct platform to update their ttl too
+        # TODO if validation succeeds do periodic callback with ttl to tell platform that token is still valid (action taken here) and instruct platform to update their ttl too
 
     def json_serialize_posts(self, query_result):
         # parse datetime objects into ISO 8601 strings for JSON serializability
@@ -96,31 +93,52 @@ class BaseHandler(tornado.web.RequestHandler):
 class MainHandler(BaseHandler):
 
     def get(self):
-        self.render("html/main.html")
+        if self.current_user:
+            self.render("html/main.html")
+        else:
+            self.redirect(CONSTANTS.ROUTING_TABLE["platform"])  # redirect to platform if there is no logged in user
+
+
+class MainRedirectHandler(BaseHandler):
+
+    def get(self):
+        self.redirect("/main")
 
 
 class AdminHandler(BaseHandler):
 
     def get(self):
-        self.render("html/newsfeed.html")
+        if self.current_user:
+            self.render("html/newsfeed.html")
+        else:
+            self.redirect(CONSTANTS.ROUTING_TABLE["platform"])  # redirect to platform if there is no logged in user
 
 
 class MyProfileHandler(BaseHandler):
 
     def get(self):
-        self.render("html/myProfile.html")
+        if self.current_user:
+            self.render("html/myProfile.html")
+        else:
+            self.redirect(CONSTANTS.ROUTING_TABLE["platform"])  # redirect to platform if there is no logged in user
 
 
 class ProfileHandler(BaseHandler):
 
     def get(self, slug):
-        self.render("html/profile.html")
+        if self.current_user:
+            self.render("html/profile.html")
+        else:
+            self.redirect(CONSTANTS.ROUTING_TABLE["platform"])  # redirect to platform if there is no logged in user
 
 
 class SpaceRenderHandler(BaseHandler):
 
     def get(self, slug):
-        self.render("html/space.html")
+        if self.current_user:
+            self.render("html/space.html")
+        else:
+            self.redirect(CONSTANTS.ROUTING_TABLE["platform"])  # redirect to platform if there is no logged in user
 
 
 class PostHandler(BaseHandler):
@@ -1442,23 +1460,20 @@ class PermissionHandler(BaseHandler):
                         "reason": "no_logged_in_user"})
 
 
-def inherit_platform_port(port):  # invoked by platform
-    SOCIALSERV_CONSTANTS.PLATFORM_PORT = port
+class RoutingHandler(BaseHandler):
+
+    def get(self):
+        """
+        /routing
+        """
+
+        self.set_status(200)
+        self.write({"routing": CONSTANTS.ROUTING_TABLE})
 
 
-def apply_config(config):  # invoked by platform, but we do not need a config for now
-    pass
-
-
-def stop_signal():  # invoked by platform
-    # TODO
-    pass
-
-
-def make_app(called_by_platform):
-    if called_by_platform:
-        SOCIALSERV_CONSTANTS.STARTED_BY_PLATFORM = True
+def make_app(cookie_secret):
         return tornado.web.Application([
+            (r"/", MainRedirectHandler),
             (r"/main", MainHandler),
             (r"/admin", AdminHandler),
             (r"/myprofile", MyProfileHandler),
@@ -1479,57 +1494,56 @@ def make_app(called_by_platform):
             (r"/users/([a-zA-Z\-0-9\.:,_]+)", UserHandler),
             (r"/tasks", TaskHandler),
             (r"/permissions", PermissionHandler),
-            (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./modules/SocialServ/css/"}),
-            (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./modules/SocialServ/html/"}),
-            (r"/javascripts/(.*)", tornado.web.StaticFileHandler, {"path": "./modules/SocialServ/javascripts/"}),
-            (r"/uploads/(.*)", tornado.web.StaticFileHandler, {"path": "./modules/SocialServ/uploads/"})
-        ], cookie_secret='somekey')
-    else:
-        return tornado.web.Application([
-            (r"/main", MainHandler),
-            (r"/admin", AdminHandler),
-            (r"/myprofile", MyProfileHandler),
-            (r"/profile/([a-zA-Z\-0-9\.:,_]+)", ProfileHandler),
-            (r"/posts", PostHandler),
-            (r"/comment", CommentHandler),
-            (r"/like", LikePostHandler),
-            (r"/repost", RepostHandler),
-            (r"/follow", FollowHandler),
-            (r"/updates", NewPostsSinceTimestampHandler),
-            (r"/spaceadministration/([a-zA-Z\-0-9\.:,_]+)", SpaceHandler),
-            (r"/space/([a-zA-Z\-0-9\.:,_]+)", SpaceRenderHandler),
-            (r"/timeline", TimelineHandler),
-            (r"/timeline/space/([a-zA-Z\-0-9\.:,_]+)", SpaceTimelineHandler),
-            (r"/timeline/user/([a-zA-Z\-0-9\.:,_]+)", UserTimelineHandler),
-            (r"/timeline/you", PersonalTimelineHandler),
-            (r"/profileinformation", ProfileInformationHandler),
-            (r"/users/([a-zA-Z\-0-9\.:,_]+)", UserHandler),
-            (r"/tasks", TaskHandler),
-            (r"/permissions", PermissionHandler),
+            (r"/routing", RoutingHandler),
             (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
             (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./html/"}),
             (r"/javascripts/(.*)", tornado.web.StaticFileHandler, {"path": "./javascripts/"}),
             (r"/uploads/(.*)", tornado.web.StaticFileHandler, {"path": "./uploads/"})
-        ],cookie_secret='somekey')
+        ], cookie_secret=cookie_secret)
+
+def determine_free_port():
+    """
+    determines a free port number to which a module can later be bound. The port number is determined by the OS
+
+    :returns: a free port number
+    :rtype: int
+
+    """
+    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
+        s.bind(('', 0))  # binding a socket to 0 lets the OS assign a port
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # for threading scenario: the determined port can be used before this function returns
+        return s.getsockname()[1]
 
 
 async def main():
+    signing.create_signing_key_if_not_exists()
+
     tornado.options.parse_command_line()
-    app = make_app(False)
+    with open("config.json", "r") as fp:
+        conf = json.load(fp)
+        cookie_secret = conf["cookie_secret"]
+
+        if ("mongodb_username" in conf) and ("mongodb_password" in conf):
+            CONSTANTS.MONGODB_USERNAME = conf["mongodb_username"]
+            CONSTANTS.MONGODB_PASSWORD = conf["mongodb_password"]
+
+    app = make_app(cookie_secret)
     server = tornado.httpserver.HTTPServer(app)
-    server.listen(8889)
-    import socket_client
-    client = await socket_client.get_socket_instance()
+    port = 8903  # determine_free_port()
+    print("Starting server on port: " + str(port))
+    server.listen(port)
+
+    client = await get_socket_instance()
     response = await client.write({"type": "module_start",
                                    "module_name": "SocialServ",
-                                   "port": 8889})
-
-    # server.start()
-
-    # webbrowser.open_new("http://localhost:{}/".format(5006))
-
-    shutdown_event = tornado.locks.Event()
-    await shutdown_event.wait()
+                                   "port": port})
+    if response["status"] == "recognized":
+        print("recognized by platform")
+        shutdown_event = tornado.locks.Event()
+        await shutdown_event.wait()
+    else:
+        print("not recognized by platform")
+        print("exiting...")
 
 if __name__ == '__main__':
     tornado.ioloop.IOLoop.current().run_sync(main)

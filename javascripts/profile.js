@@ -2,6 +2,7 @@ var name = currURL.substring(currURL.lastIndexOf('/') + 1);
 
 $(document).ready(function () {
   document.title = name + ' - Social Network';
+  getRouting();
   getUserInfo(name);
   getFollows(name);
   updateProfileContainer();
@@ -37,7 +38,7 @@ function getUserInfo(name){
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
         alert('error get user info');
         console.log(error);
@@ -65,7 +66,7 @@ function getFollows(name) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
         alert('error get user follows');
         console.log(error);
@@ -93,7 +94,7 @@ function postFollow(name) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
         alert('error post follow');
         console.log(error);
@@ -138,7 +139,7 @@ function deleteFollow(name) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
+        window.location.href = routingTable.platform;
       } else {
         alert('error post follow');
         console.log(error);

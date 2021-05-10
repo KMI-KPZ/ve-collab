@@ -23,22 +23,28 @@ This is a simple implementation of a social network. It provides all standard fu
   ```sh
   $ python3 dummy_platform.py
   ```
-  In another terminal window, start the actual social network with the standalone flag:
+  In another terminal window, start the actual social network with the dev flag:
   ```sh
-  $ python3 main.py --standalone_dev
+  $ python3 main.py --dev
   ```
   In this mode no authentication is required and there are only dummy users for testing.
 
 - for production situation:
   - fire up the platform application (please refer to the guide in the repo)
-  - open up the platform in the browser and log in with the admin account       (important, only admin can start modules). This admin account has to be created with the --create_admin flag when starting the platform
-  - If you have done everything correctly, you should see a list of available modules. Hit download on SocialServ. If it does not work on the first go, try again after some time, the Github API is mean sometimes.
-  - after it is downloaded a "start" button should appear. Click it, and SocialServ will get started. Click on the port number to get redirected.
-  - Now all users can see upon logging in to the platform the SocialServ is running and can redirect to it and use it.
+  - check the port you started the platform on. If it is not 8888, change the value of PLATFORM_PORT in SOCIALSERV_CONSTANTS.py to your port
+  - run
+    ```sh
+    $ python signing.py
+    ```
+    once to generate the files "signing_key.key" and "verify_key.key". Keep the signing key secret AT ALL COST. Take the verify_key and insert "SocialServ": "\<verify_key_here\>", into the verify_keys.json file over at the platform
+  - run the following to start the network:
+    ```sh
+    $ python3 main.py
+    ```
 
- Login to Platform | Admin View | User View
- :-------------------------:|:-------------------------:|:-------------------------:
- ![login](Features/platform/login.png)  | ![Admin Platform](Features/platform/admin.png) | ![Admin Platform](Features/platform/user.png)
+ Login to Platform | User View
+ :------------------------------------:|:-------------------------:
+ ![login](Features/platform/login.png) | ![Admin Platform](Features/platform/user.png)
 
 
 ## Features
