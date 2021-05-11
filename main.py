@@ -94,7 +94,7 @@ class MainHandler(BaseHandler):
 
     def get(self):
         if self.current_user:
-            self.render("html/main.html")
+            self.render("html/main_re.html")
         else:
             self.redirect(CONSTANTS.ROUTING_TABLE["platform"])  # redirect to platform if there is no logged in user
 
