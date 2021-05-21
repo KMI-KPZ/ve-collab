@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Social Network</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"
+    integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ"
+    crossorigin="anonymous">
+    </script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link href="http://netdna.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="../css/newsfeed.css">
+    <link rel="stylesheet" href="../css/tagsinput.css">
+    <link rel="stylesheet" type="text/css" href="../css/modal.css">
+    <link rel="stylesheet" type="text/css" href="../css/notifications.css">
+</head>
+<body class="font-sans bg-white">
+
+  <!-- Navbar -->
+  <nav class="bg-blue mb-6">
+    <div class="container bg-blue-300 mx-auto px-8">
+      <div class="flex items-center py-2 px-10">
+        <div class="w-3/4 flex items-center">
+          <div>
+            <img src="uploads/SO-SERVE_Logo_solo-285x300.png"/ width="50" height="50">
+          </div>
+          <div class="ml-4">
+            <li class="nav-item list-none">
+              <input type="text" name="search" id="search" placeholder="Search lionet" class="form-control" />
+              <ul class="list-group" id="result"></ul>
+            </li>
+          </div>
+          <div class="ml-4">
+            <div class="text-sm flex items-center">
+              <div>
+                <a href="main" class="no-underline text-grey-light pr-3">Startseite</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Container-->
+  <div class="flex">
+    <div class="container mx-auto px-8">
+      <div class="flex px-10">
+
+
+        <!-- To modularize every page in this single html, this part of code has to be outsourced in an extra html template script -->
+        <!-- Maybe use this following part for main file with id ??? and another template, eg. profile with another script id-->
+        <!-- insert script into main page by id based on assessed web address -->
+        <div class="w-1/4">
+          <div class="mb-4" id="profileImage">
+            <img class="rounded-lg" src="https://via.placeholder.com/100" />
+          </div>
+          <div class="mb-4" id="profileFullName">
+            <div class="text-3xl font-medium text-grey-darkest">
+              Andrew Huggins
+            </div>
+          </div>
+          <div class="mb-4" id="profileUsername">
+            <div class="text-xl text-grey-dark font-light">
+              ahuggins
+            </div>
+          </div>
+        </div>
+        <div class="w-3/4 ml-6 mt-2">
+          <div id="newPostContainer">
+
+          </div>
+          <div id="feedContainer">
+
+          </div>
+        </div>
+        <!-- This part ends here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="mt-8">
+    <div class="container mx-auto px-8">
+      <div class="px-10">
+        <div class="flex items-center justify-between border-t py-8">
+          <div class="justify-start justify-between text-xs w-2/5 flex">
+            <div class="mr-4">
+              &copy; 2021 lionet.
+            </div>
+            <div class="mr-4">
+              <a href="#" class="no-underline">Terms</a>
+            </div>
+            <div class="mr-4">
+              <a href="#" class="no-underline">Privacy</a>
+            </div>
+            <div class="mr-4">
+              <a href="#" class="no-underline">Security</a>
+            </div>
+            <div class="mr-4">
+              <a href="#" class="no-underline">Help</a>
+            </div>
+
+            <div class="justify-end justify-between text-xs w-2/5 flex text-right">
+              <div class="ml-4">
+                <a href="#" class="no-underline">About</a>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+  <script src="../javascripts/newsfeed.js"></script>
+  <script src="../javascripts/mustache.js"></script>
+
+  <script src="../javascripts/tagsinput.js"></script>
+  <script src="../javascripts/notifications.js"></script>
+</body>
+
+</html>

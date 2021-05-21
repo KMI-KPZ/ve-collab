@@ -94,7 +94,7 @@ class MainHandler(BaseHandler):
 
     def get(self):
         if self.current_user:
-            self.render("html/main_re.html")
+            self.render("html/main_layout.html")
         else:
             self.redirect(CONSTANTS.ROUTING_TABLE["platform"])  # redirect to platform if there is no logged in user
 
@@ -1471,6 +1471,15 @@ class RoutingHandler(BaseHandler):
         self.write({"routing": CONSTANTS.ROUTING_TABLE})
 
 
+class TemplateHandler(BaseHandler):
+
+    def get(self):
+        if self.current_user:
+            self.render("html/blocks.html")
+        else:
+            self.redirect(CONSTANTS.ROUTING_TABLE["platform"])  # redirect to platform if there is no logged in user
+
+
 def make_app(cookie_secret):
         return tornado.web.Application([
             (r"/", MainRedirectHandler),
@@ -1495,6 +1504,7 @@ def make_app(cookie_secret):
             (r"/tasks", TaskHandler),
             (r"/permissions", PermissionHandler),
             (r"/routing", RoutingHandler),
+            (r"/template", TemplateHandler),
             (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
             (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./html/"}),
             (r"/javascripts/(.*)", tornado.web.StaticFileHandler, {"path": "./javascripts/"}),

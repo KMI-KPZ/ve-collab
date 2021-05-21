@@ -14,10 +14,27 @@ var daysAgo = 0;
 //HTML & JQuery
 var $body = $('body');
 var $feedContainer = $('#feedContainer');
-var postTemplate = document.getElementById('postTemplate').innerHTML;
-var repostTemplate = document.getElementById('repostTemplate').innerHTML;
-var commentTemplate = document.getElementById('commentTemplate').innerHTML;
-var tagTemplate = document.getElementById('tagTemplate').innerHTML;
+var postTemplate //= document.getElementById('postTemplate').innerHTML;
+var repostTemplate //= document.getElementById('repostTemplate').innerHTML;
+var commentTemplate //= document.getElementById('commentTemplate').innerHTML;
+var tagTemplate //= document.getElementById('tagTemplate').innerHTML;
+
+
+var newPostTemplate
+var spaceTemplate
+var spaceTemplateSelect
+
+
+$.get("/template", function(template, textStatus, jqXhr) {
+  postTemplate = $(template).filter('#postTemplate').html()
+  repostTemplate = $(template).filter('#repostTemplate').html()
+  commentTemplate = $(template).filter('#commentTemplate').html()
+  tagTemplate = $(template).filter('#tagTemplate').html()
+
+  newPostTemplate = $(template).filter('#newPostTemplate').html()
+  spaceTemplate = $(template).filter('#spaceTemplate').html()
+  spaceTemplateSelect = $(template).filter('#spaceTemplateSelect').html()
+})
 
 //Boolean & Data
 var inSpace = false;
@@ -39,7 +56,7 @@ function initNewsFeed() {
   if(!document.body.contains(document.getElementById('newPostPanel'))) {
     //console.log(currentUser);
     currentUser["profile_pic_URL"] = baseUrl + '/uploads/' + currentUser["profile"]["profile_pic"];
-    $('#newPostContainer').prepend(Mustache.render(document.getElementById('newPostTemplate').innerHTML, currentUser));
+    $('#newPostContainer').prepend(Mustache.render(newPostTemplate, currentUser));
   }
   today = new Date();
   now = today.toISOString();
@@ -854,12 +871,12 @@ function getSpaces() {
         var inSpace = (currentUser.spaces.indexOf(space.name) > -1) ? true : false;
         // needed for displaying "join" button
         space['inSpace'] = inSpace;
-        $dropdown.prepend(Mustache.render(document.getElementById('spaceTemplate').innerHTML, space));
+        $dropdown.prepend(Mustache.render(spaceTemplate, space));
         localStorage.setItem(space.name, space.members);
         Spaces.push(space);
         // if not in Space render spaceTemplateSelect
         if (currURL.indexOf(baseUrl + '/space') == -1) {
-          $('#selectSpace').append(Mustache.render(document.getElementById('spaceTemplateSelect').innerHTML, space));
+          $('#selectSpace').append(Mustache.render(spaceTemplateSelect, space));
         }
     });
     },
@@ -1132,7 +1149,7 @@ function loadSpacesRepost(id){
       return;
         }
     }
-    $('#selectRepostSpace'+id).append(Mustache.render(document.getElementById('spaceTemplateSelect').innerHTML, space));
+    $('#selectRepostSpace'+id).append(Mustache.render(spaceTemplate, space));
   });
 }
 
