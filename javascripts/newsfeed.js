@@ -23,6 +23,8 @@ var tagTemplate //= document.getElementById('tagTemplate').innerHTML;
 var newPostTemplate
 var spaceTemplate
 var spaceTemplateSelect
+var spaceHeaderTemplate
+var profileTemplate
 
 
 $.get("/template", function(template, textStatus, jqXhr) {
@@ -34,6 +36,18 @@ $.get("/template", function(template, textStatus, jqXhr) {
   newPostTemplate = $(template).filter('#newPostTemplate').html()
   spaceTemplate = $(template).filter('#spaceTemplate').html()
   spaceTemplateSelect = $(template).filter('#spaceTemplateSelect').html()
+  spaceHeaderTemplate = $(template).filter('#spaceHeaderTemplate').html()
+  profileTemplate = $(template).filter('#profileTemplate').html()
+
+  Mustache.parse(postTemplate);
+  Mustache.parse(repostTemplate);
+  Mustache.parse(commentTemplate);
+  Mustache.parse(tagTemplate);
+  Mustache.parse(newPostTemplate);
+  Mustache.parse(spaceTemplate);
+  Mustache.parse(spaceTemplateSelect);
+  Mustache.parse(spaceHeaderTemplate);
+  Mustache.parse(profileTemplate);
 })
 
 //Boolean & Data
@@ -56,7 +70,12 @@ function initNewsFeed() {
   if(!document.body.contains(document.getElementById('newPostPanel'))) {
     //console.log(currentUser);
     currentUser["profile_pic_URL"] = baseUrl + '/uploads/' + currentUser["profile"]["profile_pic"];
-    $('#newPostContainer').prepend(Mustache.render(newPostTemplate, currentUser));
+
+    // Timeout fix error, where no templates are loading
+    // Error: Uncaught TypeError: Invalid template! Template should be a "string" but "undefined" was given as the first argument for mustache#render
+    setTimeout(function(){
+      $('#newPostContainer').prepend(Mustache.render(newPostTemplate, currentUser));
+    }, 10);
   }
   today = new Date();
   now = today.toISOString();
@@ -550,7 +569,7 @@ function getTimelineSpace(spacename, from, to) {
     success: function (timeline) {
       displayTimeline(timeline);
       var members = localStorage.getItem(spacename).split(",");
-      if(!document.body.contains(document.getElementById('spaceProfilePanel'))) $('#spaceProfileContainer').prepend(Mustache.render(document.getElementById('spaceHeaderTemplate').innerHTML, {spacename: '' + spacename + '', members : members, memberSize : members.length}));
+      if(!document.body.contains(document.getElementById('spaceProfilePanel'))) $('#spaceProfileContainer').prepend(Mustache.render(spaceHeaderTemplate, {spacename: '' + spacename + '', members : members, memberSize : members.length}));
 
     },
 

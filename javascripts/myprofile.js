@@ -24,11 +24,11 @@ function updateProfileContainer(){
   if(currentUser.hasOwnProperty('projects')) currentUser['projectSize'] = currentUser['projects'].length;
 
   if(!document.body.contains(document.getElementById('profilePanel'))){
-    $('#profileContainer').prepend(Mustache.render(document.getElementById('profileTemplate').innerHTML, currentUser));
+    $('#profileContainer').prepend(Mustache.render(profileTemplate, currentUser));
   } else {
-    var template = document.getElementById('profileTemplate').innerHTML;
-    Mustache.parse(template);
-    var render = Mustache.to_html(template, currentUser);
+    //var template = document.getElementById('profileTemplate').innerHTML;
+    Mustache.parse(profileTemplate);
+    var render = Mustache.to_html(profileTemplate, currentUser);
     $("#profileContainer").empty().html(render);
   }
 }

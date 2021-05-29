@@ -1,22 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>Social Network</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="https://code.jquery.com/jquery-1.12.4.min.js"
-    integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ"
-    crossorigin="anonymous">
-    </script>
+  <meta charset="utf-8">
+  <title>Social Network</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://code.jquery.com/jquery-1.12.4.min.js"
+  integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ"
+  crossorigin="anonymous">
+  </script>
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-    <link href="http://netdna.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="../css/newsfeed.css">
-    <link rel="stylesheet" href="../css/tagsinput.css">
-    <link rel="stylesheet" type="text/css" href="../css/modal.css">
-    <link rel="stylesheet" type="text/css" href="../css/notifications.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  <link href="http://netdna.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="../css/newsfeed.css">
+  <link rel="stylesheet" href="../css/tagsinput.css">
+  <link rel="stylesheet" type="text/css" href="../css/modal.css">
+  <link rel="stylesheet" type="text/css" href="../css/notifications.css">
 </head>
 <body class="font-sans bg-white">
 
@@ -27,7 +27,6 @@
 
 	<script id="newPostTemplate" type="text/html">
     <div class="panel panel-white post" id="newPostPanel">
-
       <div class="post-heading">
         <div class="pull-left image">
           <img src="{{!profile_pic_URL}}" class="img-circle avatar" alt="user profile image">
@@ -556,12 +555,110 @@
   </script>
 
 	<script id=spaceTemplate type="text/html">
-      <a class="dropdown-item" id={{!_id}} href="space/{{!name}}">{{!name}} {{!^inSpace}}<button type="button" id = "joinSpace" name={{!name}} class="btn btn-outline-success">Join</button>{{!/inSpace}}</a>
+    <a class="dropdown-item" id={{!_id}} href="space/{{!name}}">{{!name}} {{!^inSpace}}<button type="button" id = "joinSpace" name={{!name}} class="btn btn-outline-success">Join</button>{{!/inSpace}}</a>
   </script>
 
   <script id="spaceTemplateSelect" type="text/html">
-      <option value={{!name}}>{{!name}}</option>
+    <option value={{!name}}>{{!name}}</option>
   </script>
-	
+
+  <script id="profileTemplate" type="text/html">
+    <div class="panel panel-white profile-widget" id="profilePanel">
+      <div class="row">
+        <div class="col-sm-12">
+          <div class="image-container bg2" style="background:url(https://via.placeholder.com/400x200)">
+            <img src={{!profile_pic_URL}} class="avatar" alt="avatar">
+          </div>
+        </div>
+        <div class="col-sm-12">
+          <div class="details">
+            <h4>{{!username}}<i class="fa fa-sheild"></i></h4>
+            <div>{{!email}}</div>
+            <div class="mg-top-10">
+              {{!#isFollowed}}
+              <a href="javascript:deleteFollow('{{!username}}');" class="btn btn-danger">Unfollow</a>
+              {{!/isFollowed}}
+              {{!^isFollowed}}
+              <a href="javascript:postFollow('{{!username}}');" class="btn btn-warning">Follow</a>
+              {{!/isFollowed}}
+              <button type="button" class="btn btn-info" data-toggle="modal" data-target="#followModal">
+                Follows ({{!followSize}})
+              </button>
+            </div>
+
+            <!-- Modal -->
+            <div class="modal" id="followModal" tabindex="-1" role="dialog" aria-labelledby="followModalLabel" aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="followModalLabel">Follows</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                    <ul class="list-group">
+                      {{!#follows}}
+                      <li class="list-group-item">{{!.}}</li>
+                      {{!/follows}}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </script>
+
+  <script id="spaceHeaderTemplate" type="text/html">
+    <div class="panel panel-white profile-widget" id="spaceProfilePanel">
+      <div class="row">
+        <div class="col-sm-12">
+          <div class="image-container bg2" style="background:url(https://via.placeholder.com/400x200)">
+            <img src="https://via.placeholder.com/400x200" class="avatar" alt="avatar">
+          </div>
+        </div>
+        <div class="col-sm-12">
+          <div class="details">
+            <h1>{{!spacename}}<i class="fa fa-sheild"></i></h1>
+            <!-- Button trigger modal -->
+            <button type="button" class="btn btn-info" data-toggle="modal" data-target="#memberModal">
+              Members ({{!memberSize}})
+            </button>
+
+            <!-- Modal -->
+            <div class="modal" id="memberModal" tabindex="-1" role="dialog" aria-labelledby="memberModalLabel" aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="memberModalLabel">Members</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                    <ul class="list-group">
+                      {{!#members}}
+                      <li class="list-group-item">{{!.}}</li>
+                      {{!/members}}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div>Description of Space</div>
+            <div>This is a cool Space.</div>
+            <div class="mg-top-10">
+              <a href='#' class="btn btn-primary">Invite</a>
+              <a href='#' class="btn btn-danger">Leave</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </script>
+
 </body>
 </html>
