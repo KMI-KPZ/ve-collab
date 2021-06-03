@@ -11,10 +11,10 @@ $(document).ready(function () {
 function updateProfileContainer(){
   user["isFollowed"] = (currentUser.follows.includes(name)) ? true : false;
   if(!document.body.contains(document.getElementById('profilePanel'))){
-    $('#profileContainer').prepend(Mustache.render(document.getElementById('profileTemplate').innerHTML, user));
+    $('#profileContainer').prepend(Mustache.render(profileTemplate, user));
   } else {
-    var template = document.getElementById('profileTemplate').innerHTML;
-    Mustache.parse(template);
+    //var template = document.getElementById('profileTemplate').innerHTML;
+    Mustache.parse(profileTemplate);
     var render = Mustache.to_html(template, user);
     $("#profileContainer").empty().html(render);
   }

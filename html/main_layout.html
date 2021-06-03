@@ -35,9 +35,30 @@
             </li>
           </div>
           <div class="ml-4">
-            <div class="text-sm flex items-center">
+            <div class="text-2xl flex items-center">
               <div>
                 <a href="main" class="no-underline text-grey-light pr-3">Startseite</a>
+              </div>
+              <div>
+                <a href="myprofile" class="no-underline text-grey-light pr-3">Profil</a>
+              </div>
+              <div>
+                <div class="nav-item dropdown">
+                  <a class="nav-link dropdown-toggle" id="navbarDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Spaces
+                  </a>
+                  <div id="spaceDropdown" class="dropdown-menu" aria-labelledby="navbarDropdown">
+
+                    <div class="dropdown-divider"></div>
+                    <form class="px-4 py-3">
+                      <div class="form-group">
+                        <label for="newSpaceName">New Space name</label>
+                        <input type="text" class="form-control" id="newSpaceName" placeholder="Enter name">
+                      </div>
+                      <button id="createSpace" type="button" class="btn btn-primary">Create Space</button>
+                    </form>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -49,37 +70,26 @@
   <!-- Main Container-->
   <div class="flex">
     <div class="container mx-auto px-8">
-      <div class="flex px-10">
+
 
 
         <!-- To modularize every page in this single html, this part of code has to be outsourced in an extra html template script -->
         <!-- Maybe use this following part for main file with id ??? and another template, eg. profile with another script id-->
         <!-- insert script into main page by id based on assessed web address -->
-        <div class="w-1/4">
-          <div class="mb-4" id="profileImage">
-            <img class="rounded-lg" src="https://via.placeholder.com/100" />
-          </div>
-          <div class="mb-4" id="profileFullName">
-            <div class="text-3xl font-medium text-grey-darkest">
-              Andrew Huggins
-            </div>
-          </div>
-          <div class="mb-4" id="profileUsername">
-            <div class="text-xl text-grey-dark font-light">
-              ahuggins
-            </div>
-          </div>
-        </div>
-        <div class="w-3/4 ml-6 mt-2">
+
           <div id="newPostContainer">
 
           </div>
-          <div id="feedContainer">
+          <div class="flex">
+            <div class="w-1/4"></div>
+            <div class="w-3/4 ml-6 mt-2">
+              <div id="feedContainer">
 
+              </div>
+            </div>
           </div>
-        </div>
         <!-- This part ends here -->
-      </div>
+
     </div>
   </div>
 

@@ -1,22 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Social Network</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="https://code.jquery.com/jquery-1.12.4.min.js"
-  integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ"
-  crossorigin="anonymous">
-  </script>
+    <meta charset="utf-8">
+    <title>Social Network</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"
+    integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ"
+    crossorigin="anonymous">
+    </script>
 
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css">
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-  <link href="http://netdna.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
-  <link rel="stylesheet" type="text/css" href="../css/newsfeed.css">
-  <link rel="stylesheet" href="../css/tagsinput.css">
-  <link rel="stylesheet" type="text/css" href="../css/modal.css">
-  <link rel="stylesheet" type="text/css" href="../css/notifications.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link href="http://netdna.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="../css/newsfeed.css">
+    <link rel="stylesheet" href="../css/tagsinput.css">
+    <link rel="stylesheet" type="text/css" href="../css/modal.css">
+    <link rel="stylesheet" type="text/css" href="../css/notifications.css">
 </head>
 <body class="font-sans bg-white">
 
@@ -26,55 +26,83 @@
   Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
 
 	<script id="newPostTemplate" type="text/html">
-    <div class="panel panel-white post" id="newPostPanel">
-      <div class="post-heading">
-        <div class="pull-left image">
-          <img src="{{!profile_pic_URL}}" class="img-circle avatar" alt="user profile image">
-        </div>
-        <div class="pull-left meta">
-          <h2>
-            <b>Hello {{!username}}</b>
-          </h2>
-        </div>
-      </div>
-      <div class="post-description" style="padding-top: 5px;">
-        <div id="postAlert"></div>
-        <div class="grid grid-cols-2 gap-4">
-          <div class="flex-1">
-            <input type="text" value="" id="addTag" data-role="tagsinput" placeholder="Add Tags">
+    <div class="flex">
+      <div class="w-1/4">
+        <div class="flex">
+          <div class="w-1/2">
+            <div class="mb-4" id="profileImage">
+              <img src="{{!profile_pic_URL}}" class="img-circle avatar" alt="user profile image" width="100" height="100">
+            </div>
           </div>
-          <div class="flex-1">
-            <select id ="selectSpace" class="custom-select">
-              <option value=null selected disabled>Post into Space..</option>
-            </select>
-          </div>
-        </div>
-      </div>
+          <div class="w-1/2">
+            <div class="mb-4" id="profileFullName">
+              <div class="text-3xl font-medium text-grey-darkest">
+                Name?
+              </div>
+            </div>
+            <div class="mb-4" id="profileUsername">
+              <div class="text-xl text-grey-dark font-light">
+                {{!username}}
+              </div>
 
-      <div class="post-description">
-        <textarea class="form-control" id="postFeed" rows="2" placeholder="What are you thinking?"></textarea>
-        <div id="postdiv" class="mar-top clearfix">
-          <button class="btn btn-sm btn-primary pull-right" id="post"><i class="fa fa-pencil fa-fw"></i> Post</button>
-          <!--<div class="element">
-            <i class="fa fa-file"></i>
-            <button class="btn btn-sm btn-success" id="record"><i class="fa fa-microphone"></i></button>
-            <input type="file" name="files" id="files" multiple>
-          </div>-->
-          <div class="p-1 flex gap-1 justify-start">
-            <button id="record" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-300 hover:bg-indigo-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 btn btn-success">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
-              </svg>
-            </button>
-            <button class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-300 hover:bg-indigo-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-              <i class="fa fa-file"></i>
-            </button>
-            <input type="file" name="files" id="files" multiple>
+            </div>
           </div>
-          <p><audio id=recordedAudio></audio></p>
+        </div>
+        <div class="pb-6 border-b"></div>
+      </div>
+      <div class="w-3/4 ml-6 mt-2">
+        <div class="panel panel-white post" id="newPostPanel">
+
+          <div class="post-heading">
+            <div class="pull-left image">
+              <img src="{{!profile_pic_URL}}" class="img-circle avatar" alt="user profile image">
+            </div>
+            <div class="pull-left meta">
+              <h2>
+                <b>Hello {{!username}}</b>
+              </h2>
+            </div>
+          </div>
+          <div class="post-description" style="padding-top: 5px;">
+            <div id="postAlert"></div>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="flex-1">
+                <input type="text" value="" id="addTag" data-role="tagsinput" placeholder="Add Tags">
+              </div>
+              <div class="flex-1">
+                <select id ="selectSpace" class="custom-select">
+                  <option value=null selected disabled>Post into Space..</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="post-description">
+            <textarea class="form-control" id="postFeed" rows="2" placeholder="What are you thinking?"></textarea>
+            <div id="postdiv" class="mar-top clearfix">
+              <button class="btn btn-sm btn-primary pull-right" id="post"><i class="fa fa-pencil fa-fw"></i> Post</button>
+              <!--<div class="element">
+                <i class="fa fa-file"></i>
+                <button class="btn btn-sm btn-success" id="record"><i class="fa fa-microphone"></i></button>
+                <input type="file" name="files" id="files" multiple>
+              </div>-->
+              <div class="p-1 flex gap-1 justify-start">
+                <button id="record" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-300 hover:bg-indigo-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 btn btn-success">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
+                  </svg>
+                </button>
+                <button class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-300 hover:bg-indigo-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                  <i class="fa fa-file"></i>
+                </button>
+                <input type="file" name="files" id="files" multiple>
+              </div>
+              <p><audio id=recordedAudio></audio></p>
+            </div>
+          </div>
+
         </div>
       </div>
-
     </div>
   </script>
 
@@ -107,7 +135,9 @@
       	</div>
       </div>
       <div class="post-description">
-        <p>{{!text}}</p>
+        <div class="border p-4 mb-4 rounded">
+          <p>{{!text}}</p>
+        </div>
 
         {{!#hasMedia}}
         <div id="{{!_id}}" class="carousel slide">

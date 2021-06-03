@@ -39,15 +39,7 @@ $.get("/template", function(template, textStatus, jqXhr) {
   spaceHeaderTemplate = $(template).filter('#spaceHeaderTemplate').html()
   profileTemplate = $(template).filter('#profileTemplate').html()
 
-  Mustache.parse(postTemplate);
-  Mustache.parse(repostTemplate);
-  Mustache.parse(commentTemplate);
-  Mustache.parse(tagTemplate);
-  Mustache.parse(newPostTemplate);
-  Mustache.parse(spaceTemplate);
-  Mustache.parse(spaceTemplateSelect);
-  Mustache.parse(spaceHeaderTemplate);
-  Mustache.parse(profileTemplate);
+
 })
 
 //Boolean & Data
@@ -73,13 +65,14 @@ function initNewsFeed() {
 
     // Timeout fix error, where no templates are loading
     // Error: Uncaught TypeError: Invalid template! Template should be a "string" but "undefined" was given as the first argument for mustache#render
-    setTimeout(function(){
-      $('#newPostContainer').prepend(Mustache.render(newPostTemplate, currentUser));
-    }, 10);
+    //setTimeout(function(){
+    $('#newPostContainer').prepend(Mustache.render(newPostTemplate, currentUser));
+    //}, 10);
   }
   today = new Date();
   now = today.toISOString();
   from = yesterday.toISOString();
+  console.log("now initalizing date")
 
   if (currURL == baseUrl + '/admin') {
     if(userRole != 'admin') window.location.href = baseUrl + '/main';
@@ -121,7 +114,9 @@ $(document).ready(function () {
   getCurrentUserInfo();
   getUserRole();
   getAllUsers();
+
   initNewsFeed();
+
   const interval  = setInterval(function() {
      checkUpdate();
   }, 10000);
@@ -467,6 +462,7 @@ function displayTimeline(timeline) {
             $feedContainer.prepend(Mustache.render(postTemplate, post));
         } else $feedContainer.append(Mustache.render(postTemplate, post));
     }
+
     //console.log(post);
     //in both case render comments to post and tags
     var $feed = $('#' + post._id);

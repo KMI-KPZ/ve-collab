@@ -17,41 +17,39 @@
     <link rel="stylesheet" type="text/css" href="../css/modal.css">
     <link rel="stylesheet" type="text/css" href="../css/notifications.css">
 </head>
-<body>
+<body class="font-sans bg-white">
   <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
 
-  <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <div class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2">
-        <ul class="navbar-nav mr-auto">
-          <li class="nav-item">
-            <input type="text" name="search" id="search" placeholder="Search for User" class="form-control" />
-            <ul class="list-group" id="result"></ul>
-          </li>
-        </ul>
-    </div>
-      <div class="mx-auto order-0">
-          <a class="navbar-brand mx-auto" id='adminLink' href="../admin">Social Network</a>
-          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".dual-collapse2">
-              <span class="navbar-toggler-icon"></span>
-          </button>
-      </div>
-      <div class="navbar-collapse collapse w-100 order-3 dual-collapse2">
-          <ul class="navbar-nav ml-auto">
-            <li class="nav-item ">
-                <a class="nav-link" href="../main">Home</a>
+  <!-- Navbar -->
+  <nav class="bg-blue mb-6">
+    <div class="container bg-blue-300 mx-auto px-8">
+      <div class="flex items-center py-2 px-10">
+        <div class="w-3/4 flex items-center">
+          <div>
+            <img src="../uploads/SO-SERVE_Logo_solo-285x300.png"/ width="50" height="50">
+          </div>
+          <div class="ml-4">
+            <li class="nav-item list-none">
+              <input type="text" name="search" id="search" placeholder="Search lionet" class="form-control" />
+              <ul class="list-group" id="result"></ul>
             </li>
-
-            <li class="nav-item">
-                <a class="nav-link" href="../myprofile">Profile</a>
-            </li>
-
-            <li class="nav-item dropdown active">
-                    <a class="nav-link dropdown-toggle" id="navbarDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                      Spaces
-                    </a>
+          </div>
+          <div class="ml-4">
+            <div class="text-2xl flex items-center">
+              <div>
+                <a href="../main" class="no-underline text-grey-light pr-3">Startseite</a>
+              </div>
+              <div>
+                <a href="../myprofile" class="no-underline text-grey-light pr-3">Profil</a>
+              </div>
+              <div>
+                <div class="nav-item dropdown">
+                  <a class="nav-link dropdown-toggle" id="navbarDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Spaces
+                  </a>
                   <div id="spaceDropdown" class="dropdown-menu" aria-labelledby="navbarDropdown">
 
-                      <div class="dropdown-divider"></div>
+                    <div class="dropdown-divider"></div>
                     <form class="px-4 py-3">
                       <div class="form-group">
                         <label for="newSpaceName">New Space name</label>
@@ -60,9 +58,13 @@
                       <button id="createSpace" type="button" class="btn btn-primary">Create Space</button>
                     </form>
                   </div>
-            </li>
-          </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+    </div>
   </nav>
 
 
