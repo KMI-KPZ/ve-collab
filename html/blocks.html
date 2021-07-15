@@ -18,6 +18,8 @@
     <link rel="stylesheet" href="../css/tagsinput.css">
     <link rel="stylesheet" type="text/css" href="../css/modal.css">
     <link rel="stylesheet" type="text/css" href="../css/notifications.css">
+
+    
 </head>
 <body class="font-sans bg-white">
 
@@ -56,10 +58,10 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
             <div class="panel panel-white post" id="newPostPanel">
 
                 <div class="post-heading">
-                    <div class="pull-left image">
+                    <div class="float-left image">
                         <img src="{{!profile_pic_URL}}" class="img-circle avatar" alt="user profile image">
                     </div>
-                    <div class="pull-left meta">
+                    <div class="float-left meta">
                         <h2>
                             <b>Hello {{!username}}</b>
                         </h2>
@@ -67,7 +69,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                 </div>
 
                 <div class="post-description">
-                    <textarea class="form-control" id="postFeed" rows="2"
+                    <textarea class="form-textarea mt-1 block w-full border rounded-md" id="postFeed" rows="2"
                               placeholder="What are you thinking?"></textarea>
                     <div class="post-description" style="padding-top: 5px;">
                         <div id="postAlert"></div>
@@ -85,7 +87,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                     </div>
 
                     <div id="postdiv" class="mar-top clearfix p-2">
-                        <button class="btn btn-sm btn-primary pull-right" id="post"><i class="fa fa-pencil fa-fw"></i>
+                        <button class="m-0 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-300 hover:bg-indigo-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 m-0 float-right" id="post"><i class="fa fa-pencil fa-fw"></i>
                             Post
                         </button>
                         <!--<div class="element">
@@ -127,12 +129,12 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
 </script>
 
 <script id="postTemplate" type="text/html">
-    <div class="panel panel-white post" id={{!_id}} name={{!creation_date}}>
-        <div class="post-heading">
-            <div class="pull-left image">
+    <div class="border w-full shadow-sm block focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md p-2 mb-2 post" id={{!_id}} name={{!creation_date}}>
+        <div class="post-heading border-b">
+            <div class="float-left image">
                 <img src="{{!authorPicURL}}" class="img-circle avatar" alt="user profile image">
             </div>
-            <div class="pull-left meta">
+            <div class="float-left meta">
                 <div class="title h5">
                     <a href="profile/{{!author.username}}"><b>{{!author.username}}</b></a>
                     made a post.
@@ -143,13 +145,20 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                 </div>
                 <h6 class="text-muted time" id="agoPost">{{!ago}}</h6>
             </div>
-            <div class="pull-right">
+            <div class="float-right">
                 {{!#isAuthor}}
-                <div class="dropdown">
-                    <div class="dot" id="moreOptionMenu" data-toggle="dropdown" aria-haspopup="true"
-                         aria-expanded="false"></div>
-                    <div class="dropdown-menu" aria-labelledby="moreOptionMenu">
-                        <a class="dropdown-item" href="javascript:deletePost('{{!_id}}');">Delete</a>
+                <div class="relative" x-data="{isOpen: false}">
+                  <button
+                          @click="isOpen = !isOpen"
+                          @keydown.escape="isOpen = false"
+                          class="flex items-center"
+                  ><div class="dot" id="moreOptionMenu" data-toggle="dropdown" aria-haspopup="true"
+                       aria-expanded="false"></div></button>
+                  <div x-show="isOpen"
+                      @click.away="isOpen = false"
+                      class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none"
+                      >
+                      <a class="block w-full" href="javascript:deletePost('{{!_id}}');">Delete</a>
                     </div>
                 </div>
                 {{!/isAuthor}}
@@ -219,20 +228,39 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
 
             <div class="stats">
                 <button type="button" onclick="likeDislike(this,'{{!_id}}');" id="likers"
-                        class="btn btn-primary d-inline" data-toggle="tooltip" data-placement="right" data-html="true"
+                        class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" data-toggle="tooltip" data-placement="right" data-html="true"
                         data-original-title="{{!#likers}}<li>{{!.}}</li>{{!/likers}}">
                     <i id="likeIcon" class="fa fa-thumbs-up"></i> <span id="likeCounter">{{!likes}}</span>
                 </button>
                 <!--<p class="d-inline"> Likes: <span id="likeCounter">{{!likes}}</span></p>-->
-                <button class="btn btn-info dropdown-toggle d-inline" type="button" id="shareBtn" data-toggle="dropdown"
-                        aria-haspopup="true" aria-expanded="false">
+                <button class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" type="button" id="shareBtn" data-toggle="modal"
+                        aria-haspopup="true" aria-expanded="false" onclick="loadSpacesRepost('{{!_id}}');" data-target="#shareModal{{!_id}}">
                     <i id="shareIcon" class="fa fa-share"></i>
                 </button>
-                <div class="dropdown-menu" aria-labelledby="shareBtn">
+                <!--<div class="dropdown-menu inline-block" aria-labelledby="shareBtn">
                     <button class="dropdown-item" data-toggle="modal" onclick="loadSpacesRepost('{{!_id}}');"
                             data-target="#shareModal{{!_id}}">Share...
                     </button>
-                </div>
+                </div>-->
+
+                <!--<div class="relative inline-block" x-data="{isOpen: false}">
+                  <button
+                          id="shareBtn"
+                          @click="isOpen = !isOpen"
+                          @keydown.escape="isOpen = false"
+                          class="flex items-center"
+                  ><i id="shareIcon" class="fa fa-share"></i></button>
+                  <div x-show="isOpen"
+                      @click.away="isOpen = false"
+                      class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none"
+                      >
+                      <div class="dropdown-menu" aria-labelledby="shareBtn">
+                          <button class="dropdown-item" data-toggle="modal" onclick="loadSpacesRepost('{{!_id}}');"
+                                  data-target="#shareModal{{!_id}}">Share...
+                          </button>
+                      </div>
+                    </div>
+                </div>-->
 
                 <!-- Modal -->
                 <div id="shareModal{{!_id}}" class="modal modal-message modal-info" style="display: none;"
@@ -342,12 +370,12 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                 </div>
             </div>
         </div>
-        <div class="post-footer">
-            <div class="input-group" id="commentBox">
-                <input class="form-control" id="commentInput" placeholder="Add a comment" type="text">
-                <span class="input-group-addon">
-            <a href="javascript:void(0);"><i class="fa fa-edit" id="postComment"></i></a>
-          </span>
+        <div class="post-footer w-full">
+            <div class="input-group flex" id="commentBox">
+                <input class="form-control mt-1 block w-full border rounded-md flex-1" id="commentInput" placeholder="Add a comment" type="text">
+                <span class="p-1">
+                  <a href="javascript:void(0);"><i class="fa fa-edit" id="postComment"></i></a>
+                </span>
             </div>
             <ul class="comments-list">
             </ul>
@@ -356,12 +384,12 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
 </script>
 
 <script id="repostTemplate" type="text/html">
-    <div class="panel panel-white post" id={{!_id}} name={{!creation_date}}>
-        <div class="post-heading">
-            <div class="pull-left image">
+    <div class="panel panel-default border w-full shadow-sm block focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md p-2 post" id={{!_id}} name={{!creation_date}}>
+        <div class="post-heading border-b">
+            <div class="float-left image">
                 <img src="{{!repostAuthorPicURL}}" class="img-circle avatar" alt="user profile image">
             </div>
-            <div class="pull-left meta">
+            <div class="float-left meta">
                 <div class="title h5">
                     <a href="profile/{{!repostAuthor}}"><b>{{!repostAuthor}}</b></a>
                     shared a post.
@@ -372,13 +400,20 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                 </div>
                 <h6 class="text-muted time" id="agoPost">{{!ago}}</h6>
             </div>
-            <div class="pull-right">
+            <div class="float-right">
                 {{!#isRepostAuthor}}
-                <div class="dropdown">
-                    <div class="dot" id="moreOptionMenu" data-toggle="dropdown" aria-haspopup="true"
-                         aria-expanded="false"></div>
-                    <div class="dropdown-menu" aria-labelledby="moreOptionMenu">
-                        <a class="dropdown-item" href="javascript:deletePost('{{!_id}}');">Delete</a>
+                <div class="relative" x-data="{isOpen: false}">
+                  <button
+                          @click="isOpen = !isOpen"
+                          @keydown.escape="isOpen = false"
+                          class="flex items-center"
+                  ><div class="dot" id="moreOptionMenu" data-toggle="dropdown" aria-haspopup="true"
+                       aria-expanded="false"></div></button>
+                  <div x-show="isOpen"
+                      @click.away="isOpen = false"
+                      class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none"
+                      >
+                      <a class="block w-full" href="javascript:deletePost('{{!_id}}');">Delete</a>
                     </div>
                 </div>
                 {{!/isRepostAuthor}}
@@ -388,12 +423,12 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
             <p>{{!repostText}}</p>
 
 
-            <div class="panel panel-default">
-                <div class="post-heading">
-                    <div class="pull-left image">
+            <div class="border w-full shadow-sm block focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md p-2">
+                <div class="post-heading border-b">
+                    <div class="float-left image">
                         <img src="{{!authorPicURL}}" class="img-circle avatar" alt="user profile image">
                     </div>
-                    <div class="pull-left meta">
+                    <div class="float-left meta">
                         <div class="title h5">
                             <a href="profile/{{!author.username}}"><b>{{!author.username}}</b></a>
                             made a post.
@@ -471,12 +506,17 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
             </div>
 
             <div class="stats">
-                <button type="button" onclick="likeDislike(this,'{{!_id}}');" id="likers" class="btn btn-primary"
+                <button type="button" onclick="likeDislike(this,'{{!_id}}');" id="likers" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"
                         data-toggle="tooltip" data-placement="right" data-html="true"
                         data-original-title="{{!#likers}}<li>{{!.}}</li>{{!/likers}}">
                     <i id="likeIcon" class="fa fa-thumbs-up"></i>
                 </button>
                 <!--<p> Likes: <span id="likeCounter">{{!likes}}</span></p>-->
+                <button class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 pb-2 border border-blue-500 hover:border-transparent rounded" type="button" id="shareBtn" data-toggle="modal"
+                        aria-haspopup="true" aria-expanded="false" onclick="loadSpacesRepost('{{!_id}}');" data-target="#shareModal{{!_id}}">
+                    <i id="shareIcon" class="fa fa-share"></i>
+                </button>
+                <!--
                 <button class="btn btn-info dropdown-toggle" type="button" id="shareBtn" data-toggle="dropdown"
                         aria-haspopup="true" aria-expanded="false">
                     <i id="shareIcon" class="fa fa-share"></i>
@@ -485,7 +525,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                     <button class="dropdown-item" data-toggle="modal" onclick="loadSpacesRepost('{{!_id}}');"
                             data-target="#shareModal{{!_id}}">Share...
                     </button>
-                </div>
+                </div>-->
 
                 <!-- Modal -->
                 <div id="shareModal{{!_id}}" class="modal modal-message modal-info" style="display: none;"
@@ -594,12 +634,12 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                     </div>
                 </div>
 
-                <div class="post-footer">
-                    <div class="input-group" id="commentBox">
-                        <input class="form-control" id="commentInput" placeholder="Add a comment" type="text">
-                        <span class="input-group-addon">
-	              <a href="javascript:void(0);"><i class="fa fa-edit" id="postComment"></i></a>
-	            </span>
+                <div class="post-footer w-full">
+                    <div class="input-group flex" id="commentBox">
+                        <input class="form-control mt-1 block w-full border rounded-md flex-1" id="commentInput" placeholder="Add a comment" type="text">
+                        <span class="p-1">
+          	              <a href="javascript:void(0);"><i class="fa fa-edit" id="postComment"></i></a>
+          	            </span>
                     </div>
                     <ul class="comments-list">
                     </ul>
@@ -610,17 +650,26 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
 </script>
 
 <script id="commentTemplate" type="text/html">
-    <li class="comment" id={{!_id}}>
-        <a class="pull-left" href="javascript:void(0);">
+    <li class="comment border w-full shadow-sm block w-full focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md p-2" id={{!_id}}>
+        <a class="float-left" href="javascript:void(0);">
             <img class="avatar" src="{{!authorPicURL}}" alt="avatar">
         </a>
-        <div class="pull-right">
+        <div class="float-right">
             {{!#isCommentAuthor}}
             <div class="dropdown">
-                <div class="dotComment" id="moreOptionMenuComment" data-toggle="dropdown" aria-haspopup="true"
-                     aria-expanded="false"></div>
-                <div class="dropdown-menu" aria-labelledby="moreOptionMenuComment">
-                    <a class="dropdown-item" href="javascript:deleteComment('{{!_id}}');">Delete</a>
+                <div class="relative" x-data="{isOpen: false}">
+                  <button
+                          @click="isOpen = !isOpen"
+                          @keydown.escape="isOpen = false"
+                          class="flex items-center"
+                  ><div class="dot" id="moreOptionMenuComment" data-toggle="dropdown" aria-haspopup="true"
+                       aria-expanded="false"></div></button>
+                  <div x-show="isOpen"
+                      @click.away="isOpen = false"
+                      class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none"
+                      >
+                      <a class="block w-full" href="javascript:deleteComment('{{!_id}}')">Delete</a>
+                    </div>
                 </div>
             </div>
             {{!/isCommentAuthor}}
@@ -636,13 +685,14 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
 </script>
 
 <script id="tagTemplate" type="text/html">
-    <span class="label label-pill label-info">{{!text}}</span>
+    <!--<span class="inline-block border border-blue rounded py-1 px-3 bg-blue text-white">{{!text}}</span>-->
 </script>
 
 <script id=spaceTemplate type="text/html">
-    <a class="dropdown-item" id={{!_id}} href="space/{{!name}}">{{!name}} {{!^inSpace}}
-        <button type="button" id="joinSpace" name={{!name}} class="btn btn-outline-success">Join</button>
-        {{!/inSpace}}</a>
+
+  <a class="dropdown-item block w-full hover:bg-gray-200" id={{!_id}} href="space/{{!name}}">{{!name}} {{!^inSpace}}
+      <button type="button" id="joinSpace" name={{!name}} class="btn btn-outline-success">Join</button>
+      {{!/inSpace}}</a>
 </script>
 
 <script id="spaceTemplateSelect" type="text/html">
@@ -700,7 +750,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
     </div>
 </script>
 
-<script id="spaceHeaderTemplate" type="text/html">
+<script id="spaceHeaderTemplate1" type="text/html">
     <div class="panel panel-white profile-widget" id="spaceProfilePanel">
         <div class="row">
             <div class="col-sm-12">
@@ -748,6 +798,51 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
         </div>
     </div>
 </script>
+<script id="spaceHeaderTemplate" type="text/html">
+  <div class="panel panel-default border w-full shadow-sm block focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md p-2 profile-widget" id="spaceProfilePanel">
+    <div class="flex items-center py-2">
+      <div>
+        <div class="image-container bg2" style="background:url(https://via.placeholder.com/100x100)">
+            <img src="https://via.placeholder.com/100x100" class="avatar" alt="avatar">
+        </div>
 
+        <div class="details">
+          <h1>{{!spacename}}<i class="fa fa-sheild"></i></h1>
+          <!-- Button trigger modal -->
+          <button type="button" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" data-toggle="modal" data-target="#memberModal">
+            Members ({{!memberSize}})
+          </button>
+
+          <!--Modal-->
+          <div id="memberModal" class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full" style="display: none;"
+               aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title"id="memberModalLabel">Members</h5>
+                    <!--<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>-->
+                  </div>
+
+                  <div class="modal-body">
+                    <ul class="min-w-full divide-y divide-gray-200">
+                        {{!#members}}
+                        <li class="px-6 py-4 whitespace-nowrap">{{!.}}</li>
+                        {{!/members}}
+                    </ul>
+                  </div>
+                </div>
+          </div>
+        </div>
+        <div>Description Placeholder</div>
+        <div class="p-2">
+            <a href='#' class="bg-green-500 text-white font-bold py-2 px-4 rounded opacity-50 cursor-not-allowed">Invite</a>
+            <a href='#' class="bg-red-500 text-white font-bold py-2 px-4 rounded opacity-50 cursor-not-allowed">Leave</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</script>
 </body>
 </html>

@@ -335,7 +335,7 @@ function displayTimeline(timeline) {
   $('input[data-role=tagsinput]').tagsinput({
     allowDuplicates: false
   });
-  $('[data-toggle="tooltip"]').tooltip();
+  //$('[data-toggle="tooltip"]').tooltip();
   $('.carousel').carousel();
   //loading posts => set from-Date until there is a post in interval from - to
   if(timeline.posts.length === 0 && daysAgo < 30) {
@@ -1062,7 +1062,7 @@ function searchUser(users) {
       if (user.username.search(expression) != -1 || user.email.search(expression) != -1)
       {
        user["profile_pic_URL"] = baseUrl + '/uploads/' + user["profile_pic"];
-       $('#result').append('<li class="list-group-item link-class"><img src="' + user["profile_pic_URL"] + '" height="40" width="40" class="img-thumbnail" /> '+user.username+' | <span class="text-muted">'+user.email+'</span></li>');
+       $('#result').append('<li class=""><img src="' + user["profile_pic_URL"] + '" height="40" width="40" class="img-thumbnail" /> '+user.username+' | <span class="text-muted">'+user.email+'</span></li>');
       }
      });
    }

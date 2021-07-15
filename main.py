@@ -1077,6 +1077,15 @@ class SpaceHandler(BaseHandler):
                         "reason": "no_logged_in_user"})
 
 
+class SpaceOverviewHandler(BaseHandler):
+    def get(self):
+        if self.current_user:
+            self.render("html/space_overview.html")
+        else:
+            self.redirect(CONSTANTS.ROUTING_TABLE["platform"])  # redirect to platform if there is no logged in user
+
+
+
 class NewPostsSinceTimestampHandler(BaseHandler):
     """
     check for new posts
@@ -1495,6 +1504,7 @@ def make_app(cookie_secret):
             (r"/updates", NewPostsSinceTimestampHandler),
             (r"/spaceadministration/([a-zA-Z\-0-9\.:,_]+)", SpaceHandler),
             (r"/space/([a-zA-Z\-0-9\.:,_]+)", SpaceRenderHandler),
+            (r"/spaces", SpaceOverviewHandler),
             (r"/timeline", TimelineHandler),
             (r"/timeline/space/([a-zA-Z\-0-9\.:,_]+)", SpaceTimelineHandler),
             (r"/timeline/user/([a-zA-Z\-0-9\.:,_]+)", UserTimelineHandler),

@@ -75,29 +75,32 @@
 
 
   <!-- Main Container-->
-  <div class="flex">
-    <div class="container mx-auto px-8">
+  <div class="flex w-full">
+    <div class="table-auto w-full" id="spaceOverview">
 
+      <div class="container mx-auto px-8">
+        <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+          <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
+            <div class="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Name
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Members
+                    </th>
+                  </tr>
+                </thead>
+                <tbody id="spaceOverviewEntries" class="bg-white divide-y divide-gray-200">
 
-
-        <!-- To modularize every page in this single html, this part of code has to be outsourced in an extra html template script -->
-        <!-- Maybe use this following part for main file with id ??? and another template, eg. profile with another script id-->
-        <!-- insert script into main page by id based on assessed web address -->
-
-          <div id="newPostContainer">
-
-          </div>
-
-
-          <div class="flex">
-            <div class="w-1/4"></div>
-            <div class="w-3/4 ml-6 mt-2">
-              <div id="feedContainer">
-
-              </div>
+                </tbody>
+              </table>
             </div>
           </div>
-        <!-- This part ends here -->
+        </div>
+      </div>
 
     </div>
   </div>
@@ -136,11 +139,36 @@
     </div>
   </div>
 
+  <script id="spaceOverviewEntry" type="text/html">
+    <tr>
+      <td class="px-6 py-4 whitespace-nowrap">
+        <div class="flex items-center">
+          <div class="flex-shrink-0 h-10 w-10">
+            <img class="h-10 w-10 rounded-full" src="" alt="">Photo
+          </div>
+          <div class="ml-4">
+            <a href="space/{{!project_name}}">
+              <div class="text-sm font-medium text-gray-900">
+                {{!project_name}}
+              </div>
+              <div class="text-sm text-gray-500">
+                {{!project_id}}
+              </div>
+            </a>
+          </div>
+        </div>
+      </td>
+      <td class="px-6 py-4 whitespace-nowrap">
+        <div class="text-sm text-gray-900">{{!members}}</div>
+      </td>
+    </tr>
+  </script>
+
   <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
-  <script src="../javascripts/newsfeed.js"></script>
-  <script src="../javascripts/mustache.js"></script>
 
+  <script src="../javascripts/mustache.js"></script>
+  <script src="../javascripts/space_overview.js"></script>
   <script src="../javascripts/tagsinput.js"></script>
   <script src="../javascripts/notifications.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/2.3.0/alpine.js" integrity="sha512-nIwdJlD5/vHj23CbO2iHCXtsqzdTTx3e3uAmpTm4x2Y8xCIFyWu4cSIV8GaGe2UNVq86/1h9EgUZy7tn243qdA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
