@@ -53,10 +53,10 @@
           <div class="ml-4">
             <div class="text-sm flex items-center">
               <div>
-                <a href="main" class="no-underline text-grey-light pr-3">Startseite</a>
+                <a href="../main" class="no-underline text-grey-light pr-3">Startseite</a>
               </div>
               <div>
-                <a href="myprofile" class="no-underline text-grey-light pr-3">Profil</a>
+                <a href="../myprofile" class="no-underline text-grey-light pr-3">Profil</a>
               </div>
 
               <div class="relative" x-data="{ isOpen: false}">
@@ -259,157 +259,9 @@
                 </div>
             </div>
 
-            <!-- Static sidebar for desktop -->
-            <div class="hidden md:flex md:flex-shrink-0">
-                <div class="flex flex-col w-64">
-                    <!-- Sidebar component, swap this element with another sidebar if you like -->
-                    <div class="flex flex-col flex-1 border-r border-gray-200 bg-white">
-                        <div class="flex-1 flex flex-col ">
-                            <div class="flex-shrink-0 flex ">
-                                <a href="#" class="flex-shrink-0 w-full group block">
-                                    <div class="flex items-center">
-                                        <div>
-                                            <img class="inline-block h-9 w-9 rounded-full"
-                                                 src=""
-                                                 alt="SpaceFoto">
-                                        </div>
-                                        <div class="ml-3">
-                                            <p class="text-sm font-medium text-gray-700 group-hover:text-gray-900">
-                                                Spacename
-                                            </p>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-                            <nav class="mt-5 flex-1 px-2 bg-white space-y-1">
-                                <!-- Current: "bg-gray-100 text-gray-900", Default: "text-gray-600 hover:bg-gray-50 hover:text-gray-900" -->
-                                <a href="#"
-                                   class="bg-gray-100 text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
-                                    <!--
-                                      Heroicon name: outline/home
-
-                                      Current: "text-gray-500", Default: "text-gray-400 group-hover:text-gray-500"
-                                    -->
-                                    <svg class="text-gray-500 mr-3 flex-shrink-0 h-6 w-6"
-                                         xmlns="http://www.w3.org/2000/svg"
-                                         fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                                    </svg>
-                                    Dashboard
-                                </a>
-
-                                <a href="#"
-                                   class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
-                                    <!-- Heroicon name: outline/users -->
-                                    <svg class="text-gray-400 group-hover:text-gray-500 mr-3 flex-shrink-0 h-6 w-6"
-                                         xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                         stroke="currentColor" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                                    </svg>
-                                    Team
-                                </a>
-
-                                <a href="#"
-                                   class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
-                                    <!-- Heroicon name: outline/folder -->
-                                    <svg class="text-gray-400 group-hover:text-gray-500 mr-3 flex-shrink-0 h-6 w-6"
-                                         xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                         stroke="currentColor" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                              d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
-                                    </svg>
-                                    Wiki
-                                </a>
-
-
-                                <a href="#"
-                                   class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
-                                    <!-- Heroicon name: outline/inbox -->
-                                    <svg class="text-gray-400 group-hover:text-gray-500 mr-3 flex-shrink-0 h-6 w-6"
-                                         xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                         stroke="currentColor" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                              d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
-                                    </svg>
-                                    Documents
-                                </a>
-
-
-                            </nav>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
         </div>
-        <div class="flex flex-col w-0 flex-1 overflow-hidden">
-            <div class="w-3/4 ml-6 mt-2">
-                <div class="panel panel-white post" id="newPostPanel">
-                    <div class="post-description">
-                    <textarea class="form-control" id="postFeed" rows="2"
-                              placeholder="What are you thinking?"></textarea>
-                        <div class="post-description" style="padding-top: 5px;">
-                            <div id="postAlert"></div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <!---                        <div class="flex-1">
-                                                            <input type="text" value="" id="addTag" data-role="tagsinput" placeholder="Add Tags">
-                                                        </div>
-                                                        -->
-                            </div>
-                        </div>
 
-                        <div id="postdiv" class="mar-top clearfix p-2">
-                            <button class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-whitebg-indigo-300 hover:bg-indigo-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 pull-right "
-                                    id="post">
-                                Post
-                                <svg class="ml-2 -mr-0.5 mt-1 h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                                     fill="currentColor" aria-hidden="true">
-                                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
-                                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
-                                </svg>
-
-                            </button>
-                            <!--<div class="element">
-                              <i class="fa fa-file"></i>
-                              <button class="btn btn-sm btn-success" id="record"><i class="fa fa-microphone"></i></button>
-                              <input type="file" name="files" id="files" multiple>
-                            </div>-->
-                            <div class="rounded">
-
-                                <button id="record"
-                                        class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-whitebg-indigo-300 hover:bg-indigo-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
-                                         viewBox="0 0 24 24"
-                                         stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                              d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
-                                    </svg>
-                                </button>
-                                <button type="button"
-                                        class="inline-flex items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-whitebg-indigo-300 hover:bg-indigo-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                    <!-- Heroicon name: solid/plus -->
-                                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                                         fill="currentColor" aria-hidden="true">
-                                        <path fill-rule="evenodd"
-                                              d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-                                              clip-rule="evenodd"/>
-                                        <input type='file' name="files" id="files" multiple class="hidden"/>
-                                    </svg>
-                                </button>
-                                <p>
-                                    <audio id=recordedAudio></audio>
-                                </p>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-
-
-        </div>
     </div>
 </div>
 
@@ -423,13 +275,27 @@
 
       </div>
     </div>-->
-    <div class="flex flex-col flex-1 overflow-hidden">
+    <!--<div class="flex flex-col flex-1 overflow-hidden">
 
       <div id="feedContainer">
 
       </div>
+    </div>-->
+    <div id="spaceProfileContainer" class="flex items-center py-2">
+
     </div>
-  </div>
+
+    <div class="flex items-center py-2">
+      <div class="flex overflow-hidden bg-white">
+        <div class="flex flex-col w-64">
+
+        </div>
+      </div>
+      <div class="flex flex-col w-0 flex-1 overflow-hidden">
+        <div id="feedContainer"></div>
+      </div>
+    </div>
+</div>
 
 
   <!---->
