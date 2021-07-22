@@ -10,8 +10,8 @@
     </script>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
-          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <!--<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">-->
 
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
     <style>
@@ -28,99 +28,85 @@
             padding-right: 4rem;
         }
     </style>
+    <style>
+        :root {
+            --main-color: #4a76a8;
+        }
+
+        .bg-main-color {
+            background-color: var(--main-color);
+        }
+
+        .text-main-color {
+            color: var(--main-color);
+        }
+
+        .border-main-color {
+            border-color: var(--main-color);
+        }
+    </style>
+    <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+    <link rel="stylesheet" type="text/css" href="../css/newsfeed.css">
+    <link rel="stylesheet" href="../css/tagsinput.css">
+    <link rel="stylesheet" type="text/css" href="../css/modal.css">
+    <link rel="stylesheet" type="text/css" href="../css/notifications.css">
 </head>
 <body class="font-sans">
-<!-- component -->
-<style>
-    :root {
-        --main-color: #4a76a8;
-    }
-
-    .bg-main-color {
-        background-color: var(--main-color);
-    }
-
-    .text-main-color {
-        color: var(--main-color);
-    }
-
-    .border-main-color {
-        border-color: var(--main-color);
-    }
-</style>
-<link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
-
-
-<div class="bg-blue mb-6">
+  <!-- Navbar -->
+  <nav class="bg-blue mb-6">
     <div class="container bg-blue-300 mx-auto px-8">
-        <div class="flex items-center py-2 px-10">
-            <div class="w-3/4 flex items-center">
-                <div>
-                    <img src=""/>
-                </div>
-                <div class="ml-4">
-                    <input class="p-2 rounded bg-grey-darkest text-grey-light text-xs w-128"
-                           type="text"
-                           name="q"
-                           placeholder="Search lionet"
+      <div class="flex items-center py-2 px-10">
+        <div class="w-3/4 flex items-center">
+          <div>
+            <img src="uploads/SO-SERVE_Logo_solo-285x300.png" width="50" height="50"/>
+          </div>
+          <div class="ml-4">
+            <li class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+              <input type="text" name="search" id="search" placeholder="Search lionet" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" />
+              <ul class="" id="result"></ul>
+            </li>
+          </div>
+          <div class="ml-4">
+            <div class="text-sm flex items-center">
+              <div>
+                <a href="../main" class="no-underline text-grey-light pr-3">Startseite</a>
+              </div>
+              <div>
+                <a href="../myprofile" class="no-underline text-grey-light pr-3">Profil</a>
+              </div>
+
+              <div class="relative" x-data="{ isOpen: false}">
+                <button
+                        @click="isOpen = !isOpen"
+                        @keydown.escape="isOpen = false"
+                        class="flex items-center"
+                ><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path class="heroicon-ui" d="M17 11a1 1 0 0 1 0 2h-4v4a1 1 0 0 1-2 0v-4H7a1 1 0 0 1 0-2h4V7a1 1 0 0 1 2 0v4h4z"/></svg>Spaces</button>
+                <ul x-show="isOpen"
+                    @click.away="isOpen = false"
+                    class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none"
                     >
-                </div>
-                <div class="ml-4">
-                    <div class="text-sm flex items-center">
-                        <div>
-                            <a href="main" class="no-underline text-grey-light pr-3">
-                                Startseite
-                            </a>
-                        </div>
-                        <div>
-                            <a href="spaces" class="no-underline text-grey-light pr-3">
-                                Gruppen
-                            </a>
-                        </div>
-                        <div>
-                            <a href="myprofile" class="no-underline text-grey-light pr-3">
-                                Profil
-                            </a>
-                        </div>
-                    </div>
-                </div>
+                  <div id="spaceDropdown"></div>
+                  <li>
+                    <form class="">
+                      <label for="newSpaceName">New Space name</label>
+                      <input type="text" class="block w-full border rounded-md" id="newSpaceName" placeholder="Enter name">
+                    </form>
+                  </li>
+                  <li class="hover:bg-gray-200">
+                    <button id="createSpace" type="button" class="w-full">Create Space</button>
+                  </li>
+                </ul>
+              </div>
+
             </div>
-            <div class="w-1/4 text-right flex items-center justify-end">
-                <div class="flex items-center mr-3">
-                    <div>
-                        <svg class="fill-current text-grey-light h-4 w-4" width="24" height="24" viewBox="0 0 24 24"
-                             xmlns="http://www.w3.org/2000/svg">
-                            <path d="M7.58 4.08L6.15 2.65C3.75 4.48 2.17 7.3 2.03 10.5h2c.15-2.65 1.51-4.97 3.55-6.42zm12.39 6.42h2c-.15-3.2-1.73-6.02-4.12-7.85l-1.42 1.43c2.02 1.45 3.39 3.77 3.54 6.42zM18 11c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2v-5zm-6 11c.14 0 .27-.01.4-.04.65-.14 1.18-.58 1.44-1.18.1-.24.15-.5.15-.78h-4c.01 1.1.9 2 2.01 2z"/>
-                        </svg>
-                    </div>
-                </div>
-                <div class="flex items-center mr-3">
-                    <div>
-                        <svg class="fill-current text-grey-light h-4 w-4" xmlns="http://www.w3.org/2000/svg"
-                             width="24" height="24" viewBox="0 0 24 24">
-                            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-                        </svg>
-                    </div>
-                    <div class="">
-                        <svg class="fill-current text-grey-light h-4 w-4" xmlns="http://www.w3.org/2000/svg"
-                             width="24" height="24" viewBox="0 0 24 24">
-                            <path d="M7.41 7.84L12 12.42l4.59-4.58L18 9.25l-6 6-6-6z"/>
-                        </svg>
-                    </div>
-                </div>
-                <div class="flex items-center">
-                    <div>
-                        <img class="h-4 w-4 inline-block rounded" src="">
-                    </div>
-                    <div class="">
-                    </div>
-                </div>
-            </div>
+          </div>
         </div>
+      </div>
     </div>
-</div>
-<div class="container mx-auto px-8">
+  </nav>
+
+<div class="container mx-auto px-8" style="display: none;">
 
     <div class="container mx-auto my-5 p-5">
         <div class="md:flex no-wrap md:-mx-2 ">
@@ -334,5 +320,63 @@
 
     </div>
 </div>
+
+<div class="container mx-auto px-8">
+
+    <div class="col-sm-8 col-sm-offset-2" id="profileContainer">
+
+    </div>
+    <div class="col-sm-8 col-sm-offset-2" id="newPostContainer">
+
+    </div>
+    <div class="col-sm-8 col-sm-offset-2" id="feedContainer">
+
+    </div>
+
+
+</div>
+
+<!-- Footer -->
+<div class="mt-8">
+  <div class="container mx-auto px-8">
+    <div class="px-10">
+      <div class="flex items-center justify-between border-t py-8">
+        <div class="justify-start justify-between text-xs w-2/5 flex">
+          <div class="mr-4">
+            &copy; 2021 lionet.
+          </div>
+          <div class="mr-4">
+            <a href="#" class="no-underline">Terms</a>
+          </div>
+          <div class="mr-4">
+            <a href="#" class="no-underline">Privacy</a>
+          </div>
+          <div class="mr-4">
+            <a href="#" class="no-underline">Security</a>
+          </div>
+          <div class="mr-4">
+            <a href="#" class="no-underline">Help</a>
+          </div>
+
+          <div class="justify-end justify-between text-xs w-2/5 flex text-right">
+            <div class="ml-4">
+              <a href="#" class="no-underline">About</a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+<script src="../javascripts/mustache.js"></script>
+<script src="../javascripts/newsfeed.js"></script>
+<script src="../javascripts/myprofile.js"></script>
+<script src="../javascripts/tagsinput.js"></script>
+<script src="../javascripts/notifications.js"></script>
+
 </body>
 </html>
