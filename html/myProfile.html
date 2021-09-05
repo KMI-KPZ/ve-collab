@@ -27,47 +27,56 @@
       <div class="flex items-center py-2 px-10">
         <div class="w-3/4 flex items-center">
           <div>
-            <img src="uploads/SO-SERVE_Logo_solo-285x300.png"/ width="50" height="50">
+            <img src="uploads/SO-SERVE_Logo_solo-285x300.png" width="50" height="50"/>
           </div>
           <div class="ml-4">
-            <li class="nav-item list-none">
-              <input type="text" name="search" id="search" placeholder="Search lionet" class="form-control" />
-              <ul class="list-group" id="result"></ul>
+            <li class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+              <input type="text" name="search" id="search" placeholder="Search lionet" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" />
+              <ul class="" id="result"></ul>
             </li>
           </div>
           <div class="ml-4">
-            <div class="text-2xl flex items-center">
+            <div class="text-sm flex items-center">
               <div>
-                <a href="main" class="no-underline text-grey-light pr-3">Startseite</a>
+                <a href="../main" class="no-underline text-grey-light pr-3">Startseite</a>
               </div>
               <div>
-                <a href="myprofile" class="no-underline text-grey-light pr-3">Profil</a>
+                <a href="../myprofile" class="no-underline text-grey-light pr-3">Profil</a>
               </div>
-              <div>
-                <div class="nav-item dropdown">
-                  <a class="nav-link dropdown-toggle" id="navbarDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    Spaces
-                  </a>
-                  <div id="spaceDropdown" class="dropdown-menu" aria-labelledby="navbarDropdown">
 
-                    <div class="dropdown-divider"></div>
-                    <form class="px-4 py-3">
-                      <div class="form-group">
-                        <label for="newSpaceName">New Space name</label>
-                        <input type="text" class="form-control" id="newSpaceName" placeholder="Enter name">
-                      </div>
-                      <button id="createSpace" type="button" class="btn btn-primary">Create Space</button>
+              <div class="relative" x-data="{ isOpen: false}">
+                <button
+                        @click="isOpen = !isOpen"
+                        @keydown.escape="isOpen = false"
+                        class="flex items-center"
+                ><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path class="heroicon-ui" d="M17 11a1 1 0 0 1 0 2h-4v4a1 1 0 0 1-2 0v-4H7a1 1 0 0 1 0-2h4V7a1 1 0 0 1 2 0v4h4z"/></svg>Spaces</button>
+                <ul x-show="isOpen"
+                    @click.away="isOpen = false"
+                    class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none"
+                    >
+                  <div id="spaceDropdown"></div>
+                  <li>
+                    <a class="dropdown-item block w-full hover:bg-gray-200" href="/spaces">Overview</a>
+                  </li>
+                  <li>
+                    <form class="">
+                      <label for="newSpaceName">New Space name</label>
+                      <input type="text" class="block w-full border rounded-md" id="newSpaceName" placeholder="Enter name">
                     </form>
-                  </div>
-                </div>
+                  </li>
+                  <li class="hover:bg-gray-200">
+                    <button id="createSpace" type="button" class="w-full">Create Space</button>
+                  </li>
+                </ul>
               </div>
+
             </div>
           </div>
         </div>
       </div>
     </div>
   </nav>
-
+<p>ppppppppppppppp</p>
 
   <div class="container">
   <div class="row">

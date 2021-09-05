@@ -12,6 +12,7 @@ function updateProfileContainer(){
   user["isFollowed"] = (currentUser.follows.includes(name)) ? true : false;
   if(!document.body.contains(document.getElementById('profilePanel'))){
     $('#profileContainer').prepend(Mustache.render(profileTemplate, user));
+    $('#updateProfileButton').remove();
   } else {
     //var template = document.getElementById('profileTemplate').innerHTML;
     Mustache.parse(profileTemplate);

@@ -1017,11 +1017,134 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                          src=""
                          alt="">
                 </div>
-                <h1 class="text-gray-900 font-bold text-xl leading-8 my-1">{{!username}}</h1>
+                <div class="flex">
+                  <h1 class="text-gray-900 font-bold text-xl leading-8 my-1">{{!username}}</h1>
+
+                  <div x-data="{'showModal': false}" @keydown.escape="showModal:false">
+                    <button id="updateProfileButton" type="button" @click="showModal = true" onclick="javascript:populateProfileInformationModal()"
+                       class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full text-sm ml-2">
+                        Update Profile
+                    </button>
+
+                    <!-- Modal -->
+                    <div class="fixed inset-0 z-30 flex items-center justify-center overflow-auto bg-black bg-opacity-50"  x-show="showModal">
+                      <div class="max-w-3xl px-6 py-4 mx-auto text-left bg-white rounded shadow-lg" @click.away="showModal = false" x-transition:enter="motion-safe:ease-out duration-300" x-transition:enter-start="opacity-0 scale-90" x-transition:enter-end="opacity-100 scale-100">
+
+                        <!-- Title / Close -->
+                        <div class="flex items-center justify-between">
+                            <b class="font-bold text-gray-800">Aktualisiere dein Profil</b>
+
+                            <button type="button" class="z-50 cursor-pointer m-2" @click="showModal = false">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- Content -->
+                        <div class="mt-10 sm:mt-0">
+                          <div class="md:grid md:grid-cols-3 md:gap-6">
+                            <div class="md:col-span-1">
+                              <div class="px-4 sm:px-0">
+                                <h3 class="text-lg font-medium leading-6 text-gray-900">Profilinformationen</h3>
+                                <p class="mt-1 text-sm text-gray-600">
+                                  Hier kannst du deine Informationen aktualisieren, die in deinem Profil angezeigt werden.
+                                </p>
+                              </div>
+                            </div>
+                            <div class="mt-5 md:mt-0 md:col-span-2">
+                              <form action="#" method="POST">
+                                <div class="shadow overflow-hidden sm:rounded-md">
+                                  <div class="px-4 py-5 bg-white sm:p-6">
+                                    <div class="grid grid-cols-6 gap-6">
+                                      <div class="col-span-6 sm:col-span-3">
+                                        <label for="first_name" class="block text-sm font-medium text-gray-700">First name</label>
+                                        <input type="text" name="first_name" id="first_name" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                                      </div>
+
+                                      <div class="col-span-6 sm:col-span-3">
+                                        <label for="last_name" class="block text-sm font-medium text-gray-700">Last name</label>
+                                        <input type="text" name="last_name" id="last_name" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                                      </div>
+
+                                      <div class="col-span-6 sm:col-span-6">
+                                        <label for="bio" class="block text-sm font-medium text-gray-700">
+                                          Bio
+                                        </label>
+                                        <div class="mt-1">
+                                          <textarea id="bio" name="bio" rows="3" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md" placeholder="you@example.com"></textarea>
+                                        </div>
+                                      </div>
+
+                                      <div class="col-span-6 sm:col-span-6">
+                                        <label for="gender" class="block text-sm font-medium text-gray-700">Gender</label>
+                                        <select id="gender" name="country" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                          <option>M</option>
+                                          <option>W</option>
+                                          <option>D</option>
+                                        </select>
+                                      </div>
+
+                                      <div class="col-span-6 sm:col-span-6">
+                                        <label for="address" class="block text-sm font-medium text-gray-700">Address</label>
+                                        <input type="text" name="address" id="address" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                                      </div>
+
+                                      <div class="col-span-6 sm:col-span-6">
+                                          <label for="date_of_birth" class="block text-sm font-medium text-gray-700">Date of Birth</label>
+                                          <input type="date" name="date_of_birth" id="date_of_birth" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                                      </div>
+
+                                      <div class="col-span-6 sm:col-span-6">
+                                        <label for="institution" class="block text-sm font-medium text-gray-700">Institution</label>
+                                        <input type="text" name="institution" id="institution" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                                      </div>
+
+                                      <div class="col-span-6 sm:col-span-6">
+                                        <label for="experience" class="block text-sm font-medium text-gray-700 inline-block">Experience</label>
+                                        <button type="button" class="z-50 cursor-pointer m-2 inline-block" onclick="javascript:addListItem('experience')">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                            </svg>
+                                        </button>
+                                        <div class="bg-white shadow-xl rounded-lg">
+                                         <ul id="experience_list" class="divide-y divide-gray-300">
+
+                                          </ul>
+                                        </div>
+                                      </div>
+                                      <div class="col-span-6 sm:col-span-6">
+                                        <label for="education" class="block text-sm font-medium text-gray-700 inline-block">Education</label>
+                                        <button type="button" class="z-50 cursor-pointer m-2 inline-block" onclick="javascript:addListItem('education')">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                            </svg>
+                                        </button>
+                                        <div class="bg-white shadow-xl rounded-lg">
+                                         <ul id="education_list" class="divide-y divide-gray-300">
+
+                                          </ul>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
+                                    <button type="button" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" onclick="javascript:saveProfileInformation()">
+                                      Save
+                                    </button>
+                                  </div>
+                                </div>
+                              </form>
+                            </div>
+                          </div>
+                        </div>
+
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <h3 class="text-gray-600 font-lg text-semibold leading-6">{{!email}}</h3>
-                <p class="text-sm text-gray-500 hover:text-gray-600 leading-6">Lorem ipsum dolor sit amet
-                    consectetur adipisicing elit.
-                    Reprehenderit, eligendi dolorum sequi illum qui unde aspernatur non deserunt</p>
+                <p class="text-sm text-gray-500 hover:text-gray-600 leading-6">{{!profile.bio}}</p>
                 <ul
                         class="bg-gray-100 text-gray-600 hover:text-gray-700 hover:shadow py-2 px-3 mt-3 divide-y rounded shadow-sm">
                     <li class="flex items-center py-3">
@@ -1067,7 +1190,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
         <div class="w-full md:w-9/12 mx-2 h-64">
             <!-- Profile tab -->
             <!-- About Section -->
-            <div class="bg-white p-3 shadow-sm rounded-sm">
+            <div class="bg-white p-3 shadow-sm rounded-sm hover:shadow">
                 <div class="flex items-center space-x-2 font-semibold text-gray-900 leading-8">
                     <span clas="text-green-500">
                         <svg class="h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -1082,15 +1205,15 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                     <div class="grid md:grid-cols-2 text-sm">
                         <div class="grid grid-cols-2">
                             <div class="px-4 py-2 font-semibold">First Name</div>
-                            <div class="px-4 py-2">Jane</div>
+                            <div class="px-4 py-2">{{!profile.first_name}}</div>
                         </div>
                         <div class="grid grid-cols-2">
                             <div class="px-4 py-2 font-semibold">Last Name</div>
-                            <div class="px-4 py-2">Doe</div>
+                            <div class="px-4 py-2">{{!profile.last_name}}</div>
                         </div>
                         <div class="grid grid-cols-2">
                             <div class="px-4 py-2 font-semibold">Gender</div>
-                            <div class="px-4 py-2">Female</div>
+                            <div class="px-4 py-2">{{!profile.gender}}</div>
                         </div>
                         <div class="grid grid-cols-2">
                             <div class="px-4 py-2 font-semibold">Contact No.</div>
@@ -1098,7 +1221,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                         </div>
                         <div class="grid grid-cols-2">
                             <div class="px-4 py-2 font-semibold">Current Address</div>
-                            <div class="px-4 py-2">Beech Creek, PA, Pennsylvania</div>
+                            <div class="px-4 py-2">{{!profile.address}}</div>
                         </div>
                         <div class="grid grid-cols-2">
                             <div class="px-4 py-2 font-semibold">Permanant Address</div>
@@ -1107,20 +1230,15 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                         <div class="grid grid-cols-2">
                             <div class="px-4 py-2 font-semibold">Email.</div>
                             <div class="px-4 py-2">
-                                <a class="text-blue-800" href="mailto:jane@example.com">jane@example.com</a>
+                                <a class="text-blue-800" href="mailto:jane@example.com">{{!email}}</a>
                             </div>
                         </div>
                         <div class="grid grid-cols-2">
                             <div class="px-4 py-2 font-semibold">Birthday</div>
-                            <div class="px-4 py-2">Feb 06, 1998</div>
+                            <div class="px-4 py-2">{{!profile.birthday}}</div>
                         </div>
                     </div>
                 </div>
-                <button
-                        class="block w-full text-blue-800 text-sm font-semibold rounded-lg hover:bg-gray-100 focus:outline-none focus:shadow-outline focus:bg-gray-100 hover:shadow-xs p-3 my-4">
-                    Show
-                    Full Information
-                </button>
             </div>
             <!-- End of about section -->
 
@@ -1130,7 +1248,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
             <div class="bg-white p-3 shadow-sm rounded-sm">
 
                 <div class="grid grid-cols-2">
-                    <div>
+                    <div class="bg-white p-3 hover:shadow">
                         <div class="flex items-center space-x-2 font-semibold text-gray-900 leading-8 mb-3">
                             <span clas="text-green-500">
                                 <svg class="h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -1141,13 +1259,19 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                             </span>
                             <span class="tracking-wide">Experience</span>
                         </div>
-                        <ul class="list-inside space-y-2">
-                            <li>
-
+                        <ul class="p-2">
+                          {{!#profile.experience}}
+                            <li class="border list-none rounded-sm px-1 py-1">
+                              <div>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                </svg>{{!.}}
+                              </div>
                             </li>
+                            {{!/profile.experience}}
                         </ul>
                     </div>
-                    <div>
+                    <div class="bg-white p-3 hover:shadow">
                         <div class="flex items-center space-x-2 font-semibold text-gray-900 leading-8 mb-3">
                             <span clas="text-green-500">
                                 <svg class="h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -1161,10 +1285,16 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                             </span>
                             <span class="tracking-wide">Education</span>
                         </div>
-                        <ul class="list-inside space-y-2">
-                            <li>
-
+                        <ul class="p-2">
+                          {{!#profile.education}}
+                            <li class="border list-none rounded-sm px-1 py-1">
+                              <div>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                </svg>{{!.}}
+                              </div>
                             </li>
+                            {{!/profile.education}}
                         </ul>
                     </div>
                 </div>
@@ -1375,6 +1505,18 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
       </div>
   </div>
 </div>
+</script>
+
+<script id="profileInformation_listItem" type="text/html">
+  <li class="p-4 hover:bg-gray-50 cursor-pointer">
+    <input type="text" id="{{!item_type}}" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" value="{{!value}}">
+    <button type="" class="z-50 cursor-pointer m-2 inline-block" onclick="$(this).closest('li').remove()">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 12H6" />
+      </svg>
+    </button>
+
+  </li>
 </script>
 
 </body>

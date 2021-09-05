@@ -25,6 +25,7 @@ var spaceTemplate
 var spaceTemplateSelect
 var spaceHeaderTemplate
 var profileTemplate
+var profileInformation_listItem
 
 
 $.get("/template", function(template, textStatus, jqXhr) {
@@ -39,6 +40,7 @@ $.get("/template", function(template, textStatus, jqXhr) {
   spaceHeaderTemplate = $(template).filter('#spaceHeaderTemplate').html()
   profileTemplate = $(template).filter('#profileTemplate').html()
 
+  profileInformation_listItem = $(template).filter('#profileInformation_listItem').html()
 
 })
 

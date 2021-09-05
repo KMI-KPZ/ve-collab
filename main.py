@@ -1133,6 +1133,13 @@ class ProfileInformationHandler(BaseHandler):
                     "bio": <string>,
                     "institution": <string>,
                     "projects": [<string1>, <string2>, ...],
+                    "first_name": <string>,
+                    "last_name": <string>,
+                    "gender": <string>,
+                    "address": <string>,
+                    "birthday": <string>,
+                    "experience": [<string1>, <string2>, ...],
+                    "education": [<string1>, <string2>, ...]
                  },
                  "spaces": [<string1>, <string2>, ...],
                  "follows": [<string1>, <string2>, ...]
@@ -1180,6 +1187,13 @@ class ProfileInformationHandler(BaseHandler):
                 profile["projects"] = user_profile["projects"]
                 if "profile_pic" in user_profile:
                     profile["profile_pic"] = user_profile["profile_pic"]
+                profile["first_name"] = user_profile["first_name"]
+                profile["last_name"] = user_profile["last_name"]
+                profile["gender"] = user_profile["gender"]
+                profile["address"] = user_profile["address"]
+                profile["birthday"] = user_profile["birthday"]
+                profile["experience"] = user_profile["experience"]
+                profile["education"] = user_profile["education"]
 
             user_information = {key: user_result["user"][key] for key in user_result["user"]}
             user_information["spaces"] = spaces
@@ -1204,7 +1218,15 @@ class ProfileInformationHandler(BaseHandler):
                 {
                     "bio": <string>,
                     "institution": <string>,
-                    "projects": [<string1>, <string2>, ...]
+                    "projects": [<string1>, <string2>, ...],
+
+                    "first_name": <string>,
+                    "last_name": <string>,
+                    "gender": <string>,
+                    "address": <string>,
+                    "birthday": <string>,
+                    "experience": [<string1>, <string2>, ...],
+                    "education": [<string1>, <string2>, ...]
                 }
 
             returns:
@@ -1224,7 +1246,14 @@ class ProfileInformationHandler(BaseHandler):
         if self.current_user:
             bio = self.get_body_argument("bio", None)
             institution = self.get_body_argument("institution", None)
-            projects = self.get_body_argument("projects", None)
+            projects = self.get_body_argument("projects", None).split(",")
+            first_name = self.get_body_argument("first_name", None)
+            last_name = self.get_body_argument("last_name", None)
+            gender = self.get_body_argument("gender", None)
+            address = self.get_body_argument("address", None)
+            birthday = self.get_body_argument("birthday", None)
+            experience = self.get_body_argument("experience", None).split(",")
+            education = self.get_body_argument("education", None).split(",")
 
             # handle profile pic
             new_file_name = None
@@ -1249,7 +1278,14 @@ class ProfileInformationHandler(BaseHandler):
                             "bio": bio,
                             "institution": institution,
                             "projects": projects,
-                            "profile_pic": new_file_name
+                            "profile_pic": new_file_name,
+                            "first_name": first_name,
+                            "last_name": last_name,
+                            "gender": gender,
+                            "address": address,
+                            "birthday": birthday,
+                            "experience": experience,
+                            "education": education
                         }
                     },
                     upsert=True
@@ -1261,7 +1297,14 @@ class ProfileInformationHandler(BaseHandler):
                         {
                             "bio": bio,
                             "institution": institution,
-                            "projects": projects
+                            "projects": projects,
+                            "first_name": first_name,
+                            "last_name": last_name,
+                            "gender": gender,
+                            "address": address,
+                            "birthday": birthday,
+                            "experience": experience,
+                            "education": education
                         }
                     },
                     upsert=True
@@ -1315,10 +1358,26 @@ class UserHandler(BaseHandler):
                 user_result = await client.write({"type": "get_user",
                                                   "username": username})
                 user_result["user"]["profile_pic"] = "default_profile_pic.jpg"
+                user_result["user"]["profile"] = {}
                 profile = self.db.profiles.find_one({"user": username})
+                print("\n\n\n\n")
+                print(profile)
                 if profile:
                     if "profile_pic" in profile:
                         user_result["user"]["profile_pic"] = profile["profile_pic"]
+
+                    """
+                    Here set Profile Information to user in profile view
+                    """
+                    user_result["user"]["profile"]["first_name"] = profile["first_name"]
+                    user_result["user"]["profile"]["last_name"] = profile["last_name"]
+                    user_result["user"]["profile"]["gender"] = profile["gender"]
+                    user_result["user"]["profile"]["bio"] = profile["bio"]
+                    user_result["user"]["profile"]["address"] = profile["address"]
+                    user_result["user"]["profile"]["birthday"] = profile["birthday"]
+                    user_result["user"]["profile"]["institution"] = profile["institution"]
+                    user_result["user"]["profile"]["education"] = profile["education"]
+                    user_result["user"]["profile"]["experience"] = profile["experience"]
 
                 self.set_status(200)
                 self.write(user_result["user"])
