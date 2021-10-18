@@ -80,8 +80,9 @@ class BaseHandler(tornado.web.RequestHandler):
             if('originalCreationDate' in post):
                 post['originalCreationDate'] = post['originalCreationDate'].isoformat()
 
-            if 'comments' in post:
+            if 'comments' in post and post['comments'] is not None: #PLACEHOLDER FOR HANDLING COMMENTS WITH NULL VALUE
                 # creation date of each comment
+
                 for i in range(len(post['comments'])):
                     post['comments'][i]['creation_date'] = post['comments'][i]['creation_date'].isoformat()
                     post['comments'][i]['_id'] = str(post['comments'][i]['_id'])
@@ -794,7 +795,7 @@ class SpaceTimelineHandler(BaseHandler):
                             if "profile_pic" in profile:
                                 post["author"]["profile_pic"] = profile["profile_pic"]
                         post["author"]["username"] = author_name
-                        if "comments" in post:
+                        if "comments" in post and post['comments'] is not None: #PLACEHOLDER FOR HANDLING COMMENTS WITH NULL VALUE
                             for comment in post["comments"]:
                                 comment_author_name = comment["author"]
                                 comment["author"] = {}
@@ -864,7 +865,7 @@ class UserTimelineHandler(BaseHandler):
                     if "profile_pic" in profile:
                         post["author"]["profile_pic"] = profile["profile_pic"]
                 post["author"]["username"] = author_name
-                if "comments" in post:
+                if "comments" in post and post['comments'] is not None: #PLACEHOLDER FOR HANDLING COMMENTS WITH NULL VALUE:
                     for comment in post["comments"]:
                         comment_author_name = comment["author"]
                         comment["author"] = {}
@@ -950,7 +951,7 @@ class PersonalTimelineHandler(BaseHandler):
                     if "profile_pic" in profile:
                         post["author"]["profile_pic"] = profile["profile_pic"]
                 post["author"]["username"] = author_name
-                if "comments" in post:
+                if "comments" in post and post['comments'] is not None: #PLACEHOLDER FOR HANDLING COMMENTS WITH NULL VALUE:
                     for comment in post["comments"]:
                         comment_author_name = comment["author"]
                         comment["author"] = {}

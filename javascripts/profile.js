@@ -6,6 +6,7 @@ $(document).ready(function () {
   getUserInfo(name);
   getFollows(name);
   updateProfileContainer();
+
 });
 
 function updateProfileContainer(){

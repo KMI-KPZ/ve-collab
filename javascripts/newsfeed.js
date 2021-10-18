@@ -6,7 +6,7 @@ var currURL = window.location.href; // Returns full URL (https://example.com/pat
 
 //Datetimes
 var today = new Date();
-var yesterday = new Date(new Date().getTime() - (24 * 60 * 60 * 1000)); //24 hours ago
+var yesterday = new Date(new Date().getTime() - (24 * 60 * 60 * 1000 * 365)); //24 hours ago //Added 1 year ago
 var now = today.toISOString();
 var from = yesterday.toISOString();
 var daysAgo = 0;
@@ -448,7 +448,7 @@ function displayTimeline(timeline) {
       return;
     }
     //check if there are files to display
-    if(post.hasOwnProperty('files') && post.files.length > 0) {
+    if(post.hasOwnProperty('files') && post.files !== null && post.files.length > 0  ) {
         var fileImages = [];
         var fileVideos = [];
         var fileAudios = [];
@@ -487,7 +487,9 @@ function displayTimeline(timeline) {
     post["authorPicURL"] = baseUrl + '/uploads/' + post.author.profile_pic;
     post["ago"] = calculateAgoTime(post.creation_date);
     post["likes"] = countLikes;
-    post["tags"] = post["tags"].toString();
+    if(post.tags !== null) {
+      post["tags"] = post["tags"].toString();
+    }
     //check if it was postet in a space
     if (post.space == null) {
       post["hasSpace"] = false;
@@ -531,7 +533,10 @@ function displayTimeline(timeline) {
     //add tags
     var $dom = $feed.find('.meta');
     var tags = post.tags;
-    var tagArray = (typeof tags != 'undefined' && tags instanceof Array ) ? tags : tags.split(",");
+    var tagArray = []
+    if(post.tags !== null) {
+      tagArray = (typeof tags != 'undefined' && tags instanceof Array ) ? tags : tags.split(",");
+    }
     tagArray.forEach(function (tag, index) {
         $dom.append(Mustache.render(tagTemplate, { text: '' + tag + '' }));
     });
