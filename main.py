@@ -1,5 +1,8 @@
 import os
 import sys
+
+from dokuwiki_integration import Wiki
+
 sys.path.append(os.path.dirname(__file__))
 import asyncio
 if sys.platform == 'win32':
@@ -1085,7 +1088,6 @@ class SpaceOverviewHandler(BaseHandler):
             self.redirect(CONSTANTS.ROUTING_TABLE["platform"])  # redirect to platform if there is no logged in user
 
 
-
 class NewPostsSinceTimestampHandler(BaseHandler):
     """
     check for new posts
@@ -1513,6 +1515,93 @@ class TaskHandler(BaseHandler):
                         "reason": "no_logged_in_user"})
 
 
+class WikiPageNamesHandler(BaseHandler):
+
+    def get(self):
+        """
+        GET /wiki_pages
+            get a list of all existing pages in the wiki (optional: only in a certain namespace:
+
+            optional query parameters:
+                "namespace" : restrict page search only to this namespace
+
+            returns:
+                200 OK
+                {"status": 200,
+                 "page_names": ["page1", "page2", ...]}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
+        """
+
+        if self.current_user:
+            namespace = self.get_argument("namespace", None)
+            wiki = Wiki("http://localhost/", "test_user", "test123")  # use fixed user for now, TODO integration platform users into wiki (plugin authPDO?)
+
+            if namespace:
+                page_names = wiki.get_page_names_in_namespace(namespace)
+            else:
+                page_names = wiki.get_page_names()
+
+            self.set_status(200)
+            self.write({"status": 200,
+                        "page_names": page_names})
+        else:
+            self.set_status(401)
+            self.write({"status": 401,
+                        "reason": "no_logged_in_user"})
+
+
+class WikiPageHandler(BaseHandler):
+
+    def get(self):
+        """
+        GET /wiki_page
+            get the content of a wiki page as a html template
+
+            query params:
+                "page" : the name of the page
+
+            returns:
+                200 OK
+                {"status": 200,
+                 "page_name": <name_of_page>
+                 "page_content": <content_as_html_string>}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": "missing_key"}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
+        """
+
+        if self.current_user:
+            try:
+                page_name = self.get_argument("page")
+            except tornado.web.MissingArgumentError as e:
+                print(e)
+
+                self.set_status(400)
+                self.write({"status": 400,
+                            "reason": "missing_key"})
+                return
+
+            wiki = Wiki("http://localhost/", "test_user", "test123")  # use fixed user for now, TODO integration platform users into wiki (plugin authPDO?)
+            page_content = wiki.get_page(page_name, html=True)
+
+            self.set_status(200)
+            self.write({"status": 200,
+                        "page_name": page_name,
+                        "page_content": page_content})
+        else:
+            self.set_status(401)
+            self.write({"status": 401,
+                        "reason": "no_logged_in_user"})
+
+
 class PermissionHandler(BaseHandler):
 
     async def get(self):
@@ -1571,6 +1660,8 @@ def make_app(cookie_secret):
             (r"/profileinformation", ProfileInformationHandler),
             (r"/users/([a-zA-Z\-0-9\.:,_]+)", UserHandler),
             (r"/tasks", TaskHandler),
+            (r"/wiki_pages", WikiPageNamesHandler),
+            (r"/wiki_page", WikiPageHandler),
             (r"/permissions", PermissionHandler),
             (r"/routing", RoutingHandler),
             (r"/template", TemplateHandler),
