@@ -424,3 +424,8 @@ i.fa-file {
 i:hover {
   opacity: 0.6;
 }
+
+a.wikilink1 {
+    color: #080;
+    background-color: inherit;
+}
