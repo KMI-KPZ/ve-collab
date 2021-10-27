@@ -125,7 +125,7 @@ def insert_profiles():
                 'institution': value[2],
                 'projects': value[3],
                 'address': value[4],
-                'birthday': value[5],
+                'birthday': str(value[5]),
                 'education': value[6],
                 'experience': value[7],
                 'first_name': value[8],
@@ -173,7 +173,7 @@ def insert_posts():
         #print(value)
         entry = {
                 'author': value[0],
-                'creation_date': value[1],
+                'creation_date': str(value[1]),
                 'text': value[2],
                 'space': value[3],
                 'tags': "",
@@ -227,9 +227,9 @@ def main():
     print("-----------------------------------------------------")
     todo = input("What do you want to do?")
     """
+    #insert_profiles()
+    #insert_follows()
     insert_profiles()
-    insert_follows()
-    insert_profiles()
-    insert_spaces()
+    #insert_spaces()
     insert_posts()
     #delete_all_corresponding_posts()

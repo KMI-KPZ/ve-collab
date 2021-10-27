@@ -1,11 +1,16 @@
-var name = currURL.substring(currURL.lastIndexOf('/') + 1);
+var name
 
 $(document).ready(function () {
-  document.title = name + ' - Social Network';
-  getRouting();
-  getUserInfo(name);
-  getFollows(name);
-  updateProfileContainer();
+  setTimeout(function(){
+    name = currURL.substring(currURL.lastIndexOf('/') + 1);
+    document.title = name + ' - Social Network';
+    getRouting();
+    getUserInfo(name);
+    getFollows(name);
+    updateProfileContainer();
+  }
+   , 200);
+
 
 });
 
@@ -34,6 +39,7 @@ function getUserInfo(name){
     dataType: 'json',
     async: false,
     success: function (data) {
+      //console.log(data)
       user = data;
       user["profile_pic_URL"] = baseUrl + '/uploads/' + user.profile_pic;
     },

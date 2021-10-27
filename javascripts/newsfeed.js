@@ -423,10 +423,10 @@ function displayTimeline(timeline) {
         $originalAgo.text(calculateAgoTime(post.originalCreationDate));
       }
       //toggle class if liked
-     if(liked && $likeIcon.hasClass('fa-thumbs-up')) {
-        $likeIcon.removeClass('fa-thumbs-up').addClass('fa-thumbs-down');
-      } else if(!liked && $likeIcon.hasClass('fa-thumbs-down')) {
-        $likeIcon.removeClass('fa-thumbs-down').addClass('fa-thumbs-up');
+     if(liked && $likeIcon.hasClass('text-blue-700')) {
+        $likeIcon.removeClass('text-blue-700').addClass('text-green-700');
+      } else if(!liked && $likeIcon.hasClass('text-green-700')) {
+        $likeIcon.removeClass('text-green-700').addClass('text-blue-700');
       }
       var $commentsList = $existingPost.find('.comments-list');
       if (post.hasOwnProperty('comments')) {
@@ -518,7 +518,7 @@ function displayTimeline(timeline) {
     //in both case render comments to post and tags
     var $feed = $('#' + post._id);
     var $likeIcon = $feed.find('#likeIcon');
-    if(liked) $likeIcon.removeClass('fa-thumbs-up').addClass('fa-thumbs-down');
+    if(liked) $likeIcon.removeClass('text-blue-700').addClass('text-green-700');
     if (post.hasOwnProperty('comments')) {
       var $commentsList = $feed.find('.comments-list');
       $.each(post.comments, function (j, comment) {
@@ -1162,7 +1162,7 @@ function getAllUsers(){
  */
 function likeDislike(e, id) {
   var likeIcon = e.firstElementChild;
-  if(likeIcon.classList.contains("fa-thumbs-down")) {
+  if(likeIcon.classList.contains("text-green-700")) {
     deleteLike(id);
   } else {
     postLike(id);

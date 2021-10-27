@@ -24,7 +24,10 @@ function updateProfileContainer(){
   if(currentUser.hasOwnProperty('projects')) currentUser['projectSize'] = currentUser['projects'].length;
 
   if(!document.body.contains(document.getElementById('profilePanel'))){
-    $('#profileContainer').prepend(Mustache.render(profileTemplate, currentUser));
+
+    setTimeout(function(){
+       $('#profileContainer').prepend(Mustache.render(profileTemplate, currentUser)); }
+       , 200);
   } else {
     //var template = document.getElementById('profileTemplate').innerHTML;
     Mustache.parse(profileTemplate);
