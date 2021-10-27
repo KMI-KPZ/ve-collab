@@ -64,6 +64,7 @@ function saveProfileInformation() {
 
   var photoFile = document.getElementById('photoFile');
   var photo = null;
+  console.log(photoFile)
   if(photoFile === null){
     console.log("Error photo file")
   } else if(photoFile.files.length > 0){
@@ -101,7 +102,7 @@ function initSettingTabs(){
 function postProfileInformation(photo, bio, institution, projects, first_name, last_name, gender, address, birthday, experience, education) {
 
   var formData = new FormData();
-  formData.append("profile_pic", '');
+  formData.append("profile_pic", photo);
   formData.append("bio", bio);
   formData.append("institution", institution);
   formData.append("projects", projects); //Allow mutliple

@@ -48,19 +48,22 @@
                         @click="isOpen = !isOpen"
                         @keydown.escape="isOpen = false"
                         class="flex items-center"
-                ><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path class="heroicon-ui" d="M17 11a1 1 0 0 1 0 2h-4v4a1 1 0 0 1-2 0v-4H7a1 1 0 0 1 0-2h4V7a1 1 0 0 1 2 0v4h4z"/></svg>Spaces</button>
+                ><!--svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path class="heroicon-ui" d="M17 11a1 1 0 0 1 0 2h-4v4a1 1 0 0 1-2 0v-4H7a1 1 0 0 1 0-2h4V7a1 1 0 0 1 2 0v4h4z"/></svg-->Meine Gruppen</button>
                 <ul x-show="isOpen"
                     @click.away="isOpen = false"
                     class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none"
                     >
-                  <div id="spaceDropdown"></div>
                   <li>
+                    <a class="dropdown-item block w-full hover:bg-gray-200" href="/spaces">Overview</a>
+                  </li>
+                  <div id="spaceDropdown"></div>
+                  <li class="bg-blue-300">
                     <form class="">
                       <label for="newSpaceName">New Space name</label>
                       <input type="text" class="block w-full border rounded-md" id="newSpaceName" placeholder="Enter name">
                     </form>
                   </li>
-                  <li class="hover:bg-gray-200">
+                  <li class="hover:bg-gray-200 bg-blue-300">
                     <button id="createSpace" type="button" class="w-full">Create Space</button>
                   </li>
                 </ul>
