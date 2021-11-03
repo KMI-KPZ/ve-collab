@@ -71,6 +71,8 @@ class BaseHandler(tornado.web.RequestHandler):
         if not os.path.isfile(self.upload_dir + "default_profile_pic.jpg"):
             shutil.copy2("assets/default_profile_pic.jpg", self.upload_dir)
 
+        self.wiki = Wiki("http://localhost/", "test_user", "test123")  # use fixed user for now, TODO integration platform users into wiki (plugin authPDO?)
+
     async def prepare(self):
         # standalone dev mode: no auth, dummy platform
         if options.dev:
@@ -1081,6 +1083,9 @@ class SpaceHandler(BaseHandler):
                              "members": members}
                     self.db.spaces.insert_one(space)
 
+                    # automatically create a new start page in the wiki for the space
+                    self.wiki.create_page(space_name + ":start", "auto-generated landing page")
+
                     self.set_status(200)
                     self.write({'status': 200,
                                 'success': True})
@@ -1564,12 +1569,11 @@ class WikiPageNamesHandler(BaseHandler):
 
         if self.current_user:
             namespace = self.get_argument("namespace", None)
-            wiki = Wiki("http://localhost/", "test_user", "test123")  # use fixed user for now, TODO integration platform users into wiki (plugin authPDO?)
 
             if namespace:
-                page_names = wiki.get_page_names_in_namespace(namespace)
+                page_names = self.wiki.get_page_names_in_namespace(namespace)
             else:
-                page_names = wiki.get_page_names()
+                page_names = self.wiki.get_page_names()
 
             self.set_status(200)
             self.write({"status": 200,

@@ -43,6 +43,14 @@ class Wiki:
         else:
             return self._wiki.pages.get(name)
 
+    def create_page(self, name: str, content: str) -> None:
+        """
+        create a page with content
+        :param name: the name of the wiki page, use <level1>:<level2>:... for hierarchy
+        :param content: the content of the page. Markdown is supported by Dokuwiki
+        """
+        self._wiki.pages.set(name, content)
+
 
 if __name__ == "__main__":
     wiki = Wiki("http://localhost/", "test_user", "test123")
