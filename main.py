@@ -1741,7 +1741,7 @@ async def main():
 
     client = await get_socket_instance()
     response = await client.write({"type": "module_start",
-                                   "module_name": "SocialServ",
+                                   "module_name": "lionet",
                                    "port": port})
     if response["status"] == "recognized":
         print("recognized by platform")

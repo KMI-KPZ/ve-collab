@@ -21,7 +21,7 @@ async def get_socket_instance():
             the_websocket_client = Client("ws://localhost:88810/websocket")
         else:
             the_websocket_client = Client(tornado.httpclient.HTTPRequest("ws://localhost:" + str(CONSTANTS.PLATFORM_PORT) + "/websocket", validate_cert=False,
-                                          body=json.dumps({"type": "module_socket_connect", "module": "SocialServ"}), allow_nonstandard_methods=True))
+                                          body=json.dumps({"type": "module_socket_connect", "module": "lionet"}), allow_nonstandard_methods=True))
         await the_websocket_client._await_init()
     return the_websocket_client
 
@@ -58,7 +58,7 @@ class Client(object):
 
     def on_message(self, msg):
         json_message = tornado.escape.json_decode(msg)
-        print("SocialServ received message: ")
+        print("lionet received message: ")
         print(json_message)
 
         if "type" in json_message:
@@ -76,7 +76,7 @@ class Client(object):
                     self.futures[resolve_id].set_result(json_message)
 
     def write(self, message):
-        message['origin'] = "SocialServ"
+        message['origin'] = "lionet"
         resolve_id = str(uuid.uuid4())
         message['resolve_id'] = resolve_id
         sign_key = signing.get_signing_key()
@@ -85,7 +85,7 @@ class Client(object):
         signed_str = signed.decode("utf8")
 
         wrapped_message = {"signed_msg": signed_str,
-                           "origin": "SocialServ",
+                           "origin": "lionet",
                            "resolve_id": resolve_id}
 
         self.ws.write_message(tornado.escape.json_encode(wrapped_message))
