@@ -179,7 +179,56 @@ $(document).ready(function () {
                initNewsFeed();
         }
   });
+  //generate <space_name>:start, which is the landing page of the wiki for this space
+  //TODO on space creation, generate this wiki page using the backend
+  let wikiStartPage = window.location.pathname.split("/")[2] + ":start";
+  console.log(wikiStartPage);
+
+  //load the default wiki page on click
+  $("#wiki_link").on("click",function(event){
+    event.preventDefault();
+    getWikiPage(wikiStartPage);
+  });
+
+
 });
+
+function getWikiPage(page){
+  $.ajax({
+    type: "GET",
+    url: "/wiki_page",
+    data: {page: page},
+    dataType: "json",
+    success: function(data){
+      //first clear the container
+      $("#content_container").empty().html(data.page_content);
+
+      //find all links and set the onclick event to reload only this wiki page inside this container
+      $("#content_container").find("a").on("click", function(e){
+        e.preventDefault();
+        let page = $(this).attr("href").match(/page=(.+)/)[1];
+        getWikiPage(page);
+      });
+
+      //add "footer" to guide u to the dokuwiki instance where u can edit this page
+      $("#content_container").append("<br/> <br/> <a> To edit this page, go to <a class='wikilink1' href='http://localhost/doku.php?id=" + page + "' target='_blank' rel='noopener noreferrer'> the wiki instance </a>! </p>");
+    },
+    error: function(xhr, status, error){
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      } else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request wiki failed.'
+        });
+      }
+    }
+  });
+}
+
 
 /**
  * on new post - click - get all the values which should be postet and calls post function

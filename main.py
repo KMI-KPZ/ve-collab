@@ -1,10 +1,14 @@
 import os
 import sys
+
+from dokuwiki_integration import Wiki
+
 sys.path.append(os.path.dirname(__file__))
 import asyncio
 if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
+import tornado.httpserver
 import tornado.ioloop
 import tornado.web
 import tornado.locks
@@ -29,8 +33,33 @@ from base64 import b64encode
 
 define("dev", default=False, type=bool, help="start in dev mode (no auth) with dummy platform")
 
+NEXT_UPDATE_TIMESTAMP = datetime.now()
 
 class BaseHandler(tornado.web.RequestHandler):
+
+    async def update_token_ttl_to_platform_in_10_min_frame(self):
+        """
+        update the platform that the current access token has done some action here and is still active. Therefore the platform should also renew their ttl of this token.
+        to avoid bloating the network when sending this after each action, only send it in 10min frames. It might miss a renew then, but worst case is a relogin of the user.
+        """
+
+        now = datetime.now()
+        global NEXT_UPDATE_TIMESTAMP
+        if now > NEXT_UPDATE_TIMESTAMP:
+            if self.current_user:
+                # message the platform to update the ttl of this token
+                # no need to await because it is just an information, worst case is a forced relogin
+                client = await get_socket_instance()
+                response = await client.write({"type": "update_token_ttl",
+                                               "access_token": self._access_token})
+
+                if not response["success"]:
+                    get_token_cache().remove(self._access_token)
+                    print("user removed from token_cache due to not found on platforms cache")
+
+                NEXT_UPDATE_TIMESTAMP = now + timedelta(minutes=1)
+
+                print("update ttl of " + self._access_token + " to platform")
 
     def initialize(self):
         self.client = MongoClient('localhost', 27017, username=CONSTANTS.MONGODB_USERNAME, password=CONSTANTS.MONGODB_PASSWORD)
@@ -42,6 +71,8 @@ class BaseHandler(tornado.web.RequestHandler):
         if not os.path.isfile(self.upload_dir + "default_profile_pic.jpg"):
             shutil.copy2("assets/default_profile_pic.jpg", self.upload_dir)
 
+        self.wiki = Wiki("http://localhost/", "test_user", "test123")  # use fixed user for now, TODO integration platform users into wiki (plugin authPDO?)
+
     async def prepare(self):
         # standalone dev mode: no auth, dummy platform
         if options.dev:
@@ -51,12 +82,13 @@ class BaseHandler(tornado.web.RequestHandler):
         token = self.get_secure_cookie("access_token")
         if token is not None:
             token = token.decode("utf-8")
+        self._access_token = token
 
         # first look in own cache
         cached_user = get_token_cache().get(token)
         if cached_user is not None:
             self.current_user = User(cached_user["username"], cached_user["id"], cached_user["email"])
-            print(self.current_user.username)
+            #print(self.current_user.username)
         else:  # not found in own cache -> ask platform and put into own cache if valid
             client = await get_socket_instance()
             result = await client.write({"type": "token_validation",
@@ -69,7 +101,7 @@ class BaseHandler(tornado.web.RequestHandler):
                 self.current_user = None
                 print("no logged in user")
 
-        # TODO if validation succeeds do periodic callback with ttl to tell platform that token is still valid (action taken here) and instruct platform to update their ttl too
+        await self.update_token_ttl_to_platform_in_10_min_frame()
 
     def json_serialize_posts(self, query_result):
         # parse datetime objects into ISO 8601 strings for JSON serializability
@@ -1052,6 +1084,9 @@ class SpaceHandler(BaseHandler):
                              "members": members}
                     self.db.spaces.insert_one(space)
 
+                    # automatically create a new start page in the wiki for the space
+                    self.wiki.create_page(space_name + ":start", "auto-generated landing page")
+
                     self.set_status(200)
                     self.write({'status': 200,
                                 'success': True})
@@ -1084,7 +1119,6 @@ class SpaceOverviewHandler(BaseHandler):
             self.render("html/space_overview.html")
         else:
             self.redirect(CONSTANTS.ROUTING_TABLE["platform"])  # redirect to platform if there is no logged in user
-
 
 
 class NewPostsSinceTimestampHandler(BaseHandler):
@@ -1514,6 +1548,96 @@ class TaskHandler(BaseHandler):
                         "reason": "no_logged_in_user"})
 
 
+class WikiPageNamesHandler(BaseHandler):
+
+    def get(self):
+        """
+        GET /wiki_pages
+            get a list of all existing pages in the wiki (optional: only in a certain namespace:
+
+            optional query parameters:
+                "namespace" : restrict page search only to this namespace
+
+            returns:
+                200 OK
+                {"status": 200,
+                 "page_names": ["page1", "page2", ...]}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
+        """
+
+        if self.current_user:
+            namespace = self.get_argument("namespace", None)
+
+            if namespace:
+                page_names = self.wiki.get_page_names_in_namespace(namespace)
+            else:
+                page_names = self.wiki.get_page_names()
+
+            self.set_status(200)
+            self.write({"status": 200,
+                        "page_names": page_names})
+        else:
+            self.set_status(401)
+            self.write({"status": 401,
+                        "reason": "no_logged_in_user"})
+
+
+class WikiPageHandler(BaseHandler):
+
+    def get(self):
+        """
+        GET /wiki_page
+            get the content of a wiki page as a html template
+
+            query params:
+                "page" : the name of the page
+
+            returns:
+                200 OK
+                {"status": 200,
+                 "page_name": <name_of_page>
+                 "page_content": <content_as_html_string>}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": "missing_key"}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
+        """
+
+        if self.current_user:
+            try:
+                page_name = self.get_argument("page")
+            except tornado.web.MissingArgumentError as e:
+                print(e)
+
+                self.set_status(400)
+                self.write({"status": 400,
+                            "reason": "missing_key"})
+                return
+
+            #request page from dokuwiki (wrapper)
+            wiki = Wiki("http://localhost/", "test_user", "test123")  # use fixed user for now, TODO integration platform users into wiki (plugin authPDO?)
+            page_content = wiki.get_page(page_name, html=True)
+
+            #rewrite relative links so they land on this handler again
+            page_content = page_content.replace("doku.php?id", "wiki_page?page")
+
+            self.set_status(200)
+            self.write({"status": 200,
+                        "page_name": page_name,
+                        "page_content": page_content})
+        else:
+            self.set_status(401)
+            self.write({"status": 401,
+                        "reason": "no_logged_in_user"})
+
+
 class PermissionHandler(BaseHandler):
 
     async def get(self):
@@ -1550,36 +1674,38 @@ class TemplateHandler(BaseHandler):
 
 
 def make_app(cookie_secret):
-        return tornado.web.Application([
-            (r"/", MainRedirectHandler),
-            (r"/main", MainHandler),
-            (r"/admin", AdminHandler),
-            (r"/myprofile", MyProfileHandler),
-            (r"/profile/([a-zA-Z\-0-9\.:,_]+)", ProfileHandler),
-            (r"/posts", PostHandler),
-            (r"/comment", CommentHandler),
-            (r"/like", LikePostHandler),
-            (r"/repost", RepostHandler),
-            (r"/follow", FollowHandler),
-            (r"/updates", NewPostsSinceTimestampHandler),
-            (r"/spaceadministration/([a-zA-Z\-0-9\.:,_]+)", SpaceHandler),
-            (r"/space/([a-zA-Z\-0-9\.:,_]+)", SpaceRenderHandler),
-            (r"/spaces", SpaceOverviewHandler),
-            (r"/timeline", TimelineHandler),
-            (r"/timeline/space/([a-zA-Z\-0-9\.:,_]+)", SpaceTimelineHandler),
-            (r"/timeline/user/([a-zA-Z\-0-9\.:,_]+)", UserTimelineHandler),
-            (r"/timeline/you", PersonalTimelineHandler),
-            (r"/profileinformation", ProfileInformationHandler),
-            (r"/users/([a-zA-Z\-0-9\.:,_]+)", UserHandler),
-            (r"/tasks", TaskHandler),
-            (r"/permissions", PermissionHandler),
-            (r"/routing", RoutingHandler),
-            (r"/template", TemplateHandler),
-            (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
-            (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./html/"}),
-            (r"/javascripts/(.*)", tornado.web.StaticFileHandler, {"path": "./javascripts/"}),
-            (r"/uploads/(.*)", tornado.web.StaticFileHandler, {"path": "./uploads/"})
-        ], cookie_secret=cookie_secret)
+    return tornado.web.Application([
+        (r"/", MainRedirectHandler),
+        (r"/main", MainHandler),
+        (r"/admin", AdminHandler),
+        (r"/myprofile", MyProfileHandler),
+        (r"/profile/([a-zA-Z\-0-9\.:,_]+)", ProfileHandler),
+        (r"/posts", PostHandler),
+        (r"/comment", CommentHandler),
+        (r"/like", LikePostHandler),
+        (r"/repost", RepostHandler),
+        (r"/follow", FollowHandler),
+        (r"/updates", NewPostsSinceTimestampHandler),
+        (r"/spaceadministration/([a-zA-Z\-0-9\.:,_]+)", SpaceHandler),
+        (r"/space/([a-zA-Z\-0-9\.:,_]+)", SpaceRenderHandler),
+        (r"/spaces", SpaceOverviewHandler),
+        (r"/timeline", TimelineHandler),
+        (r"/timeline/space/([a-zA-Z\-0-9\.:,_]+)", SpaceTimelineHandler),
+        (r"/timeline/user/([a-zA-Z\-0-9\.:,_]+)", UserTimelineHandler),
+        (r"/timeline/you", PersonalTimelineHandler),
+        (r"/profileinformation", ProfileInformationHandler),
+        (r"/users/([a-zA-Z\-0-9\.:,_]+)", UserHandler),
+        (r"/tasks", TaskHandler),
+        (r"/wiki_pages", WikiPageNamesHandler),
+        (r"/wiki_page", WikiPageHandler),
+        (r"/permissions", PermissionHandler),
+        (r"/routing", RoutingHandler),
+        (r"/template", TemplateHandler),
+        (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
+        (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./html/"}),
+        (r"/javascripts/(.*)", tornado.web.StaticFileHandler, {"path": "./javascripts/"}),
+        (r"/uploads/(.*)", tornado.web.StaticFileHandler, {"path": "./uploads/"})
+    ], cookie_secret=cookie_secret)
 
 def determine_free_port():
     """

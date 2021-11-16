@@ -5,6 +5,7 @@ This is a simple implementation of a social network. It provides all standard fu
 ## Prerequisites:
 
 - Install [MongoDB](https://docs.mongodb.com/manual/installation/) for your OS on default port
+- Install & set up a [DokuWiki](https://www.dokuwiki.org/install#distribution_os_specifics) in order to use the integrated Wiki
 
 - This project is not supposed to be standalone, but rather used in our [platform application](https://github.com/Smunfr/sse-platform). Therefore you first need to install this platform. Follow the instructions in the repository.
 
