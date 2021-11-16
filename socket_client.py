@@ -1,14 +1,15 @@
 import tornado
+import tornado.httpclient
 import uuid
 import json
-import SOCIALSERV_CONSTANTS
+import CONSTANTS
 import signing
 import nacl.signing
 from tornado.ioloop import PeriodicCallback
 from tornado import gen
 from tornado.websocket import websocket_connect
 from asyncio import get_event_loop
-from socialserv_token_cache import get_token_cache
+from token_cache import get_token_cache
 from tornado.options import options
 
 
@@ -19,7 +20,7 @@ async def get_socket_instance():
         if options.dev:
             the_websocket_client = Client("ws://localhost:88810/websocket")
         else:
-            the_websocket_client = Client(tornado.httpclient.HTTPRequest("ws://localhost:" + str(SOCIALSERV_CONSTANTS.PLATFORM_PORT) + "/websocket", validate_cert=False,
+            the_websocket_client = Client(tornado.httpclient.HTTPRequest("ws://localhost:" + str(CONSTANTS.PLATFORM_PORT) + "/websocket", validate_cert=False,
                                           body=json.dumps({"type": "module_socket_connect", "module": "SocialServ"}), allow_nonstandard_methods=True))
         await the_websocket_client._await_init()
     return the_websocket_client

@@ -36,7 +36,7 @@ class Token_Cache:
     def __init__(self):
         self._data = {}
 
-    def insert(self, token, username, email, id, role):
+    def insert(self, token, username, email, id):
         """
         Inserts a new token into the cache, which is associated with the user behind the 'username'.
         The global time to live is one hour
@@ -49,9 +49,9 @@ class Token_Cache:
 
         """
         self._remove_expired()
-        cache_obj = {"username": username, "email": email, "id": id, "role": role, "expires": datetime.now() + timedelta(seconds=3600)} # TODO inherit ttl value from platform
+        cache_obj = {"username": username, "email": email, "id": id, "expires": datetime.now() + timedelta(seconds=3600)} # TODO inherit ttl value from platform
         self._data[token] = cache_obj
-        print("inserted into ListServ cache: ")
+        print("inserted into lionet cache: ")
         print(cache_obj)
 
     def get(self, token):
@@ -94,7 +94,7 @@ class Token_Cache:
         """
         self._remove_expired()
         if token in self._data:
-            print("removed from ListServ cache:")
+            print("removed from lionet cache:")
             print(self._data[token])
             del self._data[token]
 
@@ -110,8 +110,8 @@ class Token_Cache:
         """
         if token in self._data:
             self._data[token]["expires"] = datetime.now() + timedelta(seconds=3600)
-            print("updated ListServ token ttl to: ")
-            print(self._data[token])
+            #print("updated lionet token ttl to: ")
+            #print(self._data[token])
 
     def _remove_expired(self):
         """

@@ -20,14 +20,14 @@ import util
 import socket
 import json
 import signing
-import SOCIALSERV_CONSTANTS as CONSTANTS
+import CONSTANTS
 from contextlib import closing
 from bson.objectid import ObjectId
 from datetime import datetime, timedelta
 from pymongo import MongoClient
 from socket_client import get_socket_instance
 from model import User
-from socialserv_token_cache import get_token_cache
+from token_cache import get_token_cache
 from tornado.options import define, options
 from base64 import b64encode
 
