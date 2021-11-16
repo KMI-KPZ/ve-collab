@@ -6,7 +6,7 @@ var currURL = window.location.href; // Returns full URL (https://example.com/pat
 
 //Datetimes
 var today = new Date();
-var yesterday = new Date(new Date().getTime() - (24 * 60 * 60 * 1000)); //24 hours ago
+var yesterday = new Date(new Date().getTime() - (24 * 60 * 60 * 1000 * 365)); //24 hours ago //Added 1 year ago
 var now = today.toISOString();
 var from = yesterday.toISOString();
 var daysAgo = 0;
@@ -14,10 +14,82 @@ var daysAgo = 0;
 //HTML & JQuery
 var $body = $('body');
 var $feedContainer = $('#feedContainer');
-var postTemplate = document.getElementById('postTemplate').innerHTML;
-var repostTemplate = document.getElementById('repostTemplate').innerHTML;
-var commentTemplate = document.getElementById('commentTemplate').innerHTML;
-var tagTemplate = document.getElementById('tagTemplate').innerHTML;
+var postTemplate //= document.getElementById('postTemplate').innerHTML;
+var repostTemplate //= document.getElementById('repostTemplate').innerHTML;
+var commentTemplate //= document.getElementById('commentTemplate').innerHTML;
+var tagTemplate //= document.getElementById('tagTemplate').innerHTML;
+
+
+var newPostTemplate
+var spaceTemplate
+var spaceTemplateSelect
+var spaceHeaderTemplate
+var profileTemplate
+var profileInformation_listItem
+
+/**
+$.get("/template", function(template, textStatus, jqXhr) {
+  postTemplate = $(template).filter('#postTemplate').html()
+  repostTemplate = $(template).filter('#repostTemplate').html()
+  commentTemplate = $(template).filter('#commentTemplate').html()
+  tagTemplate = $(template).filter('#tagTemplate').html()
+
+  newPostTemplate = $(template).filter('#newPostTemplate').html()
+  spaceTemplate = $(template).filter('#spaceTemplate').html()
+  spaceTemplateSelect = $(template).filter('#spaceTemplateSelect').html()
+  spaceHeaderTemplate = $(template).filter('#spaceHeaderTemplate').html()
+  profileTemplate = $(template).filter('#profileTemplate').html()
+
+  profileInformation_listItem = $(template).filter('#profileInformation_listItem').html()
+
+})**/
+var load_templates = function () {
+  $.get("/template", function(template, textStatus, jqXhr) {
+    postTemplate = $(template).filter('#postTemplate').html()
+    repostTemplate = $(template).filter('#repostTemplate').html()
+    commentTemplate = $(template).filter('#commentTemplate').html()
+    tagTemplate = $(template).filter('#tagTemplate').html()
+
+    newPostTemplate = $(template).filter('#newPostTemplate').html()
+    spaceTemplate = $(template).filter('#spaceTemplate').html()
+    spaceTemplateSelect = $(template).filter('#spaceTemplateSelect').html()
+    spaceHeaderTemplate = $(template).filter('#spaceHeaderTemplate').html()
+    profileTemplate = $(template).filter('#profileTemplate').html()
+
+    profileInformation_listItem = $(template).filter('#profileInformation_listItem').html()
+
+  });
+  console.log("Entered first function");
+  return new Promise(resolve => {
+      setTimeout(function() {
+      resolve("\t\t This is first promise");
+      console.log("Returned first promise");
+    }, 100);
+  });
+};
+
+var initNewsFeed_withPromise = function() {
+  initNewsFeed();
+  return new Promise(resolve => {
+    setTimeout(function() {
+    resolve("\t\t This is second promise");
+    console.log("Returned second promise");
+  }, 100);
+  });
+};
+
+var initNewsFeed_afterPromise = async function() {
+  const first_promise= await load_templates();
+  console.log("After awaiting for 2 seconds," +
+  "the promise returned from first function is:");
+  console.log(first_promise);
+  console.log("Now init news feed")
+  //first_promise.then(initNewsFeed())
+  const second_promise= await initNewsFeed_withPromise();
+  console.log("After awaiting for 4 seconds, the" +
+  "promise returned from second function is:");
+  console.log(second_promise);
+}
 
 //Boolean & Data
 var inSpace = false;
@@ -39,11 +111,17 @@ function initNewsFeed() {
   if(!document.body.contains(document.getElementById('newPostPanel'))) {
     //console.log(currentUser);
     currentUser["profile_pic_URL"] = baseUrl + '/uploads/' + currentUser["profile"]["profile_pic"];
-    $('#newPostContainer').prepend(Mustache.render(document.getElementById('newPostTemplate').innerHTML, currentUser));
+
+    // Timeout fix error, where no templates are loading
+    // Error: Uncaught TypeError: Invalid template! Template should be a "string" but "undefined" was given as the first argument for mustache#render
+    //setTimeout(function(){
+    $('#newPostContainer').prepend(Mustache.render(newPostTemplate, currentUser));
+    //}, 10);
   }
   today = new Date();
   now = today.toISOString();
   from = yesterday.toISOString();
+  console.log("now initalizing date")
 
   if (currURL == baseUrl + '/admin') {
     if(userRole != 'admin') window.location.href = baseUrl + '/main';
@@ -85,7 +163,9 @@ $(document).ready(function () {
   getCurrentUserInfo();
   getUserRole();
   getAllUsers();
-  initNewsFeed();
+
+  initNewsFeed_afterPromise();
+
   const interval  = setInterval(function() {
      checkUpdate();
   }, 10000);
@@ -304,7 +384,7 @@ function displayTimeline(timeline) {
   $('input[data-role=tagsinput]').tagsinput({
     allowDuplicates: false
   });
-  $('[data-toggle="tooltip"]').tooltip();
+  //$('[data-toggle="tooltip"]').tooltip();
   $('.carousel').carousel();
   //loading posts => set from-Date until there is a post in interval from - to
   if(timeline.posts.length === 0 && daysAgo < 30) {
@@ -343,10 +423,10 @@ function displayTimeline(timeline) {
         $originalAgo.text(calculateAgoTime(post.originalCreationDate));
       }
       //toggle class if liked
-     if(liked && $likeIcon.hasClass('fa-thumbs-up')) {
-        $likeIcon.removeClass('fa-thumbs-up').addClass('fa-thumbs-down');
-      } else if(!liked && $likeIcon.hasClass('fa-thumbs-down')) {
-        $likeIcon.removeClass('fa-thumbs-down').addClass('fa-thumbs-up');
+     if(liked && $likeIcon.hasClass('text-blue-700')) {
+        $likeIcon.removeClass('text-blue-700').addClass('text-green-700');
+      } else if(!liked && $likeIcon.hasClass('text-green-700')) {
+        $likeIcon.removeClass('text-green-700').addClass('text-blue-700');
       }
       var $commentsList = $existingPost.find('.comments-list');
       if (post.hasOwnProperty('comments')) {
@@ -368,7 +448,7 @@ function displayTimeline(timeline) {
       return;
     }
     //check if there are files to display
-    if(post.hasOwnProperty('files') && post.files.length > 0) {
+    if(post.hasOwnProperty('files') && post.files !== null && post.files.length > 0  ) {
         var fileImages = [];
         var fileVideos = [];
         var fileAudios = [];
@@ -407,7 +487,9 @@ function displayTimeline(timeline) {
     post["authorPicURL"] = baseUrl + '/uploads/' + post.author.profile_pic;
     post["ago"] = calculateAgoTime(post.creation_date);
     post["likes"] = countLikes;
-    post["tags"] = post["tags"].toString();
+    if(post.tags !== null) {
+      post["tags"] = post["tags"].toString();
+    }
     //check if it was postet in a space
     if (post.space == null) {
       post["hasSpace"] = false;
@@ -431,11 +513,12 @@ function displayTimeline(timeline) {
             $feedContainer.prepend(Mustache.render(postTemplate, post));
         } else $feedContainer.append(Mustache.render(postTemplate, post));
     }
+
     //console.log(post);
     //in both case render comments to post and tags
     var $feed = $('#' + post._id);
     var $likeIcon = $feed.find('#likeIcon');
-    if(liked) $likeIcon.removeClass('fa-thumbs-up').addClass('fa-thumbs-down');
+    if(liked) $likeIcon.removeClass('text-blue-700').addClass('text-green-700');
     if (post.hasOwnProperty('comments')) {
       var $commentsList = $feed.find('.comments-list');
       $.each(post.comments, function (j, comment) {
@@ -450,7 +533,10 @@ function displayTimeline(timeline) {
     //add tags
     var $dom = $feed.find('.meta');
     var tags = post.tags;
-    var tagArray = (typeof tags != 'undefined' && tags instanceof Array ) ? tags : tags.split(",");
+    var tagArray = []
+    if(post.tags !== null) {
+      tagArray = (typeof tags != 'undefined' && tags instanceof Array ) ? tags : tags.split(",");
+    }
     tagArray.forEach(function (tag, index) {
         $dom.append(Mustache.render(tagTemplate, { text: '' + tag + '' }));
     });
@@ -533,7 +619,7 @@ function getTimelineSpace(spacename, from, to) {
     success: function (timeline) {
       displayTimeline(timeline);
       var members = localStorage.getItem(spacename).split(",");
-      if(!document.body.contains(document.getElementById('spaceProfilePanel'))) $('#spaceProfileContainer').prepend(Mustache.render(document.getElementById('spaceHeaderTemplate').innerHTML, {spacename: '' + spacename + '', members : members, memberSize : members.length}));
+      if(!document.body.contains(document.getElementById('spaceProfilePanel'))) $('#spaceProfileContainer').prepend(Mustache.render(spaceHeaderTemplate, {spacename: '' + spacename + '', members : members, memberSize : members.length}));
 
     },
 
@@ -854,12 +940,12 @@ function getSpaces() {
         var inSpace = (currentUser.spaces.indexOf(space.name) > -1) ? true : false;
         // needed for displaying "join" button
         space['inSpace'] = inSpace;
-        $dropdown.prepend(Mustache.render(document.getElementById('spaceTemplate').innerHTML, space));
+        $dropdown.prepend(Mustache.render(spaceTemplate, space));
         localStorage.setItem(space.name, space.members);
         Spaces.push(space);
         // if not in Space render spaceTemplateSelect
         if (currURL.indexOf(baseUrl + '/space') == -1) {
-          $('#selectSpace').append(Mustache.render(document.getElementById('spaceTemplateSelect').innerHTML, space));
+          $('#selectSpace').append(Mustache.render(spaceTemplateSelect, space));
         }
     });
     },
@@ -1030,7 +1116,7 @@ function searchUser(users) {
       if (user.username.search(expression) != -1 || user.email.search(expression) != -1)
       {
        user["profile_pic_URL"] = baseUrl + '/uploads/' + user["profile_pic"];
-       $('#result').append('<li class="list-group-item link-class"><img src="' + user["profile_pic_URL"] + '" height="40" width="40" class="img-thumbnail" /> '+user.username+' | <span class="text-muted">'+user.email+'</span></li>');
+       $('#result').append('<li class=""><img src="' + user["profile_pic_URL"] + '" height="40" width="40" class="img-thumbnail" /> '+user.username+' | <span class="text-muted">'+user.email+'</span></li>');
       }
      });
    }
@@ -1076,7 +1162,7 @@ function getAllUsers(){
  */
 function likeDislike(e, id) {
   var likeIcon = e.firstElementChild;
-  if(likeIcon.classList.contains("fa-thumbs-down")) {
+  if(likeIcon.classList.contains("text-green-700")) {
     deleteLike(id);
   } else {
     postLike(id);
@@ -1132,7 +1218,7 @@ function loadSpacesRepost(id){
       return;
         }
     }
-    $('#selectRepostSpace'+id).append(Mustache.render(document.getElementById('spaceTemplateSelect').innerHTML, space));
+    $('#selectRepostSpace'+id).append(Mustache.render(spaceTemplate, space));
   });
 }
 

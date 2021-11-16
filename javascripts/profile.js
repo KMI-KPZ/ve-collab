@@ -1,20 +1,27 @@
-var name = currURL.substring(currURL.lastIndexOf('/') + 1);
+var name
 
 $(document).ready(function () {
-  document.title = name + ' - Social Network';
-  getRouting();
-  getUserInfo(name);
-  getFollows(name);
-  updateProfileContainer();
+  setTimeout(function(){
+    name = currURL.substring(currURL.lastIndexOf('/') + 1);
+    document.title = name + ' - Social Network';
+    getRouting();
+    getUserInfo(name);
+    getFollows(name);
+    updateProfileContainer();
+  }
+   , 200);
+
+
 });
 
 function updateProfileContainer(){
   user["isFollowed"] = (currentUser.follows.includes(name)) ? true : false;
   if(!document.body.contains(document.getElementById('profilePanel'))){
-    $('#profileContainer').prepend(Mustache.render(document.getElementById('profileTemplate').innerHTML, user));
+    $('#profileContainer').prepend(Mustache.render(profileTemplate, user));
+    $('#updateProfileButton').remove();
   } else {
-    var template = document.getElementById('profileTemplate').innerHTML;
-    Mustache.parse(template);
+    //var template = document.getElementById('profileTemplate').innerHTML;
+    Mustache.parse(profileTemplate);
     var render = Mustache.to_html(template, user);
     $("#profileContainer").empty().html(render);
   }
@@ -32,6 +39,7 @@ function getUserInfo(name){
     dataType: 'json',
     async: false,
     success: function (data) {
+      //console.log(data)
       user = data;
       user["profile_pic_URL"] = baseUrl + '/uploads/' + user.profile_pic;
     },

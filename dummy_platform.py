@@ -71,7 +71,7 @@ def make_app():
 async def main():
     app = make_app()
     server = tornado.httpserver.HTTPServer(app)
-    server.listen(88810)
+    server.listen(8888)
 
     shutdown_event = tornado.locks.Event()
     await shutdown_event.wait()

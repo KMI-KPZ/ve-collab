@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Social Network Space</title>
+    <title>Social Network</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://code.jquery.com/jquery-1.12.4.min.js"
-            integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ"
-            crossorigin="anonymous">
+    integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ"
+    crossorigin="anonymous">
     </script>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css">
@@ -17,9 +17,9 @@
     <link rel="stylesheet" href="../css/tagsinput.css">
     <link rel="stylesheet" type="text/css" href="../css/modal.css">
     <link rel="stylesheet" type="text/css" href="../css/notifications.css">
-    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
 </head>
-<body class="font-sans">
+<body class="font-sans bg-white">
+
   <!-- Navbar -->
   <nav class="bg-blue mb-6">
     <div class="container bg-blue-300 mx-auto px-8">
@@ -37,10 +37,10 @@
           <div class="ml-4">
             <div class="text-sm flex items-center">
               <div>
-                <a href="../main" class="no-underline text-grey-light pr-3">Startseite</a>
+                <a href="main" class="no-underline text-grey-light pr-3">Startseite</a>
               </div>
               <div>
-                <a href="../myprofile" class="no-underline text-grey-light pr-3">Profil</a>
+                <a href="myprofile" class="no-underline text-grey-light pr-3">Profil</a>
               </div>
 
               <div class="relative" x-data="{ isOpen: false}">
@@ -77,19 +77,32 @@
   </nav>
 
 
-  <div class="container mx-auto px-8">
-
-      <div class="col-sm-8 col-sm-offset-2" id="profileContainer">
-
-      </div>
-      <!--<div class="col-sm-8 col-sm-offset-2" id="newPostContainer">
-
-      </div>
-      <div class="col-sm-8 col-sm-offset-2" id="feedContainer">
-
-      </div>-->
+  <!-- Main Container-->
+  <div class="flex">
+    <div class="container mx-auto px-8">
 
 
+
+        <!-- To modularize every page in this single html, this part of code has to be outsourced in an extra html template script -->
+        <!-- Maybe use this following part for main file with id ??? and another template, eg. profile with another script id-->
+        <!-- insert script into main page by id based on assessed web address -->
+
+          <div id="newPostContainer">
+
+          </div>
+
+
+          <div class="flex">
+            <div class="w-1/4"></div>
+            <div class="w-3/4 ml-6 mt-2">
+              <div id="feedContainer">
+
+              </div>
+            </div>
+          </div>
+        <!-- This part ends here -->
+
+    </div>
   </div>
 
   <!-- Footer -->
@@ -126,14 +139,16 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+  <script src="../javascripts/newsfeed.js"></script>
+  <script src="../javascripts/mustache.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
-<script src="../javascripts/profile.js"></script>
-<script src="../javascripts/newsfeed.js"></script>
+  <script src="../javascripts/tagsinput.js"></script>
+  <script src="../javascripts/notifications.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/2.3.0/alpine.js" integrity="sha512-nIwdJlD5/vHj23CbO2iHCXtsqzdTTx3e3uAmpTm4x2Y8xCIFyWu4cSIV8GaGe2UNVq86/1h9EgUZy7tn243qdA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
-<script src="../javascripts/mustache.js"></script>
-<script src="../javascripts/tagsinput.js"></script>
-<script src="../javascripts/notifications.js"></script>
+
 </body>
+
 </html>
