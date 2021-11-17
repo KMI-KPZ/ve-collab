@@ -71,7 +71,7 @@ class BaseHandler(tornado.web.RequestHandler):
         if not os.path.isfile(self.upload_dir + "default_profile_pic.jpg"):
             shutil.copy2("assets/default_profile_pic.jpg", self.upload_dir)
 
-        self.wiki = Wiki("http://localhost/", "test_user", "test123")  # use fixed user for now, TODO integration platform users into wiki (plugin authPDO?)
+        self.wiki = None #Wiki("http://localhost/", "test_user", "test123")  # use fixed user for now, TODO integration platform users into wiki (plugin authPDO?)
 
     async def prepare(self):
         # standalone dev mode: no auth, dummy platform
@@ -127,7 +127,7 @@ class MainHandler(BaseHandler):
 
     def get(self):
         if self.current_user:
-            self.render("html/main_layout.html")
+            self.render("html/main.html")
         else:
             self.redirect(CONSTANTS.ROUTING_TABLE["platform"])  # redirect to platform if there is no logged in user
 
@@ -151,7 +151,7 @@ class MyProfileHandler(BaseHandler):
 
     def get(self):
         if self.current_user:
-            self.render("html/profile_re.html")
+            self.render("html/myProfile.html")
         else:
             self.redirect(CONSTANTS.ROUTING_TABLE["platform"])  # redirect to platform if there is no logged in user
 
