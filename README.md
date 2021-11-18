@@ -1,4 +1,4 @@
-# SocialServ
+# lionet
 
 This is a simple implementation of a social network. It provides all standard functionality such as posting, liking, following, etc.
 
@@ -19,29 +19,18 @@ This is a simple implementation of a social network. It provides all standard fu
 
 ## Running the social network
 
-- for debugging and developing:
-  start dummy_platform.py in a separate terminal:
+- fire up the platform application (please refer to the guide in the repo)
+- check the port you started the platform on. If it is not 8888, change the values of ```PLATFORM_PORT``` and ```ROUTING_TABLE``` in CONSTANTS.py to your port
+- run
   ```sh
-  $ python3 dummy_platform.py
+  $ python signing.py
   ```
-  In another terminal window, start the actual social network with the dev flag:
+  once to generate the files ```signing_key.key``` and ```verify_key.key```. Keep the signing key secret AT ALL COST. Take the verify_key and insert ```"lionet": "<verify_key_here>"```, into the ```verify_keys.json``` file over at the platform
+- run the following to start the network:
   ```sh
-  $ python3 main.py --dev
+  $ python3 main.py
   ```
-  In this mode no authentication is required and there are only dummy users for testing.
-
-- for production situation:
-  - fire up the platform application (please refer to the guide in the repo)
-  - check the port you started the platform on. If it is not 8888, change the value of PLATFORM_PORT in SOCIALSERV_CONSTANTS.py to your port
-  - run
-    ```sh
-    $ python signing.py
-    ```
-    once to generate the files "signing_key.key" and "verify_key.key". Keep the signing key secret AT ALL COST. Take the verify_key and insert "SocialServ": "\<verify_key_here\>", into the verify_keys.json file over at the platform
-  - run the following to start the network:
-    ```sh
-    $ python3 main.py
-    ```
+  - you have the option to start without the integration of DokuWiki (e.g. if you don't have it installed and/or don't plan to use it). Use the ```--no_wiki``` flag in this case
 
  Login to Platform | User View
  :------------------------------------:|:-------------------------:
@@ -96,4 +85,4 @@ Timelines are getting updated automatically and by scrolling down the page.
 ### Workspaces
 Create your own Workspaces            |  SocialServ as a Workspace
 :-------------------------:|:-------------------------:
-![CreateSpaces](Features/CreateSpaces.png "CreateSpaces")  | <img src="Features/Space.png" alt="drawing" width="1000"/>
+![CreateSpaces](Features/CreateSpaces.png "CreateSpaces")  | ![Space](Features/Space.png "Space")

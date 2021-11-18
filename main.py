@@ -32,6 +32,7 @@ from tornado.options import define, options
 from base64 import b64encode
 
 define("dev", default=False, type=bool, help="start in dev mode (no auth) with dummy platform")
+define("no_wiki", default=False, type=bool, help="start without wiki integration (use if u don't have the wiki software installed and running)")
 
 NEXT_UPDATE_TIMESTAMP = datetime.now()
 
@@ -71,7 +72,10 @@ class BaseHandler(tornado.web.RequestHandler):
         if not os.path.isfile(self.upload_dir + "default_profile_pic.jpg"):
             shutil.copy2("assets/default_profile_pic.jpg", self.upload_dir)
 
-        self.wiki = None #Wiki("http://localhost/", "test_user", "test123")  # use fixed user for now, TODO integration platform users into wiki (plugin authPDO?)
+        if options.no_wiki:
+            self.wiki = None
+        else:
+            self.wiki = Wiki("http://localhost/", "test_user", "test123")  # use fixed user for now, TODO integration platform users into wiki (plugin authPDO?)
 
     async def prepare(self):
         # standalone dev mode: no auth, dummy platform
