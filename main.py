@@ -1112,6 +1112,64 @@ class SpaceHandler(BaseHandler):
             self.write({"status": 401,
                         "reason": "no_logged_in_user"})
 
+    def delete(self, slug):
+        """
+        DELETE /spaceadministration/leave
+            (currently authed user leaves space)
+            query param:
+                "name" : space name to leave from, mandatory argument
+
+            returns:
+                200 OK,
+                {"status": 200,
+                 "success": True}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
+
+        DELETE /spaceadministration/delete_space
+            (space will be deleted)
+            query param:
+                "name" : space name of which space to delete, mandatory argument
+
+            returns:
+                200 OK,
+                {"status": 200,
+                 "success": True}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
+        """
+
+        if self.current_user:
+            space_name = self.get_argument("name")
+
+            if slug == "leave":
+                # TODO when group admin is implemented: block leaving if user is the only admin, he has to transfer this role first before being able to leave
+                self.db.spaces.update_one(
+                    {"name": space_name},
+                    {
+                        "$pull": {"members": self.current_user.username}
+                    }
+                )
+                self.set_status(200)
+                self.write({'status': 200,
+                            'success': True})
+
+            elif slug == "delete_space":
+                self.db.spaces.delete_one({"name": space_name})
+
+                self.set_status(200)
+                self.write({'status': 200,
+                            'success': True})
+
+        else:
+            self.set_status(401)
+            self.write({"status": 401,
+                        "reason": "no_logged_in_user"})
+
 
 class SpaceOverviewHandler(BaseHandler):
     def get(self):
