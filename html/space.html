@@ -2,64 +2,72 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Social Network</title>
+    <title>Social Network Space</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://code.jquery.com/jquery-1.12.4.min.js"
-    integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ"
-    crossorigin="anonymous">
+            integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ"
+            crossorigin="anonymous">
     </script>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-    <link href="http://netdna.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+    <!---<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link href="http://netdna.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">-->
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="../css/newsfeed.css">
     <link rel="stylesheet" href="../css/tagsinput.css">
     <link rel="stylesheet" type="text/css" href="../css/modal.css">
     <link rel="stylesheet" type="text/css" href="../css/notifications.css">
 </head>
-<body class="font-sans bg-white">
-  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
-
+<body class="font-sans">
   <!-- Navbar -->
   <nav class="bg-blue mb-6">
     <div class="container bg-blue-300 mx-auto px-8">
       <div class="flex items-center py-2 px-10">
         <div class="w-3/4 flex items-center">
           <div>
-            <img src="../uploads/SO-SERVE_Logo_solo-285x300.png"/ width="50" height="50">
+            <img src="../uploads/SO-SERVE_Logo_solo-285x300.png" width="50" height="50">
           </div>
           <div class="ml-4">
-            <li class="nav-item list-none">
-              <input type="text" name="search" id="search" placeholder="Search lionet" class="form-control" />
-              <ul class="list-group" id="result"></ul>
+            <li class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+              <input type="text" name="search" id="search" placeholder="Search lionet" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" />
+              <ul class="" id="result"></ul>
             </li>
           </div>
           <div class="ml-4">
-            <div class="text-2xl flex items-center">
+            <div class="text-sm flex items-center">
               <div>
                 <a href="../main" class="no-underline text-grey-light pr-3">Startseite</a>
               </div>
               <div>
                 <a href="../myprofile" class="no-underline text-grey-light pr-3">Profil</a>
               </div>
-              <div>
-                <div class="nav-item dropdown">
-                  <a class="nav-link dropdown-toggle" id="navbarDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    Spaces
-                  </a>
-                  <div id="spaceDropdown" class="dropdown-menu" aria-labelledby="navbarDropdown">
 
-                    <div class="dropdown-divider"></div>
-                    <form class="px-4 py-3">
-                      <div class="form-group">
-                        <label for="newSpaceName">New Space name</label>
-                        <input type="text" class="form-control" id="newSpaceName" placeholder="Enter name">
-                      </div>
-                      <button id="createSpace" type="button" class="btn btn-primary">Create Space</button>
+              <div class="relative" x-data="{ isOpen: false}">
+                <button
+                        @click="isOpen = !isOpen"
+                        @keydown.escape="isOpen = false"
+                        class="flex items-center"
+                ><!--svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path class="heroicon-ui" d="M17 11a1 1 0 0 1 0 2h-4v4a1 1 0 0 1-2 0v-4H7a1 1 0 0 1 0-2h4V7a1 1 0 0 1 2 0v4h4z"/></svg-->Meine Gruppen</button>
+                <ul x-show="isOpen"
+                    @click.away="isOpen = false"
+                    class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none"
+                    >
+                  <li>
+                    <a class="dropdown-item block w-full hover:bg-gray-200" href="/spaces">Overview</a>
+                  </li>
+                  <div id="spaceDropdown"></div>
+                  <li class="bg-blue-300">
+                    <form class="">
+                      <label for="newSpaceName">New Space name</label>
+                      <input type="text" class="block w-full border rounded-md" id="newSpaceName" placeholder="Enter name">
                     </form>
-                  </div>
-                </div>
+                  </li>
+                  <li class="hover:bg-gray-200 bg-blue-300">
+                    <button id="createSpace" type="button" class="w-full">Create Space</button>
+                  </li>
+                </ul>
               </div>
+
             </div>
           </div>
         </div>
@@ -67,29 +75,257 @@
     </div>
   </nav>
 
+<div class="container mx-auto px-8">
+    <div class="flex items-center py-2">
+        <div class=" flex overflow-hidden bg-white">
 
-  <div class="container">
-  <div class="row">
-      <div class="col-sm-8 col-sm-offset-2" id="spaceProfileContainer">
+            <!-- Off-canvas menu for mobile, show/hide based on off-canvas menu state. -->
+            <div class="fixed inset-0 flex z-40 md:hidden" role="dialog" aria-modal="true">
+                <!--
+                  Off-canvas menu overlay, show/hide based on off-canvas menu state.
 
-      </div>
-      <div class="col-sm-8 col-sm-offset-2" id="newPostContainer">
+                  Entering: "transition-opacity ease-linear duration-300"
+                    From: "opacity-0"
+                    To: "opacity-100"
+                  Leaving: "transition-opacity ease-linear duration-300"
+                    From: "opacity-100"
+                    To: "opacity-0"
+                -->
 
-      </div>
-      <div class="col-sm-8 col-sm-offset-2" id="feedContainer">
+                <div class="fixed inset-0 bg-gray-600 bg-opacity-75" aria-hidden="true"></div>
 
-      </div>
+                <!--
+                  Off-canvas menu, show/hide based on off-canvas menu state.
+
+                  Entering: "transition ease-in-out duration-300 transform"
+                    From: "-translate-x-full"
+                    To: "translate-x-0"
+                  Leaving: "transition ease-in-out duration-300 transform"
+                    From: "translate-x-0"
+                    To: "-translate-x-full"
+                -->
+                <div class="relative flex-1 flex flex-col max-w-xs w-full bg-white">
+                    <!--
+                      Close button, show/hide based on off-canvas menu state.
+
+                      Entering: "ease-in-out duration-300"
+                        From: "opacity-0"
+                        To: "opacity-100"
+                      Leaving: "ease-in-out duration-300"
+                        From: "opacity-100"
+                        To: "opacity-0"
+                    -->
+
+
+                    <div class="absolute top-0 right-0 -mr-12 pt-2">
+                        <button class="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
+                            <span class="sr-only">Close sidebar</span>
+                            <!-- Heroicon name: outline/x -->
+                            <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                 viewBox="0 0 24 24"
+                                 stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
+                        <div class="flex-shrink-0 flex items-center px-4">
+                            <img class="h-8 w-auto"
+                                 src="https://tailwindui.com/img/logos/workflow-logo-indigo-600-mark-gray-800-text.svg"
+                                 alt="Workflow">
+                        </div>
+                        <nav class="mt-5 px-2 space-y-1">
+                            <!-- Current: "bg-gray-100 text-gray-900", Default: "text-gray-600 hover:bg-gray-50 hover:text-gray-900" -->
+                            <a href="#"
+                               class="bg-gray-100 text-gray-900 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                                <!--
+                                  Heroicon name: outline/home
+
+                                  Current: "text-gray-500", Default: "text-gray-400 group-hover:text-gray-500"
+                                -->
+                                <svg class="text-gray-500 mr-4 flex-shrink-0 h-6 w-6" xmlns="http://www.w3.org/2000/svg"
+                                     fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                                </svg>
+                                Dashboard
+                            </a>
+
+                            <a href="#"
+                               class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                                <!-- Heroicon name: outline/users -->
+                                <svg class="text-gray-400 group-hover:text-gray-500 mr-4 flex-shrink-0 h-6 w-6"
+                                     xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                     stroke="currentColor"
+                                     aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                                </svg>
+                                Team
+                            </a>
+
+                            <a href="#"
+                               class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                                <!-- Heroicon name: outline/folder -->
+                                <svg class="text-gray-400 group-hover:text-gray-500 mr-4 flex-shrink-0 h-6 w-6"
+                                     xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                     stroke="currentColor"
+                                     aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                                </svg>
+                                Projects
+                            </a>
+
+                            <a href="#"
+                               class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                                <!-- Heroicon name: outline/calendar -->
+                                <svg class="text-gray-400 group-hover:text-gray-500 mr-4 flex-shrink-0 h-6 w-6"
+                                     xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                     stroke="currentColor"
+                                     aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                Calendar
+                            </a>
+
+                            <a href="#"
+                               class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                                <!-- Heroicon name: outline/inbox -->
+                                <svg class="text-gray-400 group-hover:text-gray-500 mr-4 flex-shrink-0 h-6 w-6"
+                                     xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                     stroke="currentColor"
+                                     aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                                </svg>
+                                Documents
+                            </a>
+
+                            <a href="#"
+                               class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                                <!-- Heroicon name: outline/chart-bar -->
+                                <svg class="text-gray-400 group-hover:text-gray-500 mr-4 flex-shrink-0 h-6 w-6"
+                                     xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                     stroke="currentColor"
+                                     aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                </svg>
+                                Reports
+                            </a>
+                        </nav>
+                    </div>
+                    <div class="flex-shrink-0 flex border-t border-gray-200 p-4">
+                        <a href="#" class="flex-shrink-0 group block">
+                            <div class="flex items-center">
+                                <div>
+                                    <img class="inline-block h-10 w-10 rounded-full"
+                                         src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+                                         alt="">
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-base font-medium text-gray-700 group-hover:text-gray-900">
+                                        Tom Cook
+                                    </p>
+                                    <p class="text-sm font-medium text-gray-500 group-hover:text-gray-700">
+                                        View profile
+                                    </p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="flex-shrink-0 w-14">
+                    <!-- Force sidebar to shrink to fit close icon -->
+                </div>
+            </div>
+
+
+        </div>
+
+    </div>
+</div>
+
+<div class="container mx-auto px-8">
+  <!--<div id="newPostContainer">
 
   </div>
+  <div class="flex items-center py-2">
+    <div class=" flex overflow-hidden bg-white">
+      <div id="spaceProfileContainer">
+
+      </div>
+    </div>-->
+    <!--<div class="flex flex-col flex-1 overflow-hidden">
+
+      <div id="feedContainer">
+
+      </div>
+    </div>-->
+    <div id="spaceProfileContainer" class="flex items-center py-2">
+
+    </div>
+
+    <div class="flex items-center py-2">
+      <div class="flex overflow-hidden bg-white">
+        <div class="flex flex-col w-64">
+
+        </div>
+      </div>
+      <div class="flex flex-col w-0 flex-1 overflow-hidden">
+        <div id="feedContainer"></div>
+      </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<div class="mt-8">
+  <div class="container mx-auto px-8">
+    <div class="px-10">
+      <div class="flex items-center justify-between border-t py-8">
+        <div class="justify-start justify-between text-xs w-2/5 flex">
+          <div class="mr-4">
+            &copy; 2021 lionet.
+          </div>
+          <div class="mr-4">
+            <a href="#" class="no-underline">Terms</a>
+          </div>
+          <div class="mr-4">
+            <a href="#" class="no-underline">Privacy</a>
+          </div>
+          <div class="mr-4">
+            <a href="#" class="no-underline">Security</a>
+          </div>
+          <div class="mr-4">
+            <a href="#" class="no-underline">Help</a>
+          </div>
+
+          <div class="justify-end justify-between text-xs w-2/5 flex text-right">
+            <div class="ml-4">
+              <a href="#" class="no-underline">About</a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
   </div>
-
-
+</div>
+  <!---->
+</div>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
 <script src="../javascripts/newsfeed.js"></script>
-<script src="../javascripts/space.js"></script>
 <script src="../javascripts/mustache.js"></script>
+
 <script src="../javascripts/tagsinput.js"></script>
 <script src="../javascripts/notifications.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/2.3.0/alpine.js" integrity="sha512-nIwdJlD5/vHj23CbO2iHCXtsqzdTTx3e3uAmpTm4x2Y8xCIFyWu4cSIV8GaGe2UNVq86/1h9EgUZy7tn243qdA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
 </body>
 </html>
