@@ -1,0 +1,292 @@
+from __future__ import annotations
+
+from typing import Optional, Dict
+
+from pymongo import MongoClient
+
+import CONSTANTS
+
+the_acl = None
+
+
+def acl() -> ACL:
+    """
+    access function for the ACL class. since it is a singleton, only use this function. Never create an instance of ACL() yourself!
+    """
+
+    global the_acl
+    if the_acl is None:
+        the_acl = ACL()
+    return the_acl
+
+
+class ACL:
+    def __init__(self):
+        self.client = MongoClient('localhost', 27017, username=CONSTANTS.MONGODB_USERNAME, password=CONSTANTS.MONGODB_PASSWORD)
+        self.global_acl = _GlobalACL(self.client)
+        self.space_acl = _SpaceACL(self.client)
+
+
+class _GlobalACL:
+    """
+    This subgroup of the ACL System is for Network-wide permission, e.g. allowing a role to create spaces
+    """
+
+    def __init__(self, mongo_client: MongoClient) -> None:
+        self.client = mongo_client
+        self.db = self.client['lionet']  # TODO make this generic via config
+        self._EXISTING_KEYS = ["role", "create_space"]
+
+    def insert_default(self, role: str) -> None:
+        """
+        insert the standard rule for the give role. standard is: create_space: False
+        :param role: name of the role to insert
+        """
+
+        default_rule = {
+            "role": role,
+            "create_space": False,
+        }
+        self.db.global_acl.update_one(  # use update + upsert so this function can also be used to restore to default
+            {"role": role},
+            {"$set": default_rule},
+            upsert=True
+        )
+
+    def ask(self, role: str, permission_key: str) -> bool:
+        """
+        "ask" the acl for a permission value on a give role
+        :param role: which role to query
+        :param permission_key: the name of the permission. these are the same as the keys stored in the db, e.g. "create_space"
+        :return: boolean indicator whether the role has the requested permission or not
+        """
+        if permission_key not in self._EXISTING_KEYS:
+            raise KeyError("Key '{}' does not match any permission key in the db".format(permission_key))
+
+        record = self.db.global_acl.find_one({"role": role})
+        if record:
+            return record[permission_key]
+        else:
+            return False
+
+    def get(self, role: str) -> Optional[Dict]:
+        """
+        request the entire set of permissions for the role
+        :param role:
+        :return: the dict containing the set of rules for the role, e.g.: {"role": "test", "create_space": False}, or None if the role does not exist
+        """
+
+        record = self.db.global_acl.find_one({"role": role})
+        if record:
+            del record["_id"]  # _id useless information here, can leave it out
+        return record
+
+    def set(self, role: str, permission_key: str, value: bool) -> None:
+        """
+        set a value for a specific permission for a role
+        :param role: the role to set the permission for
+        :param permission_key: which permission to set. use the same identifier as in the db, e.g. "create_space"
+        :param value: the value to set (True/False)
+        """
+
+        if permission_key not in self._EXISTING_KEYS:
+            raise KeyError("Key '{}' does not match any permission key in the db".format(permission_key))
+
+        self.db.global_acl.update_one(
+            {"role": role},
+            {"$set":
+                {
+                    permission_key: value
+                }
+            },
+            upsert=True
+        )
+
+    def set_all(self, acl_entry: dict) -> None:
+        """
+        set all values of an entry of the acl. if the role already exist, the values will be updated, otherwise they will be freshly inserted.
+        ACL entry needs to only contain:
+        {
+            "role": "<rolename>",
+            "create_space": True/False
+        }
+        Having any other key(s) in this dictionary will result in a KeyError
+        :param acl_entry: the acl entry to insert
+        """
+
+        if "role" not in acl_entry:
+            raise KeyError("ACL Entry is missing mandatory key 'role'")
+        for key in acl_entry.keys():
+            if key not in self._EXISTING_KEYS:
+                raise KeyError("Key '{}' does not match any permission key in the db".format(key))
+
+        self.db.global_acl.update_one(
+            {"role": acl_entry["role"]},
+            {"$set": acl_entry},
+            upsert=True
+        )
+
+
+class _SpaceACL:
+    """
+    This subgroup of the acl applies for every space individually. it handles all neccessary CRUD operations.
+    the full access rights for a space admin is given implicitely, no matter his network-wide role.
+    """
+
+    def __init__(self, mongo_client: MongoClient) -> None:
+        self.client = mongo_client
+        self.db = self.client['lionet']  # TODO make this generic via config
+        self._EXISTING_KEYS = ["role", "space", "join_space", "read_timeline", "post", "comment", "read_wiki", "write_wiki", "read_files",
+                               "write_files"]
+
+    def insert_default(self, role: str, space: str) -> None:
+        """
+        insert the standard rule for the given role.
+        standard is read timeline only:
+            "join_space": False,
+            "post": False,
+            "read_timeline": True,
+            "comment": False,
+            "read_wiki": False,
+            "write_wiki": False,
+            "read_files": False,
+            "write_files": False
+        :param space: the space for which the rules should apply
+        :param role: name of the role to insert
+        """
+
+        default_rule = {
+            "role": role,
+            "space": space,
+            "join_space": False,
+            "read_timeline": True,
+            "post": False,
+            "comment": False,
+            "read_wiki": False,
+            "write_wiki": False,
+            "read_files": False,
+            "write_files": False
+        }
+        self.db.space_acl.update_one(  # use update + upsert so this function can also be used to restore to default
+            {"role": role, "space": space},
+            {"$set": default_rule},
+            upsert=True
+        )
+
+    def ask(self, role: str, space: str, permission_key: str) -> bool:
+        """
+        "ask" the acl for a permission value on a give role
+        :param space: the space where the rules apply
+        :param role: which role to query
+        :param permission_key: the name of the permission. these are the same as the keys stored in the db, e.g. "create_space"
+        :return: boolean indicator whether the role has the requested permission or not
+        """
+
+        if permission_key not in self._EXISTING_KEYS:
+            raise KeyError("Key '{}' does not match any permission key in the db".format(permission_key))
+
+        record = self.db.space_acl.find_one({"role": role, "space": space})
+        if record:
+            return record[permission_key]
+        else:
+            return False
+
+    def get(self, role: str, space: str) -> Optional[Dict]:
+        """
+        request the entire set of permissions for the role in the space
+        :param space:
+        :param role:
+        :return: the dict containing the set of rules for the role, e.g.: {"role": "test", "create_space": False, ...}, or None if the role does not exist
+        """
+
+        record = self.db.space_acl.find_one({"role": role, "space": space})
+        if record:
+            del record["_id"]  # _id useless information here, can leave it out
+        return record
+
+    def set(self, role: str, space: str, permission_key: str, value: bool) -> None:
+        """
+        set a value for a specific permission for a role
+        :param space: the space where the rules apply
+        :param role: the role to set the permission for
+        :param permission_key: which permission to set. use the same identifier as in the db, e.g. "create_space"
+        :param value: the value to set (True/False)
+        """
+
+        if permission_key not in self._EXISTING_KEYS:
+            raise KeyError("Key '{}' does not match any permission key in the db".format(permission_key))
+
+        self.db.space_acl.update_one(
+            {"role": role, "space": space},
+            {"$set":
+                {
+                    permission_key: value
+                }
+            },
+            upsert=True
+        )
+
+    def set_all(self, acl_entry: dict) -> None:
+        """
+        set all values of an entry of the acl. if the role already exist, the values will be updated, otherwise they will be freshly inserted.
+        ACL entry needs to only contain:
+        {
+            "role": "<role>",
+            "space": "<space>",
+            "join_space": True/False,
+            "read_timeline": True/False,
+            "post": True/False,
+            "comment": True/False,
+            "read_wiki": True/False,
+            "write_wiki": True/False,
+            "read_files": True/False,
+            "write_files": True/False
+        }
+        Having any other key(s) in this dictionary will result in a KeyError
+        :param acl_entry: the acl entry to insert
+        """
+
+        # check for mandatory keys
+        if "role" not in acl_entry:
+            raise KeyError("ACL Entry is missing mandatory key 'role'")
+        if "space" not in acl_entry:
+            raise KeyError("ACL Entry is missing mandatory key 'space'")
+        # check for any keys that are too much (or have a typo e.g.)
+        for key in acl_entry.keys():
+            if key not in self._EXISTING_KEYS:
+                raise KeyError("Key '{}' does not match any permission key in the db".format(key))
+
+        self.db.space_acl.update_one(
+            {"role": acl_entry["role"], "space": acl_entry["space"]},
+            {"$set": acl_entry},
+            upsert=True
+        )
+
+
+if __name__ == "__main__":
+    acl = acl()
+    #acl.global_acl.insert_default("test")
+    #print(acl.global_acl.ask("test", "create_space"))
+    #print(acl.global_acl.get("test"))
+    #acl.global_acl.set("test", "creat_space", True)
+    #print(acl.global_acl.get("test"))
+    #acl.global_acl.set_all({"role": "test", "creat_space": False})
+    #print(acl.global_acl.get("test"))
+
+    acl.space_acl.insert_default("test", "test_space")
+    print(acl.space_acl.ask("test", "test_space", "join_space"))
+    print(acl.space_acl.get("test", "test_space"))
+    acl.space_acl.set("test", "test_space", "join_space", True)
+    print(acl.space_acl.get("test", "test_space"))
+    acl.space_acl.set_all(
+        {"role": "test",
+         "space": "test_space",
+         "join_space": True,
+         "read_timeline": True,
+         "post": True,
+         "comment": True,
+         "read_wiki": True,
+         "write_wiki": True,
+         "read_files": True,
+         "write_files": True})
+    print(acl.space_acl.get("test", "teste_space"))
