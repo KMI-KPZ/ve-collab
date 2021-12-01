@@ -1,8 +1,9 @@
-from handlers.base_handler import BaseHandler
+from handlers.base_handler import BaseHandler, auth_needed
 
 
 class FollowHandler(BaseHandler):
 
+    @auth_needed
     def get(self):
         """
         GET /follow
@@ -18,26 +19,23 @@ class FollowHandler(BaseHandler):
                 {"status": 401,
                  "reason": "no_logged_in_user"}
         """
-        if self.current_user:
-            username = self.get_argument("user")
 
-            result = self.db.follows.find(
-                filter={"user": username},
-                projection={"_id": False}
-            )
+        username = self.get_argument("user")
 
-            follows = []  # need to instantiate it because if user follows nobody the iteration wont be run "follows" would get unassigned
-            for user in result:  # even though there is only one item in result set we need to iterate because query returns a cursor instance
-                follows = user["follows"]
+        result = self.db.follows.find(
+            filter={"user": username},
+            projection={"_id": False}
+        )
 
-            self.set_status(200)
-            self.write({"user": username,
-                        "follows": follows})
-        else:
-            self.set_status(401)
-            self.write({"status": 401,
-                        "reason": "no_logged_in_user"})
+        follows = []  # need to instantiate it because if user follows nobody the iteration wont be run "follows" would get unassigned
+        for user in result:  # even though there is only one item in result set we need to iterate because query returns a cursor instance
+            follows = user["follows"]
 
+        self.set_status(200)
+        self.write({"user": username,
+                    "follows": follows})
+
+    @auth_needed
     def post(self):
         """
         POST /follow
@@ -54,29 +52,24 @@ class FollowHandler(BaseHandler):
                  "reason": "no_logged_in_user"}
         """
 
-        if self.current_user:
-            username = self.current_user.username
-            user_to_follow = self.get_argument("user")
+        username = self.current_user.username
+        user_to_follow = self.get_argument("user")
 
-            self.db.follows.update_one(
-                {"user": username},  # fitler
-                {
-                    "$addToSet": {  # update
-                        "follows": user_to_follow
-                    }
-                },
-                upsert=True  # if no document already present, create one (i.e. user follows somebody for first time)
-            )
+        self.db.follows.update_one(
+            {"user": username},  # fitler
+            {
+                "$addToSet": {  # update
+                    "follows": user_to_follow
+                }
+            },
+            upsert=True  # if no document already present, create one (i.e. user follows somebody for first time)
+        )
 
-            self.set_status(200)
-            self.write({"status": 200,
-                        "success": True})
+        self.set_status(200)
+        self.write({"status": 200,
+                    "success": True})
 
-        else:
-            self.set_status(401)
-            self.write({"status": 401,
-                        "reason": "no_logged_in_user"})
-
+    @auth_needed
     def delete(self):
         """
         DELETE /follow
@@ -93,23 +86,17 @@ class FollowHandler(BaseHandler):
                  "reason": "no_logged_in_user"}
         """
 
-        if self.current_user:
-            username = self.get_argument("user")
+        username = self.get_argument("user")
 
-            self.db.follows.update_one(
-                {"user": self.current_user.username},
-                {
-                    "$pull": {
-                        "follows": username
-                    }
+        self.db.follows.update_one(
+            {"user": self.current_user.username},
+            {
+                "$pull": {
+                    "follows": username
                 }
-            )
+            }
+        )
 
-            self.set_status(200)
-            self.write({"status": 200,
-                        "success": True})
-
-        else:
-            self.set_status(401)
-            self.write({"status": 401,
-                        "reason": "no_logged_in_user"})
+        self.set_status(200)
+        self.write({"status": 200,
+                    "success": True})

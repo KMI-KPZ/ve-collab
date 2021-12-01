@@ -11,7 +11,7 @@ if sys.platform == 'win32':
 import tornado.httpserver
 import tornado.ioloop
 import tornado.locks
-from tornado.options import define
+from tornado.options import define, options
 
 import CONSTANTS
 from handlers.acl import PermissionHandler
@@ -29,6 +29,7 @@ from socket_client import get_socket_instance
 
 define("dev", default=False, type=bool, help="start in dev mode (no auth) with dummy platform")
 define("no_wiki", default=False, type=bool, help="start without wiki integration (use if u don't have the wiki software installed and running)")
+define("config", default="config.json", type=str, help="path to config file, defaults to config.json")
 
 
 class RoutingHandler(BaseHandler):
@@ -94,7 +95,7 @@ async def main():
     signing.create_signing_key_if_not_exists()
 
     tornado.options.parse_command_line()
-    with open("config.json", "r") as fp:
+    with open(options.config, "r") as fp:
         conf = json.load(fp)
         cookie_secret = conf["cookie_secret"]
 

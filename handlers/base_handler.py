@@ -1,7 +1,10 @@
+import functools
 import os
 import shutil
 
 from datetime import datetime, timedelta
+from typing import Awaitable, Callable, Optional
+
 from pymongo import MongoClient
 from tornado.options import options
 import tornado.web
@@ -13,6 +16,22 @@ from socket_client import get_socket_instance
 from token_cache import get_token_cache
 
 NEXT_UPDATE_TIMESTAMP = datetime.now()
+
+def auth_needed(method: Callable[..., Optional[Awaitable[None]]]) -> Callable[..., Optional[Awaitable[None]]]:
+    """
+    logging decorator
+    decorate your handlers http methods with @log_access, and the access and origin will be logged to the logfile
+    """
+
+    @functools.wraps(method)
+    def wrapper(self: tornado.web.RequestHandler, *args, **kwargs) -> Optional[Awaitable[None]]:
+        if not self.current_user:
+            self.set_status(401)
+            self.write({"status": 401, "reason": "no_logged_in_user"})
+            return
+        return method(self, *args, **kwargs)
+    return wrapper
+
 
 class BaseHandler(tornado.web.RequestHandler):
 

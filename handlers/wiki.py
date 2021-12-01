@@ -1,4 +1,4 @@
-from handlers.base_handler import BaseHandler
+from handlers.base_handler import BaseHandler, auth_needed
 import tornado.web
 
 from dokuwiki_integration import Wiki
@@ -6,6 +6,7 @@ from dokuwiki_integration import Wiki
 
 class WikiPageNamesHandler(BaseHandler):
 
+    @auth_needed
     def get(self):
         """
         GET /wiki_pages
@@ -24,25 +25,21 @@ class WikiPageNamesHandler(BaseHandler):
                  "reason": "no_logged_in_user"}
         """
 
-        if self.current_user:
-            namespace = self.get_argument("namespace", None)
+        namespace = self.get_argument("namespace", None)
 
-            if namespace:
-                page_names = self.wiki.get_page_names_in_namespace(namespace)
-            else:
-                page_names = self.wiki.get_page_names()
-
-            self.set_status(200)
-            self.write({"status": 200,
-                        "page_names": page_names})
+        if namespace:
+            page_names = self.wiki.get_page_names_in_namespace(namespace)
         else:
-            self.set_status(401)
-            self.write({"status": 401,
-                        "reason": "no_logged_in_user"})
+            page_names = self.wiki.get_page_names()
+
+        self.set_status(200)
+        self.write({"status": 200,
+                    "page_names": page_names})
 
 
 class WikiPageHandler(BaseHandler):
 
+    @auth_needed
     def get(self):
         """
         GET /wiki_page
@@ -66,29 +63,24 @@ class WikiPageHandler(BaseHandler):
                  "reason": "no_logged_in_user"}
         """
 
-        if self.current_user:
-            try:
-                page_name = self.get_argument("page")
-            except tornado.web.MissingArgumentError as e:
-                print(e)
+        try:
+            page_name = self.get_argument("page")
+        except tornado.web.MissingArgumentError as e:
+            print(e)
 
-                self.set_status(400)
-                self.write({"status": 400,
-                            "reason": "missing_key"})
-                return
+            self.set_status(400)
+            self.write({"status": 400,
+                        "reason": "missing_key"})
+            return
 
-            #request page from dokuwiki (wrapper)
-            wiki = Wiki("http://localhost/", "test_user", "test123")  # use fixed user for now, TODO integration platform users into wiki (plugin authPDO?)
-            page_content = wiki.get_page(page_name, html=True)
+        #request page from dokuwiki (wrapper)
+        wiki = Wiki("http://localhost/", "test_user", "test123")  # use fixed user for now, TODO integration platform users into wiki (plugin authPDO?)
+        page_content = wiki.get_page(page_name, html=True)
 
-            #rewrite relative links so they land on this handler again
-            page_content = page_content.replace("doku.php?id", "wiki_page?page")
+        #rewrite relative links so they land on this handler again
+        page_content = page_content.replace("doku.php?id", "wiki_page?page")
 
-            self.set_status(200)
-            self.write({"status": 200,
-                        "page_name": page_name,
-                        "page_content": page_content})
-        else:
-            self.set_status(401)
-            self.write({"status": 401,
-                        "reason": "no_logged_in_user"})
+        self.set_status(200)
+        self.write({"status": 200,
+                    "page_name": page_name,
+                    "page_content": page_content})

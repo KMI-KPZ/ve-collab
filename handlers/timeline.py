@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 import dateutil.parser
 
-from handlers.base_handler import BaseHandler
+from handlers.base_handler import BaseHandler, auth_needed
 import util
 
 class TimelineHandler(BaseHandler):
@@ -68,6 +68,7 @@ class SpaceTimelineHandler(BaseHandler):
     Timeline of a certain space
     """
 
+    @auth_needed
     def get(self, space_name):
         """
         GET /timeline/space/[name]
@@ -87,59 +88,54 @@ class SpaceTimelineHandler(BaseHandler):
               "reason": "no_logged_in_user"}
         """
 
-        if self.current_user:
-            time_from = self.get_argument("from", (datetime.utcnow() - timedelta(days=1)).isoformat())  # default value is 24h ago
-            time_to = self.get_argument("to", datetime.utcnow().isoformat())  # default value is now
+        time_from = self.get_argument("from", (datetime.utcnow() - timedelta(days=1)).isoformat())  # default value is 24h ago
+        time_to = self.get_argument("to", datetime.utcnow().isoformat())  # default value is now
 
-            # parse time strings into datetime objects (dateutil is able to guess format)
-            # however safe way is to use ISO 8601 format
-            time_from = dateutil.parser.parse(time_from)
-            time_to = dateutil.parser.parse(time_to)
+        # parse time strings into datetime objects (dateutil is able to guess format)
+        # however safe way is to use ISO 8601 format
+        time_from = dateutil.parser.parse(time_from)
+        time_to = dateutil.parser.parse(time_to)
 
-            # check if current_user is in the space and only query for posts if yes
-            space_data = self.db.spaces.find(
-                {"name": space_name}
-            )
-            for space in space_data:
-                if self.current_user.username in space["members"]:
-                    result = self.db.posts.find(
-                                    filter={"creation_date": {"$gte": time_from, "$lte": time_to},
-                                            "space":         {"$eq": space_name}})
+        # check if current_user is in the space and only query for posts if yes
+        space_data = self.db.spaces.find(
+            {"name": space_name}
+        )
+        for space in space_data:
+            if self.current_user.username in space["members"]:
+                result = self.db.posts.find(
+                                filter={"creation_date": {"$gte": time_from, "$lte": time_to},
+                                        "space":         {"$eq": space_name}})
 
-                    posts = self.json_serialize_posts(result)
-                    # TODO more efficient
-                    for post in posts:
-                        author_name = post["author"]
-                        post["author"] = {}
-                        post["author"]["profile_pic"] = "default_profile_pic.jpg"
-                        profile = self.db.profiles.find_one({"user": author_name})
-                        if profile:
-                            if "profile_pic" in profile:
-                                post["author"]["profile_pic"] = profile["profile_pic"]
-                        post["author"]["username"] = author_name
-                        if "comments" in post and post['comments'] is not None: #PLACEHOLDER FOR HANDLING COMMENTS WITH NULL VALUE
-                            for comment in post["comments"]:
-                                comment_author_name = comment["author"]
-                                comment["author"] = {}
-                                comment["author"]["profile_pic"] = "default_profile_pic.jpg"
-                                comment_author_profile = self.db.profiles.find_one({"user": comment_author_name})
-                                if comment_author_profile:
-                                    if "profile_pic" in comment_author_profile:
-                                        comment["author"]["profile_pic"] = comment_author_profile["profile_pic"]
-                                comment["author"]["username"] = comment_author_name
+                posts = self.json_serialize_posts(result)
+                # TODO more efficient
+                for post in posts:
+                    author_name = post["author"]
+                    post["author"] = {}
+                    post["author"]["profile_pic"] = "default_profile_pic.jpg"
+                    profile = self.db.profiles.find_one({"user": author_name})
+                    if profile:
+                        if "profile_pic" in profile:
+                            post["author"]["profile_pic"] = profile["profile_pic"]
+                    post["author"]["username"] = author_name
+                    if "comments" in post and post['comments'] is not None: #PLACEHOLDER FOR HANDLING COMMENTS WITH NULL VALUE
+                        for comment in post["comments"]:
+                            comment_author_name = comment["author"]
+                            comment["author"] = {}
+                            comment["author"]["profile_pic"] = "default_profile_pic.jpg"
+                            comment_author_profile = self.db.profiles.find_one({"user": comment_author_name})
+                            if comment_author_profile:
+                                if "profile_pic" in comment_author_profile:
+                                    comment["author"]["profile_pic"] = comment_author_profile["profile_pic"]
+                            comment["author"]["username"] = comment_author_name
 
-                    self.set_status(200)
-                    print(posts)
-                    self.write({"posts": posts})
+                self.set_status(200)
+                print(posts)
+                self.write({"posts": posts})
 
-                else:
-                    self.set_status(409)
-                    self.write({"status": 409,
-                                "reason": "user_not_member_of_space"})
-        else:
-            self.set_status(401)
-            self.write({"status": 401,
-                        "reason": "no_logged_in_user"})
+            else:
+                self.set_status(409)
+                self.write({"status": 409,
+                            "reason": "user_not_member_of_space"})
 
 
 class UserTimelineHandler(BaseHandler):
@@ -147,6 +143,7 @@ class UserTimelineHandler(BaseHandler):
     Timeline of a user (e.g. for his profile)
     """
 
+    @auth_needed
     def get(self, author):
         """
         GET /timeline/user/[username]
@@ -162,49 +159,43 @@ class UserTimelineHandler(BaseHandler):
              "reason": "no_logged_in_user"}
         """
 
-        if self.current_user:
-            time_from = self.get_argument("from", (datetime.utcnow() - timedelta(days=1)).isoformat())  # default value is 24h ago
-            time_to = self.get_argument("to", datetime.utcnow().isoformat())  # default value is now
+        time_from = self.get_argument("from", (datetime.utcnow() - timedelta(days=1)).isoformat())  # default value is 24h ago
+        time_to = self.get_argument("to", datetime.utcnow().isoformat())  # default value is now
 
-            # parse time strings into datetime objects (dateutil is able to guess format)
-            # however safe way is to use ISO 8601 format
-            time_from = dateutil.parser.parse(time_from)
-            time_to = dateutil.parser.parse(time_to)
+        # parse time strings into datetime objects (dateutil is able to guess format)
+        # however safe way is to use ISO 8601 format
+        time_from = dateutil.parser.parse(time_from)
+        time_to = dateutil.parser.parse(time_to)
 
-            # TODO what about posts in spaces? include? exclude? include only those that current user is also in?
-            result = self.db.posts.find(
-                            filter={"creation_date": {"$gte": time_from, "$lte": time_to},
-                                    "author":         {"$eq": author}})
+        # TODO what about posts in spaces? include? exclude? include only those that current user is also in?
+        result = self.db.posts.find(
+                        filter={"creation_date": {"$gte": time_from, "$lte": time_to},
+                                "author":         {"$eq": author}})
 
-            posts = self.json_serialize_posts(result)
-            # TODO more efficient
-            for post in posts:
-                author_name = post["author"]
-                post["author"] = {}
-                post["author"]["profile_pic"] = "default_profile_pic.jpg"
-                profile = self.db.profiles.find_one({"user": author_name})
-                if profile:
-                    if "profile_pic" in profile:
-                        post["author"]["profile_pic"] = profile["profile_pic"]
-                post["author"]["username"] = author_name
-                if "comments" in post and post['comments'] is not None: #PLACEHOLDER FOR HANDLING COMMENTS WITH NULL VALUE:
-                    for comment in post["comments"]:
-                        comment_author_name = comment["author"]
-                        comment["author"] = {}
-                        comment["author"]["profile_pic"] = "default_profile_pic.jpg"
-                        comment_author_profile = self.db.profiles.find_one({"user": comment_author_name})
-                        if comment_author_profile:
-                            if "profile_pic" in comment_author_profile:
-                                comment["author"]["profile_pic"] = comment_author_profile["profile_pic"]
-                        comment["author"]["username"] = comment_author_name
+        posts = self.json_serialize_posts(result)
+        # TODO more efficient
+        for post in posts:
+            author_name = post["author"]
+            post["author"] = {}
+            post["author"]["profile_pic"] = "default_profile_pic.jpg"
+            profile = self.db.profiles.find_one({"user": author_name})
+            if profile:
+                if "profile_pic" in profile:
+                    post["author"]["profile_pic"] = profile["profile_pic"]
+            post["author"]["username"] = author_name
+            if "comments" in post and post['comments'] is not None: #PLACEHOLDER FOR HANDLING COMMENTS WITH NULL VALUE:
+                for comment in post["comments"]:
+                    comment_author_name = comment["author"]
+                    comment["author"] = {}
+                    comment["author"]["profile_pic"] = "default_profile_pic.jpg"
+                    comment_author_profile = self.db.profiles.find_one({"user": comment_author_name})
+                    if comment_author_profile:
+                        if "profile_pic" in comment_author_profile:
+                            comment["author"]["profile_pic"] = comment_author_profile["profile_pic"]
+                    comment["author"]["username"] = comment_author_name
 
-            self.set_status(200)
-            self.write({"posts": posts})
-
-        else:
-            self.set_status(401)
-            self.write({"status": 401,
-                        "reason": "no_logged_in_user"})
+        self.set_status(200)
+        self.write({"posts": posts})
 
 
 class PersonalTimelineHandler(BaseHandler):
@@ -213,6 +204,7 @@ class PersonalTimelineHandler(BaseHandler):
     i.e. your posts, posts of users you follow, posts in spaces you are in
     """
 
+    @auth_needed
     def get(self):
         """
         GET /timeline/you
@@ -228,69 +220,63 @@ class PersonalTimelineHandler(BaseHandler):
                  "reason": "no_logged_in_user"}
         """
 
-        if self.current_user:
-            time_from = self.get_argument("from", (datetime.utcnow() - timedelta(days=1)).isoformat())  # default value is 24h ago
-            time_to = self.get_argument("to", datetime.utcnow().isoformat())  # default value is now
+        time_from = self.get_argument("from", (datetime.utcnow() - timedelta(days=1)).isoformat())  # default value is 24h ago
+        time_to = self.get_argument("to", datetime.utcnow().isoformat())  # default value is now
 
-            # parse time strings into datetime objects (dateutil is able to guess format)
-            # however safe way is to use ISO 8601 format
-            time_from = dateutil.parser.parse(time_from)
-            time_to = dateutil.parser.parse(time_to)
+        # parse time strings into datetime objects (dateutil is able to guess format)
+        # however safe way is to use ISO 8601 format
+        time_from = dateutil.parser.parse(time_from)
+        time_to = dateutil.parser.parse(time_to)
 
-            spaces_cursor = self.db.spaces.find(
-                filter={"members": self.current_user.username}
-            )
-            spaces = []
-            for space in spaces_cursor:
-                spaces.append(space["name"])
+        spaces_cursor = self.db.spaces.find(
+            filter={"members": self.current_user.username}
+        )
+        spaces = []
+        for space in spaces_cursor:
+            spaces.append(space["name"])
 
-            follows_cursor = self.db.follows.find(
-                filter={"user": self.current_user.username},
-                projection={"_id": False}
-            )
-            follows = []
-            for user in follows_cursor:
-                follows = user["follows"]
-            follows.append(self.current_user.username)  # append yourself for easier query of posts
+        follows_cursor = self.db.follows.find(
+            filter={"user": self.current_user.username},
+            projection={"_id": False}
+        )
+        follows = []
+        for user in follows_cursor:
+            follows = user["follows"]
+        follows.append(self.current_user.username)  # append yourself for easier query of posts
 
-            result = self.db.posts.find(
-                filter={"creation_date": {"$gte": time_from, "$lte": time_to}}
-            )
+        result = self.db.posts.find(
+            filter={"creation_date": {"$gte": time_from, "$lte": time_to}}
+        )
 
-            posts_to_keep = []
-            for post in result:
-                if ("author" in post and post["author"] in follows) or ("space" in post and post["space"] in spaces):
-                    posts_to_keep.append(post)
+        posts_to_keep = []
+        for post in result:
+            if ("author" in post and post["author"] in follows) or ("space" in post and post["space"] in spaces):
+                posts_to_keep.append(post)
 
-            posts = self.json_serialize_posts(posts_to_keep)
-            # TODO more efficient
-            for post in posts:
-                author_name = post["author"]
-                post["author"] = {}
-                post["author"]["profile_pic"] = "default_profile_pic.jpg"
-                profile = self.db.profiles.find_one({"user": author_name})
-                if profile:
-                    if "profile_pic" in profile:
-                        post["author"]["profile_pic"] = profile["profile_pic"]
-                post["author"]["username"] = author_name
-                if "comments" in post and post['comments'] is not None: #PLACEHOLDER FOR HANDLING COMMENTS WITH NULL VALUE:
-                    for comment in post["comments"]:
-                        comment_author_name = comment["author"]
-                        comment["author"] = {}
-                        comment["author"]["profile_pic"] = "default_profile_pic.jpg"
-                        comment_author_profile = self.db.profiles.find_one({"user": comment_author_name})
-                        if comment_author_profile:
-                            if "profile_pic" in comment_author_profile:
-                                comment["author"]["profile_pic"] = comment_author_profile["profile_pic"]
-                        comment["author"]["username"] = comment_author_name
+        posts = self.json_serialize_posts(posts_to_keep)
+        # TODO more efficient
+        for post in posts:
+            author_name = post["author"]
+            post["author"] = {}
+            post["author"]["profile_pic"] = "default_profile_pic.jpg"
+            profile = self.db.profiles.find_one({"user": author_name})
+            if profile:
+                if "profile_pic" in profile:
+                    post["author"]["profile_pic"] = profile["profile_pic"]
+            post["author"]["username"] = author_name
+            if "comments" in post and post['comments'] is not None: #PLACEHOLDER FOR HANDLING COMMENTS WITH NULL VALUE:
+                for comment in post["comments"]:
+                    comment_author_name = comment["author"]
+                    comment["author"] = {}
+                    comment["author"]["profile_pic"] = "default_profile_pic.jpg"
+                    comment_author_profile = self.db.profiles.find_one({"user": comment_author_name})
+                    if comment_author_profile:
+                        if "profile_pic" in comment_author_profile:
+                            comment["author"]["profile_pic"] = comment_author_profile["profile_pic"]
+                    comment["author"]["username"] = comment_author_name
 
-            self.set_status(200)
-            self.write({"posts": posts})
-
-        else:
-            self.set_status(401)
-            self.write({"status": 401,
-                        "reason": "no_logged_in_user"})
+        self.set_status(200)
+        self.write({"posts": posts})
 
 
 class NewPostsSinceTimestampHandler(BaseHandler):
@@ -298,6 +284,7 @@ class NewPostsSinceTimestampHandler(BaseHandler):
     check for new posts
     """
 
+    @auth_needed
     def get(self):
         """
         GET /updates

@@ -1,17 +1,23 @@
-from handlers.base_handler import BaseHandler
+from handlers.base_handler import BaseHandler, auth_needed
 import util
 
 
 class PermissionHandler(BaseHandler):
 
+    @auth_needed
     async def get(self):
-        if self.current_user:
-            role = await util.request_role(self.current_user.username)
-            self.set_status(200)
-            self.write({"status": 200,
-                        "role": role})
+        role = await util.request_role(self.current_user.username)
+        self.set_status(200)
+        self.write({"status": 200,
+                    "role": role})
 
-        else:
-            self.set_status(401)
-            self.write({"status": 401,
-                        "reason": "no_logged_in_user"})
+
+class GlobalACLHandler(BaseHandler):
+
+    @auth_needed
+    def get(self, slug):
+        pass
+
+    @auth_needed
+    async def post(self, slug):
+        pass
