@@ -14,8 +14,8 @@ import tornado.locks
 from tornado.options import define, options
 
 import CONSTANTS
-from handlers.acl import PermissionHandler
 from handlers.follow import FollowHandler
+from handlers.permissions import GlobalACLHandler, PermissionHandler, RoleHandler
 from handlers.post import *
 from handlers.render import *
 from handlers.space import SpaceHandler
@@ -69,6 +69,8 @@ def make_app(cookie_secret):
         (r"/wiki_pages", WikiPageNamesHandler),
         (r"/wiki_page", WikiPageHandler),
         (r"/permissions", PermissionHandler),
+        (r"/role", RoleHandler),
+        (r"/global_acl", GlobalACLHandler),
         (r"/routing", RoutingHandler),
         (r"/template", TemplateHandler),
         (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),

@@ -9,7 +9,7 @@ import CONSTANTS
 the_acl = None
 
 
-def acl() -> ACL:
+def get_acl() -> ACL:
     """
     access function for the ACL class. since it is a singleton, only use this function. Never create an instance of ACL() yourself!
     """
@@ -36,6 +36,9 @@ class _GlobalACL:
         self.client = mongo_client
         self.db = self.client['lionet']  # TODO make this generic via config
         self._EXISTING_KEYS = ["role", "create_space"]
+
+    def get_existing_keys(self):
+        return self._EXISTING_KEYS
 
     def insert_default(self, role: str) -> None:
         """
@@ -138,6 +141,9 @@ class _SpaceACL:
         self.db = self.client['lionet']  # TODO make this generic via config
         self._EXISTING_KEYS = ["role", "space", "join_space", "read_timeline", "post", "comment", "read_wiki", "write_wiki", "read_files",
                                "write_files"]
+
+    def get_existing_keys(self):
+        return self._EXISTING_KEYS
 
     def insert_default(self, role: str, space: str) -> None:
         """
