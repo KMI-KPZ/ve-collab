@@ -4,19 +4,19 @@ from pymongo import MongoClient
 
 file = "DummyData.xlsx"
 
-post_host = ""
-post_port = 0
-post_user = ""
-post_password = ""
-post_database = ""
-mongo_address = ""
+post_host = "localhost"
+post_port = 5432
+post_user = "postgres"
+post_password = "admin"
+post_database = "sse"
+mongo_address = "localhost"
 
 """
 Insert users by selecting number of rows and corresponding columns for each attribute of the type
 Insert users from insert_users_upperRow to insert_users_lowerRow from the worksheet
 with attributes between column 1 and 4 (e.g. username, email, role, hashed_password)
 """
-insert_users_upperRow = 2
+insert_users_upperRow = 3
 insert_users_lowerRow = 12
 insert_users_columnLeft = 1
 insert_users_columnRight = 4
@@ -93,7 +93,7 @@ def insert_follows():
     sheet = workbook['follows']
 
     client = MongoClient(mongo_address)
-    db = client['social_serv']
+    db = client['lionet']
 
 
     for value in sheet.iter_rows(min_row=insert_follows_upperRow, max_row=insert_follows_lowerRow, min_col=insert_follows_columnLeft, max_col=insert_follows_columnRight, values_only=True):
@@ -114,7 +114,7 @@ def insert_profiles():
     sheet = workbook['profiles']
 
     client = MongoClient(mongo_address)
-    db = client['social_serv']
+    db = client['lionet']
 
 
     for value in sheet.iter_rows(min_row=insert_profiles_upperRow, max_row=insert_profiles_lowerRow, min_col=insert_profiles_columnLeft, max_col=insert_profiles_columnRight, values_only=True):
@@ -145,7 +145,7 @@ def insert_spaces():
     sheet = workbook['spaces']
 
     client = MongoClient(mongo_address)
-    db = client['social_serv']
+    db = client['lionet']
 
     for value in sheet.iter_rows(min_row=insert_spaces_upperRow, max_row=insert_spaces_lowerRow, min_col=insert_spaces_columnLeft, max_col=insert_spaces_columnRight, values_only=True):
         print(value)
@@ -166,7 +166,7 @@ def insert_posts():
     sheet = workbook['posts']
 
     client = MongoClient(mongo_address)
-    db = client['social_serv']
+    db = client['lionet']
 
 
     for value in sheet.iter_rows(min_row=insert_posts_upperRow, max_row=insert_posts_lowerRow, min_col=insert_posts_columnLeft, max_col=insert_posts_columnRight, values_only=True):
@@ -199,7 +199,7 @@ Deletes all posts by the corresponding author written by users from the workshee
 """
 def delete_all_corresponding_posts():
     client = MongoClient(mongo_address)
-    db = client['social_serv']
+    db = client['lionet']
 
     workbook = load_workbook(filename=file)
     sheet = workbook['users']
@@ -227,10 +227,11 @@ def main():
     print("-----------------------------------------------------")
     todo = input("What do you want to do?")
     """
-    #insert_profiles()
-    #insert_follows()
-    #insert_profiles()
-    #insert_spaces()
-    #insert_posts()
+    #insert_users()
+    insert_follows()
+    insert_profiles()
+    insert_spaces()
     #delete_all_corresponding_posts()
+    insert_posts()
     #insert_posts()
+main()
