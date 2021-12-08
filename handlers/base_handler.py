@@ -122,3 +122,15 @@ class BaseHandler(tornado.web.RequestHandler):
             post['_id'] = str(post['_id'])
             posts.append(post)
         return posts
+
+    def get_current_user_role(self):
+        if self.current_user:
+            current_user_role = self.db.roles.find_one(
+                {"username": self.current_user.username}
+            )
+            if current_user_role:
+                return current_user_role["role"]
+            else:
+                return None
+        else:
+            return None

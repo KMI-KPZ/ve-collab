@@ -1,3 +1,4 @@
+from acl import get_acl
 from handlers.base_handler import BaseHandler, auth_needed
 
 
@@ -50,6 +51,10 @@ class SpaceHandler(BaseHandler):
 
                 401 Unauthorized
                 {"status": 401,
+                 "reason": "insufficient_permission"}
+
+                401 Unauthorized
+                {"status": 401,
                  "reason": "no_logged_in_user"}
 
         POST /spaceadministration/join
@@ -70,6 +75,14 @@ class SpaceHandler(BaseHandler):
         space_name = self.get_argument("name")
 
         if slug == "create":  # create new space
+            # check if the user has permission
+            acl = get_acl().global_acl
+            if not acl.ask(self.get_current_user_role(), "create_space"):
+                self.set_status(401)
+                self.write({"status": 401,
+                            "reason": "insufficient_permission"})
+                return
+
             members = [self.current_user.username]
 
             # only create space if no other space with the same name exists

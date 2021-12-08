@@ -1,0 +1,48 @@
+{
+  "roles": [
+    {
+      "username": "admin",
+      "role": "admin"
+    },
+    {
+      "username": "zunairah.philip",
+      "role": "guest"
+    },
+    {
+      "username": "guto.gould",
+      "role": "guest"
+    },
+    {
+      "username": "kasim.roberts",
+      "role": "guest"
+    },
+    {
+      "username": "arun.tanner",
+      "role": "guest"
+    },
+    {
+      "username": "madiha.proctor",
+      "role": "guest"
+    },
+    {
+      "username": "soraya.oneal",
+      "role": "member"
+    },
+    {
+      "username": "hattie.blair",
+      "role": "member"
+    },
+    {
+      "username": "jacques.seymour",
+      "role": "member"
+    },
+    {
+      "username": "shabaz.russell",
+      "role": "member"
+    },
+    {
+      "username": "cherise.mcdowell",
+      "role": "member"
+    }
+  ]
+}

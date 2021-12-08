@@ -69,6 +69,10 @@ class RoleHandler(BaseHandler):
                 401 Unauthorized
                 {"status": 401,
                  "reason": "no_logged_in_user"}
+
+                 401 Unauthorized
+                {"status": 401,
+                 "reason": "user_not_admin"}
         """
 
         if await util.is_admin(self.current_user.username):
@@ -97,41 +101,96 @@ class RoleHandler(BaseHandler):
             self.set_status(200)
             self.write({"status": 200,
                         "success": True})
+        else:
+            self.set_status(401)
+            self.write({"status": 401,
+                        "reason": "user_not_admin"})
 
 
 class GlobalACLHandler(BaseHandler):
 
     @auth_needed
-    def get(self):
-        acl = get_acl().global_acl
-        # since acl is role-based, we need to query for the current user's role
-        current_user_role = self.db.roles.find_one(
-            {"username": self.current_user.username},
-            {"_id": False}
-        )
-        if current_user_role:
-            acl_entry = acl.get(current_user_role["role"])
+    async def get(self, slug):
+        """
+        GET /global_acl/get
+            get the current user's acl entry
 
-            # inconsistency problem: the role exists, but no acl entry. construct an acl entry that has all permissions set to false
-            if not acl_entry:
-                acl_entry = {}
-                for acl_key in acl.get_existing_keys():
-                    if acl_key != "role":
-                        acl_entry[acl_key] = False
-                acl_entry["role"] = current_user_role["role"]
+            returns:
+                200 OK,
+                {"status": 200,
+                 "acl_entry": <entry_dict>}
 
-            self.set_status(200)
-            self.write({"status": 200,
-                        "acl_entry": acl_entry})
+                409 Conflict
+                {"status": 409,
+                 "reason": "user_has_no_role"}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
+
+        or
+
+        GET /global_acl/get_all
+            get the full set of rules from the acl (requires admin)
+
+            returns:
+                200 OK,
+                {"status": 200,
+                 "acl_entries": [<entry_dicts>]}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
+
+                 401 Unauthorized
+                {"status": 401,
+                 "reason": "user_not_admin"}
+
+        """
+
+        if slug == "get":
+            acl = get_acl().global_acl
+            # since acl is role-based, we need to query for the current user's role
+            current_user_role = self.get_current_user_role()
+            if current_user_role:
+                acl_entry = acl.get(current_user_role["role"])
+
+                # inconsistency problem: the role exists, but no acl entry. construct an acl entry that has all permissions set to false
+                if not acl_entry:
+                    acl_entry = {}
+                    for acl_key in acl.get_existing_keys():
+                        if acl_key != "role":
+                            acl_entry[acl_key] = False
+                    acl_entry["role"] = current_user_role["role"]
+
+                self.set_status(200)
+                self.write({"status": 200,
+                            "acl_entry": acl_entry})
+            else:
+                self.set_status(409)
+                self.write({"status": 409,
+                            "reason": "user_has_no_role"})
+
+        elif slug == "get_all":
+            if await util.is_admin(self.current_user.username):
+                acl = get_acl().global_acl
+                entries = acl.get_all()
+
+                self.set_status(200)
+                self.write({"status": 200,
+                            "acl_entries": entries})
+            else:
+                self.set_status(401)
+                self.write({"status": 401,
+                            "reason": "user_not_admin"})
+
         else:
-            self.set_status(409)
-            self.write({"status": 409,
-                        "reason": "user_has_no_role"})
+            self.set_status(404)
 
     @auth_needed
-    async def post(self):
+    async def post(self, slug):
         """
-        POST /global_acl
+        POST /global_acl/update
             update or set the value(s) of an acl entry.
             an acl entry is of the following structure in the http body:
 
@@ -141,31 +200,34 @@ class GlobalACLHandler(BaseHandler):
             }
 
         """
-        if await util.is_admin(self.current_user.username):
-            acl = get_acl().global_acl
-            http_body = json.loads(self.request.body)
+        if slug == "update":
+            if await util.is_admin(self.current_user.username):
+                acl = get_acl().global_acl
+                http_body = json.loads(self.request.body)
 
-            # check if the http body only contains valid keys (i.e. keys that exist in the acl)
-            if any(key not in acl.get_existing_keys() for key in http_body):
-                self.set_status(400)
-                self.write({"status": 400,
-                            "reason": "unrecognizable_key_in_http_body"})
-                return
+                # check if the http body only contains valid keys (i.e. keys that exist in the acl)
+                if any(key not in acl.get_existing_keys() for key in http_body):
+                    self.set_status(400)
+                    self.write({"status": 400,
+                                "reason": "unrecognizable_key_in_http_body"})
+                    return
 
-            # check if http body only contains boolean values, except for the role attribute
-            for key in http_body:
-                if key != "role":
-                    if not isinstance(http_body[key], bool):
-                        self.set_status(400)
-                        self.write({"status": 400,
-                                    "reason": "value_not_bool_in_http_body"})
-                        return
+                # check if http body only contains boolean values, except for the role attribute
+                for key in http_body:
+                    if key != "role":
+                        if not isinstance(http_body[key], bool):
+                            self.set_status(400)
+                            self.write({"status": 400,
+                                        "reason": "value_not_bool_in_http_body"})
+                            return
 
-            acl.set_all(http_body)
+                acl.set_all(http_body)
 
-            self.set_status(200)
-            self.write({"status": 200,
-                        "success": True})
+                self.set_status(200)
+                self.write({"status": 200,
+                            "success": True})
+        else:
+            self.set_status(404)
 
 
 class SpaceACLHandler(BaseHandler):

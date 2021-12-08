@@ -1,8 +1,12 @@
+import json
+
 from openpyxl import load_workbook
 import psycopg2
 from pymongo import MongoClient
 
 file = "DummyData.xlsx"
+role_file = "role_templates.json"
+acl_file = "acl_templates.json"
 
 post_host = ""
 post_port = 0
@@ -93,7 +97,7 @@ def insert_follows():
     sheet = workbook['follows']
 
     client = MongoClient(mongo_address)
-    db = client['social_serv']
+    db = client['lionet']
 
 
     for value in sheet.iter_rows(min_row=insert_follows_upperRow, max_row=insert_follows_lowerRow, min_col=insert_follows_columnLeft, max_col=insert_follows_columnRight, values_only=True):
@@ -114,7 +118,7 @@ def insert_profiles():
     sheet = workbook['profiles']
 
     client = MongoClient(mongo_address)
-    db = client['social_serv']
+    db = client['lionet']
 
 
     for value in sheet.iter_rows(min_row=insert_profiles_upperRow, max_row=insert_profiles_lowerRow, min_col=insert_profiles_columnLeft, max_col=insert_profiles_columnRight, values_only=True):
@@ -145,7 +149,7 @@ def insert_spaces():
     sheet = workbook['spaces']
 
     client = MongoClient(mongo_address)
-    db = client['social_serv']
+    db = client['lionet']
 
     for value in sheet.iter_rows(min_row=insert_spaces_upperRow, max_row=insert_spaces_lowerRow, min_col=insert_spaces_columnLeft, max_col=insert_spaces_columnRight, values_only=True):
         print(value)
@@ -166,7 +170,7 @@ def insert_posts():
     sheet = workbook['posts']
 
     client = MongoClient(mongo_address)
-    db = client['social_serv']
+    db = client['lionet']
 
 
     for value in sheet.iter_rows(min_row=insert_posts_upperRow, max_row=insert_posts_lowerRow, min_col=insert_posts_columnLeft, max_col=insert_posts_columnRight, values_only=True):
@@ -193,13 +197,40 @@ def insert_posts():
             print(PyMongoError)
         print(entry)
 
+"""
+insert roles of the users
+"""
+def insert_roles():
+    client = MongoClient(mongo_address)
+    db = client['lionet']
+
+    with open(role_file, "r") as fp:
+        roles = json.load(fp)
+        for role in roles["roles"]:
+            db.roles.insert_one(role)
+
+
+"""
+insert ACL entries
+"""
+def insert_acl():
+    client = MongoClient(mongo_address)
+    db = client['lionet']
+
+    with open(acl_file, "r") as fp:
+        acl = json.load(fp)
+        for entry in acl["global_acl"]:
+            db.global_acl.insert_one(entry)
+        for entry in acl["space_acl"]:
+            db.space_acl.insert_one(entry)
+
 
 """
 Deletes all posts by the corresponding author written by users from the worksheet
 """
 def delete_all_corresponding_posts():
     client = MongoClient(mongo_address)
-    db = client['social_serv']
+    db = client['lionet']
 
     workbook = load_workbook(filename=file)
     sheet = workbook['users']
@@ -234,3 +265,5 @@ def main():
     #insert_posts()
     #delete_all_corresponding_posts()
     #insert_posts()
+    #insert_roles()
+    #insert_acl()

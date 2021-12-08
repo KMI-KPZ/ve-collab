@@ -70,7 +70,7 @@ def make_app(cookie_secret):
         (r"/wiki_page", WikiPageHandler),
         (r"/permissions", PermissionHandler),
         (r"/role", RoleHandler),
-        (r"/global_acl", GlobalACLHandler),
+        (r"/global_acl/([a-zA-Z\-0-9\.:,_]+)", GlobalACLHandler),
         (r"/routing", RoutingHandler),
         (r"/template", TemplateHandler),
         (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),

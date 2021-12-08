@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 
 from pymongo import MongoClient
 
@@ -83,6 +83,19 @@ class _GlobalACL:
         if record:
             del record["_id"]  # _id useless information here, can leave it out
         return record
+
+    def get_all(self) -> Optional[List[Dict]]:
+        """
+        request all entries from the acl
+        :return: list of dict's containing all the entries, or None if no acl entry exists.
+        """
+        result_list = []
+        records = self.db.global_acl.find()
+        if records:
+            for record in records:
+                del record["_id"]
+                result_list.append(record)
+        return result_list
 
     def set(self, role: str, permission_key: str, value: bool) -> None:
         """
@@ -210,6 +223,19 @@ class _SpaceACL:
             del record["_id"]  # _id useless information here, can leave it out
         return record
 
+    def get_all(self, space: str) -> Optional[List[Dict]]:
+        """
+        request all entries of the give space from the acl
+        :return: list of dict's containing all the entries, or None if no acl entry exists.
+        """
+        result_list = []
+        records = self.db.space_acl.find({"space": space})
+        if records:
+            for record in records:
+                del record["_id"]
+                result_list.append(record)
+        return result_list
+
     def set(self, role: str, space: str, permission_key: str, value: bool) -> None:
         """
         set a value for a specific permission for a role
@@ -270,7 +296,7 @@ class _SpaceACL:
 
 
 if __name__ == "__main__":
-    acl = acl()
+    acl = get_acl()
     #acl.global_acl.insert_default("test")
     #print(acl.global_acl.ask("test", "create_space"))
     #print(acl.global_acl.get("test"))
