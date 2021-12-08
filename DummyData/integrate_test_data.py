@@ -8,19 +8,19 @@ file = "DummyData.xlsx"
 role_file = "role_templates.json"
 acl_file = "acl_templates.json"
 
-post_host = ""
-post_port = 0
-post_user = ""
-post_password = ""
-post_database = ""
-mongo_address = ""
+post_host = "localhost"
+post_port = 5432
+post_user = "postgres"
+post_password = "admin"
+post_database = "sse"
+mongo_address = "localhost"
 
 """
 Insert users by selecting number of rows and corresponding columns for each attribute of the type
 Insert users from insert_users_upperRow to insert_users_lowerRow from the worksheet
 with attributes between column 1 and 4 (e.g. username, email, role, hashed_password)
 """
-insert_users_upperRow = 2
+insert_users_upperRow = 3
 insert_users_lowerRow = 12
 insert_users_columnLeft = 1
 insert_users_columnRight = 4
@@ -258,12 +258,16 @@ def main():
     print("-----------------------------------------------------")
     todo = input("What do you want to do?")
     """
-    #insert_profiles()
-    #insert_follows()
-    #insert_profiles()
-    #insert_spaces()
-    #insert_posts()
+    #insert_users()
+    insert_follows()
+    insert_profiles()
+    insert_spaces()
     #delete_all_corresponding_posts()
+    insert_posts()
     #insert_posts()
     #insert_roles()
     #insert_acl()
+
+
+if __name__ == "__main__":
+    main()

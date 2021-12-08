@@ -257,6 +257,15 @@ $body.delegate('#postComment', 'click', function () {
     var $id = $inputBox.closest('.panel').attr('id');
     if($inputText != '') postComment($inputText, $id);
 });
+$body.delegate('#commentInput', 'keydown', function (e) {
+  if(event.key == "Enter"){
+    var $inputBox = $(this).closest('#commentBox');
+    var $inputText = $inputBox.find('#commentInput').val();
+    $inputBox.find('#commentInput').val('');
+    var $id = $inputBox.closest('.panel').attr('id');
+    if($inputText != '') postComment($inputText, $id);
+  }
+})
 
 /**
  * on create Space button - click - get name and call createSpace if not empty
@@ -1283,3 +1292,16 @@ function getRouting(){
     }
   })
 }
+
+/**
+$(document).keyup(function(event) {
+    if ($("[id=commentInput]").is(":focus") && event.key == "Enter") {
+
+          var $inputBox = $(this).closest('#commentBox');
+          var $inputText = $inputBox.find('#commentInput').val();
+          $inputBox.find('#commentInput').val('');
+          var $id = $inputBox.closest('.panel').attr('id');
+          if($inputText != '') postComment($inputText, $id);
+
+    }
+});*/
