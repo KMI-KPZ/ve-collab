@@ -216,7 +216,17 @@ function getWikiPage(page){
     error: function(xhr, status, error){
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
-      } else {
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
         window.createNotification({
             theme: 'error',
             showDuration: 5000
@@ -619,7 +629,17 @@ function getTimeline(from, to) {
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
-      } else {
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
         window.createNotification({
             theme: 'error',
             showDuration: 5000
@@ -650,7 +670,17 @@ function getPersonalTimeline(from, to) {
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
-      } else {
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
         window.createNotification({
             theme: 'error',
             showDuration: 5000
@@ -684,7 +714,17 @@ function getTimelineSpace(spacename, from, to) {
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
-      } else {
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
         window.createNotification({
             theme: 'error',
             showDuration: 5000
@@ -716,7 +756,17 @@ function getTimelineUser(username, from, to) {
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
-      } else {
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
         window.createNotification({
             theme: 'error',
             showDuration: 5000
@@ -780,7 +830,17 @@ function post(text, tags, space) {
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
-      } else {
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
         window.createNotification({
             theme: 'error',
             showDuration: 5000
@@ -817,7 +877,17 @@ function deletePost(id) {
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
-      } else {
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
         window.createNotification({
             theme: 'error',
             showDuration: 5000
@@ -855,7 +925,17 @@ function postComment(text, id) {
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
-      } else {
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
         window.createNotification({
             theme: 'error',
             showDuration: 5000
@@ -892,7 +972,17 @@ function deleteComment(id) {
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
-      } else {
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
         window.createNotification({
             theme: 'error',
             showDuration: 5000
@@ -928,7 +1018,17 @@ function postLike(id) {
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
-      } else {
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
         window.createNotification({
             theme: 'error',
             showDuration: 5000
@@ -964,7 +1064,17 @@ function deleteLike(id) {
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
-      } else {
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
         window.createNotification({
             theme: 'error',
             showDuration: 5000
@@ -1011,7 +1121,17 @@ function getSpaces() {
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
-      } else {
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
         window.createNotification({
             theme: 'error',
             showDuration: 5000
@@ -1042,7 +1162,17 @@ function createSpace(name) {
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
-      } else {
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
         window.createNotification({
             theme: 'error',
             showDuration: 5000
@@ -1071,7 +1201,17 @@ function joinSpace(name) {
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
-      } else {
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
         window.createNotification({
             theme: 'error',
             showDuration: 5000
@@ -1112,7 +1252,17 @@ function getUserRole(){
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
-      } else {
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
         window.createNotification({
             theme: 'error',
             showDuration: 5000
@@ -1142,7 +1292,17 @@ function getCurrentUserInfo() {
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
-      } else {
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
         window.createNotification({
             theme: 'error',
             showDuration: 5000
@@ -1199,7 +1359,17 @@ function getAllUsers(){
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
-      } else {
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
         window.createNotification({
             theme: 'error',
             showDuration: 5000
@@ -1256,7 +1426,17 @@ function repost(id){
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
-      } else {
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
         window.createNotification({
             theme: 'error',
             showDuration: 5000

@@ -140,7 +140,17 @@ function postProfileInformation(photo, bio, institution, projects, first_name, l
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
-      } else {
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
         alert('error posting user information');
         console.log(error);
         console.log(status);

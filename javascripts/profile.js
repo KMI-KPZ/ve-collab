@@ -47,7 +47,17 @@ function getUserInfo(name){
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
-      } else {
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
         alert('error get user info');
         console.log(error);
         console.log(status);
@@ -75,7 +85,17 @@ function getFollows(name) {
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
-      } else {
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
         alert('error get user follows');
         console.log(error);
         console.log(status);
@@ -103,7 +123,17 @@ function postFollow(name) {
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
-      } else {
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
         alert('error post follow');
         console.log(error);
         console.log(status);
@@ -148,7 +178,17 @@ function deleteFollow(name) {
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
-      } else {
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
         alert('error post follow');
         console.log(error);
         console.log(status);

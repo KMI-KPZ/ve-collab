@@ -6,6 +6,7 @@ from bson.objectid import ObjectId
 from datetime import datetime
 import tornado.escape
 
+from acl import get_acl
 from handlers.base_handler import BaseHandler, auth_needed
 
 
@@ -49,6 +50,14 @@ class PostHandler(BaseHandler):
 
         # check if space exists, if not, end with 400 Bad Request
         if space is not None:
+            # user wants to post into space, check if he has permission to do so
+            acl = get_acl().space_acl
+            if not acl.ask(self.get_current_user_role(), space, "post"):
+                self.set_status(403)
+                self.write({"status": 403,
+                            "reason": "insufficient_permission"})
+                return
+
             existing_spaces = []
             for existing_space in self.db.spaces.find(projection={"name": True, "_id": False}):
                 existing_spaces.append(existing_space["name"])
@@ -171,6 +180,17 @@ class CommentHandler(BaseHandler):
         creation_date = datetime.utcnow()
         text = http_body['text']
         post_ref = ObjectId(http_body['post_id'])
+
+        post = self.db.posts.find_one({"_id": post_ref})
+        if post:
+            if post["space"]:
+                # comment belong to a post in a space, check if user has permission to comment there
+                acl = get_acl().space_acl
+                if not acl.ask(self.get_current_user_role(), post["space"], "comment"):
+                    self.set_status(403)
+                    self.write({"status": 403,
+                                "reason": "insufficient_permission"})
+                    return
 
         self.db.posts.update_one(
             {"_id": post_ref},  # filter

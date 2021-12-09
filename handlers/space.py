@@ -1,3 +1,5 @@
+from tornado.options import options
+
 from acl import get_acl
 from handlers.base_handler import BaseHandler, auth_needed
 
@@ -78,8 +80,8 @@ class SpaceHandler(BaseHandler):
             # check if the user has permission
             acl = get_acl().global_acl
             if not acl.ask(self.get_current_user_role(), "create_space"):
-                self.set_status(401)
-                self.write({"status": 401,
+                self.set_status(403)
+                self.write({"status": 403,
                             "reason": "insufficient_permission"})
                 return
 
@@ -91,11 +93,21 @@ class SpaceHandler(BaseHandler):
                 existing_spaces.append(existing_space["name"])
             if space_name not in existing_spaces:
                 space = {"name": space_name,
-                         "members": members}
+                         "members": members,
+                         "admins": [self.current_user.username]}
                 self.db.spaces.insert_one(space)
 
+                # create default acl entry for all different roles
+                acl = get_acl().space_acl
+                acl.insert_admin(space_name)
+                roles = self.db.roles.distinct("role")
+                for role in roles:
+                    if role != "admin":
+                        acl.insert_default(role, space_name)
+
                 # automatically create a new start page in the wiki for the space
-                self.wiki.create_page(space_name + ":start", "auto-generated landing page")
+                if not options.no_wiki:
+                    self.wiki.create_page(space_name + ":start", "auto-generated landing page")
 
                 self.set_status(200)
                 self.write({'status': 200,
@@ -106,6 +118,15 @@ class SpaceHandler(BaseHandler):
                             "reason": "space_name_already_exists"})
 
         elif slug == "join":  # add current user to space members
+            # ask for permission if the role is allowed to join
+            # TODO implement invitation system for the cases where role has no join rights
+            acl = get_acl().space_acl
+            if not acl.ask(self.get_current_user_role(), space_name, "join_space"):
+                self.set_status(403)
+                self.write({"status": 403,
+                            "reason": "insufficient_permission"})
+                return
+
             self.db.spaces.update_one(
                 {"name": space_name},  # filter
                 {

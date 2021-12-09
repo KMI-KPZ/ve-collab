@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import dateutil.parser
 
+from acl import get_acl
 from handlers.base_handler import BaseHandler, auth_needed
 import util
 
@@ -102,6 +103,14 @@ class SpaceTimelineHandler(BaseHandler):
         )
         for space in space_data:
             if self.current_user.username in space["members"]:
+                # ask for permission to read timeline
+                acl = get_acl().space_acl
+                if not acl.ask(self.get_current_user_role(), space_name, "read_timeline"):
+                    self.set_status(403)
+                    self.write({"status": 403,
+                                "reason": "insufficient_permission"})
+                    return
+
                 result = self.db.posts.find(
                                 filter={"creation_date": {"$gte": time_from, "$lte": time_to},
                                         "space":         {"$eq": space_name}})
@@ -233,7 +242,10 @@ class PersonalTimelineHandler(BaseHandler):
         )
         spaces = []
         for space in spaces_cursor:
-            spaces.append(space["name"])
+            # only allow posts from spaces that you are in and have permission to read the timeline
+            acl = get_acl().space_acl
+            if acl.ask(self.get_current_user_role(), space["name"], "read_timeline"):
+                spaces.append(space["name"])
 
         follows_cursor = self.db.follows.find(
             filter={"user": self.current_user.username},

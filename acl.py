@@ -192,6 +192,26 @@ class _SpaceACL:
             upsert=True
         )
 
+    def insert_admin(self, space: str) -> None:
+        admin_rule = {
+            "role": "admin",
+            "space": space,
+            "join_space": True,
+            "read_timeline": True,
+            "post": True,
+            "comment": True,
+            "read_wiki": True,
+            "write_wiki": True,
+            "read_files": True,
+            "write_files": True
+        }
+
+        self.db.space_acl.update_one(
+            {"role": "admin", "space": space},
+            {"$set": admin_rule},
+            upsert=True
+        )
+
     def ask(self, role: str, space: str, permission_key: str) -> bool:
         """
         "ask" the acl for a permission value on a give role

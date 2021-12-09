@@ -93,7 +93,17 @@ function getSpaces() {
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
-      } else {
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
         window.createNotification({
             theme: 'error',
             showDuration: 5000
@@ -120,7 +130,17 @@ function getUserRole(){
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
-      } else {
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
         window.createNotification({
             theme: 'error',
             showDuration: 5000
@@ -150,7 +170,17 @@ function getCurrentUserInfo() {
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
-      } else {
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
         window.createNotification({
             theme: 'error',
             showDuration: 5000
@@ -207,7 +237,17 @@ function getAllUsers(){
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
-      } else {
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
         window.createNotification({
             theme: 'error',
             showDuration: 5000
