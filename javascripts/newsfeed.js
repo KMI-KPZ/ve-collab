@@ -484,8 +484,8 @@ function displayTimeline(timeline) {
       var $likeIcon = $likers.find('#likeIcon');
       var $agoPost = $existingPost.find('#agoPost');
       var $post_content = $existingPost.find('#post_content');
-      console.log($post_content)
-      console.log(post.text)
+      //console.log($post_content)
+      //console.log(post.text)
       $post_content.text(post.text);
       $agoPost.text(calculateAgoTime(post.creation_date));
       $likers.attr("data-original-title",likerHTML);
@@ -493,6 +493,9 @@ function displayTimeline(timeline) {
       if(post.hasOwnProperty('isRepost') && (post.isRepost == true)){
         var $originalAgo = $existingPost.find('#originalAgo');
         $originalAgo.text(calculateAgoTime(post.originalCreationDate));
+        var $existingPost = $('#' + post._id);
+        var $repost_content = $existingPost.find('#repost_content');
+        $repost_content.text(post.repostText);
       }
       //toggle class if liked
      if(liked && $likeIcon.hasClass('text-blue-700')) {
@@ -570,12 +573,12 @@ function displayTimeline(timeline) {
 
     var firstPostDate = $feedContainer.find('.post:first').attr('name');
 
-    //console.log(post)
     if(post['isRepost'] == true){
-
+      console.log("ISREPSOT")
       post["isRepostAuthor"] = isRepostAuthor;
       post["originalAgo"] = calculateAgoTime(post.originalCreationDate);
       post["repostAuthorPicURL"] = baseUrl + '/uploads/' + post.repostAuthorProfilePic;
+
       // check if there is a new post (more present datetime) => prepend to feedContainer
       // else post is older => append to feedContainer
       if(!(firstPostDate === null) && post.creation_date > firstPostDate) {
@@ -1478,6 +1481,52 @@ function repost(id){
       })({
           message: 'You shared into ' + msg
       });
+      initNewsFeed();
+    },
+
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'reposting failed.'
+        });
+      }
+    },
+  });
+}
+
+function updateRepost(id) {
+  dataBody = {
+    '_id': id,
+    'repostText': String($('#update_repost_content').val()),
+  };
+  //dataBody = JSON.stringify(dataBody);
+  console.log(dataBody)
+  $.ajax({
+    type: 'POST',
+    url: '/repost',
+    data: dataBody,
+    success: function (data) {
+      console.log("repost" + id);
+      window.createNotification({
+          theme: 'success',
+          showDuration: 5000
+      })
       initNewsFeed();
     },
 
