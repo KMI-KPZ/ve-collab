@@ -311,16 +311,51 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                     @click.away="isOpen = false"
                     class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none"
                     >
-                    <a class="block w-full" href="">Bearbeiten</a>
                     <a class="block w-full" href="javascript:deletePost('{{!_id}}');">Delete</a>
-                  </div>
+
+                    <div x-data="{'showModal': false}" @keydown.escape="showModal:false" class="inline-block block w-full">
+                      <button id="updatePostBtn" class="text-left w-full" type="button" @click="showModal = true">
+                        <p class="" href="">Bearbeiten</p>
+                      </button>
+
+                      <div class="fixed inset-0 z-30 flex items-center justify-center overflow-auto bg-black bg-opacity-50" x-show="showModal">
+                        <div
+                            class="max-w-3xl w-1/2 px-6 py-4 mx-auto text-left bg-white rounded shadow-lg"
+                            @click.away="showModal = false"
+                            x-transition:enter="motion-safe:ease-out duration-300"
+                            x-transition:enter-start="opacity-0 scale-90"
+                            x-transition:enter-end="opacity-100 scale-100"
+                        >
+                        <div class="flex itemes-center justify-between m-2">
+                          <div>
+                            <b>Bearbeite deinen Post</b><i class="fa fa-envelope p-2"></i>
+                          </div>
+                          <button type="button" class="z-50 cursor-pointer" @click="showModal = false">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                          </button>
+                        </div>
+                        <div id="post-description" class="mt-2">
+                          <textarea class="form-textarea mt-1 block w-full border rounded-md" id="updatePostTextArea" rows="2" placeholder="Poste etwas in deine Timeline?">{{!text}}</textarea>
+                        </div>
+                        <div>
+                          <button type="button" id="update" @click="showModal = false" onclick="javascript:updatePost('{{!_id}}');"
+                                  class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"  data-dismiss="modal">Update
+                          </button>
+                        </div>
+                        </div>
+
+                      </div>
+                    </div>
+                </div>
               </div>
               {{!/isAuthor}}
           </div>
       </div>
       <div class="post-description text-sm">
           <div class="p-4 mb-4 rounded grid grid-cols-8 gap-2">
-              <div class="col-span-8">{{!text}}</div>
+              <p id="post_content" class="col-span-8">{{!text}}</p>
           </div>
 
           {{!#hasMedia}}
@@ -438,7 +473,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
         </div>
         <div class="post-description">
             <div class="p-4 mb-4 rounded grid grid-cols-8 gap-2">
-                <div class="col-span-7">{{!text}}</div>
+                <p id="post_content" class="col-span-7">{{!text}}</p>
 
                 <div class="inline-block">
                   <button type="button" onclick="likeDislike(this,'{{!_id}}');" id="likers"
@@ -820,6 +855,41 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                       class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none"
                       >
                       <a class="block w-full" href="javascript:deletePost('{{!_id}}');">Delete</a>
+                      <div x-data="{'showModal': false}" @keydown.escape="showModal:false" class="inline-block block w-full">
+                        <button id="updatePostBtn" class="text-left w-full" type="button" @click="showModal = true">
+                          <p class="" href="">Bearbeiten</p>
+                        </button>
+
+                        <div class="fixed inset-0 z-30 flex items-center justify-center overflow-auto bg-black bg-opacity-50" x-show="showModal">
+                          <div
+                              class="max-w-3xl w-1/2 px-6 py-4 mx-auto text-left bg-white rounded shadow-lg"
+                              @click.away="showModal = false"
+                              x-transition:enter="motion-safe:ease-out duration-300"
+                              x-transition:enter-start="opacity-0 scale-90"
+                              x-transition:enter-end="opacity-100 scale-100"
+                          >
+                          <div class="flex itemes-center justify-between m-2">
+                            <div>
+                              <b>Bearbeite deinen Post</b><i class="fa fa-envelope p-2"></i>
+                            </div>
+                            <button type="button" class="z-50 cursor-pointer" @click="showModal = false">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                          </div>
+                          <div id="post-description" class="mt-2">
+                            <textarea class="form-textarea mt-1 block w-full border rounded-md" id="updatePostTextArea" rows="2" placeholder="Poste etwas in deine Timeline?">{{!repostText}}</textarea>
+                          </div>
+                          <div>
+                            <button type="button" id="update" @click="showModal = false" onclick="javascript:updatePost('{{!_id}}');"
+                                    class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"  data-dismiss="modal">Update
+                            </button>
+                          </div>
+                          </div>
+
+                        </div>
+                      </div>
                     </div>
                 </div>
                 {{!/isRepostAuthor}}

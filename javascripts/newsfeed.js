@@ -483,6 +483,10 @@ function displayTimeline(timeline) {
       var $likers = $existingPost.find('#likers');
       var $likeIcon = $likers.find('#likeIcon');
       var $agoPost = $existingPost.find('#agoPost');
+      var $post_content = $existingPost.find('#post_content');
+      console.log($post_content)
+      console.log(post.text)
+      $post_content.text(post.text);
       $agoPost.text(calculateAgoTime(post.creation_date));
       $likers.attr("data-original-title",likerHTML);
       $likeCounter.text(countLikes);
@@ -515,6 +519,7 @@ function displayTimeline(timeline) {
       }
       return;
     }
+
     //check if there are files to display
     if(post.hasOwnProperty('files') && post.files !== null && post.files.length > 0  ) {
         var fileImages = [];
@@ -825,6 +830,59 @@ function post(text, tags, space) {
 
       $("#postAlert").html('');
       $("#postAlert").removeClass("alert alert-danger");
+    },
+
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'posting to timeline failed.'
+        });
+      }
+    },
+  });
+}
+
+/**
+* post - post Feed and resets Values for Input
+* calls InitNewsFeed for update
+* @param  {String} id
+ */
+function updatePost(id) {
+  console.log("Hallo")
+  console.log(id)
+  console.log($('#updatePostTextArea').val())
+  var formData = new FormData();
+  formData.append("_id", String(id));
+  formData.append("text", $('#updatePostTextArea').val());
+
+  for (var key of formData.entries()) {
+        console.log(key[0] + ', ' + key[1]);
+    }
+  $.ajax({
+    type: 'POST',
+    url: '/posts',
+    data: formData,
+    //important for upload
+    contentType: false,
+    processData: false,
+    success: function (data) {
+      initNewsFeed();
     },
 
     error: function (xhr, status, error) {
