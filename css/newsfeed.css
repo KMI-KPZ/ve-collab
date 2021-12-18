@@ -410,10 +410,10 @@ body{
  background-color:#f1f1f1;
 }
 
-.dot:after {
-  content: '\2807';
+/*.dot:after {
+  content: '\2026';
   font-size: 25px;
-  }
+  }*/
 .dotComment:after {
     content: '\2807';
     font-size: 15px;

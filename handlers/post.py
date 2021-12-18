@@ -379,57 +379,85 @@ class RepostHandler(BaseHandler):
                  "reason": "no_logged_in_user"}
         """
 
-        http_body = tornado.escape.json_decode(self.request.body)
+        id = None
+        try:
+            id = self.get_body_argument("_id")
+        except:
+            print("Np # IDEA: ")
+        if id is None:
+            http_body = tornado.escape.json_decode(self.request.body)
 
-        if "post_id" not in http_body:
-            self.set_status(400)
-            self.write({"status": 400,
-                        "reason": "missing_key_in_http_body"})
-            self.finish()
-            return
-
-        post_ref = ObjectId(http_body['post_id'])
-        text = http_body['text']
-
-        post = self.db.posts.find_one(
-            {"_id": post_ref}
-        )
-        profile = self.db.profiles.find_one({"user": self.current_user.username})
-        if profile:
-            if "profile_pic" in profile:
-                post["repostAuthorProfilePic"] = profile["profile_pic"]
-        post["isRepost"] = True
-        post["repostAuthor"] = self.current_user.username
-        post["originalCreationDate"] = post['creation_date']
-        post["creation_date"] = datetime.utcnow()
-        post["repostText"] = text
-
-        space = http_body['space']
-
-        # check if space exists, if not, end with 400 Bad Request
-        if space is not None:
-            existing_spaces = []
-            for existing_space in self.db.spaces.find(projection={"name": True, "_id": False}):
-                existing_spaces.append(existing_space["name"])
-            if space not in existing_spaces:
+            if "post_id" not in http_body:
                 self.set_status(400)
                 self.write({"status": 400,
-                            "reason": "space_does_not_exist"})
+                            "reason": "missing_key_in_http_body"})
                 self.finish()
                 return
-        post["space"] = space
 
-        del post["_id"]
-        if "likers" in post:
-            del post["likers"]
-        if "comments" in post:
-            del post["comments"]
-        if "tags" in post:
-            post["tags"] = ""
+            post_ref = ObjectId(http_body['post_id'])
+            text = http_body['text']
 
-        print(post)
-        self.db.posts.insert_one(post)
+            post = self.db.posts.find_one(
+                {"_id": post_ref}
+            )
+            profile = self.db.profiles.find_one({"user": self.current_user.username})
+            if profile:
+                if "profile_pic" in profile:
+                    post["repostAuthorProfilePic"] = profile["profile_pic"]
+            post["isRepost"] = True
+            post["repostAuthor"] = self.current_user.username
+            post["originalCreationDate"] = post['creation_date']
+            post["creation_date"] = datetime.utcnow()
+            post["repostText"] = text
 
-        self.set_status(200)
-        self.write({"status": 200,
-                    "success": True})
+            space = http_body['space']
+
+            # check if space exists, if not, end with 400 Bad Request
+            if space is not None:
+                existing_spaces = []
+                for existing_space in self.db.spaces.find(projection={"name": True, "_id": False}):
+                    existing_spaces.append(existing_space["name"])
+                if space not in existing_spaces:
+                    self.set_status(400)
+                    self.write({"status": 400,
+                                "reason": "space_does_not_exist"})
+                    self.finish()
+                    return
+            post["space"] = space
+
+            del post["_id"]
+            if "likers" in post:
+                del post["likers"]
+            if "comments" in post:
+                del post["comments"]
+            if "tags" in post:
+                post["tags"] = ""
+
+            print(post)
+            self.db.posts.insert_one(post)
+
+            self.set_status(200)
+            self.write({"status": 200,
+                        "success": True})
+
+        else:
+            id = self.get_body_argument("_id");
+            #author = self.current_user.username
+            text = self.get_body_argument("repostText")  # http_body['text']
+
+            query = {"_id": id}
+            post = { "$set": { "repostText": text } }
+
+            self.db.posts.update_one(
+                {"_id": ObjectId(id)},
+                {"$set":
+                    {
+                        "repostText": text,
+                    }
+                },
+                upsert=True
+            )
+
+            self.set_status(200)
+            self.write({'status': 200,
+                        'success': True})
