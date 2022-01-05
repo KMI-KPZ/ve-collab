@@ -186,7 +186,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                       <!-- Title / Close-->
                       <div class="flex itemes-center justify-between m-2">
                         <div>
-                          <b>Share</b><i class="fa fa-envelope p-2"></i>
+                          <b>Teilen</b><i class="fa fa-envelope p-2"></i>
                         </div>
                         <button type="button" class="z-50 cursor-pointer" @click="showModal = false">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -198,12 +198,12 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                       <!-- Content -->
                       <div>
                         <select id="selectRepostSpace{{!_id}}" class="text-s truncate w-full normal-case font-normal -mt-1 text-gray-500 border rounded p-2">
-                            <option value=null>Share into your timeline</option>
+                            <option value=null>In deine Timeline teilen</option>
 
                         </select>
                         <br>
                         <textarea class="w-full mt-2 p-2 border rounded" id="shareText{{!_id}}" rows="2"
-                                  placeholder="What are your thoughts?"></textarea>
+                                  placeholder="Teile deine Gedanken"></textarea>
 
                         <div class="panel panel-default border rounded mt-2">
                             <div class="post-heading">
@@ -313,7 +313,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                     @click.away="isOpen = false"
                     class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none"
                     >
-                    <a class="block w-full" href="javascript:deletePost('{{!_id}}');">Delete</a>
+                    <a class="block w-full" href="javascript:deletePost('{{!_id}}');">Löschen</a>
 
                     <div x-data="{'showModal': false}" @keydown.escape="showModal:false" class="inline-block block w-full">
                       <button id="updatePostBtn" class="text-left w-full" type="button" @click="showModal = true">
@@ -343,7 +343,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                         </div>
                         <div>
                           <button type="button" id="update" @click="showModal = false" onclick="javascript:updatePost('{{!_id}}');"
-                                  class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"  data-dismiss="modal">Update
+                                  class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"  data-dismiss="modal">Speichern
                           </button>
                         </div>
                         </div>
@@ -467,7 +467,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                       @click.away="isOpen = false"
                       class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none"
                       >
-                      <a class="block w-full" href="javascript:deletePost('{{!_id}}');">Delete</a>
+                      <a class="block w-full" href="javascript:deletePost('{{!_id}}');">Löschen</a>
                     </div>
                 </div>
                 {{!/isAuthor}}
@@ -500,7 +500,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                         <!-- Title / Close-->
                         <div class="flex itemes-center justify-between m-2">
                           <div>
-                            <b>Share</b><i class="fa fa-envelope p-2"></i>
+                            <b>Teilen</b><i class="fa fa-envelope p-2"></i>
                           </div>
                           <button type="button" class="z-50 cursor-pointer" @click="showModal = false">
                               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -512,12 +512,12 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                         <!-- Content -->
                         <div>
                           <select id="selectRepostSpace{{!_id}}" class="text-s truncate w-full normal-case font-normal -mt-1 text-gray-500 border rounded p-2">
-                              <option value=null>Share into your timeline</option>
+                              <option value=null>In deine Timeline teilen</option>
 
                           </select>
                           <br>
                           <textarea class="w-full mt-2 p-2 border rounded" id="shareText{{!_id}}" rows="2"
-                                    placeholder="What are your thoughts?"></textarea>
+                                    placeholder="Teile deine Gedanken"></textarea>
 
                           <div class="panel panel-default border rounded mt-2">
                               <div class="post-heading">
@@ -732,7 +732,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                           <!-- Title / Close-->
                           <div class="flex itemes-center justify-between m-2">
                             <div>
-                              <b>Share</b><i class="fa fa-envelope p-2"></i>
+                              <b>Teilen</b><i class="fa fa-envelope p-2"></i>
                             </div>
                             <button type="button" class="z-50 cursor-pointer" @click="showModal = false">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -744,12 +744,12 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                           <!-- Content -->
                           <div>
                             <select id="selectRepostSpace{{!_id}}" class="text-s truncate w-full normal-case font-normal -mt-1 text-gray-500 border rounded p-2">
-                                <option value=null>Share into your timeline</option>
+                                <option value=null>In deine Timeline teilen</option>
 
                             </select>
                             <br>
                             <textarea class="w-full mt-2 p-2 border rounded" id="shareText{{!_id}}" rows="2"
-                                      placeholder="What are your thoughts?"></textarea>
+                                      placeholder="Teile deine Gedanken"></textarea>
 
                             <div class="panel panel-default border rounded mt-2">
                                 <div class="post-heading">
@@ -856,7 +856,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                       @click.away="isOpen = false"
                       class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none"
                       >
-                      <a class="block w-full" href="javascript:deletePost('{{!_id}}');">Delete</a>
+                      <a class="block w-full" href="javascript:deletePost('{{!_id}}');">Löschen</a>
                       <div x-data="{'showModal': false}" @keydown.escape="showModal:false" class="inline-block block w-full">
                         <button id="updatePostBtn" class="text-left w-full" type="button" @click="showModal = true">
                           <p class="" href="">Bearbeiten</p>
@@ -885,7 +885,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                           </div>
                           <div>
                             <button type="button" id="update" @click="showModal = false" onclick="javascript:updateRepost('{{!_id}}');"
-                                    class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"  data-dismiss="modal">Update
+                                    class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"  data-dismiss="modal">Speichern
                             </button>
                           </div>
                           </div>
@@ -1024,7 +1024,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                       @click.away="isOpen = false"
                       class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none"
                       >
-                      <a class="block w-full" href="javascript:deleteComment('{{!_id}}')">Delete</a>
+                      <a class="block w-full" href="javascript:deleteComment('{{!_id}}')">Löschen</a>
                     </div>
                 </div>
             </div>
@@ -1047,7 +1047,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
 <script id=spaceTemplate type="text/html">
 
   <a class="dropdown-item block w-full hover:bg-gray-200" id={{!_id}} href="../space/{{!name}}">{{!name}} {{!^inSpace}}
-      <button type="button" id="joinSpace" name={{!name}} class="btn btn-outline-success">Join</button>
+      <button type="button" id="joinSpace" name={{!name}} class="btn btn-outline-success">Beitreten </button>
       {{!/inSpace}}</a>
 </script>
 
@@ -1069,13 +1069,13 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                     <div>{{!email}}</div>
                     <div class="mg-top-10">
                         {{!#isFollowed}}
-                        <a href="javascript:deleteFollow('{{!username}}');" class="btn btn-danger">Unfollow</a>
+                        <a href="javascript:deleteFollow('{{!username}}');" class="btn btn-danger">Entfolgen</a>
                         {{!/isFollowed}}
                         {{!^isFollowed}}
-                        <a href="javascript:postFollow('{{!username}}');" class="btn btn-warning">Follow</a>
+                        <a href="javascript:postFollow('{{!username}}');" class="btn btn-warning">Folgen</a>
                         {{!/isFollowed}}
                         <button type="button" class="btn btn-info" data-toggle="modal" data-target="#followModal">
-                            Follows ({{!followSize}})
+                            Folgt ({{!followSize}})
                         </button>
                     </div>
 
@@ -1085,7 +1085,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                         <div class="modal-dialog" role="document">
                             <div class="modal-content">
                                 <div class="modal-header">
-                                    <h5 class="modal-title" id="followModalLabel">Follows</h5>
+                                    <h5 class="modal-title" id="followModalLabel">Folgt</h5>
                                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                         <span aria-hidden="true">&times;</span>
                                     </button>
@@ -1124,7 +1124,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                   <div x-data="{'showModal': false}" @keydown.escape="showModal:false">
                     <button id="updateProfileButton" type="button" @click="showModal = true" onclick="javascript:populateProfileInformationModal()"
                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full text-sm ml-2">
-                        Update Profile
+                        Profil bearbeiten
                     </button>
 
                     <!-- Modal -->
@@ -1276,11 +1276,11 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                     <li class="flex items-center py-3">
                         <span>Status</span>
                         <span class="ml-auto"><span
-                                class="bg-green-500 py-1 px-2 rounded text-white text-sm">Active</span></span>
+                                class="bg-green-500 py-1 px-2 rounded text-white text-sm">Aktiv</span></span>
                     </li>
                     <li class="flex items-center py-3">
-                        <span>Member since</span>
-                        <span class="ml-auto">Nov 07, 2016</span>
+                        <span>Mitglied seit</span>
+                        <span class="ml-auto">07 Nov. 2016</span>
                     </li>
                 </ul>
             </div>
@@ -1296,7 +1296,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                                   d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                         </svg>
                     </span>
-                    <span>Follows</span>
+                    <span>Folgt</span>
                 </div>
                 <div class="grid grid-cols-3">
                   {{!#follows}}
@@ -1557,7 +1557,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
                           </svg>
-                          Documents
+                          Dokumente
                       </a>
 
 
