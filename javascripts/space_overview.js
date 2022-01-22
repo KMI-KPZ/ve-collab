@@ -82,7 +82,9 @@ function getSpaces() {
         localStorage.setItem(space.name, space.members);
         Spaces.push(space);
         console.log(space._id)
-        $('#spaceOverviewEntries').prepend(Mustache.render($('#spaceOverviewEntry').html(), {project_id: space._id, project_name: space.name, members: space.members}))
+        console.log(space.members)
+
+        $('#spaceOverviewEntries').prepend(Mustache.render($('#spaceOverviewEntry').html(), {project_id: space._id, project_name: space.name, members: space.members, inSpace: inSpace}))
         // if not in Space render spaceTemplateSelect
         if (currURL.indexOf(baseUrl + '/space') == -1) {
           $('#selectSpace').append(Mustache.render(spaceTemplateSelect, space));
@@ -271,4 +273,97 @@ function getRouting(){
       alert("Critical Server Error, Please visit the Platform Page!");
     }
   })
+}
+
+/**
+ * on join Space button - click - get name and call joinSpace
+ */
+$body.delegate('button[id="joinSpace"]', 'click', function () {
+    var name = $(this).attr('name');
+    joinSpace(name);
+
+});
+
+/**
+ * on leave Space button - click - get name and call leaveSpace
+ */
+$body.delegate('button[id="leaveSpace"]', 'click', function () {
+    var name = $(this).attr('name');
+    leaveSpace(name);
+
+});
+
+/**
+ * joinSpace - joins Space
+ *
+ * @param  {String} name Spacename
+ */
+function joinSpace(name) {
+  $.ajax({
+    type: 'POST',
+    url: '/spaceadministration/join?name=' + name,
+    success: function (data) {
+      console.log("joined space " + name);
+      location.reload()
+    },
+
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request to join a space'
+        });
+      }
+    },
+  });
+}
+
+function leaveSpace(name) {
+  $.ajax({
+    type: 'DELETE',
+    url: '/spaceadministration/leave?name=' + name,
+    success: function (data) {
+      console.log("leaved space " + name);
+      location.reload()
+    },
+
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request to join a space'
+        });
+      }
+    },
+  });
 }
