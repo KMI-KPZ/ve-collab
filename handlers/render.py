@@ -48,7 +48,7 @@ class SpaceRenderHandler(BaseHandler):
 
     def get(self, slug):
         if self.current_user:
-            self.render("space_re.html")
+            self.render("space.html")
         else:
             self.redirect(CONSTANTS.ROUTING_TABLE["platform"])  # redirect to platform if there is no logged in user
 
