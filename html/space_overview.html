@@ -23,28 +23,28 @@
   <!-- Navbar -->
   <!-- Navbar -->
   <nav class="mb-6">
-    <div class="bg-blue-lionet container mx-auto px-8" style="">
+    <div class="bg-blue-lionet container mx-auto px-8" style="font-family: 'Titillium Web', sans-serif;">
       <div class="flex items-center py-2 px-10">
         <div class="w-3/4 flex items-center">
           <div>
             <img src="uploads/SO-SERVE_Logo_solo-285x300.png" width="50" height="50"/>
           </div>
           <div class="ml-4">
-            <li class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-              <input type="text" name="search" id="search" placeholder="Suchen" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" />
+            <li class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-base">
+              <input type="text" name="search" id="search" placeholder="Suchen" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm text-base border-gray-300 rounded-md" />
               <ul class="" id="result"></ul>
             </li>
           </div>
           <div class="ml-4">
-            <div class="text-sm flex items-center">
+            <div class="text-base flex items-center">
               <div>
-                <a href="main" class="no-underline text-grey-light pr-3">Startseite</a>
+                <a href="main" class="no-underline text-white pr-3">Startseite</a>
               </div>
               <div>
-                <a href="myprofile" class="no-underline text-grey-light pr-3">Profil</a>
+                <a href="myprofile" class="no-underline text-white pr-3">Profil</a>
               </div>
 
-              <div class="relative" x-data="{ isOpen: false}">
+              <div class="relative text-base" x-data="{ isOpen: false}">
                 <button
                         @click="isOpen = !isOpen"
                         @keydown.escape="isOpen = false"
@@ -55,16 +55,16 @@
                     class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none"
                     >
                   <li>
-                    <a class="dropdown-item block w-full hover:bg-gray-200" href="/spaces">Overview</a>
+                    <a class="dropdown-item block w-full hover:bg-gray-200 text-base" href="/spaces">Übersicht</a>
                   </li>
                   <div id="spaceDropdown"></div>
-                  <li class="bg-blue-300">
+                  <li class="bg-blue-lionet text-white text-base">
                     <form class="">
                       <label for="newSpaceName">Neuer Gruppenname</label>
-                      <input type="text" class="block w-full border rounded-md" id="newSpaceName" placeholder="Namen eingeben">
+                      <input type="text" class="block w-full border rounded-md text-base" id="newSpaceName" placeholder="Namen eingeben">
                     </form>
                   </li>
-                  <li class="hover:bg-gray-200 bg-blue-300">
+                  <li class="hover:bg-blue-200 bg-blue-lionet text-white text-base">
                     <button id="createSpace" type="button" class="w-full">Erstelle Gruppe</button>
                   </li>
                 </ul>
@@ -79,7 +79,7 @@
 
 
   <!-- Main Container-->
-  <div class="flex w-full">
+  <div class="flex w-full" style="font-family: 'Titillium Web', sans-serif;">
     <div class="table-auto w-full" id="spaceOverview">
 
       <div class="container mx-auto px-8">
@@ -89,13 +89,13 @@
               <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                   <tr>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th scope="col" class="px-6 py-3 text-left text-base font-medium text-gray-500 uppercase tracking-wider">
                       Name
                     </th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th scope="col" class="px-6 py-3 text-left text-base font-medium text-gray-500 uppercase tracking-wider">
                       Mitglieder
                     </th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th scope="col" class="px-6 py-3 text-left text-base font-medium text-gray-500 uppercase tracking-wider">
 
                     </th>
                   </tr>
@@ -113,12 +113,12 @@
   </div>
 
   <!-- Footer -->
-  <div class="mt-8">
+  <div class="mt-8" style="font-family: 'Titillium Web', sans-serif;">
     <div class="container mx-auto px-8">
       <div class="px-10">
         <div class="flex items-center justify-between border-t py-8">
-          <div class="justify-start justify-between text-xs w-2/5 flex">
-            <div class="mr-4">
+          <div class="justify-start justify-between text-xs w-4/5 flex">
+            <div class="mr-4 w-24">
               &copy; 2021 lionet.
             </div>
             <div class="mr-4">
@@ -146,7 +146,7 @@
     </div>
   </div>
 
-  <script id="spaceOverviewEntry" type="text/html">
+  <script id="spaceOverviewEntry" type="text/html" style="font-family: 'Titillium Web', sans-serif;">
     <tr>
       <td class="px-6 py-4 whitespace-nowrap">
         <div class="flex items-center">
@@ -158,7 +158,7 @@
               <div class="text-sm font-medium text-gray-900">
                 {{!project_name}}
               </div>
-              <div class="text-sm text-gray-500">
+              <div class="text-gray-500 text-base">
                 {{!project_id}}
               </div>
             </a>
@@ -166,11 +166,11 @@
         </div>
       </td>
       <td class="px-6 py-4 whitespace-nowrap">
-        <div class="text-sm text-gray-900">{{!members}}</div>
+        <div class="text-base text-gray-900">{{!members}}</div>
       </td>
       <td class="px-6 py-4 whitespace-nowrap">
          {{!^inSpace}}
-            <button type="button" id="joinSpace" name={{!project_name}} class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full">Beitreten </button>
+            <button type="button" id="joinSpace" name={{!project_name}} class="bg-blue-lionet hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-full">Beitreten </button>
           {{!/inSpace}}</a>
           {{!#inSpace}}
             <button type="button" id="leaveSpace" name={{!project_name}} class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full">Leave </button>

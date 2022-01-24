@@ -58,7 +58,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
         <div class="w-full grid grid-cols-8 gap-4">
           <div class="col-start-2 col-span-6 mt-2">
 
-            <div class="panel panel-white bg-white post" id="newPostPanel">
+            <div class="panel panel-white bg-white border-blue-lionet post" id="newPostPanel">
 
                 <div class="post-heading">
                     <div class="float-left image">
@@ -91,7 +91,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                     </div>
 
                     <div id="postdiv" class="mar-top clearfix p-2">
-                        <button class="m-0 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-300 hover:bg-indigo-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 m-0 float-right" id="post"><i class="fa fa-pencil fa-fw"></i>
+                        <button class="m-0 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-lionet border-blue-lionet hover:bg-indigo-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 m-0 float-right" id="post"><i class="fa fa-pencil fa-fw"></i>
                             Post
                         </button>
                         <!--<div class="element">
@@ -101,14 +101,14 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                         </div>-->
                         <div class="rounded">
 
-                            <button id="record"
+                            <!-- <button id="record"
                                     class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-300 hover:bg-indigo-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 btn btn-success">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
                                      stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                           d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
                                 </svg>
-                            </button>
+                            </button> -->
                             <!--<button type="button"
                                     class="inline-flex items-center py-2 px-4 border border-2 rounded-full shadow-sm text-whitebg-indigo-300 hover:bg-indigo-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 btn">
                                 <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
@@ -122,7 +122,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                             </button>-->
 
                             <button type="button"
-                                    class="inline-flex items-center py-2 px-4 border border-2 rounded-full shadow-sm text-whitebg-indigo-300 hover:bg-indigo-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 btn">
+                                    class="inline-flex items-center py-2 px-4 border border-2 rounded-full shadow-sm text-white bg-blue-lionet border-blue-lionet hover:bg-indigo-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 btn">
                                     <label class="items-center">
                                       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -165,13 +165,13 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
 
               <div class="inline-block align-top">
                 <button type="button" onclick="likeDislike(this,'{{!_id}}');" id="likers"
-                        class="bg-transparent hover:bg-blue-500 bg-white h-8 text-gray-700 font-semibold hover:text-white py-1 px-2 border border-gray-500 hover:border-transparent rounded" data-toggle="tooltip" data-placement="right" data-html="true"
+                        class="bg-transparent hover:bg-blue-500 bg-white h-8 text-gray-700 font-semibold hover:text-white py-1 px-2 border border-blue-lionet border-gray-500 hover:border-transparent rounded" data-toggle="tooltip" data-placement="right" data-html="true"
                         data-original-title="{{!#likers}}<li>{{!.}}</li>{{!/likers}}">
                     <i id="likeIcon" class="fa fa-thumbs-up text-blue-700"></i> <span id="likeCounter">{{!likes}}</span>
                 </button>
 
                 <div x-data="{'showModal': false}" @keydown.escape="showModal:false" class="inline-block">
-                  <button id="shareBtn" class="bg-transparent hover:bg-blue-500 bg-white h-8 text-gray-700 font-semibold hover:text-white py-1 px-2 border border-gray-500 hover:border-transparent rounded" type="button" @click="showModal = true">
+                  <button id="shareBtn" class="bg-transparent hover:bg-blue-500 bg-white h-8 text-gray-700 font-semibold hover:text-white py-1 px-2 border border-blue-lionet hover:border-transparent rounded" type="button" @click="showModal = true">
                     <i id="shareIcon" class="fa fa-share"></i>
                   </button>
 
@@ -287,7 +287,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
 
                         <div>
                           <button type="button" id="repost" onclick="javascript:repost('{{!_id}}');"
-                                  class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"  data-dismiss="modal">Repost
+                                  class="bg-blue-lionet hover:bg-blue-500 text-white font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"  data-dismiss="modal">Repost
                           </button>
                         </div>
 
@@ -343,7 +343,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                         </div>
                         <div>
                           <button type="button" id="update" @click="showModal = false" onclick="javascript:updatePost('{{!_id}}');"
-                                  class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"  data-dismiss="modal">Speichern
+                                  class="bg-blue-lionet hover:bg-blue-500 text-white font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"  data-dismiss="modal">Speichern
                           </button>
                         </div>
                         </div>
@@ -833,7 +833,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
 
                             <div>
                               <button type="button" id="repost" onclick="javascript:repost('{{!_id}}');"
-                                      class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"  data-dismiss="modal">Repost
+                                      class="bg-blue-lionet hover:bg-blue-500 text-white font-semibold hover:text-white py-2 px-4 border border-blue-lionet hover:border-transparent rounded"  data-dismiss="modal">Repost
                               </button>
                             </div>
 
@@ -885,7 +885,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                           </div>
                           <div>
                             <button type="button" id="update" @click="showModal = false" onclick="javascript:updateRepost('{{!_id}}');"
-                                    class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"  data-dismiss="modal">Speichern
+                                    class="bg-blue-lionet hover:bg-blue-500 text-white font-semibold hover:text-white py-2 px-4 border border-blue-lionet hover:border-transparent rounded"  data-dismiss="modal">Speichern
                             </button>
                           </div>
                           </div>
@@ -1123,7 +1123,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
 
                   <div x-data="{'showModal': false}" @keydown.escape="showModal:false">
                     <button id="updateProfileButton" type="button" @click="showModal = true" onclick="javascript:populateProfileInformationModal()"
-                       class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full text-sm ml-2">
+                       class="bg-blue-lionet hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-full text-sm ml-2">
                         Profil bearbeiten
                     </button>
 
@@ -1255,7 +1255,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                                     </div>
                                   </div>
                                   <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
-                                    <button type="button" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" onclick="javascript:saveProfileInformation()">
+                                    <button type="button" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-lionet hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" onclick="javascript:saveProfileInformation()">
                                       Speichern
                                     </button>
                                   </div>
@@ -1325,7 +1325,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                                   d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                         </svg>
                     </span>
-                    <span class="tracking-wide">About</span>
+                    <span class="tracking-wide">Über</span>
                 </div>
                 <div class="text-gray-700">
                     <div class="grid md:grid-cols-2 text-sm">

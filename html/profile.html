@@ -18,37 +18,41 @@
     <link rel="stylesheet" type="text/css" href="../css/modal.css">
     <link rel="stylesheet" type="text/css" href="../css/notifications.css">
     <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+    <!--Fonts-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300&family=Titillium+Web:wght@300&display=swap" rel="stylesheet">
 </head>
 <body class="font-sans bg-blue-50">
 
   <!-- Navbar -->
   <nav class="mb-6">
-    <div class="bg-blue-lionet container mx-auto px-8" style="">
+    <div class="bg-blue-lionet container mx-auto px-8" style="font-family: 'Titillium Web', sans-serif;">
       <div class="flex items-center py-2 px-10">
         <div class="w-3/4 flex items-center">
           <div>
             <img src="uploads/SO-SERVE_Logo_solo-285x300.png" width="50" height="50"/>
           </div>
           <div class="ml-4">
-            <li class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-              <input type="text" name="search" id="search" placeholder="Suchen" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" />
+            <li class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-base">
+              <input type="text" name="search" id="search" placeholder="Suchen" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-base border-gray-300 rounded-md" />
               <ul class="" id="result"></ul>
             </li>
           </div>
           <div class="ml-4">
-            <div class="text-sm flex items-center">
+            <div class="text-base flex items-center">
               <div>
-                <a href="main" class="no-underline text-grey-light pr-3">Startseite</a>
+                <a href="main" class="no-underline text-white pr-3">Startseite</a>
               </div>
               <div>
-                <a href="myprofile" class="no-underline text-grey-light pr-3">Profil</a>
+                <a href="myprofile" class="no-underline text-white pr-3">Profil</a>
               </div>
 
-              <div class="relative" x-data="{ isOpen: false}">
+              <div class="relative text-base" x-data="{ isOpen: false}">
                 <button
                         @click="isOpen = !isOpen"
                         @keydown.escape="isOpen = false"
-                        class="flex items-center"
+                        class="flex items-center text-white"
                 ><!--svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path class="heroicon-ui" d="M17 11a1 1 0 0 1 0 2h-4v4a1 1 0 0 1-2 0v-4H7a1 1 0 0 1 0-2h4V7a1 1 0 0 1 2 0v4h4z"/></svg-->Meine Gruppen</button>
                 <ul x-show="isOpen"
                     @click.away="isOpen = false"
@@ -58,13 +62,13 @@
                     <a class="dropdown-item block w-full hover:bg-gray-200" href="/spaces">Overview</a>
                   </li>
                   <div id="spaceDropdown"></div>
-                  <li class="bg-blue-300">
+                  <li class="bg-blue-lionet text-white">
                     <form class="">
                       <label for="newSpaceName">Neuer Gruppenname</label>
                       <input type="text" class="block w-full border rounded-md" id="newSpaceName" placeholder="Namen eingeben">
                     </form>
                   </li>
-                  <li class="hover:bg-gray-200 bg-blue-300">
+                  <li class="hover:bg-blue-200 bg-blue-lionet text-white">
                     <button id="createSpace" type="button" class="w-full">Erstelle Gruppe</button>
                   </li>
                 </ul>
@@ -80,7 +84,7 @@
 
   <div class="container mx-auto px-8">
 
-      <div class="col-sm-8 col-sm-offset-2" id="profileContainer">
+      <div class="col-sm-8 col-sm-offset-2" id="profileContainer" style="font-family: 'Titillium Web', sans-serif;">
 
       </div>
       <!--<div class="col-sm-8 col-sm-offset-2" id="newPostContainer">
@@ -94,12 +98,12 @@
   </div>
 
   <!-- Footer -->
-  <div class="mt-8">
+  <div class="mt-8" style="font-family: 'Titillium Web', sans-serif;">
     <div class="container mx-auto px-8">
       <div class="px-10">
         <div class="flex items-center justify-between border-t py-8">
-          <div class="justify-start justify-between text-xs w-2/5 flex">
-            <div class="mr-4">
+          <div class="justify-start justify-between text-sm w-4/5 flex">
+            <div class="mr-4 w-24">
               &copy; 2021 lionet.
             </div>
             <div class="mr-4">
@@ -115,7 +119,7 @@
               <a href="#" class="no-underline">Hilfe</a>
             </div>
 
-            <div class="justify-end justify-between text-xs w-2/5 flex text-right">
+            <div class="justify-end justify-between text-sm w-2/5 flex text-right">
               <div class="ml-4">
                 <a href="#" class="no-underline">Über lionet</a>
               </div>
