@@ -54,6 +54,7 @@ def make_app(cookie_secret):
         (r"/comment", CommentHandler),
         (r"/like", LikePostHandler),
         (r"/repost", RepostHandler),
+        (r"/pin", PinHandler),
         (r"/follow", FollowHandler),
         (r"/updates", NewPostsSinceTimestampHandler),
         (r"/spaceadministration/([a-zA-Z\-0-9\.:,_]+)", SpaceHandler),

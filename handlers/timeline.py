@@ -111,9 +111,13 @@ class SpaceTimelineHandler(BaseHandler):
                                 "reason": "insufficient_permission"})
                     return
 
-                result = self.db.posts.find(
-                                filter={"creation_date": {"$gte": time_from, "$lte": time_to},
-                                        "space":         {"$eq": space_name}})
+                result = self.db.posts.find(filter={
+                    "$or": [
+                        {"creation_date": {"$gte": time_from, "$lte": time_to}},
+                        {"pinned": True}
+                    ],
+                    "space": {"$eq": space_name}
+                })
 
                 posts = self.json_serialize_posts(result)
                 # TODO more efficient
