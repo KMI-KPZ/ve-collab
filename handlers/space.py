@@ -72,6 +72,30 @@ class SpaceHandler(BaseHandler):
                 401 Unauthorized
                 {"status": 401,
                  "reason": "no_logged_in_user"}
+
+        POST /spaceadministration/add_admin
+            (add given user to space admin list (only space admin or global admin can do that))
+            query param:
+                "name" : space name of which space to join, mandatory argument
+                "user": the username which to add as a space admin, mandatory argument
+
+            returns:
+                200 OK,
+                {"status": 200,
+                 "success": True}
+
+                400 Bad Request
+                {"status": 401,
+                 "reason": "space_doesnt_exist"}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                {"status": 403,
+                 "reason": "insufficient_permission"}
+
         """
 
         space_name = self.get_argument("name")
@@ -137,6 +161,34 @@ class SpaceHandler(BaseHandler):
             self.set_status(200)
             self.write({'status': 200,
                         'success': True})
+
+        elif slug == "add_admin":
+            username = self.get_argument("user")
+
+            space = self.db.spaces.find_one({"name": space_name})
+            if not space:
+                self.set_status(400)
+                self.write({'status': 400,
+                            'reason': "space_doesnt_exist"})
+                return
+
+            if (self.current_user.username in space["admins"]) or (self.get_current_user_role() == "admin"):
+                # user is either space admin or global admin and therefore is allowed to add space admin
+                self.db.spaces.update_one(
+                    {"name": space_name},  # filter
+                    {
+                        "$addToSet": {"admins": username}
+                    }
+                )
+
+                self.set_status(200)
+                self.write({'status': 200,
+                            'success': True})
+            else:
+                self.set_status(403)
+                self.write({"status": 403,
+                            "reason": "insufficient_permission"})
+                return
 
         else:
             self.set_status(404)
