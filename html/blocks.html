@@ -58,7 +58,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
         <div class="w-full grid grid-cols-8 gap-4">
           <div class="col-start-2 col-span-6 mt-2">
 
-            <div class="panel panel-white bg-white border-blue-lionet post" id="newPostPanel">
+            <div class="panel panel-white bg-white border-blue-lionet post rounded-md" id="newPostPanel">
 
                 <div class="post-heading">
                     <div class="float-left image">
@@ -145,8 +145,8 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
 </script>
 
 <script id="postTemplate" type="text/html">
-  <div class="w-full bg-white border rounded-md shadow-sm block focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 mb-2 post panel" id={{!_id}} name={{!creation_date}}>
-      <div class="post-heading border-b bg-gray-200">
+  <div class="w-full bg-white border border-blue-lionet rounded-md shadow-sm block focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 mb-2 post panel" id={{!_id}} name={{!creation_date}}>
+      <div class="post-heading border-b rounded-t-md bg-gray-200">
           <div class="float-left image">
               <img src="{{!authorPicURL}}" class="shadow rounded-full max-w-full h-auto align-middle border-none avatar" alt="user profile image">
           </div>
@@ -429,7 +429,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
             </span>-->
         </div>
       </div>
-      <div class="post-footer w-full bg-gray-50">
+      <div class="post-footer w-full bg-gray-50 rounded-b-md">
           <ul class="comments-list border-2-2 border-blue-lionet border-l-2">
           </ul>
       </div>
@@ -1285,7 +1285,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                 </ul>
             </div>
             <!-- End of profile card -->
-            <div class="my-4"></div>
+            
             <!-- Friends card -->
             <div class="bg-white p-3 hover:shadow">
                 <div class="flex items-center space-x-3 font-semibold text-gray-900 text-xl leading-8">
@@ -1310,6 +1310,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
 
                 </div>
             </div>
+            <div class="my-36"></div>
             <!-- End of friends card -->
         </div>
         <!-- Right Side -->
@@ -1425,10 +1426,9 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                     </div>
                 </div>
                 <!-- End of Experience and education grid -->
-
             </div>
             <!-- End of profile tab -->
-            <div class="my-4"></div>
+            <div class="my-8"></div>
         </div>
       </div>
     </div>
