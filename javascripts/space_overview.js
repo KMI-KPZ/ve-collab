@@ -367,3 +367,53 @@ function leaveSpace(name) {
     },
   });
 }
+
+/**
+ * on create Space button - click - get name and call createSpace if not empty
+ */
+$body.delegate('#createSpace', 'click', function () {
+    var name = $body.find('#newSpaceName').val();
+    console.log(name)
+    if (name != '') createSpace(name);
+});
+
+/**
+ * createSpace - creates new Space
+ * resets input value and calls getSpaces for update
+ * @param  {String} name name of new Space
+ */
+function createSpace(name) {
+  $.ajax({
+    type: 'POST',
+    url: '/spaceadministration/create?name=' + name,
+    success: function (data) {
+      console.log("created space " + name);
+      $body.find('#newSpaceName').val('');
+      getSpaces();
+    },
+
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request to create a space failed.'
+        });
+      }
+    },
+  });
+}
