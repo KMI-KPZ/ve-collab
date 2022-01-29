@@ -22,14 +22,16 @@ function updateProfileContainer(){
   currentUser['spaceSize'] = currentUser['spaces'].length;
   currentUser["profile_pic_URL"] = baseUrl + '/uploads/' + currentUser["profile"]["profile_pic"];
   if(currentUser.hasOwnProperty('projects')) currentUser['projectSize'] = currentUser['projects'].length;
-
+  console.log("IF")
   if(!document.body.contains(document.getElementById('profilePanel'))){
-
+    console.log("IF")
     setTimeout(function(){
+      $('#profileContainer').empty()
        $('#profileContainer').prepend(Mustache.render(profileTemplate, currentUser)); }
        , 200);
   } else {
     //var template = document.getElementById('profileTemplate').innerHTML;
+    console.log("ELSE")
     Mustache.parse(profileTemplate);
     var render = Mustache.to_html(profileTemplate, currentUser);
     $("#profileContainer").empty().html(render);
