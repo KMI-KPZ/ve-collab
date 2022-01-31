@@ -43,8 +43,8 @@ $.get("/template", function(template, textStatus, jqXhr) {
   profileInformation_listItem = $(template).filter('#profileInformation_listItem').html()
 
 })**/
-var load_templates = function () {
-  $.get("/template", function(template, textStatus, jqXhr) {
+var load_templates = async function () {
+  await $.get("/template", function(template, textStatus, jqXhr) {
     postTemplate = $(template).filter('#postTemplate').html()
     repostTemplate = $(template).filter('#repostTemplate').html()
     commentTemplate = $(template).filter('#commentTemplate').html()
@@ -59,37 +59,7 @@ var load_templates = function () {
     profileInformation_listItem = $(template).filter('#profileInformation_listItem').html()
 
   });
-  console.log("Entered first function");
-  return new Promise(resolve => {
-      setTimeout(function() {
-      resolve("\t\t This is first promise");
-      console.log("Returned first promise");
-    }, 100);
-  });
 };
-
-var initNewsFeed_withPromise = function() {
-  initNewsFeed();
-  return new Promise(resolve => {
-    setTimeout(function() {
-    resolve("\t\t This is second promise");
-    console.log("Returned second promise");
-  }, 100);
-  });
-};
-
-var initNewsFeed_afterPromise = async function() {
-  const first_promise= await load_templates();
-  console.log("After awaiting for 2 seconds," +
-  "the promise returned from first function is:");
-  console.log(first_promise);
-  console.log("Now init news feed")
-  //first_promise.then(initNewsFeed())
-  const second_promise= await initNewsFeed_withPromise();
-  console.log("After awaiting for 4 seconds, the" +
-  "promise returned from second function is:");
-  console.log(second_promise);
-}
 
 //Boolean & Data
 var inSpace = false;
@@ -164,7 +134,7 @@ $(document).ready(function () {
   getUserRole();
   getAllUsers();
 
-  initNewsFeed_afterPromise();
+  load_templates().then(initNewsFeed);
 
   const interval  = setInterval(function() {
      checkUpdate();
