@@ -468,10 +468,10 @@ function displayTimeline(timeline) {
         $repost_content.text(post.repostText);
       }
       //toggle class if liked
-     if(liked && $likeIcon.hasClass('text-blue-700')) {
-        $likeIcon.removeClass('text-blue-700').addClass('text-green-700');
-      } else if(!liked && $likeIcon.hasClass('text-green-700')) {
-        $likeIcon.removeClass('text-green-700').addClass('text-blue-700');
+     if(liked && $likeIcon.hasClass('text-white')) {
+        $likeIcon.removeClass('text-white').addClass('text-green-800');
+      } else if(!liked && $likeIcon.hasClass('text-green-800')) {
+        $likeIcon.removeClass('text-green-800').addClass('text-white');
       }
       var $commentsList = $existingPost.find('.comments-list');
       if (post.hasOwnProperty('comments')) {
