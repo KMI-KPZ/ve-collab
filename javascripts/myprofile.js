@@ -1,6 +1,6 @@
 $(document).ready(function () {
   getRouting();
-  document.title = currentUser.username + ' - Social Network';
+  document.title = currentUser.username + ' - Lionet';
   updateProfileContainer();
 });
 
