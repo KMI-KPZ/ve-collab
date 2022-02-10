@@ -685,7 +685,22 @@ function getTimelineSpace(spacename, from, to) {
     success: function (timeline) {
       displayTimeline(timeline);
       var members = localStorage.getItem(spacename).split(",");
-      if(!document.body.contains(document.getElementById('spaceProfilePanel'))) $('#spaceProfileContainer').prepend(Mustache.render(spaceHeaderTemplate, {spacename: '' + spacename + '', members : members, memberSize : members.length}));
+
+      var memberPictures = []
+      $.each(users, function(entry) {
+        if(members.includes(users[entry].username)) {
+          memberPictures.push({"username":users[entry].username, "profilePic": users[entry].profile_pic})
+        }
+      })
+
+      var documents = []
+      $.each(timeline.posts, function(post) {
+        $.each(timeline.posts[post].files, function(file) {
+          documents.push(timeline.posts[post].files[file])
+        })
+      })
+
+      if(!document.body.contains(document.getElementById('spaceProfilePanel'))) $('#spaceProfileContainer').prepend(Mustache.render(spaceHeaderTemplate, {spacename: '' + spacename + '', members : members, memberSize : members.length, member_pics : memberPictures, documents : documents}));
 
     },
 
@@ -1383,6 +1398,7 @@ function getAllUsers(){
     dataType: 'json',
     success: function (data) {
       users = data;
+
       //console.log(users);
       searchUser(users);
     },
