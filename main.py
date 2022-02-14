@@ -1,19 +1,19 @@
 import asyncio
-from contextlib import closing
 import json
 import os
-import socket
 import sys
+
 sys.path.append(os.path.dirname(__file__))
 if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
+from keycloak import KeycloakOpenID
 import tornado.httpserver
 import tornado.ioloop
 import tornado.locks
 from tornado.options import define, options
 
-import CONSTANTS
+import global_vars
 from handlers.follow import FollowHandler
 from handlers.permissions import GlobalACLHandler, PermissionHandler, RoleHandler, SpaceACLHandler
 from handlers.post import *
@@ -26,8 +26,6 @@ from handlers.wiki import *
 import signing
 from socket_client import get_socket_instance
 
-
-define("dev", default=False, type=bool, help="start in dev mode (no auth) with dummy platform")
 define("no_wiki", default=False, type=bool, help="start without wiki integration (use if u don't have the wiki software installed and running)")
 define("config", default="config.json", type=str, help="path to config file, defaults to config.json")
 
@@ -81,20 +79,6 @@ def make_app(cookie_secret):
         (r"/uploads/(.*)", tornado.web.StaticFileHandler, {"path": "./uploads/"})
     ], cookie_secret=cookie_secret, template_path="html")
 
-def determine_free_port():
-    """
-    determines a free port number to which a module can later be bound. The port number is determined by the OS
-
-    :returns: a free port number
-    :rtype: int
-
-    """
-    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
-        s.bind(('', 0))  # binding a socket to 0 lets the OS assign a port
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # for threading scenario: the determined port can be used before this function returns
-        return s.getsockname()[1]
-
-
 async def main():
     signing.create_signing_key_if_not_exists()
 
@@ -107,9 +91,11 @@ async def main():
             CONSTANTS.MONGODB_USERNAME = conf["mongodb_username"]
             CONSTANTS.MONGODB_PASSWORD = conf["mongodb_password"]
 
+    global_vars.keycloak = KeycloakOpenID("https://skm.sc.uni-leipzig.de/auth/", realm_name="SOSERVE", client_id="test", client_secret_key=conf["keycloak_client_secret"])
+
     app = make_app(cookie_secret)
     server = tornado.httpserver.HTTPServer(app)
-    port = 8903  # determine_free_port()
+    port = 8903
     print("Starting server on port: " + str(port))
     server.listen(port)
 

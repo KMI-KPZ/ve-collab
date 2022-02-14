@@ -1,21 +1,19 @@
 import functools
+import json
 import os
 import shutil
 
-from datetime import datetime, timedelta
 from typing import Awaitable, Callable, Optional
 
+from keycloak import KeycloakGetError
 from pymongo import MongoClient
 from tornado.options import options
 import tornado.web
 
 import CONSTANTS
 from dokuwiki_integration import Wiki
+import global_vars
 from model import User
-from socket_client import get_socket_instance
-from token_cache import get_token_cache
-
-NEXT_UPDATE_TIMESTAMP = datetime.now()
 
 def auth_needed(method: Callable[..., Optional[Awaitable[None]]]) -> Callable[..., Optional[Awaitable[None]]]:
     """
@@ -35,30 +33,6 @@ def auth_needed(method: Callable[..., Optional[Awaitable[None]]]) -> Callable[..
 
 class BaseHandler(tornado.web.RequestHandler):
 
-    async def update_token_ttl_to_platform_in_10_min_frame(self):
-        """
-        update the platform that the current access token has done some action here and is still active. Therefore the platform should also renew their ttl of this token.
-        to avoid bloating the network when sending this after each action, only send it in 10min frames. It might miss a renew then, but worst case is a relogin of the user.
-        """
-
-        now = datetime.now()
-        global NEXT_UPDATE_TIMESTAMP
-        if now > NEXT_UPDATE_TIMESTAMP:
-            if self.current_user:
-                # message the platform to update the ttl of this token
-                # no need to await because it is just an information, worst case is a forced relogin
-                client = await get_socket_instance()
-                response = await client.write({"type": "update_token_ttl",
-                                               "access_token": self._access_token})
-
-                if not response["success"]:
-                    get_token_cache().remove(self._access_token)
-                    print("user removed from token_cache due to not found on platforms cache")
-
-                NEXT_UPDATE_TIMESTAMP = now + timedelta(minutes=1)
-
-                print("update ttl of " + self._access_token + " to platform")
-
     def initialize(self):
         self.client = MongoClient('localhost', 27017, username=CONSTANTS.MONGODB_USERNAME, password=CONSTANTS.MONGODB_PASSWORD)
         self.db = self.client['lionet']  # TODO make this generic via config
@@ -75,34 +49,30 @@ class BaseHandler(tornado.web.RequestHandler):
             self.wiki = Wiki("http://localhost/", "test_user", "test123")  # use fixed user for now, TODO integration platform users into wiki (plugin authPDO?)
 
     async def prepare(self):
-        # standalone dev mode: no auth, dummy platform
-        if options.dev:
-            self.current_user = User("test_user1", -1, "dev@test.de")
-            return
-
         token = self.get_secure_cookie("access_token")
         if token is not None:
-            token = token.decode("utf-8")
-        self._access_token = token
+            token = json.loads(token)
+        else:
+            self.redirect(CONSTANTS.ROUTING_TABLE["platform"] + "/login")
 
-        # first look in own cache
-        cached_user = get_token_cache().get(token)
-        if cached_user is not None:
-            self.current_user = User(cached_user["username"], cached_user["id"], cached_user["email"])
-            #print(self.current_user.username)
-        else:  # not found in own cache -> ask platform and put into own cache if valid
-            client = await get_socket_instance()
-            result = await client.write({"type": "token_validation",
-                                         "access_token": token})
-            if result["success"]:
-                self.current_user = User(result["user"]["username"], result["user"]["user_id"], result["user"]["email"])
-                get_token_cache().insert(token, self.current_user.username, self.current_user.user_id, self.current_user.email)
+        try:
+            # try to refresh the token and fetch user info. this will fail if there is no valid session
+            token = global_vars.keycloak.refresh_token(token['refresh_token'])
 
-            else:  # not valid in own cache and not valid in platform --> no user logged in
+            userinfo = global_vars.keycloak.userinfo(token['access_token'])
+            # if token is still valid --> successfull authentication --> we set the current_user
+            if userinfo:
+                self.current_user = User(userinfo["preferred_username"], userinfo["sub"], userinfo["email"])
+                self._access_token = token
+        except KeycloakGetError as e:
+            # something wrong with request
+            # decode error message
+            decoded = json.loads(e.response_body.decode())
+            # no active session means user is not logged in --> redirect him straight to login
+            if decoded["error"] == "invalid_grant" and decoded["error_description"] == "Session not active":
                 self.current_user = None
-                print("no logged in user")
-
-        await self.update_token_ttl_to_platform_in_10_min_frame()
+                self._access_token = None
+                self.redirect(CONSTANTS.ROUTING_TABLE["platform"] + "/login")
 
     def json_serialize_posts(self, query_result):
         # parse datetime objects into ISO 8601 strings for JSON serializability

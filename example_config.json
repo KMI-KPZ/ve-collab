@@ -1,0 +1,6 @@
+{
+  "cookie_secret": "<cookie_secret>",
+  "keycloak_client_secret": "<client_secret>",
+  "mongodb_username": "<username>",
+  "mongodb_password": "<password>"
+}

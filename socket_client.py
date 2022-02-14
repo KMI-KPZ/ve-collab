@@ -9,7 +9,6 @@ from tornado.ioloop import PeriodicCallback
 from tornado import gen
 from tornado.websocket import websocket_connect
 from asyncio import get_event_loop
-from token_cache import get_token_cache
 from tornado.options import options
 
 
@@ -17,11 +16,8 @@ the_websocket_client = None
 async def get_socket_instance():
     global the_websocket_client
     if the_websocket_client is None:
-        if options.dev:
-            the_websocket_client = Client("ws://localhost:88810/websocket")
-        else:
-            the_websocket_client = Client(tornado.httpclient.HTTPRequest("ws://localhost:" + str(CONSTANTS.PLATFORM_PORT) + "/websocket", validate_cert=False,
-                                          body=json.dumps({"type": "module_socket_connect", "module": "lionet"}), allow_nonstandard_methods=True))
+        the_websocket_client = Client(tornado.httpclient.HTTPRequest("ws://localhost:" + str(CONSTANTS.PLATFORM_PORT) + "/websocket", validate_cert=False,
+                                      body=json.dumps({"type": "module_socket_connect", "module": "lionet"}), allow_nonstandard_methods=True))
         await the_websocket_client._await_init()
     return the_websocket_client
 
@@ -65,10 +61,10 @@ class Client(object):
             if json_message["type"] == "signature_verification_error":
                 raise RuntimeError("Platform could not validate signature")
             elif json_message["type"] == "user_login":
-                get_token_cache().insert(json_message["access_token"], json_message["username"], json_message["email"], json_message["id"])
+                pass
 
             elif json_message["type"] == "user_logout":
-                get_token_cache().remove(json_message["access_token"])
+                pass
 
             else:
                 resolve_id = json_message['resolve_id']
