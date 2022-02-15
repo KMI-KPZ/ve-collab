@@ -6,6 +6,7 @@ import shutil
 from typing import Awaitable, Callable, Optional
 
 from keycloak import KeycloakGetError
+from keycloak.exceptions import KeycloakAuthenticationError
 from pymongo import MongoClient
 from tornado.options import options
 import tornado.web
@@ -65,6 +66,7 @@ class BaseHandler(tornado.web.RequestHandler):
                 self.current_user = User(userinfo["preferred_username"], userinfo["sub"], userinfo["email"])
                 self._access_token = token
         except KeycloakGetError as e:
+            print(e)
             # something wrong with request
             # decode error message
             decoded = json.loads(e.response_body.decode())
@@ -73,6 +75,12 @@ class BaseHandler(tornado.web.RequestHandler):
                 self.current_user = None
                 self._access_token = None
                 self.redirect(CONSTANTS.ROUTING_TABLE["platform"] + "/login")
+        except KeycloakAuthenticationError as e:
+            print(e)
+            self.current_user = None
+            self.current_userinfo = None
+            self._access_token = None
+            self.redirect(CONSTANTS.ROUTING_TABLE["platform"] + "/login")
 
     def json_serialize_posts(self, query_result):
         # parse datetime objects into ISO 8601 strings for JSON serializability
