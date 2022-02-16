@@ -1628,9 +1628,10 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
               {{!/member_pics}}
             </div>
           </div>
-          <div x-show="activeTab===2"id="wiki_link" onclick="getWikiPage(window.location.pathname.split('/')[2] + ':start')"
+          <div x-show="activeTab===2"
              class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
              Wiki
+             <div id="wiki_link" onclick="getWikiPage(window.location.pathname.split('/')[2] + ':start')"><div class="wiki_container"></div></div>
           </div>
           <div x-show="activeTab===3">
             <h3>Dokumente in diesem Space</h3>
