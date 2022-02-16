@@ -74,7 +74,8 @@ class WikiPageHandler(BaseHandler):
             return
 
         #request page from dokuwiki (wrapper)
-        wiki = Wiki("http://localhost/", "test_user", "test123")  # use fixed user for now, TODO integration platform users into wiki (plugin authPDO?)
+        wiki = Wiki("http://soserve.rz.uni-leipzig.de:8079/", "user", "password")  # use fixed user for now, TODO integration platform users into wiki (plugin authPDO?)
+        page_name="personalthemen"
         page_content = wiki.get_page(page_name, html=True)
 
         #rewrite relative links so they land on this handler again

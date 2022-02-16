@@ -171,17 +171,17 @@ function getWikiPage(page){
     dataType: "json",
     success: function(data){
       //first clear the container
-      $("#content_container").empty().html(data.page_content);
+      $("#wiki_container").empty().html(data.page_content);
 
       //find all links and set the onclick event to reload only this wiki page inside this container
-      $("#content_container").find("a").on("click", function(e){
+      $("#wiki_container").find("a").on("click", function(e){
         e.preventDefault();
         let page = $(this).attr("href").match(/page=(.+)/)[1];
         getWikiPage(page);
       });
 
       //add "footer" to guide u to the dokuwiki instance where u can edit this page
-      $("#content_container").append("<br/> <br/> <a> To edit this page, go to <a class='wikilink1' href='http://localhost/doku.php?id=" + page + "' target='_blank' rel='noopener noreferrer'> the wiki instance </a>! </p>");
+      $("#wiki_container").append("<br/> <br/> <a> To edit this page, go to <a class='wikilink1' href='http://localhost/doku.php?id=" + page + "' target='_blank' rel='noopener noreferrer'> the wiki instance </a>! </p>");
     },
     error: function(xhr, status, error){
       if (xhr.status == 401) {
