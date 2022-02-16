@@ -1,5 +1,5 @@
 body{margin-top:20px;
-
+  
 }
 
 .profile-widget {
@@ -454,5 +454,6 @@ border-color:rgba(43,128,180,var(--tw-bg-opacity))
 
 .divide-blue-lionet {
 --tw-divide-opacity: 1;
-border-color: rgba(43,128,180, var(--tw-divide-opacity));
+border-color: rgba(43,128,180, var(--tw-divide-opacity))
 }
+

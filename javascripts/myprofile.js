@@ -28,7 +28,8 @@ function updateProfileContainer(){
     setTimeout(function(){
       $('#profileContainer').empty()
        $('#profileContainer').prepend(Mustache.render(profileTemplate, currentUser)); }
-       , 200);
+       , 1000);
+      //  setTimeout(1000);
   } else {
     //var template = document.getElementById('profileTemplate').innerHTML;
 
