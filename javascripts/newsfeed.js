@@ -25,6 +25,7 @@ var spaceTemplate
 var spaceTemplateSelect
 var spaceHeaderTemplate
 var profileTemplate
+var friendsTemplate
 var profileInformation_listItem
 
 /**
@@ -55,6 +56,7 @@ var load_templates = async function () {
     spaceTemplateSelect = $(template).filter('#spaceTemplateSelect').html()
     spaceHeaderTemplate = $(template).filter('#spaceHeaderTemplate').html()
     profileTemplate = $(template).filter('#profileTemplate').html()
+    friendsTemplate = $(template).filter('#friendsTemplate').html()
 
     profileInformation_listItem = $(template).filter('#profileInformation_listItem').html()
 

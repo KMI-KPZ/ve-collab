@@ -3,7 +3,7 @@ var name
 $(document).ready(function () {
   setTimeout(function(){
     name = currURL.substring(currURL.lastIndexOf('/') + 1);
-    document.title = name + ' - Social Network';
+    document.title = name + ' - Lionet';
     getRouting();
     getUserInfo(name);
     getFollows(name);

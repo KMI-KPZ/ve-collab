@@ -29,6 +29,7 @@ function updateProfileContainer(){
       $('#profileContainer').empty()
        $('#profileContainer').prepend(Mustache.render(profileTemplate, currentUser)); }
        , 1000);
+       
   } else {
     //var template = document.getElementById('profileTemplate').innerHTML;
 
@@ -215,3 +216,9 @@ function deleteClosestListItem(elem) {
   console.log($(elem).closest('li'));
   $(elem).parents("li:first").remove();
 }
+
+// function showFriends(){
+//   if(!document.body.contains(document.getElementById('profileContainer'))) {
+//     $('#profileRightSideContainer').append(Mustache.render(friendsTemplate, currentUser));
+//   }
+// }
