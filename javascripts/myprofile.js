@@ -29,6 +29,10 @@ function updateProfileContainer(){
       $('#profileContainer').empty()
        $('#profileContainer').prepend(Mustache.render(profileTemplate, currentUser)); }
        , 1000);
+<<<<<<< HEAD
+=======
+      //  setTimeout(1000);
+>>>>>>> e298a49c0aa07bead03ed2ee03766261e4d853f9
   } else {
     //var template = document.getElementById('profileTemplate').innerHTML;
 
