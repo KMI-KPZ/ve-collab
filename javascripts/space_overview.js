@@ -78,15 +78,16 @@ function getSpaces() {
         var inSpace = (currentUser.spaces.indexOf(space.name) > -1) ? true : false;
         // needed for displaying "join" button
         if(inSpace != false) {
-        space['inSpace'] = inSpace;
-        $dropdown.prepend(Mustache.render(spaceTemplate, space));
-        localStorage.setItem(space.name, space.members);
-        Spaces.push(space);
+          space['inSpace'] = inSpace;
+          $dropdown.prepend(Mustache.render(spaceTemplate, space));
+          console.log(space.name)
+          localStorage.setItem(space.name, space.members);
+          Spaces.push(space);
         }
         console.log(space._id)
         console.log(space.members)
 
-        $('#spaceOverviewEntries').prepend(Mustache.render($('#spaceOverviewEntry').html(), {project_id: space._id, project_name: space.name, members: space.members, inSpace: inSpace}))
+        $('#spaceOverviewEntries').prepend(Mustache.render($('#spaceOverviewEntry').html(), {project_id: space._id, project_name: space.name.replace(" ", "%20"), display_name: space.name, members: space.members, inSpace: inSpace}))
         // if not in Space render spaceTemplateSelect
         if (currURL.indexOf(baseUrl + '/space') == -1) {
           $('#selectSpace').append(Mustache.render(spaceTemplateSelect, space));
@@ -301,6 +302,8 @@ $body.delegate('button[id="leaveSpace"]', 'click', function () {
  * @param  {String} name Spacename
  */
 function joinSpace(name) {
+  console.log(name)
+  name = name.replace(" ", "%20")
   $.ajax({
     type: 'POST',
     url: '/spaceadministration/join?name=' + name,

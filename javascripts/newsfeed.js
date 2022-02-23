@@ -219,7 +219,7 @@ $body.delegate('#post', 'click', function () {
     //check if there is a space selected to post into
     var selectedValue = ($( "#selectSpace option:selected" ).val() === "null") ? null : $( "#selectSpace option:selected" ).val();
     //while in space page: post in this space
-    var space = (inSpace) ? spacename : selectedValue;
+    var space = (inSpace) ? spacename.replace("%20", " ") : selectedValue;
     if(text!='') post(text, tags, space);
     else {
       $("#postAlert").html('Add some text to your post!');
@@ -700,7 +700,7 @@ function getTimelineSpace(spacename, from, to) {
         })
       })
 
-      if(!document.body.contains(document.getElementById('spaceProfilePanel'))) $('#spaceProfileContainer').prepend(Mustache.render(spaceHeaderTemplate, {spacename: '' + spacename + '', members : members, memberSize : members.length, member_pics : memberPictures, documents : documents}));
+      if(!document.body.contains(document.getElementById('spaceProfilePanel'))) $('#spaceProfileContainer').prepend(Mustache.render(spaceHeaderTemplate, {spacename: '' + spacename.replace("%20", " ") + '', members : members, memberSize : members.length, member_pics : memberPictures, documents : documents}));
 
     },
 
@@ -1149,6 +1149,7 @@ function getSpaces() {
 
       $.each(data.spaces, function (i, space) {
         //return if already rendered
+        console.log(space)
         if(document.body.contains(document.getElementById(space._id))) return;
         // inSpace as local var (not the global)
         var inSpace = (currentUser.spaces.indexOf(space.name) > -1) ? true : false;
@@ -1158,6 +1159,7 @@ function getSpaces() {
           $dropdown.prepend(Mustache.render(spaceTemplate, space));
         }
         localStorage.setItem(space.name.split(' ').join(''), space.members);
+        space.name.replace(" ", "%20")
         Spaces.push(space);
 
         // if not in Space render spaceTemplateSelect
