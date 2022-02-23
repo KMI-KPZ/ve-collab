@@ -1435,12 +1435,12 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
 </script>
 
 <script id="spaceHeaderTemplate" type="text/html">
-  <div class="flex w-full overflow-hidden bg-white p-4"  x-data="setup()">
-    <div class="" id="spaceProfilePanel">
+  <div class="flex w-full overflow-hidden bg-white border rounded-md border-gray-300 p-2"  x-data="setup()">
+    <div id="spaceProfilePanel" style="/*height:700px;*/">
       <div class="hidden md:flex md:flex-shrink-0">
           <div class="flex flex-col w-64">
               <!-- Sidebar component, swap this element with another sidebar if you like -->
-              <div class="flex flex-col flex-1 border-r border-gray-200 bg-white">
+              <div class="flex flex-col flex-1 border-r border-gray-200 bg-white" >
                   <div class="flex-1 flex flex-col ">
                       <div class="flex-shrink-0 flex ">
                           <a href="../space/{{!spacename}}" class="flex-shrink-0 w-full group block">
@@ -1458,9 +1458,9 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                               </div>
                           </a>
                       </div>
-                      <nav class="mt-5 flex-1 px-2 bg-white space-y-1">
+                      <nav class="mt-5 flex-1 px-2 bg-white space-y-1" >
                           <template x-for="(tab, index) in tabs" :key="index">
-                            <div class="grid grid-rows-1 grid-flow-col">
+                            <div class="grid grid-rows-1 grid-flow-col" @click="triggerDisplay(index)">
                               <span x-show="index===0" class="cursor-pointer py-3 px-4 rounded-l-lg transition"
                                 :class="activeTab===0 ? 'bg-blue-lionet text-white' : ' text-gray-500'" @click="activeTab = index; "
                                 >
@@ -1521,50 +1521,11 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
           </div>
       </div>
     </div>
-    <div class="flex flex-col w-0 flex-1 overflow-hidden">
+    <div class="flex flex-col w-0 flex-1 overflow-hidden" >
       <div id="content_container" class="p-2">
-        <div class="">
-          <div x-show="activeTab===0"  id="newPostPanel">
-            <!--<div class="post-description">
-            <textarea class="form-control w-full" id="postFeed" rows="2"
-                      placeholder="What are you thinking?"></textarea>
-                <div id="postdiv" class="mar-top clearfix p-2">
-                    <button class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-whitebg-indigo-300 hover:bg-indigo-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 pull-right "
-                            id="post">
-                        Post
-                        <svg class="ml-2 -mr-0.5 mt-1 h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                             fill="currentColor" aria-hidden="true">
-                            <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
-                            <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
-                        </svg>
+        <div class="" >
+          <div x-show="activeTab===0"  id="newPostPanel" >
 
-                    </button>
-                    <div class="rounded">
-                        <button id="record"
-                                class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-whitebg-indigo-300 hover:bg-indigo-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
-                                 viewBox="0 0 24 24"
-                                 stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
-                            </svg>
-                        </button>
-                        <button type="button"
-                                class="inline-flex items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-whitebg-indigo-300 hover:bg-indigo-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                                 fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd"
-                                      d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-                                      clip-rule="evenodd"/>
-                                <input type='file' name="files" id="files" multiple class="hidden"/>
-                            </svg>
-                        </button>
-                        <p>
-                            <audio id=recordedAudio></audio>
-                        </p>
-                    </div>
-                </div>
-            </div>-->
             <div class="post-description">
                 <textarea class="form-textarea mt-1 p-2 block w-full border rounded-md" id="postFeed" rows="6"
                           placeholder="Poste etwas in deine Timeline?"></textarea>
@@ -1596,6 +1557,8 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                     </div>
                 </div>
             </div>
+
+
           </div>
           <div x-show="activeTab===1">
             <div class="grid grid-cols-4 gap-4 p-2">
@@ -1609,13 +1572,18 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
               {{!/member_pics}}
             </div>
           </div>
-          <div x-show="activeTab===2"
+          <div x-show="activeTab===2"id="wiki_link" onclick="getWikiPage(window.location.pathname.split('/')[2] + ':start')"
              class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
-             Wiki
-             <div id="wiki_link" onclick="getWikiPage(window.location.pathname.split('/')[2] + ':start')"><div class="wiki_container"></div></div>
+             <!--Wiki-->
+             <!--<div id="wiki_container">p</div>-->
+             <iframe class="w-full" height="600;" src="http://soserve.rz.uni-leipzig.de:8079/doku.php?id=personalthemen#personalthemen" title="description"></iframe>
           </div>
           <div x-show="activeTab===3">
-            <h3>Dokumente in diesem Space</h3>
+            <label>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mb-2 inline-block" viewBox="0 -2 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+              </svg>Dokumente in diesem Space
+            </label>
             <div class="w-full rounded-lg shadow">
               <ul class="divide-y-2 divide-gray-100">
                   {{!#documents}}
@@ -1630,14 +1598,16 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
             </div>
 
           </div>
+          <!--<div id="feedContainer"></div>-->
         </div>
       </div>
     </div>
+
 </script>
 
 <script id="2spaceHeaderTemplate" type="text/html">
 <div class="flex w-full overflow-hidden bg-white p-4">
-  <div class="" id="spaceProfilePanel">
+  <div id="spaceProfilePanel">
     <!-- Static sidebar for desktop -->
     <div class="hidden md:flex md:flex-shrink-0">
         <div class="flex flex-col w-64">

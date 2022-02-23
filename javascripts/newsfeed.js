@@ -105,6 +105,7 @@ function initNewsFeed() {
   } else if (currURL.indexOf(baseUrl + '/space') !== -1) {
     inSpace = true;
     spacename = currURL.substring(currURL.lastIndexOf('/') + 1);
+    console.log(from)
     getTimelineSpace(spacename, from, now);
 
   } else if (currURL == baseUrl + '/myprofile') {
@@ -152,7 +153,6 @@ $(document).ready(function () {
   //generate <space_name>:start, which is the landing page of the wiki for this space
   //TODO on space creation, generate this wiki page using the backend
   let wikiStartPage = window.location.pathname.split("/")[2] + ":start";
-  console.log(wikiStartPage);
 
   //load the default wiki page on click
   $("#wiki_link").on("click",function(event){
@@ -684,7 +684,7 @@ function getTimelineSpace(spacename, from, to) {
     dataType: 'json',
     success: function (timeline) {
       displayTimeline(timeline);
-      var members = localStorage.getItem(spacename).split(",");
+      var members = localStorage.getItem(spacename.split(' ').join('').replace("%20","")).split(",");
 
       var memberPictures = []
       $.each(users, function(entry) {
@@ -1155,7 +1155,7 @@ function getSpaces() {
         // needed for displaying "join" button
         space['inSpace'] = inSpace;
         $dropdown.prepend(Mustache.render(spaceTemplate, space));
-        localStorage.setItem(space.name, space.members);
+        localStorage.setItem(space.name.split(' ').join(''), space.members);
         Spaces.push(space);
         // if not in Space render spaceTemplateSelect
         if (currURL.indexOf(baseUrl + '/space') == -1) {
