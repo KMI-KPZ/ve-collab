@@ -77,10 +77,12 @@ function getSpaces() {
         // inSpace as local var (not the global)
         var inSpace = (currentUser.spaces.indexOf(space.name) > -1) ? true : false;
         // needed for displaying "join" button
+        if(inSpace != false) {
         space['inSpace'] = inSpace;
         $dropdown.prepend(Mustache.render(spaceTemplate, space));
         localStorage.setItem(space.name, space.members);
         Spaces.push(space);
+        }
         console.log(space._id)
         console.log(space.members)
 

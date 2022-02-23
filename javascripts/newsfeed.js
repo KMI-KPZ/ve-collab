@@ -1153,14 +1153,18 @@ function getSpaces() {
         // inSpace as local var (not the global)
         var inSpace = (currentUser.spaces.indexOf(space.name) > -1) ? true : false;
         // needed for displaying "join" button
-        space['inSpace'] = inSpace;
-        $dropdown.prepend(Mustache.render(spaceTemplate, space));
+        if(inSpace != false) {
+          space['inSpace'] = inSpace;
+          $dropdown.prepend(Mustache.render(spaceTemplate, space));
+        }
         localStorage.setItem(space.name.split(' ').join(''), space.members);
         Spaces.push(space);
+
         // if not in Space render spaceTemplateSelect
         if (currURL.indexOf(baseUrl + '/space') == -1) {
           $('#selectSpace').append(Mustache.render(spaceTemplateSelect, space));
         }
+
     });
     },
 
