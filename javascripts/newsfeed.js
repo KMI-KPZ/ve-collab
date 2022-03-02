@@ -705,7 +705,7 @@ function getTimelineSpace(spacename, from, to) {
         })
       })
 
-      if(!document.body.contains(document.getElementById('spaceProfilePanel'))) $('#spaceProfileContainer').prepend(Mustache.render(spaceHeaderTemplate, {spacename: '' + spacename.replace("%20", " ") + '', members : members, memberSize : members.length, member_pics : memberPictures, documents : documents}));
+      if(!document.body.contains(document.getElementById('spaceProfilePanel'))) $('#spaceProfileContainer').prepend(Mustache.render(spaceHeaderTemplate, {spacename: '' + spacename.replace("%20", " ") + '', members : members, memberSize : members.length, member_pics : memberPictures, documents : documents, user: currentUser}));
 
     },
 

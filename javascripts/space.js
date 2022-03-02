@@ -14,7 +14,7 @@ function triggerDisplay(index) {
 
     async function addContainer(){
       if ($('#feedRow').is(':empty')){
-        $('#feedRow').append('<div id="feedContainer"></div>')
+        $('#feedRow').append('<div class="container mx-auto w-3/5 px-4 mt-2 text-base" id="feedContainer" style="sans-serif;max-width: 50%;"></div>')
          $feedContainer = $('#feedContainer');
       }
     }

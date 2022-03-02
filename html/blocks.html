@@ -1123,10 +1123,10 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                          id="photoFile">
                     <h1 class="w-full text-gray-900 font-bold text-xl leading-8 my-1">{{!username}}</h1>
                 </div>
-                
+
             </div>
             <!-- <div class="bg-white p-2 mt-28 mb-16">
-    
+
                 <h3 class="w-full text-gray-600 font-lg text-semibold leading-6 ml-8 float-left">{{!email}}</h3>
                 <p class="w-80 text-sm text-gray-500 hover:text-gray-600 leading-6 ml-8 float-left">{{!profile.bio}}</p>
             </div> -->
@@ -1140,17 +1140,17 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                     <li class="flex items-center py-3">
                         <span>Mitglied seit</span>
                         <span class="ml-auto">07 Nov. 2016</span>
-                    </li> 
+                    </li>
                 </ul>
             </div> -->
         </div>
-        
+
         <div class="w-full md:w-4/6 mx-2" id="profileRightSideContainer">
             <!-- About Section -->
             <div class="bg-white p-5 shadow-sm rounded-sm hover:shadow">
-                
+
                 <div class="flex items-center space-x-2 font-semibold text-gray-900 leading-8">
-                    
+
                     <span clas="text-green-500">
                         <svg class="h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor">
@@ -1159,7 +1159,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                         </svg>
                     </span>
                     <span class="tracking-wide">Über</span>
-    
+
                 </div>
                 <div class="text-gray-700">
                     <div class="grid text-base">
@@ -1311,6 +1311,189 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
 </script>
 
 <script id="spaceHeaderTemplate" type="text/html">
+  <div class="flex" x-data="setup()">
+
+    <div class="flex-none w-1/5 border rounded-md border-blue-lionet bg-white p-2 mr-2" style="height: 0%">
+      <div id="spaceProfilePanel">
+        <div class="flex flex-col flex-1 bg-white" >
+            <div class="flex-1 flex flex-col">
+                <div class="flex-shrink-0 flex ">
+                    <a href="../space/{{!spacename}}" class="flex-shrink-0 w-full group block">
+                        <div class="flex items-center">
+                            <div>
+                                <img class="inline-block h-10 w-10 rounded-full"
+                                     src="http://localhost:8903/uploads/default_group_pic.jpg"
+                                     alt="SpaceFoto">
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-m font-bold text-gray-700 group-hover:text-gray-900">
+                                    {{!spacename}}
+                                </p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <nav class="mt-5 flex-1 px-2 bg-white space-y-1" >
+                    <template x-for="(tab, index) in tabs" :key="index">
+                      <div class="grid grid-rows-1 grid-flow-col" @click="triggerDisplay(index)">
+                        <span x-show="index===0" class="cursor-pointer py-3 px-4 rounded-l-lg transition"
+                          :class="activeTab===0 ? 'bg-blue-lionet text-white' : ' text-gray-500'" @click="activeTab = index; "
+                          >
+                          <svg class="group-hover:text-gray-500 mr-3 flex-shrink-0 h-6 w-6"
+                               xmlns="http://www.w3.org/2000/svg"
+                               fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"
+                               :class="activeTab===0 ? 'bg-blue-lionet text-white' : ' text-gray-500'">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                          </svg>
+                        </span>
+                        <span x-show="index===1" class="cursor-pointer py-3 px-4 rounded-l-lg transition"
+                          :class="activeTab===1 ? 'bg-blue-lionet text-white' : ' text-gray-500'" @click="activeTab = index; "
+                          >
+                          <svg class="group-hover:text-gray-500 mr-3 flex-shrink-0 h-6 w-6"
+                               xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                               stroke="currentColor" aria-hidden="true"
+                               :class="activeTab===1 ? 'bg-blue-lionet text-white' : ' text-gray-500'">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                          </svg>
+                        </span>
+                        <span x-show="index===2" class="cursor-pointer py-3 px-4 rounded-l-lg transition"
+                          :class="activeTab===2 ? 'bg-blue-lionet text-white' : ' text-gray-500'" @click="activeTab = index; "
+                          >
+                          <svg class="group-hover:text-gray-500 mr-3 flex-shrink-0 h-6 w-6"
+                               xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                               stroke="currentColor" aria-hidden="true"
+                               :class="activeTab===2 ? 'bg-blue-lionet text-white' : ' text-gray-500'">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                          </svg>
+                        </span>
+                        <span x-show="index===3" class="cursor-pointer py-3 px-4 rounded-l-lg transition"
+                          :class="activeTab===3 ? 'bg-blue-lionet text-white' : ' text-gray-500'" @click="activeTab = index; "
+                          >
+                          <svg class="group-hover:text-gray-500 mr-3 flex-shrink-0 h-6 w-6"
+                               xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                               stroke="currentColor" aria-hidden="true"
+                               :class="activeTab===3 ? 'bg-blue-lionet text-white' : ' text-gray-500'">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                          </svg>
+                        </span>
+
+                        <div class="cursor-pointer py-3 rounded-r-lg transition"
+                          :class="activeTab===index ? 'bg-blue-lionet text-white' : ' text-gray-500'" @click="activeTab = index; "
+                          x-text="tab"
+                          >
+                        </div>
+                      </div>
+                    </template>
+
+
+                </nav>
+            </div>
+        </div>
+      </div>
+    </div>
+    <div class="flex-none w-3/5 border rounded-md border-blue-lionet bg-white p-2 mr-2">
+      <div id="content_container" class="p-2">
+        <div class="" >
+          <div x-show="activeTab===0"  id="newPostPanel" >
+            <div class="post-heading">
+                <div class="float-left image">
+                    <img src="{{!user.profile_pic_URL}}" class="inline-block h-10 w-10 mr-2 mb-1 rounded-full" alt="user profile image">
+                </div>
+                <div class="float-left meta">
+                    <h2>
+                        <b>Hallo {{!user.username}}</b>
+                    </h2>
+                    <p class="text-sm text-gray-500 hover:text-gray-600 leading-6">Schreibe einen Post in diesen Space!<p>
+                </div>
+            </div>
+            <div class="post-description">
+                <textarea class="form-textarea mr-4 p-2 block w-full border rounded-md" id="postFeed" rows="4"
+                          placeholder="Poste etwas in deine Timeline?"></textarea>
+                <div class="post-description" style="padding-top: 5px;">
+                    <div id="postAlert"></div>
+                    <div class="grid grid-cols-2 gap-4">
+
+                    </div>
+                </div>
+
+                <div id="postdiv" class="mar-top clearfix p-2">
+                    <button class="m-0 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-lionet border-blue-lionet hover:bg-indigo-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 m-0 float-right" id="post"><i class="fa fa-pencil fa-fw"></i>
+                        Post
+                    </button>
+                    <div class="rounded">
+                        <button type="button"
+                                class="inline-flex items-center py-2 px-4 border border-2 rounded-full shadow-sm text-white bg-blue-lionet border-blue-lionet hover:bg-indigo-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 btn">
+                                <label class="items-center">
+                                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                  </svg>
+                                  <span class="mt-2 text-base leading-normal"></span>
+                                  <input type="file" name="files" id="files" multiple>
+                              </label>
+                        </button>
+                        <p>
+                            <audio id=recordedAudio></audio>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+
+          </div>
+          <div x-show="activeTab===1">
+            <div class="grid grid-cols-4 gap-4 p-2">
+              {{!#member_pics}}
+                <div class="flex flex-col items-center pb-10" >
+                  <a href="../profile/{{!username}}">
+                    <img class="mb-3 w-12 h-12 mx-auto rounded-full shadow-lg" src="../uploads/{{!profilePic}}"/>
+                    <p class="mb-1 text-xl font-medium text-gray-900 dark:text-white">{{!username}}</p>
+                  </a>
+                </div>
+              {{!/member_pics}}
+            </div>
+          </div>
+          <div x-show="activeTab===2"id="wiki_link" onclick="getWikiPage(window.location.pathname.split('/')[2] + ':start')"
+             class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+             <!--Wiki-->
+             <!--<div id="wiki_container">p</div>-->
+             <iframe class="w-full" height="600;" src="http://soserve.rz.uni-leipzig.de:8079/doku.php?id=personalthemen#personalthemen" title="description"></iframe>
+          </div>
+          <div x-show="activeTab===3">
+            <label>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mb-2 inline-block" viewBox="0 -2 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+              </svg>Dokumente in diesem Space
+            </label>
+            <div class="w-full rounded-lg shadow">
+              <ul class="divide-y-2 divide-gray-100">
+                  {{!#documents}}
+                    <li class="flex p-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-4" fill="none" viewBox="0 1 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <a href="{{!.}}" download>{{!.}}</a>
+                    </li>
+                  {{!/documents}}
+              </ul>
+            </div>
+
+          </div>
+          <!--<div id="feedContainer"></div>-->
+        </div>
+      </div>
+    </div>
+    <div class="flex-none w-1/5 p-2 mr-2">
+
+    </div>
+
+  </div>
+</script>
+
+<script id="1spaceHeaderTemplate" type="text/html">
   <div class="flex w-full overflow-hidden bg-white border rounded-md border-gray-300 p-2"  x-data="setup()">
     <div id="spaceProfilePanel" style="/*height:700px;*/">
       <div class="hidden md:flex md:flex-shrink-0">
