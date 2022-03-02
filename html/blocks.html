@@ -1111,210 +1111,46 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
 
 <script id="profileTemplate" type="text/html">
   <div class="container mx-auto my-5 p-5">
-    <div class="md:flex no-wrap md:-mx-2 bg-white border rounded-md border-gray-300 p-2">
-        <!-- Left Side -->
+    <div class="md:flex no-wrap md:-mx-2 bg-white border rounded-md border-blue-lionet p-2">
         <div class="float-left w-full md:w-2/6 md:mx-2 h-auto">
             <div class="bg-white p-2 mb-8">
                 <div class="image overflow-hidden float-left ml-8">
-                    <img class="mx-auto"
-                         src="/uploads/default_profile_pic.jpg"
+                    <img class="mx-auto mt-12"
+                         src={{!profile_pic_URL}}
                          alt="profile pic"
                          width = 150
-                         height = auto>
+                         height = auto
+                         id="photoFile">
+                    <h1 class="w-full text-gray-900 font-bold text-xl leading-8 my-1">{{!username}}</h1>
                 </div>
-                <div x-data="{'showModal': false}" @keydown.escape="showModal:false">
-                    <button id="updateProfileButton" type="button" @click="showModal = true" onclick="javascript:populateProfileInformationModal()"
-                       class="bg-blue-lionet hover:bg-blue-500 text-white font-bold py-1 px-2 rounded-full text-base ml-2 mt-1">
-                        Profil bearbeiten
-                    </button>
-
-                    <!-- Modal -->
-                    <div class="fixed inset-0 z-30 items-center justify-center overflow-auto bg-black bg-opacity-50"  x-show="showModal">
-                      <div class="max-w-3xl px-6 py-4 mx-auto text-left bg-white rounded shadow-lg" @click.away="showModal = false" x-transition:enter="motion-safe:ease-out duration-300" x-transition:enter-start="opacity-0 scale-90" x-transition:enter-end="opacity-100 scale-100">
-
-                        <!-- Title / Close -->
-                        <div class="flex items-center justify-between">
-                            <b class="font-bold text-gray-800">Aktualisiere dein Profil</b>
-
-                            <button type="button" class="z-50 cursor-pointer m-2" @click="showModal = false">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
-
-                        <!-- Content -->
-                        <div class="mt-10 sm:mt-0">
-                          <div class="md:grid md:grid-cols-3 md:gap-6">
-                            <div class="md:col-span-1">
-                              <div class="px-4 sm:px-0">
-                                <h3 class="text-lg font-medium leading-6 text-gray-900">Profilinformationen</h3>
-                                <p class="mt-1 text-sm text-gray-600">
-                                  Hier kannst du deine Informationen aktualisieren, die in deinem Profil angezeigt werden.
-                                </p>
-                              </div>
-                            </div>
-                            <div class="mt-5 md:mt-0 md:col-span-2">
-                              <form action="#" method="POST">
-                                <div class="shadow overflow-hidden sm:rounded-md">
-                                  <div class="px-4 py-5 bg-white sm:p-6">
-                                    <div class="grid grid-cols-6 gap-6">
-                                      <div class="col-span-6 sm:col-span-3">
-                                        <label for="first_name" class="block text-sm font-medium text-gray-700">Vorname</label>
-                                        <input type="text" name="first_name" id="first_name" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                                      </div>
-
-                                      <div class="col-span-6 sm:col-span-3">
-                                        <label for="last_name" class="block text-sm font-medium text-gray-700">Nachname</label>
-                                        <input type="text" name="last_name" id="last_name" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                                      </div>
-
-                                      <div class="col-span-6 sm:col-span-6">
-                                        <label for="bio" class="block text-sm font-medium text-gray-700">
-                                          Bio
-                                        </label>
-                                        <div class="mt-1">
-                                          <textarea id="bio" name="bio" rows="3" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md" placeholder="you@example.com"></textarea>
-                                        </div>
-                                      </div>
-
-                                      <div class="col-span-6 sm:col-span-6">
-                                        <label for="gender" class="block text-sm font-medium text-gray-700">Geschlecht</label>
-                                        <select id="gender" name="country" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                                          <option>M</option>
-                                          <option>W</option>
-                                          <option>D</option>
-                                        </select>
-                                      </div>
-
-                                      <div class="col-span-6 sm:col-span-6">
-                                        <label for="address" class="block text-sm font-medium text-gray-700">Gegenwärtige Adresse</label>
-                                        <input type="text" name="address" id="address" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                                      </div>
-
-                                      <div class="col-span-6 sm:col-span-6">
-                                          <label for="date_of_birth" class="block text-sm font-medium text-gray-700">Geburtstag</label>
-                                          <input type="date" name="date_of_birth" id="date_of_birth" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                                      </div>
-
-                                      <div class="col-span-6 sm:col-span-6">
-                                        <label for="institution" class="block text-sm font-medium text-gray-700">Institution</label>
-                                        <input type="text" name="institution" id="institution" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                                      </div>
-
-                                      <div class="col-span-6 sm:col-span-6">
-                                        <label for="experience" class="block text-sm font-medium text-gray-700 inline-block">Erfahrungen</label>
-                                        <button type="button" class="z-50 cursor-pointer m-2 inline-block" onclick="javascript:addListItem('experience')">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                            </svg>
-                                        </button>
-                                        <div class="bg-white shadow-xl rounded-lg">
-                                         <ul id="experience_list" class="divide-y divide-gray-300">
-
-                                          </ul>
-                                        </div>
-                                      </div>
-                                      <div class="col-span-6 sm:col-span-6">
-                                        <label for="education" class="block text-sm font-medium text-gray-700 inline-block">Ausbildung</label>
-                                        <button type="button" class="z-50 cursor-pointer m-2 inline-block" onclick="javascript:addListItem('education')">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                            </svg>
-                                        </button>
-                                        <div class="bg-white shadow-xl rounded-lg">
-                                         <ul id="education_list" class="divide-y divide-gray-300">
-
-                                          </ul>
-                                        </div>
-                                      </div>
-
-                                      <div class="col-span-6 sm:col-span-6 justify-center mt-2">
-                                        <label for="education" class="block text-sm font-medium text-gray-700 inline-block">Profilbild (Zugelassene Formate: jpg,png,svg,jpeg)</label>
-                                        <div class="rounded-lg shadow-xl bg-gray-50">
-                                            <div class="m-2">
-                                                <div class="flex items-center justify-center w-full">
-                                                    <label class="flex flex-col w-full h-32 m-4 border-4 border-dashed hover:bg-gray-100 hover:border-gray-300">
-                                                        <div class="flex flex-col items-center justify-center pt-7">
-                                                            <svg xmlns="http://www.w3.org/2000/svg"
-                                                                class="w-12 h-12 text-gray-400 group-hover:text-gray-600" viewBox="0 0 20 20"
-                                                                fill="currentColor">
-                                                                <path fill-rule="evenodd"
-                                                                    d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
-                                                                    clip-rule="evenodd" />
-                                                            </svg>
-                                                            <p class="pt-1 text-sm tracking-wider text-gray-400 group-hover:text-gray-600">
-                                                                Wähle ein Bild für dein Profil!</p>
-                                                        </div>
-                                                        <input id="photoFile" type="file" class="opacity-0" />
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                      </div>
-
-                                    </div>
-                                  </div>
-                                  <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
-                                    <button type="button" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-lionet hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" onclick="javascript:saveProfileInformation()">
-                                      Speichern
-                                    </button>
-                                  </div>
-                                </div>
-                              </form>
-                            </div>
-                          </div>
-                        </div>
-
-                      </div>
-                    </div>
-                </div>
+                
             </div>
-            <div class="bg-white p-2 mt-28 mb-16">
-                <h1 class="w-full text-gray-900 font-bold text-xl leading-8 my-1 ml-8 float-left">{{!username}}</h1>
-                <!-- <h3 class="w-full text-gray-600 font-lg text-semibold leading-6 ml-8 float-left">{{!email}}</h3> -->
+            <!-- <div class="bg-white p-2 mt-28 mb-16">
+    
+                <h3 class="w-full text-gray-600 font-lg text-semibold leading-6 ml-8 float-left">{{!email}}</h3>
                 <p class="w-80 text-sm text-gray-500 hover:text-gray-600 leading-6 ml-8 float-left">{{!profile.bio}}</p>
-            </div>
-            <div class="bg-white p-2">
+            </div> -->
+            <!-- <div class="bg-white p-2">
                 <ul class="bg-gray-100 text-gray-600 hover:text-gray-700 hover:shadow py-1 px-3 mt-3 ml-6 w-80 divide-y rounded shadow-sm">
                     <li class="flex items-center py-1">
                         <span>Status</span>
                         <span class="ml-auto"><span
                                 class="bg-green-500 py-1 px-2 rounded text-white text-sm">Aktiv</span></span>
                     </li>
-                    <!-- <li class="flex items-center py-3">
+                    <li class="flex items-center py-3">
                         <span>Mitglied seit</span>
                         <span class="ml-auto">07 Nov. 2016</span>
-                    </li> -->
+                    </li> 
                 </ul>
-            </div>
-            <button id="showProfileButton" type="button" onclick=" "
-                    class="bg-blue-lionet hover:bg-blue-500 text-white font-bold w-80 py-1 px-2 rounded-md text-base ml-8 mt-8">
-                    Profil ansehen
-            </button>
-            <button id="showTimelineButton" type="button" onclick=" "
-                    class="bg-blue-lionet hover:bg-blue-500 text-white font-bold w-80 py-1 px-2 rounded-md text-base ml-8 mt-4">
-                    Timeline ansehen
-            </button>
-            <button id="showErfahrungButton" type="button" onclick=" "
-                    class="bg-blue-lionet hover:bg-blue-500 text-white font-bold w-80 py-1 px-2 rounded-md text-base ml-8 mt-4">
-                    Erfahrungen
-            </button>
-            <button id="showAusbildungButton" type="button" onclick=" "
-                    class="bg-blue-lionet hover:bg-blue-500 text-white font-bold w-80 py-1 px-2 rounded-md text-base ml-8 mt-4">
-                    Ausbildung
-            </button>
-            <button id="showFollowsButton" type="button" onclick="javascript:showFriends()"
-                    class="bg-blue-lionet hover:bg-blue-500 text-white font-bold w-80 py-1 px-2 rounded-md text-base ml-8 mt-4 mb-8">
-                    Freunde
-            </button>
+            </div> -->
         </div>
         
-        <!-- Right Side -->
         <div class="w-full md:w-4/6 mx-2" id="profileRightSideContainer">
             <!-- About Section -->
-            <div class="bg-white p-5 mt-20 shadow-sm rounded-sm hover:shadow">
+            <div class="bg-white p-5 shadow-sm rounded-sm hover:shadow">
+                
                 <div class="flex items-center space-x-2 font-semibold text-gray-900 leading-8">
+                    
                     <span clas="text-green-500">
                         <svg class="h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor">
@@ -1336,21 +1172,21 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                             <div class="px-4 py-2">{{!profile.last_name}}</div>
                         </div>
                         <div class="grid grid-cols-2">
-                            <div class="px-4 py-2 font-semibold">Geschlecht</div>
-                            <div class="px-4 py-2">{{!profile.gender}}</div>
+                            <div class="px-4 py-2 font-semibold">Institution</div>
+                            <div class="px-4 py-2">{{!profile.institution}}</div>
                         </div>
                         <div class="grid grid-cols-2">
                             <div class="px-4 py-2 font-semibold">Telefon</div>
                             <div class="px-4 py-2">+11 998001001</div>
                         </div>
-                        <div class="grid grid-cols-2">
+                        <!-- <div class="grid grid-cols-2">
                             <div class="px-4 py-2 font-semibold">Gegenwärtige Adresse</div>
                             <div class="px-4 py-2">{{!profile.address}}</div>
                         </div>
                         <div class="grid grid-cols-2">
                             <div class="px-4 py-2 font-semibold">Permanente Adresse</div>
                             <div class="px-4 py-2">Arlington Heights, IL, Illinois</div>
-                        </div>
+                        </div> -->
                         <div class="grid grid-cols-2">
                             <div class="px-4 py-2 font-semibold">Email</div>
                             <div class="px-4 py-2">
@@ -1365,11 +1201,49 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                 </div>
             </div>
             <!-- End of about section-->
+        </div>
+      </div>
+    </div>
+</script>
 
+<script id="friendsTemplate" type="text/html">
+    <div class="container mx-auto my-5 p-5">
+        <div class="md:flex no-wrap md:-mx-2 bg-white border rounded-md border-blue-lionet p-2">
+            <!--Friends section-->
+            <div class="bg-white p-3 hover:shadow">
+                <div class="flex items-center space-x-3 font-semibold text-gray-900 text-xl leading-8">
+                    <span class="text-green-500">
+                        <svg class="h-5 fill-current" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                    </span>
+                    <span>Folgt</span>
+                </div>
+                <div class="grid grid-cols-3">
+                    {{!#follows}}
+                    <div class="text-center my-2">
+                        <img class="h-16 w-16 rounded-full mx-auto"
+                                src=""
+                                alt="">
+                        <a href="../profile/{{!.}}" class="text-main-color">{{!.}}</a>
+                    </div>
+                    {{!/follows}}
 
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End of friends card -->
+</script>
+
+<script id="experienceTemplate" type="text/html">
+    <div class="container mx-auto my-5 p-5">
+        <div class="md:flex no-wrap md:-mx-2 bg-white border rounded-md border-blue-lionet p-2">
             <!-- Experience-->
-            <!-- <div class="bg-white p-3 shadow-sm rounded-sm">
-                <div class="bg-white p-3 hover:shadow">
+            <div class="bg-white w-full p-3 shadow-sm rounded-sm">
+                <div class="bg-white p-3">
                     <div class="flex items-center space-x-2 font-semibold text-gray-900 leading-8 mb-3">
                         <span clas="text-green-500">
                             <svg class="h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -1392,11 +1266,18 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                         {{!/profile.experience}}
                     </ul>
                 </div>
-            </div> -->
+            </div>
             <!-- End of Experience-->
+        </div>
+    </div>
+</script>
+
+<script id="educationTemplate" type="text/html">
+    <div class="container mx-auto my-5 p-5">
+        <div class="md:flex no-wrap md:-mx-2 bg-white border rounded-md border-blue-lionet p-2">
             <!-- Education -->
-            <!-- <div class="bg-white p-3 shadow-sm rounded-sm">
-                <div class="bg-white p-3 hover:shadow">
+            <div class="bg-white w-full p-3 shadow-sm rounded-sm">
+                <div class="bg-white p-3">
                     <div class="flex items-center space-x-2 font-semibold text-gray-900 leading-8 mb-3">
                         <span clas="text-green-500">
                             <svg class="h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -1422,37 +1303,8 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                         {{!/profile.education}}
                     </ul>
                 </div>
-            </div> -->
-            <!-- End of Education-->
-            <!-- End of profile tab -->
-        </div>
-      </div>
-    </div>
-</script>
-
-<script id="friendsTemplate" type="text/html">
-    <!--Friends section-->
-    <div class="bg-white p-3 hover:shadow">
-        <div class="flex items-center space-x-3 font-semibold text-gray-900 text-xl leading-8">
-            <span class="text-green-500">
-                <svg class="h-5 fill-current" xmlns="http://www.w3.org/2000/svg" fill="none"
-                        viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                </svg>
-            </span>
-            <span>Folgt</span>
-        </div>
-        <div class="grid grid-cols-3">
-            {{!#follows}}
-            <div class="text-center my-2">
-                <img class="h-16 w-16 rounded-full mx-auto"
-                        src=""
-                        alt="">
-                <a href="../profile/{{!.}}" class="text-main-color">{{!.}}</a>
             </div>
-            {{!/follows}}
-
+            <!-- End of Education-->
         </div>
     </div>
     <!-- End of friends card -->

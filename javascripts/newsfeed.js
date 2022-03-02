@@ -27,6 +27,8 @@ var spaceHeaderTemplate
 var profileTemplate
 var friendsTemplate
 var profileInformation_listItem
+var experienceTemplate
+var educationTemplate
 
 /**
 $.get("/template", function(template, textStatus, jqXhr) {
@@ -57,7 +59,8 @@ var load_templates = async function () {
     spaceHeaderTemplate = $(template).filter('#spaceHeaderTemplate').html()
     profileTemplate = $(template).filter('#profileTemplate').html()
     friendsTemplate = $(template).filter('#friendsTemplate').html()
-
+    experienceTemplate = $(template).filter('#experienceTemplate').html()
+    educationTemplate = $(template).filter('#educationTemplate').html()
     profileInformation_listItem = $(template).filter('#profileInformation_listItem').html()
 
   });
