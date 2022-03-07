@@ -1456,11 +1456,14 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
               {{!/member_pics}}
             </div>
           </div>
-          <div x-show="activeTab===2"id="wiki_link" onclick="getWikiPage(window.location.pathname.split('/')[2] + ':start')"
-             class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+          <div x-show="activeTab===2" id="wiki_link"
+             class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md"
+            style="overflow: hidden;">
              <!--Wiki-->
              <!--<div id="wiki_container">p</div>-->
-             <iframe class="w-full" height="600;" src="http://soserve.rz.uni-leipzig.de:8079/doku.php?id=personalthemen#personalthemen" title="description"></iframe>
+              <!-- TODO iframe muss noch weiter nach rechts gerückt werden (über css - position?), damit es besser in die box passt, dann nochmal margins anpassen-->
+              <iframe class="w-full" src="https://soserve.rz.uni-leipzig.de:8078/doku.php?id=personalthemen#personalthemen" title="description"
+                    style="height: 1000px; width: 1000px; margin-left: -250px; margin-top: -186px; margin-bottom: -135px;"></iframe>
           </div>
           <div x-show="activeTab===3">
             <label>

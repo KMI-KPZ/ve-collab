@@ -47,7 +47,7 @@ class BaseHandler(tornado.web.RequestHandler):
         if options.no_wiki:
             self.wiki = None
         else:
-            self.wiki = Wiki("http://soserve.rz.uni-leipzig.de:8079/", "user", "password")  # use fixed user for now, TODO integration platform users into wiki (plugin authPDO?)
+            self.wiki = Wiki("https://soserve.rz.uni-leipzig.de:8078/", "user", "password")  # use fixed user for now, TODO integration platform users into wiki (plugin authPDO?)
 
     async def prepare(self):
         token = self.get_secure_cookie("access_token")
