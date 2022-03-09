@@ -1491,7 +1491,52 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
       </div>
     </div>
     <div class="flex-none w-1/5 p-2 mr-2">
+      <span>
+        {{!#isAdmin}}
+        <div x-data="{'showModal': false}" @keydown.escape="showModal:false">
+          <button id="updateProfileButton" type="button" @click="showModal = true" onclick="javascript:populateProfileInformationModal()"
+             class="bg-blue-lionet hover:bg-blue-500 text-white font-bold py-1 px-2 rounded-full text-base ml-48 mt-1">
+              Space bearbeiten
+          </button>
 
+          <!-- Modal -->
+          <div class="fixed inset-0 z-30 items-center justify-center overflow-auto bg-black bg-opacity-50"  x-show="showModal">
+            <div class="max-w-3xl px-6 py-4 mx-auto text-left bg-white rounded shadow-lg" @click.away="showModal = false" x-transition:enter="motion-safe:ease-out duration-300" x-transition:enter-start="opacity-0 scale-90" x-transition:enter-end="opacity-100 scale-100">
+              <form action="#" method="POST">
+                <div class="col-span-6 sm:col-span-6 justify-center mt-2">
+                  <label for="education" class="block text-sm font-medium text-gray-700 inline-block">Profilbild (Zugelassene Formate: jpg,png,svg,jpeg)</label>
+                  <div class="rounded-lg shadow-xl bg-gray-50">
+                      <div class="m-2">
+                          <div class="flex items-center justify-center w-full">
+                              <label class="flex flex-col w-full h-32 m-4 border-4 border-dashed hover:bg-gray-100 hover:border-gray-300">
+                                  <div class="flex flex-col items-center justify-center pt-7">
+                                      <svg xmlns="http://www.w3.org/2000/svg"
+                                          class="w-12 h-12 text-gray-400 group-hover:text-gray-600" viewBox="0 0 20 20"
+                                          fill="currentColor">
+                                          <path fill-rule="evenodd"
+                                              d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
+                                              clip-rule="evenodd" />
+                                      </svg>
+                                      <p class="pt-1 text-sm tracking-wider text-gray-400 group-hover:text-gray-600">
+                                          Wähle ein Bild für dein Profil!</p>
+                                  </div>
+                                  <input id="photoFile" type="file" class="opacity-0" />
+                              </label>
+                          </div>
+                      </div>
+                  </div>
+                </div>
+                <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
+                  <button type="button" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-lionet hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" onclick="javascript:updateSpacePicture()">
+                    Speichern
+                  </button>
+                </div>
+            </form>
+            </div>
+          </div>
+        </div>
+        {{!/isAdmin}}
+</span>
     </div>
 
   </div>

@@ -705,7 +705,17 @@ function getTimelineSpace(spacename, from, to) {
         })
       })
 
-      if(!document.body.contains(document.getElementById('spaceProfilePanel'))) $('#spaceProfileContainer').prepend(Mustache.render(spaceHeaderTemplate, {spacename: '' + spacename.replace("%20", " ") + '', members : members, memberSize : members.length, member_pics : memberPictures, documents : documents, user: currentUser}));
+      var isAdmin = [];
+      $.each(Spaces, function(entry) {
+        if(Spaces[entry].name == spacename.replace("%20"," ")) {
+          if(Spaces[entry].admins.includes(currentUser.username)) {
+            isAdmin.push(currentUser.username);
+            console.log("HALLO")
+          }
+        }
+      })
+      console.log(isAdmin)
+      if(!document.body.contains(document.getElementById('spaceProfilePanel'))) $('#spaceProfileContainer').prepend(Mustache.render(spaceHeaderTemplate, {spacename: '' + spacename.replace("%20", " ") + '', members : members, memberSize : members.length, member_pics : memberPictures, documents : documents, user: currentUser, isAdmin: isAdmin}));
 
     },
 
@@ -789,6 +799,10 @@ function post(text, tags, space) {
   fileList.forEach(function (file, i) {
     formData.append("file"+i, file);
   });
+
+  var hashtag_regex = new RegExp('#[a-zA-Z0-9_]+', 'g')
+  var hashtags = hashtag_regex.exec(text)//text.match(hashtag_regex)
+  console.log(hashtags)
 
   formData.append("file_amount", fileList.length);
   formData.append("text", text);
