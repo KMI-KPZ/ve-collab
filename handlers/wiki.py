@@ -1,6 +1,7 @@
 from handlers.base_handler import BaseHandler, auth_needed
 import tornado.web
-
+import requests
+from bs4 import BeautifulSoup
 from dokuwiki_integration import Wiki
 
 
@@ -74,14 +75,28 @@ class WikiPageHandler(BaseHandler):
             return
 
         #request page from dokuwiki (wrapper)
-        wiki = Wiki("https://soserve.rz.uni-leipzig.de:8078/", "user", "password")  # use fixed user for now, TODO integration platform users into wiki (plugin authPDO?)
-        page_name="personalthemen"
-        page_content = wiki.get_page(page_name, html=True)
+        #page_content = self.wiki.get_page(page_name, html=True)
+        page_content = requests.get("https://soserve.rz.uni-leipzig.de:8078/doku.php?id=" + page_name).content.decode()
 
         #rewrite relative links so they land on this handler again
         page_content = page_content.replace("doku.php?id", "wiki_page?page")
 
+        #rewrite media to query from wiki
+        page_content = page_content.replace("/lib/", "https://soserve.rz.uni-leipzig.de:8078/lib/")
+
+        #test
+        page_content = page_content.replace("<body>", "<body><p>I Have added this paragraph right here from the server</p>")
+
+        #test to remove login, search and other buttons with Beautifulsoup
+        soup = BeautifulSoup(page_content, features="html.parser")
+        elements = soup.find_all(attrs={"class": ["login", "search", "action recent", "action media", "action index"]})
+        for element in elements:
+            element.decompose()
+
+        page_content = str(soup)
+
         self.set_status(200)
-        self.write({"status": 200,
-                    "page_name": page_name,
-                    "page_content": page_content})
+        self.write(page_content)
+        #self.write({"status": 200,
+        #            "page_name": page_name,
+        #            "page_content": page_content})

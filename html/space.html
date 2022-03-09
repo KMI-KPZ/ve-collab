@@ -24,10 +24,10 @@
 </head>
 <body class="font-sans bg-blue-50">
   <!-- Navbar -->
-  <nav class="mb-6">
-    <div class="bg-blue-lionet container mx-auto px-8" style="font-family: 'Titillium Web', sans-serif;">
+  <nav class="mb-4">
+    <div class="bg-blue-lionet mx-4 px-8" style="font-family: 'Titillium Web', sans-serif;">
       <div class="flex items-center py-2 px-10">
-        <div class="w-3/4 flex items-center">
+        <div class="w-3/4 mx-auto flex items-center">
           <div>
             <img src="/uploads/SO-SERVE_Logo_solo-285x300.png" width="50" height="50"/>
           </div>
@@ -45,13 +45,15 @@
               <div>
                 <a href="/myprofile" class="no-underline text-white pr-3 text-base">Profil</a>
               </div>
-
-              <div class="relative text-base" x-data="{ isOpen: false}">
+              <div>
+                <a href="/spaces" class="no-underline text-white pr-3 text-base">Meine Gruppen</a>
+              </div>
+              <!--div class="relative text-base" x-data="{ isOpen: false}">
                 <button
                         @click="isOpen = !isOpen"
                         @keydown.escape="isOpen = false"
                         class="flex items-center text-white"
-                ><!--svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path class="heroicon-ui" d="M17 11a1 1 0 0 1 0 2h-4v4a1 1 0 0 1-2 0v-4H7a1 1 0 0 1 0-2h4V7a1 1 0 0 1 2 0v4h4z"/></svg-->Meine Gruppen</button>
+                >Meine Gruppen</button>
                 <ul x-show="isOpen"
                     @click.away="isOpen = false"
                     class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none"
@@ -59,7 +61,7 @@
                   <li>
                     <a class="dropdown-item block w-full hover:bg-gray-200 text-base" href="/spaces">Übersicht</a>
                   </li>
-                  <div id="spaceDropdown"></div>
+                  <div id="spaceDropdown"></div-->
                   <!--li class="bg-blue-lionet text-white">
                     <form class="">
                       <label for="newSpaceName">Neuer Gruppenname</label>
@@ -105,8 +107,12 @@
 </div>
 
 <div class="flex" id="feedRow">
-  <div class="container mx-auto w-3/5 px-4 mt-2 text-base" id="feedContainer" style="font-family: 'Titillium Web', sans-serif;max-width: 50%;">
-
+  <div class="container mx-auto px-4 mt-2 text-base"  style="font-family: 'Titillium Web', sans-serif;max-width: 85%;">
+    <div class="flex">
+    <div class="flex-none w-1/5 p-2 mr-2" style="height: 0%"></div>
+    <div class="flex-none w-3/5 p mr-2" id="feedContainer"></div>
+    <div class="flex-none w-1/5 p-2 mr-2" style="height: 0%"></div>
+  </div>
   </div>
 </div>
 
