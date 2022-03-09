@@ -229,9 +229,9 @@ function populateEducationContainer(){
     dataType: 'json',
     success: function (user) {
       console.log(user.profile)
-
-      $('#educationContainer').append(Mustache.render(educationTemplate, user.profile.education))
-
+  
+      $('#educationContainer').append(Mustache.render(educationTemplate, user.profile))
+      
     },
 
     error: function (xhr, status, error) {
@@ -251,8 +251,8 @@ function populateExperiencenContainer(){
     success: function (user) {
       console.log(user.profile)
 
-      $('#experienceContainer').append(Mustache.render(experienceTemplate, user.profile.experience))
-
+      $('#experienceContainer').append(Mustache.render(experienceTemplate, user.profile))
+  
     },
     error: function (xhr, status, error) {
       console.log("Error")
