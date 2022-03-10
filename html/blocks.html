@@ -1146,9 +1146,9 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
         <div class="w-full md:w-4/6 mx-2" id="profileRightSideContainer">
             <!-- About Section -->
             <div class="bg-white p-5 rounded-sm">
-                
+
                 <!-- <div class="flex items-center space-x-2 font-semibold text-gray-900 leading-8">
-                    
+
                     <span clas="text-green-500">
                         <svg class="h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor">
@@ -1157,7 +1157,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                         </svg>
                     </span>
                     <span class="tracking-wide">Über</span>
-    
+
                 </div> -->
                 <div class="text-gray-700">
                     <div class="grid text-base">
@@ -1196,29 +1196,29 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                             <div class="px-4 py-2">{{!profile.birthday}}</div>
                         </div>
                     </div>
-                    
+
                 </div>
                 <div x-data="{'showModal': false}" @keydown.escape="showModal:false">
                     <button id="updateProfileButton" type="button" @click="showModal = true" onclick="javascript:populateProfileInformationModal()"
                        class="bg-blue-lionet hover:bg-blue-500 text-white m-3 py-1 px-2 rounded-md text-base float-right mt-1">
                         Profil
                     </button>
-                  
+
                     <!-- Modal -->
                     <div class="fixed inset-0 z-30 items-center justify-center overflow-auto bg-black bg-opacity-50"  x-show="showModal">
                       <div class="max-w-3xl px-6 py-4 mx-auto text-left bg-white rounded shadow-lg" @click.away="showModal = false" x-transition:enter="motion-safe:ease-out duration-300" x-transition:enter-start="opacity-0 scale-90" x-transition:enter-end="opacity-100 scale-100">
-                  
+
                         <!-- Title / Close -->
                         <div class="flex items-center justify-between">
                             <b class="font-bold text-gray-800">Aktualisiere dein Profil</b>
-                  
+
                             <button type="button" class="z-50 cursor-pointer m-2" @click="showModal = false">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                             </button>
                         </div>
-                  
+
                         <!-- Content -->
                         <div class="mt-10 sm:mt-0">
                           <div class="md:grid md:grid-cols-3 md:gap-6">
@@ -1239,12 +1239,12 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                                         <label for="first_name" class="block text-sm font-medium text-gray-700">Vorname</label>
                                         <input type="text" name="first_name" id="first_name" class="mt-1 p-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
                                       </div>
-                  
+
                                       <div class="col-span-6 sm:col-span-3">
                                         <label for="last_name" class="block text-sm font-medium text-gray-700">Nachname</label>
                                         <input type="text" name="last_name" id="last_name" class="mt-1 p-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
                                       </div>
-                  
+
                                       <!-- <div class="col-span-6 sm:col-span-6">
                                         <label for="bio" class="block text-sm font-medium text-gray-700">
                                           Bio
@@ -1253,7 +1253,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                                           <textarea id="bio" name="bio" rows="3" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md" placeholder="you@example.com"></textarea>
                                         </div>
                                       </div> -->
-                  
+
                                       <!-- <div class="col-span-6 sm:col-span-6">
                                         <label for="gender" class="block text-sm font-medium text-gray-700">Geschlecht</label>
                                         <select id="gender" name="country" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
@@ -1262,22 +1262,22 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                                           <option>D</option>
                                         </select>
                                       </div> -->
-                  
+
                                       <!-- <div class="col-span-6 sm:col-span-6">
                                         <label for="address" class="block text-sm font-medium text-gray-700">Gegenwärtige Adresse</label>
                                         <input type="text" name="address" id="address" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
                                       </div> -->
-                  
+
                                       <div class="col-span-6 sm:col-span-6">
                                           <label for="date_of_birth" class="block text-sm font-medium text-gray-700">Geburtstag</label>
                                           <input type="date" name="date_of_birth" id="date_of_birth" class="mt-1 p-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
                                       </div>
-                  
+
                                       <div class="col-span-6 sm:col-span-6">
                                         <label for="institution" class="block text-sm font-medium text-gray-700">Institution</label>
                                         <input type="text" name="institution" id="institution" class="mt-1 p-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
                                       </div>
-                  
+
                                       <div class="col-span-6 sm:col-span-6">
                                         <label for="experience" class="block text-sm font-medium text-gray-700 inline-block">Erfahrungen</label>
                                         <button type="button" class="z-50 cursor-pointer m-2  inline-block" onclick="javascript:addListItem('experience')">
@@ -1287,7 +1287,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                                         </button>
                                         <div class="bg-white shadow-xl rounded-lg">
                                          <ul id="experience_list" class="divide-y divide-gray-300">
-                  
+
                                           </ul>
                                         </div>
                                       </div>
@@ -1300,11 +1300,11 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                                         </button>
                                         <div class="bg-white shadow-xl rounded-lg">
                                          <ul id="education_list" class="divide-y divide-gray-300">
-                  
+
                                           </ul>
                                         </div>
                                       </div>
-                  
+
                                       <div class="col-span-6 sm:col-span-6 justify-center mt-2">
                                         <label for="education" class="block text-sm font-medium text-gray-700 inline-block">Profilbild (Zugelassene Formate: jpg,png,svg,jpeg)</label>
                                         <div class="rounded-lg shadow-xl bg-gray-50">
@@ -1328,7 +1328,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                                             </div>
                                         </div>
                                       </div>
-                  
+
                                     </div>
                                   </div>
                                   <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
@@ -1341,7 +1341,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                             </div>
                           </div>
                         </div>
-                  
+
                       </div>
                     </div>
                   </div>
@@ -1418,22 +1418,22 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
              class="bg-blue-lionet hover:bg-blue-500 text-white m-3 py-1 px-2 rounded-md text-base float-right mt-1">
               Profil
           </button>
-        
+
           <!-- Modal -->
           <div class="fixed inset-0 z-30 items-center justify-center overflow-auto bg-black bg-opacity-50"  x-show="showModal">
             <div class="max-w-3xl px-6 py-4 mx-auto text-left bg-white rounded shadow-lg" @click.away="showModal = false" x-transition:enter="motion-safe:ease-out duration-300" x-transition:enter-start="opacity-0 scale-90" x-transition:enter-end="opacity-100 scale-100">
-        
+
               <!-- Title / Close -->
               <div class="flex items-center justify-between">
                   <b class="font-bold text-gray-800">Aktualisiere dein Profil</b>
-        
+
                   <button type="button" class="z-50 cursor-pointer m-2" @click="showModal = false">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                       </svg>
                   </button>
               </div>
-        
+
               <!-- Content -->
               <div class="mt-10 sm:mt-0">
                 <div class="md:grid md:grid-cols-3 md:gap-6">
@@ -1454,12 +1454,12 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                               <label for="first_name" class="block text-sm font-medium text-gray-700">Vorname</label>
                               <input type="text" name="first_name" id="first_name" class="mt-1 p-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
                             </div>
-        
+
                             <div class="col-span-6 sm:col-span-3">
                               <label for="last_name" class="block text-sm font-medium text-gray-700">Nachname</label>
                               <input type="text" name="last_name" id="last_name" class="mt-1 p-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
                             </div>
-        
+
                             <!-- <div class="col-span-6 sm:col-span-6">
                               <label for="bio" class="block text-sm font-medium text-gray-700">
                                 Bio
@@ -1468,7 +1468,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                                 <textarea id="bio" name="bio" rows="3" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md" placeholder="you@example.com"></textarea>
                               </div>
                             </div> -->
-        
+
                             <!-- <div class="col-span-6 sm:col-span-6">
                               <label for="gender" class="block text-sm font-medium text-gray-700">Geschlecht</label>
                               <select id="gender" name="country" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
@@ -1477,22 +1477,22 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                                 <option>D</option>
                               </select>
                             </div> -->
-        
+
                             <!-- <div class="col-span-6 sm:col-span-6">
                               <label for="address" class="block text-sm font-medium text-gray-700">Gegenwärtige Adresse</label>
                               <input type="text" name="address" id="address" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
                             </div> -->
-        
+
                             <div class="col-span-6 sm:col-span-6">
                                 <label for="date_of_birth" class="block text-sm font-medium text-gray-700">Geburtstag</label>
                                 <input type="date" name="date_of_birth" id="date_of_birth" class="mt-1 p-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
                             </div>
-        
+
                             <div class="col-span-6 sm:col-span-6">
                               <label for="institution" class="block text-sm font-medium text-gray-700">Institution</label>
                               <input type="text" name="institution" id="institution" class="mt-1 p-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
                             </div>
-        
+
                             <div class="col-span-6 sm:col-span-6">
                               <label for="experience" class="block text-sm font-medium text-gray-700 inline-block">Erfahrungen</label>
                               <button type="button" class="z-50 cursor-pointer m-2  inline-block" onclick="javascript:addListItem('experience')">
@@ -1502,7 +1502,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                               </button>
                               <div class="bg-white shadow-xl rounded-lg">
                                <ul id="experience_list" class="divide-y divide-gray-300">
-        
+
                                 </ul>
                               </div>
                             </div>
@@ -1515,11 +1515,11 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                               </button>
                               <div class="bg-white shadow-xl rounded-lg">
                                <ul id="education_list" class="divide-y divide-gray-300">
-        
+
                                 </ul>
                               </div>
                             </div>
-        
+
                             <div class="col-span-6 sm:col-span-6 justify-center mt-2">
                               <label for="education" class="block text-sm font-medium text-gray-700 inline-block">Profilbild (Zugelassene Formate: jpg,png,svg,jpeg)</label>
                               <div class="rounded-lg shadow-xl bg-gray-50">
@@ -1543,7 +1543,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                                   </div>
                               </div>
                             </div>
-        
+
                           </div>
                         </div>
                         <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
@@ -1556,7 +1556,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                   </div>
                 </div>
               </div>
-        
+
             </div>
           </div>
         </div>
@@ -1605,22 +1605,22 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
              class="bg-blue-lionet hover:bg-blue-500 text-white m-3 py-1 px-2 rounded-md text-base float-right mt-1">
               Profil
           </button>
-        
+
           <!-- Modal -->
           <div class="fixed inset-0 z-30 items-center justify-center overflow-auto bg-black bg-opacity-50"  x-show="showModal">
             <div class="max-w-3xl px-6 py-4 mx-auto text-left bg-white rounded shadow-lg" @click.away="showModal = false" x-transition:enter="motion-safe:ease-out duration-300" x-transition:enter-start="opacity-0 scale-90" x-transition:enter-end="opacity-100 scale-100">
-        
+
               <!-- Title / Close -->
               <div class="flex items-center justify-between">
                   <b class="font-bold text-gray-800">Aktualisiere dein Profil</b>
-        
+
                   <button type="button" class="z-50 cursor-pointer m-2" @click="showModal = false">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                       </svg>
                   </button>
               </div>
-        
+
               <!-- Content -->
               <div class="mt-10 sm:mt-0">
                 <div class="md:grid md:grid-cols-3 md:gap-6">
@@ -1641,12 +1641,12 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                               <label for="first_name" class="block text-sm font-medium text-gray-700">Vorname</label>
                               <input type="text" name="first_name" id="first_name" class="mt-1 p-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
                             </div>
-        
+
                             <div class="col-span-6 sm:col-span-3">
                               <label for="last_name" class="block text-sm font-medium text-gray-700">Nachname</label>
                               <input type="text" name="last_name" id="last_name" class="mt-1 p-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
                             </div>
-        
+
                             <!-- <div class="col-span-6 sm:col-span-6">
                               <label for="bio" class="block text-sm font-medium text-gray-700">
                                 Bio
@@ -1655,7 +1655,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                                 <textarea id="bio" name="bio" rows="3" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md" placeholder="you@example.com"></textarea>
                               </div>
                             </div> -->
-        
+
                             <!-- <div class="col-span-6 sm:col-span-6">
                               <label for="gender" class="block text-sm font-medium text-gray-700">Geschlecht</label>
                               <select id="gender" name="country" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
@@ -1664,22 +1664,22 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                                 <option>D</option>
                               </select>
                             </div> -->
-        
+
                             <!-- <div class="col-span-6 sm:col-span-6">
                               <label for="address" class="block text-sm font-medium text-gray-700">Gegenwärtige Adresse</label>
                               <input type="text" name="address" id="address" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
                             </div> -->
-        
+
                             <div class="col-span-6 sm:col-span-6">
                                 <label for="date_of_birth" class="block text-sm font-medium text-gray-700">Geburtstag</label>
                                 <input type="date" name="date_of_birth" id="date_of_birth" class="mt-1 p-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
                             </div>
-        
+
                             <div class="col-span-6 sm:col-span-6">
                               <label for="institution" class="block text-sm font-medium text-gray-700">Institution</label>
                               <input type="text" name="institution" id="institution" class="mt-1 p-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
                             </div>
-        
+
                             <div class="col-span-6 sm:col-span-6">
                               <label for="experience" class="block text-sm font-medium text-gray-700 inline-block">Erfahrungen</label>
                               <button type="button" class="z-50 cursor-pointer m-2  inline-block" onclick="javascript:addListItem('experience')">
@@ -1689,7 +1689,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                               </button>
                               <div class="bg-white shadow-xl rounded-lg">
                                <ul id="experience_list" class="divide-y divide-gray-300">
-        
+
                                 </ul>
                               </div>
                             </div>
@@ -1702,11 +1702,11 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                               </button>
                               <div class="bg-white shadow-xl rounded-lg">
                                <ul id="education_list" class="divide-y divide-gray-300">
-        
+
                                 </ul>
                               </div>
                             </div>
-        
+
                             <div class="col-span-6 sm:col-span-6 justify-center mt-2">
                               <label for="education" class="block text-sm font-medium text-gray-700 inline-block">Profilbild (Zugelassene Formate: jpg,png,svg,jpeg)</label>
                               <div class="rounded-lg shadow-xl bg-gray-50">
@@ -1730,7 +1730,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                                   </div>
                               </div>
                             </div>
-        
+
                           </div>
                         </div>
                         <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
@@ -1743,7 +1743,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                   </div>
                 </div>
               </div>
-        
+
             </div>
           </div>
         </div>
@@ -1837,7 +1837,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
         </div>
       </div>
     </div>
-    <div class="flex-none w-3/5 border rounded-md border-blue-lionet bg-white p-2 ml-9" style="width: 58%;">
+    <div class="flex-none w-3/5 border rounded-md border-blue-lionet bg-white p-2 ml-7">
       <div id="content_container" class="p-2">
         <div class="" >
           <div x-show="activeTab===0"  id="newPostPanel" >
@@ -1982,378 +1982,6 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
     </div>
 
   </div>
-</script>
-
-<script id="1spaceHeaderTemplate" type="text/html">
-  <div class="flex w-full overflow-hidden bg-white border rounded-md border-gray-300 p-2"  x-data="setup()">
-    <div id="spaceProfilePanel" style="/*height:700px;*/">
-      <div class="hidden md:flex md:flex-shrink-0">
-          <div class="flex flex-col w-64">
-              <!-- Sidebar component, swap this element with another sidebar if you like -->
-              <div class="flex flex-col flex-1 border-r border-gray-200 bg-white" >
-                  <div class="flex-1 flex flex-col ">
-                      <div class="flex-shrink-0 flex ">
-                          <a href="../space/{{!spacename}}" class="flex-shrink-0 w-full group block">
-                              <div class="flex items-center">
-                                  <div>
-                                      <img class="inline-block h-10 w-10 rounded-full"
-                                           src="http://localhost:8903/uploads/default_group_pic.jpg"
-                                           alt="SpaceFoto">
-                                  </div>
-                                  <div class="ml-3">
-                                      <p class="text-m font-bold text-gray-700 group-hover:text-gray-900">
-                                          {{!spacename}}
-                                      </p>
-                                  </div>
-                              </div>
-                          </a>
-                      </div>
-                      <nav class="mt-5 flex-1 px-2 bg-white space-y-1" >
-                          <template x-for="(tab, index) in tabs" :key="index">
-                            <div class="grid grid-rows-1 grid-flow-col" @click="triggerDisplay(index)">
-                              <span x-show="index===0" class="cursor-pointer py-3 px-4 rounded-l-lg transition"
-                                :class="activeTab===0 ? 'bg-blue-lionet text-white' : ' text-gray-500'" @click="activeTab = index; "
-                                >
-                                <svg class="group-hover:text-gray-500 mr-3 flex-shrink-0 h-6 w-6"
-                                     xmlns="http://www.w3.org/2000/svg"
-                                     fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"
-                                     :class="activeTab===0 ? 'bg-blue-lionet text-white' : ' text-gray-500'">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                                </svg>
-                              </span>
-                              <span x-show="index===1" class="cursor-pointer py-3 px-4 rounded-l-lg transition"
-                                :class="activeTab===1 ? 'bg-blue-lionet text-white' : ' text-gray-500'" @click="activeTab = index; "
-                                >
-                                <svg class="group-hover:text-gray-500 mr-3 flex-shrink-0 h-6 w-6"
-                                     xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                     stroke="currentColor" aria-hidden="true"
-                                     :class="activeTab===1 ? 'bg-blue-lionet text-white' : ' text-gray-500'">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                                </svg>
-                              </span>
-                              <span x-show="index===2" class="cursor-pointer py-3 px-4 rounded-l-lg transition"
-                                :class="activeTab===2 ? 'bg-blue-lionet text-white' : ' text-gray-500'" @click="activeTab = index; "
-                                >
-                                <svg class="group-hover:text-gray-500 mr-3 flex-shrink-0 h-6 w-6"
-                                     xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                     stroke="currentColor" aria-hidden="true"
-                                     :class="activeTab===2 ? 'bg-blue-lionet text-white' : ' text-gray-500'">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
-                                </svg>
-                              </span>
-                              <span x-show="index===3" class="cursor-pointer py-3 px-4 rounded-l-lg transition"
-                                :class="activeTab===3 ? 'bg-blue-lionet text-white' : ' text-gray-500'" @click="activeTab = index; "
-                                >
-                                <svg class="group-hover:text-gray-500 mr-3 flex-shrink-0 h-6 w-6"
-                                     xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                     stroke="currentColor" aria-hidden="true"
-                                     :class="activeTab===3 ? 'bg-blue-lionet text-white' : ' text-gray-500'">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
-                                </svg>
-                              </span>
-
-                              <div class="cursor-pointer py-3 rounded-r-lg transition"
-                                :class="activeTab===index ? 'bg-blue-lionet text-white' : ' text-gray-500'" @click="activeTab = index; "
-                                x-text="tab"
-                                >
-                              </div>
-                            </div>
-                          </template>
-
-
-                      </nav>
-                  </div>
-              </div>
-          </div>
-      </div>
-    </div>
-    <div class="flex flex-col w-0 flex-1 overflow-hidden" >
-      <div id="content_container" class="p-2">
-        <div class="" >
-          <div x-show="activeTab===0"  id="newPostPanel" >
-
-            <div class="post-description">
-                <textarea class="form-textarea mt-1 p-2 block w-full border rounded-md" id="postFeed" rows="6"
-                          placeholder="Poste etwas in deine Timeline?"></textarea>
-                <div class="post-description" style="padding-top: 5px;">
-                    <div id="postAlert"></div>
-                    <div class="grid grid-cols-2 gap-4">
-
-                    </div>
-                </div>
-
-                <div id="postdiv" class="mar-top clearfix p-2">
-                    <button class="m-0 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-lionet border-blue-lionet hover:bg-indigo-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 m-0 float-right" id="post"><i class="fa fa-pencil fa-fw"></i>
-                        Post
-                    </button>
-                    <div class="rounded">
-                        <button type="button"
-                                class="inline-flex items-center py-2 px-4 border border-2 rounded-full shadow-sm text-white bg-blue-lionet border-blue-lionet hover:bg-indigo-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 btn">
-                                <label class="items-center">
-                                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                  </svg>
-                                  <span class="mt-2 text-base leading-normal"></span>
-                                  <input type="file" name="files" id="files" multiple>
-                              </label>
-                        </button>
-                        <p>
-                            <audio id=recordedAudio></audio>
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-
-          </div>
-          <div x-show="activeTab===1">
-            <div class="grid grid-cols-4 gap-4 p-2">
-              {{!#member_pics}}
-                <div class="flex flex-col items-center pb-10" >
-                  <a href="../profile/{{!username}}">
-                    <img class="mb-3 w-12 h-12 mx-auto rounded-full shadow-lg" src="../uploads/{{!profilePic}}"/>
-                    <p class="mb-1 text-xl font-medium text-gray-900 dark:text-white">{{!username}}</p>
-                  </a>
-                </div>
-              {{!/member_pics}}
-            </div>
-          </div>
-          <div x-show="activeTab===2"id="wiki_link" onclick="getWikiPage(window.location.pathname.split('/')[2] + ':start')"
-             class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
-             <!--Wiki-->
-             <!--<div id="wiki_container">p</div>-->
-             <iframe class="w-full" height="600;" src="http://soserve.rz.uni-leipzig.de:8079/doku.php?id=personalthemen#personalthemen" title="description"></iframe>
-          </div>
-          <div x-show="activeTab===3">
-            <label>
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mb-2 inline-block" viewBox="0 -2 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-              </svg>Dokumente in diesem Space
-            </label>
-            <div class="w-full rounded-lg shadow">
-              <ul class="divide-y-2 divide-gray-100">
-                  {{!#documents}}
-                    <li class="flex p-3">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-4" fill="none" viewBox="0 1 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      <a href="{{!.}}" download>{{!.}}</a>
-                    </li>
-                  {{!/documents}}
-              </ul>
-            </div>
-
-          </div>
-          <!--<div id="feedContainer"></div>-->
-        </div>
-      </div>
-    </div>
-
-</script>
-
-<script id="2spaceHeaderTemplate" type="text/html">
-<div class="flex w-full overflow-hidden bg-white p-4">
-  <div id="spaceProfilePanel">
-    <!-- Static sidebar for desktop -->
-    <div class="hidden md:flex md:flex-shrink-0">
-        <div class="flex flex-col w-64">
-            <!-- Sidebar component, swap this element with another sidebar if you like -->
-            <div class="flex flex-col flex-1 border-r border-gray-200 bg-white">
-                <div class="flex-1 flex flex-col ">
-                    <div class="flex-shrink-0 flex ">
-                        <a href="../space/{{!spacename}}" class="flex-shrink-0 w-full group block">
-                            <div class="flex items-center">
-                                <div>
-                                    <img class="inline-block h-9 w-9 rounded-full"
-                                         src="https://via.placeholder.com/400x200"
-                                         alt="SpaceFoto">
-                                </div>
-                                <div class="ml-3">
-                                    <p class="text-sm font-bold text-gray-700 group-hover:text-gray-900">
-                                        {{!spacename}}
-                                    </p>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-                    <nav class="mt-5 flex-1 px-2 bg-white space-y-1">
-                        <!-- Current: "bg-gray-100 text-gray-900", Default: "text-gray-600 hover:bg-gray-50 hover:text-gray-900" -->
-                        <a href="../space/{{!spacename}}"
-                           class="bg-gray-100 text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
-                            <!--
-                              Heroicon name: outline/home
-
-                              Current: "text-gray-500", Default: "text-gray-400 group-hover:text-gray-500"
-                            -->
-                            <svg class="text-gray-500 mr-3 flex-shrink-0 h-6 w-6"
-                                 xmlns="http://www.w3.org/2000/svg"
-                                 fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                            </svg>
-                            Dashboard
-                        </a>
-
-                        <!--<a href=""
-                           class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
-                            <svg class="text-gray-400 group-hover:text-gray-500 mr-3 flex-shrink-0 h-6 w-6"
-                                 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                 stroke="currentColor" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                            </svg>
-                            Team ({{!memberSize}})
-                        </a>-->
-
-                        <div x-data="{'showModal': false}" @keydown.escape="showModal:false">
-                          <button  type="button" @click="showModal = true"
-                             class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
-                              <!-- Heroicon name: outline/users -->
-                              <svg class="text-gray-400 group-hover:text-gray-500 mr-3 flex-shrink-0 h-6 w-6"
-                                   xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                   stroke="currentColor" aria-hidden="true">
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                              </svg>
-                              Team ({{!memberSize}})
-                          </button>
-                          <!-- Modal -->
-                          <div
-                              class="fixed inset-0 z-30 flex items-center justify-center overflow-auto bg-black bg-opacity-50"
-                              x-show="showModal"
-                          >
-                              <!-- Modal inner -->
-                              <div
-                                  class="max-w-3xl px-6 py-4 mx-auto text-left bg-white rounded shadow-lg"
-                                  @click.away="showModal = false"
-                                  x-transition:enter="motion-safe:ease-out duration-300"
-                                  x-transition:enter-start="opacity-0 scale-90"
-                                  x-transition:enter-end="opacity-100 scale-100"
-                              >
-                                  <!-- Title / Close-->
-                                  <div class="flex items-center justify-between">
-                                      <b class="mr-3 text-black max-w-none">Members of {{!spacename}}</b>
-
-                                      <button type="button" class="z-50 cursor-pointer" @click="showModal = false">
-                                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                          </svg>
-                                      </button>
-                                  </div>
-
-                                  <!-- content -->
-                                  <ul class="p-2">
-                                      {{!#members}}
-                                      <li class="border list-none rounded-sm px-3 py-3">
-                                        <a href="../profile/{{!.}}">{{!.}}</a>
-                                      </li>
-                                      {{!/members}}
-                                  </ul>
-                              </div>
-                          </div>
-                        </div>
-
-                        <div id="wiki_link" onclick="getWikiPage(window.location.pathname.split('/')[2] + ':start')"
-                           class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
-                            <!-- Heroicon name: outline/folder -->
-                            <svg class="text-gray-400 group-hover:text-gray-500 mr-3 flex-shrink-0 h-6 w-6"
-                                 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                 stroke="currentColor" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
-                            </svg>
-                            Wiki
-                        </div>
-
-
-                        <a disabled href=""
-                           class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
-                            <!-- Heroicon name: outline/inbox -->
-                            <svg class="text-gray-400 group-hover:text-gray-500 mr-3 flex-shrink-0 h-6 w-6"
-                                 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                 stroke="currentColor" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
-                            </svg>
-                            Dokumente
-                        </a>
-
-
-                    </nav>
-                </div>
-            </div>
-        </div>
-    </div>
-  </div>
-  <div class="flex flex-col w-0 flex-1 overflow-hidden">
-    <div id="content_container" class="p-2">
-        <div class="panel panel-white post" id="newPostPanel">
-            <div class="post-description">
-            <textarea class="form-control w-full" id="postFeed" rows="2"
-                      placeholder="What are you thinking?"></textarea>
-                <div class="post-description" style="padding-top: 5px;">
-                    <div id="postAlert"></div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <!---                        <div class="flex-1">
-                                                    <input type="text" value="" id="addTag" data-role="tagsinput" placeholder="Add Tags">
-                                                </div>
-                                                -->
-                    </div>
-                </div>
-
-                <div id="postdiv" class="mar-top clearfix p-2">
-                    <button class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-whitebg-indigo-300 hover:bg-indigo-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 pull-right "
-                            id="post">
-                        Post
-                        <svg class="ml-2 -mr-0.5 mt-1 h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                             fill="currentColor" aria-hidden="true">
-                            <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
-                            <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
-                        </svg>
-
-                    </button>
-                    <!--<div class="element">
-                      <i class="fa fa-file"></i>
-                      <button class="btn btn-sm btn-success" id="record"><i class="fa fa-microphone"></i></button>
-                      <input type="file" name="files" id="files" multiple>
-                    </div>-->
-                    <div class="rounded">
-
-                        <button id="record"
-                                class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-whitebg-indigo-300 hover:bg-indigo-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
-                                 viewBox="0 0 24 24"
-                                 stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
-                            </svg>
-                        </button>
-                        <button type="button"
-                                class="inline-flex items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-whitebg-indigo-300 hover:bg-indigo-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <!-- Heroicon name: solid/plus -->
-                            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                                 fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd"
-                                      d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-                                      clip-rule="evenodd"/>
-                                <input type='file' name="files" id="files" multiple class="hidden"/>
-                            </svg>
-                        </button>
-                        <p>
-                            <audio id=recordedAudio></audio>
-                        </p>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </div>
-  </div>
-</div>
 </script>
 
 <script id="profileInformation_listItem" type="text/html">
