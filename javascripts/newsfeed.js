@@ -716,8 +716,14 @@ function getTimelineSpace(spacename, from, to) {
           space_pic = Spaces[entry].space_pic
         }
       })
-      if(!document.body.contains(document.getElementById('spaceProfilePanel'))) $('#spaceProfileContainer').prepend(Mustache.render(spaceHeaderTemplate, {spacename: '' + spacename.replace("%20", " ") + '', space_pic:  space_pic, members : members, memberSize : members.length, member_pics : memberPictures, documents : documents, user: currentUser, isAdmin: isAdmin}));
 
+      var this_space
+      $.each(Spaces, function(entry) {
+        if(Spaces[entry].name == spacename.replace("%20"," ")) {
+          this_space = Spaces[entry]
+        }
+      })
+      if(!document.body.contains(document.getElementById('spaceProfilePanel'))) $('#spaceProfileContainer').prepend(Mustache.render(spaceHeaderTemplate, {spacename: '' + spacename.replace("%20", " ") + '', space_pic:  space_pic, member_pics : memberPictures, documents : documents, user: currentUser, isAdmin: isAdmin}));
     },
 
     error: function (xhr, status, error) {
