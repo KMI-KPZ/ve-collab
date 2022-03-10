@@ -84,10 +84,8 @@ function getSpaces() {
           localStorage.setItem(space.name, space.members);
           Spaces.push(space);
         }
-        console.log(space._id)
-        console.log(space.members)
 
-        $('#spaceOverviewEntries').prepend(Mustache.render($('#spaceOverviewEntry').html(), {project_id: space._id, project_name: space.name.replace(" ", "%20"), display_name: space.name, members: space.members, inSpace: inSpace}))
+        $('#spaceOverviewEntries').prepend(Mustache.render($('#spaceOverviewEntry').html(), {project_id: space._id, project_name: space.name.replace(" ", "%20"), display_name: space.name, space_pic: space.space_pic, members: space.members, inSpace: inSpace}))
         // if not in Space render spaceTemplateSelect
         if (currURL.indexOf(baseUrl + '/space') == -1) {
           $('#selectSpace').append(Mustache.render(spaceTemplateSelect, space));

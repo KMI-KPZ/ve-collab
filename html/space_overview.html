@@ -69,13 +69,13 @@
               <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                   <tr>
-                    <th scope="col" class="px-6 py-3 text-left text-base font-medium text-gray-500 uppercase tracking-wider">
+                    <th scope="col" class="px-6 py-3 text-left text-base font-medium text-gray-500 uppercase tracking-wider w-5/6">
                       Name
                     </th>
-                    <th scope="col" class="px-6 py-3 text-left text-base font-medium text-gray-500 uppercase tracking-wider">
+                    <!--th scope="col" class="px-6 py-3 text-left text-base font-medium text-gray-500 uppercase tracking-wider">
                       Mitglieder
-                    </th>
-                    <th scope="col" class="px-6 py-3 text-left text-base font-medium text-gray-500 uppercase tracking-wider">
+                    </th-->
+                    <th scope="col" class="px-6 py-3 text-left text-base font-medium text-gray-500 uppercase tracking-wider w-1/6">
 
                       <div class="relative text-base" x-data="{ showModal: false}" @keydown.escape="showModal:false">
                         <button @click="showModal = true" @keydown.escape="isOpen = false"type="button" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full">
@@ -161,23 +161,23 @@
       <td class="px-6 py-4 whitespace-nowrap">
         <div class="flex items-center">
           <div class="flex-shrink-0 h-10 w-10">
-            <img class="h-10 w-10 rounded-full" src="http://localhost:8903/uploads/default_group_pic.jpg" alt="">Photo
+            <img class="h-10 w-10 rounded-full" src="http://localhost:8903/uploads/{{!space_pic}}" alt="">
           </div>
           <div class="ml-4">
             <a href="space/{{!project_name}}">
               <div class="text-sm font-medium text-gray-900">
                 {{!display_name}}
               </div>
-              <div class="text-gray-500 text-base">
+              <!--div class="text-gray-500 text-base">
                 {{!project_id}}
-              </div>
+              </div>-->
             </a>
           </div>
         </div>
       </td>
-      <td class="px-6 py-4 whitespace-nowrap">
+      <!--td class="px-6 py-4 whitespace-nowrap">
         <div class="text-base text-gray-900">{{!members}}</div>
-      </td>
+      </td-->
       <td class="px-6 py-4 whitespace-nowrap">
          {{!^inSpace}}
             <button type="button" id="joinSpace" name={{!project_name}} class="bg-blue-lionet hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-full">Beitreten </button>
