@@ -1,5 +1,9 @@
 from tornado.options import options
 
+from base64 import b64encode
+import os
+import re
+
 from acl import get_acl
 from handlers.base_handler import BaseHandler, auth_needed
 
@@ -85,7 +89,7 @@ class SpaceHandler(BaseHandler):
                  "success": True}
 
                 400 Bad Request
-                {"status": 401,
+                {"status": 400,
                  "reason": "space_doesnt_exist"}
 
                 401 Unauthorized
@@ -96,6 +100,27 @@ class SpaceHandler(BaseHandler):
                 {"status": 403,
                  "reason": "insufficient_permission"}
 
+        POST /spaceadministration/space_picture
+            (update space picture)
+            query param:
+                "name" : space name of which space to update space picture, mandatory argument
+
+            returns:
+                200 OK,
+                {"status": 200,
+                 "success": True}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": "space_doesnt_exist"}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                {"status": 403,
+                 "reason": "insufficient_permission"}
         """
 
         space_name = self.get_argument("name")
@@ -189,6 +214,55 @@ class SpaceHandler(BaseHandler):
                 self.write({"status": 403,
                             "reason": "insufficient_permission"})
                 return
+
+        elif slug == "space_picture":
+
+            space = self.db.spaces.find_one({"name": space_name})
+            if not space:
+                self.set_status(400)
+                self.write({'status': 400,
+                            'reason': "space_doesnt_exist"})
+                return
+
+            if "space_pic" in self.request.files:
+                print("in file handling")
+                space_pic_obj = self.request.files["space_pic"][0]
+
+                # save file
+                file_ext = os.path.splitext(space_pic_obj["filename"])[1]
+                new_file_name = b64encode(os.urandom(32)).decode("utf-8")
+                new_file_name = re.sub('[^0-9a-zäöüßA-ZÄÖÜ]+', '_', new_file_name).lower() + file_ext
+                print(new_file_name)
+
+                with open(self.upload_dir + new_file_name, "wb") as fp:
+                    fp.write(space_pic_obj["body"])
+
+            if new_file_name:
+                self.db.spaces.update_one(
+                    {"name": space_name},
+                    {"$set":
+                        {
+                            "space_pic": new_file_name
+
+                        }
+                    },
+                    upsert=True
+                )
+            else:
+                self.db.spaces.update_one(
+                    {"name": space_name},
+                    {"$set":
+                        {
+                            "space_pic": new_file_name
+
+                        }
+                    },
+                    upsert=True
+                )
+
+            self.set_status(200)
+            self.write({"status": 200,
+                        "success": True})
 
         else:
             self.set_status(404)

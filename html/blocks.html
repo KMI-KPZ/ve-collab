@@ -1764,7 +1764,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                         <div class="flex items-center">
                             <div>
                                 <img class="inline-block h-10 w-10 rounded-full"
-                                     src="http://localhost:8903/uploads/default_group_pic.jpg"
+                                     src="http://localhost:8903/uploads/{{!space_pic}}"
                                      alt="SpaceFoto">
                             </div>
                             <div class="ml-3">
@@ -1969,7 +1969,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                   </div>
                 </div>
                 <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
-                  <button type="button" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-lionet hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" onclick="javascript:updateSpacePicture()">
+                  <button type="button" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-lionet hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" onclick="javascript:updateSpacePicture('{{!spacename}}')">
                     Speichern
                   </button>
                 </div>

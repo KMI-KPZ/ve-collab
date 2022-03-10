@@ -20,7 +20,7 @@ function triggerDisplay(index) {
 }
 
 
-function updateSpacePicture() {
+function updateSpacePicture(name) {
   console.log("hallo")
   var photoFile = document.getElementById('photoFile');
   var photo = null;
@@ -38,7 +38,7 @@ function updateSpacePicture() {
 
   $.ajax({
     type: 'POST',
-    url: '/___',
+    url: '/spaceadministration/space_picture?name=' + name,
     data: formData,
     //important for upload
     contentType: false,
