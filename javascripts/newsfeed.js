@@ -716,7 +716,6 @@ function getTimelineSpace(spacename, from, to) {
           space_pic = Spaces[entry].space_pic
         }
       })
-      console.log(isAdmin)
       if(!document.body.contains(document.getElementById('spaceProfilePanel'))) $('#spaceProfileContainer').prepend(Mustache.render(spaceHeaderTemplate, {spacename: '' + spacename.replace("%20", " ") + '', space_pic:  space_pic, members : members, memberSize : members.length, member_pics : memberPictures, documents : documents, user: currentUser, isAdmin: isAdmin}));
 
     },

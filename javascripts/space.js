@@ -21,7 +21,6 @@ function triggerDisplay(index) {
 
 
 function updateSpacePicture(name) {
-  console.log("hallo")
   var photoFile = document.getElementById('photoFile');
   var photo = null;
   console.log(photoFile)
