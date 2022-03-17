@@ -218,12 +218,15 @@ class SpaceHandler(BaseHandler):
         elif slug == "space_picture":
 
             space = self.db.spaces.find_one({"name": space_name})
+            space_description = self.get_body_argument("space_description", None)
+
             if not space:
                 self.set_status(400)
                 self.write({'status': 400,
                             'reason': "space_doesnt_exist"})
                 return
 
+            new_file_name = None
             if "space_pic" in self.request.files:
                 print("in file handling")
                 space_pic_obj = self.request.files["space_pic"][0]
@@ -242,7 +245,8 @@ class SpaceHandler(BaseHandler):
                     {"name": space_name},
                     {"$set":
                         {
-                            "space_pic": new_file_name
+                            "space_pic": new_file_name,
+                            "space_description": space_description
 
                         }
                     },
@@ -253,7 +257,7 @@ class SpaceHandler(BaseHandler):
                     {"name": space_name},
                     {"$set":
                         {
-                            "space_pic": new_file_name
+                            "space_description": space_description
 
                         }
                     },

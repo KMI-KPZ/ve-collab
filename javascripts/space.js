@@ -19,8 +19,18 @@ function triggerDisplay(index) {
   }
 }
 
+function populateSpaceInformationModal()  {
+  $.each(Spaces, function(entry) {
+    if(Spaces[entry].name == spacename.replace("%20", " ")) {
+      if(Spaces[entry].space_description) {
+        $("#space_description").val(Spaces[entry].space_description)
+      }
+    }
+  })
+}
 
-function updateSpacePicture(name) {
+function updateSpaceInformation(name) {
+  var spaceDescription = String($('#space_description').val());
   var photoFile = document.getElementById('photoFile');
   var photo = null;
   console.log(photoFile)
@@ -34,7 +44,7 @@ function updateSpacePicture(name) {
 
   var formData = new FormData();
   formData.append("space_pic", photo);
-
+  formData.append("space_description", spaceDescription);
   $.ajax({
     type: 'POST',
     url: '/spaceadministration/space_picture?name=' + name,

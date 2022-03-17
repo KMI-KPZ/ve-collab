@@ -1779,7 +1779,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                   <div class="w-1/6">
                     {{!#isAdmin}}
                     <div x-data="{'showModal': false}" @keydown.escape="showModal:false">
-                      <button id="updateProfileButton" type="button" @click="showModal = true" onclick="javascript:populateProfileInformationModal()"
+                      <button id="updateProfileButton" type="button" @click="showModal = true" onclick="javascript:populateSpaceInformationModal()"
                          class="bg-blue-lionet hover:bg-blue-500 text-white font-bold py-1 px-2 rounded-full text-base mt-1">
                          <i class="fa fa-pencil fa-fw"></i>
                       </button>
@@ -1788,6 +1788,13 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                       <div class="fixed inset-0 z-30 items-center justify-center overflow-auto bg-black bg-opacity-50"  x-show="showModal">
                         <div class="max-w-3xl px-6 py-4 mx-auto text-left bg-white rounded shadow-lg" @click.away="showModal = false" x-transition:enter="motion-safe:ease-out duration-300" x-transition:enter-start="opacity-0 scale-90" x-transition:enter-end="opacity-100 scale-100">
                           <form action="#" method="POST">
+                            <div class="col-span-6 sm:col-span-6 justify-center mt-2">
+                              <label for="education" class="block text-sm font-medium text-gray-700 inline-block"> (Zugelassene Formate: jpg,png,svg,jpeg)</label>
+                              <div class="rounded-lg shadow-xl bg-gray-50">
+                                <textarea class="form-textarea mr-4 p-2 block w-full border rounded-md" id="space_description" rows="4"
+                                          placeholder="Beschreibe diesen Space!"></textarea>
+                              </div>
+                            </div>
                             <div class="col-span-6 sm:col-span-6 justify-center mt-2">
                               <label for="education" class="block text-sm font-medium text-gray-700 inline-block">Profilbild (Zugelassene Formate: jpg,png,svg,jpeg)</label>
                               <div class="rounded-lg shadow-xl bg-gray-50">
@@ -1812,7 +1819,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                               </div>
                             </div>
                             <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
-                              <button type="button" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-lionet hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" onclick="javascript:updateSpacePicture('{{!spacename}}')">
+                              <button type="button" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-lionet hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" onclick="javascript:updateSpaceInformation('{{!spacename}}')">
                                 Speichern
                               </button>
                             </div>
