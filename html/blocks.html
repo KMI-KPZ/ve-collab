@@ -1513,11 +1513,11 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                                 </div>
                               </div>
                               <div class="col-span-6 sm:col-span-6 justify-center mt-2">
-                                <label for="education" class="block text-sm font-medium text-gray-700 inline-block">Profilbild (Zugelassene Formate: jpg,png,svg,jpeg)</label>
+                                <label for="space_pic" class="block text-sm font-medium text-gray-700 inline-block">Profilbild (Zugelassene Formate: jpg,png,svg,jpeg)</label>
                                 <div class="rounded-lg shadow-xl bg-gray-50">
                                     <div class="m-2">
-                                        <div class="flex items-center justify-center w-full">
-                                            <label class="flex flex-col w-full h-32 m-4 border-4 border-dashed hover:bg-gray-100 hover:border-gray-300">
+                                        <div x-data="showImage()" class="flex items-center justify-center w-full">
+                                            <!--<label class="flex flex-col w-full h-32 m-4 border-4 border-dashed hover:bg-gray-100 hover:border-gray-300">
                                                 <div class="flex flex-col items-center justify-center pt-7">
                                                     <svg xmlns="http://www.w3.org/2000/svg"
                                                         class="w-12 h-12 text-gray-400 group-hover:text-gray-600" viewBox="0 0 20 20"
@@ -1530,7 +1530,23 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                                                         Wähle ein Bild für dein Profil!</p>
                                                 </div>
                                                 <input id="photoFile" type="file" class="opacity-0" />
-                                            </label>
+                                            </label>-->
+                                            <label
+                                              class="flex flex-col w-full h-32 border-4 border-dashed hover:bg-gray-100 hover:border-gray-300">
+                                              <div class="relative flex flex-col items-center justify-center pt-7">
+                                                  <img id="preview" class="absolute inset-0 w-full h-32">
+                                                  <svg xmlns="http://www.w3.org/2000/svg"
+                                                      class="w-12 h-12 text-gray-400 group-hover:text-gray-600" viewBox="0 0 20 20"
+                                                      fill="currentColor">
+                                                      <path fill-rule="evenodd"
+                                                          d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
+                                                          clip-rule="evenodd" />
+                                                  </svg>
+                                                  <p class="pt-1 text-sm tracking-wider text-gray-400 group-hover:text-gray-600">
+                                                      Wähle ein Bild für diesen Space!</p>
+                                              </div>
+                                              <input type="file" id="photoFile" class="opacity-0" accept="image/*" @change="showPreview(event)" />
+                                          </label>
                                         </div>
                                     </div>
                                 </div>
