@@ -75,15 +75,10 @@ class PostHandler(BaseHandler):
                 # save every file
                 for i in range(0, int(file_amount)):
                     file_obj = self.request.files["file" + str(i)][0]
-                    file_ext = os.path.splitext(file_obj["filename"])[1]
-                    new_file_name = b64encode(os.urandom(32)).decode("utf-8")
-                    new_file_name = re.sub('[^0-9a-zäöüßA-ZÄÖÜ]+', '_', new_file_name).lower() + file_ext
-                    print(new_file_name)
-
-                    with open(self.upload_dir + new_file_name, "wb") as fp:
+                    with open(self.upload_dir + file_obj["filename"], "wb") as fp:
                         fp.write(file_obj["body"])
 
-                    files.append(new_file_name)
+                    files.append(file_obj["filename"])
 
             post = {"author": author,
                     "creation_date": creation_date,
