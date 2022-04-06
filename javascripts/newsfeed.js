@@ -416,6 +416,10 @@ function comp(a, b) {
     return new Date(b.creation_date).getTime() - new Date(a.creation_date).getTime();
 }
 
+function compPinned(a, b) {
+  return Number(b.pinned) - Number(a.pinned)
+}
+
 /**
  * displayTimeline - renders Timeline
  * initialize tagsinput and tooltip
@@ -438,7 +442,8 @@ function displayTimeline(timeline) {
   }
   daysAgo = 0;
   //sort posts based on creation_date from new to older
-  var sortPostsByDateArray = timeline.posts.sort(comp);
+  var sortPostsByDateArray = timeline.posts.sort(comp).sort(compPinned);
+  console.log(sortPostsByDateArray)
   $.each(sortPostsByDateArray, function (i, post) {
     var countLikes = 0;
     var likerHTML = '';
@@ -549,7 +554,6 @@ function displayTimeline(timeline) {
     var firstPostDate = $feedContainer.find('.post:first').attr('name');
 
     if(post['isRepost'] == true){
-      console.log("ISREPSOT")
       post["isRepostAuthor"] = isRepostAuthor;
       post["originalAgo"] = calculateAgoTime(post.originalCreationDate);
       post["repostAuthorPicURL"] = baseUrl + '/uploads/' + post.repostAuthorProfilePic;
@@ -561,8 +565,20 @@ function displayTimeline(timeline) {
       } else $feedContainer.append(Mustache.render(repostTemplate, post));
     } else{
         if(!(firstPostDate === null) && post.creation_date > firstPostDate) {
+          if (inSpace) {
+              var isAdmin =true;
+              post["isAdmin"] = isAdmin
+          }
+
             $feedContainer.prepend(Mustache.render(postTemplate, post));
-        } else $feedContainer.append(Mustache.render(postTemplate, post));
+        } else {
+            if (inSpace) {
+                var isAdmin =true;
+                post["isAdmin"] = isAdmin
+            }
+
+            $feedContainer.append(Mustache.render(postTemplate, post));
+        }
     }
 
     //console.log(post);
@@ -700,6 +716,7 @@ function getTimelineSpace(spacename, from, to) {
 
       var documents = []
       $.each(timeline.posts, function(post) {
+        console.log(timeline.posts[post])
         $.each(timeline.posts[post].files, function(file) {
           documents.push(timeline.posts[post].files[file])
         })
@@ -713,7 +730,6 @@ function getTimelineSpace(spacename, from, to) {
           this_space = Spaces[entry]
           if(Spaces[entry].admins.includes(currentUser.username)) {
             isAdmin.push(currentUser.username);
-            console.log("HALLO")
           }
           space_pic = Spaces[entry].space_pic
         }
@@ -1171,7 +1187,6 @@ function getSpaces() {
 
       $.each(data.spaces, function (i, space) {
         //return if already rendered
-        console.log(space)
         if(document.body.contains(document.getElementById(space._id))) return;
         // inSpace as local var (not the global)
         var inSpace = (currentUser.spaces.indexOf(space.name) > -1) ? true : false;
@@ -1569,6 +1584,104 @@ function updateRepost(id) {
     },
   });
 }
+
+function pinDepin(e, id) {
+  var pinIcon = e.firstElementChild;
+  if(pinIcon.classList.contains("outlinePin")) {
+    //pinIcon.classList.remove("outlinePin")
+    //pinIcon.classList.add("solidPin")
+    postPin(id);
+  } else if(pinIcon.classList.contains("solidPin")) {
+    //pinIcon.classList.remove("solidPin")
+    //pinIcon.classList.add("outlinePin")
+    removePin(id);
+  }
+}
+
+function postPin(id) {
+  dataBody = {
+    'id': id,
+    'pin_type': "post"
+  };
+  dataBody = JSON.stringify(dataBody);
+  $.ajax({
+    type: 'POST',
+    url: '/pin',
+    data: dataBody,
+    success: function (data) {
+      console.log("pinned post " + id);
+      $feedContainer.empty()
+      initNewsFeed();
+    },
+
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Pin failed.'
+        });
+      }
+    },
+  });
+}
+
+function removePin(id) {
+  dataBody = {
+    'id': id
+  };
+
+  dataBody = JSON.stringify(dataBody);
+  $.ajax({
+    type: 'DELETE',
+    url: '/pin',
+    data: dataBody,
+    success: function (data) {
+      console.log("Removed pin of post " + id);
+      $feedContainer.empty()
+      initNewsFeed();
+    },
+
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'delete like failed.'
+        });
+      }
+    },
+  });
+}
+
 
 function loadSpacesRepost(id){
   $.each(Spaces, function(key, space){

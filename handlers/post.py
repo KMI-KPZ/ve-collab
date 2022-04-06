@@ -610,4 +610,48 @@ class PinHandler(BaseHandler):
             return
 
 
+    @auth_needed
+    def delete(self):
+        """
+        DELETE /pin
+            delete a pin of a post or a comment (posts are only pinnable if they are in a space)
+                post -> only group admin or global admin
+                comment -> any admin or creator of post
+            http body:
+                {
+                    "id": "id_of_post_or_comment"
+                }
 
+            returns:
+                200 OK,
+                {"status": 200,
+                 "success": True}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": "missing_key_in_http_body"}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
+        """
+
+        http_body = tornado.escape.json_decode(self.request.body)
+
+        if "id" in http_body:
+            self.db.posts.update_one(
+                {"_id": ObjectId(http_body["id"])},
+                {
+                    "$set": {"pinned": False}
+                }
+
+            )
+
+            self.set_status(200)
+            self.write({"status": 200,
+                        "success": True})
+
+        else:
+            self.set_status(400)
+            self.write({"status": 400,
+                        "reason": "missing_key_in_http_body"})
