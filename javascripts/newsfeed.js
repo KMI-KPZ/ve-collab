@@ -420,7 +420,24 @@ function compPinned(a, b) {
   return Number(b.pinned) - Number(a.pinned)
 }
 
+function compSpace(a,b) {
+  if(a.pinned && b.pinned) {
+    console.log("both pinned")
+    return (new Date(b.creation_date).getTime() + 3154000000000) - (new Date(a.creation_date).getTime() + 3154000000000);
+  } else if(a.pinned && !b.pinned) {
+    console.log("a pinned")
+    return new Date(b.creation_date).getTime() - (new Date(a.creation_date).getTime() + 3154000000000);
+  } else if(b.pinned && !a.pinned) {
+    console.log("b pinned")
+    return (new Date(b.creation_date).getTime() + 3154000000000) - new Date(a.creation_date).getTime();
+  } else {
+    console.log("none pinned")
+    return new Date(b.creation_date).getTime() - new Date(a.creation_date).getTime();
+  }
+}
+
 /**
+
  * displayTimeline - renders Timeline
  * initialize tagsinput and tooltip
  * @param  {JSON} timeline description
@@ -442,8 +459,14 @@ function displayTimeline(timeline) {
   }
   daysAgo = 0;
   //sort posts based on creation_date from new to older
-  var sortPostsByDateArray = timeline.posts.sort(comp).sort(compPinned);
-  console.log(sortPostsByDateArray)
+  var sortPostsByDateArray;
+  if(inSpace) {
+    sortPostsByDateArray = timeline.posts.sort(compSpace);
+    console.log(sortPostsByDateArray)
+  } else {
+    sortPostsByDateArray = timeline.posts.sort(comp);
+  }
+
   $.each(sortPostsByDateArray, function (i, post) {
     var countLikes = 0;
     var likerHTML = '';
@@ -566,15 +589,21 @@ function displayTimeline(timeline) {
     } else{
         if(!(firstPostDate === null) && post.creation_date > firstPostDate) {
           if (inSpace) {
-              var isAdmin =true;
-              post["isAdmin"] = isAdmin
+              var isAdmin = true;
+              post["isAdmin"] = isAdmin;
+              post["inSpace"] = true;
+          } else {
+            post["inSpace"] = false;
           }
 
             $feedContainer.prepend(Mustache.render(postTemplate, post));
         } else {
             if (inSpace) {
-                var isAdmin =true;
-                post["isAdmin"] = isAdmin
+                var isAdmin = true;
+                post["isAdmin"] = isAdmin;
+                post["inSpace"] = true;
+            } else {
+              post["inSpace"] = false;
             }
 
             $feedContainer.append(Mustache.render(postTemplate, post));
