@@ -574,40 +574,23 @@ function displayTimeline(timeline) {
       post["hasSpace"] = false;
     } else post["hasSpace"] = true;
 
-    var firstPostDate = $feedContainer.find('.post:first').attr('name');
-
     if(post['isRepost'] == true){
       post["isRepostAuthor"] = isRepostAuthor;
       post["originalAgo"] = calculateAgoTime(post.originalCreationDate);
       post["repostAuthorPicURL"] = baseUrl + '/uploads/' + post.repostAuthorProfilePic;
 
-      // check if there is a new post (more present datetime) => prepend to feedContainer
-      // else post is older => append to feedContainer
-      if(!(firstPostDate === null) && post.creation_date > firstPostDate) {
-          $feedContainer.prepend(Mustache.render(repostTemplate, post));
-      } else $feedContainer.append(Mustache.render(repostTemplate, post));
+      $feedContainer.append(Mustache.render(repostTemplate, post));
     } else{
-        if(!(firstPostDate === null) && post.creation_date > firstPostDate) {
-          if (inSpace) {
-              var isAdmin = true;
-              post["isAdmin"] = isAdmin;
-              post["inSpace"] = true;
-          } else {
-            post["inSpace"] = false;
-          }
+      if (inSpace) {
+          var isAdmin = true;
+          post["isAdmin"] = isAdmin; //why is this always set to true?!
+          post["inSpace"] = true;
+      } else {
+        post["inSpace"] = false;
+      }
+      // simply always append, the correct order of the posts is guaranteed because it is sorted before (see function compSpace)
+      $feedContainer.append(Mustache.render(postTemplate, post));
 
-            $feedContainer.prepend(Mustache.render(postTemplate, post));
-        } else {
-            if (inSpace) {
-                var isAdmin = true;
-                post["isAdmin"] = isAdmin;
-                post["inSpace"] = true;
-            } else {
-              post["inSpace"] = false;
-            }
-
-            $feedContainer.append(Mustache.render(postTemplate, post));
-        }
     }
 
     //console.log(post);
@@ -745,7 +728,6 @@ function getTimelineSpace(spacename, from, to) {
 
       var documents = []
       $.each(timeline.posts, function(post) {
-        console.log(timeline.posts[post])
         $.each(timeline.posts[post].files, function(file) {
           documents.push(timeline.posts[post].files[file])
         })
