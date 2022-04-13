@@ -166,7 +166,25 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
 
           </div>
           <div class="float-right">
+            {{!#isAdmin}}
+              <button type="button" onclick="pinDepinPost(this,'{{!_id}}');"
+                      class="bg-transparent hover:bg-blue-300 bg-blue-lionet h-7 text-white font-semibold text-xs hover:text-white py-1 px-2 border border-blue-lionet hover:border-transparent rounded" data-toggle="tooltip" data-placement="right" data-html="true">
+
+
+                {{!#pinned}}
+                <svg id="pinIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 solidPin" viewBox="0 1 20 20" fill="currentColor">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+                {{!/pinned}}
+                {{!^pinned}}
+                <svg id="pinIcon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 outlinePin" fill="none" viewBox="0 1 26 26" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                </svg>
+                {{!/pinned}}
+              </button>
+              {{!/isAdmin}}
               <div class="inline-block align-top">
+
                 <button type="button" onclick="likeDislike(this,'{{!_id}}');" id="likers"
                         class="bg-transparent hover:bg-blue-300 bg-blue-lionet h-7 text-white font-semibold text-xs hover:text-white py-1 px-2 border border-blue-lionet hover:border-transparent rounded" data-toggle="tooltip" data-placement="right" data-html="true"
                         data-original-title="{{!#likers}}<li>{{!.}}</li>{{!/likers}}">
@@ -433,8 +451,8 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
         </div>
       </div>
       <div class="post-footer w-full bg-gray-50 rounded-b-md">
-        {{!#isAdmin}}
-          <button type="button" onclick="pinDepin(this,'{{!_id}}');"
+        <!--{{!#isAdmin}}
+          <button type="button" onclick="pinDepinPost(this,'{{!_id}}');"
                   class="bg-transparent hover:bg-blue-300 bg-blue-lionet h-7 text-white font-semibold text-xs hover:text-white py-1 px-2 border border-blue-lionet hover:border-transparent rounded" data-toggle="tooltip" data-placement="right" data-html="true">
 
 
@@ -449,7 +467,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
             </svg>
             {{!/pinned}}
           </button>
-          {{!/isAdmin}}
+        {{!/isAdmin}}-->
 
           <ul class="comments-list border-2-2 border-blue-lionet border-l-2">
           </ul>
@@ -1056,9 +1074,25 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
             <div class="comment-heading">
                 <a href="profile/{{!author.username}}"><h4 class="user">{{!author.username}}</h4></a>
                 <h5 class="time" id="agoComment">{{!ago}}</h5>
+                {{!#isCommentAuthor}}
+                  <button type="button" onclick="pinDepinComment(this,'{{!_id}}');"
+                          class="float-right bg-transparent h-7 text-gray-300 font-semibold text-xs py-1 px-2 rounded" data-toggle="tooltip" data-placement="right" data-html="true">
+                    {{!#pinned}}
+                    <svg id="pinIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 solidPin" viewBox="0 1 20 20" fill="currentColor">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                    {{!/pinned}}
+                    {{!^pinned}}
+                    <svg id="pinIcon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 outlinePin" fill="none" viewBox="-6 1 28 28" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                    </svg>
+                    {{!/pinned}}
+                  </button>
+                {{!/isCommentAuthor}}
             </div>
             <p class="pt-1">{{!text}}</p>
         </div>
+
     </li>
 </script>
 

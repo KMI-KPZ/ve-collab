@@ -422,16 +422,12 @@ function compPinned(a, b) {
 
 function compSpace(a,b) {
   if(a.pinned && b.pinned) {
-    console.log("both pinned")
     return (new Date(b.creation_date).getTime() + 3154000000000) - (new Date(a.creation_date).getTime() + 3154000000000);
   } else if(a.pinned && !b.pinned) {
-    console.log("a pinned")
     return new Date(b.creation_date).getTime() - (new Date(a.creation_date).getTime() + 3154000000000);
   } else if(b.pinned && !a.pinned) {
-    console.log("b pinned")
     return (new Date(b.creation_date).getTime() + 3154000000000) - new Date(a.creation_date).getTime();
   } else {
-    console.log("none pinned")
     return new Date(b.creation_date).getTime() - new Date(a.creation_date).getTime();
   }
 }
@@ -508,7 +504,8 @@ function displayTimeline(timeline) {
       }
       var $commentsList = $existingPost.find('.comments-list');
       if (post.hasOwnProperty('comments')) {
-        $.each(post.comments, function (j, comment) {
+        var comments = post.comments.sort(compSpace)
+        $.each(comments, function (j, comment) {
           var existingComment = document.getElementById(comment._id);
           // case if comments doesn't exist => render Comment (postComment)
           if(!document.body.contains(existingComment)) {
@@ -516,11 +513,11 @@ function displayTimeline(timeline) {
               comment["isCommentAuthor"] = isCommentAuthor;
               comment["authorPicURL"] = baseUrl + '/uploads/' + comment.author.profile_pic;
               comment["ago"] = calculateAgoTime(comment.creation_date);
-              $commentsList.prepend(Mustache.render(commentTemplate, comment));
-        } else {
-          //update values of comments
-          existingComment.querySelector('#agoComment').innerHTML = calculateAgoTime(comment.creation_date);
-        }
+              $commentsList.append(Mustache.render(commentTemplate, comment));
+          } else {
+            //update values of comments
+            existingComment.querySelector('#agoComment').innerHTML = calculateAgoTime(comment.creation_date);
+          }
         });
       }
       return;
@@ -600,7 +597,8 @@ function displayTimeline(timeline) {
     if(liked) $likeIcon.removeClass('text-blue-700').addClass('text-green-700');
     if (post.hasOwnProperty('comments')) {
       var $commentsList = $feed.find('.comments-list');
-      $.each(post.comments, function (j, comment) {
+      var comments = post.comments.sort(compSpace).reverse()
+      $.each(comments, function (j, comment) {
         var isCommentAuthor = (currentUser.username == comment.author.username) ? true : false;
         comment["isCommentAuthor"] = isCommentAuthor;
         comment["authorPicURL"] = baseUrl + '/uploads/' + comment.author.profile_pic;
@@ -1596,20 +1594,16 @@ function updateRepost(id) {
   });
 }
 
-function pinDepin(e, id) {
+function pinDepinPost(e, id) {
   var pinIcon = e.firstElementChild;
   if(pinIcon.classList.contains("outlinePin")) {
-    //pinIcon.classList.remove("outlinePin")
-    //pinIcon.classList.add("solidPin")
-    postPin(id);
+    postPostPin(id);
   } else if(pinIcon.classList.contains("solidPin")) {
-    //pinIcon.classList.remove("solidPin")
-    //pinIcon.classList.add("outlinePin")
-    removePin(id);
+    removePostPin(id);
   }
 }
 
-function postPin(id) {
+function postPostPin(id) {
   dataBody = {
     'id': id,
     'pin_type': "post"
@@ -1651,9 +1645,10 @@ function postPin(id) {
   });
 }
 
-function removePin(id) {
+function removePostPin(id) {
   dataBody = {
-    'id': id
+    'id': id,
+    'pin_type': "post"
   };
 
   dataBody = JSON.stringify(dataBody);
@@ -1692,6 +1687,103 @@ function removePin(id) {
     },
   });
 }
+
+function pinDepinComment(e, id) {
+  var pinIcon = e.firstElementChild;
+  if(pinIcon.classList.contains("outlinePin")) {
+    postCommentPin(id);
+  } else if(pinIcon.classList.contains("solidPin")) {
+    removeCommentPin(id);
+  }
+}
+
+function postCommentPin(id) {
+  console.log("Pin Comment")
+  dataBody = {
+    'id': id,
+    'pin_type': "comment"
+  };
+  dataBody = JSON.stringify(dataBody);
+  $.ajax({
+    type: 'POST',
+    url: '/pin',
+    data: dataBody,
+    success: function (data) {
+      console.log("pinned comment " + id);
+      $feedContainer.empty()
+      initNewsFeed();
+    },
+
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Pin failed.'
+        });
+      }
+    },
+  });
+}
+
+function removeCommentPin(id) {
+  console.log("Remove Pin Comment")
+  dataBody = {
+    'id': id,
+    'pin_type': "comment"
+  };
+
+  dataBody = JSON.stringify(dataBody);
+  $.ajax({
+    type: 'DELETE',
+    url: '/pin',
+    data: dataBody,
+    success: function (data) {
+      console.log("Removed pin of post " + id);
+      $feedContainer.empty()
+      initNewsFeed();
+    },
+
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'delete like failed.'
+        });
+      }
+    },
+  });
+}
+
 
 
 function loadSpacesRepost(id){
