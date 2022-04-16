@@ -828,13 +828,20 @@ function post(text, tags, space) {
     formData.append("file"+i, file);
   });
 
-  var hashtag_regex = new RegExp('#[a-zA-Z0-9_]+', 'g')
-  var hashtags = hashtag_regex.exec(text)//text.match(hashtag_regex)
+  //var hashtag_regex = new RegExp('#[a-zA-Z0-9_]+', 'g')
+  var hashtag_regex = /#([a-zA-Z0-9_]+)/g
+  var match;
+  var hashtags = []
+  while ((match = hashtag_regex.exec(text)) != null) {
+    alert(match);
+    hashtags.push(match[1])
+  }
+  //var hashtags = hashtag_regex.exec(text)//text.match(hashtag_regex)
   console.log(hashtags)
 
   formData.append("file_amount", fileList.length);
   formData.append("text", text);
-  formData.append("tags", tags);
+  formData.append("tags", hashtags);
   if(space != null){
     formData.append("space", space);
   }

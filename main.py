@@ -46,6 +46,7 @@ def make_app(cookie_secret):
         (r"/", MainRedirectHandler),
         (r"/main", MainHandler),
         (r"/admin", AdminHandler),
+        (r"/acl", ACLHandler),
         (r"/myprofile", MyProfileHandler),
         (r"/profile/([a-zA-Z\-0-9\.:,_%]+)", ProfileHandler),
         (r"/posts", PostHandler),
