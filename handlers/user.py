@@ -273,6 +273,13 @@ class UserHandler(BaseHandler):
                     if "profile_pic" in profile:
                         user_list["users"][user]["profile_pic"] = profile["profile_pic"]
 
+                # override role of the platform by the own role of lionet, because lionet does its own role management
+                # only admins will not be overridden --> admin always stays admin
+                role = self.db.roles.find_one({"username": user})
+                if role:
+                    if user_list["users"][user]["role"] != "admin":
+                        user_list["users"][user]["role"] = role["role"]
+
             self.set_status(200)
             self.write(user_list["users"])
 

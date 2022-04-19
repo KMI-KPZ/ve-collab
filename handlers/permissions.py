@@ -78,6 +78,7 @@ class RoleHandler(BaseHandler):
 
         if await util.is_admin(self.current_user.username):
             http_body = json.loads(self.request.body)
+            print(http_body)
 
             if any(key not in http_body for key in ("username", "role")):
                 self.set_status(400)
