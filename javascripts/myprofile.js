@@ -2,9 +2,6 @@ $(document).ready(function () {
   getRouting();
   document.title = currentUser.username + ' - Lionet';
   updateProfileContainer();
-  // populateEducationContainer();
-  // populateExperiencenContainer();
-  // populateFriendsContainer();
 });
 
 /**
@@ -220,64 +217,3 @@ function deleteClosestListItem(elem) {
   console.log($(elem).closest('li'));
   $(elem).parents("li:first").remove();
 }
-
-// function populateEducationContainer(){
-//   Mustache.parse(educationTemplate);
-//   $.ajax({
-//     type: 'GET',
-//     url: '/profileinformation',
-//     dataType: 'json',
-//     success: function (user) {
-//       console.log(user.profile)
-  
-//       $('#educationContainer').append(Mustache.render(educationTemplate, user.profile))
-      
-//     },
-
-//     error: function (xhr, status, error) {
-//       console.log("Error")
-//     }
-//   })
-  
-  
-// }
-
-// function populateExperiencenContainer(){
-//   Mustache.parse(experienceTemplate);
-//   $.ajax({
-//     type: 'GET',
-//     url: '/profileinformation',
-//     dataType: 'json',
-//     success: function (user) {
-//       console.log(user.profile)
-
-//       $('#experienceContainer').append(Mustache.render(experienceTemplate, user.profile))
-  
-//     },
-//     error: function (xhr, status, error) {
-//       console.log("Error")
-//     }
-//   })
-  
-  
-// }
-
-// function populateFriendsContainer(){
-//   Mustache.parse(friendsTemplate);
-//   $.ajax({
-//     type: 'GET',
-//     url: '/profileinformation',
-//     dataType: 'json',
-//     success: function (follows) {
-//       console.log(follows)
-
-//       $('#friendsContainer').append(Mustache.render(friendsTemplate, follows))
-
-//     },
-//     error: function (xhr, status, error) {
-//       console.log("Error")
-//     }
-//   })
-  
-  
-// }
