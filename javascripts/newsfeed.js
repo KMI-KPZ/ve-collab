@@ -1196,6 +1196,7 @@ function getSpaces() {
   $.ajax({
     type: 'GET',
     url: '/spaceadministration/list',
+    async: false,  //very important that this ajax is awaited because it sets the Spaces array which is required by other functions to work
     dataType: 'json',
     success: function (data) {
       console.log("get Spaces success");
@@ -1220,7 +1221,7 @@ function getSpaces() {
           $('#selectSpace').append(Mustache.render(spaceTemplateSelect, space));
         }
 
-    });
+      });
     },
 
     error: function (xhr, status, error) {
