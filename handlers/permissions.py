@@ -3,6 +3,7 @@ import json
 from acl import get_acl
 from handlers.base_handler import BaseHandler, auth_needed
 import util
+from socket_client import get_socket_instance
 
 
 class PermissionHandler(BaseHandler):
@@ -18,38 +19,84 @@ class PermissionHandler(BaseHandler):
 class RoleHandler(BaseHandler):
 
     @auth_needed
-    def get(self):
+    async def get(self, slug):
         """
         GET /role
             request the role of the current user
         """
-
-        role_result = self.db.roles.find_one(
-            {"username": self.current_user.username}
-        )
-        print(role_result)
-
-        if role_result:
-            self.set_status(200)
-            self.write({"username": role_result["username"],
-                        "role": role_result["role"]})
-        else:
-            # no record for this user was found, insert as guest (default role)
-            # TODO guest as default role?
-            self.db.roles.insert_one(
-                {"username": self.current_user.username,
-                 "role": "guest"}
+        if slug == "my":
+            role_result = self.db.roles.find_one(
+                {"username": self.current_user.username}
             )
+            print(role_result)
 
-            self.set_status(200)
-            self.write({"username": self.current_user.username,
-                        "role": "guest"})
-    # TODO get_all
+            if role_result:
+                self.set_status(200)
+                self.write({"username": role_result["username"],
+                            "role": role_result["role"]})
+            else:
+                # no record for this user was found, insert as guest (default role)
+                # TODO guest as default role?
+                self.db.roles.insert_one(
+                    {"username": self.current_user.username,
+                     "role": "guest"}
+                )
+
+                self.set_status(200)
+                self.write({"username": self.current_user.username,
+                            "role": "guest"})
+
+        elif slug == "all":
+            if await util.is_admin(self.current_user.username):
+                ret_list = []
+                client = await get_socket_instance()
+                user_list = await client.write({"type": "get_user_list"})
+                existin_users_and_roles = self.db.roles.find(projection={"_id": False})
+                existing_users_and_roles = [item for item in existin_users_and_roles]
+
+                # match the platform users and if they have, existing lionet roles
+                for platform_user in user_list["users"]:
+                    already_in = False
+                    for existing_user in existing_users_and_roles:
+                        if user_list["users"][platform_user]["username"] == existing_user["username"]:
+                            ret_list.append(existing_user)
+                            already_in = True
+                            break
+                    if already_in:  # skip if user is already processed
+                        continue
+
+                    # if the user does not already exist, add him with guest role
+                    payload = {"username": user_list["users"][platform_user]["username"], "role": "guest"}
+                    self.db.roles.insert_one(payload)
+                    # manually because otherwise non-json-serializable ObjectId is in payload
+                    ret_list.append({"username": user_list["users"][platform_user]["username"], "role": "guest"})
+
+                self.set_status(200)
+                self.write({"users": ret_list})
+            else:
+                self.set_status(403)
+                self.write({"status": 403,
+                            "reason": "user_not_admin"})
+
+        elif slug == "distinct":
+            if await util.is_admin(self.current_user.username):
+                roles = self.db.roles.distinct("role")
+                self.set_status(200)
+                self.write({"existing_roles": roles})
+
+            else:
+                self.set_status(403)
+                self.write({"status": 403,
+                            "reason": "user_not_admin"})
+
+
+        else:
+            self.set_status(404)
 
     @auth_needed
-    async def post(self):
+    async def post(self, slug):
         """
-        POST /role
+        POST /role/update
             update or set the role of a user
 
             http body:
@@ -75,38 +122,40 @@ class RoleHandler(BaseHandler):
                 {"status": 401,
                  "reason": "user_not_admin"}
         """
+        if slug == "update":
+            if await util.is_admin(self.current_user.username):
+                http_body = json.loads(self.request.body)
+                print(http_body)
 
-        if await util.is_admin(self.current_user.username):
-            http_body = json.loads(self.request.body)
-            print(http_body)
+                if any(key not in http_body for key in ("username", "role")):
+                    self.set_status(400)
+                    self.write({"status": 400,
+                                "reason": "missing_key_in_http_body"})
+                    return
 
-            if any(key not in http_body for key in ("username", "role")):
-                self.set_status(400)
-                self.write({"status": 400,
-                            "reason": "missing_key_in_http_body"})
-                return
+                username = http_body["username"]
+                role = http_body["role"]
 
-            username = http_body["username"]
-            role = http_body["role"]
+                self.db.roles.update_one(
+                    {"username": username},
+                    {"$set":
+                        {
+                            "username": username,
+                            "role": role
+                        }
+                    },
+                    upsert=True
+                )
 
-            self.db.roles.update_one(
-                {"username": username},
-                {"$set":
-                     {
-                         "username": username,
-                         "role": role
-                      }
-                },
-                upsert=True
-            )
-
-            self.set_status(200)
-            self.write({"status": 200,
-                        "success": True})
+                self.set_status(200)
+                self.write({"status": 200,
+                            "success": True})
+            else:
+                self.set_status(403)
+                self.write({"status": 403,
+                            "reason": "user_not_admin"})
         else:
-            self.set_status(403)
-            self.write({"status": 403,
-                        "reason": "user_not_admin"})
+            self.set_status(404)
 
 
 class GlobalACLHandler(BaseHandler):
@@ -164,6 +213,7 @@ class GlobalACLHandler(BaseHandler):
                         if acl_key != "role":
                             acl_entry[acl_key] = False
                     acl_entry["role"] = current_user_role["role"]
+                    acl.insert_default(current_user_role)
 
                 self.set_status(200)
                 self.write({"status": 200,
@@ -176,6 +226,13 @@ class GlobalACLHandler(BaseHandler):
         elif slug == "get_all":
             if await util.is_admin(self.current_user.username):
                 acl = get_acl().global_acl
+
+                # solve inconsistency problem of role existing but no acl_entry: whenever there is a role that has no acl_entry, create a default one
+                distinct_roles = self.db.roles.distinct("role")
+                for role in distinct_roles:
+                    if role not in [entry["role"] for entry in acl.get_all()]:
+                        acl.insert_default(role)
+
                 entries = acl.get_all()
 
                 self.set_status(200)

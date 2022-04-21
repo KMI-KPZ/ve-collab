@@ -69,7 +69,7 @@ def make_app(cookie_secret):
         (r"/wiki_pages", WikiPageNamesHandler),
         (r"/wiki_page", WikiPageHandler),
         (r"/permissions", PermissionHandler),
-        (r"/role", RoleHandler),
+        (r"/role/([a-zA-Z\-0-9\.:,_%]+)", RoleHandler),
         (r"/global_acl/([a-zA-Z\-0-9\.:,_%]+)", GlobalACLHandler),
         (r"/space_acl/([a-zA-Z\-0-9\.:,_%]+)", SpaceACLHandler),
         (r"/routing", RoutingHandler),

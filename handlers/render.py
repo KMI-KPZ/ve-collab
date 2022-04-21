@@ -72,6 +72,7 @@ class TemplateHandler(BaseHandler):
 class ACLHandler(BaseHandler):
     def get(self):
         if self.current_user:
-            self.render("acl.html")
+            with open("html/acl.html") as fp:
+                self.write(fp.read())
         else:
             self.redirect(CONSTANTS.ROUTING_TABLE["platform"])  # redirect to platform if there is no logged in user
