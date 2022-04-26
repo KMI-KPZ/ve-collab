@@ -6,22 +6,18 @@ function jquery_id_selector(myid) {
     return "#" + myid.replace(/(:|\.|\[|\]|,|=|@)/g, "\\$1");
 }
 
-
 $(document).ready(function () {
     //fill the table in the role tab containing all users and their roles
     get_all_roles_and_users().done(function (users_response) {
         get_distinct_roles().done(function (roles_response) {
             //render the template with username and a select of all possible distinct roles
             render_role_table(users_response, roles_response);
-
-            // fill the select of all distinct roles in the Global ACL tab
-            render_global_acl_role_select(roles_response);
         });
     });
 
-    get_all_acl_entries().done(function(acl_response){
-        console.log(acl_response);
-        $("#global_acl_rules").append(Mustache.render($("#global_acl_entry_template").html(), {acl_entries: acl_response.acl_entries}));
+    //fill the global acl table
+    get_all_acl_entries().done(function (acl_response) {
+        render_global_acl_table(acl_response);
     });
 
     get_all_users()
@@ -94,7 +90,7 @@ function get_all_roles_and_users() {
     });
 }
 
-function get_all_acl_entries(){
+function get_all_acl_entries() {
     return $.ajax({
         type: "GET",
         url: "/global_acl/get_all",
@@ -104,7 +100,12 @@ function get_all_acl_entries(){
 
 function render_role_table(users_response, roles_response) {
     let user_role_table = $('#user_role_table_list');
-    let user_role_table_template = $('#user_role_table_template').html()
+    let user_role_table_template = $('#user_role_table_template').html();
+
+    //emtpy table first (need to do this because this function is also called from hot reload
+    user_role_table.empty();
+
+    //render template
     user_role_table.append(Mustache.render(user_role_table_template, {users: users_response.users, options: roles_response.existing_roles}));
 
     $.each(users_response.users, function (idx, user) {
@@ -119,16 +120,23 @@ function render_role_table(users_response, roles_response) {
             },
             select_typed: function (event, role) {
                 let username = $(this).attr("id").replace("user_role_", "");
-                post_update_userrole(username, role);
+                post_update_userrole(username, role).done(function () {
+                    //re-render the table
+                    get_all_roles_and_users().done(function (users_response) {
+                        get_distinct_roles().done(function (roles_response) {
+                            //render the template with username and a select of all possible distinct roles
+                            render_role_table(users_response, roles_response);
+                        });
+                    });
+                });
             }
         });
     });
 }
 
-function render_global_acl_role_select(roles_response) {
-    $.each(roles_response.existing_roles, function (idx, role) {
-        $('#global_role_list').append(Mustache.render($('#select_item').html(), {item: role}))
-    });
+function render_global_acl_table(acl_response) {
+    //empty first and then append new, because of hot reload there might be old data that would be duplicated if not emptied before
+    $("#global_acl_rules").empty().append(Mustache.render($("#global_acl_entry_template").html(), {acl_entries: acl_response.acl_entries}));
 }
 
 function get_user_roles() {
@@ -136,57 +144,31 @@ function get_user_roles() {
 }
 
 function update_user_role(username) {
-    let updated_role = $(jquery_id_selector('user_role_' + username)).val()
-    post_update_userrole(username, updated_role);
+    let updated_role = $(jquery_id_selector('user_role_' + username)).val();
+    post_update_userrole(username, updated_role).done(function () {
+        //re-render the table
+        get_all_roles_and_users().done(function (users_response) {
+            get_distinct_roles().done(function (roles_response) {
+                //render the template with username and a select of all possible distinct roles
+                render_role_table(users_response, roles_response);
+            });
+        });
+    });
 }
 
 function post_update_userrole(username, role) {
-    $.ajax({
+    return $.ajax({
         type: 'POST',
         url: '/role/update',
         data: JSON.stringify({"username": username, "role": role}),
         dataType: 'json',
-        success: function (response) {
-
-        },
-        error: function (xhr, status, error) {
-            if (xhr.status === 400) {
-                window.createNotification({
-                    theme: 'error',
-                    showDuration: 5000
-                })({
-                    title: 'Error!',
-                    message: 'Missing Key in HTTP Body'
-                });
-            } else if (xhr.status === 401) {
-                window.location.href = routingTable.platform;
-            } else if (xhr.status === 403) {
-                window.createNotification({
-                    theme: 'error',
-                    showDuration: 5000
-                })({
-                    title: 'Error!',
-                    message: 'Insufficient Permission, you are not an admin!'
-                });
-            } else {
-                window.createNotification({
-                    theme: 'error',
-                    showDuration: 5000
-                })({
-                    title: 'Server error!',
-                    message: 'The Server encountered an unexpected Error'
-                });
-            }
-        }
     });
 }
 
 function update_global_acl_entry(permission_key, role) {
     let val = $("#toggle_" + role).is(":checked");
-    console.log(val);
-    console.log(permission_key);
-    console.log(role);
 
+    //construct : {"role": <role, "create_space": <bool>}
     let payload = {role: role}
     payload[permission_key] = val
 
@@ -194,7 +176,12 @@ function update_global_acl_entry(permission_key, role) {
         type: "POST",
         url: "/global_acl/update",
         data: JSON.stringify(payload)
-    })
+    }).done(function () {
+        //re-render the table
+        get_all_acl_entries().done(function (acl_response) {
+            render_global_acl_table(acl_response);
+        });
+    });
 }
 
 function update_space_acl_container() {
@@ -215,4 +202,33 @@ function setup() {
             "Space ACL"
         ]
     };
-};
+}
+
+/**
+ * callback for alpine.js when clicking on the tabs to reload the data
+ * @param tab tab name (see setup() function above)
+ */
+function handleTabChange(tab) {
+    //depending on which tab we are jumping to, render their data accordingly
+    switch (tab) {
+        case "Rollen":
+            get_all_roles_and_users().done(function (users_response) {
+                get_distinct_roles().done(function (roles_response) {
+                    //render the template with username and a select of all possible distinct roles
+                    render_role_table(users_response, roles_response);
+                });
+            });
+            break;
+        case "Globales ACL":
+            get_all_acl_entries().done(function (acl_response) {
+                render_global_acl_table(acl_response);
+            });
+            break;
+        case "Space ACL":
+            // TODO fill when done
+            break;
+        default:
+            console.log("unrecognised Tab Name @TabChange: " + tab);
+            break;
+    }
+}

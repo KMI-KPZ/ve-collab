@@ -119,7 +119,7 @@
                 <ul class="flex">
                     <template x-for="(tab, index) in tabs" :key="index">
                         <li class="cursor-pointer py-3 px-4 transition"
-                            :class="activeTab===index ? 'bg-white text-black' : ' text-white'" @click="activeTab = index"
+                            :class="activeTab===index ? 'bg-white text-black' : ' text-white'" @click="activeTab = index; handleTabChange(tab);"
                             x-text="tab"></li>
                     </template>
                 </ul>
