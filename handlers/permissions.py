@@ -1,5 +1,7 @@
 import json
 
+import tornado.web
+
 from acl import get_acl
 from handlers.base_handler import BaseHandler, auth_needed
 import util
@@ -302,10 +304,8 @@ class SpaceACLHandler(BaseHandler):
         GET /space_acl/get
             get the current user's acl entry
 
-            http_body:
-            {
-                "space": "<space_name>"
-            }
+            query param:
+                space: name of space
 
             returns:
                 200 OK,
@@ -325,10 +325,8 @@ class SpaceACLHandler(BaseHandler):
         GET /space_acl/get_all
             get the full set of rules from the acl for a given space (requires either global or space admin)
 
-            http_body:
-            {
-                "space": "<space_name>"
-            }
+            query param:
+                space: name of space
 
             returns:
                 200 OK,
@@ -344,16 +342,16 @@ class SpaceACLHandler(BaseHandler):
                  "reason": "user_not_admin"}
 
         """
-        http_body = json.loads(self.request.body)
+        # since space query param is needed for both requests in this handler, check it first
+        try:
+            space_name = self.get_argument("space")
+        except tornado.web.MissingArgumentError:
+            self.set_status(400)
+            self.write({"status": 400,
+                        "reason": "missing_query_param:space"})
+            return
 
         if slug == "get":
-            if "space" not in http_body:
-                self.set_status(400)
-                self.write({"status": 400,
-                            "reason": "missing_key_in_http_body"})
-                return
-            space_name = http_body["space"]
-
             acl = get_acl().space_acl
             # since acl is role-based, we need to query for the current user's role
             current_user_role = self.get_current_user_role()
@@ -378,7 +376,6 @@ class SpaceACLHandler(BaseHandler):
                             "reason": "user_has_no_role"})
 
         elif slug == "get_all":
-            space_name = http_body["space"]
             # check if the user is either global admin or space admin, if not return
             if not await util.is_admin(self.current_user.username):
                 space = self.db.spaces.find_one({"name": space_name})
