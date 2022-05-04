@@ -128,7 +128,8 @@
 
             <div id="tabs" class="w-full bg-white p-8">
                 <!-- User Roles -->
-                <div x-show="activeTab===0">
+                <div x-show="activeTab===0" class="m-1 p-2 w-full h-full">
+                  <div id="user_roles" class="p-2">
                     <table class="table-auto w-full border border-gray-400 rounded">
                         <thead class="bg-gray-100 border-b border-gray-400">
                         <tr>
@@ -141,6 +142,7 @@
                         </tbody>
                     </table>
 
+                  </div>
                 </div>
 
                 <!-- Global ACL -->
@@ -165,7 +167,7 @@
                 <div x-show="activeTab===2" class="m-1 p-2 w-full h-full">
                     <div class="flex">
                         <div class="m-1 xl:w-96">
-                            <select id="space_user_list" onchange="update_space_acl_container()"
+                            <select id="space_role_list" onchange="update_space_acl_container()"
                                     class="form-select appearance-none block w-full px-3 py-1.5 text-base font-normal text-gray-700 bg-white bg-clip-padding bg-no-repeat border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none"
                                     aria-label="Default select example">
 
@@ -183,23 +185,13 @@
                         <!-- Space ACL Permission Table-->
                         <table class="table-auto w-full border border-gray-400 rounded">
                             <thead class="bg-gray-100 border-b border-gray-400">
-                            <tr>
-                                <th class="w-3/5 p-2 text-left">Permission</th>
-                                <th class="w-2/5 p-2">Status</th>
-                            </tr>
+                              <tr>
+                                  <th class="w-3/5 p-2 text-left">Permission</th>
+                                  <th class="w-2/5 p-2">Status</th>
+                              </tr>
                             </thead>
-                            <tbody id="">
-                            <tr>
-                                <td class="p-2">perission_example</td>
-                                <td class="p-2">
-                                    <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
-                                        <input type="checkbox" name="toggle" id="toggle"
-                                               class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
-                                        <label for="toggle"
-                                               class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
-                                    </div>
-                                </td>
-                            </tr>
+                            <tbody id="space_acl_rules">
+
                             </tbody>
                         </table>
                     </div>
@@ -286,6 +278,23 @@
                        class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
             </div>
         </td>
+    </tr>
+    {{/acl_entries}}
+</script>
+
+<script id="space_acl_entry_template" type="text/html">
+    {{#acl_entries}}
+    <tr id="row_{{permission}}">
+      <td class="p-2">{{permission}}</td>
+      <td class="p-2 text-center">
+          <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+              <input type="checkbox" name="toggle" id="toggle_{{permission}}"
+                     class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" onclick="update_space_acl_entry('{{permission}}')"
+                     {{#value}}checked="checked" {{/value}}/>
+              <label for="toggle_{{permission}}"
+                     class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+          </div>
+      </td>
     </tr>
     {{/acl_entries}}
 </script>
