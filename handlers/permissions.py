@@ -302,10 +302,13 @@ class SpaceACLHandler(BaseHandler):
     async def get(self, slug):
         """
         GET /space_acl/get
-            get the current user's acl entry
+            get the current user's role acl entry
 
             query param:
                 space: name of space
+
+            optional query param:
+                role: name of role (get the entry of the specified role, requires admin privileges)
 
             returns:
                 200 OK,
@@ -353,6 +356,43 @@ class SpaceACLHandler(BaseHandler):
 
         if slug == "get":
             acl = get_acl().space_acl
+
+            # if there is a role specified, query for this role instead of the current_user's one
+            optional_role = self.get_argument("role", None)
+            if optional_role:
+                # check if the user is either global admin or space admin, if not return
+                if not await util.is_admin(self.current_user.username):
+                    space = self.db.spaces.find_one({"name": space_name})
+                    if not space:
+                        self.set_status(400)
+                        self.write({"status": 400,
+                                    "reason": "space_doesnt_exist"})
+                        return
+                    if self.current_user.username not in space["admins"]:
+                        self.set_status(403)
+                        self.write({"status": 403,
+                                    "reason": "insufficient permission"})
+                        return
+
+                # query the acl
+                acl_entry = acl.get(optional_role, space_name)
+
+                # inconsistency problem: the role exists, but no acl entry. construct an acl entry that has all permissions set to false
+                if not acl_entry:
+                    print("role no exist")
+                    acl_entry = {}
+                    for acl_key in acl.get_existing_keys():
+                        if acl_key != "role" and acl_key != "space":
+                            acl_entry[acl_key] = False
+                    acl_entry["role"] = optional_role
+                    acl_entry["space"] = space_name
+
+                self.set_status(200)
+                self.write({"status": 200,
+                            "acl_entry": acl_entry})
+                return
+
+            # no role query parameter was passed, use current_user instead
             # since acl is role-based, we need to query for the current user's role
             current_user_role = self.get_current_user_role()
             if current_user_role:
