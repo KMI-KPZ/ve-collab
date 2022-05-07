@@ -7,6 +7,8 @@ function jquery_id_selector(myid) {
 
 $(document).ready(function () {
     //fill the table in the role tab containing all users and their roles
+    add_acl_button()
+
     get_all_roles_and_users().done(function (users_response) {
         get_distinct_roles().done(function (roles_response) {
             //render the template with username and a select of all possible distinct roles
@@ -15,6 +17,7 @@ $(document).ready(function () {
             update_space_acl_roles_select(roles_response);
             //get_all_spaces()
             currentSpaceRole = roles_response.existing_roles[0]
+            $("#space_role_list").val(currentSpaceRole).change()
         });
     });
 
@@ -299,4 +302,40 @@ function handleTabChange(tab) {
             console.log("unrecognised Tab Name @TabChange: " + tab);
             break;
     }
+}
+
+function add_acl_button() {
+  $.ajax({
+      type: 'GET',
+      url: '/role/my',
+      dataType: 'json',
+      success: function (data) {
+          if(data.role == "admin") {
+            $("#navbar_items").append(Mustache.render($('#acl_button').html()))
+          }
+
+      },
+
+      error: function (xhr, status, error) {
+          if (xhr.status == 401) {
+              window.location.href = routingTable.platform;
+          } else if (xhr.status === 403) {
+              window.createNotification({
+                  theme: 'error',
+                  showDuration: 5000
+              })({
+                  title: 'Error!',
+                  message: 'Insufficient Permission'
+              });
+          } else {
+              window.createNotification({
+                  theme: 'error',
+                  showDuration: 5000
+              })({
+                  title: 'Server error!',
+                  message: 'Request all user information'
+              });
+          }
+      },
+  });
 }

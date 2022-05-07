@@ -30,6 +30,8 @@ var profileInformation_listItem
 // var experienceTemplate
 // var educationTemplate
 
+var acl_button
+
 /**
 $.get("/template", function(template, textStatus, jqXhr) {
   postTemplate = $(template).filter('#postTemplate').html()
@@ -62,6 +64,7 @@ var load_templates = async function () {
     // experienceTemplate = $(template).filter('#experienceTemplate').html()
     // educationTemplate = $(template).filter('#educationTemplate').html()
     profileInformation_listItem = $(template).filter('#profileInformation_listItem').html()
+    acl_button = $(template).filter('#acl_button').html()
 
   });
 };
@@ -141,6 +144,8 @@ $(document).ready(function () {
   getAllUsers();
 
   load_templates().then(initNewsFeed);
+
+  add_acl_button()
 
   const interval  = setInterval(function() {
      checkUpdate();
@@ -1830,3 +1835,39 @@ $(document).keyup(function(event) {
 
     }
 });*/
+
+function add_acl_button() {
+  $.ajax({
+      type: 'GET',
+      url: '/role/my',
+      dataType: 'json',
+      success: function (data) {
+          if(data.role == "admin") {
+            $("#navbar_items").append(Mustache.render(acl_button))
+          }
+
+      },
+
+      error: function (xhr, status, error) {
+          if (xhr.status == 401) {
+              window.location.href = routingTable.platform;
+          } else if (xhr.status === 403) {
+              window.createNotification({
+                  theme: 'error',
+                  showDuration: 5000
+              })({
+                  title: 'Error!',
+                  message: 'Insufficient Permission'
+              });
+          } else {
+              window.createNotification({
+                  theme: 'error',
+                  showDuration: 5000
+              })({
+                  title: 'Server error!',
+                  message: 'Request all user information'
+              });
+          }
+      },
+  });
+}

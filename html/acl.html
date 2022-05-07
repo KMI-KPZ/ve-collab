@@ -75,7 +75,7 @@
                     </li>
                 </div>
                 <div class="ml-4">
-                    <div class="text-sm flex items-center">
+                    <div id="navbar_items" class="text-sm flex items-center">
                         <div>
                             <a href="/main" class="no-underline text-white px-6 text-base">Startseite</a>
                         </div>
@@ -206,7 +206,7 @@
     <div class="container mx-auto px-8">
         <div class="px-10">
             <div class="flex items-center justify-between border-t py-8">
-                <div class="justify-start justify-between w-4/5 flex">
+                <div id="footer_items" class="justify-start justify-between w-4/5 flex">
                     <div class="mr-4 w-24 text-sm">
                         &copy; 2021 lionet.
                     </div>
@@ -297,6 +297,12 @@
       </td>
     </tr>
     {{/acl_entries}}
+</script>
+
+<script id="acl_button" type="text/html">
+  <div>
+      <a href="./acl" class="no-underline text-white px-6 text-base">ACL</a>
+  </div>
 </script>
 
 <script src="../javascripts/acl.js"></script>
