@@ -732,10 +732,11 @@ function getTimelineSpace(spacename, from, to) {
       var documents = []
       $.each(timeline.posts, function(post) {
         $.each(timeline.posts[post].files, function(file) {
-          documents.push(timeline.posts[post].files[file])
+          //documents.push(timeline.posts[post].files[file])
+          documents.push({name:timeline.posts[post].files[file], tags: timeline.posts[post].tags.split(",")})
         })
       })
-
+      console.log(documents)
       var isAdmin = [];
       var space_pic = "";
       var this_space
@@ -838,7 +839,7 @@ function post(text, tags, space) {
   var match;
   var hashtags = []
   while ((match = hashtag_regex.exec(text)) != null) {
-    alert(match);
+    //alert(match);
     hashtags.push(match[1])
   }
   //var hashtags = hashtag_regex.exec(text)//text.match(hashtag_regex)
