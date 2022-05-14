@@ -14,30 +14,15 @@ var daysAgo = 0;
 //HTML & JQuery
 var $body = $('body');
 var $feedContainer = $('#feedContainer');
-var postTemplate //= document.getElementById('postTemplate').innerHTML;
-var repostTemplate //= document.getElementById('repostTemplate').innerHTML;
-var commentTemplate //= document.getElementById('commentTemplate').innerHTML;
-var tagTemplate //= document.getElementById('tagTemplate').innerHTML;
 
-
-var newPostTemplate
+/**
+ * Gets spaceTemplate and acl button for navbar
+ */
 var spaceTemplate
-var spaceTemplateSelect
-var spaceHeaderTemplate
-var profileTemplate
 var acl_button
+
 $.get("/template", function(template, textStatus, jqXhr) {
-  postTemplate = $(template).filter('#postTemplate').html()
-  repostTemplate = $(template).filter('#repostTemplate').html()
-  commentTemplate = $(template).filter('#commentTemplate').html()
-  tagTemplate = $(template).filter('#tagTemplate').html()
-
-  newPostTemplate = $(template).filter('#newPostTemplate').html()
   spaceTemplate = $(template).filter('#spaceTemplate').html()
-  spaceTemplateSelect = $(template).filter('#spaceTemplateSelect').html()
-  spaceHeaderTemplate = $(template).filter('#spaceHeaderTemplate').html()
-  profileTemplate = $(template).filter('#profileTemplate').html()
-
   acl_button = $(template).filter('#acl_button').html()
 })
 
@@ -53,7 +38,6 @@ $(document).ready(function () {
   getSpaces()
 
   add_acl_button()
-
 })
 
 /**
@@ -79,19 +63,16 @@ function getSpaces() {
         if(inSpace != false) {
           space['inSpace'] = inSpace;
           $dropdown.prepend(Mustache.render(spaceTemplate, space));
-          console.log(space.name)
           localStorage.setItem(space.name, space.members);
           Spaces.push(space);
         }
-
         $('#spaceOverviewEntries').prepend(Mustache.render($('#spaceOverviewEntry').html(), {project_id: space._id, space_description: space.space_description, project_name: space.name.replace(" ", "%20"), display_name: space.name, space_pic: space.space_pic, members: space.members, inSpace: inSpace}))
         // if not in Space render spaceTemplateSelect
         if (currURL.indexOf(baseUrl + '/space') == -1) {
           $('#selectSpace').append(Mustache.render(spaceTemplateSelect, space));
         }
-    });
+      });
     },
-
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
@@ -118,6 +99,9 @@ function getSpaces() {
   });
 }
 
+/**
+ * Gets current user roles
+ */
 function getUserRole(){
   $.ajax({
     type: 'GET',
@@ -154,6 +138,7 @@ function getUserRole(){
     },
   });
 }
+
 /**
  * getCurrentUserInfo - saves currenUser information
  * first time calling InitNewsFeed (on document load)
@@ -212,13 +197,13 @@ function searchUser(users) {
     if(searchField != '') {
      $.each(users, function(key, user){
       if (user.username.search(expression) != -1 || user.email.search(expression) != -1)
-      {
-       user["profile_pic_URL"] = baseUrl + '/uploads/' + user["profile_pic"];
-       $('#result').append('<li class=""><img src="' + user["profile_pic_URL"] + '" height="40" width="40" class="img-thumbnail" /> '+user.username+' | <span class="text-muted">'+user.email+'</span></li>');
-      }
-     });
-   }
-    });
+        {
+          user["profile_pic_URL"] = baseUrl + '/uploads/' + user["profile_pic"];
+          $('#result').append('<li class=""><img src="' + user["profile_pic_URL"] + '" height="40" width="40" class="img-thumbnail" /> '+user.username+' | <span class="text-muted">'+user.email+'</span></li>');
+        }
+      });
+    }
+  });
 }
 
 /**
@@ -232,7 +217,6 @@ function getAllUsers(){
     dataType: 'json',
     success: function (data) {
       users = data;
-      //console.log(users);
       searchUser(users);
     },
 
@@ -262,6 +246,9 @@ function getAllUsers(){
   });
 }
 
+/**
+ * Gets routing table from server
+ */
 function getRouting(){
   $.ajax({
     type: "GET",
@@ -300,6 +287,7 @@ $body.delegate('button[id="leaveSpace"]', 'click', function () {
  */
 function joinSpace(name) {
   console.log(name)
+  // Replace spaces with %20 for better processing on backend
   name = name.replace(" ", "%20")
   $.ajax({
     type: 'POST',
@@ -335,12 +323,18 @@ function joinSpace(name) {
   });
 }
 
+/**
+* leaveSpace - leaves Space
+*
+* @param  {String} name Spacename
+*/
 function leaveSpace(name) {
   $.ajax({
     type: 'DELETE',
     url: '/spaceadministration/leave?name=' + name,
     success: function (data) {
-      console.log("leaved space " + name);
+      //console.log("leaved space " + name);
+      //reloads page to update table
       location.reload()
     },
 
@@ -375,7 +369,6 @@ function leaveSpace(name) {
  */
 $body.delegate('#createSpace', 'click', function () {
     var name = $body.find('#newSpaceName').val();
-    console.log(name)
     if (name != '') createSpace(name);
 });
 
@@ -389,7 +382,7 @@ function createSpace(name) {
     type: 'POST',
     url: '/spaceadministration/create?name=' + name,
     success: function (data) {
-      console.log("created space " + name);
+      //console.log("created space " + name);
       $body.find('#newSpaceName').val('');
       getSpaces();
     },
@@ -420,6 +413,9 @@ function createSpace(name) {
   });
 }
 
+/**
+ * if user role is admin, adds button to navbar to access acl tables
+ */
 function add_acl_button() {
   $.ajax({
       type: 'GET',

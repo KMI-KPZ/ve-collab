@@ -10,8 +10,6 @@
     </script>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css">
-    <!---<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-    <link href="http://netdna.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">-->
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="../css/newsfeed.css">
     <link rel="stylesheet" href="../css/tagsinput.css">
@@ -23,64 +21,49 @@
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300&family=Titillium+Web:wght@300&display=swap" rel="stylesheet">
 </head>
 <body class="font-sans bg-blue-50">
-  <!-- Navbar -->
-  <nav class="mb-4">
-    <div class="bg-blue-lionet mx-4 px-8" style="font-family: 'Titillium Web', sans-serif;">
-      <div class="flex items-center py-2 px-10">
-        <div class="w-full mx-auto flex items-center">
-          <div class="ml-24">
-            <img src="/uploads/SO-SERVE_Logo_solo-285x300.png" width="50" height="50"/>
-          </div>
-          <div class="ml-4">
-            <li class="mt-1 block w-80 border border-gray-300 bg-white focus:outline-none rounded-md shadow-sm text-sm">
-              <input type="text" name="search" id="search" placeholder="Suchen" class="px-2 py-3 block w-full shadow-sm text-sm border-gray-300 focus:outline-none rounded-md" />
-              <ul class="bg-white" id="result"></ul>
-            </li>
-          </div>
-          <div class="ml-4">
-            <div id="navbar_items" class="text-sm flex items-center">
-              <div>
-                <a href="/main" class="no-underline text-white px-6 text-base">Startseite</a>
-              </div>
-              <div>
-                <a href="/myprofile" class="no-underline text-white px-6 text-base">Profil</a>
-              </div>
-              <div>
-                <a href="/spaces" class="no-underline text-white px-6 text-base">Gruppen</a>
-              </div>
+<!-- Navbar -->
+<nav class="mb-4">
+  <div class="bg-blue-lionet mx-4 px-8" style="font-family: 'Titillium Web', sans-serif;">
+    <div class="flex items-center py-2 px-10">
+      <div class="w-full mx-auto flex items-center">
+        <div class="ml-24">
+          <img src="/uploads/SO-SERVE_Logo_solo-285x300.png" width="50" height="50"/>
+        </div>
+        <div class="ml-4">
+          <li class="mt-1 block w-80 border border-gray-300 bg-white focus:outline-none rounded-md shadow-sm text-sm">
+            <input type="text" name="search" id="search" placeholder="Suchen" class="px-2 py-3 block w-full shadow-sm text-sm border-gray-300 focus:outline-none rounded-md" />
+            <ul class="bg-white" id="result"></ul>
+          </li>
+        </div>
+        <div class="ml-4">
+          <div id="navbar_items" class="text-sm flex items-center">
+            <div>
+              <a href="/main" class="no-underline text-white px-6 text-base">Startseite</a>
             </div>
+            <div>
+              <a href="/myprofile" class="no-underline text-white px-6 text-base">Profil</a>
             </div>
+            <div>
+              <a href="/spaces" class="no-underline text-white px-6 text-base">Gruppen</a>
+            </div>
+          </div>
           </div>
         </div>
       </div>
     </div>
-  </nav>
+  </div>
+</nav>
+<!-- End of navbar -->
 
-
-
-<!--div class="container mx-auto px-8">
-
-    <div id="spaceProfileContainer" class="flex items-center py-2" height="1800;">
-
-    </div>
-
-    <div class="flex items-center py-2">
-      <div class="flex overflow-hidden bg-white">
-        <div class="flex flex-col w-64">
-
-        </div>
-      </div>
-      <div class="flex flex-col w-0 flex-1 overflow-hidden" id="feedRow">
-        <div id="feedContainer"></div>
-      </div>
-    </div>
-</div>-->
+<!-- Profile Container -->
 <div class="flex">
   <div id="spaceProfileContainer" class="container mx-auto px-4 mt-2 text-base" style="font-family: 'Titillium Web', sans-serif;max-width: 85%;">
 
   </div>
 </div>
+<!-- End of Profile Container -->
 
+<!-- Post Feed for this space -->
 <div class="flex" id="feedRow">
   <div class="container mx-auto px-4 mt-2 text-base"  style="font-family: 'Titillium Web', sans-serif;max-width: 85%;">
     <div class="flex">
@@ -90,6 +73,7 @@
   </div>
   </div>
 </div>
+<!-- End of Post Feed -->
 
 <!-- Footer -->
 <div class="mt-8" style="font-family: 'Titillium Web', sans-serif;">
@@ -124,7 +108,8 @@
     </div>
   </div>
 </div>
-  <!---->
+<!-- End of footer -->
+
 </div>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
@@ -134,8 +119,12 @@
 <script src="../javascripts/tagsinput.js"></script>
 <script src="../javascripts/notifications.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/2.3.0/alpine.js" integrity="sha512-nIwdJlD5/vHj23CbO2iHCXtsqzdTTx3e3uAmpTm4x2Y8xCIFyWu4cSIV8GaGe2UNVq86/1h9EgUZy7tn243qdA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
 <script>
-	function setup() {
+  /**
+   * Setup function for tab system
+   */
+  function setup() {
     return {
       activeTab: 0,
       tabs: [
@@ -147,6 +136,9 @@
     };
   };
 
+  /**
+   * Function to preview uploaded image in update space modal
+   */
   function showImage() {
     return {
       showPreview(event) {

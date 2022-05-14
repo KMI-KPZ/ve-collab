@@ -1,10 +1,17 @@
 var spacename = currURL.substring(currURL.lastIndexOf('/') + 1);
 
+// On document ready get routing
 $(document).ready(function () {
   document.title = spacename + ' - Social Network';
   getRouting();
 });
 
+/**
+ * triggers on tab change in space view based on index variable
+ * empties feed if selected tab is not dashboard (index != 0)
+ * else reinitiate feed on dashboard tab if selected (index = 0)
+ * @param  {String} name index
+ */
 function triggerDisplay(index) {
   if(index != 0) {
     $("#feedRow").empty()
@@ -19,6 +26,9 @@ function triggerDisplay(index) {
   }
 }
 
+/**
+ * Populates space information in editing space modal
+ */
 function populateSpaceInformationModal()  {
   $.each(Spaces, function(entry) {
     if(Spaces[entry].name == spacename.replace("%20", " ")) {
@@ -29,6 +39,10 @@ function populateSpaceInformationModal()  {
   })
 }
 
+/**
+ * Sends POST request to update current space information with params from space update modal
+ * @param  {String} name name
+ */
 function updateSpaceInformation(name) {
   var spaceDescription = String($('#space_description').val());
   var photoFile = document.getElementById('photoFile');
@@ -41,7 +55,6 @@ function updateSpaceInformation(name) {
   } else {
     console.log("Error photo file")
   }
-
   var formData = new FormData();
   formData.append("space_pic", photo);
   formData.append("space_description", spaceDescription);
@@ -57,9 +70,7 @@ function updateSpaceInformation(name) {
       $("#saveAlert").addClass("alert alert-success");
       $('#settingsModal').modal('toggle');
       console.log("Success")
-
     },
-
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;

@@ -10,8 +10,6 @@
     </script>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css">
-    <!---<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-    <link href="http://netdna.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">-->
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="../css/newsfeed.css">
     <link rel="stylesheet" href="../css/tagsinput.css">
@@ -91,10 +89,11 @@
         </div>
     </div>
 </nav>
-
+<!-- End of navbar -->
 
 <!-- Main Container-->
 <div class="flex">
+  <!-- Sidebar -->
     <div id="acl_sidebar" class="flex-none h-full m-4 p-2 bg-white border border-gray-200 rounded">
         Sidebar
         <ul class="relative">
@@ -112,7 +111,9 @@
             </li>
         </ul>
     </div>
+    <!-- End of sidebar -->
 
+    <!-- ACL main container -->
     <div id="acl_main" class="flex-auto m-4 bg-white border border-gray-200 rounded">
         <div x-data="setup()">
             <nav class="bg-blue-lionet">
@@ -125,7 +126,7 @@
                 </ul>
             </nav>
 
-
+            <!-- tab system -->
             <div id="tabs" class="w-full bg-white p-8">
                 <!-- User Roles -->
                 <div x-show="activeTab===0" class="m-1 p-2 w-full h-full">
@@ -144,6 +145,7 @@
 
                   </div>
                 </div>
+                <!-- End of User Roles -->
 
                 <!-- Global ACL -->
                 <div x-show="activeTab===1" class="m-1 p-2 w-full h-full">
@@ -162,10 +164,12 @@
                         </table>
                     </div>
                 </div>
+                <!-- End of Global ACL -->
 
                 <!-- Space ACL -->
                 <div x-show="activeTab===2" class="m-1 p-2 w-full h-full">
                     <div class="flex">
+                      <!-- Role selector -->
                         <div class="m-1 xl:w-96">
                             <select id="space_role_list" onchange="update_space_acl_container()"
                                     class="form-select appearance-none block w-full px-3 py-1.5 text-base font-normal text-gray-700 bg-white bg-clip-padding bg-no-repeat border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none"
@@ -173,6 +177,7 @@
 
                             </select>
                         </div>
+                        <!-- Space selector -->
                         <div class="m-1 xl:w-96">
                             <select id="space_space_list" onchange="update_space_acl_container()"
                                     class="form-select appearance-none block w-full px-3 py-1.5 text-base font-normal text-gray-700 bg-white bg-clip-padding bg-no-repeat border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none"
@@ -196,10 +201,14 @@
                         </table>
                     </div>
                 </div>
+                <!-- End of Space ACL -->
+
             </div>
         </div>
     </div>
 </div>
+<!-- End of acl main container -->
+<!-- End of main container -->
 
 <!-- Footer -->
 <div class="mt-8" style="font-family: 'Titillium Web', sans-serif;">
@@ -234,8 +243,10 @@
         </div>
     </div>
 </div>
+<!-- End of footer -->
 
 <!-- Components -->
+<!-- User role table entry template -->
 <script id="user_role_table_template" type="text/html">
     {{#users}}
     <tr id="user_role_table_{{username}}">
@@ -256,15 +267,20 @@
     </tr>
     {{/users}}
 </script>
+<!-- End of role table entry template -->
 
+<!-- Template for generic select item -->
 <script id="select_item" type="text/html">
     <option value="{{item}}">{{item}}</option>
 </script>
+<!-- End of generic select item template-->
 
+<!-- TODO entfernen -->
 <script id="user_list_template" type="text/html">
     <option value="{{username}}">{{username}}</option>
 </script>
 
+<!-- Template for global acl entry -->
 <script id="global_acl_entry_template" type="text/html">
     {{#acl_entries}}
     <tr id="row_{{role}}">
@@ -281,7 +297,9 @@
     </tr>
     {{/acl_entries}}
 </script>
+<!-- End of global acl entry template-->
 
+<!-- Template for space acl entry -->
 <script id="space_acl_entry_template" type="text/html">
     {{#acl_entries}}
     <tr id="row_{{permission}}">
@@ -298,12 +316,17 @@
     </tr>
     {{/acl_entries}}
 </script>
+<!-- End for space acl entry template -->
 
+<!-- ACL button template -->
 <script id="acl_button" type="text/html">
   <div>
       <a href="./acl" class="no-underline text-white px-6 text-base">ACL</a>
   </div>
 </script>
+<!-- End of ACL button template -->
+
+<!-- End of components -->
 
 <script src="../javascripts/acl.js"></script>
 
@@ -315,6 +338,8 @@
         integrity="sha512-nIwdJlD5/vHj23CbO2iHCXtsqzdTTx3e3uAmpTm4x2Y8xCIFyWu4cSIV8GaGe2UNVq86/1h9EgUZy7tn243qdA==" crossorigin="anonymous"
         referrerpolicy="no-referrer"></script>
 <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.js"></script>
+
+<!-- TODO documentation -->
 <script>
     $(function () {
         $.widget("custom.combobox", {
