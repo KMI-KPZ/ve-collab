@@ -14,10 +14,10 @@ var daysAgo = 0;
 //HTML & JQuery
 var $body = $('body');
 var $feedContainer = $('#feedContainer');
-var postTemplate //= document.getElementById('postTemplate').innerHTML;
-var repostTemplate //= document.getElementById('repostTemplate').innerHTML;
-var commentTemplate //= document.getElementById('commentTemplate').innerHTML;
-var tagTemplate //= document.getElementById('tagTemplate').innerHTML;
+var postTemplate
+var repostTemplate
+var commentTemplate
+var tagTemplate
 
 
 var newPostTemplate
@@ -25,29 +25,15 @@ var spaceTemplate
 var spaceTemplateSelect
 var spaceHeaderTemplate
 var profileTemplate
-// var friendsTemplate
 var profileInformation_listItem
-// var experienceTemplate
-// var educationTemplate
 
 var acl_button
 
 /**
-$.get("/template", function(template, textStatus, jqXhr) {
-  postTemplate = $(template).filter('#postTemplate').html()
-  repostTemplate = $(template).filter('#repostTemplate').html()
-  commentTemplate = $(template).filter('#commentTemplate').html()
-  tagTemplate = $(template).filter('#tagTemplate').html()
-
-  newPostTemplate = $(template).filter('#newPostTemplate').html()
-  spaceTemplate = $(template).filter('#spaceTemplate').html()
-  spaceTemplateSelect = $(template).filter('#spaceTemplateSelect').html()
-  spaceHeaderTemplate = $(template).filter('#spaceHeaderTemplate').html()
-  profileTemplate = $(template).filter('#profileTemplate').html()
-
-  profileInformation_listItem = $(template).filter('#profileInformation_listItem').html()
-
-})**/
+ * load_templates - load templates from GET response to /template
+ * GET /template returns blocks.html with all templates needed for the site
+ * then filter for specific templates
+ */
 var load_templates = async function () {
   await $.get("/template", function(template, textStatus, jqXhr) {
     postTemplate = $(template).filter('#postTemplate').html()
@@ -60,10 +46,8 @@ var load_templates = async function () {
     spaceTemplateSelect = $(template).filter('#spaceTemplateSelect').html()
     spaceHeaderTemplate = $(template).filter('#spaceHeaderTemplate').html()
     profileTemplate = $(template).filter('#profileTemplate').html()
-    // friendsTemplate = $(template).filter('#friendsTemplate').html()
-    // experienceTemplate = $(template).filter('#experienceTemplate').html()
-    // educationTemplate = $(template).filter('#educationTemplate').html()
     profileInformation_listItem = $(template).filter('#profileInformation_listItem').html()
+
     acl_button = $(template).filter('#acl_button').html()
 
   });
@@ -87,7 +71,6 @@ var routingTable = {};
  */
 function initNewsFeed() {
   if(!document.body.contains(document.getElementById('newPostPanel'))) {
-    //console.log(currentUser);
     currentUser["profile_pic_URL"] = baseUrl + '/uploads/' + currentUser["profile"]["profile_pic"];
 
     // Timeout fix error, where no templates are loading
@@ -96,11 +79,13 @@ function initNewsFeed() {
     $('#newPostContainer').prepend(Mustache.render(newPostTemplate, currentUser));
     //}, 10);
   }
+  //Initializing dates to get post between from and now
   today = new Date();
   now = today.toISOString();
   from = yesterday.toISOString();
   console.log("now initalizing date")
 
+  // based on URL get specific timeline with time paramaeters
   if (currURL == baseUrl + '/admin') {
     if(userRole != 'admin') window.location.href = baseUrl + '/main';
     else {
@@ -138,13 +123,16 @@ function initNewsFeed() {
  * while scrolling down the page: updates "from" - Datetime and Timeline (depending on URL)
  */
 $(document).ready(function () {
+  // misc functions for routing, users, etc.
   getRouting();
   getCurrentUserInfo();
   getUserRole();
   getAllUsers();
 
+  // load templates for construction of page
   load_templates().then(initNewsFeed);
 
+  // add acl button if admin
   add_acl_button()
 
   const interval  = setInterval(function() {
@@ -154,7 +142,6 @@ $(document).ready(function () {
   $(window).scroll(function() {
         // vertical amount of pixel before event should trigger
         var nearToBottom = 10;
-
         if ($(window).scrollTop() + $(window).height() > $(document).height() - nearToBottom) {
                yesterday = new Date(yesterday - (24 * 60 * 60 * 1000));
                initNewsFeed();
@@ -169,10 +156,12 @@ $(document).ready(function () {
     event.preventDefault();
     getWikiPage(wikiStartPage);
   });
-
-
 });
 
+/**
+ * getWikiPage - gets wiki page with param name page
+ * @param  {String} name page
+ */
 function getWikiPage(page){
   $.ajax({
     type: "GET",
@@ -306,6 +295,10 @@ $body.delegate('#record', 'click', function () {
   }
 });
 
+/**
+ * handlerFunction - handles recording of audio
+ * @param  {Audio} name stream
+ */
 function handlerFunction(stream){
   rec = new MediaRecorder(stream);
   rec.ondataavailable = e => {
@@ -337,11 +330,17 @@ $body.delegate('#files', 'change', function () {
   }
 });
 
+/**
+ * getExtension - get extension of a filename
+ */
 function getExtension(filename) {
   var parts = filename.split('.');
   return parts[parts.length - 1];
 }
 
+/**
+ * isImage - tests if file is image with extension .jpg, .bmp, .png
+ */
 function isImage(filename) {
   var ext = getExtension(filename);
   switch (ext.toLowerCase()) {
@@ -354,6 +353,9 @@ function isImage(filename) {
   return false;
 }
 
+/**
+ * isVideo - test if file is video with video specific extension
+ */
 function isVideo(filename) {
   var ext = getExtension(filename);
   switch (ext.toLowerCase()) {
@@ -371,6 +373,9 @@ function isVideo(filename) {
   return false;
 }
 
+/**
+ * isAudio - test if file is audio with extension .mpeg
+ */
 function isAudio(filename) {
   var ext = getExtension(filename);
   switch (ext.toLowerCase()) {
@@ -393,7 +398,6 @@ function previousSlide(id) {
 
 /**
  * calculateAgoTime
- *
  * @param  {String} creationDate Date of the Post
  * @return {String} Output String with ago time
  */
@@ -421,11 +425,24 @@ function comp(a, b) {
     return new Date(b.creation_date).getTime() - new Date(a.creation_date).getTime();
 }
 
+/**
+ * compPinned - compare function for sorting posts on pinned attribute
+ * @param  {JSON} a Post a
+ * @param  {JSON} b Post b
+ * @return {Float}   pinned value
+ */
 function compPinned(a, b) {
   return Number(b.pinned) - Number(a.pinned)
 }
 
+/**
+ * compSpace - compare function for sorting Dates of Posts and if posts are pinned
+ * @param  {JSON} a Post a
+ * @param  {JSON} b Post b
+ * @return {Float}   timevalue
+ */
 function compSpace(a,b) {
+  // if pinned, add time value of 3154000000000 seconds(~10000 years) to time value of post
   if(a.pinned && b.pinned) {
     return (new Date(b.creation_date).getTime() + 3154000000000) - (new Date(a.creation_date).getTime() + 3154000000000);
   } else if(a.pinned && !b.pinned) {
@@ -462,8 +479,8 @@ function displayTimeline(timeline) {
   //sort posts based on creation_date from new to older
   var sortPostsByDateArray;
   if(inSpace) {
+    // if in space, sort posts based on creation_date and isPinned
     sortPostsByDateArray = timeline.posts.sort(compSpace);
-    console.log(sortPostsByDateArray)
   } else {
     sortPostsByDateArray = timeline.posts.sort(comp);
   }
@@ -488,8 +505,7 @@ function displayTimeline(timeline) {
       var $likeIcon = $likers.find('#likeIcon');
       var $agoPost = $existingPost.find('#agoPost');
       var $post_content = $existingPost.find('#post_content');
-      //console.log($post_content)
-      //console.log(post.text)
+
       $post_content.text(post.text);
       $agoPost.text(calculateAgoTime(post.creation_date));
       $likers.attr("data-original-title",likerHTML);
@@ -595,7 +611,6 @@ function displayTimeline(timeline) {
 
     }
 
-    //console.log(post);
     //in both case render comments to post and tags
     var $feed = $('#' + post._id);
     var $likeIcon = $feed.find('#likeIcon');
@@ -627,7 +642,6 @@ function displayTimeline(timeline) {
 
 /**
  * getTimeline - get Admin timeline and call displayTimeline
- *
  * @param  {String} from DateTime String (ISO)
  * @param  {String} to   DateTime String (ISO)
  */
@@ -668,7 +682,6 @@ function getTimeline(from, to) {
 
 /**
  * getPersonalTimeline - get Personal timeline and call displayTimeline
- *
  * @param  {String} from DateTime String (ISO)
  * @param  {String} to   DateTime String (ISO)
  */
@@ -680,7 +693,6 @@ function getPersonalTimeline(from, to) {
     success: function (timeline) {
       displayTimeline(timeline);
     },
-
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
@@ -722,6 +734,7 @@ function getTimelineSpace(spacename, from, to) {
       displayTimeline(timeline);
       var members = localStorage.getItem(spacename.split(' ').join('').replace("%20","")).split(",");
 
+      // collects members and member pics for "Team"-Tab in Space
       var memberPictures = []
       $.each(users, function(entry) {
         if(members.includes(users[entry].username)) {
@@ -729,14 +742,15 @@ function getTimelineSpace(spacename, from, to) {
         }
       })
 
+      // collects documents and corresponding tags from post for "Dokumente"-Tab in Space
       var documents = []
       $.each(timeline.posts, function(post) {
         $.each(timeline.posts[post].files, function(file) {
-          //documents.push(timeline.posts[post].files[file])
           documents.push({name:timeline.posts[post].files[file], tags: timeline.posts[post].tags.split(",")})
         })
       })
-      console.log(documents)
+
+      // sets space pic and if current user is admin for edit space button
       var isAdmin = [];
       var space_pic = "";
       var this_space
@@ -750,9 +764,9 @@ function getTimelineSpace(spacename, from, to) {
         }
       })
 
+      // construct spaceProfilePanel
       if(!document.body.contains(document.getElementById('spaceProfilePanel'))) $('#spaceProfileContainer').prepend(Mustache.render(spaceHeaderTemplate, {spacename: '' + spacename.replace("%20", " ") + '', space_pic:  space_pic, member_pics : memberPictures, documents : documents, user: currentUser, isAdmin: isAdmin}));
     },
-
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
@@ -781,7 +795,6 @@ function getTimelineSpace(spacename, from, to) {
 
 /**
  * getTimelineUser - get a User timeline (profile) and call displayTimeline
- *
  * @param  {String} username Name of the User
  * @param  {String} from DateTime String (ISO)
  * @param  {String} to   DateTime String (ISO)
@@ -834,16 +847,13 @@ function post(text, tags, space) {
     formData.append("file"+i, file);
   });
 
-  //var hashtag_regex = new RegExp('#[a-zA-Z0-9_]+', 'g')
+  // searches post content for all occurences of tags beginning with #
   var hashtag_regex = /#([a-zA-Z0-9_]+)/g
   var match;
   var hashtags = []
   while ((match = hashtag_regex.exec(text)) != null) {
-    //alert(match);
     hashtags.push(match[1])
   }
-  //var hashtags = hashtag_regex.exec(text)//text.match(hashtag_regex)
-  console.log(hashtags)
 
   formData.append("file_amount", fileList.length);
   formData.append("text", text);
@@ -851,12 +861,7 @@ function post(text, tags, space) {
   if(space != null){
     formData.append("space", space);
   }
-  // Display the key/value pairs
-  /*
-  for (var pair of formData.entries()) {
-      console.log(pair[0]+ ', ' + pair[1]);
-  }
-  */
+
   $.ajax({
     type: 'POST',
     url: '/posts',
@@ -865,7 +870,6 @@ function post(text, tags, space) {
     contentType: false,
     processData: false,
     success: function (data) {
-      //console.log("posted " + form);
       initNewsFeed();
       $('#postFeed').val('');
       $("input[id=addTag]").tagsinput('removeAll');
@@ -907,21 +911,15 @@ function post(text, tags, space) {
 }
 
 /**
-* post - post Feed and resets Values for Input
+* updatePost - post Feed and resets Values for Input
 * calls InitNewsFeed for update
 * @param  {String} id
- */
+*/
 function updatePost(id) {
-  console.log("Hallo")
-  console.log(id)
-  console.log($('#updatePostTextArea').val())
   var formData = new FormData();
   formData.append("_id", String(id));
   formData.append("text", $('#updatePostTextArea').val());
 
-  for (var key of formData.entries()) {
-        console.log(key[0] + ', ' + key[1]);
-    }
   $.ajax({
     type: 'POST',
     url: '/posts',
@@ -1008,7 +1006,6 @@ function deletePost(id) {
 
 /**
  * postComment - calls initNewsFeed for update after success
- *
  * @param  {String} text comment Text
  * @param  {String} id   id of the Post
  */
@@ -1103,7 +1100,6 @@ function deleteComment(id) {
 
 /**
  * postLike - calls initNewsFeed for update after success
- *
  * @param  {String} id id of the Post
  */
 function postLike(id) {
@@ -1299,7 +1295,6 @@ function createSpace(name) {
 
 /**
  * joinSpace - joins Space
- *
  * @param  {String} name Spacename
  */
 function joinSpace(name) {
@@ -1350,6 +1345,9 @@ function checkUpdate() {
   });
 }
 
+/**
+ *  getUserRole - returns role of the current user
+ */
 function getUserRole(){
   $.ajax({
     type: 'GET',
@@ -1386,6 +1384,7 @@ function getUserRole(){
     },
   });
 }
+
 /**
  * getCurrentUserInfo - saves currenUser information
  * first time calling InitNewsFeed (on document load)
@@ -1455,7 +1454,6 @@ function searchUser(users) {
 
 /**
  * getAllUsers - stores all Users in "users" and calls searchUser
- *
  */
 function getAllUsers(){
   $.ajax({
@@ -1510,6 +1508,10 @@ function likeDislike(e, id) {
   }
 }
 
+/**
+ * repost - reposts post with id
+ * @param  {String} name id
+ */
 function repost(id){
   var space = ($( '#selectRepostSpace'+id +' option:selected' ).val() === "null") ? null : $( '#selectRepostSpace'+id +' option:selected' ).val();
 
@@ -1562,13 +1564,16 @@ function repost(id){
   });
 }
 
+/**
+* updateRepost - updates repost with id
+* calls InitNewsFeed for update
+* @param  {String} id
+ */
 function updateRepost(id) {
   dataBody = {
     '_id': id,
     'repostText': String($('#update_repost_content').val()),
   };
-  //dataBody = JSON.stringify(dataBody);
-  console.log(dataBody)
   $.ajax({
     type: 'POST',
     url: '/repost',
@@ -1608,6 +1613,11 @@ function updateRepost(id) {
   });
 }
 
+/**
+ * pinDepinPost - pins or depins selected post based on attribute in classList of element pinIcon
+ * if classList contains outlinePin -> post is not pinned -> postPostPin
+ * else if classList contains solidPin -> post is pinned -> removePostPin
+ */
 function pinDepinPost(e, id) {
   var pinIcon = e.firstElementChild;
   if(pinIcon.classList.contains("outlinePin")) {
@@ -1617,6 +1627,11 @@ function pinDepinPost(e, id) {
   }
 }
 
+/**
+ * postPostPin - pins post with id
+ * pin_type : "post" -> only for posts
+ * @param  {String} name id
+ */
 function postPostPin(id) {
   dataBody = {
     'id': id,
@@ -1632,7 +1647,6 @@ function postPostPin(id) {
       $feedContainer.empty()
       initNewsFeed();
     },
-
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
@@ -1659,12 +1673,16 @@ function postPostPin(id) {
   });
 }
 
+/**
+ * removePostPin - removes pin of post with id
+ * pin_type : "post" -> only for posts
+ * @param  {String} name id
+ */
 function removePostPin(id) {
   dataBody = {
     'id': id,
     'pin_type': "post"
   };
-
   dataBody = JSON.stringify(dataBody);
   $.ajax({
     type: 'DELETE',
@@ -1675,7 +1693,6 @@ function removePostPin(id) {
       $feedContainer.empty()
       initNewsFeed();
     },
-
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
@@ -1702,6 +1719,11 @@ function removePostPin(id) {
   });
 }
 
+/**
+ * pinDepinComment - pins or depins selected comment based on attribute in classList of element pinIcon
+ * if classList contains outlinePin -> comment is not pinned -> postCommentPin
+ * else if classList contains solidPin -> comment is pinned -> removeCommentPin
+ */
 function pinDepinComment(e, id) {
   var pinIcon = e.firstElementChild;
   if(pinIcon.classList.contains("outlinePin")) {
@@ -1711,8 +1733,12 @@ function pinDepinComment(e, id) {
   }
 }
 
+/**
+ * postCommentPin - pins comment of post with id
+ * pin_type : "comment" -> only for comment
+ * @param  {String} name id
+ */
 function postCommentPin(id) {
-  console.log("Pin Comment")
   dataBody = {
     'id': id,
     'pin_type': "comment"
@@ -1727,7 +1753,6 @@ function postCommentPin(id) {
       $feedContainer.empty()
       initNewsFeed();
     },
-
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
@@ -1752,15 +1777,18 @@ function postCommentPin(id) {
       }
     },
   });
-}
 
+}
+/**
+ * removeCommentPin - removes pin of comment of post with id
+ * pin_type : "comment" -> only for comment
+ * @param  {String} name id
+ */
 function removeCommentPin(id) {
-  console.log("Remove Pin Comment")
   dataBody = {
     'id': id,
     'pin_type': "comment"
   };
-
   dataBody = JSON.stringify(dataBody);
   $.ajax({
     type: 'DELETE',
@@ -1771,7 +1799,6 @@ function removeCommentPin(id) {
       $feedContainer.empty()
       initNewsFeed();
     },
-
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
@@ -1799,7 +1826,9 @@ function removeCommentPin(id) {
 }
 
 
-
+/**
+ * loadSpacesRepost -
+ */
 function loadSpacesRepost(id){
   $.each(Spaces, function(key, space){
     for (i = 0; i < document.getElementById('selectRepostSpace'+id).length; ++i){
@@ -1811,6 +1840,9 @@ function loadSpacesRepost(id){
   });
 }
 
+/**
+ * getRouting - gets routing table from server
+ */
 function getRouting(){
   $.ajax({
     type: "GET",
@@ -1837,6 +1869,10 @@ $(document).keyup(function(event) {
     }
 });*/
 
+/**
+ * add_acl_button - GETs current cole of user
+ * if user is admin add acl button to navbar
+ */
 function add_acl_button() {
   $.ajax({
       type: 'GET',
