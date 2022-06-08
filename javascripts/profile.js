@@ -8,19 +8,19 @@ $(document).ready(function () {
     getUserInfo(name);
     getFollows(name);
     updateProfileContainer();
-  }
-   , 200);
-
-
+    add_acl_button()
+  }, 200);
 });
 
+/**
+ * updateProfileContainer - update profile container with data from user
+ */
 function updateProfileContainer(){
   user["isFollowed"] = (currentUser.follows.includes(name)) ? true : false;
   if(!document.body.contains(document.getElementById('profilePanel'))){
     $('#profileContainer').prepend(Mustache.render(profileTemplate, user));
     $('#updateProfileButton').remove();
   } else {
-    //var template = document.getElementById('profileTemplate').innerHTML;
     Mustache.parse(profileTemplate);
     var render = Mustache.to_html(template, user);
     $("#profileContainer").empty().html(render);

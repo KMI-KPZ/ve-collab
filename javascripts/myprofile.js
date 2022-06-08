@@ -2,6 +2,7 @@ $(document).ready(function () {
   getRouting();
   document.title = currentUser.username + ' - Lionet';
   updateProfileContainer();
+  add_acl_button()
 });
 
 /**
@@ -17,22 +18,20 @@ $body.delegate('#photoFile', 'change', function () {
   $('#photoLabel').html(name);
 });
 
+/**
+ * updateProfileContainer - update profile container with data from user
+ */
 function updateProfileContainer(){
   currentUser['followSize'] = currentUser['follows'].length;
   currentUser['spaceSize'] = currentUser['spaces'].length;
   currentUser["profile_pic_URL"] = baseUrl + '/uploads/' + currentUser["profile"]["profile_pic"];
   if(currentUser.hasOwnProperty('projects')) currentUser['projectSize'] = currentUser['projects'].length;
-
   if(!document.body.contains(document.getElementById('profilePanel'))){
-
     setTimeout(function(){
       $('#profileContainer').empty()
        $('#profileContainer').prepend(Mustache.render(profileTemplate, currentUser)); }
        , 1000);
-       
   } else {
-    //var template = document.getElementById('profileTemplate').innerHTML;
-
     Mustache.parse(profileTemplate);
     var render = Mustache.to_html(profileTemplate, currentUser);
     $("#profileContainer").empty().html(render);
@@ -53,8 +52,6 @@ function saveProfileInformation() {
   var gender = $('#gender').val();
   var address = $('#address').val();
   var birthday = $('#date_of_birth').val();
-  //var experience = $('#experience').val(); //Allow mutliple
-  //var education = $('#education').val(); //Allow mutliple
   var experience =[];
   $.each($('[id="experience"]'), function(entry) {
     experience.push($('[id="experience"]')[entry].value)
@@ -77,16 +74,6 @@ function saveProfileInformation() {
     console.log("Error photo file")
   }
   postProfileInformation(photo, bio, institution, null, first_name, last_name, gender, address, birthday, experience, education);
-  /*
-  console.log(bio)
-  console.log(institution)
-  console.log(first_name)
-  console.log(last_name)
-  console.log(gender)
-  console.log(address)
-  console.log(birthday)
-  console.log(experience)
-  console.log(education)*/
 }
 
 /**
@@ -123,12 +110,10 @@ function postProfileInformation(photo, bio, institution, projects, first_name, l
   for (var pair of formData.entries()) {
       console.log(pair[0]+ ', ' + pair[1]);
   }
-
   $.ajax({
     type: 'POST',
     url: '/profileinformation',
     data: formData,
-    //important for upload
     contentType: false,
     processData: false,
     success: function (data) {
@@ -138,9 +123,7 @@ function postProfileInformation(photo, bio, institution, projects, first_name, l
       console.log("Success")
       getCurrentUserInfo();
       updateProfileContainer();
-
     },
-
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
@@ -174,6 +157,9 @@ function addListItem(type) {
   }
 }
 
+/**
+ * populateProfileInformationModal - populates profile information edit modal with current user data
+ */
 function populateProfileInformationModal() {
   $.ajax({
     type: 'GET',
@@ -204,16 +190,15 @@ function populateProfileInformationModal() {
           $('#education_list').prepend(Mustache.render(profileInformation_listItem, {item_type:"education", value:user.profile.education[entry]}))
         })
       }
-
     },
-
     error: function (xhr, status, error) {
       console.log("Error")
     }
   })
 }
 
-function deleteClosestListItem(elem) {
+function deleteClosestListItem(event, elem) {
+  event.preventDefault()
   console.log($(elem).closest('li'));
   $(elem).parents("li:first").remove();
 }
