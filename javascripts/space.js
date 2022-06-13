@@ -93,3 +93,10 @@ function updateSpaceInformation(name) {
     },
   });
 }
+
+/**
+ * on leave Space button - click - get name and call leaveSpace
+ */
+ $body.delegate('button[id="leaveSpace"]', 'click', function () {
+  leaveSpace(spacename);
+});

@@ -1439,7 +1439,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                         <div class="flex items-center">
                             <div>
                                 <img class="inline-block h-10 w-10 rounded-full"
-                                     src="http://localhost:8903/uploads/{{!space_pic}}"
+                                     src="{{!space_pic}}"
                                      alt="SpaceFoto">
                             </div>
                             <div class="ml-3">
@@ -1687,6 +1687,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
     </div>
     <div class="flex-none w-1/5 p-2 mr-2">
       <!-- Still empty, can be used for additional items that should be displayed in space header -->
+      <button type="button" id="leaveSpace" name="{{!space_name}}" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full">Diesen Space verlassen </button>
     </div>
 
   </div>
