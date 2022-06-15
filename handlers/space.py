@@ -1,8 +1,10 @@
-from tornado.options import options
-
 from base64 import b64encode
 import os
 import re
+from typing import Dict, Optional
+
+from tornado.options import options
+import tornado.web
 
 from acl import get_acl
 from handlers.base_handler import BaseHandler, auth_needed
@@ -27,14 +29,8 @@ class SpaceHandler(BaseHandler):
         """
 
         if slug == "list":
-            result = self.db.spaces.find({})
-
-            spaces = []
-            for space in result:
-                space['_id'] = str(space['_id'])
-                spaces.append(space)
-
-            self.write({"spaces": spaces})
+            self.list_spaces()
+            return
 
         else:
             self.set_status(404)
@@ -51,9 +47,9 @@ class SpaceHandler(BaseHandler):
                 {"status": 200,
                  "success": True}
 
-                409 Conflict
-                {"status": 409,
-                 "reason": "space_name_already_exists"}
+                400 Bad Request
+                {"status": 400,
+                 "reason": missing_key:name}
 
                 401 Unauthorized
                 {"status": 401,
@@ -62,6 +58,10 @@ class SpaceHandler(BaseHandler):
                 401 Unauthorized
                 {"status": 401,
                  "reason": "no_logged_in_user"}
+
+                409 Conflict
+                {"status": 409,
+                 "reason": "space_name_already_exists"}
 
         POST /spaceadministration/join
             (currently authed user joins space)
@@ -73,9 +73,17 @@ class SpaceHandler(BaseHandler):
                 {"status": 200,
                  "success": True}
 
+                400 Bad Request
+                {"status": 400,
+                 "reason": missing_key:name}
+
                 401 Unauthorized
                 {"status": 401,
                  "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                {"status": 403,
+                 "reason": "insufficient_permission}
 
         POST /spaceadministration/add_admin
             (add given user to space admin list (only space admin or global admin can do that))
@@ -87,6 +95,10 @@ class SpaceHandler(BaseHandler):
                 200 OK,
                 {"status": 200,
                  "success": True}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": missing_key:name}
 
                 400 Bad Request
                 {"status": 400,
@@ -112,6 +124,10 @@ class SpaceHandler(BaseHandler):
 
                 400 Bad Request
                 {"status": 400,
+                 "reason": missing_key:name}
+
+                400 Bad Request
+                {"status": 400,
                  "reason": "space_doesnt_exist"}
 
                 401 Unauthorized
@@ -123,150 +139,42 @@ class SpaceHandler(BaseHandler):
                  "reason": "insufficient_permission"}
         """
 
-        space_name = self.get_argument("name")
+        try:
+            space_name = self.get_argument("name")
+        except tornado.web.MissingArgumentError as e:
+            print(e)
 
-        if slug == "create":  # create new space
-            # check if the user has permission
-            acl = get_acl().global_acl
-            if not acl.ask(self.get_current_user_role(), "create_space"):
-                self.set_status(403)
-                self.write({"status": 403,
-                            "reason": "insufficient_permission"})
-                return
+            self.set_status(400)
+            self.write({"status": 400,
+                        "reason": "missing_key:name"})
+            return
 
-            members = [self.current_user.username]
+        if slug == "create":
+            self.create_space(space_name)
+            return
 
-            # only create space if no other space with the same name exists
-            existing_spaces = []
-            for existing_space in self.db.spaces.find(projection={"name": True, "_id": False}):
-                existing_spaces.append(existing_space["name"])
-            if space_name not in existing_spaces:
-                space = {"name": space_name,
-                         "members": members,
-                         "admins": [self.current_user.username]}
-                self.db.spaces.insert_one(space)
-
-                # create default acl entry for all different roles
-                acl = get_acl().space_acl
-                acl.insert_admin(space_name)
-                roles = self.db.roles.distinct("role")
-                for role in roles:
-                    if role != "admin":
-                        acl.insert_default(role, space_name)
-
-                # automatically create a new start page in the wiki for the space
-                if not options.no_wiki:
-                    #self.wiki.create_page(space_name + ":start", "auto-generated landing page")
-                    pass
-                self.set_status(200)
-                self.write({'status': 200,
-                            'success': True})
-            else:
-                self.set_status(409)
-                self.write({"status": 409,
-                            "reason": "space_name_already_exists"})
-
-        elif slug == "join":  # add current user to space members
-            # ask for permission if the role is allowed to join
-            # TODO implement invitation system for the cases where role has no join rights
-            acl = get_acl().space_acl
-            if not acl.ask(self.get_current_user_role(), space_name, "join_space"):
-                self.set_status(403)
-                self.write({"status": 403,
-                            "reason": "insufficient_permission"})
-                return
-
-            self.db.spaces.update_one(
-                {"name": space_name},  # filter
-                {
-                    "$addToSet": {"members": self.current_user.username}
-                }
-            )
-
-            self.set_status(200)
-            self.write({'status': 200,
-                        'success': True})
+        elif slug == "join":
+            self.join_space(space_name)
+            return
 
         elif slug == "add_admin":
-            username = self.get_argument("user")
-
-            space = self.db.spaces.find_one({"name": space_name})
-            if not space:
+            try:
+                username = self.get_argument("user")
+            except tornado.web.MissingArgumentError as e:
+                print(e)
                 self.set_status(400)
-                self.write({'status': 400,
-                            'reason': "space_doesnt_exist"})
+                self.write({"status": 400,
+                            "reason": "missing_key:user"})
                 return
 
-            if (self.current_user.username in space["admins"]) or (self.get_current_user_role() == "admin"):
-                # user is either space admin or global admin and therefore is allowed to add space admin
-                self.db.spaces.update_one(
-                    {"name": space_name},  # filter
-                    {
-                        "$addToSet": {"admins": username}
-                    }
-                )
-
-                self.set_status(200)
-                self.write({'status': 200,
-                            'success': True})
-            else:
-                self.set_status(403)
-                self.write({"status": 403,
-                            "reason": "insufficient_permission"})
-                return
+            self.add_admin_to_space(space_name, username)
+            return
 
         elif slug == "space_picture":
-
-            space = self.db.spaces.find_one({"name": space_name})
-            space_description = self.get_body_argument("space_description", None)
-
-            if not space:
-                self.set_status(400)
-                self.write({'status': 400,
-                            'reason': "space_doesnt_exist"})
-                return
-
-            new_file_name = None
-            if "space_pic" in self.request.files:
-                print("in file handling")
-                space_pic_obj = self.request.files["space_pic"][0]
-
-                # save file
-                file_ext = os.path.splitext(space_pic_obj["filename"])[1]
-                new_file_name = b64encode(os.urandom(32)).decode("utf-8")
-                new_file_name = re.sub('[^0-9a-zäöüßA-ZÄÖÜ]+', '_', new_file_name).lower() + file_ext
-                print(new_file_name)
-
-                with open(self.upload_dir + new_file_name, "wb") as fp:
-                    fp.write(space_pic_obj["body"])
-
-            if new_file_name:
-                self.db.spaces.update_one(
-                    {"name": space_name},
-                    {"$set":
-                        {
-                            "space_pic": new_file_name,
-                            "space_description": space_description
-
-                        }
-                    },
-                    upsert=True
-                )
-            else:
-                self.db.spaces.update_one(
-                    {"name": space_name},
-                    {"$set":
-                        {
-                            "space_description": space_description
-
-                        }
-                    },
-                    upsert=True
-                )
-
-            self.set_status(200)
-            self.write({"status": 200,
-                        "success": True})
+            space_description = self.get_body_argument(
+                "space_description", None)
+            self.update_space_information(space_name, space_description)
+            return
 
         else:
             self.set_status(404)
@@ -284,12 +192,51 @@ class SpaceHandler(BaseHandler):
                 {"status": 200,
                  "success": True}
 
+                400 Bad Request
+                {"status": 400, 
+                 "reason": "missing_key:name"}
+
+                400 Bad Request
+                {"status": 400, 
+                 "reason": "space_doesnt_exist"}
+
                 401 Unauthorized
                 {"status": 401,
                  "reason": "no_logged_in_user"}
 
+        DELETE /spaceadministration/kick
+            (kick a user from the space, requires being global or space admin)
+            query param:
+                "name" : space name to kick the user from, mandatory argument
+                "username" : user name to kick from the space, mandatory argument
+
+            returns:
+                200 OK,
+                {"status": 200,
+                 "success": True}
+
+                400 Bad Request
+                {"status": 400, 
+                 "reason": "missing_key:name"}
+
+                400 Bad Request
+                {"status": 400, 
+                 "reason": "missing_key:username"}
+
+                400 Bad Request
+                {"status": 400, 
+                 "reason": "space_doesnt_exist"}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                {"status": 403,
+                 "reason": "insufficient_permission}
+
         DELETE /spaceadministration/delete_space
-            (space will be deleted)
+            (space will be deleted, requires being global or space admin)
             query param:
                 "name" : space name of which space to delete, mandatory argument
 
@@ -298,31 +245,319 @@ class SpaceHandler(BaseHandler):
                 {"status": 200,
                  "success": True}
 
+                400 Bad Request
+                {"status": 400, 
+                 "reason": "missing_key:name"}
+
+                400 Bad Request
+                {"status": 400, 
+                 "reason": "space_doesnt_exist"}
+
                 401 Unauthorized
                 {"status": 401,
                  "reason": "no_logged_in_user"}
-        """
 
-        space_name = self.get_argument("name")
+                403 Forbidden
+                {"status": 403,
+                 "reason": "insufficient_permission}
+        """
+        try:
+            space_name = self.get_argument("name")
+        except tornado.web.MissingArgumentError as e:
+            print(e)
+
+            self.set_status(400)
+            self.write({"status": 400,
+                        "reason": "missing_key:name"})
+            return
+
+        space = self.db.spaces.find_one({"name": space_name})
+        if not space:
+            self.set_status(400)
+            self.write({"status": 400,
+                        "reason": "space_doesnt_exist"})
+            return
 
         if slug == "leave":
-            # TODO when group admin is implemented: block leaving if user is the only admin, he has to transfer this role first before being able to leave
-            self.db.spaces.update_one(
-                {"name": space_name},
-                {
-                    "$pull": {"members": self.current_user.username}
-                }
-            )
-            self.set_status(200)
-            self.write({'status': 200,
-                        'success': True})
+            self.user_leave(space)
+            return
+
+        elif slug == "kick":
+            try:
+                user_name = self.get_argument("username")
+            except tornado.web.MissingArgumentError as e:
+                print(e)
+
+                self.set_status(400)
+                self.write({"status": 400,
+                            "reason": "missing_key:username"})
+                return
+
+            self.user_kick(space, user_name)
+            return
 
         elif slug == "delete_space":
-            self.db.spaces.delete_one({"name": space_name})
-
-            self.set_status(200)
-            self.write({'status': 200,
-                        'success': True})
+            self.delete_space(space)
+            return
 
         else:
             self.set_status(404)
+            return
+
+##############################################################################
+#                             helper functions                               #
+##############################################################################
+
+    def list_spaces(self) -> None:
+        """
+        list all available spaces
+        """
+
+        result = self.db.spaces.find({})
+
+        spaces = []
+        for space in result:
+            space['_id'] = str(space['_id'])
+            spaces.append(space)
+
+        self.set_status(200)
+        self.write({"spaces": spaces})
+        return
+
+    def create_space(self, space_name: str) -> None:
+        """
+        create a new space if it does not already exist and if the current user has sufficient permissions
+        """
+
+        # check if the user has permission
+        acl = get_acl().global_acl
+        if not acl.ask(self.get_current_user_role(), "create_space"):
+            self.set_status(403)
+            self.write({"status": 403,
+                        "reason": "insufficient_permission"})
+            return
+
+        members = [self.current_user.username]
+
+        # if space with same name already exists dont create and return conflict
+        existing_spaces = []
+        for existing_space in self.db.spaces.find(projection={"name": True, "_id": False}):
+            existing_spaces.append(existing_space["name"])
+        if space_name in existing_spaces:
+            self.set_status(409)
+            self.write({"status": 409,
+                        "reason": "space_name_already_exists"})
+            return
+
+        space = {"name": space_name,
+                 "members": members,
+                 "admins": [self.current_user.username]}
+        self.db.spaces.insert_one(space)
+
+        # create default acl entry for all different roles
+        acl = get_acl().space_acl
+        acl.insert_admin(space_name)
+        roles = self.db.roles.distinct("role")
+        for role in roles:
+            if role != "admin":
+                acl.insert_default(role, space_name)
+
+        # automatically create a new start page in the wiki for the space
+        if not options.no_wiki:
+            #self.wiki.create_page(space_name + ":start", "auto-generated landing page")
+            pass
+        self.set_status(200)
+        self.write({'status': 200,
+                    'success': True})
+
+    def join_space(self, space_name: str) -> None:
+        """
+        let current user join the space, if he has sufficient permissions
+        """
+
+        # ask for permission if the role is allowed to join
+        # TODO implement invitation system for the cases where role has no join rights
+        acl = get_acl().space_acl
+        if not acl.ask(self.get_current_user_role(), space_name, "join_space"):
+            self.set_status(403)
+            self.write({"status": 403,
+                        "reason": "insufficient_permission"})
+            return
+
+        self.db.spaces.update_one(
+            {"name": space_name},  # filter
+            {
+                "$addToSet": {"members": self.current_user.username}
+            }
+        )
+
+        self.set_status(200)
+        self.write({'status': 200,
+                    'success': True})
+
+    def add_admin_to_space(self, space_name: str, username: str) -> None:
+        """
+        add another user as a space admin to the space, requires space admin or global admin to perform this operation
+        """
+
+        space = self.db.spaces.find_one({"name": space_name})
+        if not space:
+            self.set_status(400)
+            self.write({'status': 400,
+                        'reason': "space_doesnt_exist"})
+            return
+
+        if (self.current_user.username in space["admins"]) or (self.get_current_user_role() == "admin"):
+            # user is either space admin or global admin and therefore is allowed to add space admin
+            self.db.spaces.update_one(
+                {"name": space_name},
+                {
+                    "$addToSet": {"admins": username}
+                }
+            )
+
+            self.set_status(200)
+            self.write({'status': 200,
+                        'success': True})
+        else:
+            self.set_status(403)
+            self.write({"status": 403,
+                        "reason": "insufficient_permission"})
+            return
+
+    def update_space_information(self, space_name: str, space_description: Optional[str]) -> None:
+        """
+        update space picture and space description, requires space admin or global admin privileges
+        """
+
+        space = self.db.spaces.find_one({"name": space_name})
+
+        if not space:
+            self.set_status(400)
+            self.write({'status': 400,
+                        'reason': "space_doesnt_exist"})
+            return
+
+        # check if user is either space or global admin
+        if not (self.current_user.username in space["admins"] or self.get_current_user_role() == "admin"):
+            self.set_status(403)
+            self.write({"status": 403,
+                        "reason": "insufficient_permission"})
+            return
+
+        new_file_name = None
+        if "space_pic" in self.request.files:
+            print("in file handling")
+            space_pic_obj = self.request.files["space_pic"][0]
+
+            # save file
+            file_ext = os.path.splitext(space_pic_obj["filename"])[1]
+            new_file_name = b64encode(os.urandom(32)).decode("utf-8")
+            new_file_name = re.sub(
+                '[^0-9a-zäöüßA-ZÄÖÜ]+', '_', new_file_name).lower() + file_ext
+            print(new_file_name)
+
+            with open(self.upload_dir + new_file_name, "wb") as fp:
+                fp.write(space_pic_obj["body"])
+
+        if new_file_name:
+            self.db.spaces.update_one(
+                {"name": space_name},
+                {"$set":
+                    {
+                        "space_pic": new_file_name,
+                        "space_description": space_description
+
+                    }
+                 },
+                upsert=True
+            )
+        else:
+            self.db.spaces.update_one(
+                {"name": space_name},
+                {"$set":
+                    {
+                        "space_description": space_description
+
+                    }
+                 },
+                upsert=True
+            )
+
+        self.set_status(200)
+        self.write({"status": 200,
+                    "success": True})
+
+    def user_leave(self, space: Dict) -> None:
+        """
+        let the current user leave the space
+        """
+
+        # TODO when group admin is implemented: block leaving if user is the only admin, he has to transfer this role first before being able to leave
+        self.db.spaces.update_one(
+            {"name": space["name"]},
+            {
+                "$pull": {"members": self.current_user.username}
+            }
+        )
+        self.set_status(200)
+        self.write({"status": 200,
+                    "success": True})
+
+    def user_kick(self, space: Dict, user_name: str) -> None:
+        """
+        kick a user from the space, requires space admin or global admin privileges
+        if the to-be-kicked user is a space admin himself, global admin privileges are required to prevent space admins from kicking each other
+        """
+
+        # check if user is either space or global admin
+        if not (self.current_user.username in space["admins"] or self.get_current_user_role() == "admin"):
+            self.set_status(403)
+            self.write({"status": 403,
+                        "reason": "insufficient_permission"})
+            return
+
+        # in order to kick an admin from the space, you have to be global admin (prevents space admins from kicking each other)
+        if user_name in space["admins"]:
+            if self.get_current_user_role() == "admin":
+                self.db.spaces.update_one(
+                    {"name": space["name"]},
+                    {"$pull": {
+                        "members": user_name}
+                     }
+                )
+            else:
+                self.set_status(403)
+                self.write({"status": 403,
+                            "reason": "insufficient_permission",
+                            "hint": "need to be global admin to kick another admin from the space (prevent kicking of space admins between each other)"})
+                return
+
+        # user is not an admin, can kick him without doubt
+        else:
+            self.db.spaces.update_one(
+                {"name": space["name"]},
+                {"$pull": {
+                    "members": user_name}
+                 }
+            )
+
+        self.set_status(200)
+        self.write({"status": 200,
+                    "success": True})
+
+    def delete_space(self, space: Dict) -> None:
+        """
+        delete a space, requires space admin or global admin privileges
+        """
+
+        if (self.current_user.username in space["admins"]) or (self.get_current_user_role() == "admin"):
+            self.db.spaces.delete_one({"name": space["name"]})
+
+            self.set_status(200)
+            self.write({"status": 200,
+                        "success": True})
+        else:
+            self.set_status(403)
+            self.write({"status": 403,
+                        "reason": "insufficient_permission"})
