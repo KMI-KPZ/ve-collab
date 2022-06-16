@@ -66,7 +66,11 @@ function getSpaces() {
           localStorage.setItem(space.name, space.members);
           Spaces.push(space);
         }
-        $('#spaceOverviewEntries').prepend(Mustache.render($('#spaceOverviewEntry').html(), {project_id: space._id, space_description: space.space_description, project_name: space.name.replace(" ", "%20"), display_name: space.name, space_pic: space.space_pic, members: space.members, inSpace: inSpace}))
+        var space_pic = 'default_group_pic.jpg';
+        if(space.hasOwnProperty('space_pic')) {
+          space_pic = space["space_pic"];
+        }
+        $('#spaceOverviewEntries').prepend(Mustache.render($('#spaceOverviewEntry').html(), {project_id: space._id, space_description: space.space_description, project_name: space.name.replace(" ", "%20"), display_name: space.name, space_pic: space_pic, members: space.members, inSpace: inSpace}))
         // if not in Space render spaceTemplateSelect
         if (currURL.indexOf(baseUrl + '/space') == -1) {
           $('#selectSpace').append(Mustache.render(spaceTemplateSelect, space));
