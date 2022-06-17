@@ -19,17 +19,71 @@ class SpaceHandler(BaseHandler):
     def get(self, slug):
         """
         GET /spaceadministration/list
-        return:
-            200 OK,
-            {"spaces": [space1, space2,...]}
+            (view all spaces)
+            return:
+                200 OK,
+                {"spaces": [space1, space2,...]}
 
-            401 Unauthorized
-            {"status": 401,
-             "reason": "no_logged_in_user"}
+                401 Unauthorized
+                {"status": 401,
+                "reason": "no_logged_in_user"}
+
+        GET /spaceadministration/invites
+            (get pending invites into spaces for current user)
+            returns:
+                200 OK
+                {"pending_invites": ["space1", "space2", ...]}
+
+                401 Unauthorized
+                {"status": 401,
+                "reason": "no_logged_in_user"}
+
+        GET /spaceadministration/join_requests
+            (view join requests for the space (requires space admin or global admin privileges))
+            query param:
+                "name": the space name of which to view the requests
+
+            returns:
+                200 OK
+                {"join_requests": ["username1", "username2", ...]}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": missing_key:name}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": "space_doesnt_exist"}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                {"status": 403,
+                 "reason": "insufficient_permission"}
         """
 
         if slug == "list":
             self.list_spaces()
+            return
+        
+        elif slug == "invites":
+            self.get_invites_for_current_user()
+            return
+
+        elif slug == "join_requests":
+            try:
+                space_name = self.get_argument("name")
+            except tornado.web.MissingArgumentError as e:
+                print(e)
+
+                self.set_status(400)
+                self.write({"status": 400,
+                            "reason": "missing_key:name"})
+                return
+
+            self.get_join_requests_for_space(space_name)
             return
 
         else:
@@ -64,14 +118,15 @@ class SpaceHandler(BaseHandler):
                  "reason": "space_name_already_exists"}
 
         POST /spaceadministration/join
-            (currently authed user joins space)
+            (currently authed user joins space or sends a join request (depending on permissions))
             query param:
                 "name" : space name of which space to join, mandatory argument
 
             returns:
                 200 OK,
                 {"status": 200,
-                 "success": True}
+                 "success": True
+                 "join_type": "joined" OR "requested_join"}
 
                 400 Bad Request
                 {"status": 400,
@@ -80,10 +135,6 @@ class SpaceHandler(BaseHandler):
                 401 Unauthorized
                 {"status": 401,
                  "reason": "no_logged_in_user"}
-
-                403 Forbidden
-                {"status": 403,
-                 "reason": "insufficient_permission}
 
         POST /spaceadministration/add_admin
             (add given user to space admin list (only space admin or global admin can do that))
@@ -137,6 +188,94 @@ class SpaceHandler(BaseHandler):
                 403 Forbidden
                 {"status": 403,
                  "reason": "insufficient_permission"}
+
+        POST /spaceadministration/invite
+            (invite a user into a space (requires space admin or global admin privileges))
+            query param:
+                "name": space name of which to invite the user into
+                "user": username to invite
+
+            returns:
+                200 OK,
+                {"status": 200,
+                 "success": True}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": missing_key:name}
+                
+                400 Bad Request
+                {"status": 400,
+                 "reason": missing_key:user}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": "space_doesnt_exist"}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                {"status": 403,
+                 "reason": "insufficient_permission"}
+
+        POST /spaceadministration/accept_invite
+            (current user accepts invite into a space)
+            query param:
+                "name": space name of which the current user accepts the invite into
+
+            returns:
+                200 OK,
+                {"status": 200,
+                 "success": True}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": missing_key:name}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": "space_doesnt_exist"}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
+
+        POST /spaceadministration/accept_request
+            (space admin or global admin accept join request of a user)
+            query param:
+                "name": space name of which the request into will be accepted
+                "user": username whose request will be accepted
+
+            returns:
+                200 OK,
+                {"status": 200,
+                 "success": True}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": missing_key:name}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": missing_key:user}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": "space_doesnt_exist"}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": "user_didnt_request_to_join"}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                {"status": 403,
+                 "reason": "insufficient_permission"}
         """
 
         try:
@@ -174,6 +313,36 @@ class SpaceHandler(BaseHandler):
             space_description = self.get_body_argument(
                 "space_description", None)
             self.update_space_information(space_name, space_description)
+            return
+
+        elif slug == "invite":
+            try:
+                username = self.get_argument("user")
+            except tornado.web.MissingArgumentError as e:
+                print(e)
+                self.set_status(400)
+                self.write({"status": 400,
+                            "reason": "missing_key:user"})
+                return
+            
+            self.invite_user_into_space(space_name, username)
+            return
+
+        elif slug == "accept_invite":
+            self.accept_space_invite(space_name)
+            return
+
+        elif slug == "accept_request":
+            try:
+                username = self.get_argument("user")
+            except tornado.web.MissingArgumentError as e:
+                print(e)
+                self.set_status(400)
+                self.write({"status": 400,
+                            "reason": "missing_key:user"})
+                return
+            
+            self.accept_join_space_request(space_name, username)
             return
 
         else:
@@ -324,6 +493,20 @@ class SpaceHandler(BaseHandler):
         self.write({"spaces": spaces})
         return
 
+    def get_invites_for_current_user(self) -> None:
+        """
+        get all pending invites into spaces for the current user
+        """
+
+        self.set_status(501)
+
+    def get_join_requests_for_space(self, space_name: str) -> None:
+        """
+        view join requests for the given space
+        """
+
+        self.set_status(501)
+
     def create_space(self, space_name: str) -> None:
         """
         create a new space if it does not already exist and if the current user has sufficient permissions
@@ -351,7 +534,9 @@ class SpaceHandler(BaseHandler):
 
         space = {"name": space_name,
                  "members": members,
-                 "admins": [self.current_user.username]}
+                 "admins": [self.current_user.username],
+                 "invites": [],
+                 "requests": []}
         self.db.spaces.insert_one(space)
 
         # create default acl entry for all different roles
@@ -373,6 +558,7 @@ class SpaceHandler(BaseHandler):
     def join_space(self, space_name: str) -> None:
         """
         let current user join the space, if he has sufficient permissions
+        if not, let him send a join request instead
         """
 
         # ask for permission if the role is allowed to join
@@ -487,6 +673,27 @@ class SpaceHandler(BaseHandler):
         self.set_status(200)
         self.write({"status": 200,
                     "success": True})
+
+    def invite_user_into_space(self, space_name: str, username: str) -> None:
+        """
+        invite a user into the space
+        """
+
+        self.set_status(501)
+
+    def accept_space_invite(self, space_name: str) -> None:
+        """
+        current user accept invite into space
+        """
+
+        self.set_status(501)
+
+    def accept_join_space_request(self, space_name: str, username: str) -> None:
+        """
+        space admin or global admin accepts the request of a user to join the space
+        """
+
+        self.set_status(501)
 
     def user_leave(self, space: Dict) -> None:
         """
