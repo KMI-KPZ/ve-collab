@@ -22,7 +22,9 @@ class SpaceHandler(BaseHandler):
             (view all spaces)
             return:
                 200 OK,
-                {"spaces": [space1, space2,...]}
+                {"status": 200,
+                 "success": True,
+                 "spaces": [space1, space2,...]}
 
                 401 Unauthorized
                 {"status": 401,
@@ -32,7 +34,9 @@ class SpaceHandler(BaseHandler):
             (get pending invites into spaces for current user)
             returns:
                 200 OK
-                {"pending_invites": ["space1", "space2", ...]}
+                {"status": 200,
+                 "success": True,
+                 "pending_invites": ["space1", "space2", ...]}
 
                 401 Unauthorized
                 {"status": 401,
@@ -45,7 +49,9 @@ class SpaceHandler(BaseHandler):
 
             returns:
                 200 OK
-                {"join_requests": ["username1", "username2", ...]}
+                {"status": 200,
+                 "success": True,
+                 "join_requests": ["username1", "username2", ...]}
 
                 400 Bad Request
                 {"status": 400,
@@ -118,7 +124,7 @@ class SpaceHandler(BaseHandler):
                  "reason": "space_name_already_exists"}
 
         POST /spaceadministration/join
-            (currently authed user joins space or sends a join request (depending on permissions))
+            (currently authed user joins space or sends a join request (depending on permissions), which case happened is indicated by join_type in response)
             query param:
                 "name" : space name of which space to join, mandatory argument
 
@@ -131,6 +137,10 @@ class SpaceHandler(BaseHandler):
                 400 Bad Request
                 {"status": 400,
                  "reason": missing_key:name}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": "space_doesnt_exist"}
 
                 401 Unauthorized
                 {"status": 401,
@@ -238,13 +248,13 @@ class SpaceHandler(BaseHandler):
                 {"status": 400,
                  "reason": "space_doesnt_exist"}
 
+                400 Conflict
+                {"status": 400,
+                 "reason": "user_is_not_invited_into_space"}
+
                 401 Unauthorized
                 {"status": 401,
                  "reason": "no_logged_in_user"}
-
-                409 Conflict
-                {"status": 409,
-                 "reason": "user_is_not_invited_into_space"}
 
         POST /spaceadministration/accept_request
             (space admin or global admin accept join request of a user)
@@ -494,7 +504,9 @@ class SpaceHandler(BaseHandler):
             spaces.append(space)
 
         self.set_status(200)
-        self.write({"spaces": spaces})
+        self.write({"status": 200,
+                    "success": True, 
+                    "spaces": spaces})
         return
 
     def get_invites_for_current_user(self) -> None:
@@ -508,14 +520,35 @@ class SpaceHandler(BaseHandler):
             pending_invites.append(space["name"])
         
         self.set_status(200)
-        self.write({"pending_invites": pending_invites})
+        self.write({"status": 200,
+                    "success": True, 
+                    "pending_invites": pending_invites})
 
     def get_join_requests_for_space(self, space_name: str) -> None:
         """
-        view join requests for the given space
+        view join requests for the given space (requires space admin or global admin privileges)
         """
 
-        self.set_status(501)
+        space = self.db.spaces.find_one({"name": space_name})
+
+        # abort if space doesnt exist
+        if not space:
+            self.set_status(400)
+            self.write({"status": 400,
+                        "reason": "space_doesnt_exist"})
+            return
+
+        # abort if user is neither space nor global admin
+        if not (self.current_user.username in space["admins"] or self.get_current_user_role() == "admin"):
+            self.set_status(403)
+            self.write({"status": 403,
+                        "reason": "insufficient_permission"})
+            return
+
+        self.set_status(200)
+        self.write({"status": 200,
+                    "success": True, 
+                    "join_requests": space["requests"]})
 
     def create_space(self, space_name: str) -> None:
         """
@@ -571,15 +604,31 @@ class SpaceHandler(BaseHandler):
         if not, let him send a join request instead
         """
 
-        # ask for permission if the role is allowed to join
-        # TODO implement invitation system for the cases where role has no join rights
-        acl = get_acl().space_acl
-        if not acl.ask(self.get_current_user_role(), space_name, "join_space"):
-            self.set_status(403)
-            self.write({"status": 403,
-                        "reason": "insufficient_permission"})
+        # abort if space doesnt exist
+        space = self.db.spaces.find_one({"name": space_name})
+        if not space:
+            self.set_status(400)
+            self.write({"status": 400,
+                        "reason": "space_doesnt_exist"})
             return
 
+        acl = get_acl().space_acl
+        # user is not allowed to join spaces directly, therefore send join request instead of joining directly
+        if not acl.ask(self.get_current_user_role(), space_name, "join_space"):
+            self.db.spaces.update_one(
+                {"name": space_name},
+                {
+                    "$addToSet": {"requests": self.current_user.username}
+                }
+            )
+
+            self.set_status(200)
+            self.write({"status": 200,
+                        "success": True,
+                        "join_type": "requested_join"})
+            return
+
+        # user has permission to join spaces, directly add him as member
         self.db.spaces.update_one(
             {"name": space_name},
             {
@@ -589,7 +638,8 @@ class SpaceHandler(BaseHandler):
 
         self.set_status(200)
         self.write({"status": 200,
-                    "success": True})
+                    "success": True,
+                    "join_type": "joined"})
 
     def add_admin_to_space(self, space_name: str, username: str) -> None:
         """
@@ -733,8 +783,8 @@ class SpaceHandler(BaseHandler):
 
         # abort if user wasn't even invited into space in first place (= prevent sneaking in)
         if self.current_user.username not in space["invites"]:
-            self.set_status(409)
-            self.write({"status": 409,
+            self.set_status(400)
+            self.write({"status": 400,
                         "reason": "user_is_not_invited_into_space"})
             return
 
@@ -756,7 +806,41 @@ class SpaceHandler(BaseHandler):
         space admin or global admin accepts the request of a user to join the space
         """
 
-        self.set_status(501)
+        space = self.db.spaces.find_one({"name": space_name})
+
+        # abort if space doesnt exist
+        if not space:
+            self.set_status(400)
+            self.write({"status": 400,
+                        "reason": "space_doesnt_exist"})
+            return
+
+        # abort if user is neither space nor global admin
+        if not (self.current_user.username in space["admins"] or self.get_current_user_role() == "admin"):
+            self.set_status(403)
+            self.write({"status": 403,
+                        "reason": "insufficient_permission"})
+            return
+
+        # abort if user didn't request to join
+        if username not in space["requests"]:
+            self.set_status(400)
+            self.write({"status": 400,
+                        "reason": "user_didnt_request_to_join"})
+            return
+
+        # add user to members and pull them from pending requests
+        self.db.spaces.update_one(
+            {"name": space_name},
+            {
+                "$addToSet": {"members": username},
+                "$pull": {"requests": username}
+            }
+        )
+
+        self.set_status(200)
+        self.write({"status": 200,
+                    "success": True})
 
     def user_leave(self, space: Dict) -> None:
         """
