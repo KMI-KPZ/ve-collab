@@ -28,7 +28,7 @@ class SpaceHandler(BaseHandler):
                 {"status": 401,
                 "reason": "no_logged_in_user"}
 
-        GET /spaceadministration/invites
+        GET /spaceadministration/pending_invites
             (get pending invites into spaces for current user)
             returns:
                 200 OK
@@ -68,7 +68,7 @@ class SpaceHandler(BaseHandler):
             self.list_spaces()
             return
         
-        elif slug == "invites":
+        elif slug == "pending_invites":
             self.get_invites_for_current_user()
             return
 
