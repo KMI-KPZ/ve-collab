@@ -246,17 +246,6 @@ $body.delegate('#commentInput', 'keydown', function (e) {
   }
 })
 
-/**
- * triggers when searchresult is clicked - get his username and redirect to his profile
- */
-$body.delegate('.link-class', 'click', function () {
-    var click_text = $(this).text().split('|');
-    var selectedUser = $.trim(click_text[0]);
-    $('#search').val(selectedUser);
-    $("#result").html('');
-    window.location.href = baseUrl + '/profile/' + selectedUser;
-});
-
 $body.delegate('i.fa-file', 'click', function () {
   $("input[type='file']").trigger('click');
 });
@@ -744,7 +733,12 @@ function getTimelineSpace(spacename, from, to) {
           if(Spaces[entry].admins.includes(currentUser.username)) {
             isAdmin.push(currentUser.username);
           }
-          space_pic = Spaces[entry].space_pic
+
+          if(Spaces[entry].hasOwnProperty('space_pic')) {
+            space_pic = Spaces[entry]["space_pic"];
+          } else {
+            space_pic = 'default_group_pic.jpg';
+          }
         }
       })
 

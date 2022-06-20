@@ -80,32 +80,6 @@ function getCurrentUserInfo() {
 }
 
 /**
- * searchUser - search for a username or email in users JSON
- * renders search results
- * @param  {JSON} users all Users from getAllUsers()
- */
-function searchUser(users) {
-  $.ajaxSetup({ cache: false });
-  //triggers if a char is changed at input
-  $('#search').keyup(function(){
-    $('#result').html('');
-    $('#state').val('');
-    var searchField = $('#search').val();
-    var expression = new RegExp(searchField, "i");
-    //only search if input isn't empty
-    if(searchField != '') {
-     $.each(users, function(key, user){
-      if (user.username.search(expression) != -1 || user.email.search(expression) != -1)
-      {
-       user["profile_pic_URL"] = baseUrl + '/uploads/' + user["profile_pic"];
-       $('#result').append('<li class=""><img src="' + user["profile_pic_URL"] + '" height="40" width="40" class="img-thumbnail" /> '+user.username+' | <span class="text-muted">'+user.email+'</span></li>');
-      }
-     });
-   }
-    });
-}
-
-/**
  * getAllUsers - stores all Users in "users" and calls searchUser
  */
 function getAllUsers(){
@@ -115,7 +89,7 @@ function getAllUsers(){
     dataType: 'json',
     success: function (data) {
       users = data;
-      searchUser(users);
+      //searchUser(users);
     },
 
     error: function (xhr, status, error) {
