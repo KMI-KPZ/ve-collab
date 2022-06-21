@@ -1,9 +1,9 @@
-from handlers.base_handler import BaseHandler, auth_needed
-import tornado.web
-import requests
 from bs4 import BeautifulSoup
-from dokuwiki_integration import Wiki
+import requests
+import tornado.web
 
+import global_vars
+from handlers.base_handler import BaseHandler, auth_needed
 
 class WikiPageNamesHandler(BaseHandler):
 
@@ -76,13 +76,13 @@ class WikiPageHandler(BaseHandler):
 
         #request page from dokuwiki (wrapper)
         #page_content = self.wiki.get_page(page_name, html=True)
-        page_content = requests.get("https://soserve.rz.uni-leipzig.de:8078/doku.php?id=" + page_name).content.decode()
+        page_content = requests.get("{}/doku.php?id={}".format(global_vars.wiki_url, page_name)).content.decode()
 
         #rewrite relative links so they land on this handler again
         page_content = page_content.replace("doku.php?id", "wiki_page?page")
 
         #rewrite media to query from wiki
-        page_content = page_content.replace("/lib/", "https://soserve.rz.uni-leipzig.de:8078/lib/")
+        page_content = page_content.replace("/lib/", "{}/lib/".format(global_vars.wiki_url))
 
         #test
         page_content = page_content.replace("<body>", "<body><p>I Have added this paragraph right here from the server</p>")

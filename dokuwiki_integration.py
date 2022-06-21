@@ -1,6 +1,5 @@
 from __future__ import annotations
 from pprint import pprint
-
 from typing import List
 
 import dokuwiki
@@ -53,7 +52,4 @@ class Wiki:
 
 
 if __name__ == "__main__":
-    wiki = Wiki("http://localhost/", "test_user", "test123")
-    print(wiki.get_page_names())
-    print(wiki.get_page("test_space:start"))
-    print(wiki.get_page("test_space:start", html=True))
+    pass

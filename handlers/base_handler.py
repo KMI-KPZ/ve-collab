@@ -2,7 +2,6 @@ import functools
 import json
 import os
 import shutil
-
 from typing import Awaitable, Callable, Optional
 
 from keycloak import KeycloakGetError
@@ -11,7 +10,6 @@ from pymongo import MongoClient
 from tornado.options import options
 import tornado.web
 
-import CONSTANTS
 from dokuwiki_integration import Wiki
 import global_vars
 from model import User
@@ -35,8 +33,8 @@ def auth_needed(method: Callable[..., Optional[Awaitable[None]]]) -> Callable[..
 class BaseHandler(tornado.web.RequestHandler):
 
     def initialize(self):
-        self.client = MongoClient('localhost', 27017, username=CONSTANTS.MONGODB_USERNAME, password=CONSTANTS.MONGODB_PASSWORD)
-        self.db = self.client['lionet']  # TODO make this generic via config
+        self.client = MongoClient(global_vars.mongodb_host, global_vars.mongodb_port, username=global_vars.mongodb_username, password=global_vars.mongodb_password)
+        self.db = self.client["lionet"]
 
         self.upload_dir = "uploads/"
         if not os.path.isdir(self.upload_dir):
@@ -47,14 +45,14 @@ class BaseHandler(tornado.web.RequestHandler):
         if options.no_wiki:
             self.wiki = None
         else:
-            self.wiki = Wiki("https://soserve.rz.uni-leipzig.de:8078/", "user", "password")  # use fixed user for now, TODO integration platform users into wiki (plugin authPDO?)
+            self.wiki = Wiki(global_vars.wiki_url, global_vars.wiki_username, global_vars.wiki_password)
 
     async def prepare(self):
         token = self.get_secure_cookie("access_token")
         if token is not None:
             token = json.loads(token)
         else:
-            self.redirect(CONSTANTS.ROUTING_TABLE["platform"] + "/login")
+            self.redirect(global_vars.routing_table["platform"] + "/login")
 
         try:
             # try to refresh the token and fetch user info. this will fail if there is no valid session
@@ -74,13 +72,13 @@ class BaseHandler(tornado.web.RequestHandler):
             if decoded["error"] == "invalid_grant" and decoded["error_description"] == "Session not active":
                 self.current_user = None
                 self._access_token = None
-                self.redirect(CONSTANTS.ROUTING_TABLE["platform"] + "/login")
+                self.redirect(global_vars.routing_table["platform"] + "/login")
         except KeycloakAuthenticationError as e:
             print(e)
             self.current_user = None
             self.current_userinfo = None
             self._access_token = None
-            self.redirect(CONSTANTS.ROUTING_TABLE["platform"] + "/login")
+            self.redirect(global_vars.routing_table["platform"] + "/login")
 
     def json_serialize_posts(self, query_result):
         # parse datetime objects into ISO 8601 strings for JSON serializability

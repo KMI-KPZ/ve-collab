@@ -1,4 +1,4 @@
-import CONSTANTS
+import global_vars
 from handlers.base_handler import BaseHandler
 
 
@@ -8,7 +8,8 @@ class MainHandler(BaseHandler):
         if self.current_user:
             self.render("main.html")
         else:
-            self.redirect(CONSTANTS.ROUTING_TABLE["platform"])  # redirect to platform if there is no logged in user
+            # redirect to platform if there is no logged in user
+            self.redirect(global_vars.routing_table["platform"])
 
 
 class MainRedirectHandler(BaseHandler):
@@ -23,7 +24,8 @@ class AdminHandler(BaseHandler):
         if self.current_user:
             self.render("newsfeed.html")
         else:
-            self.redirect(CONSTANTS.ROUTING_TABLE["platform"])  # redirect to platform if there is no logged in user
+            # redirect to platform if there is no logged in user
+            self.redirect(global_vars.routing_table["platform"])
 
 
 class MyProfileHandler(BaseHandler):
@@ -32,7 +34,8 @@ class MyProfileHandler(BaseHandler):
         if self.current_user:
             self.render("myProfile.html")
         else:
-            self.redirect(CONSTANTS.ROUTING_TABLE["platform"])  # redirect to platform if there is no logged in user
+            # redirect to platform if there is no logged in user
+            self.redirect(global_vars.routing_table["platform"])
 
 
 class ProfileHandler(BaseHandler):
@@ -41,7 +44,8 @@ class ProfileHandler(BaseHandler):
         if self.current_user:
             self.render("profile.html")
         else:
-            self.redirect(CONSTANTS.ROUTING_TABLE["platform"])  # redirect to platform if there is no logged in user
+            # redirect to platform if there is no logged in user
+            self.redirect(global_vars.routing_table["platform"])
 
 
 class SpaceRenderHandler(BaseHandler):
@@ -50,7 +54,8 @@ class SpaceRenderHandler(BaseHandler):
         if self.current_user:
             self.render("space.html")
         else:
-            self.redirect(CONSTANTS.ROUTING_TABLE["platform"])  # redirect to platform if there is no logged in user
+            # redirect to platform if there is no logged in user
+            self.redirect(global_vars.routing_table["platform"])
 
 
 class SpaceOverviewHandler(BaseHandler):
@@ -58,7 +63,8 @@ class SpaceOverviewHandler(BaseHandler):
         if self.current_user:
             self.render("space_overview.html")
         else:
-            self.redirect(CONSTANTS.ROUTING_TABLE["platform"])  # redirect to platform if there is no logged in user
+            # redirect to platform if there is no logged in user
+            self.redirect(global_vars.routing_table["platform"])
 
 
 class TemplateHandler(BaseHandler):
@@ -67,7 +73,8 @@ class TemplateHandler(BaseHandler):
         if self.current_user:
             self.render("blocks.html")
         else:
-            self.redirect(CONSTANTS.ROUTING_TABLE["platform"])  # redirect to platform if there is no logged in user
+            # redirect to platform if there is no logged in user
+            self.redirect(global_vars.routing_table["platform"])
 
 class ACLHandler(BaseHandler):
     def get(self):
@@ -75,4 +82,5 @@ class ACLHandler(BaseHandler):
             with open("html/acl.html") as fp:
                 self.write(fp.read())
         else:
-            self.redirect(CONSTANTS.ROUTING_TABLE["platform"])  # redirect to platform if there is no logged in user
+            # redirect to platform if there is no logged in user
+            self.redirect(global_vars.routing_table["platform"])

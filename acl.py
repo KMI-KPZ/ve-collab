@@ -4,7 +4,7 @@ from typing import Optional, Dict, List
 
 from pymongo import MongoClient
 
-import CONSTANTS
+import global_vars
 
 the_acl = None
 
@@ -22,7 +22,7 @@ def get_acl() -> ACL:
 
 class ACL:
     def __init__(self):
-        self.client = MongoClient('localhost', 27017, username=CONSTANTS.MONGODB_USERNAME, password=CONSTANTS.MONGODB_PASSWORD)
+        self.client = MongoClient(global_vars.mongodb_host, global_vars.mongodb_port, username=global_vars.mongodb_username, password=global_vars.mongodb_password)
         self.global_acl = _GlobalACL(self.client)
         self.space_acl = _SpaceACL(self.client)
 
@@ -34,7 +34,7 @@ class _GlobalACL:
 
     def __init__(self, mongo_client: MongoClient) -> None:
         self.client = mongo_client
-        self.db = self.client['lionet']  # TODO make this generic via config
+        self.db = self.client["lionet"]
         self._EXISTING_KEYS = ["role", "create_space"]
 
     def get_existing_keys(self):
@@ -151,7 +151,7 @@ class _SpaceACL:
 
     def __init__(self, mongo_client: MongoClient) -> None:
         self.client = mongo_client
-        self.db = self.client['lionet']  # TODO make this generic via config
+        self.db = self.client["lionet"]
         self._EXISTING_KEYS = ["role", "space", "join_space", "read_timeline", "post", "comment", "read_wiki", "write_wiki", "read_files",
                                "write_files"]
 
@@ -316,29 +316,4 @@ class _SpaceACL:
 
 
 if __name__ == "__main__":
-    acl = get_acl()
-    #acl.global_acl.insert_default("test")
-    #print(acl.global_acl.ask("test", "create_space"))
-    #print(acl.global_acl.get("test"))
-    #acl.global_acl.set("test", "creat_space", True)
-    #print(acl.global_acl.get("test"))
-    #acl.global_acl.set_all({"role": "test", "creat_space": False})
-    #print(acl.global_acl.get("test"))
-
-    acl.space_acl.insert_default("test", "test_space")
-    print(acl.space_acl.ask("test", "test_space", "join_space"))
-    print(acl.space_acl.get("test", "test_space"))
-    acl.space_acl.set("test", "test_space", "join_space", True)
-    print(acl.space_acl.get("test", "test_space"))
-    acl.space_acl.set_all(
-        {"role": "test",
-         "space": "test_space",
-         "join_space": True,
-         "read_timeline": True,
-         "post": True,
-         "comment": True,
-         "read_wiki": True,
-         "write_wiki": True,
-         "read_files": True,
-         "write_files": True})
-    print(acl.space_acl.get("test", "teste_space"))
+    pass

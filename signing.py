@@ -1,4 +1,5 @@
 import os
+
 import nacl.signing
 import nacl.encoding
 

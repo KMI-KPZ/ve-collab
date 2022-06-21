@@ -26,8 +26,11 @@ from handlers.wiki import *
 import signing
 from socket_client import get_socket_instance
 
-define("no_wiki", default=False, type=bool, help="start without wiki integration (use if u don't have the wiki software installed and running)")
-define("config", default="config.json", type=str, help="path to config file, defaults to config.json")
+
+define("no_wiki", default=False, type=bool,
+       help="start without wiki integration (use if u don't have the wiki software installed and running)")
+define("config", default="config.json", type=str,
+       help="path to config file, defaults to config.json")
 
 
 class RoutingHandler(BaseHandler):
@@ -38,7 +41,7 @@ class RoutingHandler(BaseHandler):
         """
 
         self.set_status(200)
-        self.write({"routing": CONSTANTS.ROUTING_TABLE})
+        self.write({"routing": global_vars.routing_table})
 
 
 def make_app(cookie_secret):
@@ -80,23 +83,40 @@ def make_app(cookie_secret):
         (r"/uploads/(.*)", tornado.web.StaticFileHandler, {"path": "./uploads/"})
     ], cookie_secret=cookie_secret, template_path="html")
 
+
 async def main():
     signing.create_signing_key_if_not_exists()
 
     tornado.options.parse_command_line()
     with open(options.config, "r") as fp:
         conf = json.load(fp)
-        cookie_secret = conf["cookie_secret"]
 
-        if ("mongodb_username" in conf) and ("mongodb_password" in conf):
-            CONSTANTS.MONGODB_USERNAME = conf["mongodb_username"]
-            CONSTANTS.MONGODB_PASSWORD = conf["mongodb_password"]
+    # assure config contains expected keys
+    expected_config_keys = ["port", "platform_host", "platform_port", "cookie_secret", "keycloak_base_url", "keycloak_realm",
+                            "keycloak_client_id", "keycloak_client_secret", "mongodb_host", "mongodb_port", "mongodb_username",
+                            "mongodb_password", "wiki_url", "wiki_username", "wiki_password", "routing_table"]
+    for key in expected_config_keys:
+        if key not in conf:
+            raise RuntimeError("config misses {}".format(key))
 
-    global_vars.keycloak = KeycloakOpenID("https://skm.sc.uni-leipzig.de/auth/", realm_name="SOSERVE", client_id="test", client_secret_key=conf["keycloak_client_secret"])
+    # set global vars from config
+    global_vars.platform_host = conf["platform_host"]
+    global_vars.platform_port = conf["platform_port"]
+    global_vars.mongodb_host = conf["mongodb_host"]
+    global_vars.mongodb_port = conf["mongodb_port"]
+    global_vars.mongodb_username = conf["mongodb_username"]
+    global_vars.mongodb_password = conf["mongodb_password"]
+    global_vars.wiki_url = conf["wiki_url"]
+    global_vars.wiki_username = conf["wiki_username"]
+    global_vars.wiki_password = conf["wiki_password"]
+    global_vars.routing_table = conf["routing_table"]
+    global_vars.keycloak = KeycloakOpenID(conf["keycloak_base_url"], realm_name=conf["keycloak_realm"],
+                                          client_id=conf["keycloak_client_id"], client_secret_key=conf["keycloak_client_secret"])
 
+    cookie_secret = conf["cookie_secret"]
     app = make_app(cookie_secret)
     server = tornado.httpserver.HTTPServer(app)
-    port = 8903
+    port = conf["port"]
     print("Starting server on port: " + str(port))
     server.listen(port)
 

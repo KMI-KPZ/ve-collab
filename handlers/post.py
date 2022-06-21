@@ -1,7 +1,3 @@
-from base64 import b64encode
-import os
-import re
-
 from bson.objectid import ObjectId
 from datetime import datetime
 import tornado.escape

@@ -1,22 +1,23 @@
-import tornado
-import tornado.httpclient
-import uuid
-import json
-import CONSTANTS
-import signing
-import nacl.signing
-from tornado.ioloop import PeriodicCallback
-from tornado import gen
-from tornado.websocket import websocket_connect
 from asyncio import get_event_loop
-from tornado.options import options
+import json
+import uuid
+
+import nacl.signing
+import tornado
+from tornado import gen
+import tornado.httpclient
+from tornado.ioloop import PeriodicCallback
+from tornado.websocket import websocket_connect
+
+import global_vars
+import signing
 
 
 the_websocket_client = None
 async def get_socket_instance():
     global the_websocket_client
     if the_websocket_client is None:
-        the_websocket_client = Client(tornado.httpclient.HTTPRequest("ws://localhost:" + str(CONSTANTS.PLATFORM_PORT) + "/websocket", validate_cert=False,
+        the_websocket_client = Client(tornado.httpclient.HTTPRequest("ws://{}:{}/websocket".format(global_vars.platform_host, global_vars.platform_port), validate_cert=False,
                                       body=json.dumps({"type": "module_socket_connect", "module": "lionet"}), allow_nonstandard_methods=True))
         await the_websocket_client._await_init()
     return the_websocket_client
