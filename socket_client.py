@@ -1,5 +1,6 @@
 from asyncio import get_event_loop
 import json
+from time import sleep
 import uuid
 
 import nacl.signing
@@ -14,6 +15,8 @@ import signing
 
 
 the_websocket_client = None
+
+
 async def get_socket_instance():
     global the_websocket_client
     if the_websocket_client is None:
@@ -37,9 +40,18 @@ class Client(object):
         PeriodicCallback(self.keep_alive, 20000).start()
 
     async def connect(self):
-        print("trying to connect to platform")
-        self.ws = await websocket_connect(self.url)
-        print("connected to platform")
+        # poll the platform for connections, until it succeeds, then break from the connection step and go into the run phase, where messages will be accepted
+        while True:
+            print("trying to connect to platform")
+            try:
+                self.ws = await websocket_connect(self.url)
+                print("connected to platform")
+                break
+            except ConnectionRefusedError:
+                print(
+                    "Platform not yet ready to accept connections, retrying in 3 seconds")
+                sleep(3)
+                continue
         self.run()
 
     @gen.coroutine
@@ -78,7 +90,8 @@ class Client(object):
         message['resolve_id'] = resolve_id
         sign_key = signing.get_signing_key()
         msg_str = tornado.escape.json_encode(message)
-        signed = sign_key.sign(msg_str.encode("utf8"), encoder=nacl.encoding.Base64Encoder)
+        signed = sign_key.sign(msg_str.encode(
+            "utf8"), encoder=nacl.encoding.Base64Encoder)
         signed_str = signed.decode("utf8")
 
         wrapped_message = {"signed_msg": signed_str,
@@ -97,3 +110,6 @@ class Client(object):
         if self.ws is None:
             print("reconnecting")
             await self.connect()
+            self.write({"type": "module_start",
+                        "module_name": "lionet",
+                        "port": global_vars.port})

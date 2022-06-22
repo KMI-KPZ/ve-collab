@@ -100,6 +100,7 @@ async def main():
             raise RuntimeError("config misses {}".format(key))
 
     # set global vars from config
+    global_vars.port = conf["port"]
     global_vars.platform_host = conf["platform_host"]
     global_vars.platform_port = conf["platform_port"]
     global_vars.mongodb_host = conf["mongodb_host"]
@@ -116,14 +117,13 @@ async def main():
     cookie_secret = conf["cookie_secret"]
     app = make_app(cookie_secret)
     server = tornado.httpserver.HTTPServer(app)
-    port = conf["port"]
-    print("Starting server on port: " + str(port))
-    server.listen(port)
+    print("Starting server on port: " + str(global_vars.port))
+    server.listen(global_vars.port)
 
     client = await get_socket_instance()
     response = await client.write({"type": "module_start",
                                    "module_name": "lionet",
-                                   "port": port})
+                                   "port": global_vars.port})
     if response["status"] == "recognized":
         print("recognized by platform")
         shutdown_event = tornado.locks.Event()
