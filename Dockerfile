@@ -1,6 +1,6 @@
 FROM python:3.10-buster
 
-WORKDIR /sse-platform
+WORKDIR /lionet
 
 COPY . .
 
