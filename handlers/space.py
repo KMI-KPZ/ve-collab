@@ -149,7 +149,7 @@ class SpaceHandler(BaseHandler):
         POST /spaceadministration/add_admin
             (add given user to space admin list (only space admin or global admin can do that))
             query param:
-                "name" : space name of which space to join, mandatory argument
+                "name" : space name in which the privilege should be granted, mandatory argument
                 "user": the username which to add as a space admin, mandatory argument
 
             returns:
@@ -160,6 +160,41 @@ class SpaceHandler(BaseHandler):
                 400 Bad Request
                 {"status": 400,
                  "reason": missing_key:name}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": missing_key:user}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": "space_doesnt_exist"}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                {"status": 403,
+                 "reason": "insufficient_permission"}
+
+        POST /spaceadministration/remove_admin
+            (revoke space admin privileges from given user (requires global admin privileges to do that))
+            query param:
+                "name" : space name in which the privilege should be revoked, mandatory argument
+                "user": the username which to remove as a space admin, mandatory argument
+
+            returns:
+                200 OK,
+                {"status": 200,
+                 "success": True}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": missing_key:name}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": missing_key:user}
 
                 400 Bad Request
                 {"status": 400,
@@ -321,6 +356,19 @@ class SpaceHandler(BaseHandler):
                 return
 
             self.add_admin_to_space(space_name, username)
+            return
+
+        elif slug == "remove_admin":
+            try:
+                username = self.get_argument("user")
+            except tornado.web.MissingArgumentError as e:
+                print(e)
+                self.set_status(400)
+                self.write({"status": 400,
+                            "reason": "missing_key:user"})
+                return
+
+            self.remove_admin_from_space(space_name, username)
             return
 
         elif slug == "space_picture":
@@ -670,6 +718,39 @@ class SpaceHandler(BaseHandler):
             self.write({"status": 403,
                         "reason": "insufficient_permission"})
             return
+
+    def remove_admin_from_space(self, space_name: str, username: str) -> None:
+        """
+        remove user as space admin, requires global admin privileges to prevent space admins from degrading each other
+        """
+
+        space = self.db.spaces.find_one({"name": space_name})
+        
+        # abort if space doesnt exist 
+        if not space:
+            self.set_status(400)
+            self.write({"status": 400,
+                        "reason": "space_doesnt_exist"})
+            return
+
+        # abort if user is no global admin
+        if not (self.get_current_user_role() == "admin"):
+            self.set_status(403)
+            self.write({"status": 403,
+                        "reason": "insufficient_permission"})
+            return
+
+        # remove user from spaces admins list
+        self.db.spaces.update_one(
+            {"name": space_name},
+            {
+                "$pull": {"admins": username}
+            }
+        )
+
+        self.set_status(200)
+        self.write({"status": 200,
+                    "success": True})
 
     def update_space_information(self, space_name: str, space_description: Optional[str]) -> None:
         """
