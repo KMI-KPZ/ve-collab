@@ -101,6 +101,7 @@ class SpaceHandler(BaseHandler):
         POST /spaceadministration/create
             query param:
                 "name" : space name to create, mandatory argument
+                "invisible" : boolean to mark if space should be visible to users in overview or not, optional argument, default False
 
             returns:
                 200 OK,
@@ -294,6 +295,32 @@ class SpaceHandler(BaseHandler):
                 403 Forbidden
                 {"status": 403,
                  "reason": "insufficient_permission"}
+
+        POST /spaceadministration/toggle_visibility
+            (toggle invisible state of space, i.e. true --> false, false --> true, requires space admin or global admin privileges)
+            query param:
+                "name" : the space which to trigger
+
+            returns:
+                200 OK,
+                {"status": 200,
+                 "success": True}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": missing_key:name}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": "space_doesnt_exist"}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                {"status": 403,
+                 "reason": "insufficient_permission"}
         """
 
         try:
@@ -307,7 +334,10 @@ class SpaceHandler(BaseHandler):
             return
 
         if slug == "create":
-            self.create_space(space_name)
+            invisible = self.get_argument("invisible", False)
+            invisible = bool(invisible) # explicit bool cast in case user puts any string or int value that is not already "true" (will be interpreted as true then)
+
+            self.create_space(space_name, invisible)
             return
 
         elif slug == "join":
@@ -361,6 +391,10 @@ class SpaceHandler(BaseHandler):
                 return
             
             self.accept_join_space_request(space_name, username)
+            return
+
+        elif slug == "toggle_visibility":
+            self.toggle_space_visibility(space_name)
             return
 
         else:
@@ -598,7 +632,7 @@ class SpaceHandler(BaseHandler):
                     "success": True, 
                     "join_requests": space["requests"]})
 
-    def create_space(self, space_name: str) -> None:
+    def create_space(self, space_name: str, is_invisible: bool) -> None:
         """
         create a new space if it does not already exist and if the current user has sufficient permissions
         """
@@ -624,6 +658,7 @@ class SpaceHandler(BaseHandler):
             return
 
         space = {"name": space_name,
+                 "invisible": is_invisible,
                  "members": members,
                  "admins": [self.current_user.username],
                  "invites": [],
@@ -718,39 +753,6 @@ class SpaceHandler(BaseHandler):
             self.write({"status": 403,
                         "reason": "insufficient_permission"})
             return
-
-    def remove_admin_from_space(self, space_name: str, username: str) -> None:
-        """
-        remove user as space admin, requires global admin privileges to prevent space admins from degrading each other
-        """
-
-        space = self.db.spaces.find_one({"name": space_name})
-        
-        # abort if space doesnt exist 
-        if not space:
-            self.set_status(400)
-            self.write({"status": 400,
-                        "reason": "space_doesnt_exist"})
-            return
-
-        # abort if user is no global admin
-        if not (self.get_current_user_role() == "admin"):
-            self.set_status(403)
-            self.write({"status": 403,
-                        "reason": "insufficient_permission"})
-            return
-
-        # remove user from spaces admins list
-        self.db.spaces.update_one(
-            {"name": space_name},
-            {
-                "$pull": {"admins": username}
-            }
-        )
-
-        self.set_status(200)
-        self.write({"status": 200,
-                    "success": True})
 
     def update_space_information(self, space_name: str, space_description: Optional[str]) -> None:
         """
@@ -923,6 +925,39 @@ class SpaceHandler(BaseHandler):
         self.write({"status": 200,
                     "success": True})
 
+    def toggle_space_visibility(self, space_name: str) -> None:
+        """
+        toggle invisible state of space depending on current state, i.e. true --> false, false --> true
+        """
+        
+        space = self.db.spaces.find_one({"name": space_name})
+
+        # abort if space doesnt exist
+        if not space:
+            self.set_status(400)
+            self.write({"status": 400,
+                        "reason": "space_doesnt_exist"})
+            return
+
+        # abort if user is neither space nor global admin
+        if not (self.current_user.username in space["admins"] or self.get_current_user_role() == "admin"):
+            self.set_status(403)
+            self.write({"status": 403,
+                        "reason": "insufficient_permission"})
+            return
+
+        # toggle visibility
+        self.db.spaces.update_one(
+            {"name": space_name},
+            {
+                "$set": {"invisible": not space["invisible"]}
+            }
+        )
+
+        self.set_status(200)
+        self.write({"status": 200,
+                    "success": True})
+
     def user_leave(self, space: Dict) -> None:
         """
         let the current user leave the space
@@ -976,6 +1011,39 @@ class SpaceHandler(BaseHandler):
                     "members": user_name}
                  }
             )
+
+        self.set_status(200)
+        self.write({"status": 200,
+                    "success": True})
+
+    def remove_admin_from_space(self, space_name: str, username: str) -> None:
+        """
+        remove user as space admin, requires global admin privileges to prevent space admins from degrading each other
+        """
+
+        space = self.db.spaces.find_one({"name": space_name})
+
+        # abort if space doesnt exist
+        if not space:
+            self.set_status(400)
+            self.write({"status": 400,
+                        "reason": "space_doesnt_exist"})
+            return
+
+        # abort if user is no global admin
+        if not (self.get_current_user_role() == "admin"):
+            self.set_status(403)
+            self.write({"status": 403,
+                        "reason": "insufficient_permission"})
+            return
+
+        # remove user from spaces admins list
+        self.db.spaces.update_one(
+            {"name": space_name},
+            {
+                "$pull": {"admins": username}
+            }
+        )
 
         self.set_status(200)
         self.write({"status": 200,
