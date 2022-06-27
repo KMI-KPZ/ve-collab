@@ -177,37 +177,6 @@ class SpaceHandler(BaseHandler):
                 {"status": 403,
                  "reason": "insufficient_permission"}
 
-        POST /spaceadministration/remove_admin
-            (revoke space admin privileges from given user (requires global admin privileges to do that))
-            query param:
-                "name" : space name in which the privilege should be revoked, mandatory argument
-                "user": the username which to remove as a space admin, mandatory argument
-
-            returns:
-                200 OK,
-                {"status": 200,
-                 "success": True}
-
-                400 Bad Request
-                {"status": 400,
-                 "reason": missing_key:name}
-
-                400 Bad Request
-                {"status": 400,
-                 "reason": missing_key:user}
-
-                400 Bad Request
-                {"status": 400,
-                 "reason": "space_doesnt_exist"}
-
-                401 Unauthorized
-                {"status": 401,
-                 "reason": "no_logged_in_user"}
-
-                403 Forbidden
-                {"status": 403,
-                 "reason": "insufficient_permission"}
-
         POST /spaceadministration/space_picture
             (update space picture)
             query param:
@@ -358,19 +327,6 @@ class SpaceHandler(BaseHandler):
             self.add_admin_to_space(space_name, username)
             return
 
-        elif slug == "remove_admin":
-            try:
-                username = self.get_argument("user")
-            except tornado.web.MissingArgumentError as e:
-                print(e)
-                self.set_status(400)
-                self.write({"status": 400,
-                            "reason": "missing_key:user"})
-                return
-
-            self.remove_admin_from_space(space_name, username)
-            return
-
         elif slug == "space_picture":
             space_description = self.get_body_argument(
                 "space_description", None)
@@ -466,6 +422,37 @@ class SpaceHandler(BaseHandler):
                 {"status": 403,
                  "reason": "insufficient_permission}
 
+        DELETE /spaceadministration/remove_admin
+            (revoke space admin privileges from given user (requires global admin privileges to do that))
+            query param:
+                "name" : space name in which the privilege should be revoked, mandatory argument
+                "user": the username which to remove as a space admin, mandatory argument
+
+            returns:
+                200 OK,
+                {"status": 200,
+                 "success": True}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": missing_key:name}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": missing_key:user}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": "space_doesnt_exist"}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                {"status": 403,
+                 "reason": "insufficient_permission"}
+
         DELETE /spaceadministration/delete_space
             (space will be deleted, requires being global or space admin)
             query param:
@@ -525,6 +512,19 @@ class SpaceHandler(BaseHandler):
                 return
 
             self.user_kick(space, user_name)
+            return
+
+        elif slug == "remove_admin":
+            try:
+                username = self.get_argument("user")
+            except tornado.web.MissingArgumentError as e:
+                print(e)
+                self.set_status(400)
+                self.write({"status": 400,
+                            "reason": "missing_key:user"})
+                return
+
+            self.remove_admin_from_space(space_name, username)
             return
 
         elif slug == "delete_space":
