@@ -1,19 +1,27 @@
-var name = currURL.substring(currURL.lastIndexOf('/') + 1);
+var name
 
 $(document).ready(function () {
-  document.title = name + ' - Social Network';
-  getUserInfo(name);
-  getFollows(name);
-  updateProfileContainer();
+  setTimeout(function(){
+    name = currURL.substring(currURL.lastIndexOf('/') + 1);
+    document.title = name + ' - Lionet';
+    getRouting();
+    getUserInfo(name);
+    getFollows(name);
+    updateProfileContainer();
+    add_acl_button()
+  }, 200);
 });
 
+/**
+ * updateProfileContainer - update profile container with data from user
+ */
 function updateProfileContainer(){
   user["isFollowed"] = (currentUser.follows.includes(name)) ? true : false;
   if(!document.body.contains(document.getElementById('profilePanel'))){
-    $('#profileContainer').prepend(Mustache.render(document.getElementById('profileTemplate').innerHTML, user));
+    $('#profileContainer').prepend(Mustache.render(profileTemplate, user));
+    $('#updateProfileButton').remove();
   } else {
-    var template = document.getElementById('profileTemplate').innerHTML;
-    Mustache.parse(template);
+    Mustache.parse(profileTemplate);
     var render = Mustache.to_html(template, user);
     $("#profileContainer").empty().html(render);
   }
@@ -31,14 +39,25 @@ function getUserInfo(name){
     dataType: 'json',
     async: false,
     success: function (data) {
+      //console.log(data)
       user = data;
       user["profile_pic_URL"] = baseUrl + '/uploads/' + user.profile_pic;
     },
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
-      } else {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
         alert('error get user info');
         console.log(error);
         console.log(status);
@@ -65,8 +84,18 @@ function getFollows(name) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
-      } else {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
         alert('error get user follows');
         console.log(error);
         console.log(status);
@@ -93,8 +122,18 @@ function postFollow(name) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
-      } else {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
         alert('error post follow');
         console.log(error);
         console.log(status);
@@ -138,8 +177,18 @@ function deleteFollow(name) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
-      } else {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
         alert('error post follow');
         console.log(error);
         console.log(status);

@@ -1,0 +1,163 @@
+{
+  "global_acl": [
+    {
+      "role": "guest",
+      "create_space": false
+    },
+    {
+      "role": "member",
+      "create_space": true
+    },
+    {
+      "role": "admin",
+      "create_space": true
+    }
+  ],
+  "group_acl": [
+    {
+      "role": "guest",
+      "space": "Filmgruppe",
+      "join_space": false,
+      "read_timeline": false,
+      "post": false,
+      "comment": false,
+      "read_wiki": false,
+      "write_wiki": false,
+      "read_files": false,
+      "write_files": false
+    },
+    {
+      "role": "member",
+      "space": "Filmgruppe",
+      "join_space": true,
+      "read_timeline": true,
+      "post": true,
+      "comment": true,
+      "read_wiki": true,
+      "write_wiki": false,
+      "read_files": true,
+      "write_files": false
+    },
+    {
+      "role": "admin",
+      "space": "Filmgruppe",
+      "join_space": true,
+      "read_timeline": true,
+      "post": true,
+      "comment": true,
+      "read_wiki": true,
+      "write_wiki": true,
+      "read_files": true,
+      "write_files": true
+    },
+    {
+      "role": "guest",
+      "space": "Projekt_2021",
+      "join_space": false,
+      "read_timeline": false,
+      "post": false,
+      "comment": false,
+      "read_wiki": false,
+      "write_wiki": false,
+      "read_files": false,
+      "write_files": false
+    },
+    {
+      "role": "member",
+      "space": "Projekt_2021",
+      "join_space": true,
+      "read_timeline": true,
+      "post": true,
+      "comment": true,
+      "read_wiki": true,
+      "write_wiki": false,
+      "read_files": true,
+      "write_files": false
+    },
+    {
+      "role": "admin",
+      "space": "Projekt_2021",
+      "join_space": true,
+      "read_timeline": true,
+      "post": true,
+      "comment": true,
+      "read_wiki": true,
+      "write_wiki": true,
+      "read_files": true,
+      "write_files": true
+    },
+    {
+      "role": "guest",
+      "space": "Projekt_2020",
+      "join_space": false,
+      "read_timeline": false,
+      "post": false,
+      "comment": false,
+      "read_wiki": false,
+      "write_wiki": false,
+      "read_files": false,
+      "write_files": false
+    },
+    {
+      "role": "member",
+      "space": "Projekt_2020",
+      "join_space": true,
+      "read_timeline": true,
+      "post": true,
+      "comment": true,
+      "read_wiki": true,
+      "write_wiki": false,
+      "read_files": true,
+      "write_files": false
+    },
+    {
+      "role": "admin",
+      "space": "Projekt_2020",
+      "join_space": true,
+      "read_timeline": true,
+      "post": true,
+      "comment": true,
+      "read_wiki": true,
+      "write_wiki": true,
+      "read_files": true,
+      "write_files": true
+    },
+    {
+      "role": "guest",
+      "space": "Musikgruppe",
+      "join_space": false,
+      "read_timeline": false,
+      "post": false,
+      "comment": false,
+      "read_wiki": false,
+      "write_wiki": false,
+      "read_files": false,
+      "write_files": false
+    },
+    {
+      "role": "member",
+      "space": "Musikgruppe",
+      "join_space": true,
+      "read_timeline": true,
+      "post": true,
+      "comment": true,
+      "read_wiki": true,
+      "write_wiki": false,
+      "read_files": true,
+      "write_files": false
+    },
+    {
+      "role": "admin",
+      "space": "Musikgruppe",
+      "join_space": true,
+      "read_timeline": true,
+      "post": true,
+      "comment": true,
+      "read_wiki": true,
+      "write_wiki": true,
+      "read_files": true,
+      "write_files": true
+    }
+
+  ]
+}

@@ -1,5 +1,5 @@
 body{margin-top:20px;
-background:#eee;
+  
 }
 
 .profile-widget {
@@ -48,14 +48,15 @@ text-align: center;
 
 /* Component: Panel */
 .panel {
-border-radius: 0;
-margin-bottom: 30px;
+/*border-radius: 0;*/
+margin-top: 40px;
+margin-bottom: 40px;
 }
 .panel.solid-color {
 color: white;
 }
 .panel .panel-heading {
-border-radius: 0;
+/*border-radius: 0;*/
 position: relative;
 }
 .panel .panel-heading > .controls {
@@ -277,12 +278,12 @@ border-top: 0;
 
 /* Component: Posts */
 .post .post-heading {
-height: 95px;
-padding: 20px 15px;
+height: 50px;
+padding: 10px 15px;
 }
 .post .post-heading .avatar {
-width: 60px;
-height: 60px;
+width: 30px;
+height: 30px;
 display: block;
 margin-right: 15px;
 }
@@ -305,6 +306,9 @@ height: auto;
 }
 .post .post-description {
 padding: 15px;
+overflow-wrap: break-word;
+word-wrap: break-word;
+hyphens: auto;
 }
 .post .post-description p {
 font-size: 14px;
@@ -326,9 +330,13 @@ padding: 15px;
 .post .post-footer .input-group-addon a {
 color: #454545;
 }
+.post .write-comment-box {
+border-top: 1px solid #ddd;
+border-bottom: 1px solid #ddd;
+width:100%;
+}
 .post .post-footer .comments-list {
 padding: 0;
-margin-top: 20px;
 list-style-type: none;
 }
 .post .post-footer .comments-list .comment {
@@ -359,6 +367,9 @@ display: inline;
 }
 .post .post-footer .comments-list .comment .comment-body {
 margin-left: 50px;
+overflow-wrap: break-word;
+word-wrap: break-word;
+hyphens: auto;
 }
 .post .post-footer .comments-list .comment > .comments-list {
 margin-left: 50px;
@@ -399,10 +410,10 @@ body{
  background-color:#f1f1f1;
 }
 
-.dot:after {
-  content: '\2807';
+/*.dot:after {
+  content: '\2026';
   font-size: 25px;
-  }
+  }*/
 .dotComment:after {
     content: '\2807';
     font-size: 15px;
@@ -424,3 +435,25 @@ i.fa-file {
 i:hover {
   opacity: 0.6;
 }
+
+
+a.wikilink1 {
+    color: #080;
+    background-color: inherit;
+}
+
+.bg-blue-lionet {
+ --tw-bg-opacity:1;
+ background-color:rgba(43,128,180,var(--tw-bg-opacity))
+}
+
+.border-blue-lionet {
+--tw-border-opacity: 0.5;
+border-color:rgba(43,128,180,var(--tw-bg-opacity))
+}
+
+.divide-blue-lionet {
+--tw-divide-opacity: 1;
+border-color: rgba(43,128,180, var(--tw-divide-opacity))
+}
+

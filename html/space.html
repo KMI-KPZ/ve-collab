@@ -2,649 +2,162 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Social Network</title>
+    <title>Lionet Space</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://code.jquery.com/jquery-1.12.4.min.js"
-    integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ"
-    crossorigin="anonymous">
+            integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ"
+            crossorigin="anonymous">
     </script>
 
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-    <link href="http://netdna.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="../css/newsfeed.css">
     <link rel="stylesheet" href="../css/tagsinput.css">
     <link rel="stylesheet" type="text/css" href="../css/modal.css">
     <link rel="stylesheet" type="text/css" href="../css/notifications.css">
+    <!--Fonts-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300&family=Titillium+Web:wght@300&display=swap" rel="stylesheet">
 </head>
-<body>
-  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
-
-  <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <div class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2">
-        <ul class="navbar-nav mr-auto">
-          <li class="nav-item">
-            <input type="text" name="search" id="search" placeholder="Search for User" class="form-control" />
-            <ul class="list-group" id="result"></ul>
+<body class="font-sans bg-blue-50">
+<!-- Navbar -->
+<nav class="mb-4">
+  <div class="bg-blue-lionet mx-4 px-8" style="font-family: 'Titillium Web', sans-serif;">
+    <div class="flex items-center py-2 px-10">
+      <div class="w-full mx-auto flex items-center">
+        <div class="ml-24">
+          <img src="/uploads/SO-SERVE_Logo_solo-285x300.png" width="50" height="50"/>
+        </div>
+        <div class="ml-4">
+          <li class="mt-1 block w-80 border border-gray-300 bg-white focus:outline-none rounded-md shadow-sm text-sm">
+            <input type="text" name="search" id="search" placeholder="Suchen" class="px-2 py-3 block w-full shadow-sm text-sm border-gray-300 focus:outline-none rounded-md" />
+            <ul class="bg-white" id="result"></ul>
           </li>
-        </ul>
+        </div>
+        <div class="ml-4">
+          <div id="navbar_items" class="text-sm flex items-center">
+            <div>
+              <a href="/main" class="no-underline text-white px-6 text-base">Startseite</a>
+            </div>
+            <div>
+              <a href="/myprofile" class="no-underline text-white px-6 text-base">Profil</a>
+            </div>
+            <div>
+              <a href="/spaces" class="no-underline text-white px-6 text-base">Gruppen</a>
+            </div>
+          </div>
+          </div>
+        </div>
+      </div>
     </div>
-      <div class="mx-auto order-0">
-          <a class="navbar-brand mx-auto" id='adminLink' href="../admin">Social Network</a>
-          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".dual-collapse2">
-              <span class="navbar-toggler-icon"></span>
-          </button>
-      </div>
-      <div class="navbar-collapse collapse w-100 order-3 dual-collapse2">
-          <ul class="navbar-nav ml-auto">
-            <li class="nav-item ">
-                <a class="nav-link" href="../main">Home</a>
-            </li>
+  </div>
+</nav>
+<!-- End of navbar -->
 
-            <li class="nav-item">
-                <a class="nav-link" href="../myprofile">Profile</a>
-            </li>
-
-            <li class="nav-item dropdown active">
-                    <a class="nav-link dropdown-toggle" id="navbarDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                      Spaces
-                    </a>
-                  <div id="spaceDropdown" class="dropdown-menu" aria-labelledby="navbarDropdown">
-
-                      <div class="dropdown-divider"></div>
-                    <form class="px-4 py-3">
-                      <div class="form-group">
-                        <label for="newSpaceName">New Space name</label>
-                        <input type="text" class="form-control" id="newSpaceName" placeholder="Enter name">
-                      </div>
-                      <button id="createSpace" type="button" class="btn btn-primary">Create Space</button>
-                    </form>
-                  </div>
-            </li>
-          </ul>
-      </div>
-  </nav>
-
-
-  <div class="container">
-  <div class="row">
-      <div class="col-sm-8 col-sm-offset-2" id="spaceProfileContainer">
-
-      </div>
-      <div class="col-sm-8 col-sm-offset-2" id="newPostContainer">
-
-      </div>
-      <div class="col-sm-8 col-sm-offset-2" id="feedContainer">
-
-      </div>
+<!-- Profile Container -->
+<div class="flex">
+  <div id="spaceProfileContainer" class="container mx-auto px-4 mt-2 text-base" style="font-family: 'Titillium Web', sans-serif;max-width: 85%;">
 
   </div>
+</div>
+<!-- End of Profile Container -->
+
+<!-- Post Feed for this space -->
+<div class="flex" id="feedRow">
+  <div class="container mx-auto px-4 mt-2 text-base"  style="font-family: 'Titillium Web', sans-serif;max-width: 85%;">
+    <div class="flex">
+    <div class="flex-none w-1/5 p-2 mr-2" style="height: 0%"></div>
+    <div class="flex-none w-3/5 p mr-2" id="feedContainer"></div>
+    <div class="flex-none w-1/5 p-2 mr-2" style="height: 0%"></div>
   </div>
-<script id="spaceHeaderTemplate" type="text/html">
-  <div class="panel panel-white profile-widget" id="spaceProfilePanel">
-      <div class="row">
-          <div class="col-sm-12">
-              <div class="image-container bg2" style="background:url(https://via.placeholder.com/400x200)">
-                  <img src="https://via.placeholder.com/400x200" class="avatar" alt="avatar">
-              </div>
-          </div>
-          <div class="col-sm-12">
-              <div class="details">
-                  <h1>{{!spacename}}<i class="fa fa-sheild"></i></h1>
-                  <!-- Button trigger modal -->
-                  <button type="button" class="btn btn-info" data-toggle="modal" data-target="#memberModal">
-                    Members ({{!memberSize}})
-                  </button>
-
-                  <!-- Modal -->
-                  <div class="modal" id="memberModal" tabindex="-1" role="dialog" aria-labelledby="memberModalLabel" aria-hidden="true">
-                    <div class="modal-dialog" role="document">
-                      <div class="modal-content">
-                        <div class="modal-header">
-                          <h5 class="modal-title" id="memberModalLabel">Members</h5>
-                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                          </button>
-                        </div>
-                        <div class="modal-body">
-                          <ul class="list-group">
-                              {{!#members}}
-                              <li class="list-group-item">{{!.}}</li>
-                              {{!/members}}
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div>Description of Space</div>
-                  <div>This is a cool Space.</div>
-                  <div class="mg-top-10">
-                      <a href='#' class="btn btn-primary">Invite</a>
-                      <a href='#' class="btn btn-danger">Leave</a>
-                  </div>
-              </div>
-          </div>
-
-      </div>
   </div>
-</script>
+</div>
+<!-- End of Post Feed -->
 
-<script id="newPostTemplate" type="text/html">
-    <div class="panel panel-white post" id="newPostPanel">
+<!-- Footer -->
+<div class="mt-8" style="font-family: 'Titillium Web', sans-serif;">
+  <div class="container mx-auto px-8">
+    <div class="px-10">
+      <div class="flex items-center justify-between border-t py-8">
+        <div class="justify-start justify-between text-xs w-4/5 flex">
+          <div class="mr-4 w-24 text-sm">
+            &copy; 2021 lionet.
+          </div>
+          <div class="mr-4 text-sm">
+            <a href="#" class="no-underline">Nutzungsbedingungen</a>
+          </div>
+          <div class="mr-4 text-sm">
+            <a href="#" class="no-underline">Datenschutz</a>
+          </div>
+          <div class="mr-4 text-sm">
+            <a href="#" class="no-underline">Sicherheit</a>
+          </div>
+          <div class="mr-4 text-sm">
+            <a href="#" class="no-underline">Hilfe</a>
+          </div>
 
-        <div class="post-heading">
-            <div id="postAlert"></div>
-            <div class="pull-left image">
-                <img src="{{!profile_pic_URL}}" class="img-circle avatar" alt="user profile image">
+          <div class="justify-end justify-between text-xs w-2/5 flex text-right">
+            <div class="ml-4">
+              <a href="#" class="no-underline">Über lionet</a>
             </div>
-            <div class="pull-left meta">
-                <h2>
-                    <b>Hello {{!username}}</b>
-                </h2>
-                <input type="text" value="" id="addTag" data-role="tagsinput" placeholder="Add Tags">
-            </div>
+          </div>
+
         </div>
-
-        <div class="post-description">
-            <textarea class="form-control" id="postFeed" rows="2" placeholder="What are you thinking?"></textarea>
-            <div id="postdiv" class="mar-top clearfix">
-              <button class="btn btn-sm btn-primary pull-right" id="post"><i class="fa fa-pencil fa-fw"></i> Post</button>
-              <div class="element">
-                <i class="fa fa-file"></i>
-                <button class="btn btn-sm btn-success" id="record"><i class="fa fa-microphone"></i></button>
-                <input type="file" name="files" id="files" multiple>
-              </div>
-              <p><audio id=recordedAudio></audio></p>
-            </div>
-        </div>
-
+      </div>
+    </div>
   </div>
-</script>
+</div>
+<!-- End of footer -->
 
-<script id="tagTemplate" type="text/html">
-    <span class="label label-pill label-info">{{!text}}</span>
-</script>
-
-<script id=spaceTemplate type="text/html">
-    <a class="dropdown-item" id={{!_id}} href="../space/{{!name}}">{{!name}} {{!^inSpace}}<button type="button" id = "joinSpace" name={{!name}} class="btn btn-outline-success">Join</button>{{!/inSpace}}</a>
-</script>
-
-<script id="spaceTemplateSelect" type="text/html">
-    <option value={{!name}}>{{!name}}</option>
-</script>
-
-<script id="postTemplate" type="text/html">
-      <div class="panel panel-white post" id = {{!_id}} name={{!creation_date}}>
-          <div class="post-heading">
-              <div class="pull-left image">
-                  <img src="{{!authorPicURL}}" class="img-circle avatar" alt="user profile image">
-              </div>
-              <div class="pull-left meta">
-                  <div class="title h5">
-                      <a href="profile/{{!author.username}}"><b>{{!author.username}}</b></a>
-                      made a post.
-                      {{!#hasSpace}}
-                      <b>></b>
-                      <span class="label label-pill label-primary">{{!space}}</span>
-                      {{!/hasSpace}}
-                  </div>
-                  <h6 class="text-muted time" id="agoPost">{{!ago}}</h6>
-              </div>
-              <div class="pull-right">
-                {{!#isAuthor}}
-                <div class="dropdown">
-                  <div class="dot" id="moreOptionMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></div>
-                  <div class="dropdown-menu" aria-labelledby="moreOptionMenu">
-                    <a class="dropdown-item" href="javascript:deletePost('{{!_id}}');">Delete</a>
-                  </div>
-                </div>
-                {{!/isAuthor}}
-            </div>
-          </div>
-          <div class="post-description">
-              <p>{{!text}}</p>
-
-              {{!#hasMedia}}
-                <div id="{{!_id}}" class="carousel slide">
-                  {{!#multipleMedia}}
-                    <ol class="carousel-indicators">
-                      <li data-slide-to="0" class="active"></li>
-                      {{!#fileMediaCountTail}}
-                      <li  data-slide-to="{{!.}}"></li>
-                      {{!/fileMediaCountTail}}
-                    </ol>
-                  {{!/multipleMedia}}
-                    <div class="carousel-inner">
-                      <div class="carousel-item active">
-                        {{!#firstMediaIsImage}}
-                        <img class="d-block w-100" src="{{!firstMediaURL}}" alt="post image">
-                        {{!/firstMediaIsImage}}
-                        {{!^firstMediaIsImage}}
-                        <video width="100%" height="100%" autostart="false" controls>
-                            <source src="{{!firstMediaURL}}">
-                            Your browser does not support the video tag.
-                        </video>
-                        {{!/firstMediaIsImage}}
-                      </div>
-                      {{!#tailVideosURL}}
-                      <div class="carousel-item">
-                      <video width="100%" height="100%" autostart="false" controls>
-                          <source src="{{!.}}">
-                          Your browser does not support the video tag.
-                        </video>
-                      </div>
-                      {{!/tailVideosURL}}
-
-                      {{!#tailImagesURL}}
-                      <div class="carousel-item">
-                        <img class="d-block w-100" src="{{!.}}" alt="post image">
-                      </div>
-                      {{!/tailImagesURL}}
-
-                    </div>
-                    {{!#multipleMedia}}
-                    <a class="carousel-control-prev" href="javascript:previousSlide('{{!_id}}');" type="button">
-                      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                    </a>
-                    <a class="carousel-control-next" href="javascript:nextSlide('{{!_id}}');" type="button">
-                      <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                    </a>
-                    {{!/multipleMedia}}
-                </div>
-              {{!/hasMedia}}
-              {{!#audiosURL}}
-              <p><audio id=voiceInput src={{!.}} controls=true autostart="false"></audio></p>
-              {{!/audiosURL}}
-              {{!#otherfiles}}
-                <i class="fa fa-download"></i> <a href="{{!path}}" download>{{!name}}</a>
-              {{!/otherfiles}}
-
-              <div class="stats">
-                <button type="button" onclick="likeDislike(this,'{{!_id}}');" id="likers" class="btn btn-primary" data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="{{!#likers}}<li>{{!.}}</li>{{!/likers}}">
-                  <i id="likeIcon" class="fa fa-thumbs-up" ></i> <span id="likeCounter">{{!likes}}</span>
-                </button>
-                <button class="btn btn-info dropdown-toggle" type="button" id="shareBtn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                  <i id="shareIcon" class="fa fa-share" ></i>
-                </button>
-                <div class="dropdown-menu" aria-labelledby="shareBtn">
-                  <button class="dropdown-item" data-toggle="modal" onclick="loadSpacesRepost('{{!_id}}');" data-target="#shareModal{{!_id}}">Share...</button>
-                </div>
-
-                  <!-- Modal -->
-                  <div id="shareModal{{!_id}}" class="modal modal-message modal-info" style="display: none;" aria-hidden="true">
-                      <div class="modal-dialog">
-                          <div class="modal-content">
-                              <div class="modal-header">
-                                  <i class="fa fa-envelope"></i>
-                              </div>
-                              <div class="modal-title"></div>
-
-                              <div class="modal-body">
-                                <select id ="selectRepostSpace{{!_id}}" class="custom-select">
-                                    <option value=null>Share into your timeline</option>
-
-                                </select>
-                                <textarea class="form-control" id="shareText{{!_id}}" rows="2" placeholder="What are your thoughts?"></textarea>
-
-                                <div class="panel panel-default">
-                                <div class="post-heading">
-
-                                        <div class="title h5">
-                                            <a><b>{{!author.username}}</b></a>
-                                            made a post.
-                                            {{!#hasSpace}}
-                                            <b>></b>
-                                            <span class="label label-pill label-primary">{{!space}}</span>
-                                            {{!/hasSpace}}
-                                        </div>
-                                        <h6 class="text-muted time" id="agoPost">{{!ago}}</h6>
-
-                                </div>
-
-                                <div class="post-description">
-                                    <p>{{!text}}</p>
-
-                                    {{!#hasMedia}}
-                                      <div id="{{!_id}}" class="carousel slide">
-                                        {{!#multipleMedia}}
-                                          <ol class="carousel-indicators">
-                                            <li data-slide-to="0" class="active"></li>
-                                            {{!#fileMediaCountTail}}
-                                            <li  data-slide-to="{{!.}}"></li>
-                                            {{!/fileMediaCountTail}}
-                                          </ol>
-                                        {{!/multipleMedia}}
-                                          <div class="carousel-inner">
-                                            <div class="carousel-item active">
-                                              {{!#firstMediaIsImage}}
-                                              <img class="d-block w-100" src="{{!firstMediaURL}}" alt="post image">
-                                              {{!/firstMediaIsImage}}
-                                              {{!^firstMediaIsImage}}
-                                              <video width="100%" height="100%" autostart="false" controls>
-                                                  <source src="{{!firstMediaURL}}">
-                                                  Your browser does not support the video tag.
-                                              </video>
-                                              {{!/firstMediaIsImage}}
-                                            </div>
-                                            {{!#tailVideosURL}}
-                                            <div class="carousel-item">
-                                            <video width="100%" height="100%" autostart="false" controls>
-                                                <source src="{{!.}}">
-                                                Your browser does not support the video tag.
-                                              </video>
-                                            </div>
-                                            {{!/tailVideosURL}}
-
-                                            {{!#tailImagesURL}}
-                                            <div class="carousel-item">
-                                              <img class="d-block w-100" src="{{!.}}" alt="post image">
-                                            </div>
-                                            {{!/tailImagesURL}}
-
-                                          </div>
-                                          {{!#multipleMedia}}
-                                          <a class="carousel-control-prev" href="javascript:previousSlide('{{!_id}}');" type="button">
-                                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                                          </a>
-                                          <a class="carousel-control-next" href="javascript:nextSlide('{{!_id}}');" type="button">
-                                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                                          </a>
-                                          {{!/multipleMedia}}
-                                      </div>
-                                    {{!/hasMedia}}
-                                    {{!#audiosURL}}
-                                    <p><audio id=voiceInput src={{!.}} controls=true autostart="false"></audio></p>
-                                    {{!/audiosURL}}
-                                    {{!#otherfiles}}
-                                      <i class="fa fa-download"></i> <a href="{{!path}}" download>{{!name}}</a>
-                                    {{!/otherfiles}}
-                              </div>
-                              </div>
-                              <div class="modal-footer">
-                                  <button type="button" id="repost" onclick="javascript:repost('{{!_id}}');"class="btn btn-info" data-dismiss="modal">Post</button>
-                              </div>
-                          </div> <!-- / .modal-content -->
-                      </div> <!-- / .modal-dialog -->
-                  </div>
-              </div>
-          </div>
-          </div>
-          <div class="post-footer">
-              <div class="input-group" id = "commentBox">
-                  <input class="form-control" id = "commentInput"  placeholder="Add a comment" type="text">
-                  <span class="input-group-addon">
-                      <a href="javascript:void(0);"><i class="fa fa-edit" id = "postComment"></i></a>
-                  </span>
-              </div>
-            <ul class="comments-list">
-            </ul>
-            </div></div>
-  </script>
-
-  <script id="repostTemplate" type="text/html">
-    <div class="panel panel-white post" id = {{!_id}} name={{!creation_date}}>
-        <div class="post-heading">
-          <div class="pull-left image">
-              <img src="{{!repostAuthorPicURL}}" class="img-circle avatar" alt="user profile image">
-          </div>
-            <div class="pull-left meta">
-                <div class="title h5">
-                    <a href="profile/{{!repostAuthor}}"><b>{{!repostAuthor}}</b></a>
-                    shared a post.
-                    {{!#hasSpace}}
-                    <b>></b>
-                    <span class="label label-pill label-primary">{{!space}}</span>
-                    {{!/hasSpace}}
-                </div>
-                <h6 class="text-muted time" id="agoPost">{{!ago}}</h6>
-            </div>
-            <div class="pull-right">
-              {{!#isRepostAuthor}}
-              <div class="dropdown">
-                <div class="dot" id="moreOptionMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></div>
-                <div class="dropdown-menu" aria-labelledby="moreOptionMenu">
-                  <a class="dropdown-item" href="javascript:deletePost('{{!_id}}');">Delete</a>
-                </div>
-              </div>
-              {{!/isRepostAuthor}}
-          </div>
-        </div>
-        <div class="post-description">
-            <p>{{!repostText}}</p>
-
-
-        <div class="panel panel-default">
-            <div class="post-heading">
-                <div class="pull-left image">
-                    <img src="{{!authorPicURL}}" class="img-circle avatar" alt="user profile image">
-                </div>
-                <div class="pull-left meta">
-                    <div class="title h5">
-                        <a href="profile/{{!author.username}}"><b>{{!author.username}}</b></a>
-                        made a post.
-                        {{!^isRepost}}
-                        {{!#hasSpace}}
-                        <b>></b>
-                        <span class="label label-pill label-primary">{{!space}}</span>
-                        {{!/hasSpace}}
-                        {{!/isRepost}}
-                    </div>
-                    <h6 class="text-muted time" id="originalAgo">{{!originalAgo}}</h6>
-                </div>
-            </div>
-
-            <div class="post-description">
-                <p>{{!text}}</p>
-
-                {{!#hasMedia}}
-                  <div id="{{!_id}}" class="carousel slide">
-                    {{!#multipleMedia}}
-                      <ol class="carousel-indicators">
-                        <li data-slide-to="0" class="active"></li>
-                        {{!#fileMediaCountTail}}
-                        <li  data-slide-to="{{!.}}"></li>
-                        {{!/fileMediaCountTail}}
-                      </ol>
-                    {{!/multipleMedia}}
-                      <div class="carousel-inner">
-                        <div class="carousel-item active">
-                          {{!#firstMediaIsImage}}
-                          <img class="d-block w-100" src="{{!firstMediaURL}}" alt="post image">
-                          {{!/firstMediaIsImage}}
-                          {{!^firstMediaIsImage}}
-                          <video width="100%" height="100%" autostart="false" controls>
-                              <source src="{{!firstMediaURL}}">
-                              Your browser does not support the video tag.
-                          </video>
-                          {{!/firstMediaIsImage}}
-                        </div>
-                        {{!#tailVideosURL}}
-                        <div class="carousel-item">
-                        <video width="100%" height="100%" autostart="false" controls>
-                            <source src="{{!.}}">
-                            Your browser does not support the video tag.
-                          </video>
-                        </div>
-                        {{!/tailVideosURL}}
-
-                        {{!#tailImagesURL}}
-                        <div class="carousel-item">
-                          <img class="d-block w-100" src="{{!.}}" alt="post image">
-                        </div>
-                        {{!/tailImagesURL}}
-
-                      </div>
-                      {{!#multipleMedia}}
-                      <a class="carousel-control-prev" href="javascript:previousSlide('{{!_id}}');" type="button">
-                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                      </a>
-                      <a class="carousel-control-next" href="javascript:nextSlide('{{!_id}}');" type="button">
-                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                      </a>
-                      {{!/multipleMedia}}
-                  </div>
-                {{!/hasMedia}}
-                {{!#audiosURL}}
-                <p><audio id=voiceInput src={{!.}} controls=true autostart="false"></audio></p>
-                {{!/audiosURL}}
-                {{!#otherfiles}}
-                  <i class="fa fa-download"></i> <a href="{{!path}}" download>{{!name}}</a>
-                {{!/otherfiles}}
-              </div>
-            </div>
-
-            <div class="stats">
-              <button type="button" onclick="likeDislike(this,'{{!_id}}');" id="likers" class="btn btn-primary" data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="{{!#likers}}<li>{{!.}}</li>{{!/likers}}">
-                <i id="likeIcon" class="fa fa-thumbs-up" ></i> <span id="likeCounter">{{!likes}}</span>
-              </button>
-              <button class="btn btn-info dropdown-toggle" type="button" id="shareBtn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <i id="shareIcon" class="fa fa-share" ></i>
-              </button>
-              <div class="dropdown-menu" aria-labelledby="shareBtn">
-                <button class="dropdown-item" data-toggle="modal" onclick="loadSpacesRepost('{{!_id}}');" data-target="#shareModal{{!_id}}">Share...</button>
-              </div>
-
-                <!-- Modal -->
-                <div id="shareModal{{!_id}}" class="modal modal-message modal-info" style="display: none;" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <i class="fa fa-envelope"></i>
-                            </div>
-                            <div class="modal-title"></div>
-
-                            <div class="modal-body">
-                              <select id ="selectRepostSpace{{!_id}}" class="custom-select">
-                                  <option value=null>Share into your timeline</option>
-
-                              </select>
-                              <textarea class="form-control" id="shareText{{!_id}}" rows="2" placeholder="What are your thoughts?"></textarea>
-
-                              <div class="panel panel-default">
-                              <div class="post-heading">
-
-                                      <div class="title h5">
-                                          <a><b>{{!author.username}}</b></a>
-                                          made a post.
-                                          {{!#hasSpace}}
-                                          <b>></b>
-                                          <span class="label label-pill label-primary">{{!space}}</span>
-                                          {{!/hasSpace}}
-                                      </div>
-                                      <h6 class="text-muted time" id="originalAgo">{{!originalAgo}}</h6>
-
-                              </div>
-
-                              <div class="post-description">
-                                  <p>{{!text}}</p>
-
-                                  {{!#hasMedia}}
-                                    <div id="{{!_id}}" class="carousel slide">
-                                      {{!#multipleMedia}}
-                                        <ol class="carousel-indicators">
-                                          <li data-slide-to="0" class="active"></li>
-                                          {{!#fileMediaCountTail}}
-                                          <li  data-slide-to="{{!.}}"></li>
-                                          {{!/fileMediaCountTail}}
-                                        </ol>
-                                      {{!/multipleMedia}}
-                                        <div class="carousel-inner">
-                                          <div class="carousel-item active">
-                                            {{!#firstMediaIsImage}}
-                                            <img class="d-block w-100" src="{{!firstMediaURL}}" alt="post image">
-                                            {{!/firstMediaIsImage}}
-                                            {{!^firstMediaIsImage}}
-                                            <video width="100%" height="100%" autostart="false" controls>
-                                                <source src="{{!firstMediaURL}}">
-                                                Your browser does not support the video tag.
-                                            </video>
-                                            {{!/firstMediaIsImage}}
-                                          </div>
-                                          {{!#tailVideosURL}}
-                                          <div class="carousel-item">
-                                          <video width="100%" height="100%" autostart="false" controls>
-                                              <source src="{{!.}}">
-                                              Your browser does not support the video tag.
-                                            </video>
-                                          </div>
-                                          {{!/tailVideosURL}}
-
-                                          {{!#tailImagesURL}}
-                                          <div class="carousel-item">
-                                            <img class="d-block w-100" src="{{!.}}" alt="post image">
-                                          </div>
-                                          {{!/tailImagesURL}}
-
-                                        </div>
-                                        {{!#multipleMedia}}
-                                        <a class="carousel-control-prev" href="javascript:previousSlide('{{!_id}}');" type="button">
-                                          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                                        </a>
-                                        <a class="carousel-control-next" href="javascript:nextSlide('{{!_id}}');" type="button">
-                                          <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                                        </a>
-                                        {{!/multipleMedia}}
-                                    </div>
-                                  {{!/hasMedia}}
-                                  {{!#audiosURL}}
-                                  <p><audio id=voiceInput src={{!.}} controls=true autostart="false"></audio></p>
-                                  {{!/audiosURL}}
-                                  {{!#otherfiles}}
-                                    <i class="fa fa-download"></i> <a href="{{!path}}" download>{{!name}}</a>
-                                  {{!/otherfiles}}
-                            </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" id="repost" onclick="javascript:repost('{{!_id}}');"class="btn btn-info" data-dismiss="modal">Post</button>
-                            </div>
-                        </div> <!-- / .modal-content -->
-                    </div> <!-- / .modal-dialog -->
-                </div>
-            </div>
-
-            <div class="post-footer">
-                <div class="input-group" id = "commentBox">
-                    <input class="form-control" id = "commentInput"  placeholder="Add a comment" type="text">
-                    <span class="input-group-addon">
-                        <a href="javascript:void(0);"><i class="fa fa-edit" id = "postComment"></i></a>
-                    </span>
-                </div>
-              <ul class="comments-list">
-              </ul>
-              </div>
-          </div>
-    </script>
-
-<script id = "commentTemplate" type="text/html">
-  <li class="comment" id={{!_id}}>
-      <a class="pull-left" href="javascript:void(0);">
-          <img class="avatar" src="{{!authorPicURL}}" alt="avatar">
-      </a>
-      <div class="pull-right">
-        {{!#isCommentAuthor}}
-        <div class="dropdown">
-          <div class="dotComment" id="moreOptionMenuComment" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></div>
-          <div class="dropdown-menu" aria-labelledby="moreOptionMenuComment">
-            <a class="dropdown-item" href="javascript:deleteComment('{{!_id}}');">Delete</a>
-          </div>
-        </div>
-        {{!/isCommentAuthor}}
-      </div>
-      <div class="comment-body">
-          <div class="comment-heading">
-              <a href="profile/{{!author.username}}"><h4 class="user">{{!author.username}}</h4></a>
-              <h5 class="time" id="agoComment">{{!ago}}</h5>
-          </div>
-          <p>{{!text}}</p>
-      </div>
-  </li>
-</script>
-
+</div>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/2.3.0/alpine.js" integrity="sha512-nIwdJlD5/vHj23CbO2iHCXtsqzdTTx3e3uAmpTm4x2Y8xCIFyWu4cSIV8GaGe2UNVq86/1h9EgUZy7tn243qdA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<script src="../javascripts/mustache.js"></script>
+
+<script src="../javascripts/general_utility.js"></script>
+<script src="../javascripts/user_utility.js"></script>
+<script src="../javascripts/space_utility.js"></script>
+
 <script src="../javascripts/newsfeed.js"></script>
 <script src="../javascripts/space.js"></script>
-<script src="../javascripts/mustache.js"></script>
+
 <script src="../javascripts/tagsinput.js"></script>
 <script src="../javascripts/notifications.js"></script>
+
+<script>
+  /**
+   * Setup function for tab system
+   */
+  function setup() {
+    return {
+      activeTab: 0,
+      tabs: [
+          "Dashboard",
+          "Team",
+          "Wiki",
+          "Dokumente",
+      ]
+    };
+  };
+
+  /**
+   * Function to preview uploaded image in update space modal
+   */
+  function showImage() {
+    return {
+      showPreview(event) {
+        if (event.target.files.length > 0) {
+            var src = URL.createObjectURL(event.target.files[0]);
+            var preview = document.getElementById("preview");
+            preview.src = src;
+            preview.style.display = "block";
+        }
+      }
+    }
+  }
+</script>
 </body>
 </html>

@@ -6,7 +6,7 @@ var currURL = window.location.href; // Returns full URL (https://example.com/pat
 
 //Datetimes
 var today = new Date();
-var yesterday = new Date(new Date().getTime() - (24 * 60 * 60 * 1000)); //24 hours ago
+var yesterday = new Date(new Date().getTime() - (24 * 60 * 60 * 1000 * 365)); //24 hours ago //Added 1 year ago
 var now = today.toISOString();
 var from = yesterday.toISOString();
 var daysAgo = 0;
@@ -14,10 +14,44 @@ var daysAgo = 0;
 //HTML & JQuery
 var $body = $('body');
 var $feedContainer = $('#feedContainer');
-var postTemplate = document.getElementById('postTemplate').innerHTML;
-var repostTemplate = document.getElementById('repostTemplate').innerHTML;
-var commentTemplate = document.getElementById('commentTemplate').innerHTML;
-var tagTemplate = document.getElementById('tagTemplate').innerHTML;
+var postTemplate
+var repostTemplate
+var commentTemplate
+var tagTemplate
+
+
+var newPostTemplate
+var spaceTemplate
+var spaceTemplateSelect
+var spaceHeaderTemplate
+var profileTemplate
+var profileInformation_listItem
+
+var acl_button
+
+/**
+ * load_templates - load templates from GET response to /template
+ * GET /template returns blocks.html with all templates needed for the site
+ * then filter for specific templates
+ */
+var load_templates = async function () {
+  await $.get("/template", function(template, textStatus, jqXhr) {
+    postTemplate = $(template).filter('#postTemplate').html()
+    repostTemplate = $(template).filter('#repostTemplate').html()
+    commentTemplate = $(template).filter('#commentTemplate').html()
+    tagTemplate = $(template).filter('#tagTemplate').html()
+
+    newPostTemplate = $(template).filter('#newPostTemplate').html()
+    spaceTemplate = $(template).filter('#spaceTemplate').html()
+    spaceTemplateSelect = $(template).filter('#spaceTemplateSelect').html()
+    spaceHeaderTemplate = $(template).filter('#spaceHeaderTemplate').html()
+    profileTemplate = $(template).filter('#profileTemplate').html()
+    profileInformation_listItem = $(template).filter('#profileInformation_listItem').html()
+
+    acl_button = $(template).filter('#acl_button').html()
+
+  });
+};
 
 //Boolean & Data
 var inSpace = false;
@@ -29,20 +63,29 @@ var users = {};
 var userRole;
 var fileList = [];
 
+
+var routingTable = {};
 /**
  * initNewsFeed - renders the timeline depending on the current URL
  * update Datetimes and get information about all Spaces
  */
 function initNewsFeed() {
   if(!document.body.contains(document.getElementById('newPostPanel'))) {
-    //console.log(currentUser);
     currentUser["profile_pic_URL"] = baseUrl + '/uploads/' + currentUser["profile"]["profile_pic"];
-    $('#newPostContainer').prepend(Mustache.render(document.getElementById('newPostTemplate').innerHTML, currentUser));
+
+    // Timeout fix error, where no templates are loading
+    // Error: Uncaught TypeError: Invalid template! Template should be a "string" but "undefined" was given as the first argument for mustache#render
+    //setTimeout(function(){
+    $('#newPostContainer').prepend(Mustache.render(newPostTemplate, currentUser));
+    //}, 10);
   }
+  //Initializing dates to get post between from and now
   today = new Date();
   now = today.toISOString();
   from = yesterday.toISOString();
+  console.log("now initalizing date")
 
+  // based on URL get specific timeline with time paramaeters
   if (currURL == baseUrl + '/admin') {
     if(userRole != 'admin') window.location.href = baseUrl + '/main';
     else {
@@ -55,6 +98,7 @@ function initNewsFeed() {
   } else if (currURL.indexOf(baseUrl + '/space') !== -1) {
     inSpace = true;
     spacename = currURL.substring(currURL.lastIndexOf('/') + 1);
+    console.log(from)
     getTimelineSpace(spacename, from, now);
 
   } else if (currURL == baseUrl + '/myprofile') {
@@ -79,10 +123,18 @@ function initNewsFeed() {
  * while scrolling down the page: updates "from" - Datetime and Timeline (depending on URL)
  */
 $(document).ready(function () {
+  // misc functions for routing, users, etc.
+  getRouting();
   getCurrentUserInfo();
   getUserRole();
   getAllUsers();
-  initNewsFeed();
+
+  // load templates for construction of page
+  load_templates().then(initNewsFeed);
+
+  // add acl button if admin
+  add_acl_button()
+
   const interval  = setInterval(function() {
      checkUpdate();
   }, 10000);
@@ -90,13 +142,72 @@ $(document).ready(function () {
   $(window).scroll(function() {
         // vertical amount of pixel before event should trigger
         var nearToBottom = 10;
-
         if ($(window).scrollTop() + $(window).height() > $(document).height() - nearToBottom) {
                yesterday = new Date(yesterday - (24 * 60 * 60 * 1000));
                initNewsFeed();
         }
   });
+  //generate <space_name>:start, which is the landing page of the wiki for this space
+  //TODO on space creation, generate this wiki page using the backend
+  let wikiStartPage = window.location.pathname.split("/")[2] + ":start";
+
+  //load the default wiki page on click
+  $("#wiki_link").on("click",function(event){
+    event.preventDefault();
+    getWikiPage(wikiStartPage);
+  });
 });
+
+/**
+ * getWikiPage - gets wiki page with param name page
+ * @param  {String} name page
+ */
+function getWikiPage(page){
+  $.ajax({
+    type: "GET",
+    url: "/wiki_page",
+    data: {page: page},
+    dataType: "json",
+    success: function(data){
+      //first clear the container
+      $("#wiki_container").empty().html(data.page_content);
+
+      //find all links and set the onclick event to reload only this wiki page inside this container
+      $("#wiki_container").find("a").on("click", function(e){
+        e.preventDefault();
+        let page = $(this).attr("href").match(/page=(.+)/)[1];
+        getWikiPage(page);
+      });
+
+      //add "footer" to guide u to the dokuwiki instance where u can edit this page
+      $("#wiki_container").append("<br/> <br/> <a> To edit this page, go to <a class='wikilink1' href='http://localhost/doku.php?id=" + page + "' target='_blank' rel='noopener noreferrer'> the wiki instance </a>! </p>");
+    },
+    error: function(xhr, status, error){
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request wiki failed.'
+        });
+      }
+    }
+  });
+}
+
 
 /**
  * on new post - click - get all the values which should be postet and calls post function
@@ -107,7 +218,7 @@ $body.delegate('#post', 'click', function () {
     //check if there is a space selected to post into
     var selectedValue = ($( "#selectSpace option:selected" ).val() === "null") ? null : $( "#selectSpace option:selected" ).val();
     //while in space page: post in this space
-    var space = (inSpace) ? spacename : selectedValue;
+    var space = (inSpace) ? spacename.replace("%20", " ") : selectedValue;
     if(text!='') post(text, tags, space);
     else {
       $("#postAlert").html('Add some text to your post!');
@@ -125,33 +236,15 @@ $body.delegate('#postComment', 'click', function () {
     var $id = $inputBox.closest('.panel').attr('id');
     if($inputText != '') postComment($inputText, $id);
 });
-
-/**
- * on create Space button - click - get name and call createSpace if not empty
- */
-$body.delegate('#createSpace', 'click', function () {
-    var name = $body.find('#newSpaceName').val();
-    if (name != '') createSpace(name);
-});
-
-/**
- * on join Space button - click - get name and call joinSpace
- */
-$body.delegate('button[id="joinSpace"]', 'click', function () {
-    var name = $(this).attr('name');
-    joinSpace(name);
-});
-
-/**
- * triggers when searchresult is clicked - get his username and redirect to his profile
- */
-$body.delegate('.link-class', 'click', function () {
-    var click_text = $(this).text().split('|');
-    var selectedUser = $.trim(click_text[0]);
-    $('#search').val(selectedUser);
-    $("#result").html('');
-    window.location.href = baseUrl + '/profile/' + selectedUser;
-});
+$body.delegate('#commentInput', 'keydown', function (e) {
+  if(event.key == "Enter"){
+    var $inputBox = $(this).closest('#commentBox');
+    var $inputText = $inputBox.find('#commentInput').val();
+    $inputBox.find('#commentInput').val('');
+    var $id = $inputBox.closest('.panel').attr('id');
+    if($inputText != '') postComment($inputText, $id);
+  }
+})
 
 $body.delegate('i.fa-file', 'click', function () {
   $("input[type='file']").trigger('click');
@@ -175,6 +268,10 @@ $body.delegate('#record', 'click', function () {
   }
 });
 
+/**
+ * handlerFunction - handles recording of audio
+ * @param  {Audio} name stream
+ */
 function handlerFunction(stream){
   rec = new MediaRecorder(stream);
   rec.ondataavailable = e => {
@@ -206,11 +303,17 @@ $body.delegate('#files', 'change', function () {
   }
 });
 
+/**
+ * getExtension - get extension of a filename
+ */
 function getExtension(filename) {
   var parts = filename.split('.');
   return parts[parts.length - 1];
 }
 
+/**
+ * isImage - tests if file is image with extension .jpg, .bmp, .png
+ */
 function isImage(filename) {
   var ext = getExtension(filename);
   switch (ext.toLowerCase()) {
@@ -223,6 +326,9 @@ function isImage(filename) {
   return false;
 }
 
+/**
+ * isVideo - test if file is video with video specific extension
+ */
 function isVideo(filename) {
   var ext = getExtension(filename);
   switch (ext.toLowerCase()) {
@@ -240,6 +346,9 @@ function isVideo(filename) {
   return false;
 }
 
+/**
+ * isAudio - test if file is audio with extension .mpeg
+ */
 function isAudio(filename) {
   var ext = getExtension(filename);
   switch (ext.toLowerCase()) {
@@ -262,7 +371,6 @@ function previousSlide(id) {
 
 /**
  * calculateAgoTime
- *
  * @param  {String} creationDate Date of the Post
  * @return {String} Output String with ago time
  */
@@ -291,6 +399,36 @@ function comp(a, b) {
 }
 
 /**
+ * compPinned - compare function for sorting posts on pinned attribute
+ * @param  {JSON} a Post a
+ * @param  {JSON} b Post b
+ * @return {Float}   pinned value
+ */
+function compPinned(a, b) {
+  return Number(b.pinned) - Number(a.pinned)
+}
+
+/**
+ * compSpace - compare function for sorting Dates of Posts and if posts are pinned
+ * @param  {JSON} a Post a
+ * @param  {JSON} b Post b
+ * @return {Float}   timevalue
+ */
+function compSpace(a,b) {
+  // if pinned, add time value of 3154000000000 seconds(~10000 years) to time value of post
+  if(a.pinned && b.pinned) {
+    return (new Date(b.creation_date).getTime() + 3154000000000) - (new Date(a.creation_date).getTime() + 3154000000000);
+  } else if(a.pinned && !b.pinned) {
+    return new Date(b.creation_date).getTime() - (new Date(a.creation_date).getTime() + 3154000000000);
+  } else if(b.pinned && !a.pinned) {
+    return (new Date(b.creation_date).getTime() + 3154000000000) - new Date(a.creation_date).getTime();
+  } else {
+    return new Date(b.creation_date).getTime() - new Date(a.creation_date).getTime();
+  }
+}
+
+/**
+
  * displayTimeline - renders Timeline
  * initialize tagsinput and tooltip
  * @param  {JSON} timeline description
@@ -301,7 +439,7 @@ function displayTimeline(timeline) {
   $('input[data-role=tagsinput]').tagsinput({
     allowDuplicates: false
   });
-  $('[data-toggle="tooltip"]').tooltip();
+  //$('[data-toggle="tooltip"]').tooltip();
   $('.carousel').carousel();
   //loading posts => set from-Date until there is a post in interval from - to
   if(timeline.posts.length === 0 && daysAgo < 30) {
@@ -312,7 +450,14 @@ function displayTimeline(timeline) {
   }
   daysAgo = 0;
   //sort posts based on creation_date from new to older
-  var sortPostsByDateArray = timeline.posts.sort(comp);
+  var sortPostsByDateArray;
+  if(inSpace) {
+    // if in space, sort posts based on creation_date and isPinned
+    sortPostsByDateArray = timeline.posts.sort(compSpace);
+  } else {
+    sortPostsByDateArray = timeline.posts.sort(comp);
+  }
+
   $.each(sortPostsByDateArray, function (i, post) {
     var countLikes = 0;
     var likerHTML = '';
@@ -332,22 +477,29 @@ function displayTimeline(timeline) {
       var $likers = $existingPost.find('#likers');
       var $likeIcon = $likers.find('#likeIcon');
       var $agoPost = $existingPost.find('#agoPost');
+      var $post_content = $existingPost.find('#post_content');
+
+      $post_content.text(post.text);
       $agoPost.text(calculateAgoTime(post.creation_date));
       $likers.attr("data-original-title",likerHTML);
       $likeCounter.text(countLikes);
       if(post.hasOwnProperty('isRepost') && (post.isRepost == true)){
         var $originalAgo = $existingPost.find('#originalAgo');
         $originalAgo.text(calculateAgoTime(post.originalCreationDate));
+        var $existingPost = $('#' + post._id);
+        var $repost_content = $existingPost.find('#repost_content');
+        $repost_content.text(post.repostText);
       }
       //toggle class if liked
-     if(liked && $likeIcon.hasClass('fa-thumbs-up')) {
-        $likeIcon.removeClass('fa-thumbs-up').addClass('fa-thumbs-down');
-      } else if(!liked && $likeIcon.hasClass('fa-thumbs-down')) {
-        $likeIcon.removeClass('fa-thumbs-down').addClass('fa-thumbs-up');
+     if(liked && $likeIcon.hasClass('text-white')) {
+        $likeIcon.removeClass('text-white').addClass('text-green-800');
+      } else if(!liked && $likeIcon.hasClass('text-green-800')) {
+        $likeIcon.removeClass('text-green-800').addClass('text-white');
       }
       var $commentsList = $existingPost.find('.comments-list');
       if (post.hasOwnProperty('comments')) {
-        $.each(post.comments, function (j, comment) {
+        var comments = post.comments.sort(compSpace)
+        $.each(comments, function (j, comment) {
           var existingComment = document.getElementById(comment._id);
           // case if comments doesn't exist => render Comment (postComment)
           if(!document.body.contains(existingComment)) {
@@ -355,17 +507,18 @@ function displayTimeline(timeline) {
               comment["isCommentAuthor"] = isCommentAuthor;
               comment["authorPicURL"] = baseUrl + '/uploads/' + comment.author.profile_pic;
               comment["ago"] = calculateAgoTime(comment.creation_date);
-              $commentsList.prepend(Mustache.render(commentTemplate, comment));
-        } else {
-          //update values of comments
-          existingComment.querySelector('#agoComment').innerHTML = calculateAgoTime(comment.creation_date);
-        }
+              $commentsList.append(Mustache.render(commentTemplate, comment));
+          } else {
+            //update values of comments
+            existingComment.querySelector('#agoComment').innerHTML = calculateAgoTime(comment.creation_date);
+          }
         });
       }
       return;
     }
+
     //check if there are files to display
-    if(post.hasOwnProperty('files') && post.files.length > 0) {
+    if(post.hasOwnProperty('files') && post.files !== null && post.files.length > 0  ) {
         var fileImages = [];
         var fileVideos = [];
         var fileAudios = [];
@@ -404,38 +557,41 @@ function displayTimeline(timeline) {
     post["authorPicURL"] = baseUrl + '/uploads/' + post.author.profile_pic;
     post["ago"] = calculateAgoTime(post.creation_date);
     post["likes"] = countLikes;
-    post["tags"] = post["tags"].toString();
+    if(post.tags !== null) {
+      post["tags"] = post["tags"].toString();
+    }
     //check if it was postet in a space
     if (post.space == null) {
       post["hasSpace"] = false;
     } else post["hasSpace"] = true;
 
-    var firstPostDate = $feedContainer.find('.post:first').attr('name');
-
-    //console.log(post)
     if(post['isRepost'] == true){
-
       post["isRepostAuthor"] = isRepostAuthor;
       post["originalAgo"] = calculateAgoTime(post.originalCreationDate);
       post["repostAuthorPicURL"] = baseUrl + '/uploads/' + post.repostAuthorProfilePic;
-      // check if there is a new post (more present datetime) => prepend to feedContainer
-      // else post is older => append to feedContainer
-      if(!(firstPostDate === null) && post.creation_date > firstPostDate) {
-          $feedContainer.prepend(Mustache.render(repostTemplate, post));
-      } else $feedContainer.append(Mustache.render(repostTemplate, post));
+
+      $feedContainer.append(Mustache.render(repostTemplate, post));
     } else{
-        if(!(firstPostDate === null) && post.creation_date > firstPostDate) {
-            $feedContainer.prepend(Mustache.render(postTemplate, post));
-        } else $feedContainer.append(Mustache.render(postTemplate, post));
+      if (inSpace) {
+          var isAdmin = true;
+          post["isAdmin"] = isAdmin; //why is this always set to true?!
+          post["inSpace"] = true;
+      } else {
+        post["inSpace"] = false;
+      }
+      // simply always append, the correct order of the posts is guaranteed because it is sorted before (see function compSpace)
+      $feedContainer.append(Mustache.render(postTemplate, post));
+
     }
-    //console.log(post);
+
     //in both case render comments to post and tags
     var $feed = $('#' + post._id);
     var $likeIcon = $feed.find('#likeIcon');
-    if(liked) $likeIcon.removeClass('fa-thumbs-up').addClass('fa-thumbs-down');
+    if(liked) $likeIcon.removeClass('text-blue-700').addClass('text-green-700');
     if (post.hasOwnProperty('comments')) {
       var $commentsList = $feed.find('.comments-list');
-      $.each(post.comments, function (j, comment) {
+      var comments = post.comments.sort(compSpace).reverse()
+      $.each(comments, function (j, comment) {
         var isCommentAuthor = (currentUser.username == comment.author.username) ? true : false;
         comment["isCommentAuthor"] = isCommentAuthor;
         comment["authorPicURL"] = baseUrl + '/uploads/' + comment.author.profile_pic;
@@ -447,7 +603,10 @@ function displayTimeline(timeline) {
     //add tags
     var $dom = $feed.find('.meta');
     var tags = post.tags;
-    var tagArray = (typeof tags != 'undefined' && tags instanceof Array ) ? tags : tags.split(",");
+    var tagArray = []
+    if(post.tags !== null) {
+      tagArray = (typeof tags != 'undefined' && tags instanceof Array ) ? tags : tags.split(",");
+    }
     tagArray.forEach(function (tag, index) {
         $dom.append(Mustache.render(tagTemplate, { text: '' + tag + '' }));
     });
@@ -456,7 +615,6 @@ function displayTimeline(timeline) {
 
 /**
  * getTimeline - get Admin timeline and call displayTimeline
- *
  * @param  {String} from DateTime String (ISO)
  * @param  {String} to   DateTime String (ISO)
  */
@@ -471,12 +629,25 @@ function getTimeline(from, to) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
-      } else {
-        alert('error get timeline');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request for admin timeline failed.'
+        });
     }
     },
   });
@@ -484,7 +655,6 @@ function getTimeline(from, to) {
 
 /**
  * getPersonalTimeline - get Personal timeline and call displayTimeline
- *
  * @param  {String} from DateTime String (ISO)
  * @param  {String} to   DateTime String (ISO)
  */
@@ -496,15 +666,27 @@ function getPersonalTimeline(from, to) {
     success: function (timeline) {
       displayTimeline(timeline);
     },
-
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
-      } else {
-        alert('error get Personal timeline');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request for personal timeline failed'
+        });
     }
     },
   });
@@ -523,19 +705,67 @@ function getTimelineSpace(spacename, from, to) {
     dataType: 'json',
     success: function (timeline) {
       displayTimeline(timeline);
-      var members = localStorage.getItem(spacename).split(",");
-      if(!document.body.contains(document.getElementById('spaceProfilePanel'))) $('#spaceProfileContainer').prepend(Mustache.render(document.getElementById('spaceHeaderTemplate').innerHTML, {spacename: '' + spacename + '', members : members, memberSize : members.length}));
+      var members = localStorage.getItem(spacename.split(' ').join('').replace("%20","")).split(",");
 
+      // collects members and member pics for "Team"-Tab in Space
+      var memberPictures = []
+      $.each(users, function(entry) {
+        if(members.includes(users[entry].username)) {
+          memberPictures.push({"username":users[entry].username, "profilePic": users[entry].profile_pic})
+        }
+      })
+
+      // collects documents and corresponding tags from post for "Dokumente"-Tab in Space
+      var documents = []
+      $.each(timeline.posts, function(post) {
+        $.each(timeline.posts[post].files, function(file) {
+          documents.push({name:timeline.posts[post].files[file], tags: timeline.posts[post].tags.split(",")})
+        })
+      })
+
+      // sets space pic and if current user is admin for edit space button
+      var isAdmin = [];
+      var space_pic = "";
+      var this_space
+      $.each(Spaces, function(entry) {
+        if(Spaces[entry].name == spacename.replace("%20"," ")) {
+          this_space = Spaces[entry]
+          if(Spaces[entry].admins.includes(currentUser.username)) {
+            isAdmin.push(currentUser.username);
+          }
+
+          if(Spaces[entry].hasOwnProperty('space_pic')) {
+            space_pic = Spaces[entry]["space_pic"];
+          } else {
+            space_pic = 'default_group_pic.jpg';
+          }
+        }
+      })
+
+      // construct spaceProfilePanel
+      if(!document.body.contains(document.getElementById('spaceProfilePanel'))) $('#spaceProfileContainer').prepend(Mustache.render(spaceHeaderTemplate, {spacename: '' + spacename.replace("%20", " ") + '', space_pic:  space_pic, member_pics : memberPictures, documents : documents, user: currentUser, isAdmin: isAdmin}));
     },
-
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
-      } else {
-        alert('error get timeline space');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request for spacetimeline failed.'
+        });
       }
     },
   });
@@ -543,7 +773,6 @@ function getTimelineSpace(spacename, from, to) {
 
 /**
  * getTimelineUser - get a User timeline (profile) and call displayTimeline
- *
  * @param  {String} username Name of the User
  * @param  {String} from DateTime String (ISO)
  * @param  {String} to   DateTime String (ISO)
@@ -559,12 +788,25 @@ function getTimelineUser(username, from, to) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
-      } else {
-        alert('error get timeline user');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request for Usertimeline failed.'
+        });
       }
     },
   });
@@ -583,18 +825,21 @@ function post(text, tags, space) {
     formData.append("file"+i, file);
   });
 
+  // searches post content for all occurences of tags beginning with #
+  var hashtag_regex = /#([a-zA-Z0-9_]+)/g
+  var match;
+  var hashtags = []
+  while ((match = hashtag_regex.exec(text)) != null) {
+    hashtags.push(match[1])
+  }
+
   formData.append("file_amount", fileList.length);
   formData.append("text", text);
-  formData.append("tags", tags);
+  formData.append("tags", hashtags);
   if(space != null){
     formData.append("space", space);
   }
-  // Display the key/value pairs
-  /*
-  for (var pair of formData.entries()) {
-      console.log(pair[0]+ ', ' + pair[1]);
-  }
-  */
+
   $.ajax({
     type: 'POST',
     url: '/posts',
@@ -603,7 +848,6 @@ function post(text, tags, space) {
     contentType: false,
     processData: false,
     success: function (data) {
-      //console.log("posted " + form);
       initNewsFeed();
       $('#postFeed').val('');
       $("input[id=addTag]").tagsinput('removeAll');
@@ -620,12 +864,72 @@ function post(text, tags, space) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
-      } else {
-        alert('error posting');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'posting to timeline failed.'
+        });
+      }
+    },
+  });
+}
+
+/**
+* updatePost - post Feed and resets Values for Input
+* calls InitNewsFeed for update
+* @param  {String} id
+*/
+function updatePost(id) {
+  var formData = new FormData();
+  formData.append("_id", String(id));
+  formData.append("text", $('#updatePostTextArea').val());
+
+  $.ajax({
+    type: 'POST',
+    url: '/posts',
+    data: formData,
+    //important for upload
+    contentType: false,
+    processData: false,
+    success: function (data) {
+      initNewsFeed();
+    },
+
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'posting to timeline failed.'
+        });
       }
     },
   });
@@ -654,12 +958,25 @@ function deletePost(id) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
-      } else {
-        alert('error deleting post');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request to delete the post failed.'
+        });
       }
     },
   });
@@ -667,7 +984,6 @@ function deletePost(id) {
 
 /**
  * postComment - calls initNewsFeed for update after success
- *
  * @param  {String} text comment Text
  * @param  {String} id   id of the Post
  */
@@ -689,12 +1005,25 @@ function postComment(text, id) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
-      } else {
-        alert('error posting comment');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'post comment failed.'
+        });
       }
     },
   });
@@ -723,12 +1052,25 @@ function deleteComment(id) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
-      } else {
-        alert('error deleting comment');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request to delete comment failed.'
+        });
       }
     },
   });
@@ -736,7 +1078,6 @@ function deleteComment(id) {
 
 /**
  * postLike - calls initNewsFeed for update after success
- *
  * @param  {String} id id of the Post
  */
 function postLike(id) {
@@ -756,12 +1097,25 @@ function postLike(id) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
-      } else {
-        alert('error posting like');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'like failed.'
+        });
       }
     },
   });
@@ -789,12 +1143,25 @@ function deleteLike(id) {
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
-      } else {
-        alert('error posting dislike');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'delete like failed.'
+        });
       }
     },
   });
@@ -809,6 +1176,7 @@ function getSpaces() {
   $.ajax({
     type: 'GET',
     url: '/spaceadministration/list',
+    async: false,  //very important that this ajax is awaited because it sets the Spaces array which is required by other functions to work
     dataType: 'json',
     success: function (data) {
       console.log("get Spaces success");
@@ -820,79 +1188,43 @@ function getSpaces() {
         // inSpace as local var (not the global)
         var inSpace = (currentUser.spaces.indexOf(space.name) > -1) ? true : false;
         // needed for displaying "join" button
-        space['inSpace'] = inSpace;
-        $dropdown.prepend(Mustache.render(document.getElementById('spaceTemplate').innerHTML, space));
-        localStorage.setItem(space.name, space.members);
+        if(inSpace != false) {
+          space['inSpace'] = inSpace;
+          $dropdown.prepend(Mustache.render(spaceTemplate, space));
+        }
+        localStorage.setItem(space.name.split(' ').join(''), space.members);
+        space.name.replace(" ", "%20")
         Spaces.push(space);
+
         // if not in Space render spaceTemplateSelect
         if (currURL.indexOf(baseUrl + '/space') == -1) {
-          $('#selectSpace').append(Mustache.render(document.getElementById('spaceTemplateSelect').innerHTML, space));
+          $('#selectSpace').append(Mustache.render(spaceTemplateSelect, space));
         }
-    });
+
+      });
     },
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
-      } else {
-        alert('error get spaces');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.location.href = routingTable.platform;
       }
-    },
-  });
-}
-
-/**
- * createSpace - creates new Space
- * resets input value and calls getSpaces for update
- * @param  {String} name name of new Space
- */
-function createSpace(name) {
-  $.ajax({
-    type: 'POST',
-    url: '/spaceadministration/create?name=' + name,
-    success: function (data) {
-      console.log("created space " + name);
-      $body.find('#newSpaceName').val('');
-      getSpaces();
-    },
-
-    error: function (xhr, status, error) {
-      if (xhr.status == 401) {
-        window.location.href = loginURL;
-      } else {
-        alert('error creating Space');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
       }
-    },
-  });
-}
-
-/**
- * joinSpace - joins Space
- *
- * @param  {String} name Spacename
- */
-function joinSpace(name) {
-  $.ajax({
-    type: 'POST',
-    url: '/spaceadministration/join?name=' + name,
-    success: function (data) {
-      console.log("joined space " + name);
-    },
-
-    error: function (xhr, status, error) {
-      if (xhr.status == 401) {
-        window.location.href = loginURL;
-      } else {
-        alert('error joining Space');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+      else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request all spaces failed.'
+        });
       }
     },
   });
@@ -912,112 +1244,6 @@ function checkUpdate() {
   });
 }
 
-function getUserRole(){
-  $.ajax({
-    type: 'GET',
-    url: '/permissions',
-    dataType: 'json',
-    async: false,
-    success: function (data) {
-      userRole = data.role;
-      if(userRole != 'admin') $('#adminLink').attr("href", baseUrl + '/main');
-    },
-
-    error: function (xhr, status, error) {
-      if (xhr.status == 401) {
-        window.location.href = loginURL;
-      } else {
-        alert('error get current user role');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
-      }
-    },
-  });
-}
-/**
- * getCurrentUserInfo - saves currenUser information
- * first time calling InitNewsFeed (on document load)
- * calls getAllUser for Search
- */
-function getCurrentUserInfo() {
-  $.ajax({
-    type: 'GET',
-    url: '/profileinformation',
-    dataType: 'json',
-    async: false,
-    success: function (data) {
-      currentUser = data;
-    },
-
-    error: function (xhr, status, error) {
-      if (xhr.status == 401) {
-        window.location.href = loginURL;
-      } else {
-        alert('error get current user info');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
-      }
-    },
-  });
-}
-
-
-/**
- * searchUser - search for a username or email in users JSON
- * renders search results
- * @param  {JSON} users all Users from getAllUsers()
- */
-function searchUser(users) {
-  $.ajaxSetup({ cache: false });
-  //triggers if a char is changed at input
-  $('#search').keyup(function(){
-    $('#result').html('');
-    $('#state').val('');
-    var searchField = $('#search').val();
-    var expression = new RegExp(searchField, "i");
-    //only search if input isn't empty
-    if(searchField != '') {
-     $.each(users, function(key, user){
-      if (user.username.search(expression) != -1 || user.email.search(expression) != -1)
-      {
-       user["profile_pic_URL"] = baseUrl + '/uploads/' + user["profile_pic"];
-       $('#result').append('<li class="list-group-item link-class"><img src="' + user["profile_pic_URL"] + '" height="40" width="40" class="img-thumbnail" /> '+user.username+' | <span class="text-muted">'+user.email+'</span></li>');
-      }
-     });
-   }
-    });
-}
-
-/**
- * getAllUsers - stores all Users in "users" and calls searchUser
- *
- */
-function getAllUsers(){
-  $.ajax({
-    type: 'GET',
-    url: '/users/list',
-    dataType: 'json',
-    success: function (data) {
-      users = data;
-      //console.log(users);
-      searchUser(users);
-    },
-
-    error: function (xhr, status, error) {
-      if (xhr.status == 401) {
-        window.location.href = loginURL;
-      } else {
-        alert('error get all users');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
-      }
-    },
-  });
-}
-
 /**
  * likeDislike - toggle function for html update on like & dislike
  * calls deleteLike or postLike depending on elements html class
@@ -1026,13 +1252,17 @@ function getAllUsers(){
  */
 function likeDislike(e, id) {
   var likeIcon = e.firstElementChild;
-  if(likeIcon.classList.contains("fa-thumbs-down")) {
+  if(likeIcon.classList.contains("text-green-700")) {
     deleteLike(id);
   } else {
     postLike(id);
   }
 }
 
+/**
+ * repost - reposts post with id
+ * @param  {String} name id
+ */
 function repost(id){
   var space = ($( '#selectRepostSpace'+id +' option:selected' ).val() === "null") ? null : $( '#selectRepostSpace'+id +' option:selected' ).val();
 
@@ -1061,17 +1291,294 @@ function repost(id){
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
-        window.location.href = loginURL;
-      } else {
-        alert('error reposting');
-        console.log(error);
-        console.log(status);
-        console.log(xhr);
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'reposting failed.'
+        });
       }
     },
   });
 }
 
+/**
+* updateRepost - updates repost with id
+* calls InitNewsFeed for update
+* @param  {String} id
+ */
+function updateRepost(id) {
+  dataBody = {
+    '_id': id,
+    'repostText': String($('#update_repost_content').val()),
+  };
+  $.ajax({
+    type: 'POST',
+    url: '/repost',
+    data: dataBody,
+    success: function (data) {
+      console.log("repost" + id);
+      window.createNotification({
+          theme: 'success',
+          showDuration: 5000
+      })
+      initNewsFeed();
+    },
+
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'reposting failed.'
+        });
+      }
+    },
+  });
+}
+
+/**
+ * pinDepinPost - pins or depins selected post based on attribute in classList of element pinIcon
+ * if classList contains outlinePin -> post is not pinned -> postPostPin
+ * else if classList contains solidPin -> post is pinned -> removePostPin
+ */
+function pinDepinPost(e, id) {
+  var pinIcon = e.firstElementChild;
+  if(pinIcon.classList.contains("outlinePin")) {
+    postPostPin(id);
+  } else if(pinIcon.classList.contains("solidPin")) {
+    removePostPin(id);
+  }
+}
+
+/**
+ * postPostPin - pins post with id
+ * pin_type : "post" -> only for posts
+ * @param  {String} name id
+ */
+function postPostPin(id) {
+  dataBody = {
+    'id': id,
+    'pin_type': "post"
+  };
+  dataBody = JSON.stringify(dataBody);
+  $.ajax({
+    type: 'POST',
+    url: '/pin',
+    data: dataBody,
+    success: function (data) {
+      console.log("pinned post " + id);
+      $feedContainer.empty()
+      initNewsFeed();
+    },
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Pin failed.'
+        });
+      }
+    },
+  });
+}
+
+/**
+ * removePostPin - removes pin of post with id
+ * pin_type : "post" -> only for posts
+ * @param  {String} name id
+ */
+function removePostPin(id) {
+  dataBody = {
+    'id': id,
+    'pin_type': "post"
+  };
+  dataBody = JSON.stringify(dataBody);
+  $.ajax({
+    type: 'DELETE',
+    url: '/pin',
+    data: dataBody,
+    success: function (data) {
+      console.log("Removed pin of post " + id);
+      $feedContainer.empty()
+      initNewsFeed();
+    },
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'delete like failed.'
+        });
+      }
+    },
+  });
+}
+
+/**
+ * pinDepinComment - pins or depins selected comment based on attribute in classList of element pinIcon
+ * if classList contains outlinePin -> comment is not pinned -> postCommentPin
+ * else if classList contains solidPin -> comment is pinned -> removeCommentPin
+ */
+function pinDepinComment(e, id) {
+  var pinIcon = e.firstElementChild;
+  if(pinIcon.classList.contains("outlinePin")) {
+    postCommentPin(id);
+  } else if(pinIcon.classList.contains("solidPin")) {
+    removeCommentPin(id);
+  }
+}
+
+/**
+ * postCommentPin - pins comment of post with id
+ * pin_type : "comment" -> only for comment
+ * @param  {String} name id
+ */
+function postCommentPin(id) {
+  dataBody = {
+    'id': id,
+    'pin_type': "comment"
+  };
+  dataBody = JSON.stringify(dataBody);
+  $.ajax({
+    type: 'POST',
+    url: '/pin',
+    data: dataBody,
+    success: function (data) {
+      console.log("pinned comment " + id);
+      $feedContainer.empty()
+      initNewsFeed();
+    },
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Pin failed.'
+        });
+      }
+    },
+  });
+
+}
+/**
+ * removeCommentPin - removes pin of comment of post with id
+ * pin_type : "comment" -> only for comment
+ * @param  {String} name id
+ */
+function removeCommentPin(id) {
+  dataBody = {
+    'id': id,
+    'pin_type': "comment"
+  };
+  dataBody = JSON.stringify(dataBody);
+  $.ajax({
+    type: 'DELETE',
+    url: '/pin',
+    data: dataBody,
+    success: function (data) {
+      console.log("Removed pin of post " + id);
+      $feedContainer.empty()
+      initNewsFeed();
+    },
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'delete like failed.'
+        });
+      }
+    },
+  });
+}
+
+/**
+ * loadSpacesRepost -
+ */
 function loadSpacesRepost(id){
   $.each(Spaces, function(key, space){
     for (i = 0; i < document.getElementById('selectRepostSpace'+id).length; ++i){
@@ -1079,6 +1586,6 @@ function loadSpacesRepost(id){
       return;
         }
     }
-    $('#selectRepostSpace'+id).append(Mustache.render(document.getElementById('spaceTemplateSelect').innerHTML, space));
+    $('#selectRepostSpace'+id).append(Mustache.render(spaceTemplate, space));
   });
 }
