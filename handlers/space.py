@@ -507,7 +507,7 @@ class SpaceHandler(BaseHandler):
             (kick a user from the space, requires being global or space admin)
             query param:
                 "name" : space name to kick the user from, mandatory argument
-                "username" : user name to kick from the space, mandatory argument
+                "user" : user name to kick from the space, mandatory argument
 
             returns:
                 200 OK,
@@ -614,13 +614,13 @@ class SpaceHandler(BaseHandler):
 
         elif slug == "kick":
             try:
-                user_name = self.get_argument("username")
+                user_name = self.get_argument("user")
             except tornado.web.MissingArgumentError as e:
                 print(e)
 
                 self.set_status(400)
                 self.write({"status": 400,
-                            "reason": "missing_key:username"})
+                            "reason": "missing_key:user"})
                 return
 
             self.user_kick(space, user_name)
