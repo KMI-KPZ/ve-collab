@@ -261,11 +261,72 @@ class SpaceHandler(BaseHandler):
                 {"status": 401,
                  "reason": "no_logged_in_user"}
 
+        POST /spaceadministration/decline_invite
+            (current user declines invite into a space)
+            query param:
+                "name" space of which the invite should be declined
+
+            returns:
+                200 OK,
+                {"status": 200,
+                 "success": True}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": missing_key:name}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": "space_doesnt_exist"}
+
+                400 Conflict
+                {"status": 400,
+                 "reason": "user_is_not_invited_into_space"}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
+
         POST /spaceadministration/accept_request
             (space admin or global admin accept join request of a user)
             query param:
                 "name": space name of which the request into will be accepted
                 "user": username whose request will be accepted
+
+            returns:
+                200 OK,
+                {"status": 200,
+                 "success": True}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": missing_key:name}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": missing_key:user}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": "space_doesnt_exist"}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": "user_didnt_request_to_join"}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                {"status": 403,
+                 "reason": "insufficient_permission"}
+
+        POST /spaceadministration/reject_request
+            (space admin or global admin rejects join request of as user)
+            query param:
+                "name": space name of which the request will be rejected
+                "user": username whose request will be rejected
 
             returns:
                 200 OK,
@@ -380,6 +441,10 @@ class SpaceHandler(BaseHandler):
             self.accept_space_invite(space_name)
             return
 
+        elif slug == "decline_invite":
+            self.decline_space_invite(space_name)
+            return
+
         elif slug == "accept_request":
             try:
                 username = self.get_argument("user")
@@ -391,6 +456,19 @@ class SpaceHandler(BaseHandler):
                 return
             
             self.accept_join_space_request(space_name, username)
+            return
+
+        elif slug == "reject_request":
+            try:
+                username = self.get_argument("user")
+            except tornado.web.MissingArgumentError as e:
+                print(e)
+                self.set_status(400)
+                self.write({"status": 400,
+                            "reason": "missing_key:user"})
+                return
+            
+            self.reject_join_space_request(space_name, username)
             return
 
         elif slug == "toggle_visibility":
@@ -884,6 +962,40 @@ class SpaceHandler(BaseHandler):
         self.write({"status": 200,
                     "success": True})
 
+    def decline_space_invite(self, space_name: str) -> None:
+        """
+        current user declines invite into space
+        """
+
+        space = self.db.spaces.find_one({"name": space_name})
+
+        # abort if space doesnt exist
+        if not space:
+            self.set_status(400)
+            self.write({"status": 400,
+                        "reason": "space_doesnt_exist"})
+            return
+        
+        # abort if user wasn't even invited into space in first place
+        if self.current_user.username not in space["invites"]:
+            self.set_status(400)
+            self.write({"status": 400,
+                        "reason": "user_is_not_invited_into_space"})
+            return
+
+        # pull user from pending invites to decline (dont add to members obviously)
+        self.db.spaces.update_one(
+            {"name": space_name},
+            {
+                "$pull": {"invites": self.current_user.username}
+            }
+        )
+
+        self.set_status(200)
+        self.write({"status": 200,
+                    "success": True})
+
+
     def accept_join_space_request(self, space_name: str, username: str) -> None:
         """
         space admin or global admin accepts the request of a user to join the space
@@ -917,6 +1029,46 @@ class SpaceHandler(BaseHandler):
             {"name": space_name},
             {
                 "$addToSet": {"members": username},
+                "$pull": {"requests": username}
+            }
+        )
+
+        self.set_status(200)
+        self.write({"status": 200,
+                    "success": True})
+
+    def reject_join_space_request(self, space_name: str, username: str) -> None:
+        """
+        space admin or global admin rejects join request of a user
+        """
+
+        space = self.db.spaces.find_one({"name": space_name})
+
+        # abort if space doesnt exist
+        if not space:
+            self.set_status(400)
+            self.write({"status": 400,
+                        "reason": "space_doesnt_exist"})
+            return
+
+        # abort if user is neither space nor global admin
+        if not (self.current_user.username in space["admins"] or self.get_current_user_role() == "admin"):
+            self.set_status(403)
+            self.write({"status": 403,
+                        "reason": "insufficient_permission"})
+            return
+
+        # abort if user didn't request to join
+        if username not in space["requests"]:
+            self.set_status(400)
+            self.write({"status": 400,
+                        "reason": "user_didnt_request_to_join"})
+            return
+
+        # pull user from request to decline (obviously dont add as member)
+        self.db.spaces.update_one(
+            {"name": space_name},
+            {
                 "$pull": {"requests": username}
             }
         )
