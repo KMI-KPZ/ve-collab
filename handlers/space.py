@@ -68,7 +68,36 @@ class SpaceHandler(BaseHandler):
                 403 Forbidden
                 {"status": 403,
                  "reason": "insufficient_permission"}
+            
+        GET /spaceadministration/invites
+            (view invites for the space (requires space admin or global admin privileges))
+            query param:
+                "name": the space name of which to view the invites
+
+            returns:
+                200 OK
+                {"status": 200,
+                 "success": True,
+                 "join_requests": ["username1", "username2", ...]}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": missing_key:name}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": "space_doesnt_exist"}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                {"status": 403,
+                 "reason": "insufficient_permission"}
         """
+
+        
 
         if slug == "list":
             self.list_spaces()
@@ -90,6 +119,20 @@ class SpaceHandler(BaseHandler):
                 return
 
             self.get_join_requests_for_space(space_name)
+            return
+
+        elif slug == "invites":
+            try:
+                space_name = self.get_argument("name")
+            except:
+                print(e)
+
+                self.set_status(400)
+                self.write({"status": 400,
+                            "reason": "missing_key:name"})
+                return
+
+            self.get_invites_for_space(space_name)
             return
 
         else:
@@ -683,6 +726,31 @@ class SpaceHandler(BaseHandler):
         self.write({"status": 200,
                     "success": True, 
                     "pending_invites": pending_invites})
+
+    def get_invites_for_space(self, space_name: str) -> None:
+        """
+        view invites for the given space (requires space admin or global admin privileges)
+        """
+        space = self.db.spaces.find_one({"name": space_name})
+
+        # abort if space doesnt exist
+        if not space:
+            self.set_status(400)
+            self.write({"status": 400,
+                        "reason": "space_doesnt_exist"})
+            return
+
+        # abort if user is neither space nor global admin
+        if not (self.current_user.username in space["admins"] or self.get_current_user_role() == "admin"):
+            self.set_status(403)
+            self.write({"status": 403,
+                        "reason": "insufficient_permission"})
+            return
+
+        self.set_status(200)
+        self.write({"status": 200,
+                    "success": True, 
+                    "invites": space["invites"]})
 
     def get_join_requests_for_space(self, space_name: str) -> None:
         """
