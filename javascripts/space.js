@@ -4,6 +4,7 @@ var spacename = currURL.substring(currURL.lastIndexOf('/') + 1);
 $(document).ready(function () {
   document.title = spacename + ' - Social Network';
   getRouting();
+
 });
 
 /**
@@ -23,6 +24,39 @@ function triggerDisplay(index) {
       }
     }
     addContainer().then(initNewsFeed())
+  }
+}
+
+function handleSpaceAdministrationTabChange(tab) {
+  //depending on which tab we are jumping to, render their data accordingly
+  switch (tab) {
+    case "User Management":
+        renderUserManagementModal()
+        console.log("User Management")
+        break;
+    case "Anfragen":
+      console.log("Anfragen")
+      getPendingJoinRequests(spacename)
+        break;
+    case "Einladungen":
+      console.log("Einladungen")
+      $('#invite_select').empty()
+      var currentSpace = "";
+      $.each(Spaces, function(entry) {
+        if(Spaces[entry].name == spacename.replace("%20", " ")) {
+          currentSpace = Spaces[entry]
+        }
+      })
+      $.each(users, function(entry) {
+        if(!currentSpace.members.includes(users[entry].username)) {          
+          $('#invite_select').append("<option>"+ users[entry].username +"</option>")
+        }
+      })
+      update_invite_change_select()       
+        break;
+    default:
+        console.log("unrecognised Tab Name @TabChange: " + tab);
+        break;
   }
 }
 
@@ -94,9 +128,351 @@ function updateSpaceInformation(name) {
   });
 }
 
+function update_invite_change_select() {
+  $('#invite_profile_display div').remove()
+  var selected = $('#invite_select').val()
+  var this_user = new Object();
+  $.each(users, function(entry) {
+    if(users[entry].username == selected) {
+      this_user = users[entry]
+    }
+  })
+  $('#invite_profile_display').append(Mustache.render($("#invite_profile_card").html(), {profile_pic_URL: this_user.profile_pic, username: this_user.username, spacename: spacename}))
+}
+
 /**
  * on leave Space button - click - get name and call leaveSpace
  */
  $body.delegate('button[id="leaveSpace"]', 'click', function () {
   leaveSpace(spacename);
+});
+
+function addAdmin(spacename, user) {
+  var formData = new FormData();
+  formData.append("name", spacename)
+  formData.append("user", user)
+  $.ajax({
+    type: 'POST',
+    url: '/spaceadministration/add_admin',
+    data: formData,
+    //important for upload
+    contentType: false,
+    processData: false,
+    success: function(data) {
+      console.log("Success")
+      renderUserManagementModal()
+    },
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        alert('error posting user information');
+        console.log(error);
+        console.log(status);
+        console.log(xhr);
+      }
+    }
+  });
+}
+
+function removeAdmin(spacename, user) {
+  var formData = new FormData();
+  formData.append("name", spacename)
+  formData.append("user", user)
+  $.ajax({
+    type: 'DELETE',
+    url: '/spaceadministration/remove_admin',
+    data: formData,
+    //important for upload
+    contentType: false,
+    processData: false,
+    success: function(data) {
+      console.log("Success")
+      renderUserManagementModal()
+    },
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        alert('error posting user information');
+        console.log(error);
+        console.log(status);
+        console.log(xhr);
+      }
+    }
+  });
+}
+
+function kick(spacename, user) {
+  var formData = new FormData();
+  formData.append("name", spacename)
+  formData.append("user", user)
+  $.ajax({
+    type: 'DELETE',
+    url: '/spaceadministration/kick',
+    data: formData,
+    contentType: false,
+    processData: false,
+    success: function(data) {
+      console.log("Success")
+      renderUserManagementModal()
+    },
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        alert('error posting user information');
+        console.log(error);
+        console.log(status);
+        console.log(xhr);
+      }
+    }
+  })
+}
+
+function sendInvitation(spacename, user) {
+  var formData = new FormData();
+  formData.append("name", spacename)
+  formData.append("user", user)
+  $.ajax({
+    type: 'POST',
+    url: '/spaceadministration/invite',
+    data: formData,
+    contentType: false,
+    processData: false,
+    success: function(data) {
+      //TODO
+    },
+    error: function(xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        alert('error posting user information');
+        console.log(error);
+        console.log(status);
+        console.log(xhr);
+      }
+    }
+  })
+}
+
+function getPendingJoinRequests(spacename) {
+  var formData = new FormData();
+  formData.append("name", spacename)
+  $.ajax({
+    type: 'GET',
+    url: '/spaceadministration/join_requests?name='+spacename,
+    //data: formData,
+    contentType: false,
+    processData: false,
+    success: function(data) {
+      console.log("Success")
+      $("#join_request_list div").remove()
+      console.log(data['join_requests'])
+      if(!data['join_requests'].length == 0) {
+        $.each(data['join_requests'], function(entry) {
+          if(data['join_requests'][entry] != "") {
+            $('#join_request_list').append(Mustache.render($("#space_join_request_template").html(), {username:data['join_requests'][entry], spacename:spacename}))
+          }
+        })
+      } else {
+        $('#join_request_list').append('<div class="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap"><p>Keine Anfragen für diesen Space vorhanden!</p></div>')
+      }
+    },
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        alert('error posting user information');
+        console.log(error);
+        console.log(status);
+        console.log(xhr);
+      }
+    }
+  })
+}
+
+function acceptJoinRequest(spacename, user) {
+  var formData = new FormData();
+  formData.append("name", spacename)
+  formData.append("user", user)
+  $.ajax({
+    type: 'POST',
+    url: '/spaceadministration/accept_request',
+    data: formData,
+    contentType: false,
+    processData: false,
+    success: function(data) {
+      $('#join_request_'+user.replace(".", "\\.")).remove()
+    },
+    error: function(xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        alert('error posting user information');
+        console.log(error);
+        console.log(status);
+        console.log(xhr);
+      }
+    }
+  })
+}
+
+function declineJoinRequest(spacename, user) {
+  var formData = new FormData();
+  formData.append("name", spacename)
+  formData.append("user", user)
+  $.ajax({
+    type: 'POST',
+    url: '/spaceadministration/reject_request',
+    data: formData,
+    contentType: false,
+    processData: false,
+    success: function(data) {
+      $('#join_request_'+user.replace(".", "\\.")).remove()
+    },
+    error: function(xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        alert('error posting user information');
+        console.log(error);
+        console.log(status);
+        console.log(xhr);
+      }
+    }
+  })
+}
+
+function getPendingInvites(space_name) {
+  $.ajax({
+    type: 'GET',
+    url: '/spaceadministration/invites?name=' + space_name,
+    dataType: "json",
+    contentType: false,
+    processData: false,
+    success: function(data) {
+      console.log(data["invites"])
+      $.each(data["invites"], function(entry) {
+        $('#user_management_table').append(Mustache.render($("#user_management_entry").html(), {isInvite: true, username: data["invites"][entry], role: "Eingeladen", spacename: spacename}))
+      })
+    },
+    error: function(xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        alert('error posting user information');
+        console.log(error);
+        console.log(status);
+        console.log(xhr);
+      }
+    }
+  })
+}
+
+function renderUserManagementModal() {
+  getSpaces()
+  $("#user_management_table tr").remove()
+  $.each(Spaces, function(space_entry) {
+    if(Spaces[space_entry].name == spacename.replace("%20"," ")) {
+      $.each(Spaces[space_entry].members, function(member_entry) {
+        var role = "member"
+        var isAdmin = false
+        if(Spaces[space_entry].admins.includes(Spaces[space_entry].members[member_entry])) {
+          role = "admin"
+          isAdmin = true
+        }
+        $('#user_management_table').append(Mustache.render($("#user_management_entry").html(), {username: Spaces[space_entry].members[member_entry], role: role, isAdmin: isAdmin, spacename: spacename}))
+      })
+    }
+  })
+  getPendingInvites(spacename)
+}
+
+// tooltip trigger
+var tooltipTriggerList = [].slice.call(
+  document.querySelectorAll('[data-bs-toggle="tooltip"]')
+);
+var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+  return new Tooltip(tooltipTriggerEl);
 });
