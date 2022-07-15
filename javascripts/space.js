@@ -5,6 +5,15 @@ $(document).ready(function () {
   document.title = spacename + ' - Social Network';
   getRouting();
 
+  setTimeout(function(){
+    //alert(Object.keys(users).length === 0)
+    console.log(!jQuery.isEmptyObject(users)) 
+    if(!jQuery.isEmptyObject(users)) {
+      
+      searchUserInvites(users)
+    }
+  }, 3000);
+
 });
 
 /**
@@ -476,3 +485,47 @@ var tooltipTriggerList = [].slice.call(
 var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
   return new Tooltip(tooltipTriggerEl);
 });
+
+// search User
+function searchUserInvites(users) {
+  var currentSpace;
+  $.each(Spaces, function(space_entry) {
+    if(Spaces[space_entry].name == spacename.replace("%20"," ")) {
+      currentSpace = Spaces[space_entry]
+    }
+  })
+  
+  $.ajaxSetup({ cache: false });
+  //triggers if a char is changed at input
+  $('#invite_search').keyup(function(){
+    $('#invite_list').html('');
+    $('#state').val('');
+    var searchField = $('#invite_search').val();
+    var expression = new RegExp(searchField, "i");
+    //only search if input isn't empty
+    if(searchField != '') {
+     $.each(users, function(key, user){
+      if (!currentSpace.members.includes(user.username) && !currentSpace.invites.includes(user.username) && (user.username.search(expression) != -1 || user.email.search(expression) != -1))
+      {
+       user["profile_pic_URL"] = baseUrl + '/uploads/' + user["profile_pic"];
+       //$('#invite_list').append('<li class="link-class"><img src="' + user["profile_pic_URL"] + '" height="40" width="40" class="img-thumbnail" /> '+user.username+' | <span class="text-muted">'+user.email+'</span></li>');
+       $('#invite_list').append(Mustache.render($("#user_invite_card").html(), {spacename:spacename, user:user}))
+      }
+     });
+   }
+    });
+}
+// search trigger
+$('body').delegate('.link-class', 'click', function() {
+  var click_text = $(this).text().split('|');
+  var selected = $.trim(click_text[0]);
+  var type = $(this).parent().last().text().split(' ')[0]
+  $('#invite_search').val(selected);
+  $("#invite_list").html('');
+  if(type === 'Userprofile') {
+    window.location.href = baseUrl + '/profile/' + selected;
+  } 
+  if(type === "Spaces") {
+    window.location.href = baseUrl + '/space/' + selected;
+  }
+})
