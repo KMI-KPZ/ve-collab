@@ -210,7 +210,8 @@ function leaveSpace(name) {
  */
 $body.delegate('#createSpace', 'click', function () {
     var name = $body.find('#newSpaceName').val();
-    if (name != '') createSpace(name);
+    var invisible = $("#newSpaceInvisibility").is(":checked");
+    if (name != '') createSpace(name, invisible);
 });
 
 /**
@@ -218,10 +219,10 @@ $body.delegate('#createSpace', 'click', function () {
  * resets input value and calls getSpaces for update
  * @param  {String} name name of new Space
  */
-function createSpace(name) {
+function createSpace(name, visibilty) {
   $.ajax({
     type: 'POST',
-    url: '/spaceadministration/create?name=' + name,
+    url: '/spaceadministration/create?name=' + name + '&invisible=' + visibilty,
     success: function (data) {
       //console.log("created space " + name);
       $body.find('#newSpaceName').val('');
