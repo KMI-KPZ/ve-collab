@@ -19,7 +19,7 @@ class SpaceHandler(BaseHandler):
     def get(self, slug):
         """
         GET /spaceadministration/list
-            (view all spaces)
+            (view all spaces, except invisible ones that current user is not a member of)
             return:
                 200 OK,
                 {"status": 200,
@@ -29,6 +29,22 @@ class SpaceHandler(BaseHandler):
                 401 Unauthorized
                 {"status": 401,
                 "reason": "no_logged_in_user"}
+
+        GET /spaceadministration/list_all
+            (view all spaces, including invisible ones, requires global admin privilege)
+            return:
+                200 OK,
+                {"status": 200,
+                 "success": True,
+                 "spaces": [space1, space2,...]}
+
+                401 Unauthorized
+                {"status": 401,
+                "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                {"status": 403,
+                 "reason": "insufficient_permission"}
 
         GET /spaceadministration/pending_invites
             (get pending invites into spaces for current user)
@@ -100,6 +116,10 @@ class SpaceHandler(BaseHandler):
         
 
         if slug == "list":
+            self.list_spaces_except_invisible()
+            return
+        
+        elif slug == "list_all":
             self.list_spaces()
             return
         
@@ -439,6 +459,9 @@ class SpaceHandler(BaseHandler):
 
         if slug == "create":
             invisible = self.get_argument("invisible", False)
+            # apparentry the "false" str is true, pain
+            if invisible == "false":
+                invisible = False
             invisible = bool(invisible) # explicit bool cast in case user puts any string or int value that is not already "true" (will be interpreted as true then)
 
             self.create_space(space_name, invisible)
@@ -696,8 +719,15 @@ class SpaceHandler(BaseHandler):
 
     def list_spaces(self) -> None:
         """
-        list all available spaces
+        list all available spaces, requires admin privilegs because it includes invisible spaces
         """
+
+        # abort if user is not global admin
+        if not self.get_current_user_role() == "admin":
+            self.set_status(403)
+            self.write({"status": 403,
+                        "reason": "insufficient_permission"})
+            return
 
         result = self.db.spaces.find({})
 
@@ -709,6 +739,35 @@ class SpaceHandler(BaseHandler):
         self.set_status(200)
         self.write({"status": 200,
                     "success": True, 
+                    "spaces": spaces})
+        return
+
+    def list_spaces_except_invisible(self) -> None:
+        """
+        list available spaces (except invisible spaces, that you are not a member of)
+        i.e. list spaces that:
+            - have invisible parameter set to false
+            - have no invisible parameter (for legacy spaces from before this feature was implemented)
+            - you are a member of (no matter visibility setting)
+        """
+
+        # query 3 criteria above
+        result = self.db.spaces.find({
+            "$or": [
+                {"invisible": False},
+                {"invisible": {"$exists": False}},
+                {"members": self.current_user.username}
+        ]})
+
+        # stringify ObjectId instance
+        spaces = []
+        for space in result:
+            space["_id"] = str(space["_id"])
+            spaces.append(space)
+
+        self.set_status(200)
+        self.write({"status": 200,
+                    "success": True,
                     "spaces": spaces})
         return
 
