@@ -36,7 +36,8 @@ $(document).ready(function () {
   getUserRole();
   getAllUsers();
   getSpaces()
-
+  //addPendingInvitesButton()
+  getPendingInvites()
   add_acl_button()
 })
 
@@ -225,6 +226,7 @@ function createSpace(name, visibilty) {
     url: '/spaceadministration/create?name=' + name + '&invisible=' + visibilty,
     success: function (data) {
       //console.log("created space " + name);
+      $('#spaceOverviewEntries').remove();
       $body.find('#newSpaceName').val('');
       getSpaces();
     },
@@ -253,4 +255,136 @@ function createSpace(name, visibilty) {
       }
     },
   });
+}
+
+function getPendingInvites() {
+  console.log("Hallo")
+  $.ajax({
+    type: 'GET',
+    url: "/spaceadministration/pending_invites",
+    success: function(data) {
+      console.log(data)
+
+      if(!document.body.contains(document.getElementById('pending_invite_button'))) {
+        $('#space_overview_utils').append(Mustache.render($("#pending_invite_modal").html(), {number_of_invites: data.pending_invites.length}))
+      }
+
+      $('#pending_invites').empty()
+      $.each(data.pending_invites, function(invite) {
+        $('#pending_invites').append(Mustache.render($("#space_pending_invite").html(), {spacename: data.pending_invites[invite], username:currentUser.username}))
+      })
+    },
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request to create a space failed.'
+        });
+      }
+    },
+  })
+}
+
+function acceptInvite(spacename, user) {
+  var formData = new FormData();
+  formData.append("name", spacename)
+
+  $.ajax({
+    type: 'POST',
+    url: "/spaceadministration/accept_invite",
+    data: formData,
+    //important for upload
+    contentType: false,
+    processData: false,
+    success: function(data) {
+      console.log("Success")
+    },
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request to create a space failed.'
+        });
+      }
+    },
+  })
+}
+
+function declineInvite(spacename, user) {
+  var formData = new FormData();
+  formData.append("name", spacename)
+
+  $.ajax({
+    type: 'POST',
+    url: "/spaceadministration/decline_invite",
+    data: formData,
+    //important for upload
+    contentType: false,
+    processData: false,
+    success: function(data) {
+      console.log("Success")
+    },
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request to create a space failed.'
+        });
+      }
+    },
+  })
+}
+
+function addPendingInvitesButton() {
+  var number_pending_invites = getPendingInvites()
+  console.log(number_pending_invites)
+  number_pending_invites.then((response) => {
+    
+  })
+  
 }
