@@ -51,27 +51,34 @@ function getSpaces() {
     type: 'GET',
     url: '/spaceadministration/list',
     dataType: 'json',
+    //important for upload
     success: function (data) {
       console.log("get Spaces success");
       var $dropdown = $body.find('#spaceDropdown');
-      console.log(data.spaces)
+
+      $('#spaceOverviewEntries').empty();
+
       $.each(data.spaces, function (i, space) {
         //return if already rendered
         if(document.body.contains(document.getElementById(space._id))) return;
         // inSpace as local var (not the global)
         var inSpace = (currentUser.spaces.indexOf(space.name) > -1) ? true : false;
+        var isRequested = false
         // needed for displaying "join" button
         if(inSpace != false) {
           space['inSpace'] = inSpace;
           $dropdown.prepend(Mustache.render(spaceTemplate, space));
           localStorage.setItem(space.name, space.members);
-          Spaces.push(space);
+        } else {
+          if(space["requests"].includes(currentUser.username)) {
+            isRequested = true
+          }
         }
         var space_pic = 'default_group_pic.jpg';
         if(space.hasOwnProperty('space_pic')) {
           space_pic = space["space_pic"];
         }
-        $('#spaceOverviewEntries').prepend(Mustache.render($('#spaceOverviewEntry').html(), {project_id: space._id, space_description: space.space_description, project_name: space.name.replace(" ", "%20"), display_name: space.name, space_pic: space_pic, members: space.members, inSpace: inSpace}))
+        $('#spaceOverviewEntries').prepend(Mustache.render($('#spaceOverviewEntry').html(), {project_id: space._id, space_description: space.space_description, project_name: space.name.replace(" ", "%20"), display_name: space.name, space_pic: space_pic, members: space.members, inSpace: inSpace, isRequested: isRequested}))
         // if not in Space render spaceTemplateSelect
         if (currURL.indexOf(baseUrl + '/space') == -1) {
           $('#selectSpace').append(Mustache.render(spaceTemplateSelect, space));
@@ -110,7 +117,7 @@ function getSpaces() {
 $body.delegate('button[id="joinSpace"]', 'click', function () {
     var name = $(this).attr('name');
     joinSpace(name);
-
+    $(this).replaceWith("<p>Anfrage geschickt!</p>")
 });
 
 /**
@@ -136,9 +143,15 @@ function joinSpace(name) {
     url: '/spaceadministration/join?name=' + name,
     success: function (data) {
       console.log("joined space " + name);
-      location.reload()
-    },
+      console.log(data)
+      //location.reload()
+      if(data.join_type == "join") {
+        location.reload()
+      } else {
+        
+      }
 
+    },
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
@@ -226,7 +239,6 @@ function createSpace(name, visibilty) {
     url: '/spaceadministration/create?name=' + name + '&invisible=' + visibilty,
     success: function (data) {
       //console.log("created space " + name);
-      $('#spaceOverviewEntries').remove();
       $body.find('#newSpaceName').val('');
       getSpaces();
     },
@@ -313,6 +325,7 @@ function acceptInvite(spacename, user) {
     processData: false,
     success: function(data) {
       console.log("Success")
+      getSpaces()
     },
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
@@ -353,6 +366,7 @@ function declineInvite(spacename, user) {
     processData: false,
     success: function(data) {
       console.log("Success")
+      getSpaces()
     },
     error: function (xhr, status, error) {
       if (xhr.status == 401) {

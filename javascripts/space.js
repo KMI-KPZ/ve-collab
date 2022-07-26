@@ -281,6 +281,7 @@ function sendInvitation(spacename, user) {
     processData: false,
     success: function(data) {
       //TODO
+      $('#invitation_btn_'+user.replace('.','\\.')).replaceWith("<p class='s'>Invitation send!</p>")
     },
     error: function(xhr, status, error) {
       if (xhr.status == 401) {

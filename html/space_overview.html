@@ -187,12 +187,18 @@
         <div class="text-base text-gray-900">{{!space_description}}</div>
       </td>
       <td class="px-6 py-4 whitespace-nowrap">
+         {{!^isRequested}}
          {{!^inSpace}}
             <button type="button" id="joinSpace" name={{!project_name}} class="bg-blue-lionet hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-full">Beitreten </button>
           {{!/inSpace}}</a>
           {{!#inSpace}}
             <button type="button" id="leaveSpace" name={{!project_name}} class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full">Leave </button>
           {{!/inSpace}}
+         {{!/isRequested}}
+         {{!#isRequested}}
+         <p class="no-underline text-black font-bold">Anfrage gesendet!</p>
+         {{!/isRequested}}
+         
       </td>
     </tr>
   </script>
