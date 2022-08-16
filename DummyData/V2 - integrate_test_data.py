@@ -18,8 +18,8 @@ base_image_dir = "../uploads/"
 #post_user = ""
 #post_password = ""
 #post_database = ""
-mongo_address = ""
-mongo_db = ""  
+mongo_address = "localhost"
+mongo_db = "test_lionet"
 collections = ['users', 'follows', 'profiles', 'spaces', 'roles', 'space_acl', 'global_acl', 'posts']
 
 """
@@ -276,7 +276,7 @@ def insert_posts():
             'text': value[2],
             'space': value[3],
             'pinned': eval(value[4]),
-            'tags': value[5],
+            'tags': value[5] if value[5] != None else "",
             'files': [file for file in value[6].split(', ')] if value[6] != None else [],
             'comments': [],
             'likers': [liker for liker in value[8].split(', ')] if value[8] != None else [],           
