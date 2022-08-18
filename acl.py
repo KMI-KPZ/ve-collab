@@ -34,7 +34,7 @@ class _GlobalACL:
 
     def __init__(self, mongo_client: MongoClient) -> None:
         self.client = mongo_client
-        self.db = self.client["lionet"]
+        self.db = self.client[global_vars.mongodb_db_name]
         self._EXISTING_KEYS = ["role", "create_space"]
 
     def get_existing_keys(self):
@@ -151,7 +151,7 @@ class _SpaceACL:
 
     def __init__(self, mongo_client: MongoClient) -> None:
         self.client = mongo_client
-        self.db = self.client["lionet"]
+        self.db = self.client[global_vars.mongodb_db_name]
         self._EXISTING_KEYS = ["role", "space", "join_space", "read_timeline", "post", "comment", "read_wiki", "write_wiki", "read_files",
                                "write_files"]
 

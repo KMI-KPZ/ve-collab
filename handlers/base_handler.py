@@ -34,7 +34,7 @@ class BaseHandler(tornado.web.RequestHandler):
 
     def initialize(self):
         self.client = MongoClient(global_vars.mongodb_host, global_vars.mongodb_port, username=global_vars.mongodb_username, password=global_vars.mongodb_password)
-        self.db = self.client["lionet"]
+        self.db = self.client[global_vars.mongodb_db_name]
 
         self.upload_dir = "uploads/"
         if not os.path.isdir(self.upload_dir):
