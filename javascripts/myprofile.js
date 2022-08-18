@@ -2,7 +2,7 @@ $(document).ready(function () {
   getRouting();
   document.title = currentUser.username + ' - Lionet';
   updateProfileContainer();
-  add_acl_button()
+  //add_acl_button()
 });
 
 /**

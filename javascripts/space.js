@@ -25,6 +25,21 @@ $(document).ready(function () {
 function triggerDisplay(index) {
   if(index != 0) {
     $("#feedRow").empty()
+    if(index == 1) {
+      //alert("Hallo")
+      $('#space_members').empty()
+      $.each(Spaces, function(entry) {
+        if(Spaces[entry].name == spacename.replace("%20", " ")) {
+          $.each(users, function(user) {
+            if(Spaces[entry].members.includes(users[user].username)) {
+              $('#space_members').append(Mustache.render($('#space_member').html(), {username:users[user].username, memberRole:users[user].role, profilePic:users[user].profile_pic}))
+            }
+          })
+
+
+        }
+      })
+    }
   } else {
     async function addContainer(){
       if ($('#feedRow').is(':empty')){
