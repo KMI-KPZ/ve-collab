@@ -94,7 +94,7 @@ async def main():
     # assure config contains expected keys
     expected_config_keys = ["port", "platform_host", "platform_port", "cookie_secret", "keycloak_base_url", "keycloak_realm",
                             "keycloak_client_id", "keycloak_client_secret", "mongodb_host", "mongodb_port", "mongodb_username",
-                            "mongodb_password", "wiki_url", "wiki_username", "wiki_password", "routing_table"]
+                            "mongodb_password", "mongodb_db_name", "wiki_url", "wiki_username", "wiki_password", "routing_table"]
     for key in expected_config_keys:
         if key not in conf:
             raise RuntimeError("config misses {}".format(key))
@@ -107,6 +107,7 @@ async def main():
     global_vars.mongodb_port = conf["mongodb_port"]
     global_vars.mongodb_username = conf["mongodb_username"]
     global_vars.mongodb_password = conf["mongodb_password"]
+    global_vars.mongodb_db_name = conf["mongodb_db_name"]
     global_vars.wiki_url = conf["wiki_url"]
     global_vars.wiki_username = conf["wiki_username"]
     global_vars.wiki_password = conf["wiki_password"]

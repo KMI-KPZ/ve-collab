@@ -9,6 +9,7 @@ mongodb_host: str = ""
 mongodb_port: int = 0
 mongodb_username: str = ""
 mongodb_password: str = ""
+mongodb_db_name: str = ""
 wiki_url: str = "",
 wiki_username: str = "",
 wiki_password: str = "",

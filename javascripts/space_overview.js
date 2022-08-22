@@ -36,7 +36,8 @@ $(document).ready(function () {
   getUserRole();
   getAllUsers();
   getSpaces()
-
+  //addPendingInvitesButton()
+  getPendingInvites()
   add_acl_button()
 })
 
@@ -50,27 +51,34 @@ function getSpaces() {
     type: 'GET',
     url: '/spaceadministration/list',
     dataType: 'json',
+    //important for upload
     success: function (data) {
       console.log("get Spaces success");
       var $dropdown = $body.find('#spaceDropdown');
-      console.log(data.spaces)
+
+      $('#spaceOverviewEntries').empty();
+
       $.each(data.spaces, function (i, space) {
         //return if already rendered
         if(document.body.contains(document.getElementById(space._id))) return;
         // inSpace as local var (not the global)
         var inSpace = (currentUser.spaces.indexOf(space.name) > -1) ? true : false;
+        var isRequested = false
         // needed for displaying "join" button
         if(inSpace != false) {
           space['inSpace'] = inSpace;
           $dropdown.prepend(Mustache.render(spaceTemplate, space));
           localStorage.setItem(space.name, space.members);
-          Spaces.push(space);
+        } else {
+          if(space["requests"].includes(currentUser.username)) {
+            isRequested = true
+          }
         }
         var space_pic = 'default_group_pic.jpg';
         if(space.hasOwnProperty('space_pic')) {
           space_pic = space["space_pic"];
         }
-        $('#spaceOverviewEntries').prepend(Mustache.render($('#spaceOverviewEntry').html(), {project_id: space._id, space_description: space.space_description, project_name: space.name.replace(" ", "%20"), display_name: space.name, space_pic: space_pic, members: space.members, inSpace: inSpace}))
+        $('#spaceOverviewEntries').prepend(Mustache.render($('#spaceOverviewEntry').html(), {project_id: space._id, space_description: space.space_description, project_name: space.name.replace(" ", "%20"), display_name: space.name, space_pic: space_pic, members: space.members, inSpace: inSpace, isRequested: isRequested}))
         // if not in Space render spaceTemplateSelect
         if (currURL.indexOf(baseUrl + '/space') == -1) {
           $('#selectSpace').append(Mustache.render(spaceTemplateSelect, space));
@@ -109,7 +117,7 @@ function getSpaces() {
 $body.delegate('button[id="joinSpace"]', 'click', function () {
     var name = $(this).attr('name');
     joinSpace(name);
-
+    $(this).replaceWith("<p>Anfrage geschickt!</p>")
 });
 
 /**
@@ -135,9 +143,15 @@ function joinSpace(name) {
     url: '/spaceadministration/join?name=' + name,
     success: function (data) {
       console.log("joined space " + name);
-      location.reload()
-    },
+      console.log(data)
+      //location.reload()
+      if(data.join_type == "join") {
+        location.reload()
+      } else {
+        
+      }
 
+    },
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
@@ -210,7 +224,8 @@ function leaveSpace(name) {
  */
 $body.delegate('#createSpace', 'click', function () {
     var name = $body.find('#newSpaceName').val();
-    if (name != '') createSpace(name);
+    var invisible = $("#newSpaceInvisibility").is(":checked");
+    if (name != '') createSpace(name, invisible);
 });
 
 /**
@@ -218,10 +233,10 @@ $body.delegate('#createSpace', 'click', function () {
  * resets input value and calls getSpaces for update
  * @param  {String} name name of new Space
  */
-function createSpace(name) {
+function createSpace(name, visibilty) {
   $.ajax({
     type: 'POST',
-    url: '/spaceadministration/create?name=' + name,
+    url: '/spaceadministration/create?name=' + name + '&invisible=' + visibilty,
     success: function (data) {
       //console.log("created space " + name);
       $body.find('#newSpaceName').val('');
@@ -252,4 +267,138 @@ function createSpace(name) {
       }
     },
   });
+}
+
+function getPendingInvites() {
+  console.log("Hallo")
+  $.ajax({
+    type: 'GET',
+    url: "/spaceadministration/pending_invites",
+    success: function(data) {
+      console.log(data)
+
+      if(!document.body.contains(document.getElementById('pending_invite_button'))) {
+        $('#space_overview_utils').append(Mustache.render($("#pending_invite_modal").html(), {number_of_invites: data.pending_invites.length}))
+      }
+
+      $('#pending_invites').empty()
+      $.each(data.pending_invites, function(invite) {
+        $('#pending_invites').append(Mustache.render($("#space_pending_invite").html(), {spacename: data.pending_invites[invite], username:currentUser.username}))
+      })
+    },
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request to create a space failed.'
+        });
+      }
+    },
+  })
+}
+
+function acceptInvite(spacename, user) {
+  var formData = new FormData();
+  formData.append("name", spacename)
+
+  $.ajax({
+    type: 'POST',
+    url: "/spaceadministration/accept_invite",
+    data: formData,
+    //important for upload
+    contentType: false,
+    processData: false,
+    success: function(data) {
+      console.log("Success")
+      getSpaces()
+    },
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request to create a space failed.'
+        });
+      }
+    },
+  })
+}
+
+function declineInvite(spacename, user) {
+  var formData = new FormData();
+  formData.append("name", spacename)
+
+  $.ajax({
+    type: 'POST',
+    url: "/spaceadministration/decline_invite",
+    data: formData,
+    //important for upload
+    contentType: false,
+    processData: false,
+    success: function(data) {
+      console.log("Success")
+      getSpaces()
+    },
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Server error!',
+            message: 'Request to create a space failed.'
+        });
+      }
+    },
+  })
+}
+
+function addPendingInvitesButton() {
+  var number_pending_invites = getPendingInvites()
+  console.log(number_pending_invites)
+  number_pending_invites.then((response) => {
+    
+  })
+  
 }

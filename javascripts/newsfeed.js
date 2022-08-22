@@ -707,14 +707,6 @@ function getTimelineSpace(spacename, from, to) {
       displayTimeline(timeline);
       var members = localStorage.getItem(spacename.split(' ').join('').replace("%20","")).split(",");
 
-      // collects members and member pics for "Team"-Tab in Space
-      var memberPictures = []
-      $.each(users, function(entry) {
-        if(members.includes(users[entry].username)) {
-          memberPictures.push({"username":users[entry].username, "profilePic": users[entry].profile_pic})
-        }
-      })
-
       // collects documents and corresponding tags from post for "Dokumente"-Tab in Space
       var documents = []
       $.each(timeline.posts, function(post) {
@@ -726,7 +718,11 @@ function getTimelineSpace(spacename, from, to) {
       // sets space pic and if current user is admin for edit space button
       var isAdmin = [];
       var space_pic = "";
-      var this_space
+      var this_space;
+
+      // collects members and member pics for "Team"-Tab in Space
+      var memberPictures = []
+
       $.each(Spaces, function(entry) {
         if(Spaces[entry].name == spacename.replace("%20"," ")) {
           this_space = Spaces[entry]
@@ -739,6 +735,18 @@ function getTimelineSpace(spacename, from, to) {
           } else {
             space_pic = 'default_group_pic.jpg';
           }
+
+          $.each(users, function(user_entry) {
+            if(members.includes(users[user_entry].username)) {       
+              var memberRole = "member";
+              var memberIsAdmin = false;
+              if(Spaces[entry].admins.includes(users[user_entry].username)) {
+                memberRole = "admin"
+                memberIsAdmin = true;
+              }
+              memberPictures.push({"username":users[user_entry].username, "profilePic": users[user_entry].profile_pic, "memberRole": memberRole, "memberIsAdmin": memberIsAdmin})
+            }
+          })
         }
       })
 
@@ -1181,7 +1189,9 @@ function getSpaces() {
     success: function (data) {
       console.log("get Spaces success");
       var $dropdown = $body.find('#spaceDropdown');
-
+      
+      // clears existing Spaces Array without creating brand new array  
+      Spaces.length = 0
       $.each(data.spaces, function (i, space) {
         //return if already rendered
         if(document.body.contains(document.getElementById(space._id))) return;

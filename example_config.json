@@ -11,6 +11,7 @@
   "mongodb_port": 27017,
   "mongodb_username": "<mongo_username>",
   "mongodb_password": "<mongo_password>",
+  "mongodb_db_name": "lionet",
   "wiki_url": "<absolute_url>",
   "wiki_username": "<wiki_username>",
   "wiki_password": "<wiki_password>",

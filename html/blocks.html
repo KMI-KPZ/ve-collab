@@ -1,28 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>Social Network</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="https://code.jquery.com/jquery-1.12.4.min.js"
-            integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ"
-            crossorigin="anonymous">
-    </script>
-
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css">
-    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="../css/newsfeed.css">
-    <link rel="stylesheet" href="../css/tagsinput.css">
-    <link rel="stylesheet" type="text/css" href="../css/modal.css">
-    <link rel="stylesheet" type="text/css" href="../css/notifications.css">
-    <!--Fonts-->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300&family=Titillium+Web:wght@300&display=swap" rel="stylesheet">
-
-</head>
-<body class="font-sans bg-white">
-
 <!--
 Create new route/handler for this html
 then use $.get("...html") to get the templates in this file
@@ -1100,7 +1075,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
         <div class="flex flex-col flex-1 bg-white" >
             <div class="flex-1 flex flex-col">
                 <div class="flex-shrink-0 flex ">
-                  <div class="w-5/6">
+                  <div class="w-4/6">
                     <a href="../space/{{!spacename}}" class="flex-shrink-0 w-full group block">
                         <div class="flex items-center">
                             <div>
@@ -1116,12 +1091,14 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                         </div>
                     </a>
                   </div>
-                  <div class="w-1/6">
+                  <div class="w-2/6">
                     {{!#isAdmin}}
-                    <div x-data="{'showModal': false}" @keydown.escape="showModal:false">
+                    <div x-data="{'showModal': false}" @keydown.escape="showModal:false" class="inline-block">
                       <button id="updateProfileButton" type="button" @click="showModal = true" onclick="javascript:populateSpaceInformationModal()"
                          class="bg-blue-lionet hover:bg-blue-500 text-white font-bold py-1 px-2 rounded-full text-base mt-1">
-                         <i class="fa fa-pencil fa-fw"></i>
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
                       </button>
 
                       <!-- Edit space modal -->
@@ -1180,6 +1157,100 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                         </div>
                       </div>
                       <!-- End of edit space modal -->
+                    </div>
+                    {{!/isAdmin}}
+                    {{!#isAdmin}}
+                    <div x-data="{'showModal': false}" @keydown.escape="showModal:false" class="inline-block">
+                      <button id="updateProfileButton" type="button" @click="showModal = true" onclick="javascript:renderUserManagementModal()"
+                         class="bg-blue-lionet hover:bg-blue-500 text-white font-bold py-1 px-2 rounded-full text-base mt-1">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                        </svg>
+                      </button>
+
+                      <div class="fixed inset-0 z-30 items-center justify-center overflow-auto bg-black bg-opacity-50"  x-show="showModal">
+                        <div class="max-w-7xl px-6 py-4 mx-auto my-4 text-left bg-white rounded shadow-lg" @click.away="showModal = false" x-transition:enter="motion-safe:ease-out duration-300" x-transition:enter-start="opacity-0 scale-90" x-transition:enter-end="opacity-100 scale-100">
+                          <div class="flex items-center justify-between">
+                            <b class="font-bold text-gray-800">Space Administration</b>
+
+                            <button type="button" class="z-50 cursor-pointer m-2" @click="showModal = false">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                          </div>
+                          <div>
+                            <div x-data="setupSpaceAdministrationTabs()">
+                              <nav class="flex flex-wrap text-sm font-medium text-center text-gray-500 border-b border-gray-200 dark:border-gray-700 dark:text-gray-400">
+                                  <ul class="flex">
+                                      <template x-for="(tab, index) in tabs" :key="index">
+                                          <li class="cursor-pointer py-3 px-4 transition"
+                                              :class="activeTab===index ? 'bg-white text-blue-700' : ' text-black'" @click="activeTab = index; handleSpaceAdministrationTabChange(tab);"
+                                              x-text="tab"></li>
+                                      </template>
+                                  </ul>
+                              </nav>
+                  
+                              <!-- tab system -->
+                              <div id="tabs" class="w-full bg-white p-8">
+                                <div x-show="activeTab===0" class="m-1 p-2 w-full h-full">
+                                  <div id="tab_1" class="p-2">
+
+                                    <div class="flex flex-col">
+                                      <div class="overflow-x-auto sm:-mx-6 lg:-mx-8">
+                                        <div class="py-2 inline-block min-w-full sm:px-6 lg:px-8">
+                                          <div class="overflow-hidden">
+                                            <table class="min-w-full">
+                                              <thead class="border-b">
+                                                <tr>
+                                                  <th scope="col" class="text-sm font-medium text-gray-900 px-6 py-4 text-left">
+                                                    User
+                                                  </th>
+                                                  <th scope="col" class="text-sm font-medium text-gray-900 px-6 py-4 text-left">
+                                                    Rolle 
+                                                  </th>
+                                                </tr>
+                                              </thead>
+                                              <tbody id="user_management_table">
+                                                
+                                              </tbody>
+                                            </table>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                  </div>
+                                </div>
+                                <div x-show="activeTab===1" class="m-1 p-2 w-full h-full">
+                                  <div id="tab_2" class="p-2">                                   	
+                             
+                                    <div id="join_request_list">
+                                      
+                                    </div>
+
+                                  </div>
+                                </div>
+                                <div x-show="activeTab===2" class="m-1 p-2 w-full h-full">
+                                  <div id="tab_3" class="p-2">
+
+                                    <div class="flex m-2">
+                                      <input id="invite_search" class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500" id="invite_input" type="text" placeholder="Suche nach einem Nutzer!">
+                                      <!--button type="button" onclick="" class="inline-block px-6 py-2.5 bg-green-600 text-white font-medium text-xs leading-tight uppercase rounded shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out">Einladen</button-->
+                                    </div>
+
+                                    <div class="grid grid-cols-3 gap-6" id="invite_list">
+                                      
+                                    </div>
+
+                                  </div>
+                                </div>
+                              </div>
+
+                            </div> 
+                          </div>  
+                        </div>
+                      </div>
                     </div>
                     {{!/isAdmin}}
                   </div>
@@ -1302,15 +1373,8 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
 
           </div>
           <div x-show="activeTab===1">
-            <div class="grid grid-cols-4 gap-4 p-2">
-              {{!#member_pics}}
-                <div class="flex flex-col items-center pb-10" >
-                  <a href="../profile/{{!username}}">
-                    <img class="mb-3 w-12 h-12 mx-auto rounded-full shadow-lg" src="../uploads/{{!profilePic}}"/>
-                    <p class="mb-1 text-xl font-medium text-gray-900 dark:text-white">{{!username}}</p>
-                  </a>
-                </div>
-              {{!/member_pics}}
+            <div id="space_members" class="grid grid-cols-4 gap-4 p-2">
+
             </div>
           </div>
           <div x-show="activeTab===2" id="wiki_link"
@@ -1374,6 +1438,8 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
 </script>
 <!-- -->
 
+
+
 <!-- ACL button template -->
 <script id="acl_button" type="text/html">
   <div>
@@ -1381,6 +1447,3 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
   </div>
 </script>
 <!-- End of ACL button template -->
-
-</body>
-</html>

@@ -19,7 +19,7 @@ class SpaceHandler(BaseHandler):
     def get(self, slug):
         """
         GET /spaceadministration/list
-            (view all spaces)
+            (view all spaces, except invisible ones that current user is not a member of)
             return:
                 200 OK,
                 {"status": 200,
@@ -29,6 +29,22 @@ class SpaceHandler(BaseHandler):
                 401 Unauthorized
                 {"status": 401,
                 "reason": "no_logged_in_user"}
+
+        GET /spaceadministration/list_all
+            (view all spaces, including invisible ones, requires global admin privilege)
+            return:
+                200 OK,
+                {"status": 200,
+                 "success": True,
+                 "spaces": [space1, space2,...]}
+
+                401 Unauthorized
+                {"status": 401,
+                "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                {"status": 403,
+                 "reason": "insufficient_permission"}
 
         GET /spaceadministration/pending_invites
             (get pending invites into spaces for current user)
@@ -68,9 +84,42 @@ class SpaceHandler(BaseHandler):
                 403 Forbidden
                 {"status": 403,
                  "reason": "insufficient_permission"}
+            
+        GET /spaceadministration/invites
+            (view invites for the space (requires space admin or global admin privileges))
+            query param:
+                "name": the space name of which to view the invites
+
+            returns:
+                200 OK
+                {"status": 200,
+                 "success": True,
+                 "join_requests": ["username1", "username2", ...]}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": missing_key:name}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": "space_doesnt_exist"}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                {"status": 403,
+                 "reason": "insufficient_permission"}
         """
 
+        
+
         if slug == "list":
+            self.list_spaces_except_invisible()
+            return
+        
+        elif slug == "list_all":
             self.list_spaces()
             return
         
@@ -90,6 +139,20 @@ class SpaceHandler(BaseHandler):
                 return
 
             self.get_join_requests_for_space(space_name)
+            return
+
+        elif slug == "invites":
+            try:
+                space_name = self.get_argument("name")
+            except:
+                print(e)
+
+                self.set_status(400)
+                self.write({"status": 400,
+                            "reason": "missing_key:name"})
+                return
+
+            self.get_invites_for_space(space_name)
             return
 
         else:
@@ -396,6 +459,9 @@ class SpaceHandler(BaseHandler):
 
         if slug == "create":
             invisible = self.get_argument("invisible", False)
+            # apparentry the "false" str is true, pain
+            if invisible == "false":
+                invisible = False
             invisible = bool(invisible) # explicit bool cast in case user puts any string or int value that is not already "true" (will be interpreted as true then)
 
             self.create_space(space_name, invisible)
@@ -653,8 +719,15 @@ class SpaceHandler(BaseHandler):
 
     def list_spaces(self) -> None:
         """
-        list all available spaces
+        list all available spaces, requires admin privilegs because it includes invisible spaces
         """
+
+        # abort if user is not global admin
+        if not self.get_current_user_role() == "admin":
+            self.set_status(403)
+            self.write({"status": 403,
+                        "reason": "insufficient_permission"})
+            return
 
         result = self.db.spaces.find({})
 
@@ -666,6 +739,35 @@ class SpaceHandler(BaseHandler):
         self.set_status(200)
         self.write({"status": 200,
                     "success": True, 
+                    "spaces": spaces})
+        return
+
+    def list_spaces_except_invisible(self) -> None:
+        """
+        list available spaces (except invisible spaces, that you are not a member of)
+        i.e. list spaces that:
+            - have invisible parameter set to false
+            - have no invisible parameter (for legacy spaces from before this feature was implemented)
+            - you are a member of (no matter visibility setting)
+        """
+
+        # query 3 criteria above
+        result = self.db.spaces.find({
+            "$or": [
+                {"invisible": False},
+                {"invisible": {"$exists": False}},
+                {"members": self.current_user.username}
+        ]})
+
+        # stringify ObjectId instance
+        spaces = []
+        for space in result:
+            space["_id"] = str(space["_id"])
+            spaces.append(space)
+
+        self.set_status(200)
+        self.write({"status": 200,
+                    "success": True,
                     "spaces": spaces})
         return
 
@@ -683,6 +785,31 @@ class SpaceHandler(BaseHandler):
         self.write({"status": 200,
                     "success": True, 
                     "pending_invites": pending_invites})
+
+    def get_invites_for_space(self, space_name: str) -> None:
+        """
+        view invites for the given space (requires space admin or global admin privileges)
+        """
+        space = self.db.spaces.find_one({"name": space_name})
+
+        # abort if space doesnt exist
+        if not space:
+            self.set_status(400)
+            self.write({"status": 400,
+                        "reason": "space_doesnt_exist"})
+            return
+
+        # abort if user is neither space nor global admin
+        if not (self.current_user.username in space["admins"] or self.get_current_user_role() == "admin"):
+            self.set_status(403)
+            self.write({"status": 403,
+                        "reason": "insufficient_permission"})
+            return
+
+        self.set_status(200)
+        self.write({"status": 200,
+                    "success": True, 
+                    "invites": space["invites"]})
 
     def get_join_requests_for_space(self, space_name: str) -> None:
         """
