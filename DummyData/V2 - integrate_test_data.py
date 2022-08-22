@@ -19,7 +19,9 @@ base_image_dir = "../uploads/"
 #post_password = ""
 #post_database = ""
 mongo_address = "localhost"
-mongo_db = "test_lionet"
+mongo_db = "dummy_lionet"
+mongo_user = ""
+mongo_pw = ""
 collections = ['users', 'follows', 'profiles', 'spaces', 'roles', 'space_acl', 'global_acl', 'posts']
 
 """
@@ -112,7 +114,7 @@ def insert_users():
     workbook = load_workbook(filename=file)
     sheet = workbook['users']
 
-    client = MongoClient(mongo_address)
+    client = MongoClient(mongo_address, username=mongo_user, password=mongo_pw)
     db = client[mongo_db]
 
 
@@ -130,7 +132,7 @@ def insert_roles():
     workbook = load_workbook(filename=file)
     sheet = workbook['roles']
 
-    client = MongoClient(mongo_address)
+    client = MongoClient(mongo_address, username=mongo_user, password=mongo_pw)
     db = client[mongo_db]
 
 
@@ -147,7 +149,7 @@ def insert_spaces():
     workbook = load_workbook(filename=file)
     sheet = workbook['spaces']
 
-    client = MongoClient(mongo_address)
+    client = MongoClient(mongo_address, username=mongo_user, password=mongo_pw)
     db = client[mongo_db]
 
     for value in sheet.iter_rows(min_row=insert_spaces_upperRow, max_row=insert_spaces_lowerRow, min_col=insert_spaces_columnLeft, max_col=insert_spaces_columnRight, values_only=True):
@@ -172,7 +174,7 @@ def insert_follows():
     workbook = load_workbook(filename=file)
     sheet = workbook['follows']
 
-    client = MongoClient(mongo_address)
+    client = MongoClient(mongo_address, username=mongo_user, password=mongo_pw)
     db = client[mongo_db]
 
     for value in sheet.iter_rows(min_row=insert_follows_upperRow, max_row=insert_follows_lowerRow, min_col=insert_follows_columnLeft, max_col=insert_follows_columnRight, values_only=True):
@@ -191,7 +193,7 @@ def insert_profiles():
     workbook = load_workbook(filename=file)
     sheet = workbook['profiles']
 
-    client = MongoClient(mongo_address)
+    client = MongoClient(mongo_address, username=mongo_user, password=mongo_pw)
     db = client[mongo_db]
 
     for value in sheet.iter_rows(min_row=insert_profiles_upperRow, max_row=insert_profiles_lowerRow, min_col=insert_profiles_columnLeft, max_col=insert_profiles_columnRight, values_only=True):
@@ -220,7 +222,7 @@ def insert_global_acl():
     workbook = load_workbook(filename=file)
     sheet = workbook['global_acl']
 
-    client = MongoClient(mongo_address)
+    client = MongoClient(mongo_address, username=mongo_user, password=mongo_pw)
     db = client[mongo_db]
 
     for value in sheet.iter_rows(min_row=insert_globalacl_upperRow, max_row=insert_globalacl_lowerRow, min_col=insert_globalacl_columnLeft, max_col=insert_globalacl_columnRight, values_only=True):
@@ -239,7 +241,7 @@ def insert_space_acl():
     workbook = load_workbook(filename=file)
     sheet = workbook['space_acl']
 
-    client = MongoClient(mongo_address)
+    client = MongoClient(mongo_address, username=mongo_user, password=mongo_pw)
     db = client[mongo_db]
 
     for value in sheet.iter_rows(min_row=insert_spaceacl_upperRow, max_row=insert_spaceacl_lowerRow, min_col=insert_spaceacl_columnLeft, max_col=insert_spaceacl_columnRight, values_only=True):
@@ -266,7 +268,7 @@ def insert_posts():
     workbook = load_workbook(filename=file)
     sheet = workbook['posts']
 
-    client = MongoClient(mongo_address)
+    client = MongoClient(mongo_address, username=mongo_user, password=mongo_pw)
     db = client[mongo_db]
 
     for value in sheet.iter_rows(min_row=insert_posts_upperRow, max_row=insert_posts_lowerRow, min_col=insert_posts_columnLeft, max_col=insert_posts_columnRight, values_only=True):
@@ -314,7 +316,7 @@ def place_dummy_images():
 Clears the test instance of the database
 """
 def clear_database(): 
-    client = MongoClient(mongo_address)
+    client = MongoClient(mongo_address, username=mongo_user, password=mongo_pw)
     db = client[mongo_db]
 
     workbook = load_workbook(filename=file)
