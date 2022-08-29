@@ -1428,7 +1428,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
 <script id="profileInformation_listItem" type="text/html">
   <li class="p-4 hover:bg-gray-50 cursor-pointer">
     <input type="text" id="{{!item_type}}" class="mt-1 p-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" value="{{!value}}">
-    <button type="" class="z-50 cursor-pointer m-2 inline-block" onclick="$(this).closest('li').remove()">
+    <button type="" class="z-50 cursor-pointer m-2 inline-block" onclick="$(this).closest('li').remove();" x-on:click.stop>
       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 12H6" />
       </svg>
