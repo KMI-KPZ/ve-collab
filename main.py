@@ -9,6 +9,7 @@ if sys.platform == 'win32':
 
 from keycloak import KeycloakOpenID
 import pymongo
+import pymongo.errors
 import tornado.httpserver
 import tornado.ioloop
 import tornado.locks
@@ -102,14 +103,20 @@ def init_text_indexes(force_rebuild: bool) -> None:
 
     # only build the index if they are either not present or we forced a rebuild
     if "posts" not in db.posts.index_information() or force_rebuild:
-        db.posts.drop_index("posts")
+        try:
+            db.posts.drop_index("posts")
+        except pymongo.errors.OperationFailure:
+            pass
         db.posts.create_index([("text", pymongo.TEXT),
                                ("tags", pymongo.TEXT)],
                                name="posts")
         print("Built text index named {} on collection {}".format("posts", "posts"))
 
     if "profiles" not in db.profiles.index_information() or force_rebuild:
-        db.profiles.drop_index("profiles")
+        try:
+            db.profiles.drop_index("profiles")
+        except pymongo.errors.OperationFailure:
+            pass
         db.profiles.create_index([("bio", pymongo.TEXT),
                                   ("institution", pymongo.TEXT),
                                   ("projects", pymongo.TEXT),
