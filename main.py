@@ -20,6 +20,7 @@ from handlers.follow import FollowHandler
 from handlers.permissions import GlobalACLHandler, PermissionHandler, RoleHandler, SpaceACLHandler
 from handlers.post import *
 from handlers.render import *
+from handlers.search import SearchHandler
 from handlers.space import SpaceHandler
 from handlers.task import TaskHandler
 from handlers.timeline import *
@@ -79,6 +80,7 @@ def make_app(cookie_secret):
         (r"/role/([a-zA-Z\-0-9\.:,_%]+)", RoleHandler),
         (r"/global_acl/([a-zA-Z\-0-9\.:,_%]+)", GlobalACLHandler),
         (r"/space_acl/([a-zA-Z\-0-9\.:,_%]+)", SpaceACLHandler),
+        (r"/search", SearchHandler),
         (r"/routing", RoutingHandler),
         (r"/template", TemplateHandler),
         (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
