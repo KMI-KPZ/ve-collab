@@ -1,3 +1,5 @@
+import json
+
 from bson.objectid import ObjectId
 from datetime import datetime
 import tornado.escape
@@ -49,6 +51,11 @@ class PostHandler(BaseHandler):
             creation_date = datetime.utcnow()
             text = self.get_body_argument("text")  # http_body['text']
             tags = self.get_body_argument("tags")  # http_body['tags']
+            # convert tags to list, because formdata will send it as a string
+            try:
+                tags = json.loads(tags)
+            except Exception:
+                pass
             space = self.get_body_argument("space", None)  # if space is set, this post belongs to a space (only visible inside)
 
             # check if space exists, if not, end with 400 Bad Request
