@@ -19,9 +19,9 @@ base_image_dir = "../uploads/"
 #post_password = ""
 #post_database = ""
 mongo_address = "localhost"
-mongo_db = "dummy_lionet"
-mongo_user = ""
-mongo_pw = ""
+mongo_db = "test_lionet"
+mongo_user = "admin"
+mongo_pw = "admin"
 collections = ['users', 'follows', 'profiles', 'spaces', 'roles', 'space_acl', 'global_acl', 'posts']
 
 """
