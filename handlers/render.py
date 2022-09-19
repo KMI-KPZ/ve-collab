@@ -1,86 +1,74 @@
-import global_vars
-from handlers.base_handler import BaseHandler
+from handlers.base_handler import BaseHandler, auth_needed
+from logger_factory import log_access
 
 
 class MainHandler(BaseHandler):
 
+    @log_access
+    @auth_needed
     def get(self):
-        if self.current_user:
-            self.render("main.html")
-        else:
-            # redirect to platform if there is no logged in user
-            self.redirect(global_vars.routing_table["platform"])
+        self.render("main.html")
 
 
 class MainRedirectHandler(BaseHandler):
 
+    @log_access
+    @auth_needed
     def get(self):
         self.redirect("/main")
 
 
 class AdminHandler(BaseHandler):
 
+    @log_access
+    @auth_needed
     def get(self):
-        if self.current_user:
-            self.render("newsfeed.html")
-        else:
-            # redirect to platform if there is no logged in user
-            self.redirect(global_vars.routing_table["platform"])
+        self.render("newsfeed.html")
 
 
 class MyProfileHandler(BaseHandler):
 
+    @log_access
+    @auth_needed
     def get(self):
-        if self.current_user:
-            self.render("myProfile.html")
-        else:
-            # redirect to platform if there is no logged in user
-            self.redirect(global_vars.routing_table["platform"])
+        self.render("myProfile.html")
 
 
 class ProfileHandler(BaseHandler):
 
+    @log_access
+    @auth_needed
     def get(self, slug):
-        if self.current_user:
-            self.render("profile.html")
-        else:
-            # redirect to platform if there is no logged in user
-            self.redirect(global_vars.routing_table["platform"])
+        self.render("profile.html")
 
 
 class SpaceRenderHandler(BaseHandler):
 
+    @log_access
+    @auth_needed
     def get(self, slug):
-        if self.current_user:
-            self.render("space.html")
-        else:
-            # redirect to platform if there is no logged in user
-            self.redirect(global_vars.routing_table["platform"])
+        self.render("space.html")
 
 
 class SpaceOverviewHandler(BaseHandler):
+
+    @log_access
+    @auth_needed
     def get(self):
-        if self.current_user:
-            self.render("space_overview.html")
-        else:
-            # redirect to platform if there is no logged in user
-            self.redirect(global_vars.routing_table["platform"])
+        self.render("space_overview.html")
 
 
 class TemplateHandler(BaseHandler):
 
+    @log_access
+    @auth_needed
     def get(self):
-        if self.current_user:
-            self.render("blocks.html")
-        else:
-            # redirect to platform if there is no logged in user
-            self.redirect(global_vars.routing_table["platform"])
+        self.render("blocks.html")
 
 class ACLHandler(BaseHandler):
+    
+    @log_access
+    @auth_needed
     def get(self):
-        if self.current_user:
-            with open("html/acl.html") as fp:
-                self.write(fp.read())
-        else:
-            # redirect to platform if there is no logged in user
-            self.redirect(global_vars.routing_table["platform"])
+        with open("html/acl.html") as fp:
+            self.write(fp.read())

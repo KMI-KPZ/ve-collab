@@ -26,9 +26,11 @@ from handlers.task import TaskHandler
 from handlers.timeline import *
 from handlers.user import *
 from handlers.wiki import *
+from logger_factory import get_logger, log_access
 import signing
 from socket_client import get_socket_instance
 
+logger = get_logger(__name__)
 
 define("no_wiki", default=False, type=bool,
        help="start without wiki integration (use if u don't have the wiki software installed and running)")
@@ -40,6 +42,7 @@ define("build_text_index", default=False, type=bool,
 
 class RoutingHandler(BaseHandler):
 
+    @log_access
     def get(self):
         """
         /routing
@@ -112,7 +115,7 @@ def init_text_indexes(force_rebuild: bool) -> None:
         db.posts.create_index([("text", pymongo.TEXT),
                                ("tags", pymongo.TEXT)],
                                name="posts")
-        print("Built text index named {} on collection {}".format("posts", "posts"))
+        logger.info("Built text index named {} on collection {}".format("posts", "posts"))
 
     if "profiles" not in db.profiles.index_information() or force_rebuild:
         try:
@@ -131,7 +134,8 @@ def init_text_indexes(force_rebuild: bool) -> None:
                                   ("education", pymongo.TEXT),
                                   ("user", pymongo.TEXT)],
                                   name="profiles")   
-        print("Built text index named {} on collection {}".format("profiles", "profiles"))
+        logger.info("Built text index named {} on collection {}".format(
+            "profiles", "profiles"))
 
 
 async def main():
@@ -169,7 +173,7 @@ async def main():
     cookie_secret = conf["cookie_secret"]
     app = make_app(cookie_secret)
     server = tornado.httpserver.HTTPServer(app)
-    print("Starting server on port: " + str(global_vars.port))
+    logger.info("Starting server on port: " + str(global_vars.port))
     server.listen(global_vars.port)
 
     # setup text indexes for searching
@@ -181,12 +185,11 @@ async def main():
                                    "module_name": "lionet",
                                    "port": global_vars.port})
     if response["status"] == "recognized":
-        print("recognized by platform")
+        logger.info("Lionet has been recognized by platform")
         shutdown_event = tornado.locks.Event()
         await shutdown_event.wait()
     else:
-        print("not recognized by platform")
-        print("exiting...")
+        logger.critical("Lionet has not been recognized by the platform, app will exit now")
 
 if __name__ == '__main__':
     tornado.ioloop.IOLoop.current().run_sync(main)

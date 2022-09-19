@@ -4,12 +4,17 @@ import tornado.web
 
 from acl import get_acl
 from handlers.base_handler import BaseHandler, auth_needed
+from logger_factory import get_logger, log_access
 import util
 from socket_client import get_socket_instance
 
 
+logger = get_logger(__name__)
+
+
 class PermissionHandler(BaseHandler):
 
+    @log_access
     @auth_needed
     async def get(self):
         role = await util.request_role(self.current_user.username)
@@ -20,6 +25,7 @@ class PermissionHandler(BaseHandler):
 
 class RoleHandler(BaseHandler):
 
+    @log_access
     @auth_needed
     async def get(self, slug):
         """
@@ -30,7 +36,6 @@ class RoleHandler(BaseHandler):
             role_result = self.db.roles.find_one(
                 {"username": self.current_user.username}
             )
-            print(role_result)
 
             if role_result:
                 self.set_status(200)
@@ -95,6 +100,7 @@ class RoleHandler(BaseHandler):
         else:
             self.set_status(404)
 
+    @log_access
     @auth_needed
     async def post(self, slug):
         """
@@ -127,7 +133,6 @@ class RoleHandler(BaseHandler):
         if slug == "update":
             if await util.is_admin(self.current_user.username):
                 http_body = json.loads(self.request.body)
-                print(http_body)
 
                 if any(key not in http_body for key in ("username", "role")):
                     self.set_status(400)
@@ -162,6 +167,7 @@ class RoleHandler(BaseHandler):
 
 class GlobalACLHandler(BaseHandler):
 
+    @log_access
     @auth_needed
     async def get(self, slug):
         """
@@ -210,6 +216,8 @@ class GlobalACLHandler(BaseHandler):
 
                 # inconsistency problem: the role exists, but no acl entry. construct an acl entry that has all permissions set to false
                 if not acl_entry:
+                    logger.warning(
+                        "Inconsistency Problem: the role '{}' exists, but no Global ACL entry for it".format(current_user_role))
                     acl_entry = {}
                     for acl_key in acl.get_existing_keys():
                         if acl_key != "role":
@@ -248,6 +256,7 @@ class GlobalACLHandler(BaseHandler):
         else:
             self.set_status(404)
 
+    @log_access
     @auth_needed
     async def post(self, slug):
         """
@@ -298,6 +307,7 @@ class GlobalACLHandler(BaseHandler):
 
 class SpaceACLHandler(BaseHandler):
 
+    @log_access
     @auth_needed
     async def get(self, slug):
         """
@@ -379,7 +389,8 @@ class SpaceACLHandler(BaseHandler):
 
                 # inconsistency problem: the role exists, but no acl entry. construct an acl entry that has all permissions set to false
                 if not acl_entry:
-                    print("role no exist")
+                    logger.warning(
+                        "Inconsistency Problem: the role '{}' exists, but no Space ACL entry for it".format(optional_role))
                     acl_entry = {}
                     for acl_key in acl.get_existing_keys():
                         if acl_key != "role" and acl_key != "space":
@@ -400,6 +411,8 @@ class SpaceACLHandler(BaseHandler):
 
                 # inconsistency problem: the role exists, but no acl entry. construct an acl entry that has all permissions set to false
                 if not acl_entry:
+                    logger.warning(
+                        "Inconsistency Problem: the role '{}' exists, but no Space ACL entry for it".format(optional_role))
                     acl_entry = {}
                     for acl_key in acl.get_existing_keys():
                         if acl_key != "role" and acl_key != "space":
@@ -440,6 +453,7 @@ class SpaceACLHandler(BaseHandler):
         else:
             self.set_status(404)
 
+    @log_access
     @auth_needed
     async def post(self, slug):
         """

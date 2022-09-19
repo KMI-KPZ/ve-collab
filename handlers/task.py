@@ -3,9 +3,11 @@ import dateutil
 import tornado.escape
 
 from handlers.base_handler import BaseHandler, auth_needed
+from logger_factory import log_access
 
 class TaskHandler(BaseHandler):
 
+    @log_access
     @auth_needed
     def get(self):
         """
@@ -31,6 +33,7 @@ class TaskHandler(BaseHandler):
         self.set_status(200)
         self.write({"tasks": tasks})
 
+    @log_access
     @auth_needed
     def post(self):
         """

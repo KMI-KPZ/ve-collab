@@ -2,12 +2,16 @@ from base64 import b64encode
 import os
 import re
 
+import tornado.web
+
 from handlers.base_handler import BaseHandler, auth_needed
+from logger_factory import log_access
 from socket_client import get_socket_instance
 
 
 class ProfileInformationHandler(BaseHandler):
 
+    @log_access
     @auth_needed
     async def get(self):
         """
@@ -94,6 +98,7 @@ class ProfileInformationHandler(BaseHandler):
         self.set_status(200)
         self.write(user_information)
 
+    @log_access
     @auth_needed
     def post(self):
         """
@@ -144,14 +149,12 @@ class ProfileInformationHandler(BaseHandler):
         # handle profile pic
         new_file_name = None
         if "profile_pic" in self.request.files:
-            print("in file handling")
             profile_pic_obj = self.request.files["profile_pic"][0]
 
             # save file
             file_ext = os.path.splitext(profile_pic_obj["filename"])[1]
             new_file_name = b64encode(os.urandom(32)).decode("utf-8")
             new_file_name = re.sub('[^0-9a-zäöüßA-ZÄÖÜ]+', '_', new_file_name).lower() + file_ext
-            print(new_file_name)
 
             with open(self.upload_dir + new_file_name, "wb") as fp:
                 fp.write(profile_pic_obj["body"])
@@ -206,6 +209,7 @@ class UserHandler(BaseHandler):
     User management
     """
 
+    @log_access
     @auth_needed
     async def get(self, slug):
         """
@@ -232,7 +236,13 @@ class UserHandler(BaseHandler):
         """
 
         if slug == "user_data":
-            username = self.get_argument("username", "test_user1")
+            try:
+                username = self.get_argument("username")
+            except tornado.web.MissingArgumentError:
+                self.set_status(400)
+                self.write({"status": 400,
+                            "reason": "missing_key:username"})
+                return
 
             client = await get_socket_instance()
             user_result = await client.write({"type": "get_user",
@@ -240,8 +250,6 @@ class UserHandler(BaseHandler):
             user_result["user"]["profile_pic"] = "default_profile_pic.jpg"
             user_result["user"]["profile"] = {}
             profile = self.db.profiles.find_one({"user": username})
-            print("\n\n\n\n")
-            print(profile)
             if profile:
                 if "profile_pic" in profile:
                     user_result["user"]["profile_pic"] = profile["profile_pic"]
