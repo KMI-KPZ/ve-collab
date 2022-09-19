@@ -12,12 +12,14 @@ import tornado.web
 
 from dokuwiki_integration import Wiki
 import global_vars
+from logger_factory import get_logger
 from model import User
+
+logger = get_logger(__name__)
 
 def auth_needed(method: Callable[..., Optional[Awaitable[None]]]) -> Callable[..., Optional[Awaitable[None]]]:
     """
-    logging decorator
-    decorate your handlers http methods with @log_access, and the access and origin will be logged to the logfile
+    authentication decorator that checks if a valid session exists, otherwise redirects to platform for the login procedure
     """
 
     @functools.wraps(method)
@@ -25,6 +27,7 @@ def auth_needed(method: Callable[..., Optional[Awaitable[None]]]) -> Callable[..
         if not self.current_user:
             self.set_status(401)
             self.write({"status": 401, "reason": "no_logged_in_user"})
+            self.redirect(global_vars.routing_table["platform"] + "/login")
             return
         return method(self, *args, **kwargs)
     return wrapper
@@ -52,7 +55,9 @@ class BaseHandler(tornado.web.RequestHandler):
         if token is not None:
             token = json.loads(token)
         else:
-            self.redirect(global_vars.routing_table["platform"] + "/login")
+            self.current_user = None
+            self._access_token = None
+            return
 
         try:
             # try to refresh the token and fetch user info. this will fail if there is no valid session
@@ -64,7 +69,7 @@ class BaseHandler(tornado.web.RequestHandler):
                 self.current_user = User(userinfo["preferred_username"], userinfo["sub"], userinfo["email"])
                 self._access_token = token
         except KeycloakGetError as e:
-            print(e)
+            logger.info("Caught Exception: {} ".format(e))
             # something wrong with request
             # decode error message
             decoded = json.loads(e.response_body.decode())
@@ -72,13 +77,10 @@ class BaseHandler(tornado.web.RequestHandler):
             if decoded["error"] == "invalid_grant" and decoded["error_description"] == "Session not active":
                 self.current_user = None
                 self._access_token = None
-                self.redirect(global_vars.routing_table["platform"] + "/login")
         except KeycloakAuthenticationError as e:
-            print(e)
+            logger.info("Caught Exception: {} ".format(e))
             self.current_user = None
-            self.current_userinfo = None
             self._access_token = None
-            self.redirect(global_vars.routing_table["platform"] + "/login")
 
     def json_serialize_posts(self, query_result):
         # parse datetime objects into ISO 8601 strings for JSON serializability

@@ -5,6 +5,10 @@ from datetime import datetime
 import tornado.escape
 
 from handlers.base_handler import BaseHandler, auth_needed
+from logger_factory import get_logger, log_access
+
+
+logger = get_logger(__name__)
 
 
 class PostHandler(BaseHandler):
@@ -14,7 +18,8 @@ class PostHandler(BaseHandler):
 
     def get(self):
         pass
-
+    
+    @log_access
     @auth_needed
     def post(self):
         """
@@ -41,12 +46,10 @@ class PostHandler(BaseHandler):
             {"status": 401,
              "reason": "no_logged_in_user"}
         """
-        id = None
-        try:
-            id = self.get_body_argument("_id")
-        except:
-            print("Np # IDEA: ")
-        if id is None:
+        _id = self.get_body_argument("_id", None)
+
+        # no _id field means a new post is made
+        if _id is None:
             author = self.current_user.username
             creation_date = datetime.utcnow()
             text = self.get_body_argument("text")  # http_body['text']
@@ -96,16 +99,14 @@ class PostHandler(BaseHandler):
             self.set_status(200)
             self.write({'status': 200,
                         'success': True})
+        
+        # _id field present in request, therefore update the existing post
         else:
-            id = self.get_body_argument("_id");
             author = self.current_user.username
             text = self.get_body_argument("text")  # http_body['text']
 
-            query = {"_id": id}
-            post = { "$set": { "text": text } }
-
             self.db.posts.update_one(
-                {"_id": ObjectId(id)},
+                {"_id": ObjectId(_id)},
                 {"$set":
                     {
                         "text": text,
@@ -118,7 +119,7 @@ class PostHandler(BaseHandler):
             self.write({'status': 200,
                         'success': True})
 
-
+    @log_access
     @auth_needed
     def delete(self):
         """
@@ -164,6 +165,7 @@ class CommentHandler(BaseHandler):
     def get(self):
         pass
 
+    @log_access
     @auth_needed
     def post(self):
         """
@@ -214,6 +216,7 @@ class CommentHandler(BaseHandler):
         self.write({"status": 200,
                     "success": True})
 
+    @log_access
     @auth_needed
     def delete(self):
         """
@@ -260,6 +263,7 @@ class CommentHandler(BaseHandler):
 
 class LikePostHandler(BaseHandler):
 
+    @log_access
     @auth_needed
     def post(self):
         """
@@ -307,6 +311,7 @@ class LikePostHandler(BaseHandler):
         self.write({"status": 200,
                     "success": True})
 
+    @log_access
     @auth_needed
     def delete(self):
         """
@@ -353,6 +358,7 @@ class LikePostHandler(BaseHandler):
 
 class RepostHandler(BaseHandler):
 
+    @log_access
     @auth_needed
     def post(self):
         """
@@ -378,12 +384,10 @@ class RepostHandler(BaseHandler):
                  "reason": "no_logged_in_user"}
         """
 
-        id = None
-        try:
-            id = self.get_body_argument("_id")
-        except:
-            print("Np # IDEA: ")
-        if id is None:
+        _id = self.get_body_argument("_id", None)
+
+        # no _id field in the request means a new repost is made (not to confuse with post_id, which is the _id of the original post that is being reposted here)
+        if _id is None:
             http_body = tornado.escape.json_decode(self.request.body)
 
             if "post_id" not in http_body:
@@ -432,7 +436,6 @@ class RepostHandler(BaseHandler):
             if "tags" in post:
                 post["tags"] = ""
 
-            print(post)
             self.db.posts.insert_one(post)
 
             self.set_status(200)
@@ -440,15 +443,11 @@ class RepostHandler(BaseHandler):
                         "success": True})
 
         else:
-            id = self.get_body_argument("_id")
             #author = self.current_user.username
             text = self.get_body_argument("repostText")  # http_body['text']
 
-            query = {"_id": id}
-            post = { "$set": { "repostText": text } }
-
             self.db.posts.update_one(
-                {"_id": ObjectId(id)},
+                {"_id": ObjectId(_id)},
                 {"$set":
                     {
                         "repostText": text,
@@ -477,6 +476,7 @@ class PinHandler(BaseHandler):
         else:
             raise ValueError("Space doesnt exist")
 
+    @log_access
     @auth_needed
     def post(self):
         """
@@ -612,7 +612,7 @@ class PinHandler(BaseHandler):
                         'reason': "invalid_pin_type_in_http_body"})
             return
 
-
+    @log_access
     @auth_needed
     def delete(self):
         """

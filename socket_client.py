@@ -11,9 +11,11 @@ from tornado.ioloop import PeriodicCallback
 from tornado.websocket import websocket_connect
 
 import global_vars
+from logger_factory import get_logger
 import signing
 
 
+logger = get_logger(__name__)
 the_websocket_client = None
 
 
@@ -42,13 +44,13 @@ class Client(object):
     async def connect(self):
         # poll the platform for connections, until it succeeds, then break from the connection step and go into the run phase, where messages will be accepted
         while True:
-            print("trying to connect to platform")
+            logger.info("trying to connect to platform")
             try:
                 self.ws = await websocket_connect(self.url)
-                print("connected to platform")
+                logger.info("connected to platform")
                 break
             except ConnectionRefusedError:
-                print(
+                logger.info(
                     "Platform not yet ready to accept connections, retrying in 3 seconds")
                 sleep(3)
                 continue
@@ -59,7 +61,7 @@ class Client(object):
         while True:
             msg = yield self.ws.read_message()
             if msg is None:  # could also use a "cancel message"
-                print("connection closed")
+                logger.info("connection closed")
                 self.ws = None
                 break
             else:
@@ -67,8 +69,7 @@ class Client(object):
 
     def on_message(self, msg):
         json_message = tornado.escape.json_decode(msg)
-        print("lionet received message: ")
-        print(json_message)
+        logger.info("lionet received message: \n {}".format(json_message))
 
         if "type" in json_message:
             if json_message["type"] == "signature_verification_error":
@@ -108,7 +109,7 @@ class Client(object):
 
     async def keep_alive(self):
         if self.ws is None:
-            print("reconnecting")
+            logger.info("Connection to platform lost, initiating reconnection")
             await self.connect()
             self.write({"type": "module_start",
                         "module_name": "lionet",

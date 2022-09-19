@@ -8,6 +8,7 @@ import tornado.web
 
 from acl import get_acl
 from handlers.base_handler import BaseHandler, auth_needed
+from logger_factory import log_access
 
 
 class SpaceHandler(BaseHandler):
@@ -15,6 +16,7 @@ class SpaceHandler(BaseHandler):
     handle existing and creation of new spaces
     """
 
+    @log_access
     @auth_needed
     def get(self, slug):
         """
@@ -131,8 +133,6 @@ class SpaceHandler(BaseHandler):
             try:
                 space_name = self.get_argument("name")
             except tornado.web.MissingArgumentError as e:
-                print(e)
-
                 self.set_status(400)
                 self.write({"status": 400,
                             "reason": "missing_key:name"})
@@ -145,8 +145,6 @@ class SpaceHandler(BaseHandler):
             try:
                 space_name = self.get_argument("name")
             except:
-                print(e)
-
                 self.set_status(400)
                 self.write({"status": 400,
                             "reason": "missing_key:name"})
@@ -158,6 +156,7 @@ class SpaceHandler(BaseHandler):
         else:
             self.set_status(404)
 
+    @log_access
     @auth_needed
     def post(self, slug):
         """
@@ -450,8 +449,6 @@ class SpaceHandler(BaseHandler):
         try:
             space_name = self.get_argument("name")
         except tornado.web.MissingArgumentError as e:
-            print(e)
-
             self.set_status(400)
             self.write({"status": 400,
                         "reason": "missing_key:name"})
@@ -475,7 +472,6 @@ class SpaceHandler(BaseHandler):
             try:
                 username = self.get_argument("user")
             except tornado.web.MissingArgumentError as e:
-                print(e)
                 self.set_status(400)
                 self.write({"status": 400,
                             "reason": "missing_key:user"})
@@ -494,7 +490,6 @@ class SpaceHandler(BaseHandler):
             try:
                 username = self.get_argument("user")
             except tornado.web.MissingArgumentError as e:
-                print(e)
                 self.set_status(400)
                 self.write({"status": 400,
                             "reason": "missing_key:user"})
@@ -515,7 +510,6 @@ class SpaceHandler(BaseHandler):
             try:
                 username = self.get_argument("user")
             except tornado.web.MissingArgumentError as e:
-                print(e)
                 self.set_status(400)
                 self.write({"status": 400,
                             "reason": "missing_key:user"})
@@ -528,7 +522,6 @@ class SpaceHandler(BaseHandler):
             try:
                 username = self.get_argument("user")
             except tornado.web.MissingArgumentError as e:
-                print(e)
                 self.set_status(400)
                 self.write({"status": 400,
                             "reason": "missing_key:user"})
@@ -544,6 +537,7 @@ class SpaceHandler(BaseHandler):
         else:
             self.set_status(404)
 
+    @log_access
     @auth_needed
     def delete(self, slug):
         """
@@ -657,11 +651,10 @@ class SpaceHandler(BaseHandler):
                 {"status": 403,
                  "reason": "insufficient_permission}
         """
+
         try:
             space_name = self.get_argument("name")
         except tornado.web.MissingArgumentError as e:
-            print(e)
-
             self.set_status(400)
             self.write({"status": 400,
                         "reason": "missing_key:name"})
@@ -682,8 +675,6 @@ class SpaceHandler(BaseHandler):
             try:
                 user_name = self.get_argument("user")
             except tornado.web.MissingArgumentError as e:
-                print(e)
-
                 self.set_status(400)
                 self.write({"status": 400,
                             "reason": "missing_key:user"})
@@ -696,7 +687,6 @@ class SpaceHandler(BaseHandler):
             try:
                 username = self.get_argument("user")
             except tornado.web.MissingArgumentError as e:
-                print(e)
                 self.set_status(400)
                 self.write({"status": 400,
                             "reason": "missing_key:user"})
@@ -981,7 +971,6 @@ class SpaceHandler(BaseHandler):
 
         new_file_name = None
         if "space_pic" in self.request.files:
-            print("in file handling")
             space_pic_obj = self.request.files["space_pic"][0]
 
             # save file
@@ -989,7 +978,6 @@ class SpaceHandler(BaseHandler):
             new_file_name = b64encode(os.urandom(32)).decode("utf-8")
             new_file_name = re.sub(
                 '[^0-9a-zäöüßA-ZÄÖÜ]+', '_', new_file_name).lower() + file_ext
-            print(new_file_name)
 
             with open(self.upload_dir + new_file_name, "wb") as fp:
                 fp.write(space_pic_obj["body"])
