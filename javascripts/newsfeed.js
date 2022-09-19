@@ -843,7 +843,7 @@ function post(text, tags, space) {
 
   formData.append("file_amount", fileList.length);
   formData.append("text", text);
-  formData.append("tags", hashtags);
+  formData.append("tags", JSON.stringify(hashtags));
   if(space != null){
     formData.append("space", space);
   }
