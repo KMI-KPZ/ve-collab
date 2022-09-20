@@ -113,7 +113,8 @@ def init_text_indexes(force_rebuild: bool) -> None:
         except pymongo.errors.OperationFailure:
             pass
         db.posts.create_index([("text", pymongo.TEXT),
-                               ("tags", pymongo.TEXT)],
+                               ("tags", pymongo.TEXT),
+                               ("files", pymongo.TEXT)],
                                name="posts")
         logger.info("Built text index named {} on collection {}".format("posts", "posts"))
 
