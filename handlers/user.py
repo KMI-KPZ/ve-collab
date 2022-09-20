@@ -271,6 +271,13 @@ class UserHandler(BaseHandler):
             followers_result = self.db.follows.find_one({"user": username})
             user_result["user"]["follows"] = followers_result["follows"] if followers_result else []
 
+            # also add all names of people that follow the user
+            followers_result = self.db.follows.find({"follows": username})
+            followers = []
+            for follower in followers_result:
+                followers.append(follower["user"])
+            user_result["user"]["followers"] = followers
+
 
             self.set_status(200)
             self.write(user_result["user"])
@@ -288,8 +295,15 @@ class UserHandler(BaseHandler):
                         user_list["users"][user]["profile_pic"] = profile["profile_pic"]
                 
                 # add all names of people that the user follows
-                followers_result = self.db.follows.find_one({"user": user})
-                user_list["users"][user]["follows"] = followers_result["follows"] if followers_result else []
+                follows_result = self.db.follows.find_one({"user": user})
+                user_list["users"][user]["follows"] = follows_result["follows"] if follows_result else []
+
+                # also add all names of people that follow the user
+                followers_result = self.db.follows.find({"follows": user})
+                followers = []
+                for follower in followers_result:
+                    followers.append(follower["user"])
+                user_list["users"][user]["followers"] = followers
 
                 # override role of the platform by the own role of lionet, because lionet does its own role management
                 # only admins will not be overridden --> admin always stays admin
