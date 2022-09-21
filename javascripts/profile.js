@@ -17,9 +17,33 @@ $(document).ready(function () {
  */
 function updateProfileContainer(){
   user["isFollowed"] = (currentUser.follows.includes(name)) ? true : false;
-  if(!document.body.contains(document.getElementById('profilePanel'))){
-    $('#profileContainer').prepend(Mustache.render(profileTemplate, user));
-    $('#updateProfileButton').remove();
+  var follows_list = []
+  var follower_list = []
+  var timeout = setInterval(function() {
+    if(users != undefined) {
+      $.each(user["follows"], function(entry) {   
+        var pic_url = baseUrl + '/uploads/' + users[user["follows"][entry]]["profile_pic"]
+        follows_list.push({
+          user_name: user["follows"][entry], user_picture: pic_url
+        })
+        clearInterval(timeout); 
+      })
+      $.each(user["followers"], function(entry) {   
+        var pic_url = baseUrl + '/uploads/' + users[user["followers"][entry]]["profile_pic"]
+        follower_list.push({
+          user_name: user["followers"][entry], user_picture: pic_url
+        })
+        clearInterval(timeout); 
+      })
+    }
+  }, 100)
+  user['follows_list'] = follows_list
+  user['follower_list'] = follower_list
+  if(!document.body.contains(document.getElementById('profilePanel'))){ 
+    setTimeout(function(){
+      $('#profileContainer').empty()
+      $('#profileContainer').prepend(Mustache.render(profileTemplate, user)); }
+      , 1000);
   } else {
     Mustache.parse(profileTemplate);
     var render = Mustache.to_html(template, user);

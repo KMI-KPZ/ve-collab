@@ -71,6 +71,13 @@ class ProfileInformationHandler(BaseHandler):
         for user in follows_cursor:
             follows = user["follows"]
 
+        # grab users that follow current_user
+        follower_cursor = self.db.follows.find({"follows": username})
+        followers = []
+        for user in follower_cursor:
+            print(user)
+            followers.append(user["user"]) 
+
         profile_cursor = self.db.profiles.find(
             filter={"user": username}
         )
@@ -93,6 +100,7 @@ class ProfileInformationHandler(BaseHandler):
         user_information = {key: user_result["user"][key] for key in user_result["user"]}
         user_information["spaces"] = spaces
         user_information["follows"] = follows
+        user_information["followers"] = followers
         user_information["profile"] = profile
 
         self.set_status(200)
