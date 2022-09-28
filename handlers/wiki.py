@@ -4,9 +4,11 @@ import tornado.web
 
 import global_vars
 from handlers.base_handler import BaseHandler, auth_needed
+from logger_factory import log_access
 
 class WikiPageNamesHandler(BaseHandler):
 
+    @log_access
     @auth_needed
     def get(self):
         """
@@ -40,6 +42,7 @@ class WikiPageNamesHandler(BaseHandler):
 
 class WikiPageHandler(BaseHandler):
 
+    @log_access
     @auth_needed
     def get(self):
         """
@@ -67,11 +70,9 @@ class WikiPageHandler(BaseHandler):
         try:
             page_name = self.get_argument("page")
         except tornado.web.MissingArgumentError as e:
-            print(e)
-
             self.set_status(400)
             self.write({"status": 400,
-                        "reason": "missing_key"})
+                        "reason": "missing_key:page"})
             return
 
         #request page from dokuwiki (wrapper)

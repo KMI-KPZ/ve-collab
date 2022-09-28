@@ -25,12 +25,35 @@ function updateProfileContainer(){
   currentUser['followSize'] = currentUser['follows'].length;
   currentUser['spaceSize'] = currentUser['spaces'].length;
   currentUser["profile_pic_URL"] = baseUrl + '/uploads/' + currentUser["profile"]["profile_pic"];
+  currentUser['profile_owner'] = true;
   if(currentUser.hasOwnProperty('projects')) currentUser['projectSize'] = currentUser['projects'].length;
+  var follows_list = []
+  var follower_list = []
+  var timeout = setInterval(function() {
+    if(users != undefined) {
+      $.each(currentUser["follows"], function(user) {       
+        var pic_url = baseUrl + '/uploads/' + users[currentUser["follows"][user]]["profile_pic"]
+        follows_list.push({
+          user_name: currentUser["follows"][user], user_picture: pic_url
+        })
+        clearInterval(timeout); 
+      })
+      $.each(currentUser["followers"], function(user) {       
+        var pic_url = baseUrl + '/uploads/' + users[currentUser["followers"][user]]["profile_pic"]
+        follower_list.push({
+          user_name: currentUser["followers"][user], user_picture: pic_url
+        })
+        clearInterval(timeout); 
+      })
+    }
+  }, 100)
+  currentUser['follows_list'] = follows_list
+  currentUser['follower_list'] = follower_list
   if(!document.body.contains(document.getElementById('profilePanel'))){
     setTimeout(function(){
       $('#profileContainer').empty()
-       $('#profileContainer').prepend(Mustache.render(profileTemplate, currentUser)); }
-       , 1000);
+      $('#profileContainer').prepend(Mustache.render(profileTemplate, currentUser)); }
+      , 1000);
   } else {
     Mustache.parse(profileTemplate);
     var render = Mustache.to_html(profileTemplate, currentUser);

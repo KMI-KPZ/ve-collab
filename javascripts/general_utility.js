@@ -91,6 +91,99 @@ function searchPopulation(users, spaces) {
   })
 }
 
+function jumpto(jump_id) {
+  var $postContainer = $('#'+jump_id);
+  $([document.documentElement, document.body]).animate({
+      scrollTop: $('#'+jump_id).offset().top
+  }, 1000);
+  //alert(jump_id)
+}
+
+function search(query) {
+  $.ajax({
+    type: 'GET',
+    url: '/search?query=' + query,
+    dataType: 'json',
+    success: function (data) {
+        $('#result').html('');
+        
+        posts = data["posts"]
+        tags = data["tags"]
+        users = data["users"]
+        
+        $('#result').append("<div class='p-2 font-bold'>Posts</div>")
+        if(posts.length == 0) {
+          $('#result').find("div").last().append('<li class="link-class p-2">Kein Post mit diesem Inhalt gefunden!</li>')
+        } else {
+          $.each(posts, function(entry) {
+            $('#result').find("div").last().append(`
+              <li class="link-class p-2 grid grid-cols-10" onclick="jumpto('${posts[entry]._id}')">        
+                <img src="http://localhost:8903/uploads/default_group_pic.jpg" class="shadow rounded-full h-10 align-middle border-none avatar"></img>
+                <p class="col-span-9">${posts[entry].text}</p> 
+              </li>
+            `);
+          })
+        }
+
+        $('#result').append("<div class='p-2 font-bold'>Tags</div>")
+        if(tags.length == 0) {
+          $('#result').find("div").last().append('<li class="link-class p-2">Keine Post mit diesem Tag gefunden!</li>')
+        } else {
+          $.each(tags, function(entry) {
+            $('#result').find("div").last().append(`
+              <li class="link-class p-2 grid grid-cols-10" onclick="jumpto('${tags[entry]._id}')">        
+                <img src="http://localhost:8903/uploads/default_group_pic.jpg" class="shadow rounded-full h-10 align-middle border-none avatar"></img>
+                <p class="col-span-9">${tags[entry].text}</p> 
+              </li>
+            `);
+          })
+        }
+
+        $('#result').append("<div class='p-2 font-bold'>User</div>")
+        if(users.length == 0) {
+          $('#result').find("div").last().append('<li class="link-class p-2">Keine User gefunden!</li>')
+        } else {
+          $.each(users, function(entry) {
+            $('#result').find("div").last().append(`
+              <li class="link-class p-2">
+                <a class="grid grid-cols-10" href="http://localhost:8903/profile/${users[entry].user}">        
+                  <img src="http://localhost:8903/uploads/${users[entry].profile_pic}" class="shadow rounded-full h-10 align-middle border-none avatar"></img>
+                  <p class="col-span-9">${users[entry].user}</p> 
+                </a>
+              </li>
+            `);
+          })
+        }
+    },
+
+    error: function (xhr, status, error) {
+        if (xhr.status == 401) {
+            window.location.href = routingTable.platform;
+        } else if (xhr.status === 403) {
+            window.createNotification({
+                theme: 'error',
+                showDuration: 5000
+            })({
+                title: 'Error!',
+                message: 'Insufficient Permission'
+            });
+        } else {
+            window.createNotification({
+                theme: 'error',
+                showDuration: 5000
+            })({
+                title: 'Server error!',
+                message: 'Request all user information'
+            });
+        }
+    },
+});
+}
+$("#search").on('change keydown paste input', function(){
+  var query = $('#search').val()
+  search(query)
+});
+
 /**
  * triggers when searchresult is clicked - get his username and redirect to his profile
  */

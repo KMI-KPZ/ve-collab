@@ -3,6 +3,7 @@ import dateutil.parser
 
 from acl import get_acl
 from handlers.base_handler import BaseHandler, auth_needed
+from logger_factory import log_access
 import util
 
 class TimelineHandler(BaseHandler):
@@ -10,7 +11,8 @@ class TimelineHandler(BaseHandler):
     Timeline of all posts (all users and all spaces)
     no use case in production, maybe use case for moderators?
     """
-
+    @log_access
+    @auth_needed
     async def get(self):
         """
         GET /timeline
@@ -69,6 +71,7 @@ class SpaceTimelineHandler(BaseHandler):
     Timeline of a certain space
     """
 
+    @log_access
     @auth_needed
     def get(self, space_name):
         """
@@ -142,7 +145,6 @@ class SpaceTimelineHandler(BaseHandler):
                             comment["author"]["username"] = comment_author_name
 
                 self.set_status(200)
-                print(posts)
                 self.write({"posts": posts})
 
             else:
@@ -156,6 +158,7 @@ class UserTimelineHandler(BaseHandler):
     Timeline of a user (e.g. for his profile)
     """
 
+    @log_access
     @auth_needed
     def get(self, author):
         """
@@ -217,6 +220,7 @@ class PersonalTimelineHandler(BaseHandler):
     i.e. your posts, posts of users you follow, posts in spaces you are in
     """
 
+    @log_access
     @auth_needed
     def get(self):
         """
@@ -300,6 +304,7 @@ class NewPostsSinceTimestampHandler(BaseHandler):
     check for new posts
     """
 
+    @log_access
     @auth_needed
     def get(self):
         """
