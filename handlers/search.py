@@ -44,9 +44,9 @@ class SearchHandler(BaseHandler):
                         "reason": "missing_key:query"})
             return
 
-        search_posts = self.get_argument("posts", "false")
-        search_tags = self.get_argument("tags", "false")
-        search_users = self.get_argument("users", "false")
+        search_posts = self.get_argument("posts", "true")
+        search_tags = self.get_argument("tags", "true")
+        search_users = self.get_argument("users", "true")
 
         # ensure type safety: only "true" will be True, everything else will evaluate to False
         search_posts = (search_posts == "true")
