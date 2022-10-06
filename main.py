@@ -151,6 +151,22 @@ async def main():
                                                password=conf["keycloak_admin_password"], verify=True, auto_refresh_token=['get', 'put', 'post', 'delete'])
     global_vars.keycloak_callback_url = conf["keycloak_callback_url"]
 
+    # insert default role and acl templates if db is empty
+    acl = get_acl().global_acl
+    existing_roles = acl.db.roles.find_one({})
+    if not existing_roles:
+        with open("DummyData/role_templates.json", "r") as fp:
+            role_templates = json.load(fp)
+        for role in role_templates["roles"]:
+            acl.db.roles.insert_one(
+                {"username": role["username"], "role": role["role"]})
+
+    if not acl.get_all():
+        with open("DummyData/acl_templates.json", "r") as fp:
+            acl_templates = json.load(fp)
+        for entry in acl_templates["global_acl"]:
+            acl.set_all(entry)
+
     # build and start server
     cookie_secret = conf["cookie_secret"]
     app = make_app(cookie_secret)

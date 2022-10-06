@@ -4,7 +4,6 @@ $(document).ready(function () {
   setTimeout(function(){
     name = currURL.substring(currURL.lastIndexOf('/') + 1);
     document.title = name + ' - Lionet';
-    getRouting();
     getUserInfo(name);
     getFollows(name);
     updateProfileContainer();

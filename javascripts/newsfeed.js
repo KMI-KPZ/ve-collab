@@ -124,7 +124,6 @@ function initNewsFeed() {
  */
 $(document).ready(function () {
   // misc functions for routing, users, etc.
-  //getRouting();
   getCurrentUserInfo();
   getUserRole();
   getAllUsers();

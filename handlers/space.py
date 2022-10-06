@@ -868,10 +868,6 @@ class SpaceHandler(BaseHandler):
             if role != "admin":
                 acl.insert_default(role, space_name)
 
-        # automatically create a new start page in the wiki for the space
-        if not options.no_wiki:
-            #self.wiki.create_page(space_name + ":start", "auto-generated landing page")
-            pass
         self.set_status(200)
         self.write({"status": 200,
                     "success": True})

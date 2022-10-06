@@ -31,7 +31,6 @@ var spacename;
 var currentUser = {};
 
 $(document).ready(function () {
-  getRouting();
   getCurrentUserInfo();
   getUserRole();
   getAllUsers();
