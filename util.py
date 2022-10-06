@@ -1,12 +1,9 @@
-from socket_client import get_socket_instance
+from unittest import mock
+import mock_platform
 
 
 async def request_role(username):
-    client = await get_socket_instance()
-    result = await client.write({"type": "check_permission",
-                                 "username": username})
-
-    return result["role"]
+    return mock_platform.check_permission(username)
 
 
 async def is_admin(username):

@@ -5,8 +5,8 @@ import tornado.web
 from acl import get_acl
 from handlers.base_handler import BaseHandler, auth_needed
 from logger_factory import get_logger, log_access
+import mock_platform
 import util
-from socket_client import get_socket_instance
 
 
 logger = get_logger(__name__)
@@ -56,8 +56,7 @@ class RoleHandler(BaseHandler):
         elif slug == "all":
             if await util.is_admin(self.current_user.username):
                 ret_list = []
-                client = await get_socket_instance()
-                user_list = await client.write({"type": "get_user_list"})
+                user_list = mock_platform.get_user_list()
                 existin_users_and_roles = self.db.roles.find(projection={"_id": False})
                 existing_users_and_roles = [item for item in existin_users_and_roles]
 

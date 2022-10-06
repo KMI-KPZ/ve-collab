@@ -10,7 +10,6 @@ from pymongo import MongoClient
 from tornado.options import options
 import tornado.web
 
-from dokuwiki_integration import Wiki
 import global_vars
 from logger_factory import get_logger
 from model import User
@@ -27,7 +26,7 @@ def auth_needed(method: Callable[..., Optional[Awaitable[None]]]) -> Callable[..
         if not self.current_user:
             self.set_status(401)
             self.write({"status": 401, "reason": "no_logged_in_user"})
-            self.redirect(global_vars.routing_table["platform"] + "/login")
+            self.redirect("/login")
             return
         return method(self, *args, **kwargs)
     return wrapper
@@ -44,11 +43,6 @@ class BaseHandler(tornado.web.RequestHandler):
             os.mkdir(self.upload_dir)
         if not os.path.isfile(self.upload_dir + "default_profile_pic.jpg"):
             shutil.copy2("assets/default_profile_pic.jpg", self.upload_dir)
-
-        if options.no_wiki:
-            self.wiki = None
-        else:
-            self.wiki = Wiki(global_vars.wiki_url, global_vars.wiki_username, global_vars.wiki_password)
 
     async def prepare(self):
         token = self.get_secure_cookie("access_token")
