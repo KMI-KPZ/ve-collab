@@ -6,7 +6,7 @@ import tornado.web
 
 from handlers.base_handler import BaseHandler, auth_needed
 from logger_factory import log_access
-from socket_client import get_socket_instance
+import mock_platform
 
 
 class ProfileInformationHandler(BaseHandler):
@@ -51,9 +51,7 @@ class ProfileInformationHandler(BaseHandler):
             username = self.current_user.username
 
         # get account information from platform
-        client = await get_socket_instance()
-        user_result = await client.write({"type": "get_user",
-                                          "username": username})
+        user_result = mock_platform.get_user(username)
 
         # grab spaces
         spaces_cursor = self.db.spaces.find(
@@ -252,9 +250,8 @@ class UserHandler(BaseHandler):
                             "reason": "missing_key:username"})
                 return
 
-            client = await get_socket_instance()
-            user_result = await client.write({"type": "get_user",
-                                              "username": username})
+            user_result = mock_platform.get_user(username)
+
             user_result["user"]["profile_pic"] = "default_profile_pic.jpg"
             user_result["user"]["profile"] = {}
             profile = self.db.profiles.find_one({"user": username})
@@ -291,8 +288,7 @@ class UserHandler(BaseHandler):
             self.write(user_result["user"])
 
         elif slug == "list":
-            client = await get_socket_instance()
-            user_list = await client.write({"type": "get_user_list"})
+            user_list = mock_platform.get_user_list()
 
             for user in user_list["users"]:
                 # add profile and optionally profile picture
