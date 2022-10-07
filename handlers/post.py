@@ -31,7 +31,8 @@ class PostHandler(BaseHandler):
                 "_id": "id",
                 "text": "text_of_post",
                 "tags": ["tag1", "tag2"],
-                "space": "optional, post this post into a space, not directly into your profile"
+                "space": "optional, post this post into a space, not directly into your profile",
+                "wordpress_post_id": "optional, id of associated wordpress post"
             }
         return:
             200 OK,
@@ -53,6 +54,7 @@ class PostHandler(BaseHandler):
             author = self.current_user.username
             creation_date = datetime.utcnow()
             text = self.get_body_argument("text")  # http_body['text']
+            wordpress_post_id = self.get_body_argument("wordpress_post_id", None)
             tags = self.get_body_argument("tags")  # http_body['tags']
             # convert tags to list, because formdata will send it as a string
             try:
@@ -91,6 +93,7 @@ class PostHandler(BaseHandler):
                     "text": text,
                     "space": space,
                     "pinned": False,
+                    "wordpress_post_id": wordpress_post_id,
                     "tags": tags,
                     "files": files}
 

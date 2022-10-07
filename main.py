@@ -25,6 +25,7 @@ from handlers.search import SearchHandler
 from handlers.space import SpaceHandler
 from handlers.timeline import *
 from handlers.user import *
+from handlers.wordpress import WordpressCollectionHandler, WordpressPostHandler
 from logger_factory import get_logger
 
 logger = get_logger(__name__)
@@ -68,6 +69,8 @@ def make_app(cookie_secret):
         (r"/space_acl/([a-zA-Z\-0-9\.:,_%]+)", SpaceACLHandler),
         (r"/search", SearchHandler),
         (r"/template", TemplateHandler),
+        (r"/wordpress/posts", WordpressCollectionHandler),
+        (r"/wordpress/posts/([0-9]+)", WordpressPostHandler),
         (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
         (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./html/"}),
         (r"/javascripts/(.*)", tornado.web.StaticFileHandler,

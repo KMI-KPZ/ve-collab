@@ -5,7 +5,7 @@ import shutil
 from typing import Awaitable, Callable, Optional
 
 from keycloak import KeycloakGetError
-from keycloak.exceptions import KeycloakAuthenticationError
+from keycloak.exceptions import KeycloakError
 from pymongo import MongoClient
 from tornado.options import options
 import tornado.web
@@ -71,7 +71,7 @@ class BaseHandler(tornado.web.RequestHandler):
             if decoded["error"] == "invalid_grant" and decoded["error_description"] == "Session not active":
                 self.current_user = None
                 self._access_token = None
-        except KeycloakAuthenticationError as e:
+        except KeycloakError as e:
             logger.info("Caught Exception: {} ".format(e))
             self.current_user = None
             self._access_token = None
