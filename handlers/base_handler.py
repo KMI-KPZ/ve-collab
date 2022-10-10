@@ -5,7 +5,7 @@ import shutil
 from typing import Awaitable, Callable, Optional
 
 from keycloak import KeycloakGetError
-from keycloak.exceptions import KeycloakAuthenticationError
+from keycloak.exceptions import KeycloakError
 from pymongo import MongoClient
 from tornado.options import options
 import tornado.web
@@ -19,7 +19,8 @@ logger = get_logger(__name__)
 
 def auth_needed(method: Callable[..., Optional[Awaitable[None]]]) -> Callable[..., Optional[Awaitable[None]]]:
     """
-    authentication decorator that checks if a valid session exists, otherwise redirects to platform for the login procedure
+    authentication decorator that checks if a valid session exists (by checking that self.current_user has been set from the Basehandler's prepare()-function ), 
+    otherwise redirects to platform for the login procedure
     """
 
     @functools.wraps(method)
@@ -51,10 +52,12 @@ class BaseHandler(tornado.web.RequestHandler):
             self.wiki = Wiki(global_vars.wiki_url, global_vars.wiki_username, global_vars.wiki_password)
 
     async def prepare(self):
+        # load the stored access token from the cookie
         token = self.get_secure_cookie("access_token")
         if token is not None:
             token = json.loads(token)
         else:
+            # if there is no cookie at all, we can't authenticate, set no active user
             self.current_user = None
             self._access_token = None
             return
@@ -73,11 +76,12 @@ class BaseHandler(tornado.web.RequestHandler):
             # something wrong with request
             # decode error message
             decoded = json.loads(e.response_body.decode())
-            # no active session means user is not logged in --> redirect him straight to login
+            # no active session means user is not logged in --> set no active user
             if decoded["error"] == "invalid_grant" and decoded["error_description"] == "Session not active":
                 self.current_user = None
                 self._access_token = None
-        except KeycloakAuthenticationError as e:
+        except KeycloakError as e:
+            # some other error happened, but anyway, thats still no successfull authentication
             logger.info("Caught Exception: {} ".format(e))
             self.current_user = None
             self._access_token = None
