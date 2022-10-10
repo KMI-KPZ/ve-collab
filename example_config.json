@@ -2,11 +2,14 @@
   "port": 8903,
   "platform_host": "localhost",
   "platform_port": 8888,
-  "cookie_secret": "<tornado_cookie_secret>",
+  "cookie_secret": "<tornado_cookie_secret_same_as_platform>",
   "keycloak_base_url": "<keycloak_host_url_including_/auth/>",
   "keycloak_realm": "<keycloak_realm>",
   "keycloak_client_id": "<keycloak_client_id>",
   "keycloak_client_secret": "<keycloak_client_secret>",
+  "routing_table": {
+    "platform": "http://localhost:8888"
+  },
   "mongodb_host": "localhost",
   "mongodb_port": 27017,
   "mongodb_username": "<mongo_username>",
@@ -14,8 +17,5 @@
   "mongodb_db_name": "lionet",
   "wiki_url": "<absolute_url>",
   "wiki_username": "<wiki_username>",
-  "wiki_password": "<wiki_password>",
-  "routing_table": {
-    "platform": "http://localhost:8888"
-  }
+  "wiki_password": "<wiki_password>"
 }
