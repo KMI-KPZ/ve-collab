@@ -416,14 +416,14 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                 <div class="inline-block align-top">
                   <div>
                     <button type="button" onclick="likeDislike(this,'{{!_id}}');" id="likers"
-                            class="bg-transparent hover:bg-blue-500 bg-white h-8 text-gray-700 font-semibold hover:text-white py-1 px-2 border border-gray-500 hover:border-transparent rounded" data-toggle="tooltip" data-placement="right" data-html="true"
+                            class="bg-transparent hover:bg-blue-300 bg-blue-lionet h-7 text-white font-semibold text-xs hover:text-white py-1 px-2 border border-blue-lionet hover:border-transparent rounded" data-toggle="tooltip" data-placement="right" data-html="true"
                             data-original-title="{{!#likers}}<li>{{!.}}</li>{{!/likers}}">
-                        <i id="likeIcon" class="fa fa-thumbs-up text-blue-700"></i> <span id="likeCounter">{{!likes}}</span>
+                        <i id="likeIcon" class="fa fa-thumbs-up text-white text-sm"></i> <span id="likeCounter">{{!likes}}</span>
                     </button>
 
                     <div x-data="{'showModal': false}" @keydown.escape="showModal:false" class="inline-block">
-                      <button id="shareBtn" class="bg-transparent hover:bg-blue-500 bg-white h-8 text-gray-700 font-semibold hover:text-white py-1 px-2 border border-gray-500 hover:border-transparent rounded" type="button" @click="showModal = true">
-                        <i id="shareIcon" class="fa fa-share"></i>
+                      <button id="shareBtn" class="bg-transparent bg-blue-lionet hover:bg-blue-300 bg-white h-7 text-xs text-white font-semibold hover:text-white py-1 px-2 border border-blue-lionet hover:border-transparent rounded" type="button" @click="showModal = true">
+                        <i id="shareIcon" class="fa fa-share text-white text-sm"></i>
                       </button>
 
                       <!-- Modal -->

@@ -1264,8 +1264,10 @@ function likeDislike(e, id) {
   var likeIcon = e.firstElementChild;
   if(likeIcon.classList.contains("text-green-700")) {
     deleteLike(id);
+    likeIcon.classList.remove("text-green-700")
   } else {
     postLike(id);
+    likeIcon.classList.add("text-green-700")
   }
 }
 
