@@ -4,8 +4,8 @@ This is a simple implementation of a social network. It provides all standard fu
 
 ## Prerequisites:
 
-- Install [MongoDB](https://docs.mongodb.com/manual/installation/) for your OS on default port
-- Install & set up a [DokuWiki](https://www.dokuwiki.org/install#distribution_os_specifics) in order to use the integrated Wiki
+- Install [MongoDB](https://docs.mongodb.com/manual/installation/) for your OS and enable Authentication
+- Install & set up a [DokuWiki](https://www.dokuwiki.org/install#distribution_os_specifics) in order to use the integrated Wiki (optional)
 
 - This project is not supposed to be standalone, but rather used in our [platform application](https://github.com/Smunfr/sse-platform). Therefore you first need to install this platform. Follow the instructions in the repository.
 
@@ -20,7 +20,8 @@ This is a simple implementation of a social network. It provides all standard fu
 ## Running the social network
 
 - fire up the platform application (please refer to the guide in the repo)
-- check the port you started the platform on. If it is not 8888, change the values of ```PLATFORM_PORT``` and ```ROUTING_TABLE``` in CONSTANTS.py to your port
+- copy the ```example_config.json``` into ```config.json``` and fill in the values according to your Keycloak, MongoDB and Dokuwiki settings and setups
+- check the host and port you started the platform on. If it is not 8888 on localhost, change the values of ```platform_host```, ```platform_port``` and ```routing_table``` in your ```config.json``` accordingly.
 - run
   ```sh
   $ python signing.py
@@ -31,13 +32,14 @@ This is a simple implementation of a social network. It provides all standard fu
   $ python3 main.py
   ```
   - you have the option to start without the integration of DokuWiki (e.g. if you don't have it installed and/or don't plan to use it). Use the ```--no_wiki``` flag in this case
-
- Login to Platform | User View
- :------------------------------------:|:-------------------------:
- ![login](Features/platform/login.png) | ![Admin Platform](Features/platform/user.png)
+  - if you desire to store your config file anywhere else than in the main directory, you can use the ```--config path/to/config/file``` flag
 
 
 ## Features
+```diff
+- Disclaimer: pictures are highly out of date, updates of screenshots required
+```
+
 The pictures below show examples for the current visualization state of the features.
 ### Newsfeed, Streaming and Timelines
 
