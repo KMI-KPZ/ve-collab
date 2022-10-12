@@ -6,6 +6,7 @@ keycloak_admin = KeycloakAdmin
 keycloak_callback_url: str = ""
 domain: str = ""
 port: int = 0
+cookie_secret: str = ""
 mongodb_host: str = ""
 mongodb_port: int = 0
 mongodb_username: str = ""

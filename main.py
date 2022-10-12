@@ -32,6 +32,8 @@ logger = get_logger(__name__)
 
 define("config", default="config.json", type=str,
        help="path to config file, defaults to config.json")
+define("test", default=False, type=bool,
+       help="start application in test mode (bypass authentication)")
 define("build_text_index", default=False, type=bool,
        help="force the application to (re)build the text index for full text search")
 
