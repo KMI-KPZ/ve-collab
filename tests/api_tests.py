@@ -7,6 +7,8 @@ from tornado.testing import AsyncHTTPTestCase, gen_test
 import global_vars
 from main import make_app
 
+MISSING_KEY_ERROR_SLUG = "missing_key:"
+
 def setup():
     # deal with config properties
     with open(options.config) as json_file:
@@ -39,7 +41,7 @@ def validate_json_str(suspect_str: str) -> bool:
     return True
 
 
-class RenderHandlerBaseTest(AsyncHTTPTestCase):
+class RenderHandlerTest(AsyncHTTPTestCase):
 
     def get_app(self):
         setup() # have to do our setup here, because get_app and setUp seemingly have a race condition, but we need to make sure cookie_secret is set before make_app
@@ -81,3 +83,47 @@ class RenderHandlerBaseTest(AsyncHTTPTestCase):
                 self.fetch_and_assert_is_302_redirect(endpoint)
             else:
                 self.fetch_and_assert_is_html(endpoint)
+
+
+class AuthenticationHandlersTest(AsyncHTTPTestCase):
+    # the only authentication we can really effectively test is the redirect to keycloak and the error case for the callback...
+
+    def get_app(self):
+        setup()  # have to do our setup here, because get_app and setUp seemingly have a race condition, but we need to make sure cookie_secret is set before make_app
+        return make_app(global_vars.cookie_secret)
+
+    def test_login_redirect(self):
+        """
+        expect: 302 redirect to keycloak
+        """
+
+        response = self.fetch("/login", follow_redirects=False)
+        self.assertEqual(response.code, 302)
+
+    def test_login_callback_error_no_code(self):
+        """
+        expect: 400 Bad request, reason missing_key
+        """
+
+        response = self.fetch("/login/callback")
+        content = response.buffer.getvalue().decode()
+
+        # expect response code 400
+        self.assertEqual(response.code, 400)
+
+        # expect valid json as response content
+        self.assertIsInstance(content, str)
+        is_json = validate_json_str(content)
+        self.assertEqual(is_json, True)
+
+        content = json.loads(content)
+
+        # expect a "success" key and that it has False value
+        self.assertIn("success", content)
+        self.assertEqual(content["success"], False)
+
+        # expect a missing_key:code error as the reason
+        self.assertIn("reason", content)
+        self.assertEqual(content["reason"], MISSING_KEY_ERROR_SLUG + "code")
+        
+
