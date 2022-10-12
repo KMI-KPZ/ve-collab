@@ -32,5 +32,6 @@ jobs:
         python -m tornado.testing tests/api_tests.py
     - name: Clean up config
       # even though runners get destroyed after execution: better safe than sorry, delete config file
+      if: always()
       run: |
         rm -rf config.json
