@@ -18,14 +18,6 @@ class MainRedirectHandler(BaseHandler):
         self.redirect("/main")
 
 
-class AdminHandler(BaseHandler):
-
-    @log_access
-    @auth_needed
-    def get(self):
-        self.render("newsfeed.html")
-
-
 class MyProfileHandler(BaseHandler):
 
     @log_access

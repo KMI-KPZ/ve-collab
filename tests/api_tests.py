@@ -17,7 +17,6 @@ def setup():
     global_vars.keycloak_admin = KeycloakAdmin(config["keycloak_base_url"], realm_name=config["keycloak_realm"], username=config["keycloak_admin_username"],
                                                password=config["keycloak_admin_password"], verify=True, auto_refresh_token=['get', 'put', 'post', 'delete'])
     global_vars.keycloak_callback_url = config["keycloak_callback_url"]
-    global_vars.config_path = options.config
     global_vars.domain = config["domain"]
     global_vars.keycloak_client_id = config["keycloak_client_id"]
     global_vars.cookie_secret = config["cookie_secret"]
@@ -27,9 +26,6 @@ def setup():
     global_vars.mongodb_username = config["mongodb_username"]
     global_vars.mongodb_password = config["mongodb_password"]
     global_vars.mongodb_db_name = config["mongodb_db_name"]
-
-    if "routing" in config:
-        global_vars.routing = config["routing"]
 
     # set test mode to bypass authentication
     options.test = True

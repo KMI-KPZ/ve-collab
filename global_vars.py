@@ -2,7 +2,8 @@
 
 from keycloak import KeycloakOpenID, KeycloakAdmin
 keycloak = KeycloakOpenID
-keycloak_admin = KeycloakAdmin 
+keycloak_admin = KeycloakAdmin
+keycloak_client_id: str = "" 
 keycloak_callback_url: str = ""
 domain: str = ""
 port: int = 0
