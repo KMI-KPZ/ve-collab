@@ -34,7 +34,11 @@ class LoginCallbackHandler(tornado.web.RequestHandler, metaclass=ABCMeta):
         # keycloak redirects you back here with this code
         code = self.get_argument("code", None)
         if code is None:
-            print("error, code None")
+            self.set_status(400)
+            self.write({"status": 400,
+                        "success": False,
+                        "reason": "missing_key:code"})
+            return
 
         #exchange authorization code for token
         # (redirect_uri has to match the uri in keycloak.auth_url(...) as per openID standard)

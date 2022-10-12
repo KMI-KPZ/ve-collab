@@ -13,7 +13,8 @@ import pymongo.errors
 import tornado.httpserver
 import tornado.ioloop
 import tornado.locks
-from tornado.options import define, options
+import tornado.web
+from tornado.options import define, options, parse_command_line
 
 import global_vars
 from handlers.authentication import LoginHandler, LoginCallbackHandler, LogoutHandler
@@ -45,7 +46,6 @@ def make_app(cookie_secret):
         (r"/login/callback", LoginCallbackHandler),
         (r"/logout", LogoutHandler),
         (r"/main", MainHandler),
-        (r"/admin", AdminHandler),
         (r"/acl", ACLHandler),
         (r"/myprofile", MyProfileHandler),
         (r"/profile/([a-zA-Z\-0-9\.:,_%]+)", ProfileHandler),
@@ -130,7 +130,7 @@ def init_text_indexes(force_rebuild: bool) -> None:
 
 
 async def main():
-    tornado.options.parse_command_line()
+    parse_command_line()
     with open(options.config, "r") as fp:
         conf = json.load(fp)
 
@@ -154,6 +154,7 @@ async def main():
                                           client_id=conf["keycloak_client_id"], client_secret_key=conf["keycloak_client_secret"])
     global_vars.keycloak_admin = KeycloakAdmin(conf["keycloak_base_url"], realm_name=conf["keycloak_realm"], username=conf["keycloak_admin_username"],
                                                password=conf["keycloak_admin_password"], verify=True, auto_refresh_token=['get', 'put', 'post', 'delete'])
+    global_vars.keycloak_client_id = conf["keycloak_client_id"]
     global_vars.keycloak_callback_url = conf["keycloak_callback_url"]
 
     # insert default role and acl templates if db is empty

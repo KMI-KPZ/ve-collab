@@ -22,6 +22,7 @@ class FollowHandler(BaseHandler):
                  "reason": "no_logged_in_user"}
         """
 
+        # TODO missing key error handling
         username = self.get_argument("user")
 
         result = self.db.follows.find(
@@ -34,7 +35,8 @@ class FollowHandler(BaseHandler):
             follows = user["follows"]
 
         self.set_status(200)
-        self.write({"user": username,
+        self.write({"success": True,
+                    "user": username,
                     "follows": follows})
 
     @log_access
