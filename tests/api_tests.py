@@ -265,3 +265,98 @@ class FollowHandlerTest(BaseApiTestCase):
         # cleanup test data
         self.db.follows.delete_many({})
         super().tearDown()
+
+
+class PermissionHandlerTest(BaseApiTestCase):
+
+    def test_get_permissions(self):
+        """
+        expect: a role to be transmitted from keycloak
+        """
+
+        response = self.base_checks("GET", "/permissions", True, 200)
+
+        # since we don't directly control setting what role the user has because it is done in keycloak,
+        # we shouldn't assert any fixed value here. as long as a non-empty role is responded, we are fine
+        self.assertIn("role", response)
+        self.assertNotEqual(response["role"], None)
+
+
+class RoleHandlerTest(BaseApiTestCase):
+
+    def setUp(self) -> None:
+        super().setUp()
+
+        # insert test data
+        self.test_roles = {
+            CURRENT_USER.username: "admin",
+            "test_user": "user"
+        }
+        self.db.roles.insert_many(
+            [{"username": key, "role": value} for key, value in self.test_roles.items()]
+        )
+
+    def tearDown(self) -> None:
+        # cleanup test data
+        self.db.roles.delete_many({})
+        super().tearDown()
+
+    def _get_my_role(self):
+        return self.base_checks("GET", "/role/my", True, 200)
+
+    def test_get_my_role(self):
+        """
+        expect: personal role to be returned as initiazlized in setup
+        """
+
+        response = self._get_my_role()
+
+        # expect returned role to be as in set up
+        self.assertIn("role", response)
+        self.assertEqual(response["role"], self.test_roles[CURRENT_USER.username])
+
+    def test_get_my_role_auto_created(self):
+        """
+        expect: personal role to returned is "guest" and it is also stored in db
+        this is a side effect if no record is in the db for the given user: create entry with the lowest possible permissions
+        """
+
+        # gotta clean up first to see effect if no record is stored
+        self.db.roles.delete_many({})
+
+        response = self._get_my_role()
+
+        # expect role to be guest
+        self.assertIn("role", response)
+        self.assertEqual(response["role"], "guest")
+
+        # also expect the note that this role entry was auto-created
+        self.assertIn("note", response)
+        self.assertEqual(response["note"],
+                         "created_because_no_previous_record")
+
+    def test_get_all_roles(self):
+        """
+        expect: alle roles as defined in setup
+        """
+
+        response = self.base_checks("GET", "/role/all", True, 200)
+
+        # expect the test_roles from the setup to appear in the response
+        # careful: we cannot check for equality here, because there might be other users coming from keycloak as well
+        # (they are aggregated)
+        self.assertIn("users", response)
+        expected_entries = [{"username": key, "role": value}
+                            for key, value in self.test_roles.items()]
+        self.assertTrue(all(entry in response["users"] for entry in expected_entries))
+
+    def test_get_distinct_roles(self):
+        """
+        expect: a list containing atleast the roles in setup
+        """
+
+        response = self.base_checks("GET", "/role/distinct", True, 200)
+
+        # expect the roles from the setup to be in the response
+        self.assertIn("existing_roles", response)
+        self.assertTrue(role in response["existing_roles"] for role in self.test_roles.values())

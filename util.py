@@ -1,4 +1,3 @@
-from unittest import mock
 import mock_platform
 
 
@@ -7,4 +6,7 @@ async def request_role(username):
 
 
 async def is_admin(username):
+    return (await request_role(username) == "admin")
+
+async def is_platform_admin(username):
     return (await request_role(username) == "admin")

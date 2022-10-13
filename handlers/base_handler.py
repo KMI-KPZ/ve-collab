@@ -123,3 +123,6 @@ class BaseHandler(tornado.web.RequestHandler):
                 return None
         else:
             return None
+
+    def is_current_user_lionet_admin(self):
+        return bool(self.get_current_user_role() == "admin")

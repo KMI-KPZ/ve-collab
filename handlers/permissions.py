@@ -17,9 +17,15 @@ class PermissionHandler(BaseHandler):
     @log_access
     @auth_needed
     async def get(self):
+        """
+        GET /permissions
+            request the role that was assigned by the platform (might differ from lionet-internal role)
+        """
+
         role = await util.request_role(self.current_user.username)
         self.set_status(200)
         self.write({"status": 200,
+                    "success": True,
                     "role": role})
 
 
@@ -39,7 +45,8 @@ class RoleHandler(BaseHandler):
 
             if role_result:
                 self.set_status(200)
-                self.write({"username": role_result["username"],
+                self.write({"success": True,
+                            "username": role_result["username"],
                             "role": role_result["role"]})
             else:
                 # no record for this user was found, insert as guest (default role)
@@ -50,11 +57,13 @@ class RoleHandler(BaseHandler):
                 )
 
                 self.set_status(200)
-                self.write({"username": self.current_user.username,
-                            "role": "guest"})
+                self.write({"success": True,
+                            "username": self.current_user.username,
+                            "role": "guest",
+                            "note": "created_because_no_previous_record"})
 
         elif slug == "all":
-            if await util.is_admin(self.current_user.username):
+            if self.is_current_user_lionet_admin() or await util.is_platform_admin(self.current_user.username):
                 ret_list = []
                 user_list = mock_platform.get_user_list()
                 existin_users_and_roles = self.db.roles.find(projection={"_id": False})
@@ -78,23 +87,26 @@ class RoleHandler(BaseHandler):
                     ret_list.append({"username": user_list["users"][platform_user]["username"], "role": "guest"})
 
                 self.set_status(200)
-                self.write({"users": ret_list})
+                self.write({"success": True,
+                            "users": ret_list})
             else:
                 self.set_status(403)
                 self.write({"status": 403,
+                            "success": False,
                             "reason": "user_not_admin"})
 
         elif slug == "distinct":
-            if await util.is_admin(self.current_user.username):
+            if self.is_current_user_lionet_admin() or await util.is_platform_admin(self.current_user.username):
                 roles = self.db.roles.distinct("role")
                 self.set_status(200)
-                self.write({"existing_roles": roles})
+                self.write({"success": True,
+                            "existing_roles": roles})
 
             else:
                 self.set_status(403)
                 self.write({"status": 403,
+                            "success": False,
                             "reason": "user_not_admin"})
-
 
         else:
             self.set_status(404)
