@@ -6,6 +6,10 @@ on:
     secrets:
       CONFIG:
         required: true
+      MONGODB_USERNAME:
+        required: true
+      MONGODB_PASSWORD:
+        required: true
 
 jobs:
   test:
@@ -27,6 +31,11 @@ jobs:
       # now decode it and create the config file again
       run: |
         echo -n '${{ secrets.CONFIG }}' | base64 --decode > config.json
+    - name: setup and start MongoDB
+      uses: supercharge/mongodb-github-action@1.8.0
+      with:
+        mongodb-username: ${{ secrets.MONGODB_USERNAME }}
+        mongodb-password: ${{ secrets.MONGODB_PASSWORD }}
     - name: Run tests
       run: |
         python -m tornado.testing tests/api_tests.py

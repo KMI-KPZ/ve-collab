@@ -13,3 +13,5 @@ jobs:
     uses: ./.github/workflows/test_caller.yml
     secrets:
       CONFIG: ${{ secrets.CONFIG }}
+      MONGODB_USERNAME: ${{ secrets.MONGODB_USERNAME }}
+      MONGODB_PASSWORD: ${{ secrets.MONGODB_PASSWORD }}
