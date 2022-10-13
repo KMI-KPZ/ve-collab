@@ -1,3 +1,5 @@
+import tornado.web
+
 from handlers.base_handler import BaseHandler, auth_needed
 from logger_factory import log_access
 
@@ -17,13 +19,24 @@ class FollowHandler(BaseHandler):
                 {"user": <string>,
                  "follows": ["username1", "username2", ...]}
 
+                400 Bad Request
+                {"status": 400,
+                 "success": False,
+                 "reason": "missing_key:user}
+
                 401 Unauthorized
                 {"status": 401,
                  "reason": "no_logged_in_user"}
         """
 
-        # TODO missing key error handling
-        username = self.get_argument("user")
+        try:
+            username = self.get_argument("user")
+        except tornado.web.MissingArgumentError:
+            self.set_status(400)
+            self.write({"status": 400,
+                        "success": False,
+                        "reason": "missing_key:user"})
+            return
 
         result = self.db.follows.find(
             filter={"user": username},
@@ -52,13 +65,26 @@ class FollowHandler(BaseHandler):
                 {"status": 200,
                  "success": True}
 
+                400 Bad Request
+                {"status": 400,
+                 "success": False,
+                 "reason": "missing_key:user}
+
                 401 Unauthorized
                 {"status": 401,
                  "reason": "no_logged_in_user"}
         """
 
+        try:
+            user_to_follow = self.get_argument("user")
+        except tornado.web.MissingArgumentError:
+            self.set_status(400)
+            self.write({"status": 400,
+                        "success": False,
+                        "reason": "missing_key:user"})
+            return
+
         username = self.current_user.username
-        user_to_follow = self.get_argument("user")
 
         self.db.follows.update_one(
             {"user": username},  # fitler
@@ -87,12 +113,24 @@ class FollowHandler(BaseHandler):
                 {"status": 200,
                  "success": True}
 
+                400 Bad Request
+                {"status": 400,
+                 "success": False,
+                 "reason": "missing_key:user}
+
                 401 Unauthorized
                 {"status": 401,
                  "reason": "no_logged_in_user"}
         """
 
-        username = self.get_argument("user")
+        try:
+            username = self.get_argument("user")
+        except tornado.web.MissingArgumentError:
+            self.set_status(400)
+            self.write({"status": 400,
+                        "success": False,
+                        "reason": "missing_key:user"})
+            return
 
         self.db.follows.update_one(
             {"user": self.current_user.username},

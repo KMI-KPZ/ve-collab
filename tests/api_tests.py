@@ -1,4 +1,5 @@
 import json
+from typing import List
 
 from keycloak import KeycloakAdmin, KeycloakOpenID
 from pymongo import MongoClient
@@ -120,7 +121,7 @@ class BaseApiTestCase(AsyncHTTPTestCase):
         :returns: response content
         """
 
-        response = self.fetch(url, method=method)
+        response = self.fetch(url, method=method, allow_nonstandard_methods=True)
         content = response.buffer.getvalue().decode()
 
         # match expected response code
@@ -176,12 +177,22 @@ class FollowHandlerTest(BaseApiTestCase):
             "follows": self.user_follows
         })
 
+    def _db_get_follows(self) -> List[str]:
+        """
+        get list of follows for CURRENT_USER from db
+        """
+
+        db_response = self.db.follows.find_one({"user": CURRENT_USER.username})
+        if db_response:
+            return db_response["follows"]
+
     def test_get_follows(self):
         """
         expect: a dict containing the above set-up follow-relation
         """
 
-        response = self.base_checks("GET", "/follow?user={}".format(CURRENT_USER.username), True, 200)
+        response = self.base_checks(
+            "GET", "/follow?user={}".format(CURRENT_USER.username), True, 200)
 
         # expect a users and a follows key
         self.assertIn("user", response)
@@ -190,6 +201,65 @@ class FollowHandlerTest(BaseApiTestCase):
         # expect user to be the requested one and the users he follows as stated in the setup
         self.assertEqual(response["user"], CURRENT_USER.username)
         self.assertEqual(response["follows"], self.user_follows)
+
+    def test_get_follows_error_missing_key(self):
+        """
+        expect: missing key error due to user parameter left out of request
+        """
+
+        response = self.base_checks("GET", "/follow", False, 400)
+
+        # expect a missing_key:user error as the reason
+        self.assertIn("reason", response)
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "user")
+
+    def test_post_follow(self):
+        """
+        expect: the added follow to afterwards be present in the list
+        """
+
+        # post the request to follow this user
+        followed_username = "test_user_added"
+        self.base_checks("POST", "/follow?user={}".format(followed_username), True, 200)
+
+        # we now expect to be following those 3 users
+        db_state = self._db_get_follows()
+        self.assertIn(followed_username, db_state)
+
+    def test_post_follow_error_missing_key(self):
+        """
+        expect: missing key error due to user parameter left out of request
+        """
+
+        response = self.base_checks("POST", "/follow", False, 400)
+
+        # expect a missing_key:user error as the reason
+        self.assertIn("reason", response)
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "user")
+
+    def test_delete_follow(self):
+        """
+        expect: the removed follow disappears from the list
+        """
+
+        # remove the first one, because it was definetly in (manually added in setup)
+        remove_follow = self.user_follows[0]
+        self.base_checks("DELETE", "/follow?user={}".format(remove_follow), True, 200)
+
+        # we now expect to no longer follow the removed user (first from list)
+        db_state = self._db_get_follows()
+        self.assertNotIn(remove_follow, db_state)
+    
+    def test_delete_follow_error_missing_key(self):
+        """
+        expect: missing key error due to user parameter left out of request
+        """
+
+        response = self.base_checks("DELETE", "/follow", False, 400)
+
+        # expect a missing_key:user error as the reason
+        self.assertIn("reason", response)
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "user")
 
     def tearDown(self) -> None:
         # cleanup test data
