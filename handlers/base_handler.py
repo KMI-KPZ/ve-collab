@@ -45,14 +45,29 @@ class BaseHandler(tornado.web.RequestHandler):
             shutil.copy2("assets/default_profile_pic.jpg", self.upload_dir)
 
     async def prepare(self):
-        # set user for test environment to bypass authentication in the handlers
-        if options.test:
+        # set user for test environments to bypass authentication in the handlers
+        if options.test_admin:
             self.current_userinfo = {'sub': 'aaaaaaaa-bbbb-0000-cccc-dddddddddddd',
                                      'resource_access': {'test': {'roles': ['admin']}},
                                      'email_verified': True, 'name': 'Test Admin',
                                      'preferred_username': 'test_admin',
                                      'given_name': 'Test', 'family_name': 'Admin',
                                      'email': 'test_admin@mail.de'}
+            self.current_user = User(
+                self.current_userinfo["preferred_username"], self.current_userinfo["sub"], self.current_userinfo["email"])
+            self._access_token = {'access_token': 'abcdefg', 'expires_in': 3600,
+                                  'refresh_expires_in': 3600, 'refresh_token': 'hijklmn',
+                                  'token_type': 'Bearer', 'not-before-policy': 0,
+                                  'session_state': 'abcdefgh-1234-ijkl-56m7-nopqrstuv890',
+                                  'scope': 'email profile'}
+            return
+        elif options.test_user:
+            self.current_userinfo = {'sub': 'aaaaaaaa-bbbb-0000-cccc-dddddddddddd',
+                                     'resource_access': {'test': {'roles': ['user']}},
+                                     'email_verified': True, 'name': 'Test User',
+                                     'preferred_username': 'test_user',
+                                     'given_name': 'Test', 'family_name': 'User',
+                                     'email': 'test_user@mail.de'}
             self.current_user = User(
                 self.current_userinfo["preferred_username"], self.current_userinfo["sub"], self.current_userinfo["email"])
             self._access_token = {'access_token': 'abcdefg', 'expires_in': 3600,

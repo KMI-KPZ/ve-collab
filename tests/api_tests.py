@@ -1,4 +1,5 @@
 import json
+import logging
 from typing import List
 
 from keycloak import KeycloakAdmin, KeycloakOpenID
@@ -9,11 +10,23 @@ from tornado.testing import AsyncHTTPTestCase
 import global_vars
 from main import make_app
 from model import User
+from logger_factory import get_logger
+
+# hack access loggers to not produce too much irrelevant output here
+logger = get_logger("access_logger")
+logger.setLevel(logging.WARNING)
+tornado_access_logger = logging.getLogger("tornado.access")
+tornado_access_logger.setLevel(logging.CRITICAL)
+
 
 MISSING_KEY_ERROR_SLUG = "missing_key:"
+USER_NOT_ADMIN_ERROR = "user_not_admin"
 
+# don't change, these values match with the ones in BaseHandler
+CURRENT_ADMIN = User(
+    "test_admin", "aaaaaaaa-bbbb-0000-cccc-dddddddddddd", "test_admin@mail.de")
 CURRENT_USER = User(
-    "test_admin", "aaaaaaaa-bbbb-0000-cccc-dddddddddddd", "test_admin@mail.de") # don't change, these values match with the ones in BaseHandler
+    "test_user", "aaaaaaaa-bbbb-0000-cccc-dddddddddddd", "test_user@mail.de")
 
 def setup():
     # deal with config properties
@@ -35,9 +48,6 @@ def setup():
     global_vars.mongodb_password = config["mongodb_password"]
     global_vars.mongodb_db_name = "test_db"
 
-    # set test mode to bypass authentication
-    options.test = True
-
 
 def validate_json_str(suspect_str: str) -> bool:
     try:
@@ -55,6 +65,9 @@ class RenderHandlerTest(AsyncHTTPTestCase):
 
     def setUp(self) -> None:
         super().setUp()
+
+        # set test mode to bypass authentication as an admin
+        options.test_admin = True
 
         self.render_endpoints = ["/", "/main", "/myprofile", "/profile/test", "/space/test", "/spaces", "/template", "/acl"]
 
@@ -78,7 +91,8 @@ class RenderHandlerTest(AsyncHTTPTestCase):
         self.assertEqual(response.code, 302)
 
     def test_render_handlers_no_login_redirect(self):
-        options.test = False
+        options.test_admin = False
+        options.test_user = False
         for endpoint in self.render_endpoints:
             self.fetch_and_assert_is_302_redirect(endpoint)
 
@@ -95,6 +109,9 @@ class BaseApiTestCase(AsyncHTTPTestCase):
 
     def setUp(self) -> None:
         super().setUp()
+
+        # set test mode to bypass authentication as an admin as default for each test case (test cases where user view is required will set mode themselves)
+        options.test_admin = True
 
         # initialize mongodb connection
         self.client = MongoClient(global_vars.mongodb_host, global_vars.mongodb_port,
@@ -173,7 +190,7 @@ class FollowHandlerTest(BaseApiTestCase):
         
         # insert test data
         self.db.follows.insert_one({
-            "user": CURRENT_USER.username,
+            "user": CURRENT_ADMIN.username,
             "follows": self.user_follows
         })
 
@@ -182,7 +199,7 @@ class FollowHandlerTest(BaseApiTestCase):
         get list of follows for CURRENT_USER from db
         """
 
-        db_response = self.db.follows.find_one({"user": CURRENT_USER.username})
+        db_response = self.db.follows.find_one({"user": CURRENT_ADMIN.username})
         if db_response:
             return db_response["follows"]
 
@@ -192,14 +209,14 @@ class FollowHandlerTest(BaseApiTestCase):
         """
 
         response = self.base_checks(
-            "GET", "/follow?user={}".format(CURRENT_USER.username), True, 200)
+            "GET", "/follow?user={}".format(CURRENT_ADMIN.username), True, 200)
 
         # expect a users and a follows key
         self.assertIn("user", response)
         self.assertIn("follows", response)
 
         # expect user to be the requested one and the users he follows as stated in the setup
-        self.assertEqual(response["user"], CURRENT_USER.username)
+        self.assertEqual(response["user"], CURRENT_ADMIN.username)
         self.assertEqual(response["follows"], self.user_follows)
 
     def test_get_follows_error_missing_key(self):
@@ -289,7 +306,7 @@ class RoleHandlerTest(BaseApiTestCase):
 
         # insert test data
         self.test_roles = {
-            CURRENT_USER.username: "admin",
+            CURRENT_ADMIN.username: "admin",
             "test_user": "user"
         }
         self.db.roles.insert_many(
@@ -313,7 +330,7 @@ class RoleHandlerTest(BaseApiTestCase):
 
         # expect returned role to be as in set up
         self.assertIn("role", response)
-        self.assertEqual(response["role"], self.test_roles[CURRENT_USER.username])
+        self.assertEqual(response["role"], self.test_roles[CURRENT_ADMIN.username])
 
     def test_get_my_role_auto_created(self):
         """
@@ -350,6 +367,19 @@ class RoleHandlerTest(BaseApiTestCase):
                             for key, value in self.test_roles.items()]
         self.assertTrue(all(entry in response["users"] for entry in expected_entries))
 
+    def test_get_all_roles_error_no_admin(self):
+        """
+        expect: fail message because user is not an admin
+        """
+        # explicitely switch to user mode for this test
+        options.test_admin = False
+        options.test_user = True
+
+        response = self.base_checks("GET", "/role/all", False, 403)
+
+        self.assertIn("reason", response)
+        self.assertEqual(response["reason"], USER_NOT_ADMIN_ERROR)
+
     def test_get_distinct_roles(self):
         """
         expect: a list containing atleast the roles in setup
@@ -360,3 +390,17 @@ class RoleHandlerTest(BaseApiTestCase):
         # expect the roles from the setup to be in the response
         self.assertIn("existing_roles", response)
         self.assertTrue(role in response["existing_roles"] for role in self.test_roles.values())
+
+    def test_get_distinct_roles_error_no_admin(self):
+        """
+        expect: fail message because user is not an admin
+        """
+
+        # explicitely switch to user mode for this test
+        options.test_admin = False
+        options.test_user = True
+
+        response = self.base_checks("GET", "/role/distinct", False, 403)
+
+        self.assertIn("reason", response)
+        self.assertEqual(response["reason"], USER_NOT_ADMIN_ERROR)
