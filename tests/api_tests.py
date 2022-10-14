@@ -20,6 +20,7 @@ tornado_access_logger.setLevel(logging.CRITICAL)
 
 
 MISSING_KEY_ERROR_SLUG = "missing_key:"
+MISSING_KEY_HTTP_BODY_ERROR_SLUG = "missing_key_in_http_body:"
 USER_NOT_ADMIN_ERROR = "user_not_admin"
 
 # don't change, these values match with the ones in BaseHandler
@@ -127,7 +128,7 @@ class BaseApiTestCase(AsyncHTTPTestCase):
         setup()  # have to do our setup here, because parent class calls get_app in its own setUp, so we would have to setup before super() otherwise, which might break something idk
         return make_app(global_vars.cookie_secret)
 
-    def base_checks(self, method: str, url: str, expect_success: bool, expect_response_code: str) -> dict:
+    def base_checks(self, method: str, url: str, expect_success: bool, expect_response_code: str, body: dict = None) -> dict:
         """
         convenience wrapper to assert the following:
         - response matches expected http code
@@ -138,7 +139,16 @@ class BaseApiTestCase(AsyncHTTPTestCase):
         :returns: response content
         """
 
-        response = self.fetch(url, method=method, allow_nonstandard_methods=True)
+        # convert body to string, if it is not already one
+        if body is not None:
+            if isinstance(body, dict):
+                body = json.dumps(body)
+            elif isinstance(body, str):
+                pass
+            else:
+                raise ValueError("Body can either be Dict or str, but is {}".format(type(body)))
+
+        response = self.fetch(url, method=method, body=body, allow_nonstandard_methods=True)
         content = response.buffer.getvalue().decode()
 
         # match expected response code
@@ -307,7 +317,7 @@ class RoleHandlerTest(BaseApiTestCase):
         # insert test data
         self.test_roles = {
             CURRENT_ADMIN.username: "admin",
-            "test_user": "user"
+            CURRENT_USER.username: "user"
         }
         self.db.roles.insert_many(
             [{"username": key, "role": value} for key, value in self.test_roles.items()]
@@ -401,6 +411,66 @@ class RoleHandlerTest(BaseApiTestCase):
         options.test_user = True
 
         response = self.base_checks("GET", "/role/distinct", False, 403)
+
+        self.assertIn("reason", response)
+        self.assertEqual(response["reason"], USER_NOT_ADMIN_ERROR)
+
+    def test_post_update_role(self):
+        """
+        expect: updated role appears in the db
+        """
+        updated_user_role = "updated_role"
+        http_body = {
+            "username": CURRENT_USER.username,
+            "role": updated_user_role
+        }
+
+        self.base_checks("POST", "/role/update", True, 200, body=http_body)
+
+        db_state = self.db.roles.find_one({"username": CURRENT_USER.username})
+        self.assertIn("role", db_state)
+        self.assertEqual(db_state["role"], updated_user_role)
+
+    def test_post_update_role_error_missing_username(self):
+        """
+        expect: missing_key_in_http_body error
+        """
+
+        http_body = {
+            "role": "irrelevant"
+        }
+
+        response = self.base_checks("POST", "/role/update", False, 400, body=http_body)
+
+        self.assertIn("reason", response)
+        self.assertEqual(response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "username")
+
+    def test_post_update_role_error_missing_role(self):
+        """
+        expect: missing_key_in_http_body error
+        """
+
+        http_body = {
+            "username": CURRENT_USER.username,
+        }
+
+        response = self.base_checks(
+            "POST", "/role/update", False, 400, body=http_body)
+
+        self.assertIn("reason", response)
+        self.assertEqual(response["reason"],
+                         MISSING_KEY_HTTP_BODY_ERROR_SLUG + "role")
+
+    def test_post_update_role_error_no_admin(self):
+        """
+        expect: fail message because user is not an admin
+        """
+
+        # explicitely switch to user mode for this test
+        options.test_admin = False
+        options.test_user = True
+
+        response = self.base_checks("POST", "/role/update", False, 403)
 
         self.assertIn("reason", response)
         self.assertEqual(response["reason"], USER_NOT_ADMIN_ERROR)

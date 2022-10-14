@@ -131,7 +131,11 @@ class RoleHandler(BaseHandler):
 
                 400 Bad Request
                 {"status": 400,
-                 "reason": "missing_key_in_http_body"}
+                 "reason": "missing_key_in_http_body:username"}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": "missing_key_in_http_body:role"}
 
                 401 Unauthorized
                 {"status": 401,
@@ -142,13 +146,20 @@ class RoleHandler(BaseHandler):
                  "reason": "user_not_admin"}
         """
         if slug == "update":
-            if await util.is_admin(self.current_user.username):
+            if self.is_current_user_lionet_admin() or await util.is_platform_admin(self.current_user.username):
                 http_body = json.loads(self.request.body)
 
-                if any(key not in http_body for key in ("username", "role")):
+                if "username" not in http_body:
                     self.set_status(400)
                     self.write({"status": 400,
-                                "reason": "missing_key_in_http_body"})
+                                "success": False,
+                                "reason": "missing_key_in_http_body:username"})
+                    return
+                if "role" not in http_body:
+                    self.set_status(400)
+                    self.write({"status": 400,
+                                "success": False,
+                                "reason": "missing_key_in_http_body:role"})
                     return
 
                 username = http_body["username"]
@@ -171,6 +182,7 @@ class RoleHandler(BaseHandler):
             else:
                 self.set_status(403)
                 self.write({"status": 403,
+                            "success": False,
                             "reason": "user_not_admin"})
         else:
             self.set_status(404)
@@ -245,7 +257,7 @@ class GlobalACLHandler(BaseHandler):
                             "reason": "user_has_no_role"})
 
         elif slug == "get_all":
-            if await util.is_admin(self.current_user.username):
+            if self.is_current_user_lionet_admin() or await util.is_platform_admin(self.current_user.username):
                 acl = get_acl().global_acl
 
                 # solve inconsistency problem of role existing but no acl_entry: whenever there is a role that has no acl_entry, create a default one
@@ -283,7 +295,7 @@ class GlobalACLHandler(BaseHandler):
         """
 
         if slug == "update":
-            if await util.is_admin(self.current_user.username):
+            if self.is_current_user_lionet_admin() or await util.is_platform_admin(self.current_user.username):
                 acl = get_acl().global_acl
                 http_body = json.loads(self.request.body)
 
