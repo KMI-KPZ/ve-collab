@@ -49,6 +49,7 @@ var load_templates = async function () {
     profileInformation_listItem = $(template).filter('#profileInformation_listItem').html()
 
     acl_button = $(template).filter('#acl_button').html()
+    wordpress_button = $(template).filter("#wordpress_button").html()
 
   });
 };
@@ -171,8 +172,8 @@ $(document).ready(function () {
   // load templates for construction of page
   load_templates().then(initNewsFeed);
 
-  // add acl button if admin
-  add_acl_button()
+  // add acl and wordpress button if admin
+  add_acl_and_wordpress_button();
 
   const interval  = setInterval(function() {
      checkUpdate();

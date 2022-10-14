@@ -194,16 +194,17 @@ $('body').delegate('.link-class', 'click', function() {
 })
 
 /**
- * if user role is admin, adds button to navbar to access acl tables
+ * if user role is admin, adds button to navbar to access acl tables and wordpress instance
  */
-function add_acl_button() {
+function add_acl_and_wordpress_button() {
   $.ajax({
       type: 'GET',
       url: '/role/my',
       dataType: 'json',
       success: function (data) {
           if(data.role == "admin") {
-            $("#navbar_items").append(Mustache.render(acl_button))
+            $("#navbar_items").append(Mustache.render(acl_button));
+            $("#navbar_items").append(Mustache.render(wordpress_button));
           }
 
       },

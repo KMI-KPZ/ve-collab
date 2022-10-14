@@ -14,7 +14,7 @@ function jquery_id_selector(myid) {
  *  c) get space acl entries and renders space acl table
  */
 $(document).ready(function () {
-    add_acl_button()
+    add_acl_and_wordpress_button();
 
     //fill the table in the role tab containing all users and their roles
     get_all_roles_and_users().done(function (users_response) {

@@ -1,7 +1,6 @@
 $(document).ready(function () {
   document.title = currentUser.username + ' - Lionet';
   updateProfileContainer();
-  //add_acl_button()
 });
 
 /**
