@@ -1,4 +1,5 @@
 import json
+from lib2to3.pytree import Base
 import logging
 from typing import List
 
@@ -164,6 +165,10 @@ class BaseApiTestCase(AsyncHTTPTestCase):
         # expect a "success" key and match expected value
         self.assertIn("success", content)
         self.assertEqual(content["success"], expect_success)
+
+        # if we expect an error, we also need to have reason in the message
+        if expect_success == False:
+            self.assertIn("reason", content)
 
         return content
 
@@ -474,3 +479,139 @@ class RoleHandlerTest(BaseApiTestCase):
 
         self.assertIn("reason", response)
         self.assertEqual(response["reason"], USER_NOT_ADMIN_ERROR)
+
+
+class GlobalACLHandlerTest(BaseApiTestCase):
+
+    def setUp(self) -> None:
+        super().setUp()
+
+        # insert test data
+        self.test_roles = {
+            CURRENT_ADMIN.username: "admin",
+            CURRENT_USER.username: "user"
+        }
+        self.test_global_acl_rules = {
+            CURRENT_ADMIN.username: {
+                "role": "admin",
+                "create_space": True
+            },
+            CURRENT_USER.username: {
+                "role": "user",
+                "create_space": False
+            }
+        }
+        self.db.roles.insert_many(
+            [{"username": key, "role": value}
+                for key, value in self.test_roles.items()]
+        )
+        # pymongo modifies parameters in place (adds _id fields), like WHAT THE FUCK!? anyway, thats why we give it a copy...
+        self.db.global_acl.insert_many(
+            [value.copy() for value in self.test_global_acl_rules.values()]
+        )
+
+    def tearDown(self) -> None:
+        # cleanup test data
+        self.db.roles.delete_many({})
+        self.db.global_acl.delete_many({})
+        super().tearDown()
+
+    def test_get_global_acl(self):
+        """
+        expect: responded acl entry matches the one in setup
+        """
+
+        response = self.base_checks("GET", "/global_acl/get", True, 200)
+
+        self.assertIn("acl_entry", response)
+        self.assertEqual(response["acl_entry"], self.test_global_acl_rules[CURRENT_ADMIN.username])
+
+    def test_get_global_acl_error_user_has_no_role(self):
+        """
+        expect: fail message because user has no role
+        """
+
+        self.db.roles.delete_many({})
+
+        response = self.base_checks("GET", "/global_acl/get", False, 409)
+
+        self.assertIn("reason", response)
+        self.assertEqual(response["reason"], "user_has_no_role")
+
+    def test_get_global_acl_all(self):
+        """
+        expect: list of all acl entries, matching those in setup
+        """
+
+        response = self.base_checks("GET", "/global_acl/get_all", True, 200)
+
+        self.assertIn("acl_entries", response)
+        self.assertEqual(response["acl_entries"], [value for value in self.test_global_acl_rules.values()])
+
+    def test_get_global_acl_all_error_no_admin(self):
+        """
+        expect: fail message because user is not an admin
+        """
+
+        # explicitely switch to user mode for this test
+        options.test_admin = False
+        options.test_user = True
+
+        response = self.base_checks("GET", "/global_acl/get_all", False, 403)
+
+        self.assertIn("reason", response)
+        self.assertEqual(response["reason"], USER_NOT_ADMIN_ERROR)
+
+    def test_post_global_acl_update(self):
+        """
+        expect: updated entries get persisted into the db
+        """
+
+        updated_acl_entry = {
+            "role": self.test_roles[CURRENT_USER.username],
+            "create_space": False
+        }
+
+        self.base_checks("POST", "/global_acl/update", True, 200, body=updated_acl_entry)
+
+        db_state = self.db.global_acl.find_one(
+            {"role": self.test_roles[CURRENT_USER.username]}
+        )
+
+        self.assertIn("role", db_state)
+        self.assertEqual(db_state["create_space"], updated_acl_entry["create_space"])
+
+    def test_post_global_acl_update_error_no_admin(self):
+        """
+        expect: fail message because user is not an admin
+        """
+
+        # explicitely switch to user mode for this test
+        options.test_admin = False
+        options.test_user = True
+
+        response = self.base_checks("POST", "/global_acl/update", False, 403)
+
+        self.assertIn("reason", response)
+        self.assertEqual(response["reason"], USER_NOT_ADMIN_ERROR)
+
+    def test_post_global_acl_update_error_unrecognizable_key(self):
+        """
+        expect fail message because request contains invalid key
+        """
+
+        updated_acl_entry = {
+            "role": self.test_roles[CURRENT_USER.username],
+            "create_space": False,
+            "invalid_key": True
+        }
+
+        response = self.base_checks("POST", "/global_acl/update", False, 400, body=updated_acl_entry)
+
+        self.assertEqual(response["reason"], "unrecognizable_key_in_http_body")
+
+    def test_post_global_acl_update_error_non_bool_value(self):
+        pass
+
+    def test_post_global_acl_update_error_admin_immutable(self):
+        pass

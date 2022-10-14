@@ -44,6 +44,9 @@ class BaseHandler(tornado.web.RequestHandler):
         if not os.path.isfile(self.upload_dir + "default_profile_pic.jpg"):
             shutil.copy2("assets/default_profile_pic.jpg", self.upload_dir)
 
+    def on_finish(self) -> None:
+        self.client.close()
+
     async def prepare(self):
         # set user for test environments to bypass authentication in the handlers
         if options.test_admin:

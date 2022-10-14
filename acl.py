@@ -22,6 +22,7 @@ def get_acl() -> ACL:
 
 class ACL:
     def __init__(self):
+        # TODO keeping this client open will leak memory, should switch to using it as Resource with __enter__/__exit__ and with-statement
         self.client = MongoClient(global_vars.mongodb_host, global_vars.mongodb_port, username=global_vars.mongodb_username, password=global_vars.mongodb_password)
         self.global_acl = _GlobalACL(self.client)
         self.space_acl = _SpaceACL(self.client)

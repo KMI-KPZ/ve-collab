@@ -137,6 +137,10 @@ class RoleHandler(BaseHandler):
                 {"status": 400,
                  "reason": "missing_key_in_http_body:role"}
 
+                400 Bad Request
+                {"status": 400,
+                 "reason": "json_parsing_error"}
+
                 401 Unauthorized
                 {"status": 401,
                  "reason": "no_logged_in_user"}
@@ -147,7 +151,14 @@ class RoleHandler(BaseHandler):
         """
         if slug == "update":
             if self.is_current_user_lionet_admin() or await util.is_platform_admin(self.current_user.username):
-                http_body = json.loads(self.request.body)
+                try:
+                    http_body = json.loads(self.request.body)
+                except json.JSONDecodeError:
+                    self.set_status(400)
+                    self.write({"status": 400,
+                                "success": False,
+                                "reason": "json_parsing_error"})
+                    return
 
                 if "username" not in http_body:
                     self.set_status(400)
@@ -237,23 +248,31 @@ class GlobalACLHandler(BaseHandler):
             if current_user_role:
                 acl_entry = acl.get(current_user_role)
 
-                # inconsistency problem: the role exists, but no acl entry. construct an acl entry that has all permissions set to false
+                # inconsistency problem: the role exists, but no acl entry. construct an acl entry that has all permissions set to false (except it is for some reason the admin role, then set everything to true)
                 if not acl_entry:
                     logger.warning(
                         "Inconsistency Problem: the role '{}' exists, but no Global ACL entry for it".format(current_user_role))
                     acl_entry = {}
+                    # if the role is admin, set everything to true instead of false
+                    # technically this should never happen, but better safe than sorry
+                    if current_user_role == "admin":
+                        acl_entry_value = True
+                    else:
+                        acl_entry_value = False
                     for acl_key in acl.get_existing_keys():
                         if acl_key != "role":
-                            acl_entry[acl_key] = False
+                            acl_entry[acl_key] = acl_entry_value
                     acl_entry["role"] = current_user_role["role"]
                     acl.insert_default(current_user_role)
 
                 self.set_status(200)
                 self.write({"status": 200,
+                            "success": True,
                             "acl_entry": acl_entry})
             else:
                 self.set_status(409)
                 self.write({"status": 409,
+                            "success": False,
                             "reason": "user_has_no_role"})
 
         elif slug == "get_all":
@@ -270,10 +289,12 @@ class GlobalACLHandler(BaseHandler):
 
                 self.set_status(200)
                 self.write({"status": 200,
+                            "success": True,
                             "acl_entries": entries})
             else:
                 self.set_status(403)
                 self.write({"status": 403,
+                            "success": False,
                             "reason": "user_not_admin"})
 
         else:
@@ -296,13 +317,22 @@ class GlobalACLHandler(BaseHandler):
 
         if slug == "update":
             if self.is_current_user_lionet_admin() or await util.is_platform_admin(self.current_user.username):
+                try:
+                    http_body = json.loads(self.request.body)
+                except json.JSONDecodeError:
+                    self.set_status(400)
+                    self.write({"status": 400,
+                                "success": False,
+                                "reason": "json_parsing_error"})
+                    return
+
                 acl = get_acl().global_acl
-                http_body = json.loads(self.request.body)
 
                 # check if the http body only contains valid keys (i.e. keys that exist in the acl)
                 if any(key not in acl.get_existing_keys() for key in http_body):
                     self.set_status(400)
                     self.write({"status": 400,
+                                "success": False,
                                 "reason": "unrecognizable_key_in_http_body"})
                     return
 
@@ -312,8 +342,17 @@ class GlobalACLHandler(BaseHandler):
                         if not isinstance(http_body[key], bool):
                             self.set_status(400)
                             self.write({"status": 400,
+                                        "success": False,
                                         "reason": "value_not_bool_in_http_body"})
                             return
+
+                # forbid any modifications to the admin role to avoid deadlocks
+                if http_body["role"] == "admin":
+                    self.set_status(409)
+                    self.write({"status": 409,
+                                "success": False,
+                                "reason": "admin_role_immutable"})
+                    return
 
                 acl.set_all(http_body)
 
@@ -323,6 +362,7 @@ class GlobalACLHandler(BaseHandler):
             else:
                 self.set_status(403)
                 self.write({"status": 403,
+                            "success": False,
                             "reason": "user_not_admin"})
         else:
             self.set_status(404)
