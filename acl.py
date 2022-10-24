@@ -1,14 +1,20 @@
 from __future__ import annotations
 
+from tornado.ioloop import PeriodicCallback
+from tornado.options import options
 from typing import Optional, Dict, List
 
 from pymongo import MongoClient
 
 import global_vars
+from logger_factory import get_logger
+
+logger = get_logger(__name__)
 
 the_acl = None
 
 
+# TODO unused once everything is refactored to context manager
 def get_acl() -> ACL:
     """
     access function for the ACL class. since it is a singleton, only use this function. Never create an instance of ACL() yourself!
@@ -21,11 +27,57 @@ def get_acl() -> ACL:
 
 
 class ACL:
+    """
+    implementation of ACL as a context manager, usage::
+
+        with ACL() as acl_manager:
+            acl_manager.global_acl.get_all()
+            ...
+
+    """
     def __init__(self):
-        # TODO keeping this client open will leak memory, should switch to using it as Resource with __enter__/__exit__ and with-statement
-        self.client = MongoClient(global_vars.mongodb_host, global_vars.mongodb_port, username=global_vars.mongodb_username, password=global_vars.mongodb_password)
+        # TODO once everything is refactored to context manager: set client to None here for initialization, context manager will actually do the init then
+        self.client = MongoClient(global_vars.mongodb_host, global_vars.mongodb_port,
+                                  username=global_vars.mongodb_username, password=global_vars.mongodb_password)
         self.global_acl = _GlobalACL(self.client)
         self.space_acl = _SpaceACL(self.client)
+
+        # periodically schedule acl entry cleanup if we are not in test mode
+        if not (options.test_admin or options.test_user):
+            # cleanup happens every  3,600,000 ms = 1 hour
+            PeriodicCallback(self._cleanup_unused_rules, 3_600_000).start()
+
+    def __enter__(self):
+        self.client = MongoClient(global_vars.mongodb_host, global_vars.mongodb_port,
+                                  username=global_vars.mongodb_username, password=global_vars.mongodb_password)
+        return self
+    
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        self.client.close()
+
+    def _cleanup_unused_rules(self):
+        """
+        Delete all ACL entries whose role (or space) does no longer exist, because those entries are orphans.
+        This function is periodically scheduled (every 1 hour), but may also be manually called if desired
+        """
+
+        logger.info("Running ACL cleanup")
+        
+        with self:
+            db = self.client[global_vars.mongodb_db_name]
+            currently_existing_roles = db.roles.distinct("role")
+            currently_existing_spaces = db.spaces.distinct("name")
+
+            # clean global acl (roles no longer exists)
+            for global_acl_rule in self.global_acl.get_all():
+                if global_acl_rule["role"] not in currently_existing_roles:
+                    self.global_acl.delete(global_acl_rule["role"])
+
+            # clean space acl (role or space no longer exist)
+            for space_acl_rule in self.space_acl.get_full_list():
+                if (space_acl_rule["role"] not in currently_existing_roles) or (space_acl_rule["space"] not in currently_existing_spaces):
+                    self.space_acl.delete(
+                        space_acl_rule["role"], space_acl_rule["space"])
 
 
 class _GlobalACL:
@@ -41,10 +93,11 @@ class _GlobalACL:
     def get_existing_keys(self):
         return self._EXISTING_KEYS
 
-    def insert_default(self, role: str) -> None:
+    def insert_default(self, role: str) -> dict:
         """
-        insert the standard rule for the give role. standard is: create_space: False
+        insert the standard rule for the give role, returning the inserted rule. standard is: create_space: False
         :param role: name of the role to insert
+        :return: inserted default rule
         """
 
         default_rule = {
@@ -56,6 +109,25 @@ class _GlobalACL:
             {"$set": default_rule},
             upsert=True
         )
+        return default_rule
+
+    def insert_admin(self) -> dict:
+        """
+        insert the standard rule for admins (everything true), returning the rule that was inserted
+        :return: inserted admin rule
+        """
+
+        admin_rule = {
+            "role": "admin",
+            "create_space": True
+        }
+        self.db.global_acl.update_one(  # use update + upsert so this function can also be used to restore to default
+            {"role": "admin"},
+            {"$set": admin_rule},
+            upsert=True
+        )
+
+        return admin_rule
 
     def ask(self, role: str, permission_key: str) -> bool:
         """
@@ -65,7 +137,8 @@ class _GlobalACL:
         :return: boolean indicator whether the role has the requested permission or not
         """
         if permission_key not in self._EXISTING_KEYS:
-            raise KeyError("Key '{}' does not match any permission key in the db".format(permission_key))
+            raise KeyError(
+                "Key '{}' does not match any permission key in the db".format(permission_key))
 
         record = self.db.global_acl.find_one({"role": role})
         if record:
@@ -107,7 +180,8 @@ class _GlobalACL:
         """
 
         if permission_key not in self._EXISTING_KEYS:
-            raise KeyError("Key '{}' does not match any permission key in the db".format(permission_key))
+            raise KeyError(
+                "Key '{}' does not match any permission key in the db".format(permission_key))
 
         self.db.global_acl.update_one(
             {"role": role},
@@ -115,7 +189,7 @@ class _GlobalACL:
                 {
                     permission_key: value
                 }
-            },
+             },
             upsert=True
         )
 
@@ -135,13 +209,21 @@ class _GlobalACL:
             raise KeyError("ACL Entry is missing mandatory key 'role'")
         for key in acl_entry.keys():
             if key not in self._EXISTING_KEYS:
-                raise KeyError("Key '{}' does not match any permission key in the db".format(key))
+                raise KeyError(
+                    "Key '{}' does not match any permission key in the db".format(key))
 
         self.db.global_acl.update_one(
             {"role": acl_entry["role"]},
             {"$set": acl_entry},
             upsert=True
         )
+
+    def delete(self, role: str) -> None:
+        """
+        delete the entry associated with the given role
+        """
+
+        self.db.global_acl.delete_one({"role": role})
 
 
 class _SpaceACL:
@@ -159,9 +241,9 @@ class _SpaceACL:
     def get_existing_keys(self):
         return self._EXISTING_KEYS
 
-    def insert_default(self, role: str, space: str) -> None:
+    def insert_default(self, role: str, space: str) -> dict:
         """
-        insert the standard rule for the given role.
+        insert the standard rule for the given role, returning the inserted rule.
         standard is read timeline only:
             "join_space": False,
             "post": False,
@@ -173,6 +255,7 @@ class _SpaceACL:
             "write_files": False
         :param space: the space for which the rules should apply
         :param role: name of the role to insert
+        :return: inserted rule
         """
 
         default_rule = {
@@ -192,8 +275,9 @@ class _SpaceACL:
             {"$set": default_rule},
             upsert=True
         )
+        return default_rule
 
-    def insert_admin(self, space: str) -> None:
+    def insert_admin(self, space: str) -> dict:
         admin_rule = {
             "role": "admin",
             "space": space,
@@ -212,6 +296,7 @@ class _SpaceACL:
             {"$set": admin_rule},
             upsert=True
         )
+        return admin_rule
 
     def ask(self, role: str, space: str, permission_key: str) -> bool:
         """
@@ -223,7 +308,8 @@ class _SpaceACL:
         """
 
         if permission_key not in self._EXISTING_KEYS:
-            raise KeyError("Key '{}' does not match any permission key in the db".format(permission_key))
+            raise KeyError(
+                "Key '{}' does not match any permission key in the db".format(permission_key))
 
         record = self.db.space_acl.find_one({"role": role, "space": space})
         if record:
@@ -257,6 +343,19 @@ class _SpaceACL:
                 result_list.append(record)
         return result_list
 
+    def get_full_list(self) -> Optional[List[Dict]]:
+        """
+        request the full list of the space ACL, i.e. all spaces and all roles
+        :return: list of dict's containing all the entries, or None if no acl entry exists.
+        """
+        ret_list = []
+        entries = self.db.space_acl.find()
+        if entries:
+            for entry in entries:
+                del entry["_id"]
+                ret_list.append(entry)
+        return ret_list
+
     def set(self, role: str, space: str, permission_key: str, value: bool) -> None:
         """
         set a value for a specific permission for a role
@@ -267,7 +366,8 @@ class _SpaceACL:
         """
 
         if permission_key not in self._EXISTING_KEYS:
-            raise KeyError("Key '{}' does not match any permission key in the db".format(permission_key))
+            raise KeyError(
+                "Key '{}' does not match any permission key in the db".format(permission_key))
 
         self.db.space_acl.update_one(
             {"role": role, "space": space},
@@ -275,7 +375,7 @@ class _SpaceACL:
                 {
                     permission_key: value
                 }
-            },
+             },
             upsert=True
         )
 
@@ -307,13 +407,26 @@ class _SpaceACL:
         # check for any keys that are too much (or have a typo e.g.)
         for key in acl_entry.keys():
             if key not in self._EXISTING_KEYS:
-                raise KeyError("Key '{}' does not match any permission key in the db".format(key))
+                raise KeyError(
+                    "Key '{}' does not match any permission key in the db".format(key))
 
         self.db.space_acl.update_one(
             {"role": acl_entry["role"], "space": acl_entry["space"]},
             {"$set": acl_entry},
             upsert=True
         )
+
+    def delete(self, role: str = None, space: str = None):
+        """
+        Delete ACL entries either by role or by space
+        """
+
+        self.db.space_acl.delete_many({
+            "$or": [
+                {"role": role},
+                {"space": space}
+            ]
+        })
 
 
 if __name__ == "__main__":

@@ -1,5 +1,4 @@
 import json
-from lib2to3.pytree import Base
 import logging
 from typing import List
 
@@ -8,21 +7,25 @@ from pymongo import MongoClient
 from tornado.options import options
 from tornado.testing import AsyncHTTPTestCase
 
+from acl import ACL
 import global_vars
 from main import make_app
 from model import User
 from logger_factory import get_logger
 
-# hack access loggers to not produce too much irrelevant output here
-logger = get_logger("access_logger")
-logger.setLevel(logging.WARNING)
-tornado_access_logger = logging.getLogger("tornado.access")
-tornado_access_logger.setLevel(logging.CRITICAL)
+# hack all loggers to not produce too much irrelevant (info) output here
+for logger_name in logging.root.manager.loggerDict:
+    logger = logging.getLogger(logger_name)
+    logger.setLevel(logging.ERROR)
 
 
 MISSING_KEY_ERROR_SLUG = "missing_key:"
 MISSING_KEY_HTTP_BODY_ERROR_SLUG = "missing_key_in_http_body:"
 USER_NOT_ADMIN_ERROR = "user_not_admin"
+INSUFFICIENT_PERMISSION_ERROR = "insufficient_permission"
+UNRECOGNIZABLE_KEY_ERROR = "unrecognizable_key_in_http_body"
+NON_BOOL_VALUE_ERROR = "value_not_bool_in_http_body"
+
 
 # don't change, these values match with the ones in BaseHandler
 CURRENT_ADMIN = User(
@@ -192,7 +195,6 @@ class AuthenticationHandlersTest(BaseApiTestCase):
         response = self.base_checks("GET", "/login/callback", False, 400)
 
         # expect a missing_key:code error as the reason
-        self.assertIn("reason", response)
         self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "code")
 
 
@@ -242,7 +244,6 @@ class FollowHandlerTest(BaseApiTestCase):
         response = self.base_checks("GET", "/follow", False, 400)
 
         # expect a missing_key:user error as the reason
-        self.assertIn("reason", response)
         self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "user")
 
     def test_post_follow(self):
@@ -266,7 +267,6 @@ class FollowHandlerTest(BaseApiTestCase):
         response = self.base_checks("POST", "/follow", False, 400)
 
         # expect a missing_key:user error as the reason
-        self.assertIn("reason", response)
         self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "user")
 
     def test_delete_follow(self):
@@ -290,7 +290,6 @@ class FollowHandlerTest(BaseApiTestCase):
         response = self.base_checks("DELETE", "/follow", False, 400)
 
         # expect a missing_key:user error as the reason
-        self.assertIn("reason", response)
         self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "user")
 
     def tearDown(self) -> None:
@@ -392,7 +391,6 @@ class RoleHandlerTest(BaseApiTestCase):
 
         response = self.base_checks("GET", "/role/all", False, 403)
 
-        self.assertIn("reason", response)
         self.assertEqual(response["reason"], USER_NOT_ADMIN_ERROR)
 
     def test_get_distinct_roles(self):
@@ -417,7 +415,6 @@ class RoleHandlerTest(BaseApiTestCase):
 
         response = self.base_checks("GET", "/role/distinct", False, 403)
 
-        self.assertIn("reason", response)
         self.assertEqual(response["reason"], USER_NOT_ADMIN_ERROR)
 
     def test_post_update_role(self):
@@ -447,7 +444,6 @@ class RoleHandlerTest(BaseApiTestCase):
 
         response = self.base_checks("POST", "/role/update", False, 400, body=http_body)
 
-        self.assertIn("reason", response)
         self.assertEqual(response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "username")
 
     def test_post_update_role_error_missing_role(self):
@@ -462,7 +458,6 @@ class RoleHandlerTest(BaseApiTestCase):
         response = self.base_checks(
             "POST", "/role/update", False, 400, body=http_body)
 
-        self.assertIn("reason", response)
         self.assertEqual(response["reason"],
                          MISSING_KEY_HTTP_BODY_ERROR_SLUG + "role")
 
@@ -477,7 +472,6 @@ class RoleHandlerTest(BaseApiTestCase):
 
         response = self.base_checks("POST", "/role/update", False, 403)
 
-        self.assertIn("reason", response)
         self.assertEqual(response["reason"], USER_NOT_ADMIN_ERROR)
 
 
@@ -535,7 +529,6 @@ class GlobalACLHandlerTest(BaseApiTestCase):
 
         response = self.base_checks("GET", "/global_acl/get", False, 409)
 
-        self.assertIn("reason", response)
         self.assertEqual(response["reason"], "user_has_no_role")
 
     def test_get_global_acl_all(self):
@@ -559,7 +552,6 @@ class GlobalACLHandlerTest(BaseApiTestCase):
 
         response = self.base_checks("GET", "/global_acl/get_all", False, 403)
 
-        self.assertIn("reason", response)
         self.assertEqual(response["reason"], USER_NOT_ADMIN_ERROR)
 
     def test_post_global_acl_update(self):
@@ -592,7 +584,6 @@ class GlobalACLHandlerTest(BaseApiTestCase):
 
         response = self.base_checks("POST", "/global_acl/update", False, 403)
 
-        self.assertIn("reason", response)
         self.assertEqual(response["reason"], USER_NOT_ADMIN_ERROR)
 
     def test_post_global_acl_update_error_unrecognizable_key(self):
@@ -608,10 +599,483 @@ class GlobalACLHandlerTest(BaseApiTestCase):
 
         response = self.base_checks("POST", "/global_acl/update", False, 400, body=updated_acl_entry)
 
-        self.assertEqual(response["reason"], "unrecognizable_key_in_http_body")
+        self.assertEqual(response["reason"], UNRECOGNIZABLE_KEY_ERROR)
 
     def test_post_global_acl_update_error_non_bool_value(self):
-        pass
+        """
+        expect fail message because request contains non-boolean value
+        """
+
+        updated_acl_entry = {
+            "role": self.test_roles[CURRENT_USER.username],
+            "create_space": "str_val",
+        }
+
+        response = self.base_checks("POST", "/global_acl/update", False, 400, body=updated_acl_entry)
+
+        self.assertEqual(response["reason"], NON_BOOL_VALUE_ERROR)
 
     def test_post_global_acl_update_error_admin_immutable(self):
-        pass
+        """
+        expect fail message because admin role is immutable
+        """
+
+        updated_acl_entry = {
+            "role": "admin",
+            "create_space": False,
+        }
+
+        response = self.base_checks("POST", "/global_acl/update", False, 409, body=updated_acl_entry)
+
+        self.assertEqual(response["reason"], "admin_role_immutable")
+
+
+class SpaceACLHandlerTest(BaseApiTestCase):
+
+    def setUp(self) -> None:
+        super().setUp()
+
+        # insert test data
+        self.test_space = "unittest_space"
+        self.test_roles = {
+            CURRENT_ADMIN.username: "admin",
+            CURRENT_USER.username: "user"
+        }
+        self.test_space_acl_rules = {
+            CURRENT_ADMIN.username: {
+                "role": "admin",
+                "space": self.test_space,
+                "join_space": True,
+                "read_timeline": True,
+                "post": True,
+                "comment": True,
+                "read_wiki": True,
+                "write_wiki": True,
+                "read_files": True,
+                "write_files": True
+            },
+            CURRENT_USER.username: {
+                "role": "user",
+                "space": self.test_space,
+                "join_space": True,
+                "read_timeline": True,
+                "post": True,
+                "comment": True,
+                "read_wiki": False,
+                "write_wiki": False,
+                "read_files": True,
+                "write_files": False
+            }
+        }
+
+        self.db.spaces.insert_one({
+            "name": self.test_space,
+            "invisible": False,
+            "members": [CURRENT_ADMIN.username, CURRENT_USER.username],
+            "admins": [CURRENT_ADMIN.username],
+            "invites": [],
+            "requests": []
+        })
+        self.db.roles.insert_many(
+            [{"username": key, "role": value}
+                for key, value in self.test_roles.items()]
+        )
+        # pymongo modifies parameters in place (adds _id fields), like WHAT THE FUCK!? anyway, thats why we give it a copy...
+        self.db.space_acl.insert_many(
+            [value.copy() for value in self.test_space_acl_rules.values()]
+        )
+
+    def tearDown(self) -> None:
+        # cleanup test data
+        self.db.roles.delete_many({})
+        self.db.space_acl.delete_many({})
+        self.db.spaces.delete_many({})
+        super().tearDown()
+
+    def test_get_space_acl(self):
+        """
+        expect: responded acl entry matches the one in setup
+        """
+
+        response = self.base_checks("GET", "/space_acl/get?space={}".format(self.test_space), True, 200)
+
+        self.assertIn("acl_entry", response)
+        self.assertEqual(
+            response["acl_entry"], self.test_space_acl_rules[CURRENT_ADMIN.username])
+
+    def test_get_space_acl_other_role(self):
+        """
+        expect: acl entry of CURRENT_USER instead of CURRENT_ADMIN
+        """
+
+        response = self.base_checks(
+            "GET", "/space_acl/get?space={}&role={}".format(self.test_space, self.test_roles[CURRENT_USER.username]), True, 200)
+
+        self.assertIn("acl_entry", response)
+        self.assertEqual(
+            response["acl_entry"], self.test_space_acl_rules[CURRENT_USER.username])
+
+    def test_get_space_acl_no_space(self):
+        """
+        expect: fail message because query parameter 'space' is missing
+        """
+
+        response = self.base_checks("GET", "/space_acl/get", False, 400)
+
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "space")
+
+    def test_get_space_acl_error_user_has_no_role(self):
+        """
+        expect: fail message because user has no role
+        """
+
+        self.db.roles.delete_many({})
+
+        response = self.base_checks("GET", "/space_acl/get?space={}".format(self.test_space), False, 409)
+        
+        self.assertEqual(response["reason"], "user_has_no_role")
+
+    def test_get_space_acl_all(self):
+        """
+        expect: list of all acl entries, matching those in setup
+        """
+
+        response = self.base_checks(
+            "GET", "/space_acl/get_all?space={}".format(self.test_space), True, 200)
+
+        self.assertIn("acl_entries", response)
+        self.assertEqual(response["acl_entries"], [
+                         value for value in self.test_space_acl_rules.values()])
+
+    def test_get_space_acl_all_error_no_space(self):
+        """
+        expect: fail message because space doesnt exist
+        """
+
+        # explicitely switch to user mode for this test, because space existence is only checked if user is not global admin (--> might be space admin)
+        options.test_admin = False
+        options.test_user = True
+
+        response = self.base_checks(
+            "GET", "/space_acl/get_all?space={}".format("not_existing_space"), False, 400)
+
+        self.assertEqual(response["reason"], "space_doesnt_exist")
+
+    def test_get_space_acl_all_error_no_admin(self):
+        """
+        expect: fail message because user is not admin (neither global nor space)
+        """
+
+        # explicitely switch to user mode for this test
+        options.test_admin = False
+        options.test_user = True
+
+        response = self.base_checks(
+            "GET", "/space_acl/get_all?space={}".format(self.test_space), False, 403)
+
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_post_space_acl_update(self):
+        """
+        expect: updated entries get persisted into the db
+        """
+
+        updated_acl_entry = {
+            "role": self.test_roles[CURRENT_USER.username],
+            "space": self.test_space,
+            "join_space": True,
+            "read_timeline": True,
+            "post": False,
+            "comment": False,
+            "read_wiki": False,
+            "write_wiki": False,
+            "read_files": False,
+            "write_files": False
+        }
+
+        self.base_checks("POST", "/space_acl/update",
+                         True, 200, body=updated_acl_entry)
+
+        db_state = self.db.space_acl.find_one(
+            {"role": self.test_roles[CURRENT_USER.username]}
+        )
+
+        # for equality checks, delete the id
+        del db_state["_id"]
+
+        self.assertIn("role", db_state)
+        self.assertEqual(db_state, updated_acl_entry)
+
+    def test_post_space_acl_update_error_no_admin(self):
+        """
+        expect: fail message because user is not an admin
+        """
+
+        # explicitely switch to user mode for this test
+        options.test_admin = False
+        options.test_user = True
+
+        # have to include the update payload here, because acl checks for space admin, therefore space has to be included
+        updated_acl_entry = {
+            "role": self.test_roles[CURRENT_USER.username],
+            "space": self.test_space,
+            "join_space": True,
+            "read_timeline": True,
+            "post": False,
+            "comment": False,
+            "read_wiki": False,
+            "write_wiki": False,
+            "read_files": False,
+            "write_files": False
+        }
+
+        response = self.base_checks("POST", "/space_acl/update", False, 403, body=updated_acl_entry)
+
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_post_space_acl_update_error_unrecognizable_key(self):
+        """
+        expect fail message because request contains invalid key
+        """
+
+        updated_acl_entry = {
+            "role": self.test_roles[CURRENT_USER.username],
+            "space": self.test_space,
+            "join_space": True,
+            "read_timeline": True,
+            "post": False,
+            "comment": False,
+            "read_wiki": False,
+            "write_wiki": False,
+            "read_files": False,
+            "write_files": False,
+            "invalid_key": True
+        }
+
+        response = self.base_checks(
+            "POST", "/space_acl/update", False, 400, body=updated_acl_entry)
+
+        self.assertEqual(response["reason"], UNRECOGNIZABLE_KEY_ERROR)
+
+    def test_post_space_acl_update_error_non_bool_value(self):
+        """
+        expect fail message because request contains non-boolean value
+        """
+
+        updated_acl_entry = {
+            "role": self.test_roles[CURRENT_USER.username],
+            "space": self.test_space,
+            "join_space": "non_bool_value",
+            "read_timeline": True,
+            "post": False,
+            "comment": False,
+            "read_wiki": False,
+            "write_wiki": False,
+            "read_files": False,
+            "write_files": False,
+        }
+
+        response = self.base_checks(
+            "POST", "/space_acl/update", False, 400, body=updated_acl_entry)
+
+        self.assertEqual(response["reason"], NON_BOOL_VALUE_ERROR)
+
+    def test_post_space_acl_update_error_role_doesnt_exist(self):
+        """
+        expect: fail message because the role doesnt exist
+        """
+
+        updated_acl_entry = {
+            "role": "non_existent_role",
+            "space": self.test_space,
+            "join_space": True,
+            "read_timeline": True,
+            "post": False,
+            "comment": False,
+            "read_wiki": False,
+            "write_wiki": False,
+            "read_files": False,
+            "write_files": False,
+        }
+
+        response = self.base_checks(
+            "POST", "/space_acl/update", False, 409, body=updated_acl_entry)
+
+        self.assertEqual(response["reason"], "role_doesnt_exist")
+
+    def test_post_space_acl_update_error_space_doesnt_exist(self):
+        """
+        expect: fail message because the space doesnt exist
+        """
+
+        updated_acl_entry = {
+            "role": self.test_roles[CURRENT_USER.username],
+            "space": "non_existing_space",
+            "join_space": True,
+            "read_timeline": True,
+            "post": False,
+            "comment": False,
+            "read_wiki": False,
+            "write_wiki": False,
+            "read_files": False,
+            "write_files": False,
+        }
+
+        response = self.base_checks(
+            "POST", "/space_acl/update", False, 409, body=updated_acl_entry)
+
+        self.assertEqual(response["reason"], "space_doesnt_exist")
+
+    def test_post_space_acl_update_error_admin_immutable(self):
+        """
+        expect: fail message because the admin role should not be modifiable
+        """
+
+        updated_acl_entry = {
+            "role": "admin",
+            "space": self.test_space,
+            "join_space": True,
+            "read_timeline": True,
+            "post": False,
+            "comment": False,
+            "read_wiki": False,
+            "write_wiki": False,
+            "read_files": False,
+            "write_files": False,
+        }
+
+        response = self.base_checks(
+            "POST", "/space_acl/update", False, 409, body=updated_acl_entry)
+
+        self.assertEqual(response["reason"], "admin_role_immutable")
+
+
+class RoleACLIntegrationTest(BaseApiTestCase):
+
+    def setUp(self) -> None:
+        super().setUp()
+
+        # insert test data
+        self.test_space = "unittest_space"
+        self.test_roles = {
+            CURRENT_ADMIN.username: "admin",
+            CURRENT_USER.username: "user"
+        }
+        self.test_space_acl_rules = {
+            CURRENT_ADMIN.username: {
+                "role": "admin",
+                "space": self.test_space,
+                "join_space": True,
+                "read_timeline": True,
+                "post": True,
+                "comment": True,
+                "read_wiki": True,
+                "write_wiki": True,
+                "read_files": True,
+                "write_files": True
+            },
+            CURRENT_USER.username: {
+                "role": "user",
+                "space": self.test_space,
+                "join_space": True,
+                "read_timeline": True,
+                "post": True,
+                "comment": True,
+                "read_wiki": False,
+                "write_wiki": False,
+                "read_files": True,
+                "write_files": False
+            }
+        }
+
+        self.db.spaces.insert_one({
+            "name": self.test_space,
+            "invisible": False,
+            "members": [CURRENT_ADMIN.username, CURRENT_USER.username],
+            "admins": [CURRENT_ADMIN.username],
+            "invites": [],
+            "requests": []
+        })
+        self.db.roles.insert_many(
+            [{"username": key, "role": value}
+                for key, value in self.test_roles.items()]
+        )
+        # pymongo modifies parameters in place (adds _id fields), like WHAT THE FUCK!? anyway, thats why we give it a copy...
+        self.db.space_acl.insert_many(
+            [value.copy() for value in self.test_space_acl_rules.values()]
+        )
+
+    def tearDown(self) -> None:
+        # cleanup test data
+        self.db.roles.delete_many({})
+        self.db.space_acl.delete_many({})
+        self.db.spaces.delete_many({})
+        super().tearDown()
+
+
+    def test_acl_entry_creation_on_role_request_of_no_role(self):
+        """
+        expect: when requesting the role of the current_user, but he has no role, the role and a corresponding acl entry should be created
+        """
+
+        # explicitely switch to user mode for this test
+        options.test_admin = False
+        options.test_user = True
+
+        # delete the role entry
+        self.db.roles.delete_one({"username": CURRENT_USER.username})
+
+        role_response = self.base_checks("GET", "/role/my", True, 200)
+
+        # expect the role "guest" to be assigned to me automatically
+        self.assertIn("role", role_response)
+        self.assertEqual(role_response["role"], "guest")
+
+        # also expect a corresponding global acl entry to be created
+        global_acl_db_state = self.db.global_acl.find_one({"role": "guest"})
+        self.assertNotEqual(global_acl_db_state, None)
+
+        # also expect a corresponding space acl entry to be created (in all spaces, i.e. only in the test space here)
+        space_acl_db_state = self.db.space_acl.find_one({"role": "guest", "space": self.test_space})
+        self.assertNotEqual(space_acl_db_state, None)
+
+
+    def test_acl_entry_creation_on_role_creation(self):
+        """
+        expect: creating a new role via update/upsert should also create a corresponding acl entry
+        """
+
+        new_role = {
+            "username": CURRENT_USER.username,
+            "role": "new_role"
+        }
+
+        self.base_checks("POST", "/role/update", True, 200, body=new_role)
+
+        # expect a corresponding global acl entry to be created
+        global_acl_db_state = self.db.global_acl.find_one({"role": "new_role"})
+        self.assertNotEqual(global_acl_db_state, None)
+
+        # also expect a corresponding space acl entry to be created (in all spaces, i.e. only in the test space here)
+        space_acl_db_state = self.db.space_acl.find_one(
+            {"role": "new_role", "space": self.test_space})
+        self.assertNotEqual(space_acl_db_state, None)
+
+
+    def test_cleanup_unused_acl_rules(self):
+        """
+        expect: removing all roles should cleanup the full acl according to the cleanup procedure removing any entries, that no longer have a matching role or space
+        """
+
+        self.db.roles.delete_many({})
+
+        with ACL() as acl_manager:
+            acl_manager._cleanup_unused_rules()
+
+        # expect an empty global acl
+        global_acl_db_state = list(self.db.global_acl.find())
+        self.assertEqual(global_acl_db_state, [])
+
+        # also expect an empty space acl
+        space_acl_db_state = list(self.db.space_acl.find())
+        self.assertEqual(space_acl_db_state, [])
