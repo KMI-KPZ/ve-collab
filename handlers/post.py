@@ -79,7 +79,7 @@ class PostHandler(BaseHandler):
                         {
                             "status": 400,
                             "success": False,
-                            "reason": "space_does_not_exist",
+                            "reason": "space_doesnt_exist",
                         }
                     )
                     self.finish()

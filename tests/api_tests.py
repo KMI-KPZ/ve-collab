@@ -25,6 +25,7 @@ USER_NOT_ADMIN_ERROR = "user_not_admin"
 INSUFFICIENT_PERMISSION_ERROR = "insufficient_permission"
 UNRECOGNIZABLE_KEY_ERROR = "unrecognizable_key_in_http_body"
 NON_BOOL_VALUE_ERROR = "value_not_bool_in_http_body"
+SPACE_DOESNT_EXIST_ERROR = "space_doesnt_exist"
 
 
 # don't change, these values match with the ones in BaseHandler
@@ -820,7 +821,7 @@ class SpaceACLHandlerTest(BaseApiTestCase):
             400,
         )
 
-        self.assertEqual(response["reason"], "space_doesnt_exist")
+        self.assertEqual(response["reason"], SPACE_DOESNT_EXIST_ERROR)
 
     def test_get_space_acl_all_error_no_admin(self):
         """
@@ -991,7 +992,7 @@ class SpaceACLHandlerTest(BaseApiTestCase):
             "POST", "/space_acl/update", False, 409, body=updated_acl_entry
         )
 
-        self.assertEqual(response["reason"], "space_doesnt_exist")
+        self.assertEqual(response["reason"], SPACE_DOESNT_EXIST_ERROR)
 
     def test_post_space_acl_update_error_admin_immutable(self):
         """
@@ -1261,13 +1262,108 @@ class PostHandlerTest(BaseApiTestCase):
         self.assertEqual(db_state["files"], [])
 
     def test_post_create_post_space(self):
-        pass
+        """
+        expect: successful post creation into space
+        """
+
+        request_json = {
+            "text": "unittest_test_post",
+            "tags": json.dumps(["tag1", "tag2"]),
+            "space": self.test_space,
+        }
+
+        request = MultipartEncoder(fields=request_json)
+
+        response = self.base_checks(
+            "POST",
+            "/posts",
+            True,
+            200,
+            headers={"Content-Type": request.content_type},
+            body=request.to_string(),
+        )
+
+        db_state = list(self.db.posts.find(projection={"_id": False}))
+
+        # expect exactly this one post in the db
+        self.assertEqual(len(db_state), 1)
+
+        # since we asserted len == 1, we can safely use the first (and only) element
+        db_state = db_state[0]
+
+        # expect content
+        expected_keys = [
+            "author",
+            "creation_date",
+            "text",
+            "space",
+            "pinned",
+            "wordpress_post_id",
+            "tags",
+            "files",
+        ]
+        self.assertTrue(all(key in db_state for key in expected_keys))
+        self.assertEqual(db_state["author"], CURRENT_ADMIN.username)
+        self.assertEqual(db_state["text"], request_json["text"])
+        self.assertEqual(db_state["space"], self.test_space)
+        self.assertFalse(db_state["pinned"])
+        self.assertIsNone(db_state["wordpress_post_id"])
+        self.assertEqual(db_state["tags"], json.loads(request_json["tags"]))
+        self.assertEqual(db_state["files"], [])
 
     def test_post_create_post_error_insufficient_permission(self):
-        pass
+        """
+        expect: post creation should fail,
+        because user has not enough permission to post into that space
+        """
+
+        # explicitely switch to user mode for this test, because test_user has
+        # post permission set to False
+        options.test_admin = False
+        options.test_user = True
+
+        request_json = {
+            "text": "unittest_test_post",
+            "tags": json.dumps(["tag1", "tag2"]),
+            "space": self.test_space,
+        }
+
+        request = MultipartEncoder(fields=request_json)
+
+        response = self.base_checks(
+            "POST",
+            "/posts",
+            False,
+            403,
+            headers={"Content-Type": request.content_type},
+            body=request.to_string(),
+        )
+
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
 
     def test_post_create_post_error_space_doesnt_exist(self):
-        pass
+        """
+        expect: fail message, because space doesnt exist in which the post should land
+        """
+
+        request_json = {
+            "text": "unittest_test_post",
+            "tags": json.dumps(["tag1", "tag2"]),
+            "space": "non_existent_space",
+        }
+
+        request = MultipartEncoder(fields=request_json)
+
+        response = self.base_checks(
+            "POST",
+            "/posts",
+            False,
+            400,
+            headers={"Content-Type": request.content_type},
+            body=request.to_string(),
+        )
+
+        self.assertEqual(response["reason"], SPACE_DOESNT_EXIST_ERROR)
 
     def test_post_edit_post(self):
         pass
