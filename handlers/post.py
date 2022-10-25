@@ -4,8 +4,10 @@ from bson.objectid import ObjectId
 from datetime import datetime
 import tornado.escape
 
+from acl import ACL
 from handlers.base_handler import BaseHandler, auth_needed
 from logger_factory import get_logger, log_access
+import util
 
 
 logger = get_logger(__name__)
@@ -73,6 +75,17 @@ class PostHandler(BaseHandler):
                     self.write({"status": 400,
                                 "reason": "space_does_not_exist"})
                     self.finish()
+                    return
+
+                # determine if user has permission to post into that space
+                user_can_post = False
+                with ACL() as acl:
+                    user_can_post = acl.space_acl.ask(self.get_current_user_role(), space, "post")
+                if not user_can_post:
+                    self.set_status(403)
+                    self.write({"status": 403,
+                                "success": False,
+                                "reason": "insufficient_permission"})
                     return
 
             # handle files
@@ -206,6 +219,7 @@ class CommentHandler(BaseHandler):
         text = http_body['text']
         post_ref = ObjectId(http_body['post_id'])
 
+        # TODO enforce acl comment permission
         self.db.posts.update_one(
             {"_id": post_ref},  # filter
             {                   # update
@@ -429,6 +443,19 @@ class RepostHandler(BaseHandler):
                                 "reason": "space_does_not_exist"})
                     self.finish()
                     return
+                
+                # determine if user has permission to post into that space
+                user_can_post = False
+                with ACL() as acl:
+                    user_can_post = acl.space_acl.ask(
+                        self.get_current_user_role(), space, "post")
+                if not user_can_post:
+                    self.set_status(403)
+                    self.write({"status": 403,
+                                "success": False,
+                                "reason": "insufficient_permission"})
+                    return
+
             post["space"] = space
 
             del post["_id"]
@@ -469,10 +496,10 @@ class PinHandler(BaseHandler):
     def get_space(self, space_name):
         return self.db.spaces.find_one({"name": space_name})
 
-    def check_space_or_global_admin(self, space_name):
+    async def check_space_or_global_admin(self, space_name):
         space = self.get_space(space_name)
         if space is not None:
-            if (self.current_user.username in space["admins"]) or (self.get_current_user_role() == "admin"):
+            if (self.current_user.username in space["admins"]) or (self.get_current_user_role() == "admin") or (await util.is_platform_admin(self.current_user.username)):
                 return True
             else:
                 return False
@@ -481,7 +508,7 @@ class PinHandler(BaseHandler):
 
     @log_access
     @auth_needed
-    def post(self):
+    async def post(self):
         """
         POST /pin
             pin a post or comment (posts are only pinnable if they are in a space)
@@ -527,7 +554,7 @@ class PinHandler(BaseHandler):
             if "space" in post and post["space"] is not None:
                 try:
                     # check if user is either space admin or global admin
-                    if self.check_space_or_global_admin(post["space"]):
+                    if await self.check_space_or_global_admin(post["space"]):
                         # set the pin
                         self.db.posts.update_one(
                             {"_id": ObjectId(http_body["id"])},  # filter
@@ -563,7 +590,7 @@ class PinHandler(BaseHandler):
                 # have to check if the post was in a space first, because then also the space admin may pin comments
                 if "space" in post and post["space"] is not None:
                     # check if user is either space admin or global admin or the post creator
-                    if self.check_space_or_global_admin(post["space"]) or self.current_user.username == post["author"]:
+                    if await self.check_space_or_global_admin(post["space"]) or self.current_user.username == post["author"]:
                         # set the pin
                         self.db.posts.update_one(
                             {"comments._id": ObjectId(http_body["id"])},  # filter
@@ -617,7 +644,7 @@ class PinHandler(BaseHandler):
 
     @log_access
     @auth_needed
-    def delete(self):
+    async def delete(self):
         """
         DELETE /pin
             delete a pin of a post or a comment (posts are only pinnable if they are in a space)
@@ -664,8 +691,8 @@ class PinHandler(BaseHandler):
             if "space" in post and post["space"] is not None:
                 try:
                     # check if user is either space admin or global admin
-                    if self.check_space_or_global_admin(post["space"]):
-                        # set the pin
+                    if await self.check_space_or_global_admin(post["space"]):
+                        # unset the pin
                         self.db.posts.update_one(
                             {"_id": ObjectId(http_body["id"])},  # filter
                             {
@@ -677,7 +704,7 @@ class PinHandler(BaseHandler):
                         self.write({"status": 200,
                                     "success": True})
                     else:
-                        # user is no group admin nor global admin --> no permission to pin
+                        # user is no group admin nor global admin --> no permission to unpin
                         self.set_status(403)
                         self.write({"status": 403,
                                     "reason": "insufficient_permission"})
@@ -688,7 +715,7 @@ class PinHandler(BaseHandler):
                                 'reason': "space_doesnt_exist"})
                     return
             else:
-                #cannot pin because post is not in space
+                #cannot unpin because post is not in space
                 self.set_status(400)
                 self.write({'status': 400,
                             'reason': "post_not_in_space"})
@@ -700,8 +727,8 @@ class PinHandler(BaseHandler):
                 # have to check if the post was in a space first, because then also the space admin may pin comments
                 if "space" in post and post["space"] is not None:
                     # check if user is either space admin or global admin or the post creator
-                    if self.check_space_or_global_admin(post["space"]) or self.current_user.username == post["author"]:
-                        # set the pin
+                    if await self.check_space_or_global_admin(post["space"]) or self.current_user.username == post["author"]:
+                        # set the unpin
                         self.db.posts.update_one(
                             {"comments._id": ObjectId(http_body["id"])},  # filter
                             {
@@ -714,13 +741,13 @@ class PinHandler(BaseHandler):
                                     "success": True})
 
                     else:
-                        # user is no group admin nor global admin nor post author --> no permission to pin
+                        # user is no group admin nor global admin nor post author --> no permission to unpin
                         self.set_status(403)
                         self.write({"status": 403,
                                     "reason": "insufficient_permission"})
                         return
                 else:
-                    # post was not in space, only post author or global admin have permission to pin
+                    # post was not in space, only post author or global admin have permission to unpin
                     if self.current_user.username == post["author"] or self.get_current_user_role() == "admin":
                         # set the pin
                         self.db.posts.update_one(

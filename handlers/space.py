@@ -3,10 +3,9 @@ import os
 import re
 from typing import Dict, Optional
 
-from tornado.options import options
 import tornado.web
 
-from acl import get_acl
+from acl import ACL
 from handlers.base_handler import BaseHandler, auth_needed
 from logger_factory import log_access
 
@@ -833,12 +832,12 @@ class SpaceHandler(BaseHandler):
         """
 
         # check if the user has permission
-        acl = get_acl().global_acl
-        if not acl.ask(self.get_current_user_role(), "create_space"):
-            self.set_status(403)
-            self.write({"status": 403,
-                        "reason": "insufficient_permission"})
-            return
+        with ACL() as acl:
+            if not acl.global_acl.ask(self.get_current_user_role(), "create_space"):
+                self.set_status(403)
+                self.write({"status": 403,
+                            "reason": "insufficient_permission"})
+                return
 
         members = [self.current_user.username]
 
@@ -861,12 +860,12 @@ class SpaceHandler(BaseHandler):
         self.db.spaces.insert_one(space)
 
         # create default acl entry for all different roles
-        acl = get_acl().space_acl
-        acl.insert_admin(space_name)
-        roles = self.db.roles.distinct("role")
-        for role in roles:
-            if role != "admin":
-                acl.insert_default(role, space_name)
+        with ACL() as acl:
+            acl.space_acl.insert_admin(space_name)
+            roles = self.db.roles.distinct("role")
+            for role in roles:
+                if role != "admin":
+                    acl.space_acl.insert_default(role, space_name)
 
         self.set_status(200)
         self.write({"status": 200,
@@ -886,21 +885,21 @@ class SpaceHandler(BaseHandler):
                         "reason": "space_doesnt_exist"})
             return
 
-        acl = get_acl().space_acl
-        # user is not allowed to join spaces directly, therefore send join request instead of joining directly
-        if not acl.ask(self.get_current_user_role(), space_name, "join_space"):
-            self.db.spaces.update_one(
-                {"name": space_name},
-                {
-                    "$addToSet": {"requests": self.current_user.username}
-                }
-            )
+        with ACL() as acl:
+            # user is not allowed to join spaces directly, therefore send join request instead of joining directly
+            if not acl.space_acl.ask(self.get_current_user_role(), space_name, "join_space"):
+                self.db.spaces.update_one(
+                    {"name": space_name},
+                    {
+                        "$addToSet": {"requests": self.current_user.username}
+                    }
+                )
 
-            self.set_status(200)
-            self.write({"status": 200,
-                        "success": True,
-                        "join_type": "requested_join"})
-            return
+                self.set_status(200)
+                self.write({"status": 200,
+                            "success": True,
+                            "join_type": "requested_join"})
+                return
 
         # user has permission to join spaces, directly add him as member
         self.db.spaces.update_one(

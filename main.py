@@ -16,6 +16,7 @@ import tornado.locks
 import tornado.web
 from tornado.options import define, options, parse_command_line
 
+from acl import ACL
 import global_vars
 from handlers.authentication import LoginHandler, LoginCallbackHandler, LogoutHandler
 from handlers.follow import FollowHandler
@@ -161,20 +162,20 @@ async def main():
     global_vars.keycloak_callback_url = conf["keycloak_callback_url"]
 
     # insert default role and acl templates if db is empty
-    acl = get_acl().global_acl
-    existing_roles = acl.db.roles.find_one({})
-    if not existing_roles:
-        with open("DummyData/role_templates.json", "r") as fp:
-            role_templates = json.load(fp)
-        for role in role_templates["roles"]:
-            acl.db.roles.insert_one(
-                {"username": role["username"], "role": role["role"]})
+    with ACL() as acl:
+        existing_roles = acl.global_acl.db.roles.find_one({})
+        if not existing_roles:
+            with open("DummyData/role_templates.json", "r") as fp:
+                role_templates = json.load(fp)
+            for role in role_templates["roles"]:
+                acl.global_acl.db.roles.insert_one(
+                    {"username": role["username"], "role": role["role"]})
 
-    if not acl.get_all():
-        with open("DummyData/acl_templates.json", "r") as fp:
-            acl_templates = json.load(fp)
-        for entry in acl_templates["global_acl"]:
-            acl.set_all(entry)
+        if not acl.global_acl.get_all():
+            with open("DummyData/acl_templates.json", "r") as fp:
+                acl_templates = json.load(fp)
+            for entry in acl_templates["global_acl"]:
+                acl.global_acl.set_all(entry)
 
     # build and start server
     cookie_secret = conf["cookie_secret"]

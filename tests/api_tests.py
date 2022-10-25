@@ -11,7 +11,6 @@ from acl import ACL
 import global_vars
 from main import make_app
 from model import User
-from logger_factory import get_logger
 
 # hack all loggers to not produce too much irrelevant (info) output here
 for logger_name in logging.root.manager.loggerDict:
@@ -330,6 +329,9 @@ class RoleHandlerTest(BaseApiTestCase):
     def tearDown(self) -> None:
         # cleanup test data
         self.db.roles.delete_many({})
+        # since acl entries get created as a side effect, clean those as well
+        self.db.global_acl.delete_many({})
+        self.db.space_acl.delete_many({})
         super().tearDown()
 
     def _get_my_role(self):
@@ -1008,6 +1010,7 @@ class RoleACLIntegrationTest(BaseApiTestCase):
     def tearDown(self) -> None:
         # cleanup test data
         self.db.roles.delete_many({})
+        self.db.global_acl.delete_many({})
         self.db.space_acl.delete_many({})
         self.db.spaces.delete_many({})
         super().tearDown()

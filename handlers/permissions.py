@@ -2,7 +2,7 @@ import json
 
 import tornado.web
 
-from acl import get_acl, ACL
+from acl import ACL
 from handlers.base_handler import BaseHandler, auth_needed
 from logger_factory import get_logger, log_access
 import mock_platform
@@ -36,16 +36,16 @@ class RoleHandler(BaseHandler):
         given the role, initialize a default acl entry, such that we don't ever have inconsistency problems that roles exist but no acl entries
         """
 
-        acl = get_acl()
-        # insert into global acl
-        if not acl.global_acl.get(role):
-            acl.global_acl.insert_default(role)
-        
-        # insert into space acl of all spaces
-        spaces = [space["name"] for space in self.db.spaces.find()]
-        for space in spaces:
-            if not acl.space_acl.get(role, space):
-                acl.space_acl.insert_default(role, space)
+        with ACL() as acl:
+            # insert into global acl
+            if not acl.global_acl.get(role):
+                acl.global_acl.insert_default(role)
+            
+            # insert into space acl of all spaces
+            spaces = [space["name"] for space in self.db.spaces.find()]
+            for space in spaces:
+                if not acl.space_acl.get(role, space):
+                    acl.space_acl.insert_default(role, space)
 
     @log_access
     @auth_needed
@@ -66,7 +66,6 @@ class RoleHandler(BaseHandler):
                             "role": role_result["role"]})
             else:
                 # no record for this user was found, insert as guest (default role)
-                # TODO guest as default role?
                 self.db.roles.insert_one(
                     {"username": self.current_user.username,
                      "role": "guest"}
@@ -100,13 +99,13 @@ class RoleHandler(BaseHandler):
                     # if the user does not already exist, add him with guest role
                     payload = {"username": user_list["users"][platform_user]["username"], "role": "guest"}
                     self.db.roles.insert_one(payload)
-                    # manually because otherwise non-json-serializable ObjectId is in payload
+                    # manually create return entry because otherwise non-json-serializable ObjectId is in payload
                     ret_list.append({"username": user_list["users"][platform_user]["username"], "role": "guest"})
 
                     # check once if the guest role was present (once is enough, there might be many keycloak users coming in, checking for the same role on everyone is useless overhead)
                     checked_guest_role_present = False
                     if not checked_guest_role_present:
-                        self._create_acl_entry_if_not_exists("guest")
+                        self._create_acl_entry_if_not_exists(payload["role"])
                         checked_guest_role_present = True
 
                 self.set_status(200)
@@ -233,14 +232,13 @@ class GlobalACLHandler(BaseHandler):
         logger.warning(
             "Inconsistency Problem: the role '{}' exists, but no Global ACL entry for it. Inserting default rule".format(role))
         
-        acl = get_acl().global_acl
-        
-        # if the role is admin, set everything to true instead of false
-        # technically this should never happen, but better safe than sorry
-        if role == "admin":
-            return acl.insert_admin()
-        else:
-            return acl.insert_default(role)
+        with ACL() as acl:
+            # if the role is admin, set everything to true instead of false
+            # technically this should never happen, but better safe than sorry
+            if role == "admin":
+                return acl.global_acl.insert_admin()
+            else:
+                return acl.global_acl.insert_default(role)
 
     @log_access
     @auth_needed
@@ -283,11 +281,12 @@ class GlobalACLHandler(BaseHandler):
         """
 
         if slug == "get":
-            acl = get_acl().global_acl
             # since acl is role-based, we need to query for the current user's role
             current_user_role = self.get_current_user_role()
             if current_user_role:
-                acl_entry = acl.get(current_user_role)
+                acl_entry = None
+                with ACL() as acl:
+                    acl_entry = acl.global_acl.get(current_user_role)
 
                 # inconsistency problem: the role exists, but no acl entry. construct an acl entry that has all permissions set to false (except it is for some reason the admin role, then set everything to true)
                 if not acl_entry:
@@ -305,15 +304,15 @@ class GlobalACLHandler(BaseHandler):
 
         elif slug == "get_all":
             if self.is_current_user_lionet_admin() or await util.is_platform_admin(self.current_user.username):
-                acl = get_acl().global_acl
+                entries = []
+                with ACL() as acl:
+                    # solve inconsistency problem of role existing but no acl_entry: whenever there is a role that has no acl_entry, create a default one
+                    distinct_roles = self.db.roles.distinct("role")
+                    for role in distinct_roles:
+                        if role not in [entry["role"] for entry in acl.global_acl.get_all()]:
+                            self.resolve_inconsistency(role)
 
-                # solve inconsistency problem of role existing but no acl_entry: whenever there is a role that has no acl_entry, create a default one
-                distinct_roles = self.db.roles.distinct("role")
-                for role in distinct_roles:
-                    if role not in [entry["role"] for entry in acl.get_all()]:
-                        self.resolve_inconsistency(role)
-
-                entries = acl.get_all()
+                    entries = acl.global_acl.get_all()
 
                 self.set_status(200)
                 self.write({"status": 200,
@@ -353,44 +352,43 @@ class GlobalACLHandler(BaseHandler):
                                 "success": False,
                                 "reason": "json_parsing_error"})
                     return
+                
+                with ACL() as acl:
+                    # check if the http body only contains valid keys (i.e. keys that exist in the acl)
+                    if any(key not in acl.global_acl.get_existing_keys() for key in http_body):
+                        self.set_status(400)
+                        self.write({"status": 400,
+                                    "success": False,
+                                    "reason": "unrecognizable_key_in_http_body"})
+                        return
 
-                acl = get_acl().global_acl
+                    # check if http body only contains boolean values, except for the role attribute
+                    for key in http_body:
+                        if key != "role":
+                            if not isinstance(http_body[key], bool):
+                                self.set_status(400)
+                                self.write({"status": 400,
+                                            "success": False,
+                                            "reason": "value_not_bool_in_http_body"})
+                                return
 
-                # check if the http body only contains valid keys (i.e. keys that exist in the acl)
-                if any(key not in acl.get_existing_keys() for key in http_body):
-                    self.set_status(400)
-                    self.write({"status": 400,
-                                "success": False,
-                                "reason": "unrecognizable_key_in_http_body"})
-                    return
+                    # forbid any modifications to the admin role to avoid deadlocks
+                    if http_body["role"] == "admin":
+                        self.set_status(409)
+                        self.write({"status": 409,
+                                    "success": False,
+                                    "reason": "admin_role_immutable"})
+                        return
 
-                # check if http body only contains boolean values, except for the role attribute
-                for key in http_body:
-                    if key != "role":
-                        if not isinstance(http_body[key], bool):
-                            self.set_status(400)
-                            self.write({"status": 400,
-                                        "success": False,
-                                        "reason": "value_not_bool_in_http_body"})
-                            return
+                    # reject setting an entry of a role that does not exist to prevent dangling entries
+                    if not self.db.roles.find_one({"role": http_body["role"]}):
+                        self.set_status(409)
+                        self.write({"status": 409,
+                                    "success": False,
+                                    "reason": "role_doesnt_exist"})
+                        return
 
-                # forbid any modifications to the admin role to avoid deadlocks
-                if http_body["role"] == "admin":
-                    self.set_status(409)
-                    self.write({"status": 409,
-                                "success": False,
-                                "reason": "admin_role_immutable"})
-                    return
-
-                # reject setting an entry of a role that does not exist to prevent dangling entries
-                if not self.db.roles.find_one({"role": http_body["role"]}):
-                    self.set_status(409)
-                    self.write({"status": 409,
-                                "success": False,
-                                "reason": "role_doesnt_exist"})
-                    return
-
-                acl.set_all(http_body)
+                    acl.global_acl.set_all(http_body)
 
                 self.set_status(200)
                 self.write({"status": 200,
@@ -410,17 +408,17 @@ class SpaceACLHandler(BaseHandler):
         """
         resolve inconsistency problem when the role exists, but no acl entry for it: insert the default rule and return it
         """
+
         logger.warning(
             "Inconsistency Problem: the role '{}' exists, but no Global ACL entry for it. Inserting default rule".format(role))
 
-        acl = get_acl().space_acl
-
-        # if the role is admin, set everything to true instead of false
-        # technically this should never happen, but better safe than sorry
-        if role == "admin":
-            return acl.insert_admin(space)
-        else:
-            return acl.insert_default(role, space)
+        with ACL() as acl:
+            # if the role is admin, set everything to true instead of false
+            # technically this should never happen, but better safe than sorry
+            if role == "admin":
+                return acl.space_acl.insert_admin(space)
+            else:
+                return acl.space_acl.insert_default(role, space)
 
     @log_access
     @auth_needed
@@ -481,8 +479,6 @@ class SpaceACLHandler(BaseHandler):
             return
 
         if slug == "get":
-            acl = get_acl().space_acl
-
             # if there is a role specified, query for this role instead of the current_user's one
             optional_role = self.get_argument("role", None)
             if optional_role:
@@ -503,7 +499,9 @@ class SpaceACLHandler(BaseHandler):
                         return
 
                 # query the acl
-                acl_entry = acl.get(optional_role, space_name)
+                acl_entry = None
+                with ACL() as acl:
+                    acl_entry = acl.space_acl.get(optional_role, space_name)
 
                 # inconsistency problem: the role exists, but no acl entry. construct an acl entry that has all permissions set to false
                 if not acl_entry:
@@ -519,7 +517,9 @@ class SpaceACLHandler(BaseHandler):
             # since acl is role-based, we need to query for the current user's role
             current_user_role = self.get_current_user_role()
             if current_user_role:
-                acl_entry = acl.get(current_user_role, space_name)
+                acl_entry = None
+                with ACL() as acl:
+                    acl_entry = acl.space_acl.get(current_user_role, space_name)
 
                 # inconsistency problem: the role exists, but no acl entry. construct an acl entry that has all permissions set to false
                 if not acl_entry:
@@ -552,8 +552,9 @@ class SpaceACLHandler(BaseHandler):
                                 "reason": "insufficient_permission"})
                     return
 
-            acl = get_acl().space_acl
-            entries = acl.get_all(space_name)
+            entries = None
+            with ACL() as acl:
+                entries = acl.space_acl.get_all(space_name)
 
             self.set_status(200)
             self.write({"status": 200,
@@ -595,61 +596,61 @@ class SpaceACLHandler(BaseHandler):
                             "success": False,
                             "reason": "json_parsing_error"})
                 return
-            acl = get_acl().space_acl
-
-            # check if the http body only contains valid keys (i.e. keys that exist in the acl)
-            if any(key not in acl.get_existing_keys() for key in http_body):
-                self.set_status(400)
-                self.write({"status": 400,
-                            "success": False,
-                            "reason": "unrecognizable_key_in_http_body"})
-                return
-
-            # check if http body only contains boolean values, except for the role and space attribute
-            for key in http_body:
-                if key != "role" and key != "space":
-                    if not isinstance(http_body[key], bool):
-                        self.set_status(400)
-                        self.write({"status": 400,
-                                    "success": False,
-                                    "reason": "value_not_bool_in_http_body"})
-                        return
-
-            # reject setting the acl entry if the space doesnt exist to prevent dangling entries
-            space = self.db.spaces.find_one({"name": http_body["space"]})
-            if not space:
-                self.set_status(409)
-                self.write({"status": 409,
-                            "success": False,
-                            "reason": "space_doesnt_exist"})
-                return
-
-            # check if the user is either global admin or space admin, if not return
-            if not (self.is_current_user_lionet_admin() or await util.is_platform_admin(self.current_user.username)):
-                if self.current_user.username not in space["admins"]:
-                    self.set_status(403)
-                    self.write({"status": 403,
+            
+            with ACL() as acl:
+                # check if the http body only contains valid keys (i.e. keys that exist in the acl)
+                if any(key not in acl.space_acl.get_existing_keys() for key in http_body):
+                    self.set_status(400)
+                    self.write({"status": 400,
                                 "success": False,
-                                "reason": "insufficient_permission"})
+                                "reason": "unrecognizable_key_in_http_body"})
                     return
 
-            # reject setting an entry of a role that does not exist to prevent dangling entries
-            if not self.db.roles.find_one({"role": http_body["role"]}):
-                self.set_status(409)
-                self.write({"status": 409,
-                            "success": False,
-                            "reason": "role_doesnt_exist"})
-                return
+                # check if http body only contains boolean values, except for the role and space attribute
+                for key in http_body:
+                    if key != "role" and key != "space":
+                        if not isinstance(http_body[key], bool):
+                            self.set_status(400)
+                            self.write({"status": 400,
+                                        "success": False,
+                                        "reason": "value_not_bool_in_http_body"})
+                            return
 
-            # forbid any modifications to the admin role to avoid deadlocks
-            if http_body["role"] == "admin":
-                self.set_status(409)
-                self.write({"status": 409,
-                            "success": False,
-                            "reason": "admin_role_immutable"})
-                return
+                # reject setting the acl entry if the space doesnt exist to prevent dangling entries
+                space = self.db.spaces.find_one({"name": http_body["space"]})
+                if not space:
+                    self.set_status(409)
+                    self.write({"status": 409,
+                                "success": False,
+                                "reason": "space_doesnt_exist"})
+                    return
 
-            acl.set_all(http_body)
+                # check if the user is either global admin or space admin, if not return
+                if not (self.is_current_user_lionet_admin() or await util.is_platform_admin(self.current_user.username)):
+                    if self.current_user.username not in space["admins"]:
+                        self.set_status(403)
+                        self.write({"status": 403,
+                                    "success": False,
+                                    "reason": "insufficient_permission"})
+                        return
+
+                # reject setting an entry of a role that does not exist to prevent dangling entries
+                if not self.db.roles.find_one({"role": http_body["role"]}):
+                    self.set_status(409)
+                    self.write({"status": 409,
+                                "success": False,
+                                "reason": "role_doesnt_exist"})
+                    return
+
+                # forbid any modifications to the admin role to avoid deadlocks
+                if http_body["role"] == "admin":
+                    self.set_status(409)
+                    self.write({"status": 409,
+                                "success": False,
+                                "reason": "admin_role_immutable"})
+                    return
+
+                acl.space_acl.set_all(http_body)
 
             self.set_status(200)
             self.write({"status": 200,

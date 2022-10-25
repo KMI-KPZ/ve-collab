@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 import dateutil.parser
 
-from acl import get_acl
+from acl import ACL
 from handlers.base_handler import BaseHandler, auth_needed
 from logger_factory import log_access
 import util
@@ -101,56 +101,55 @@ class SpaceTimelineHandler(BaseHandler):
         time_to = dateutil.parser.parse(time_to)
 
         # check if current_user is in the space and only query for posts if yes
-        space_data = self.db.spaces.find(
+        space = self.db.spaces.find_one(
             {"name": space_name}
         )
-        for space in space_data:
-            if self.current_user.username in space["members"]:
-                # ask for permission to read timeline
-                acl = get_acl().space_acl
-                if not acl.ask(self.get_current_user_role(), space_name, "read_timeline"):
+        if self.current_user.username in space["members"]:
+            # ask for permission to read timeline
+            with ACL() as acl:
+                if not acl.space_acl.ask(self.get_current_user_role(), space_name, "read_timeline"):
                     self.set_status(403)
                     self.write({"status": 403,
                                 "reason": "insufficient_permission"})
                     return
 
-                result = self.db.posts.find(filter={
-                    "$or": [
-                        {"creation_date": {"$gte": time_from, "$lte": time_to}},
-                        {"pinned": True}
-                    ],
-                    "space": {"$eq": space_name}
-                })
+            result = self.db.posts.find(filter={
+                "$or": [
+                    {"creation_date": {"$gte": time_from, "$lte": time_to}},
+                    {"pinned": True}
+                ],
+                "space": {"$eq": space_name}
+            })
 
-                posts = self.json_serialize_posts(result)
-                # TODO more efficient
-                for post in posts:
-                    author_name = post["author"]
-                    post["author"] = {}
-                    post["author"]["profile_pic"] = "default_profile_pic.jpg"
-                    profile = self.db.profiles.find_one({"user": author_name})
-                    if profile:
-                        if "profile_pic" in profile:
-                            post["author"]["profile_pic"] = profile["profile_pic"]
-                    post["author"]["username"] = author_name
-                    if "comments" in post and post['comments'] is not None: #PLACEHOLDER FOR HANDLING COMMENTS WITH NULL VALUE
-                        for comment in post["comments"]:
-                            comment_author_name = comment["author"]
-                            comment["author"] = {}
-                            comment["author"]["profile_pic"] = "default_profile_pic.jpg"
-                            comment_author_profile = self.db.profiles.find_one({"user": comment_author_name})
-                            if comment_author_profile:
-                                if "profile_pic" in comment_author_profile:
-                                    comment["author"]["profile_pic"] = comment_author_profile["profile_pic"]
-                            comment["author"]["username"] = comment_author_name
+            posts = self.json_serialize_posts(result)
+            # TODO more efficient
+            for post in posts:
+                author_name = post["author"]
+                post["author"] = {}
+                post["author"]["profile_pic"] = "default_profile_pic.jpg"
+                profile = self.db.profiles.find_one({"user": author_name})
+                if profile:
+                    if "profile_pic" in profile:
+                        post["author"]["profile_pic"] = profile["profile_pic"]
+                post["author"]["username"] = author_name
+                if "comments" in post and post['comments'] is not None: #PLACEHOLDER FOR HANDLING COMMENTS WITH NULL VALUE
+                    for comment in post["comments"]:
+                        comment_author_name = comment["author"]
+                        comment["author"] = {}
+                        comment["author"]["profile_pic"] = "default_profile_pic.jpg"
+                        comment_author_profile = self.db.profiles.find_one({"user": comment_author_name})
+                        if comment_author_profile:
+                            if "profile_pic" in comment_author_profile:
+                                comment["author"]["profile_pic"] = comment_author_profile["profile_pic"]
+                        comment["author"]["username"] = comment_author_name
 
-                self.set_status(200)
-                self.write({"posts": posts})
+            self.set_status(200)
+            self.write({"posts": posts})
 
-            else:
-                self.set_status(409)
-                self.write({"status": 409,
-                            "reason": "user_not_member_of_space"})
+        else:
+            self.set_status(409)
+            self.write({"status": 409,
+                        "reason": "user_not_member_of_space"})
 
 
 class UserTimelineHandler(BaseHandler):
@@ -249,11 +248,11 @@ class PersonalTimelineHandler(BaseHandler):
             filter={"members": self.current_user.username}
         )
         spaces = []
-        for space in spaces_cursor:
-            # only allow posts from spaces that you are in and have permission to read the timeline
-            acl = get_acl().space_acl
-            if acl.ask(self.get_current_user_role(), space["name"], "read_timeline"):
-                spaces.append(space["name"])
+        with ACL() as acl:
+            for space in spaces_cursor:
+                # only allow posts from spaces that you are in and have permission to read the timeline
+                if acl.space_acl.ask(self.get_current_user_role(), space["name"], "read_timeline"):
+                    spaces.append(space["name"])
 
         follows_cursor = self.db.follows.find(
             filter={"user": self.current_user.username},

@@ -11,20 +11,6 @@ from logger_factory import get_logger
 
 logger = get_logger(__name__)
 
-the_acl = None
-
-
-# TODO unused once everything is refactored to context manager
-def get_acl() -> ACL:
-    """
-    access function for the ACL class. since it is a singleton, only use this function. Never create an instance of ACL() yourself!
-    """
-
-    global the_acl
-    if the_acl is None:
-        the_acl = ACL()
-    return the_acl
-
 
 class ACL:
     """
@@ -36,7 +22,6 @@ class ACL:
 
     """
     def __init__(self):
-        # TODO once everything is refactored to context manager: set client to None here for initialization, context manager will actually do the init then
         self.client = MongoClient(global_vars.mongodb_host, global_vars.mongodb_port,
                                   username=global_vars.mongodb_username, password=global_vars.mongodb_password)
         self.global_acl = _GlobalACL(self.client)
@@ -48,8 +33,6 @@ class ACL:
             PeriodicCallback(self._cleanup_unused_rules, 3_600_000).start()
 
     def __enter__(self):
-        self.client = MongoClient(global_vars.mongodb_host, global_vars.mongodb_port,
-                                  username=global_vars.mongodb_username, password=global_vars.mongodb_password)
         return self
     
     def __exit__(self, exc_type, exc_value, exc_traceback):
