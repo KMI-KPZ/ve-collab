@@ -29,9 +29,11 @@ NON_BOOL_VALUE_ERROR = "value_not_bool_in_http_body"
 
 # don't change, these values match with the ones in BaseHandler
 CURRENT_ADMIN = User(
-    "test_admin", "aaaaaaaa-bbbb-0000-cccc-dddddddddddd", "test_admin@mail.de")
+    "test_admin", "aaaaaaaa-bbbb-0000-cccc-dddddddddddd", "test_admin@mail.de"
+)
 CURRENT_USER = User(
-    "test_user", "aaaaaaaa-bbbb-0000-cccc-dddddddddddd", "test_user@mail.de")
+    "test_user", "aaaaaaaa-bbbb-0000-cccc-dddddddddddd", "test_user@mail.de"
+)
 
 
 def setup():
@@ -43,13 +45,16 @@ def setup():
         config["keycloak_base_url"],
         realm_name=config["keycloak_realm"],
         client_id=config["keycloak_client_id"],
-        client_secret_key=config["keycloak_client_secret"])
+        client_secret_key=config["keycloak_client_secret"],
+    )
     global_vars.keycloak_admin = KeycloakAdmin(
         config["keycloak_base_url"],
         realm_name=config["keycloak_realm"],
         username=config["keycloak_admin_username"],
         password=config["keycloak_admin_password"],
-        verify=True, auto_refresh_token=['get', 'put', 'post', 'delete'])
+        verify=True,
+        auto_refresh_token=["get", "put", "post", "delete"],
+    )
     global_vars.keycloak_callback_url = config["keycloak_callback_url"]
     global_vars.domain = config["domain"]
     global_vars.keycloak_client_id = config["keycloak_client_id"]
@@ -71,7 +76,6 @@ def validate_json_str(suspect_str: str) -> bool:
 
 
 class RenderHandlerTest(AsyncHTTPTestCase):
-
     def get_app(self):
         setup()  # have to do our setup here, because parent class calls get_app in its own setUp, so we would have to setup before super() otherwise, which might break something idk
         return make_app(global_vars.cookie_secret)
@@ -83,8 +87,15 @@ class RenderHandlerTest(AsyncHTTPTestCase):
         options.test_admin = True
 
         self.render_endpoints = [
-            "/", "/main", "/myprofile", "/profile/test", "/space/test", "/spaces",
-            "/template", "/acl"]
+            "/",
+            "/main",
+            "/myprofile",
+            "/profile/test",
+            "/space/test",
+            "/spaces",
+            "/template",
+            "/acl",
+        ]
 
     def fetch_and_assert_is_html(self, endpoint: str):
         """
@@ -121,7 +132,6 @@ class RenderHandlerTest(AsyncHTTPTestCase):
 
 
 class BaseApiTestCase(AsyncHTTPTestCase):
-
     def setUp(self) -> None:
         super().setUp()
 
@@ -130,8 +140,11 @@ class BaseApiTestCase(AsyncHTTPTestCase):
 
         # initialize mongodb connection
         self.client = MongoClient(
-            global_vars.mongodb_host, global_vars.mongodb_port,
-            username=global_vars.mongodb_username, password=global_vars.mongodb_password)
+            global_vars.mongodb_host,
+            global_vars.mongodb_port,
+            username=global_vars.mongodb_username,
+            password=global_vars.mongodb_password,
+        )
         self.db = self.client[global_vars.mongodb_db_name]
 
     def tearDown(self) -> None:
@@ -144,8 +157,14 @@ class BaseApiTestCase(AsyncHTTPTestCase):
         return make_app(global_vars.cookie_secret)
 
     def base_checks(
-            self, method: str, url: str, expect_success: bool, expect_response_code: str,
-            headers: dict = None, body: dict = None) -> dict:
+        self,
+        method: str,
+        url: str,
+        expect_success: bool,
+        expect_response_code: str,
+        headers: dict = None,
+        body: dict = None,
+    ) -> dict:
         """
         convenience wrapper to assert the following:
         - response matches expected http code
@@ -164,11 +183,16 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                 pass
             else:
                 raise ValueError(
-                    "Body can either be Dict or str, but is {}".format(type(body)))
+                    "Body can either be Dict or str, but is {}".format(type(body))
+                )
 
         response = self.fetch(
-            url, method=method, headers=headers, body=body,
-            allow_nonstandard_methods=True)
+            url,
+            method=method,
+            headers=headers,
+            body=body,
+            allow_nonstandard_methods=True,
+        )
         content = response.buffer.getvalue().decode()
 
         # match expected response code
@@ -215,25 +239,22 @@ class AuthenticationHandlersTest(BaseApiTestCase):
 
 
 class FollowHandlerTest(BaseApiTestCase):
-
     def setUp(self) -> None:
         super().setUp()
 
         self.user_follows = ["test_user1", "test_user2"]
 
         # insert test data
-        self.db.follows.insert_one({
-            "user": CURRENT_ADMIN.username,
-            "follows": self.user_follows
-        })
+        self.db.follows.insert_one(
+            {"user": CURRENT_ADMIN.username, "follows": self.user_follows}
+        )
 
     def _db_get_follows(self) -> List[str]:
         """
         get list of follows for CURRENT_USER from db
         """
 
-        db_response = self.db.follows.find_one(
-            {"user": CURRENT_ADMIN.username})
+        db_response = self.db.follows.find_one({"user": CURRENT_ADMIN.username})
         if db_response:
             return db_response["follows"]
 
@@ -243,7 +264,8 @@ class FollowHandlerTest(BaseApiTestCase):
         """
 
         response = self.base_checks(
-            "GET", "/follow?user={}".format(CURRENT_ADMIN.username), True, 200)
+            "GET", "/follow?user={}".format(CURRENT_ADMIN.username), True, 200
+        )
 
         # expect a users and a follows key
         self.assertIn("user", response)
@@ -270,8 +292,7 @@ class FollowHandlerTest(BaseApiTestCase):
 
         # post the request to follow this user
         followed_username = "test_user_added"
-        self.base_checks(
-            "POST", "/follow?user={}".format(followed_username), True, 200)
+        self.base_checks("POST", "/follow?user={}".format(followed_username), True, 200)
 
         # we now expect to be following those 3 users
         db_state = self._db_get_follows()
@@ -294,8 +315,7 @@ class FollowHandlerTest(BaseApiTestCase):
 
         # remove the first one, because it was definetly in (manually added in setup)
         remove_follow = self.user_follows[0]
-        self.base_checks(
-            "DELETE", "/follow?user={}".format(remove_follow), True, 200)
+        self.base_checks("DELETE", "/follow?user={}".format(remove_follow), True, 200)
 
         # we now expect to no longer follow the removed user (first from list)
         db_state = self._db_get_follows()
@@ -318,7 +338,6 @@ class FollowHandlerTest(BaseApiTestCase):
 
 
 class PermissionHandlerTest(BaseApiTestCase):
-
     def test_get_permissions(self):
         """
         expect: a role to be transmitted from keycloak
@@ -333,18 +352,16 @@ class PermissionHandlerTest(BaseApiTestCase):
 
 
 class RoleHandlerTest(BaseApiTestCase):
-
     def setUp(self) -> None:
         super().setUp()
 
         # insert test data
         self.test_roles = {
             CURRENT_ADMIN.username: "admin",
-            CURRENT_USER.username: "user"
+            CURRENT_USER.username: "user",
         }
         self.db.roles.insert_many(
-            [{"username": key, "role": value}
-                for key, value in self.test_roles.items()]
+            [{"username": key, "role": value} for key, value in self.test_roles.items()]
         )
 
     def tearDown(self) -> None:
@@ -367,8 +384,7 @@ class RoleHandlerTest(BaseApiTestCase):
 
         # expect returned role to be as in set up
         self.assertIn("role", response)
-        self.assertEqual(response["role"],
-                         self.test_roles[CURRENT_ADMIN.username])
+        self.assertEqual(response["role"], self.test_roles[CURRENT_ADMIN.username])
 
     def test_get_my_role_auto_created(self):
         """
@@ -387,8 +403,7 @@ class RoleHandlerTest(BaseApiTestCase):
 
         # also expect the note that this role entry was auto-created
         self.assertIn("note", response)
-        self.assertEqual(response["note"],
-                         "created_because_no_previous_record")
+        self.assertEqual(response["note"], "created_because_no_previous_record")
 
     def test_get_all_roles(self):
         """
@@ -401,10 +416,10 @@ class RoleHandlerTest(BaseApiTestCase):
         # careful: we cannot check for equality here, because there might be other users coming from keycloak as well
         # (they are aggregated)
         self.assertIn("users", response)
-        expected_entries = [{"username": key, "role": value}
-                            for key, value in self.test_roles.items()]
-        self.assertTrue(all(entry in response["users"]
-                        for entry in expected_entries))
+        expected_entries = [
+            {"username": key, "role": value} for key, value in self.test_roles.items()
+        ]
+        self.assertTrue(all(entry in response["users"] for entry in expected_entries))
 
     def test_get_all_roles_error_no_admin(self):
         """
@@ -427,8 +442,9 @@ class RoleHandlerTest(BaseApiTestCase):
 
         # expect the roles from the setup to be in the response
         self.assertIn("existing_roles", response)
-        self.assertTrue(role in response["existing_roles"]
-                        for role in self.test_roles.values())
+        self.assertTrue(
+            role in response["existing_roles"] for role in self.test_roles.values()
+        )
 
     def test_get_distinct_roles_error_no_admin(self):
         """
@@ -448,10 +464,7 @@ class RoleHandlerTest(BaseApiTestCase):
         expect: updated role appears in the db
         """
         updated_user_role = "updated_role"
-        http_body = {
-            "username": CURRENT_USER.username,
-            "role": updated_user_role
-        }
+        http_body = {"username": CURRENT_USER.username, "role": updated_user_role}
 
         self.base_checks("POST", "/role/update", True, 200, body=http_body)
 
@@ -464,15 +477,13 @@ class RoleHandlerTest(BaseApiTestCase):
         expect: missing_key_in_http_body error
         """
 
-        http_body = {
-            "role": "irrelevant"
-        }
+        http_body = {"role": "irrelevant"}
 
-        response = self.base_checks(
-            "POST", "/role/update", False, 400, body=http_body)
+        response = self.base_checks("POST", "/role/update", False, 400, body=http_body)
 
-        self.assertEqual(response["reason"],
-                         MISSING_KEY_HTTP_BODY_ERROR_SLUG + "username")
+        self.assertEqual(
+            response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "username"
+        )
 
     def test_post_update_role_error_missing_role(self):
         """
@@ -483,11 +494,9 @@ class RoleHandlerTest(BaseApiTestCase):
             "username": CURRENT_USER.username,
         }
 
-        response = self.base_checks(
-            "POST", "/role/update", False, 400, body=http_body)
+        response = self.base_checks("POST", "/role/update", False, 400, body=http_body)
 
-        self.assertEqual(response["reason"],
-                         MISSING_KEY_HTTP_BODY_ERROR_SLUG + "role")
+        self.assertEqual(response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "role")
 
     def test_post_update_role_error_no_admin(self):
         """
@@ -504,28 +513,20 @@ class RoleHandlerTest(BaseApiTestCase):
 
 
 class GlobalACLHandlerTest(BaseApiTestCase):
-
     def setUp(self) -> None:
         super().setUp()
 
         # insert test data
         self.test_roles = {
             CURRENT_ADMIN.username: "admin",
-            CURRENT_USER.username: "user"
+            CURRENT_USER.username: "user",
         }
         self.test_global_acl_rules = {
-            CURRENT_ADMIN.username: {
-                "role": "admin",
-                "create_space": True
-            },
-            CURRENT_USER.username: {
-                "role": "user",
-                "create_space": False
-            }
+            CURRENT_ADMIN.username: {"role": "admin", "create_space": True},
+            CURRENT_USER.username: {"role": "user", "create_space": False},
         }
         self.db.roles.insert_many(
-            [{"username": key, "role": value}
-                for key, value in self.test_roles.items()]
+            [{"username": key, "role": value} for key, value in self.test_roles.items()]
         )
         # pymongo modifies parameters in place (adds _id fields), like WHAT THE FUCK!? anyway, thats why we give it a copy...
         self.db.global_acl.insert_many(
@@ -547,7 +548,8 @@ class GlobalACLHandlerTest(BaseApiTestCase):
 
         self.assertIn("acl_entry", response)
         self.assertEqual(
-            response["acl_entry"], self.test_global_acl_rules[CURRENT_ADMIN.username])
+            response["acl_entry"], self.test_global_acl_rules[CURRENT_ADMIN.username]
+        )
 
     def test_get_global_acl_error_user_has_no_role(self):
         """
@@ -568,8 +570,10 @@ class GlobalACLHandlerTest(BaseApiTestCase):
         response = self.base_checks("GET", "/global_acl/get_all", True, 200)
 
         self.assertIn("acl_entries", response)
-        self.assertEqual(response["acl_entries"], [
-                         value for value in self.test_global_acl_rules.values()])
+        self.assertEqual(
+            response["acl_entries"],
+            [value for value in self.test_global_acl_rules.values()],
+        )
 
     def test_get_global_acl_all_error_no_admin(self):
         """
@@ -591,19 +595,19 @@ class GlobalACLHandlerTest(BaseApiTestCase):
 
         updated_acl_entry = {
             "role": self.test_roles[CURRENT_USER.username],
-            "create_space": False
+            "create_space": False,
         }
 
-        self.base_checks("POST", "/global_acl/update",
-                         True, 200, body=updated_acl_entry)
+        self.base_checks(
+            "POST", "/global_acl/update", True, 200, body=updated_acl_entry
+        )
 
         db_state = self.db.global_acl.find_one(
             {"role": self.test_roles[CURRENT_USER.username]}
         )
 
         self.assertIn("role", db_state)
-        self.assertEqual(db_state["create_space"],
-                         updated_acl_entry["create_space"])
+        self.assertEqual(db_state["create_space"], updated_acl_entry["create_space"])
 
     def test_post_global_acl_update_error_no_admin(self):
         """
@@ -626,11 +630,12 @@ class GlobalACLHandlerTest(BaseApiTestCase):
         updated_acl_entry = {
             "role": self.test_roles[CURRENT_USER.username],
             "create_space": False,
-            "invalid_key": True
+            "invalid_key": True,
         }
 
         response = self.base_checks(
-            "POST", "/global_acl/update", False, 400, body=updated_acl_entry)
+            "POST", "/global_acl/update", False, 400, body=updated_acl_entry
+        )
 
         self.assertEqual(response["reason"], UNRECOGNIZABLE_KEY_ERROR)
 
@@ -645,7 +650,8 @@ class GlobalACLHandlerTest(BaseApiTestCase):
         }
 
         response = self.base_checks(
-            "POST", "/global_acl/update", False, 400, body=updated_acl_entry)
+            "POST", "/global_acl/update", False, 400, body=updated_acl_entry
+        )
 
         self.assertEqual(response["reason"], NON_BOOL_VALUE_ERROR)
 
@@ -660,13 +666,13 @@ class GlobalACLHandlerTest(BaseApiTestCase):
         }
 
         response = self.base_checks(
-            "POST", "/global_acl/update", False, 409, body=updated_acl_entry)
+            "POST", "/global_acl/update", False, 409, body=updated_acl_entry
+        )
 
         self.assertEqual(response["reason"], "admin_role_immutable")
 
 
 class SpaceACLHandlerTest(BaseApiTestCase):
-
     def setUp(self) -> None:
         super().setUp()
 
@@ -674,7 +680,7 @@ class SpaceACLHandlerTest(BaseApiTestCase):
         self.test_space = "unittest_space"
         self.test_roles = {
             CURRENT_ADMIN.username: "admin",
-            CURRENT_USER.username: "user"
+            CURRENT_USER.username: "user",
         }
         self.test_space_acl_rules = {
             CURRENT_ADMIN.username: {
@@ -687,7 +693,7 @@ class SpaceACLHandlerTest(BaseApiTestCase):
                 "read_wiki": True,
                 "write_wiki": True,
                 "read_files": True,
-                "write_files": True
+                "write_files": True,
             },
             CURRENT_USER.username: {
                 "role": "user",
@@ -699,21 +705,22 @@ class SpaceACLHandlerTest(BaseApiTestCase):
                 "read_wiki": False,
                 "write_wiki": False,
                 "read_files": True,
-                "write_files": False
-            }
+                "write_files": False,
+            },
         }
 
-        self.db.spaces.insert_one({
-            "name": self.test_space,
-            "invisible": False,
-            "members": [CURRENT_ADMIN.username, CURRENT_USER.username],
-            "admins": [CURRENT_ADMIN.username],
-            "invites": [],
-            "requests": []
-        })
+        self.db.spaces.insert_one(
+            {
+                "name": self.test_space,
+                "invisible": False,
+                "members": [CURRENT_ADMIN.username, CURRENT_USER.username],
+                "admins": [CURRENT_ADMIN.username],
+                "invites": [],
+                "requests": [],
+            }
+        )
         self.db.roles.insert_many(
-            [{"username": key, "role": value}
-                for key, value in self.test_roles.items()]
+            [{"username": key, "role": value} for key, value in self.test_roles.items()]
         )
         # pymongo modifies parameters in place (adds _id fields), like WHAT THE FUCK!? anyway, thats why we give it a copy...
         self.db.space_acl.insert_many(
@@ -733,23 +740,32 @@ class SpaceACLHandlerTest(BaseApiTestCase):
         """
 
         response = self.base_checks(
-            "GET", "/space_acl/get?space={}".format(self.test_space), True, 200)
+            "GET", "/space_acl/get?space={}".format(self.test_space), True, 200
+        )
 
         self.assertIn("acl_entry", response)
         self.assertEqual(
-            response["acl_entry"], self.test_space_acl_rules[CURRENT_ADMIN.username])
+            response["acl_entry"], self.test_space_acl_rules[CURRENT_ADMIN.username]
+        )
 
     def test_get_space_acl_other_role(self):
         """
         expect: acl entry of CURRENT_USER instead of CURRENT_ADMIN
         """
 
-        response = self.base_checks("GET", "/space_acl/get?space={}&role={}".format(
-            self.test_space, self.test_roles[CURRENT_USER.username]), True, 200)
+        response = self.base_checks(
+            "GET",
+            "/space_acl/get?space={}&role={}".format(
+                self.test_space, self.test_roles[CURRENT_USER.username]
+            ),
+            True,
+            200,
+        )
 
         self.assertIn("acl_entry", response)
         self.assertEqual(
-            response["acl_entry"], self.test_space_acl_rules[CURRENT_USER.username])
+            response["acl_entry"], self.test_space_acl_rules[CURRENT_USER.username]
+        )
 
     def test_get_space_acl_no_space(self):
         """
@@ -768,7 +784,8 @@ class SpaceACLHandlerTest(BaseApiTestCase):
         self.db.roles.delete_many({})
 
         response = self.base_checks(
-            "GET", "/space_acl/get?space={}".format(self.test_space), False, 409)
+            "GET", "/space_acl/get?space={}".format(self.test_space), False, 409
+        )
 
         self.assertEqual(response["reason"], "user_has_no_role")
 
@@ -778,11 +795,14 @@ class SpaceACLHandlerTest(BaseApiTestCase):
         """
 
         response = self.base_checks(
-            "GET", "/space_acl/get_all?space={}".format(self.test_space), True, 200)
+            "GET", "/space_acl/get_all?space={}".format(self.test_space), True, 200
+        )
 
         self.assertIn("acl_entries", response)
-        self.assertEqual(response["acl_entries"], [
-                         value for value in self.test_space_acl_rules.values()])
+        self.assertEqual(
+            response["acl_entries"],
+            [value for value in self.test_space_acl_rules.values()],
+        )
 
     def test_get_space_acl_all_error_no_space(self):
         """
@@ -794,8 +814,11 @@ class SpaceACLHandlerTest(BaseApiTestCase):
         options.test_user = True
 
         response = self.base_checks(
-            "GET", "/space_acl/get_all?space={}".format("not_existing_space"),
-            False, 400)
+            "GET",
+            "/space_acl/get_all?space={}".format("not_existing_space"),
+            False,
+            400,
+        )
 
         self.assertEqual(response["reason"], "space_doesnt_exist")
 
@@ -809,7 +832,8 @@ class SpaceACLHandlerTest(BaseApiTestCase):
         options.test_user = True
 
         response = self.base_checks(
-            "GET", "/space_acl/get_all?space={}".format(self.test_space), False, 403)
+            "GET", "/space_acl/get_all?space={}".format(self.test_space), False, 403
+        )
 
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
 
@@ -828,11 +852,10 @@ class SpaceACLHandlerTest(BaseApiTestCase):
             "read_wiki": False,
             "write_wiki": False,
             "read_files": False,
-            "write_files": False
+            "write_files": False,
         }
 
-        self.base_checks("POST", "/space_acl/update",
-                         True, 200, body=updated_acl_entry)
+        self.base_checks("POST", "/space_acl/update", True, 200, body=updated_acl_entry)
 
         db_state = self.db.space_acl.find_one(
             {"role": self.test_roles[CURRENT_USER.username]}
@@ -864,11 +887,12 @@ class SpaceACLHandlerTest(BaseApiTestCase):
             "read_wiki": False,
             "write_wiki": False,
             "read_files": False,
-            "write_files": False
+            "write_files": False,
         }
 
         response = self.base_checks(
-            "POST", "/space_acl/update", False, 403, body=updated_acl_entry)
+            "POST", "/space_acl/update", False, 403, body=updated_acl_entry
+        )
 
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
 
@@ -888,11 +912,12 @@ class SpaceACLHandlerTest(BaseApiTestCase):
             "write_wiki": False,
             "read_files": False,
             "write_files": False,
-            "invalid_key": True
+            "invalid_key": True,
         }
 
         response = self.base_checks(
-            "POST", "/space_acl/update", False, 400, body=updated_acl_entry)
+            "POST", "/space_acl/update", False, 400, body=updated_acl_entry
+        )
 
         self.assertEqual(response["reason"], UNRECOGNIZABLE_KEY_ERROR)
 
@@ -915,7 +940,8 @@ class SpaceACLHandlerTest(BaseApiTestCase):
         }
 
         response = self.base_checks(
-            "POST", "/space_acl/update", False, 400, body=updated_acl_entry)
+            "POST", "/space_acl/update", False, 400, body=updated_acl_entry
+        )
 
         self.assertEqual(response["reason"], NON_BOOL_VALUE_ERROR)
 
@@ -938,7 +964,8 @@ class SpaceACLHandlerTest(BaseApiTestCase):
         }
 
         response = self.base_checks(
-            "POST", "/space_acl/update", False, 409, body=updated_acl_entry)
+            "POST", "/space_acl/update", False, 409, body=updated_acl_entry
+        )
 
         self.assertEqual(response["reason"], "role_doesnt_exist")
 
@@ -961,7 +988,8 @@ class SpaceACLHandlerTest(BaseApiTestCase):
         }
 
         response = self.base_checks(
-            "POST", "/space_acl/update", False, 409, body=updated_acl_entry)
+            "POST", "/space_acl/update", False, 409, body=updated_acl_entry
+        )
 
         self.assertEqual(response["reason"], "space_doesnt_exist")
 
@@ -984,13 +1012,13 @@ class SpaceACLHandlerTest(BaseApiTestCase):
         }
 
         response = self.base_checks(
-            "POST", "/space_acl/update", False, 409, body=updated_acl_entry)
+            "POST", "/space_acl/update", False, 409, body=updated_acl_entry
+        )
 
         self.assertEqual(response["reason"], "admin_role_immutable")
 
 
 class RoleACLIntegrationTest(BaseApiTestCase):
-
     def setUp(self) -> None:
         super().setUp()
 
@@ -998,7 +1026,7 @@ class RoleACLIntegrationTest(BaseApiTestCase):
         self.test_space = "unittest_space"
         self.test_roles = {
             CURRENT_ADMIN.username: "admin",
-            CURRENT_USER.username: "user"
+            CURRENT_USER.username: "user",
         }
         self.test_space_acl_rules = {
             CURRENT_ADMIN.username: {
@@ -1011,7 +1039,7 @@ class RoleACLIntegrationTest(BaseApiTestCase):
                 "read_wiki": True,
                 "write_wiki": True,
                 "read_files": True,
-                "write_files": True
+                "write_files": True,
             },
             CURRENT_USER.username: {
                 "role": "user",
@@ -1023,21 +1051,22 @@ class RoleACLIntegrationTest(BaseApiTestCase):
                 "read_wiki": False,
                 "write_wiki": False,
                 "read_files": True,
-                "write_files": False
-            }
+                "write_files": False,
+            },
         }
 
-        self.db.spaces.insert_one({
-            "name": self.test_space,
-            "invisible": False,
-            "members": [CURRENT_ADMIN.username, CURRENT_USER.username],
-            "admins": [CURRENT_ADMIN.username],
-            "invites": [],
-            "requests": []
-        })
+        self.db.spaces.insert_one(
+            {
+                "name": self.test_space,
+                "invisible": False,
+                "members": [CURRENT_ADMIN.username, CURRENT_USER.username],
+                "admins": [CURRENT_ADMIN.username],
+                "invites": [],
+                "requests": [],
+            }
+        )
         self.db.roles.insert_many(
-            [{"username": key, "role": value}
-                for key, value in self.test_roles.items()]
+            [{"username": key, "role": value} for key, value in self.test_roles.items()]
         )
         # pymongo modifies parameters in place (adds _id fields), like WHAT THE FUCK!? anyway, thats why we give it a copy...
         self.db.space_acl.insert_many(
@@ -1076,7 +1105,8 @@ class RoleACLIntegrationTest(BaseApiTestCase):
 
         # also expect a corresponding space acl entry to be created (in all spaces, i.e. only in the test space here)
         space_acl_db_state = self.db.space_acl.find_one(
-            {"role": "guest", "space": self.test_space})
+            {"role": "guest", "space": self.test_space}
+        )
         self.assertNotEqual(space_acl_db_state, None)
 
     def test_acl_entry_creation_on_role_creation(self):
@@ -1084,10 +1114,7 @@ class RoleACLIntegrationTest(BaseApiTestCase):
         expect: creating a new role via update/upsert should also create a corresponding acl entry
         """
 
-        new_role = {
-            "username": CURRENT_USER.username,
-            "role": "new_role"
-        }
+        new_role = {"username": CURRENT_USER.username, "role": "new_role"}
 
         self.base_checks("POST", "/role/update", True, 200, body=new_role)
 
@@ -1097,7 +1124,8 @@ class RoleACLIntegrationTest(BaseApiTestCase):
 
         # also expect a corresponding space acl entry to be created (in all spaces, i.e. only in the test space here)
         space_acl_db_state = self.db.space_acl.find_one(
-            {"role": "new_role", "space": self.test_space})
+            {"role": "new_role", "space": self.test_space}
+        )
         self.assertNotEqual(space_acl_db_state, None)
 
     def test_cleanup_unused_acl_rules(self):
@@ -1120,7 +1148,6 @@ class RoleACLIntegrationTest(BaseApiTestCase):
 
 
 class PostHandlerTest(BaseApiTestCase):
-
     def setUp(self) -> None:
         super().setUp()
 
@@ -1128,7 +1155,7 @@ class PostHandlerTest(BaseApiTestCase):
         self.test_space = "unittest_space"
         self.test_roles = {
             CURRENT_ADMIN.username: "admin",
-            CURRENT_USER.username: "user"
+            CURRENT_USER.username: "user",
         }
         self.test_space_acl_rules = {
             CURRENT_ADMIN.username: {
@@ -1141,7 +1168,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "read_wiki": True,
                 "write_wiki": True,
                 "read_files": True,
-                "write_files": True
+                "write_files": True,
             },
             CURRENT_USER.username: {
                 "role": "user",
@@ -1153,21 +1180,22 @@ class PostHandlerTest(BaseApiTestCase):
                 "read_wiki": False,
                 "write_wiki": False,
                 "read_files": False,
-                "write_files": False
-            }
+                "write_files": False,
+            },
         }
 
-        self.db.spaces.insert_one({
-            "name": self.test_space,
-            "invisible": False,
-            "members": [CURRENT_ADMIN.username, CURRENT_USER.username],
-            "admins": [CURRENT_ADMIN.username],
-            "invites": [],
-            "requests": []
-        })
+        self.db.spaces.insert_one(
+            {
+                "name": self.test_space,
+                "invisible": False,
+                "members": [CURRENT_ADMIN.username, CURRENT_USER.username],
+                "admins": [CURRENT_ADMIN.username],
+                "invites": [],
+                "requests": [],
+            }
+        )
         self.db.roles.insert_many(
-            [{"username": key, "role": value}
-                for key, value in self.test_roles.items()]
+            [{"username": key, "role": value} for key, value in self.test_roles.items()]
         )
         # pymongo modifies parameters in place (adds _id fields), like WHAT THE FUCK!? anyway, thats why we give it a copy...
         self.db.space_acl.insert_many(
@@ -1190,16 +1218,21 @@ class PostHandlerTest(BaseApiTestCase):
 
         request_json = {
             "text": "unittest_test_post",
-            "tags": json.dumps(["tag1", "tag2"])
+            "tags": json.dumps(["tag1", "tag2"]),
         }
 
         request = MultipartEncoder(fields=request_json)
 
         response = self.base_checks(
-            "POST", "/posts", True, 200, headers={"Content-Type": request.content_type},
-            body=request.to_string())
+            "POST",
+            "/posts",
+            True,
+            200,
+            headers={"Content-Type": request.content_type},
+            body=request.to_string(),
+        )
 
-        db_state = list(self.db.posts.find(projection={'_id': False}))
+        db_state = list(self.db.posts.find(projection={"_id": False}))
 
         # expect exactly this one post in the db
         self.assertEqual(len(db_state), 1)
@@ -1208,8 +1241,16 @@ class PostHandlerTest(BaseApiTestCase):
         db_state = db_state[0]
 
         # expect content
-        expected_keys = ["author", "creation_date", "text",
-                         "space", "pinned", "wordpress_post_id", "tags", "files"]
+        expected_keys = [
+            "author",
+            "creation_date",
+            "text",
+            "space",
+            "pinned",
+            "wordpress_post_id",
+            "tags",
+            "files",
+        ]
         self.assertTrue(all(key in db_state for key in expected_keys))
         self.assertEqual(db_state["author"], CURRENT_ADMIN.username)
         self.assertEqual(db_state["text"], request_json["text"])

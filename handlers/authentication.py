@@ -28,34 +28,35 @@ class LoginHandler(tornado.web.RequestHandler, metaclass=ABCMeta):
 
 
 class LoginCallbackHandler(tornado.web.RequestHandler, metaclass=ABCMeta):
-
     @log_access
     async def get(self):
         # keycloak redirects you back here with this code
         code = self.get_argument("code", None)
         if code is None:
             self.set_status(400)
-            self.write({"status": 400,
-                        "success": False,
-                        "reason": "missing_key:code"})
+            self.write({"status": 400, "success": False, "reason": "missing_key:code"})
             return
 
-        #exchange authorization code for token
+        # exchange authorization code for token
         # (redirect_uri has to match the uri in keycloak.auth_url(...) as per openID standard)
-        token = global_vars.keycloak.token(code=code, grant_type=[
-                                           "authorization_code"], redirect_uri=global_vars.keycloak_callback_url)
+        token = global_vars.keycloak.token(
+            code=code,
+            grant_type=["authorization_code"],
+            redirect_uri=global_vars.keycloak_callback_url,
+        )
         print(token)
 
         # get user info, (not really necessary here though)
-        userinfo = global_vars.keycloak.userinfo(token['access_token'])
+        userinfo = global_vars.keycloak.userinfo(token["access_token"])
         print(userinfo)
 
         # dump token dict to str and store it in a secure cookie (BaseHandler will decode it later to validate a user is logged in)
         if global_vars.domain == "localhost":
             self.set_secure_cookie("access_token", json.dumps(token))
         else:
-            self.set_secure_cookie("access_token", json.dumps(
-                token), domain="." + global_vars.domain)
+            self.set_secure_cookie(
+                "access_token", json.dumps(token), domain="." + global_vars.domain
+            )
 
         self.redirect("/main")
 
@@ -86,6 +87,4 @@ class LogoutHandler(BaseHandler, metaclass=ABCMeta):
         global_vars.keycloak.logout(self._access_token["refresh_token"])
 
         self.set_status(200)
-        self.write({"status": 200,
-                    "success": True,
-                    "redirect_suggestions": ["/login"]})
+        self.write({"status": 200, "success": True, "redirect_suggestions": ["/login"]})

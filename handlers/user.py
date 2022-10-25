@@ -10,7 +10,6 @@ import mock_platform
 
 
 class ProfileInformationHandler(BaseHandler):
-
     @log_access
     @auth_needed
     async def get(self):
@@ -54,17 +53,13 @@ class ProfileInformationHandler(BaseHandler):
         user_result = mock_platform.get_user(username)
 
         # grab spaces
-        spaces_cursor = self.db.spaces.find(
-            filter={"members": username}
-        )
+        spaces_cursor = self.db.spaces.find(filter={"members": username})
         spaces = []
         for space in spaces_cursor:
             spaces.append(space["name"])
 
         # grab users that the current_user follows
-        follows_cursor = self.db.follows.find(
-            filter={"user": username}
-        )
+        follows_cursor = self.db.follows.find(filter={"user": username})
         follows = []
         for user in follows_cursor:
             follows = user["follows"]
@@ -74,11 +69,9 @@ class ProfileInformationHandler(BaseHandler):
         followers = []
         for user in follower_cursor:
             print(user)
-            followers.append(user["user"]) 
+            followers.append(user["user"])
 
-        profile_cursor = self.db.profiles.find(
-            filter={"user": username}
-        )
+        profile_cursor = self.db.profiles.find(filter={"user": username})
         profile = {}
         profile["profile_pic"] = "default_profile_pic.jpg"
         for user_profile in profile_cursor:
@@ -95,7 +88,9 @@ class ProfileInformationHandler(BaseHandler):
             profile["experience"] = user_profile["experience"]
             profile["education"] = user_profile["education"]
 
-        user_information = {key: user_result["user"][key] for key in user_result["user"]}
+        user_information = {
+            key: user_result["user"][key] for key in user_result["user"]
+        }
         user_information["spaces"] = spaces
         user_information["follows"] = follows
         user_information["followers"] = followers
@@ -160,7 +155,9 @@ class ProfileInformationHandler(BaseHandler):
             # save file
             file_ext = os.path.splitext(profile_pic_obj["filename"])[1]
             new_file_name = b64encode(os.urandom(32)).decode("utf-8")
-            new_file_name = re.sub('[^0-9a-zäöüßA-ZÄÖÜ]+', '_', new_file_name).lower() + file_ext
+            new_file_name = (
+                re.sub("[^0-9a-zäöüßA-ZÄÖÜ]+", "_", new_file_name).lower() + file_ext
+            )
 
             with open(self.upload_dir + new_file_name, "wb") as fp:
                 fp.write(profile_pic_obj["body"])
@@ -168,8 +165,8 @@ class ProfileInformationHandler(BaseHandler):
         if new_file_name:
             self.db.profiles.update_one(
                 {"user": self.current_user.username},
-                {"$set":
-                    {
+                {
+                    "$set": {
                         "bio": bio,
                         "institution": institution,
                         "projects": projects,
@@ -180,16 +177,16 @@ class ProfileInformationHandler(BaseHandler):
                         "address": address,
                         "birthday": birthday,
                         "experience": experience,
-                        "education": education
+                        "education": education,
                     }
                 },
-                upsert=True
+                upsert=True,
             )
         else:
             self.db.profiles.update_one(
                 {"user": self.current_user.username},
-                {"$set":
-                    {
+                {
+                    "$set": {
                         "bio": bio,
                         "institution": institution,
                         "projects": projects,
@@ -199,15 +196,14 @@ class ProfileInformationHandler(BaseHandler):
                         "address": address,
                         "birthday": birthday,
                         "experience": experience,
-                        "education": education
+                        "education": education,
                     }
                 },
-                upsert=True
+                upsert=True,
             )
 
         self.set_status(200)
-        self.write({"status": 200,
-                    "success": True})
+        self.write({"status": 200, "success": True})
 
 
 class UserHandler(BaseHandler):
@@ -246,8 +242,7 @@ class UserHandler(BaseHandler):
                 username = self.get_argument("username")
             except tornado.web.MissingArgumentError:
                 self.set_status(400)
-                self.write({"status": 400,
-                            "reason": "missing_key:username"})
+                self.write({"status": 400, "reason": "missing_key:username"})
                 return
 
             user_result = mock_platform.get_user(username)
@@ -274,7 +269,9 @@ class UserHandler(BaseHandler):
 
             # add all names of people that the user follows
             followers_result = self.db.follows.find_one({"user": username})
-            user_result["user"]["follows"] = followers_result["follows"] if followers_result else []
+            user_result["user"]["follows"] = (
+                followers_result["follows"] if followers_result else []
+            )
 
             # also add all names of people that follow the user
             followers_result = self.db.follows.find({"follows": username})
@@ -282,7 +279,6 @@ class UserHandler(BaseHandler):
             for follower in followers_result:
                 followers.append(follower["user"])
             user_result["user"]["followers"] = followers
-
 
             self.set_status(200)
             self.write(user_result["user"])
@@ -297,10 +293,12 @@ class UserHandler(BaseHandler):
                 if profile:
                     if "profile_pic" in profile:
                         user_list["users"][user]["profile_pic"] = profile["profile_pic"]
-                
+
                 # add all names of people that the user follows
                 follows_result = self.db.follows.find_one({"user": user})
-                user_list["users"][user]["follows"] = follows_result["follows"] if follows_result else []
+                user_list["users"][user]["follows"] = (
+                    follows_result["follows"] if follows_result else []
+                )
 
                 # also add all names of people that follow the user
                 followers_result = self.db.follows.find({"follows": user})

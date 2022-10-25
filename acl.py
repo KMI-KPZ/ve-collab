@@ -21,9 +21,14 @@ class ACL:
             ...
 
     """
+
     def __init__(self):
-        self.client = MongoClient(global_vars.mongodb_host, global_vars.mongodb_port,
-                                  username=global_vars.mongodb_username, password=global_vars.mongodb_password)
+        self.client = MongoClient(
+            global_vars.mongodb_host,
+            global_vars.mongodb_port,
+            username=global_vars.mongodb_username,
+            password=global_vars.mongodb_password,
+        )
         self.global_acl = _GlobalACL(self.client)
         self.space_acl = _SpaceACL(self.client)
 
@@ -34,7 +39,7 @@ class ACL:
 
     def __enter__(self):
         return self
-    
+
     def __exit__(self, exc_type, exc_value, exc_traceback):
         self.client.close()
 
@@ -45,7 +50,7 @@ class ACL:
         """
 
         logger.info("Running ACL cleanup")
-        
+
         with self:
             db = self.client[global_vars.mongodb_db_name]
             currently_existing_roles = db.roles.distinct("role")
@@ -58,9 +63,12 @@ class ACL:
 
             # clean space acl (role or space no longer exist)
             for space_acl_rule in self.space_acl.get_full_list():
-                if (space_acl_rule["role"] not in currently_existing_roles) or (space_acl_rule["space"] not in currently_existing_spaces):
+                if (space_acl_rule["role"] not in currently_existing_roles) or (
+                    space_acl_rule["space"] not in currently_existing_spaces
+                ):
                     self.space_acl.delete(
-                        space_acl_rule["role"], space_acl_rule["space"])
+                        space_acl_rule["role"], space_acl_rule["space"]
+                    )
 
 
 class _GlobalACL:
@@ -88,9 +96,7 @@ class _GlobalACL:
             "create_space": False,
         }
         self.db.global_acl.update_one(  # use update + upsert so this function can also be used to restore to default
-            {"role": role},
-            {"$set": default_rule},
-            upsert=True
+            {"role": role}, {"$set": default_rule}, upsert=True
         )
         return default_rule
 
@@ -100,14 +106,9 @@ class _GlobalACL:
         :return: inserted admin rule
         """
 
-        admin_rule = {
-            "role": "admin",
-            "create_space": True
-        }
+        admin_rule = {"role": "admin", "create_space": True}
         self.db.global_acl.update_one(  # use update + upsert so this function can also be used to restore to default
-            {"role": "admin"},
-            {"$set": admin_rule},
-            upsert=True
+            {"role": "admin"}, {"$set": admin_rule}, upsert=True
         )
 
         return admin_rule
@@ -121,7 +122,10 @@ class _GlobalACL:
         """
         if permission_key not in self._EXISTING_KEYS:
             raise KeyError(
-                "Key '{}' does not match any permission key in the db".format(permission_key))
+                "Key '{}' does not match any permission key in the db".format(
+                    permission_key
+                )
+            )
 
         record = self.db.global_acl.find_one({"role": role})
         if record:
@@ -164,16 +168,13 @@ class _GlobalACL:
 
         if permission_key not in self._EXISTING_KEYS:
             raise KeyError(
-                "Key '{}' does not match any permission key in the db".format(permission_key))
+                "Key '{}' does not match any permission key in the db".format(
+                    permission_key
+                )
+            )
 
         self.db.global_acl.update_one(
-            {"role": role},
-            {"$set":
-                {
-                    permission_key: value
-                }
-             },
-            upsert=True
+            {"role": role}, {"$set": {permission_key: value}}, upsert=True
         )
 
     def set_all(self, acl_entry: dict) -> None:
@@ -193,12 +194,11 @@ class _GlobalACL:
         for key in acl_entry.keys():
             if key not in self._EXISTING_KEYS:
                 raise KeyError(
-                    "Key '{}' does not match any permission key in the db".format(key))
+                    "Key '{}' does not match any permission key in the db".format(key)
+                )
 
         self.db.global_acl.update_one(
-            {"role": acl_entry["role"]},
-            {"$set": acl_entry},
-            upsert=True
+            {"role": acl_entry["role"]}, {"$set": acl_entry}, upsert=True
         )
 
     def delete(self, role: str) -> None:
@@ -218,8 +218,18 @@ class _SpaceACL:
     def __init__(self, mongo_client: MongoClient) -> None:
         self.client = mongo_client
         self.db = self.client[global_vars.mongodb_db_name]
-        self._EXISTING_KEYS = ["role", "space", "join_space", "read_timeline", "post", "comment", "read_wiki", "write_wiki", "read_files",
-                               "write_files"]
+        self._EXISTING_KEYS = [
+            "role",
+            "space",
+            "join_space",
+            "read_timeline",
+            "post",
+            "comment",
+            "read_wiki",
+            "write_wiki",
+            "read_files",
+            "write_files",
+        ]
 
     def get_existing_keys(self):
         return self._EXISTING_KEYS
@@ -251,12 +261,10 @@ class _SpaceACL:
             "read_wiki": False,
             "write_wiki": False,
             "read_files": False,
-            "write_files": False
+            "write_files": False,
         }
         self.db.space_acl.update_one(  # use update + upsert so this function can also be used to restore to default
-            {"role": role, "space": space},
-            {"$set": default_rule},
-            upsert=True
+            {"role": role, "space": space}, {"$set": default_rule}, upsert=True
         )
         return default_rule
 
@@ -271,13 +279,11 @@ class _SpaceACL:
             "read_wiki": True,
             "write_wiki": True,
             "read_files": True,
-            "write_files": True
+            "write_files": True,
         }
 
         self.db.space_acl.update_one(
-            {"role": "admin", "space": space},
-            {"$set": admin_rule},
-            upsert=True
+            {"role": "admin", "space": space}, {"$set": admin_rule}, upsert=True
         )
         return admin_rule
 
@@ -292,7 +298,10 @@ class _SpaceACL:
 
         if permission_key not in self._EXISTING_KEYS:
             raise KeyError(
-                "Key '{}' does not match any permission key in the db".format(permission_key))
+                "Key '{}' does not match any permission key in the db".format(
+                    permission_key
+                )
+            )
 
         record = self.db.space_acl.find_one({"role": role, "space": space})
         if record:
@@ -350,16 +359,15 @@ class _SpaceACL:
 
         if permission_key not in self._EXISTING_KEYS:
             raise KeyError(
-                "Key '{}' does not match any permission key in the db".format(permission_key))
+                "Key '{}' does not match any permission key in the db".format(
+                    permission_key
+                )
+            )
 
         self.db.space_acl.update_one(
             {"role": role, "space": space},
-            {"$set":
-                {
-                    permission_key: value
-                }
-             },
-            upsert=True
+            {"$set": {permission_key: value}},
+            upsert=True,
         )
 
     def set_all(self, acl_entry: dict) -> None:
@@ -391,12 +399,13 @@ class _SpaceACL:
         for key in acl_entry.keys():
             if key not in self._EXISTING_KEYS:
                 raise KeyError(
-                    "Key '{}' does not match any permission key in the db".format(key))
+                    "Key '{}' does not match any permission key in the db".format(key)
+                )
 
         self.db.space_acl.update_one(
             {"role": acl_entry["role"], "space": acl_entry["space"]},
             {"$set": acl_entry},
-            upsert=True
+            upsert=True,
         )
 
     def delete(self, role: str = None, space: str = None):
@@ -404,12 +413,7 @@ class _SpaceACL:
         Delete ACL entries either by role or by space
         """
 
-        self.db.space_acl.delete_many({
-            "$or": [
-                {"role": role},
-                {"space": space}
-            ]
-        })
+        self.db.space_acl.delete_many({"$or": [{"role": role}, {"space": space}]})
 
 
 if __name__ == "__main__":

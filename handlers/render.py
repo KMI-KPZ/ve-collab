@@ -3,7 +3,6 @@ from logger_factory import log_access
 
 
 class MainHandler(BaseHandler):
-
     @log_access
     @auth_needed
     def get(self):
@@ -11,7 +10,6 @@ class MainHandler(BaseHandler):
 
 
 class MainRedirectHandler(BaseHandler):
-
     @log_access
     @auth_needed
     def get(self):
@@ -19,7 +17,6 @@ class MainRedirectHandler(BaseHandler):
 
 
 class MyProfileHandler(BaseHandler):
-
     @log_access
     @auth_needed
     def get(self):
@@ -27,7 +24,6 @@ class MyProfileHandler(BaseHandler):
 
 
 class ProfileHandler(BaseHandler):
-
     @log_access
     @auth_needed
     def get(self, slug):
@@ -35,7 +31,6 @@ class ProfileHandler(BaseHandler):
 
 
 class SpaceRenderHandler(BaseHandler):
-
     @log_access
     @auth_needed
     def get(self, slug):
@@ -43,7 +38,6 @@ class SpaceRenderHandler(BaseHandler):
 
 
 class SpaceOverviewHandler(BaseHandler):
-
     @log_access
     @auth_needed
     def get(self):
@@ -51,14 +45,13 @@ class SpaceOverviewHandler(BaseHandler):
 
 
 class TemplateHandler(BaseHandler):
-
     @log_access
     @auth_needed
     def get(self):
         self.render("blocks.html")
 
+
 class ACLHandler(BaseHandler):
-    
     @log_access
     @auth_needed
     def get(self):

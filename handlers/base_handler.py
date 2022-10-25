@@ -16,26 +16,36 @@ from model import User
 
 logger = get_logger(__name__)
 
-def auth_needed(method: Callable[..., Optional[Awaitable[None]]]) -> Callable[..., Optional[Awaitable[None]]]:
+
+def auth_needed(
+    method: Callable[..., Optional[Awaitable[None]]]
+) -> Callable[..., Optional[Awaitable[None]]]:
     """
     authentication decorator that checks if a valid session exists, otherwise redirects to platform for the login procedure
     """
 
     @functools.wraps(method)
-    def wrapper(self: tornado.web.RequestHandler, *args, **kwargs) -> Optional[Awaitable[None]]:
+    def wrapper(
+        self: tornado.web.RequestHandler, *args, **kwargs
+    ) -> Optional[Awaitable[None]]:
         if not self.current_user:
             self.set_status(401)
             self.write({"status": 401, "reason": "no_logged_in_user"})
             self.redirect("/login")
             return
         return method(self, *args, **kwargs)
+
     return wrapper
 
 
 class BaseHandler(tornado.web.RequestHandler):
-
     def initialize(self):
-        self.client = MongoClient(global_vars.mongodb_host, global_vars.mongodb_port, username=global_vars.mongodb_username, password=global_vars.mongodb_password)
+        self.client = MongoClient(
+            global_vars.mongodb_host,
+            global_vars.mongodb_port,
+            username=global_vars.mongodb_username,
+            password=global_vars.mongodb_password,
+        )
         self.db = self.client[global_vars.mongodb_db_name]
 
         self.upload_dir = "uploads/"
@@ -50,34 +60,58 @@ class BaseHandler(tornado.web.RequestHandler):
     async def prepare(self):
         # set user for test environments to bypass authentication in the handlers
         if options.test_admin:
-            self.current_userinfo = {'sub': 'aaaaaaaa-bbbb-0000-cccc-dddddddddddd',
-                                     'resource_access': {'test': {'roles': ['admin']}},
-                                     'email_verified': True, 'name': 'Test Admin',
-                                     'preferred_username': 'test_admin',
-                                     'given_name': 'Test', 'family_name': 'Admin',
-                                     'email': 'test_admin@mail.de'}
+            self.current_userinfo = {
+                "sub": "aaaaaaaa-bbbb-0000-cccc-dddddddddddd",
+                "resource_access": {"test": {"roles": ["admin"]}},
+                "email_verified": True,
+                "name": "Test Admin",
+                "preferred_username": "test_admin",
+                "given_name": "Test",
+                "family_name": "Admin",
+                "email": "test_admin@mail.de",
+            }
             self.current_user = User(
-                self.current_userinfo["preferred_username"], self.current_userinfo["sub"], self.current_userinfo["email"])
-            self._access_token = {'access_token': 'abcdefg', 'expires_in': 3600,
-                                  'refresh_expires_in': 3600, 'refresh_token': 'hijklmn',
-                                  'token_type': 'Bearer', 'not-before-policy': 0,
-                                  'session_state': 'abcdefgh-1234-ijkl-56m7-nopqrstuv890',
-                                  'scope': 'email profile'}
+                self.current_userinfo["preferred_username"],
+                self.current_userinfo["sub"],
+                self.current_userinfo["email"],
+            )
+            self._access_token = {
+                "access_token": "abcdefg",
+                "expires_in": 3600,
+                "refresh_expires_in": 3600,
+                "refresh_token": "hijklmn",
+                "token_type": "Bearer",
+                "not-before-policy": 0,
+                "session_state": "abcdefgh-1234-ijkl-56m7-nopqrstuv890",
+                "scope": "email profile",
+            }
             return
         elif options.test_user:
-            self.current_userinfo = {'sub': 'aaaaaaaa-bbbb-0000-cccc-dddddddddddd',
-                                     'resource_access': {'test': {'roles': ['user']}},
-                                     'email_verified': True, 'name': 'Test User',
-                                     'preferred_username': 'test_user',
-                                     'given_name': 'Test', 'family_name': 'User',
-                                     'email': 'test_user@mail.de'}
+            self.current_userinfo = {
+                "sub": "aaaaaaaa-bbbb-0000-cccc-dddddddddddd",
+                "resource_access": {"test": {"roles": ["user"]}},
+                "email_verified": True,
+                "name": "Test User",
+                "preferred_username": "test_user",
+                "given_name": "Test",
+                "family_name": "User",
+                "email": "test_user@mail.de",
+            }
             self.current_user = User(
-                self.current_userinfo["preferred_username"], self.current_userinfo["sub"], self.current_userinfo["email"])
-            self._access_token = {'access_token': 'abcdefg', 'expires_in': 3600,
-                                  'refresh_expires_in': 3600, 'refresh_token': 'hijklmn',
-                                  'token_type': 'Bearer', 'not-before-policy': 0,
-                                  'session_state': 'abcdefgh-1234-ijkl-56m7-nopqrstuv890',
-                                  'scope': 'email profile'}
+                self.current_userinfo["preferred_username"],
+                self.current_userinfo["sub"],
+                self.current_userinfo["email"],
+            )
+            self._access_token = {
+                "access_token": "abcdefg",
+                "expires_in": 3600,
+                "refresh_expires_in": 3600,
+                "refresh_token": "hijklmn",
+                "token_type": "Bearer",
+                "not-before-policy": 0,
+                "session_state": "abcdefgh-1234-ijkl-56m7-nopqrstuv890",
+                "scope": "email profile",
+            }
             return
 
         token = self.get_secure_cookie("access_token")
@@ -90,12 +124,14 @@ class BaseHandler(tornado.web.RequestHandler):
 
         try:
             # try to refresh the token and fetch user info. this will fail if there is no valid session
-            token = global_vars.keycloak.refresh_token(token['refresh_token'])
+            token = global_vars.keycloak.refresh_token(token["refresh_token"])
 
-            userinfo = global_vars.keycloak.userinfo(token['access_token'])
+            userinfo = global_vars.keycloak.userinfo(token["access_token"])
             # if token is still valid --> successfull authentication --> we set the current_user
             if userinfo:
-                self.current_user = User(userinfo["preferred_username"], userinfo["sub"], userinfo["email"])
+                self.current_user = User(
+                    userinfo["preferred_username"], userinfo["sub"], userinfo["email"]
+                )
                 self._access_token = token
         except KeycloakGetError as e:
             logger.info("Caught Exception: {} ".format(e))
@@ -103,7 +139,10 @@ class BaseHandler(tornado.web.RequestHandler):
             # decode error message
             decoded = json.loads(e.response_body.decode())
             # no active session means user is not logged in --> redirect him straight to login
-            if decoded["error"] == "invalid_grant" and decoded["error_description"] == "Session not active":
+            if (
+                decoded["error"] == "invalid_grant"
+                and decoded["error_description"] == "Session not active"
+            ):
                 self.current_user = None
                 self._access_token = None
         except KeycloakError as e:
@@ -116,17 +155,20 @@ class BaseHandler(tornado.web.RequestHandler):
         posts = []
         for post in query_result:
             # post creation date
-            post['creation_date'] = post['creation_date'].isoformat()
-            if('originalCreationDate' in post):
-                post['originalCreationDate'] = post['originalCreationDate'].isoformat()
+            post["creation_date"] = post["creation_date"].isoformat()
+            if "originalCreationDate" in post:
+                post["originalCreationDate"] = post["originalCreationDate"].isoformat()
 
-            if 'comments' in post and post['comments'] is not None: #PLACEHOLDER FOR HANDLING COMMENTS WITH NULL VALUE
+            # PLACEHOLDER FOR HANDLING COMMENTS WITH NULL VALUE
+            if "comments" in post and post["comments"] is not None:
                 # creation date of each comment
 
-                for i in range(len(post['comments'])):
-                    post['comments'][i]['creation_date'] = post['comments'][i]['creation_date'].isoformat()
-                    post['comments'][i]['_id'] = str(post['comments'][i]['_id'])
-            post['_id'] = str(post['_id'])
+                for i in range(len(post["comments"])):
+                    post["comments"][i]["creation_date"] = post["comments"][i][
+                        "creation_date"
+                    ].isoformat()
+                    post["comments"][i]["_id"] = str(post["comments"][i]["_id"])
+            post["_id"] = str(post["_id"])
             posts.append(post)
         return posts
 

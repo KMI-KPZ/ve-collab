@@ -5,7 +5,6 @@ from logger_factory import log_access
 
 
 class FollowHandler(BaseHandler):
-
     @log_access
     @auth_needed
     def get(self):
@@ -33,24 +32,25 @@ class FollowHandler(BaseHandler):
             username = self.get_argument("user")
         except tornado.web.MissingArgumentError:
             self.set_status(400)
-            self.write({"status": 400,
-                        "success": False,
-                        "reason": "missing_key:user"})
+            self.write({"status": 400, "success": False, "reason": "missing_key:user"})
             return
 
         result = self.db.follows.find(
-            filter={"user": username},
-            projection={"_id": False}
+            filter={"user": username}, projection={"_id": False}
         )
 
-        follows = []  # need to instantiate it because if user follows nobody the iteration wont be run "follows" would get unassigned
-        for user in result:  # even though there is only one item in result set we need to iterate because query returns a cursor instance
+        follows = (
+            []
+        )  # need to instantiate it because if user follows nobody the iteration wont be run "follows" would get unassigned
+        for (
+            user
+        ) in (
+            result
+        ):  # even though there is only one item in result set we need to iterate because query returns a cursor instance
             follows = user["follows"]
 
         self.set_status(200)
-        self.write({"success": True,
-                    "user": username,
-                    "follows": follows})
+        self.write({"success": True, "user": username, "follows": follows})
 
     @log_access
     @auth_needed
@@ -79,26 +79,20 @@ class FollowHandler(BaseHandler):
             user_to_follow = self.get_argument("user")
         except tornado.web.MissingArgumentError:
             self.set_status(400)
-            self.write({"status": 400,
-                        "success": False,
-                        "reason": "missing_key:user"})
+            self.write({"status": 400, "success": False, "reason": "missing_key:user"})
             return
 
         username = self.current_user.username
 
         self.db.follows.update_one(
             {"user": username},  # fitler
-            {
-                "$addToSet": {  # update
-                    "follows": user_to_follow
-                }
-            },
-            upsert=True  # if no document already present, create one (i.e. user follows somebody for first time)
+            {"$addToSet": {"follows": user_to_follow}},  # update
+            # if no document already present, create one (i.e. user follows somebody for first time)
+            upsert=True,
         )
 
         self.set_status(200)
-        self.write({"status": 200,
-                    "success": True})
+        self.write({"status": 200, "success": True})
 
     @log_access
     @auth_needed
@@ -127,20 +121,12 @@ class FollowHandler(BaseHandler):
             username = self.get_argument("user")
         except tornado.web.MissingArgumentError:
             self.set_status(400)
-            self.write({"status": 400,
-                        "success": False,
-                        "reason": "missing_key:user"})
+            self.write({"status": 400, "success": False, "reason": "missing_key:user"})
             return
 
         self.db.follows.update_one(
-            {"user": self.current_user.username},
-            {
-                "$pull": {
-                    "follows": username
-                }
-            }
+            {"user": self.current_user.username}, {"$pull": {"follows": username}}
         )
 
         self.set_status(200)
-        self.write({"status": 200,
-                    "success": True})
+        self.write({"status": 200, "success": True})

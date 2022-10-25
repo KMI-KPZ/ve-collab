@@ -6,14 +6,13 @@ from logger_factory import log_access
 
 
 class SearchHandler(BaseHandler):
-
     @log_access
     @auth_needed
     def get(self):
         """
         GET /search
         search the database for posts, tags, and users
-        required parameters: 
+        required parameters:
             query - search query
 
         optional parameters: (at least one needs to be true obviously, default behaviour is "false", i.e. not included in search)
@@ -30,7 +29,7 @@ class SearchHandler(BaseHandler):
             400 Bad Request
             {"status": 400,
              "reason": "missing_key_in_http_body"}
-            
+
             401 Unauthorized
             {"status": 401,
              "reason": "no_logged_in_user"}
@@ -40,8 +39,7 @@ class SearchHandler(BaseHandler):
             query = self.get_argument("query")
         except tornado.web.MissingArgumentError:
             self.set_status(400)
-            self.write({"status": 400,
-                        "reason": "missing_key:query"})
+            self.write({"status": 400, "reason": "missing_key:query"})
             return
 
         search_posts = self.get_argument("posts", "true")
@@ -49,9 +47,9 @@ class SearchHandler(BaseHandler):
         search_users = self.get_argument("users", "true")
 
         # ensure type safety: only "true" will be True, everything else will evaluate to False
-        search_posts = (search_posts == "true")
-        search_tags = (search_tags == "true")
-        search_users = (search_users == "true")
+        search_posts = search_posts == "true"
+        search_tags = search_tags == "true"
+        search_users = search_users == "true"
 
         users_search_result = []
         tags_search_result = []
@@ -70,18 +68,17 @@ class SearchHandler(BaseHandler):
         response = {
             "users": users_search_result,
             "tags": tags_search_result,
-            "posts": posts_search_result
+            "posts": posts_search_result,
         }
 
         self.set_status(200)
         self.write(response)
 
-
     def _search_users(self, query: str) -> List[Dict]:
         """
         full text search on user profiles
         :param query: search query
-        :return: any users matching the query 
+        :return: any users matching the query
         """
 
         # TODO decide if user search should be limited to name, because like this it searches for anything on the profile
@@ -98,7 +95,7 @@ class SearchHandler(BaseHandler):
         :param query: search query
         :return: any posts that has tags that match the query
         """
-    
+
         # tags is an exact match query, therefore explicitely search without using index
         matched_posts = self.db.posts.find({"tags": query})
 
@@ -112,9 +109,12 @@ class SearchHandler(BaseHandler):
 
             # if the post was not in a space, the user has to follow the author (or be the author himself)
             else:
-                if post["author"] in self._get_follows_of_current_user() or post["author"] == self.current_user.username:
+                if (
+                    post["author"] in self._get_follows_of_current_user()
+                    or post["author"] == self.current_user.username
+                ):
                     remaining_posts.append(post)
-        
+
         return self.json_serialize_posts(remaining_posts)
 
     def _search_posts(self, query: str) -> List[Dict]:
@@ -126,7 +126,7 @@ class SearchHandler(BaseHandler):
 
         # full text search
         matched_posts = self.db.posts.find({"$text": {"$search": query}})
-        
+
         remaining_posts = []
         # iterate matched posts and sort out those that user is not allowed to see
         for post in matched_posts:
@@ -137,9 +137,12 @@ class SearchHandler(BaseHandler):
 
             # if the post was not in a space, the user has to follow the author (or be the author himself)
             else:
-                if post["author"] in self._get_follows_of_current_user() or post["author"] == self.current_user.username:
+                if (
+                    post["author"] in self._get_follows_of_current_user()
+                    or post["author"] == self.current_user.username
+                ):
                     remaining_posts.append(post)
-        
+
         return self.json_serialize_posts(remaining_posts)
 
     def _get_spaces_of_current_user(self) -> List[str]:
@@ -160,6 +163,7 @@ class SearchHandler(BaseHandler):
         get a list of users that the current_user follows (i.e. current_user FOLLOWS other_users)
         """
 
-        followers_result = self.db.follows.find_one({"user": self.current_user.username})
+        followers_result = self.db.follows.find_one(
+            {"user": self.current_user.username}
+        )
         return followers_result["follows"] if followers_result else []
-
