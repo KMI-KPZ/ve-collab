@@ -262,7 +262,7 @@ $body.delegate('#post', 'click', function () {
 
     let selectedWordpressPostId = $("#wordpressPostSelect").val();
     console.log(selectedWordpressPostId);
-    if(selectedWordpressPostId === ""){
+    if (selectedWordpressPostId === "" || selectedWordpressPostId === undefined){
       selectedWordpressPostId = null;
     }
 
