@@ -73,6 +73,7 @@ class PostHandler(BaseHandler):
                 if space not in existing_spaces:
                     self.set_status(400)
                     self.write({"status": 400,
+                                "success": False,
                                 "reason": "space_does_not_exist"})
                     self.finish()
                     return
