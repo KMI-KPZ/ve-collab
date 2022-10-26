@@ -39,8 +39,20 @@ CURRENT_USER = User(
 )
 
 
-def setup():
-    # deal with config properties
+def validate_json_str(suspect_str: str) -> bool:
+    try:
+        json.loads(suspect_str)
+    except:
+        return False
+    return True
+
+
+def setUpModule():
+    """
+    initial one time setup that deals with config properties.
+    unittest will call this method itself.
+    """
+
     with open(options.config) as json_file:
         config = json.load(json_file)
 
@@ -70,17 +82,30 @@ def setup():
     global_vars.mongodb_db_name = "test_db"
 
 
-def validate_json_str(suspect_str: str) -> bool:
-    try:
-        json.loads(suspect_str)
-    except:
-        return False
-    return True
+def tearDownModule():
+    """
+    after all tests from all cases have run, wipe the whole db for safety's sake
+    in case any of the test cases missed to clean up.
+    unittest will call this method itself.
+    """
+    with MongoClient(
+        global_vars.mongodb_host,
+        global_vars.mongodb_port,
+        username=global_vars.mongodb_username,
+        password=global_vars.mongodb_password,
+    ) as mongo_client:
+        db = mongo_client[global_vars.mongodb_db_name]
+        db.drop_collection("posts")
+        db.drop_collection("spaces")
+        db.drop_collection("profiles")
+        db.drop_collection("follows")
+        db.drop_collection("roles")
+        db.drop_collection("global_acl")
+        db.drop_collection("space_acl")
 
 
 class RenderHandlerTest(AsyncHTTPTestCase):
     def get_app(self):
-        setup()  # have to do our setup here, because parent class calls get_app in its own setUp, so we would have to setup before super() otherwise, which might break something idk
         return make_app(global_vars.cookie_secret)
 
     def setUp(self) -> None:
@@ -135,6 +160,17 @@ class RenderHandlerTest(AsyncHTTPTestCase):
 
 
 class BaseApiTestCase(AsyncHTTPTestCase):
+    @classmethod
+    def setUpClass(cls):
+        # initialize mongodb connection
+        cls._client = MongoClient(
+            global_vars.mongodb_host,
+            global_vars.mongodb_port,
+            username=global_vars.mongodb_username,
+            password=global_vars.mongodb_password,
+        )
+        cls._db = cls._client[global_vars.mongodb_db_name]
+
     def setUp(self) -> None:
         super().setUp()
 
@@ -142,22 +178,93 @@ class BaseApiTestCase(AsyncHTTPTestCase):
         options.test_admin = True
 
         # initialize mongodb connection
-        self.client = MongoClient(
-            global_vars.mongodb_host,
-            global_vars.mongodb_port,
-            username=global_vars.mongodb_username,
-            password=global_vars.mongodb_password,
-        )
-        self.db = self.client[global_vars.mongodb_db_name]
+        self.client = self.__class__._client
+        self.db = self.__class__._db
 
     def tearDown(self) -> None:
         # close mongodb connection
-        self.client.close()
+        self.client = None
         super().tearDown()
 
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls._client.close()
+
     def get_app(self):
-        setup()  # have to do our setup here, because parent class calls get_app in its own setUp, so we would have to setup before super() otherwise, which might break something idk
         return make_app(global_vars.cookie_secret)
+
+    def base_permission_environment_setUp(self) -> None:
+        # insert test data
+        self.test_space = "unittest_space"
+        self.test_roles = {
+            CURRENT_ADMIN.username: "admin",
+            CURRENT_USER.username: "user",
+        }
+        self.test_global_acl_rules = {
+            CURRENT_ADMIN.username: {
+                "role": self.test_roles[CURRENT_ADMIN.username],
+                "create_space": True,
+            },
+            CURRENT_USER.username: {
+                "role": self.test_roles[CURRENT_USER.username],
+                "create_space": False,
+            },
+        }
+
+        self.test_space_acl_rules = {
+            CURRENT_ADMIN.username: {
+                "role": "admin",
+                "space": self.test_space,
+                "join_space": True,
+                "read_timeline": True,
+                "post": True,
+                "comment": True,
+                "read_wiki": True,
+                "write_wiki": True,
+                "read_files": True,
+                "write_files": True,
+            },
+            CURRENT_USER.username: {
+                "role": "user",
+                "space": self.test_space,
+                "join_space": True,
+                "read_timeline": True,
+                "post": False,
+                "comment": True,
+                "read_wiki": False,
+                "write_wiki": False,
+                "read_files": False,
+                "write_files": False,
+            },
+        }
+
+        self.db.spaces.insert_one(
+            {
+                "name": self.test_space,
+                "invisible": False,
+                "members": [CURRENT_ADMIN.username, CURRENT_USER.username],
+                "admins": [CURRENT_ADMIN.username],
+                "invites": [],
+                "requests": [],
+            }
+        )
+        self.db.roles.insert_many(
+            [{"username": key, "role": value} for key, value in self.test_roles.items()]
+        )
+        # pymongo modifies parameters in place (adds _id fields), like WHAT THE FUCK!? anyway, thats why we give it a copy...
+        self.db.space_acl.insert_many(
+            [value.copy() for value in self.test_space_acl_rules.values()]
+        )
+        self.db.global_acl.insert_many(
+            [value.copy() for value in self.test_global_acl_rules.values()]
+        )
+
+    def base_permission_environments_tearDown(self) -> None:
+        # cleanup test data
+        self.db.roles.delete_many({})
+        self.db.global_acl.delete_many({})
+        self.db.space_acl.delete_many({})
+        self.db.spaces.delete_many({})
 
     def base_checks(
         self,
@@ -1025,63 +1132,12 @@ class RoleACLIntegrationTest(BaseApiTestCase):
     def setUp(self) -> None:
         super().setUp()
 
-        # insert test data
-        self.test_space = "unittest_space"
-        self.test_roles = {
-            CURRENT_ADMIN.username: "admin",
-            CURRENT_USER.username: "user",
-        }
-        self.test_space_acl_rules = {
-            CURRENT_ADMIN.username: {
-                "role": "admin",
-                "space": self.test_space,
-                "join_space": True,
-                "read_timeline": True,
-                "post": True,
-                "comment": True,
-                "read_wiki": True,
-                "write_wiki": True,
-                "read_files": True,
-                "write_files": True,
-            },
-            CURRENT_USER.username: {
-                "role": "user",
-                "space": self.test_space,
-                "join_space": True,
-                "read_timeline": True,
-                "post": True,
-                "comment": True,
-                "read_wiki": False,
-                "write_wiki": False,
-                "read_files": True,
-                "write_files": False,
-            },
-        }
-
-        self.db.spaces.insert_one(
-            {
-                "name": self.test_space,
-                "invisible": False,
-                "members": [CURRENT_ADMIN.username, CURRENT_USER.username],
-                "admins": [CURRENT_ADMIN.username],
-                "invites": [],
-                "requests": [],
-            }
-        )
-        self.db.roles.insert_many(
-            [{"username": key, "role": value} for key, value in self.test_roles.items()]
-        )
-        # pymongo modifies parameters in place (adds _id fields), like WHAT THE FUCK!? anyway, thats why we give it a copy...
-        self.db.space_acl.insert_many(
-            [value.copy() for value in self.test_space_acl_rules.values()]
-        )
+        # setup basic permissions
+        self.base_permission_environment_setUp()
 
     def tearDown(self) -> None:
         # cleanup test data
-        self.db.roles.delete_many({})
-        self.db.global_acl.delete_many({})
-        self.db.space_acl.delete_many({})
-        self.db.spaces.delete_many({})
+        self.base_permission_environments_tearDown()
         super().tearDown()
 
     def test_acl_entry_creation_on_role_request_of_no_role(self):
@@ -1154,63 +1210,12 @@ class PostHandlerTest(BaseApiTestCase):
     def setUp(self) -> None:
         super().setUp()
 
-        # insert test data
-        self.test_space = "unittest_space"
-        self.test_roles = {
-            CURRENT_ADMIN.username: "admin",
-            CURRENT_USER.username: "user",
-        }
-        self.test_space_acl_rules = {
-            CURRENT_ADMIN.username: {
-                "role": "admin",
-                "space": self.test_space,
-                "join_space": True,
-                "read_timeline": True,
-                "post": True,
-                "comment": True,
-                "read_wiki": True,
-                "write_wiki": True,
-                "read_files": True,
-                "write_files": True,
-            },
-            CURRENT_USER.username: {
-                "role": "user",
-                "space": self.test_space,
-                "join_space": True,
-                "read_timeline": True,
-                "post": False,
-                "comment": True,
-                "read_wiki": False,
-                "write_wiki": False,
-                "read_files": False,
-                "write_files": False,
-            },
-        }
-
-        self.db.spaces.insert_one(
-            {
-                "name": self.test_space,
-                "invisible": False,
-                "members": [CURRENT_ADMIN.username, CURRENT_USER.username],
-                "admins": [CURRENT_ADMIN.username],
-                "invites": [],
-                "requests": [],
-            }
-        )
-        self.db.roles.insert_many(
-            [{"username": key, "role": value} for key, value in self.test_roles.items()]
-        )
-        # pymongo modifies parameters in place (adds _id fields), like WHAT THE FUCK!? anyway, thats why we give it a copy...
-        self.db.space_acl.insert_many(
-            [value.copy() for value in self.test_space_acl_rules.values()]
-        )
+        # setup basic environment of permissions
+        self.base_permission_environment_setUp()
 
     def tearDown(self) -> None:
         # cleanup test data
-        self.db.roles.delete_many({})
-        self.db.global_acl.delete_many({})
-        self.db.space_acl.delete_many({})
-        self.db.spaces.delete_many({})
+        self.base_permission_environments_tearDown()
         self.db.posts.delete_many({})
         super().tearDown()
 
