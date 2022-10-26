@@ -133,9 +133,25 @@ class PostHandler(BaseHandler):
 
         # _id field present in request, therefore update the existing post
         else:
-            author = self.current_user.username
-            text = self.get_body_argument("text")  # http_body['text']
+            post = self.db.posts.find_one({"_id": ObjectId(_id)})
+            # reject update if the post doesnt exist
+            if not post:
+                self.set_status(409)
+                self.write(
+                    {"status": 409, "success": False, "reason": "post_id_doesnt_exist"}
+                )
+                return
 
+            # reject update if current_user is not the author
+            if self.current_user.username != post["author"]:
+                self.set_status(403)
+                self.write(
+                    {"status": 403, "success": False, "reason": "user_not_author"}
+                )
+                return
+
+            # update the text
+            text = self.get_body_argument("text")
             self.db.posts.update_one(
                 {"_id": ObjectId(_id)},
                 {
@@ -143,7 +159,6 @@ class PostHandler(BaseHandler):
                         "text": text,
                     }
                 },
-                upsert=True,
             )
 
             self.set_status(200)
@@ -151,7 +166,7 @@ class PostHandler(BaseHandler):
 
     @log_access
     @auth_needed
-    def delete(self):
+    async def delete(self):
         """
         DELETE /posts
             http_body:
@@ -173,16 +188,80 @@ class PostHandler(BaseHandler):
                   "reason": "no_logged_in_user"}
         """
 
-        http_body = tornado.escape.json_decode(self.request.body)
+        try:
+            http_body = json.loads(self.request.body)
+        except json.JSONDecodeError:
+            self.set_status(400)
+            self.write(
+                {"status": 400, "success": False, "reason": "json_parsing_error"}
+            )
+            return
 
-        if "post_id" in http_body:
+        if "post_id" not in http_body:
+            self.set_status(400)
+            self.write(
+                {"status": 400, "success": False, "reason": "missing_key_in_http_body"}
+            )
+            return
+
+        post_to_delete = self.db.posts.find_one(
+            {"_id": ObjectId(http_body["post_id"])},
+        )
+
+        if not post_to_delete:
+            self.set_status(409)
+            self.write(
+                {"status": 409, "success": False, "reason": "post_id_doesnt_exist"}
+            )
+            return
+
+        # if the post is in a space, one of the following allows the user to delete the post:
+        # 1. user is author of the post
+        # 2. user is lionet global admin
+        # 3. user is space admin
+        # 4. user is platform admin (check this last because it is the slowest request)
+        if post_to_delete["space"]:
+            if self.current_user.username != post_to_delete["author"]:
+                if not self.is_current_user_lionet_admin():
+                    space = self.db.spaces.find_one({"name": post_to_delete["space"]})
+                    if self.current_user.username not in space["admins"]:
+                        if not await util.is_platform_admin(self.current_user.username):
+                            # none of the four permission cases apply, deny removal
+                            self.set_status(403)
+                            self.write(
+                                {
+                                    "status": 403,
+                                    "success": False,
+                                    "reason": "insufficient_permission",
+                                }
+                            )
+                            return
+
+            # one of the four conditions applied, remove the post
+            self.db.posts.delete_one({"_id": post_to_delete["_id"]})
+
+        # if the post is not in a space, the option to be space admin
+        # to remove the post doesnt hold anymore, check only the other 3 options
+        else:
+            if self.current_user.username != post_to_delete["author"]:
+                if not self.is_current_user_lionet_admin():
+                    if not await util.is_platform_admin(self.current_user.username):
+                        # none of the three permission cases apply, deny removal
+                        self.set_status(403)
+                        self.write(
+                            {
+                                "status": 403,
+                                "success": False,
+                                "reason": "insufficient_permission",
+                            }
+                        )
+                        return
+
+            # one of the three conditions applied, remove the post
             self.db.posts.delete_one({"_id": ObjectId(http_body["post_id"])})
 
-            self.set_status(200)
-            self.write({"status": 200, "success": True})
-        else:
-            self.set_status(400)
-            self.write({"status": 400, "reason": "missing_key_in_http_body"})
+        self.set_status(200)
+        self.write({"status": 200, "success": True})
 
 
 class CommentHandler(BaseHandler):

@@ -1,7 +1,9 @@
+import datetime
 import json
 import logging
 from typing import List
 
+from bson import ObjectId
 from keycloak import KeycloakAdmin, KeycloakOpenID
 from pymongo import MongoClient
 from requests_toolbelt import MultipartEncoder
@@ -1274,7 +1276,7 @@ class PostHandlerTest(BaseApiTestCase):
 
         request = MultipartEncoder(fields=request_json)
 
-        response = self.base_checks(
+        self.base_checks(
             "POST",
             "/posts",
             True,
@@ -1366,4 +1368,357 @@ class PostHandlerTest(BaseApiTestCase):
         self.assertEqual(response["reason"], SPACE_DOESNT_EXIST_ERROR)
 
     def test_post_edit_post(self):
-        pass
+        """
+        expect: updated text of post to be persisted into the db
+        """
+
+        # manually insert test post
+        oid = ObjectId()
+        self.db.posts.insert_one(
+            {
+                "_id": oid,
+                "author": CURRENT_ADMIN.username,
+                "creation_date": datetime.datetime.now(),
+                "text": "initial_post_text",
+                "space": None,
+                "pinned": False,
+                "wordpress_post_id": None,
+                "tags": [],
+                "files": [],
+            }
+        )
+
+        # construct update request payload
+        updated_text = "updated_post_text"
+        request = MultipartEncoder(
+            fields={
+                "_id": str(oid),
+                "text": updated_text,
+            }
+        )
+
+        # do the update request
+        self.base_checks(
+            "POST",
+            "/posts",
+            True,
+            200,
+            headers={"Content-Type": request.content_type},
+            body=request.to_string(),
+        )
+
+        # assert that text has been updated
+        updated_post = self.db.posts.find_one({"_id": oid})
+        self.assertIn("text", updated_post)
+        self.assertEqual(updated_post["text"], updated_text)
+
+    def test_post_edit_post_error_post_id_doesnt_exist(self):
+        """
+        expect: fail message because the post that should be edited doesnt exist
+        """
+
+        # manually insert test post
+        oid = ObjectId()
+        self.db.posts.insert_one(
+            {
+                "_id": oid,
+                "author": CURRENT_ADMIN.username,
+                "creation_date": datetime.datetime.now(),
+                "text": "initial_post_text",
+                "space": None,
+                "pinned": False,
+                "wordpress_post_id": None,
+                "tags": [],
+                "files": [],
+            }
+        )
+
+        # construct update request payload, using another _id this time
+        updated_text = "updated_post_text"
+        request = MultipartEncoder(
+            fields={
+                "_id": str(ObjectId()),
+                "text": updated_text,
+            }
+        )
+
+        # do the update request
+        response = self.base_checks(
+            "POST",
+            "/posts",
+            False,
+            409,
+            headers={"Content-Type": request.content_type},
+            body=request.to_string(),
+        )
+
+        self.assertEqual(response["reason"], "post_id_doesnt_exist")
+
+    def test_post_edit_post_error_user_not_author(self):
+        """
+        expect: fail message because the requesting user is not the author
+        """
+
+        # manually insert test post (note that author is other user)
+        oid = ObjectId()
+        self.db.posts.insert_one(
+            {
+                "_id": oid,
+                "author": CURRENT_USER.username,
+                "creation_date": datetime.datetime.now(),
+                "text": "initial_post_text",
+                "space": None,
+                "pinned": False,
+                "wordpress_post_id": None,
+                "tags": [],
+                "files": [],
+            }
+        )
+
+        # construct update request payload
+        updated_text = "updated_post_text"
+        request = MultipartEncoder(
+            fields={
+                "_id": str(oid),
+                "text": updated_text,
+            }
+        )
+
+        # do the update request
+        response = self.base_checks(
+            "POST",
+            "/posts",
+            False,
+            403,
+            headers={"Content-Type": request.content_type},
+            body=request.to_string(),
+        )
+
+        self.assertEqual(response["reason"], "user_not_author")
+
+    def test_delete_post_author(self):
+        """
+        expect: successfully remove post from db, permission is granted because
+        user is the author of the post
+        """
+
+        # explicitely switch to user mode for this test,
+        # such that delete is possible because user is the author
+        options.test_admin = False
+        options.test_user = True
+
+        # manually insert test post
+        oid = ObjectId()
+        self.db.posts.insert_one(
+            {
+                "_id": oid,
+                "author": CURRENT_USER.username,
+                "creation_date": datetime.datetime.now(),
+                "text": "initial_post_text",
+                "space": None,
+                "pinned": False,
+                "wordpress_post_id": None,
+                "tags": [],
+                "files": [],
+            }
+        )
+
+        self.base_checks("DELETE", "/posts", True, 200, body={"post_id": str(oid)})
+
+        self.assertEqual(list(self.db.posts.find()), [])
+
+    def test_delete_post_global_admin(self):
+        """
+        expect: successfully remove post from db, permission is granted because
+        user is global admin
+        """
+
+        # manually insert test post
+        oid = ObjectId()
+        self.db.posts.insert_one(
+            {
+                "_id": oid,
+                "author": CURRENT_USER.username,
+                "creation_date": datetime.datetime.now(),
+                "text": "initial_post_text",
+                "space": None,
+                "pinned": False,
+                "wordpress_post_id": None,
+                "tags": [],
+                "files": [],
+            }
+        )
+
+        self.base_checks("DELETE", "/posts", True, 200, body={"post_id": str(oid)})
+
+        self.assertEqual(list(self.db.posts.find()), [])
+
+    def test_delete_post_space_author(self):
+        """
+        expect: successfully remove space post from db, permission is granted because
+        user is the author of the post
+        """
+
+        # explicitely switch to user mode for this test,
+        # such that delete is possible because user is the author
+        options.test_admin = False
+        options.test_user = True
+
+        # manually insert test post
+        oid = ObjectId()
+        self.db.posts.insert_one(
+            {
+                "_id": oid,
+                "author": CURRENT_USER.username,
+                "creation_date": datetime.datetime.now(),
+                "text": "initial_post_text",
+                "space": self.test_space,
+                "pinned": False,
+                "wordpress_post_id": None,
+                "tags": [],
+                "files": [],
+            }
+        )
+
+        self.base_checks("DELETE", "/posts", True, 200, body={"post_id": str(oid)})
+
+        self.assertEqual(list(self.db.posts.find()), [])
+
+    def test_delete_post_space_global_admin(self):
+        """
+        expect: successfully remove space post from db, permission is granted because
+        user is global admin
+        """
+
+        # manually insert test post
+        oid = ObjectId()
+        self.db.posts.insert_one(
+            {
+                "_id": oid,
+                "author": CURRENT_USER.username,
+                "creation_date": datetime.datetime.now(),
+                "text": "initial_post_text",
+                "space": self.test_space,
+                "pinned": False,
+                "wordpress_post_id": None,
+                "tags": [],
+                "files": [],
+            }
+        )
+
+        self.base_checks("DELETE", "/posts", True, 200, body={"post_id": str(oid)})
+
+        self.assertEqual(list(self.db.posts.find()), [])
+
+    def test_delete_post_space_space_admin(self):
+        """
+        expect: successfully remove space post from db, permission is granted because
+        user is space admin
+        """
+
+        # explicitely switch to user mode for this test,
+        # such that delete is possible because user space admin,
+        # but neither global admin or author
+        options.test_admin = False
+        options.test_user = True
+
+        # add test_user to space admins for this test
+        self.db.spaces.update_one(
+            {"name": self.test_space}, {"$addToSet": {"admins": CURRENT_USER.username}}
+        )
+
+        # manually insert test post (into space this time)
+        oid = ObjectId()
+        self.db.posts.insert_one(
+            {
+                "_id": oid,
+                "author": CURRENT_ADMIN.username,
+                "creation_date": datetime.datetime.now(),
+                "text": "initial_post_text",
+                "space": self.test_space,
+                "pinned": False,
+                "wordpress_post_id": None,
+                "tags": [],
+                "files": [],
+            }
+        )
+
+        self.base_checks("DELETE", "/posts", True, 200, body={"post_id": str(oid)})
+
+        self.assertEqual(list(self.db.posts.find()), [])
+
+    def test_delete_post_error_post_doesnt_exist(self):
+        """
+        expect: fail message because the post_id doesnt exist
+        """
+
+        # use random non-existent post_id
+        response = self.base_checks(
+            "DELETE", "/posts", False, 409, body={"post_id": str(ObjectId())}
+        )
+
+        self.assertEqual(response["reason"], "post_id_doesnt_exist")
+
+    def test_delete_post_error_insufficient_permission(self):
+        """
+        expect: delete is rejected because user is neither global admin,
+        platform admin or author
+        """
+
+        # explicitely switch to user mode for this test,
+        # such that delete is possible because user space admin,
+        # but neither global admin or author
+        options.test_admin = False
+        options.test_user = True
+
+        # manually insert test post (into space this time)
+        oid = ObjectId()
+        self.db.posts.insert_one(
+            {
+                "_id": oid,
+                "author": CURRENT_ADMIN.username,
+                "creation_date": datetime.datetime.now(),
+                "text": "initial_post_text",
+                "space": None,
+                "pinned": False,
+                "wordpress_post_id": None,
+                "tags": [],
+                "files": [],
+            }
+        )
+
+        self.base_checks("DELETE", "/posts", False, 403, body={"post_id": str(oid)})
+
+        self.assertNotEqual(list(self.db.posts.find()), [])
+
+    def test_delete_post_space_error_insufficient_permission(self):
+        """
+        expect: delete is rejected because user is neither global admin,
+        platform admin, space admin or author
+        """
+
+        # explicitely switch to user mode for this test,
+        # such that delete is possible because user space admin,
+        # but neither global admin or author
+        options.test_admin = False
+        options.test_user = True
+
+        # manually insert test post (into space this time)
+        oid = ObjectId()
+        self.db.posts.insert_one(
+            {
+                "_id": oid,
+                "author": CURRENT_ADMIN.username,
+                "creation_date": datetime.datetime.now(),
+                "text": "initial_post_text",
+                "space": self.test_space,
+                "pinned": False,
+                "wordpress_post_id": None,
+                "tags": [],
+                "files": [],
+            }
+        )
+
+        self.base_checks("DELETE", "/posts", False, 403, body={"post_id": str(oid)})
+
+        self.assertNotEqual(list(self.db.posts.find()), [])
