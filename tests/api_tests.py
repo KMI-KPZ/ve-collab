@@ -1727,3 +1727,54 @@ class PostHandlerTest(BaseApiTestCase):
         self.base_checks("DELETE", "/posts", False, 403, body={"post_id": str(oid)})
 
         self.assertNotEqual(list(self.db.posts.find()), [])
+
+
+class CommentHandlerTest(BaseApiTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+
+        # setup basic environment of permissions
+        self.base_permission_environment_setUp()
+
+        self.post_oid = ObjectId()
+        self.db.posts.insert_one(
+            {
+                "_id": self.post_oid,
+                "author": CURRENT_ADMIN.username,
+                "creation_date": datetime.datetime.now(),
+                "text": "initial_post_text",
+                "space": self.test_space,
+                "pinned": False,
+                "wordpress_post_id": None,
+                "tags": [],
+                "files": [],
+            }
+        )
+
+    def tearDown(self) -> None:
+        # cleanup test data
+        self.base_permission_environments_tearDown()
+        self.db.posts.delete_many({})
+        super().tearDown()
+
+    def test_post_comment(self):
+        """
+        expect: successfully add comment to a post
+        """
+
+        request = {"post_id": str(self.post_oid), "text": "test_comment"}
+
+        self.base_checks("POST", "/comment", True, 200, body=request)
+
+        db_state = self.db.posts.find_one({"_id": self.post_oid})
+
+        # assert exactly one comment to the post that matches the text in the request
+        self.assertIn("comments", db_state)
+        self.assertEqual(len(db_state["comments"]), 1)
+        self.assertEqual(db_state["comments"][0]["text"], request["text"])
+
+    def test_post_comment_error_missing_post_id(self):
+        pass
+
+    def test_post_comment_space_insufficient_permission(self):
+        pass

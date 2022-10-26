@@ -106,7 +106,7 @@ class PostHandler(BaseHandler):
             file_amount = self.get_body_argument("file_amount", None)
             files = []
             if file_amount:
-
+                # TODO store files in mongodb instead of filesystem
                 # save every file
                 for i in range(0, int(file_amount)):
                     file_obj = self.request.files["file" + str(i)][0]
