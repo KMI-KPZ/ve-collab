@@ -28,7 +28,7 @@ INSUFFICIENT_PERMISSION_ERROR = "insufficient_permission"
 UNRECOGNIZABLE_KEY_ERROR = "unrecognizable_key_in_http_body"
 NON_BOOL_VALUE_ERROR = "value_not_bool_in_http_body"
 SPACE_DOESNT_EXIST_ERROR = "space_doesnt_exist"
-
+POST_DOESNT_EXIST_ERROR = "post_doesnt_exist"
 
 # don't change, these values match with the ones in BaseHandler
 CURRENT_ADMIN = User(
@@ -182,12 +182,12 @@ class BaseApiTestCase(AsyncHTTPTestCase):
         self.db = self.__class__._db
 
     def tearDown(self) -> None:
-        # close mongodb connection
         self.client = None
         super().tearDown()
 
     @classmethod
     def tearDownClass(cls) -> None:
+        # close mongodb connection
         cls._client.close()
 
     def get_app(self):
@@ -1457,7 +1457,7 @@ class PostHandlerTest(BaseApiTestCase):
             body=request.to_string(),
         )
 
-        self.assertEqual(response["reason"], "post_id_doesnt_exist")
+        self.assertEqual(response["reason"], POST_DOESNT_EXIST_ERROR)
 
     def test_post_edit_post_error_user_not_author(self):
         """
@@ -1662,7 +1662,7 @@ class PostHandlerTest(BaseApiTestCase):
             "DELETE", "/posts", False, 409, body={"post_id": str(ObjectId())}
         )
 
-        self.assertEqual(response["reason"], "post_id_doesnt_exist")
+        self.assertEqual(response["reason"], POST_DOESNT_EXIST_ERROR)
 
     def test_delete_post_error_insufficient_permission(self):
         """
@@ -1774,7 +1774,268 @@ class CommentHandlerTest(BaseApiTestCase):
         self.assertEqual(db_state["comments"][0]["text"], request["text"])
 
     def test_post_comment_error_missing_post_id(self):
-        pass
+        """
+        expect: fail message because post_id is not in the request
+        """
+
+        request = {"text": "test_comment"}
+
+        response = self.base_checks("POST", "/comment", False, 400, body=request)
+
+        self.assertEqual(
+            response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "post_id"
+        )
 
     def test_post_comment_space_insufficient_permission(self):
-        pass
+        """
+        expect: fail message because user has no permission to comment
+        """
+
+        # explicitely switch to user mode for this test
+        options.test_admin = False
+        options.test_user = True
+
+        # revoke comment permission for this test
+        self.db.space_acl.update_one(
+            {"role": self.test_roles[CURRENT_USER.username], "space": self.test_space},
+            {"$set": {"comment": False}},
+        )
+
+        request = {"post_id": str(self.post_oid), "text": "test_comment"}
+
+        response = self.base_checks("POST", "/comment", False, 403, body=request)
+
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_delete_comment_author(self):
+        """
+        expect: successful removal of comment, permission is granted because user
+        is the author of the comment
+        """
+
+        # explicitely switch to user mode for this test
+        # such that user is not an admin
+        options.test_admin = False
+        options.test_user = True
+
+        comment_id = ObjectId()
+
+        # manually add the comment
+        self.db.posts.update_one(
+            {"_id": self.post_oid},
+            {
+                "$set": {"space": None},
+                "$push": {
+                    "comments": {
+                        "_id": comment_id,
+                        "author": CURRENT_USER.username,
+                        "creation_date": datetime.datetime.now(),
+                        "text": "test_comment",
+                        "pinned": False,
+                    }
+                },
+            },
+        )
+
+        request = {"comment_id": str(comment_id)}
+
+        self.base_checks("DELETE", "/comment", True, 200, body=request)
+
+    def test_delete_comment_global_admin(self):
+        """
+        expect: successful removal of comment, permission is granted because user
+        is global admin
+        """
+
+        comment_id = ObjectId()
+
+        # manually add the comment
+        self.db.posts.update_one(
+            {"_id": self.post_oid},
+            {
+                "$set": {"space": None},
+                "$push": {
+                    "comments": {
+                        "_id": comment_id,
+                        "author": CURRENT_USER.username,
+                        "creation_date": datetime.datetime.now(),
+                        "text": "test_comment",
+                        "pinned": False,
+                    }
+                },
+            },
+        )
+
+        request = {"comment_id": str(comment_id)}
+
+        self.base_checks("DELETE", "/comment", True, 200, body=request)
+
+    def test_delete_comment_space_author(self):
+        """
+        expect: successful removal of comment, permission is granted because user
+        is the author of the comment
+        """
+
+        # explicitely switch to user mode for this test
+        # such that user is not an admin
+        options.test_admin = False
+        options.test_user = True
+
+        comment_id = ObjectId()
+
+        # manually add the comment
+        self.db.posts.update_one(
+            {"_id": self.post_oid},
+            {
+                "$push": {
+                    "comments": {
+                        "_id": comment_id,
+                        "author": CURRENT_USER.username,
+                        "creation_date": datetime.datetime.now(),
+                        "text": "test_comment",
+                        "pinned": False,
+                    }
+                },
+            },
+        )
+
+        request = {"comment_id": str(comment_id)}
+
+        self.base_checks("DELETE", "/comment", True, 200, body=request)
+
+    def test_delete_comment_space_global_admin(self):
+        """
+        expect: successful removal of comment, permission is granted because user
+        is global admin
+        """
+
+        comment_id = ObjectId()
+
+        # manually add the comment
+        self.db.posts.update_one(
+            {"_id": self.post_oid},
+            {
+                "$push": {
+                    "comments": {
+                        "_id": comment_id,
+                        "author": CURRENT_USER.username,
+                        "creation_date": datetime.datetime.now(),
+                        "text": "test_comment",
+                        "pinned": False,
+                    }
+                },
+            },
+        )
+
+        request = {"comment_id": str(comment_id)}
+
+        self.base_checks("DELETE", "/comment", True, 200, body=request)
+
+    def test_delete_comment_space_space_admin(self):
+        """
+        expect: successful removal of comment, permission is granted because user
+        is space admin
+        """
+
+        # explicitely switch to user mode for this test
+        # such that user is not a global admin
+        options.test_admin = False
+        options.test_user = True
+
+        # grant the user space admin permissions
+        self.db.spaces.update_one(
+            {"name": self.test_space}, {"$addToSet": {"admins": CURRENT_USER.username}}
+        )
+
+        comment_id = ObjectId()
+
+        # manually add the comment
+        self.db.posts.update_one(
+            {"_id": self.post_oid},
+            {
+                "$push": {
+                    "comments": {
+                        "_id": comment_id,
+                        "author": CURRENT_ADMIN.username,
+                        "creation_date": datetime.datetime.now(),
+                        "text": "test_comment",
+                        "pinned": False,
+                    }
+                },
+            },
+        )
+
+        request = {"comment_id": str(comment_id)}
+
+        self.base_checks("DELETE", "/comment", True, 200, body=request)
+
+    def test_delete_comment_error_insufficient_permission(self):
+        """
+        expect: fail message because user is not allowed to remove the comment
+        since he is neither the author or a global admin
+        """
+
+        # explicitely switch to user mode for this test
+        # such that user is not an admin
+        options.test_admin = False
+        options.test_user = True
+
+        comment_id = ObjectId()
+
+        # manually add the comment
+        self.db.posts.update_one(
+            {"_id": self.post_oid},
+            {
+                "$set": {"space": None},
+                "$push": {
+                    "comments": {
+                        "_id": comment_id,
+                        "author": CURRENT_ADMIN.username,
+                        "creation_date": datetime.datetime.now(),
+                        "text": "test_comment",
+                        "pinned": False,
+                    }
+                },
+            },
+        )
+
+        request = {"comment_id": str(comment_id)}
+
+        response = self.base_checks("DELETE", "/comment", False, 403, body=request)
+
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_delete_comment_space_error_insufficient_permission(self):
+        """
+        expect: fail message because user is not allowed to remove the comment
+        since he is neither the author, a global admin or a space admin
+        """
+
+        # explicitely switch to user mode for this test
+        # such that user is not an admin
+        options.test_admin = False
+        options.test_user = True
+
+        comment_id = ObjectId()
+
+        # manually add the comment
+        self.db.posts.update_one(
+            {"_id": self.post_oid},
+            {
+                "$push": {
+                    "comments": {
+                        "_id": comment_id,
+                        "author": CURRENT_ADMIN.username,
+                        "creation_date": datetime.datetime.now(),
+                        "text": "test_comment",
+                        "pinned": False,
+                    }
+                },
+            },
+        )
+
+        request = {"comment_id": str(comment_id)}
+
+        response = self.base_checks("DELETE", "/comment", False, 403, body=request)
+
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)

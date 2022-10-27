@@ -28,11 +28,11 @@ class PostHandler(BaseHandler):
         POST /posts
         IF id is in body, update post
         ELSE add new post
-        http body:
+        http body (as form data, json here is only for readability):
             {
-                "_id": "id",
+                "_id": "optional, _id, if supplied, the post is updated instead of freshly inserted",
                 "text": "text_of_post",
-                "tags": ["tag1", "tag2"],
+                "tags": ["tag1", "tag2"], (json encoded list)
                 "space": "optional, post this post into a space, not directly into your profile",
                 "wordpress_post_id": "optional, id of associated wordpress post"
             }
@@ -43,12 +43,30 @@ class PostHandler(BaseHandler):
 
             400 Bad Request,
             {"status": 400,
+             "success": False,
              "reason": "space_does_not_exist"}
 
             401 Unauthorized,
             {"status": 401,
+             "success": False,
              "reason": "no_logged_in_user"}
+
+            403 Forbidden
+            {"status": 403,
+             "success": False,
+             "reason": "insufficient_permission"}
+
+            403 Forbidden
+            {"status": 403,
+             "success": False,
+             "reason": "user_not_author"}
+
+            409 Conflict
+            {"status": 409,
+             "success": False,
+             "reason": "post_doesnt_exist"}
         """
+
         _id = self.get_body_argument("_id", None)
 
         # no _id field means a new post is made
@@ -82,10 +100,10 @@ class PostHandler(BaseHandler):
                             "reason": "space_doesnt_exist",
                         }
                     )
-                    self.finish()
                     return
 
-                # determine if user has permission to post into that space
+                # space exists, now determine if user has permission
+                # to post into that space, if not end with 403 insufficient permission
                 user_can_post = False
                 with ACL() as acl:
                     user_can_post = acl.space_acl.ask(
@@ -138,7 +156,7 @@ class PostHandler(BaseHandler):
             if not post:
                 self.set_status(409)
                 self.write(
-                    {"status": 409, "success": False, "reason": "post_id_doesnt_exist"}
+                    {"status": 409, "success": False, "reason": "post_doesnt_exist"}
                 )
                 return
 
@@ -181,11 +199,28 @@ class PostHandler(BaseHandler):
 
                 400 Bad Request,
                 {"status": 400,
-                 "reason": <string>}
+                 "success": False,
+                 "reason": "json_parsing_error"}
 
-                 401 Unauthorized
-                 {"status": 401,
-                  "reason": "no_logged_in_user"}
+                400 Bad Request,
+                {"status": 400,
+                 "success": False,
+                 "reason": "missing_key_in_http_body:post_id"}
+
+                401 Unauthorized
+                {"status": 401,
+                 "success": False,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden,
+                {"status": 403,
+                 "success": False,
+                 "reason": "insufficient_permission"}
+
+                409 Conflict,
+                {"status": 409,
+                 "success": False,
+                 "reason": "post_doesnt_exist"}
         """
 
         try:
@@ -200,7 +235,11 @@ class PostHandler(BaseHandler):
         if "post_id" not in http_body:
             self.set_status(400)
             self.write(
-                {"status": 400, "success": False, "reason": "missing_key_in_http_body"}
+                {
+                    "status": 400,
+                    "success": False,
+                    "reason": "missing_key_in_http_body:post_id",
+                }
             )
             return
 
@@ -210,9 +249,7 @@ class PostHandler(BaseHandler):
 
         if not post_to_delete:
             self.set_status(409)
-            self.write(
-                {"status": 409, "success": False, "reason": "post_id_doesnt_exist"}
-            )
+            self.write({"status": 409, "success": False, "reason": "post_doesnt_exist"})
             return
 
         # if the post is in a space, one of the following allows the user to delete the post:
@@ -280,7 +317,7 @@ class CommentHandler(BaseHandler):
         http body:
             {
                 "text": "content_of_comment",
-                "post_id": "id_von_post"
+                "post_id": "id_of_post"
             }
         return:
             200 OK
@@ -289,29 +326,77 @@ class CommentHandler(BaseHandler):
 
             400 Bad Request
             {"status": 400,
-             "reason": "missing_key_in_http_body"}
+             "success": False,
+             "reason": "json_parsing_error"}
+
+            400 Bad Request
+            {"status": 400,
+             "success": False,
+             "reason": "missing_key_in_http_body:post_id"}
 
             401 Unauthorized
             {"status": 401,
              "reason": "no_logged_in_user"}
+
+            403 Forbidden
+            {"status": 403,
+             "success": False,
+             "reason": "insufficient_permission"}
+
+            409 Conflict
+            {"status": 409,
+             "success": False,
+             "reason": "post_doesnt_exist"}
         """
 
-        http_body = tornado.escape.json_decode(self.request.body)
-
-        if (
-            "post_id" not in http_body
-        ):  # exit if there is no post_id to associate the comment to
+        try:
+            http_body = json.loads(self.request.body)
+        except json.JSONDecodeError:
             self.set_status(400)
-            self.write({"status": 400, "reason": "missing_key_in_http_body"})
-            self.finish()
+            self.write(
+                {"status": 400, "success": False, "reason": "json_parsing_error"}
+            )
             return
+
+        if "post_id" not in http_body:
+            self.set_status(400)
+            self.write(
+                {
+                    "status": 400,
+                    "success": False,
+                    "reason": "missing_key_in_http_body:post_id",
+                }
+            )
+            return
+
+        post_ref = ObjectId(http_body["post_id"])
+
+        post = self.db.posts.find_one({"_id": post_ref})
+        if not post:
+            self.set_status(409)
+            self.write({"status": 409, "success": False, "reason": "post_doesnt_exist"})
+            return
+
+        # if post is in a space, we have to check the permissions to comment
+        if post["space"]:
+            with ACL() as acl:
+                if not acl.space_acl.ask(
+                    self.get_current_user_role(), post["space"], "comment"
+                ):
+                    self.set_status(403)
+                    self.write(
+                        {
+                            "status": 403,
+                            "success": False,
+                            "reason": "insufficient_permission",
+                        }
+                    )
+                    return
 
         author = self.current_user.username
         creation_date = datetime.utcnow()
         text = http_body["text"]
-        post_ref = ObjectId(http_body["post_id"])
 
-        # TODO enforce acl comment permission
         self.db.posts.update_one(
             {"_id": post_ref},  # filter
             {  # update
@@ -332,7 +417,7 @@ class CommentHandler(BaseHandler):
 
     @log_access
     @auth_needed
-    def delete(self):
+    async def delete(self):
         """
         DELETE /comment
             http_body:
@@ -347,28 +432,142 @@ class CommentHandler(BaseHandler):
 
                 400 Bad Request
                 {"status": 400,
-                 "reason": "missing_key_in_http_body"}
+                 "success": False,
+                 "reason": "json_parsing_error"}
+
+                400 Bad Request
+                {"status": 400,
+                 "success": False,
+                 "reason": "missing_key_in_http_body:comment_id"}
 
                 401 Unauthorized
                 {"status": 401,
+                 "success": False,
                  "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                {"status": 403,
+                 "success": False,
+                 "reason": "insufficient_permission"}
+
+                409 Conflict
+                {"status": 409,
+                 "success": False,
+                 "reason": "post_doesnt_exist"}
+
+                409 Conflict
+                {"status": 409,
+                 "success": False,
+                 "reason": "comment_doesnt_exist"}
         """
 
-        http_body = tornado.escape.json_decode(self.request.body)
+        try:
+            http_body = json.loads(self.request.body)
+        except json.JSONDecodeError:
+            self.set_status(400)
+            self.write(
+                {"status": 400, "success": False, "reason": "json_parsing_error"}
+            )
+            return
 
-        if "comment_id" in http_body:
-            self.db.posts.update_many(
-                {},  # filter
-                {  # update
-                    "$pull": {"comments": {"_id": ObjectId(http_body["comment_id"])}}
-                },
+        if "comment_id" not in http_body:
+            self.set_status(400)
+            self.write(
+                {
+                    "status": 400,
+                    "success": False,
+                    "reason": "missing_key_in_http_body:comment_id",
+                }
+            )
+            return
+
+        comment_id = ObjectId(http_body["comment_id"])
+
+        post = self.db.posts.find_one({"comments": {"$elemMatch": {"_id": comment_id}}})
+
+        # reject if the post doesnt exist
+        if not post:
+            self.set_status(409)
+            self.write({"status": 409, "success": False, "reason": "post_doesnt_exist"})
+            return
+
+        # reject if there are no comments at all, meaning the desired comment to delete cannot exist
+        if not post["comments"]:
+            self.set_status(409)
+            self.write(
+                {"status": 409, "success": False, "reason": "comment_doesnt_exist"}
+            )
+            return
+
+        # search for the desired comment
+        comment = None
+        for comment_iter in post["comments"]:
+            if comment_iter["_id"] == comment_id:
+                comment = comment_iter
+                break
+
+        # reject if the comment was not found
+        if not comment:
+            self.set_status(409)
+            self.write(
+                {"status": 409, "success": False, "reason": "comment_doesnt_exist"}
+            )
+            return
+
+        # if the post is in a space,
+        # one of the following allows the user to delete the desired comment:
+        # 1. user is author of the comment
+        # 2. user is lionet global admin
+        # 3. user is space admin
+        # 4. user is platform admin (check this last because it is the slowest request)
+        if post["space"]:
+            if self.current_user.username != comment["author"]:
+                if not self.is_current_user_lionet_admin():
+                    space = self.db.spaces.find_one({"name": post["space"]})
+                    if self.current_user.username not in space["admins"]:
+                        if not await util.is_platform_admin(self.current_user.username):
+                            # none of the four permission cases apply, deny removal
+                            self.set_status(403)
+                            self.write(
+                                {
+                                    "status": 403,
+                                    "success": False,
+                                    "reason": "insufficient_permission",
+                                }
+                            )
+                            return
+
+            # one of the four conditions applied, remove the post
+            self.db.posts.update_one(
+                {"_id": post["_id"]},  # filter
+                {"$pull": {"comments": {"_id": comment_id}}},  # update
             )
 
-            self.set_status(200)
-            self.write({"status": 200, "success": True})
+        # if the post is not in a space, the option to be space admin
+        # to remove the comment doesnt hold anymore, check only the other 3 options
         else:
-            self.set_status(400)
-            self.write({"status": 400, "reason": "missing_key_in_http_body"})
+            if self.current_user.username != comment["author"]:
+                if not self.is_current_user_lionet_admin():
+                    if not await util.is_platform_admin(self.current_user.username):
+                        # none of the three permission cases apply, deny removal
+                        self.set_status(403)
+                        self.write(
+                            {
+                                "status": 403,
+                                "success": False,
+                                "reason": "insufficient_permission",
+                            }
+                        )
+                        return
+
+            # one of the three conditions applied, remove the post
+            self.db.posts.update_one(
+                {"_id": post["_id"]},  # filter
+                {"$pull": {"comments": {"_id": comment_id}}},  # update
+            )
+
+        self.set_status(200)
+        self.write({"status": 200, "success": True})
 
 
 class LikePostHandler(BaseHandler):
