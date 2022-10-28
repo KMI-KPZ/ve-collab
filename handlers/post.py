@@ -142,6 +142,8 @@ class PostHandler(BaseHandler):
                 "wordpress_post_id": wordpress_post_id,
                 "tags": tags,
                 "files": files,
+                "comments": [],
+                "likers": [],
             }
 
             self.db.posts.insert_one(post)
@@ -167,6 +169,24 @@ class PostHandler(BaseHandler):
                     {"status": 403, "success": False, "reason": "user_not_author"}
                 )
                 return
+
+            # if the post is in a space, enforce write permission
+            if post["space"]:
+                user_can_post = False
+                with ACL() as acl:
+                    user_can_post = acl.space_acl.ask(
+                        self.get_current_user_role(), post["space"], "post"
+                    )
+                if not user_can_post:
+                    self.set_status(403)
+                    self.write(
+                        {
+                            "status": 403,
+                            "success": False,
+                            "reason": "insufficient_permission",
+                        }
+                    )
+                    return
 
             # update the text
             text = self.get_body_argument("text")
@@ -588,25 +608,41 @@ class LikePostHandler(BaseHandler):
 
                 400 Bad Request
                 {"status": 400,
-                 "reason": "missing_key_in_http_body"}
+                 "success": False,
+                 "reason": "json_parsing_error"}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": "missing_key_in_http_body:post_id"}
 
                 401 Unauthorized
                 {"status": 401,
+                 "success": False,
                  "reason": "no_logged_in_user"}
         """
 
-        http_body = tornado.escape.json_decode(self.request.body)
+        try:
+            http_body = json.loads(self.request.body)
+        except json.JSONDecodeError:
+            self.set_status(400)
+            self.write(
+                {"status": 400, "success": False, "reason": "json_parsing_error"}
+            )
+            return
 
         if "post_id" not in http_body:
             self.set_status(400)
-            self.write({"status": 400, "reason": "missing_key_in_http_body"})
-            self.finish()
+            self.write(
+                {
+                    "status": 400,
+                    "success": False,
+                    "reason": "missing_key_in_http_body:post_id",
+                }
+            )
             return
 
-        post_ref = ObjectId(http_body["post_id"])
-
         self.db.posts.update_one(
-            {"_id": post_ref},  # filter
+            {"_id": ObjectId(http_body["post_id"])},  # filter
             {"$addToSet": {"likers": self.current_user.username}},  # update
         )
 
@@ -630,26 +666,47 @@ class LikePostHandler(BaseHandler):
 
                 400 Bad Request
                 {"status": 400,
-                 "reason": "missing_key_in_http_body"}
+                 "success": False,
+                 "reason": "json_parsing_error"}
+
+                400 Bad Request
+                {"status": 400,
+                 "success": False,
+                 "reason": "missing_key_in_http_body:post_id"}
 
                 401 Unauthorized
                 {"status": 401,
+                 "success": False,
                  "reason": "no_logged_in_user"}
         """
 
-        http_body = tornado.escape.json_decode(self.request.body)
-
-        if "post_id" in http_body:
-            self.db.posts.update_one(
-                {"_id": ObjectId(http_body["post_id"])},
-                {"$pull": {"likers": self.current_user.username}},
-            )
-
-            self.set_status(200)
-            self.write({"status": 200, "success": True})
-        else:
+        try:
+            http_body = json.loads(self.request.body)
+        except json.JSONDecodeError:
             self.set_status(400)
-            self.write({"status": 400, "reason": "missing_key_in_http_body"})
+            self.write(
+                {"status": 400, "success": False, "reason": "json_parsing_error"}
+            )
+            return
+
+        if "post_id" not in http_body:
+            self.set_status(400)
+            self.write(
+                {
+                    "status": 400,
+                    "success": False,
+                    "reason": "missing_key_in_http_body:post_id",
+                }
+            )
+            return
+
+        self.db.posts.update_one(
+            {"_id": ObjectId(http_body["post_id"])},
+            {"$pull": {"likers": self.current_user.username}},
+        )
+
+        self.set_status(200)
+        self.write({"status": 200, "success": True})
 
 
 class RepostHandler(BaseHandler):
@@ -658,12 +715,19 @@ class RepostHandler(BaseHandler):
     def post(self):
         """
         POST /repost
-            http body:
-                {
-                    "post_id": "id_of_post",
-                    "text": "new text for the repost",
-                    "space": "the space where to post"
-                }
+            create new repost:
+                http body:
+                    {
+                        "post_id": "id_of_post",
+                        "text": "new text for the repost",
+                        "space": "the space where to post, None if no space"
+                    }
+            or update existing repost:
+                http_body:
+                    {
+                        "_id": "id_of_repost",
+                        "text": "updated_repost_text"
+                    }
 
             returns:
                 200 OK,
@@ -679,22 +743,67 @@ class RepostHandler(BaseHandler):
                  "reason": "no_logged_in_user"}
         """
 
-        _id = self.get_body_argument("_id", None)
+        try:
+            http_body = json.loads(self.request.body)
+        except json.JSONDecodeError:
+            self.set_status(400)
+            self.write(
+                {"status": 400, "success": False, "reason": "json_parsing_error"}
+            )
+            return
+
+        # in both cases test has to be in http body
+        if "text" not in http_body:
+            self.set_status(400)
+            self.write(
+                {
+                    "status": 400,
+                    "success": False,
+                    "reason": "missing_key_in_http_body:text",
+                }
+            )
+            return
 
         # no _id field in the request means a new repost is made (not to confuse with post_id, which is the _id of the original post that is being reposted here)
-        if _id is None:
-            http_body = tornado.escape.json_decode(self.request.body)
-
+        if "_id" not in http_body:
             if "post_id" not in http_body:
                 self.set_status(400)
-                self.write({"status": 400, "reason": "missing_key_in_http_body"})
-                self.finish()
+                self.write(
+                    {
+                        "status": 400,
+                        "success": False,
+                        "reason": "missing_key_in_http_body:post_id",
+                    }
+                )
+                return
+
+            if "space" not in http_body:
+                self.set_status(400)
+                self.write(
+                    {
+                        "status": 400,
+                        "success": False,
+                        "reason": "missing_key_in_http_body:space",
+                    }
+                )
                 return
 
             post_ref = ObjectId(http_body["post_id"])
             text = http_body["text"]
 
             post = self.db.posts.find_one({"_id": post_ref})
+
+            # reject if original post doesnt exist
+            if not post:
+                self.set_status(409)
+                self.write(
+                    {"status": 409, "success": False, "reason": "post_doesnt_exist"}
+                )
+                return
+
+            # TODO move this profile stuff to requesting timeline
+            # because saving this info to the post is useless since it is changeable
+            # when requesting timeline, up to date info is grabbed from profiles collection
             profile = self.db.profiles.find_one({"user": self.current_user.username})
             if profile:
                 if "profile_pic" in profile:
@@ -705,26 +814,29 @@ class RepostHandler(BaseHandler):
             post["creation_date"] = datetime.utcnow()
             post["repostText"] = text
 
-            space = http_body["space"]
+            space_name = http_body["space"]
 
-            # check if space exists, if not, end with 400 Bad Request
-            if space is not None:
-                existing_spaces = []
-                for existing_space in self.db.spaces.find(
-                    projection={"name": True, "_id": False}
-                ):
-                    existing_spaces.append(existing_space["name"])
-                if space not in existing_spaces:
-                    self.set_status(400)
-                    self.write({"status": 400, "reason": "space_does_not_exist"})
-                    self.finish()
+            # user requested to post into space
+            # --> check if space exists
+            if space_name is not None:
+                space = self.db.spaces.find_one({"name": space_name})
+                if not space:
+                    self.set_status(409)
+                    self.write(
+                        {
+                            "status": 409,
+                            "success": False,
+                            "reason": "space_doesnt_exist",
+                        }
+                    )
                     return
 
-                # determine if user has permission to post into that space
+                # space exists, but also determine if user has permission
+                # to post into that space
                 user_can_post = False
                 with ACL() as acl:
                     user_can_post = acl.space_acl.ask(
-                        self.get_current_user_role(), space, "post"
+                        self.get_current_user_role(), space_name, "post"
                     )
                 if not user_can_post:
                     self.set_status(403)
@@ -737,8 +849,8 @@ class RepostHandler(BaseHandler):
                     )
                     return
 
-            post["space"] = space
-
+            # TODO make an explicit dict here (once profile stuff is moved to timeline)
+            post["space"] = space_name
             del post["_id"]
             if "likers" in post:
                 del post["likers"]
@@ -752,12 +864,60 @@ class RepostHandler(BaseHandler):
             self.set_status(200)
             self.write({"status": 200, "success": True})
 
+        # _id was specified in the request: update the existing repost
         else:
-            # author = self.current_user.username
-            text = self.get_body_argument("repostText")  # http_body['text']
+            _id = ObjectId(http_body["_id"])
+            repost = self.db.posts.find_one({"_id": _id})
+
+            if not repost:
+                self.set_status(409)
+                self.write(
+                    {"status": 409, "success": False, "reason": "post_doesnt_exist"}
+                )
+                return
+
+            # reject if it is actually a normal post instead of a repost
+            if "isRepost" not in repost or repost["isRepost"] == False:
+                self.set_status(409)
+                self.write(
+                    {"status": 409, "success": False, "reason": "post_is_no_repost"}
+                )
+                return
+
+            # reject if user is not the author
+            if repost["repostAuthor"] != self.current_user.username:
+                self.set_status(403)
+                self.write(
+                    {
+                        "status": 403,
+                        "success": False,
+                        "reason": "user_not_author",
+                    }
+                )
+                return
+
+            # if post is in a space, reject if the user has no posting permission
+            if repost["space"]:
+                user_can_post = False
+                with ACL() as acl:
+                    user_can_post = acl.space_acl.ask(
+                        self.get_current_user_role(), repost["space"], "post"
+                    )
+                if not user_can_post:
+                    self.set_status(403)
+                    self.write(
+                        {
+                            "status": 403,
+                            "success": False,
+                            "reason": "insufficient_permission",
+                        }
+                    )
+                    return
+
+            text = http_body["text"]
 
             self.db.posts.update_one(
-                {"_id": ObjectId(_id)},
+                {"_id": _id},
                 {
                     "$set": {
                         "repostText": text,

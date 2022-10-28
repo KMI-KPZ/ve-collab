@@ -2,6 +2,7 @@ import datetime
 import json
 import logging
 from typing import List
+from urllib import request
 
 from bson import ObjectId
 from keycloak import KeycloakAdmin, KeycloakOpenID
@@ -29,6 +30,7 @@ UNRECOGNIZABLE_KEY_ERROR = "unrecognizable_key_in_http_body"
 NON_BOOL_VALUE_ERROR = "value_not_bool_in_http_body"
 SPACE_DOESNT_EXIST_ERROR = "space_doesnt_exist"
 POST_DOESNT_EXIST_ERROR = "post_doesnt_exist"
+USER_NOT_AUTHOR_ERROR = "user_not_author"
 
 # don't change, these values match with the ones in BaseHandler
 CURRENT_ADMIN = User(
@@ -1417,6 +1419,98 @@ class PostHandlerTest(BaseApiTestCase):
         self.assertIn("text", updated_post)
         self.assertEqual(updated_post["text"], updated_text)
 
+    def test_post_edit_post_space(self):
+        """
+        expect: successfully edit post
+        """
+
+        # manually insert test post
+        oid = ObjectId()
+        self.db.posts.insert_one(
+            {
+                "_id": oid,
+                "author": CURRENT_ADMIN.username,
+                "creation_date": datetime.datetime.now(),
+                "text": "initial_post_text",
+                "space": self.test_space,
+                "pinned": False,
+                "wordpress_post_id": None,
+                "tags": [],
+                "files": [],
+            }
+        )
+
+        # construct update request payload
+        updated_text = "updated_post_text"
+        request = MultipartEncoder(
+            fields={
+                "_id": str(oid),
+                "text": updated_text,
+            }
+        )
+
+        # do the update request
+        self.base_checks(
+            "POST",
+            "/posts",
+            True,
+            200,
+            headers={"Content-Type": request.content_type},
+            body=request.to_string(),
+        )
+
+        # assert that text has been updated
+        updated_post = self.db.posts.find_one({"_id": oid})
+        self.assertIn("text", updated_post)
+        self.assertEqual(updated_post["text"], updated_text)
+
+    def test_post_edit_post_space_error_insufficient_permission(self):
+        """
+        expect: fail message because user is not permitted to post into
+        the space, so editing is also forbidden
+        """
+
+        # switch to user mode, because he has no post permission in the space
+        options.test_admin = False
+        options.test_user = True
+
+        # manually insert test post
+        oid = ObjectId()
+        self.db.posts.insert_one(
+            {
+                "_id": oid,
+                "author": CURRENT_USER.username,
+                "creation_date": datetime.datetime.now(),
+                "text": "initial_post_text",
+                "space": self.test_space,
+                "pinned": False,
+                "wordpress_post_id": None,
+                "tags": [],
+                "files": [],
+            }
+        )
+
+        # construct update request payload
+        updated_text = "updated_post_text"
+        request = MultipartEncoder(
+            fields={
+                "_id": str(oid),
+                "text": updated_text,
+            }
+        )
+
+        # do the update request
+        response = self.base_checks(
+            "POST",
+            "/posts",
+            False,
+            403,
+            headers={"Content-Type": request.content_type},
+            body=request.to_string(),
+        )
+
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
     def test_post_edit_post_error_post_id_doesnt_exist(self):
         """
         expect: fail message because the post that should be edited doesnt exist
@@ -1499,7 +1593,7 @@ class PostHandlerTest(BaseApiTestCase):
             body=request.to_string(),
         )
 
-        self.assertEqual(response["reason"], "user_not_author")
+        self.assertEqual(response["reason"], USER_NOT_AUTHOR_ERROR)
 
     def test_delete_post_author(self):
         """
@@ -1757,6 +1851,11 @@ class CommentHandlerTest(BaseApiTestCase):
         self.db.posts.delete_many({})
         super().tearDown()
 
+    def assert_comments_empty(self):
+        # assert that comments are empty after the successful delete
+        db_state = self.db.posts.find_one({"_id": self.post_oid})
+        self.assertEqual(db_state["comments"], [])
+
     def test_post_comment(self):
         """
         expect: successfully add comment to a post
@@ -1786,7 +1885,7 @@ class CommentHandlerTest(BaseApiTestCase):
             response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "post_id"
         )
 
-    def test_post_comment_space_insufficient_permission(self):
+    def test_post_comment_space_error_insufficient_permission(self):
         """
         expect: fail message because user has no permission to comment
         """
@@ -1841,6 +1940,8 @@ class CommentHandlerTest(BaseApiTestCase):
 
         self.base_checks("DELETE", "/comment", True, 200, body=request)
 
+        self.assert_comments_empty()
+
     def test_delete_comment_global_admin(self):
         """
         expect: successful removal of comment, permission is granted because user
@@ -1869,6 +1970,8 @@ class CommentHandlerTest(BaseApiTestCase):
         request = {"comment_id": str(comment_id)}
 
         self.base_checks("DELETE", "/comment", True, 200, body=request)
+
+        self.assert_comments_empty()
 
     def test_delete_comment_space_author(self):
         """
@@ -1903,6 +2006,8 @@ class CommentHandlerTest(BaseApiTestCase):
 
         self.base_checks("DELETE", "/comment", True, 200, body=request)
 
+        self.assert_comments_empty()
+
     def test_delete_comment_space_global_admin(self):
         """
         expect: successful removal of comment, permission is granted because user
@@ -1930,6 +2035,8 @@ class CommentHandlerTest(BaseApiTestCase):
         request = {"comment_id": str(comment_id)}
 
         self.base_checks("DELETE", "/comment", True, 200, body=request)
+
+        self.assert_comments_empty()
 
     def test_delete_comment_space_space_admin(self):
         """
@@ -1968,6 +2075,8 @@ class CommentHandlerTest(BaseApiTestCase):
         request = {"comment_id": str(comment_id)}
 
         self.base_checks("DELETE", "/comment", True, 200, body=request)
+
+        self.assert_comments_empty()
 
     def test_delete_comment_error_insufficient_permission(self):
         """
@@ -2038,4 +2147,375 @@ class CommentHandlerTest(BaseApiTestCase):
 
         response = self.base_checks("DELETE", "/comment", False, 403, body=request)
 
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+
+class LikePostHandlerTest(BaseApiTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+
+        # setup basic environment of permissions
+        self.base_permission_environment_setUp()
+
+        self.post_oid = ObjectId()
+        self.db.posts.insert_one(
+            {
+                "_id": self.post_oid,
+                "author": CURRENT_ADMIN.username,
+                "creation_date": datetime.datetime.now(),
+                "text": "initial_post_text",
+                "space": self.test_space,
+                "pinned": False,
+                "wordpress_post_id": None,
+                "tags": [],
+                "files": [],
+            }
+        )
+
+    def tearDown(self) -> None:
+        # cleanup test data
+        self.base_permission_environments_tearDown()
+        self.db.posts.delete_many({})
+        super().tearDown()
+
+    def test_post_like(self):
+        """
+        expect: successfully like the post
+        """
+
+        request = {"post_id": str(self.post_oid)}
+
+        self.base_checks("POST", "/like", True, 200, body=request)
+
+        # assert that the like is persisted in the db
+        db_state = self.db.posts.find_one({"_id": self.post_oid})
+        self.assertIn("likers", db_state)
+        self.assertIn(CURRENT_ADMIN.username, db_state["likers"])
+
+    def test_post_like_error_no_post_id(self):
+        """
+        expect: fail message because request misses post_id
+        """
+
+        response = self.base_checks("POST", "/like", False, 400, body={})
+        self.assertEqual(
+            response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "post_id"
+        )
+
+    def test_delete_like(self):
+        """
+        like gets deleted from db
+        """
+
+        # manually insert like
+        self.db.posts.update_one(
+            {"_id": self.post_oid}, {"$addToSet": {"likers": CURRENT_ADMIN.username}}
+        )
+
+        request = {"post_id": str(self.post_oid)}
+
+        self.base_checks("DELETE", "/like", True, 200, body=request)
+
+        # assert likers to be empty
+        db_state = self.db.posts.find_one({"_id": self.post_oid})
+        self.assertIn("likers", db_state)
+        self.assertEqual(db_state["likers"], [])
+
+    def test_delete_like_error_no_post_id(self):
+        """
+        expect: fail message because request misses post_id
+        """
+
+        response = self.base_checks("DELETE", "/like", False, 400, body={})
+        self.assertEqual(
+            response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "post_id"
+        )
+
+
+class RepostHandlerTest(BaseApiTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+
+        # setup basic environment of permissions
+        self.base_permission_environment_setUp()
+
+        self.post_oid = ObjectId()
+        self.post_json = {
+            "_id": self.post_oid,
+            "author": CURRENT_ADMIN.username,
+            "creation_date": datetime.datetime.now(),
+            "text": "initial_post_text",
+            "space": self.test_space,
+            "pinned": False,
+            "wordpress_post_id": None,
+            "tags": [],
+            "files": [],
+        }
+        self.db.posts.insert_one(self.post_json)
+
+    def tearDown(self) -> None:
+        # cleanup test data
+        self.base_permission_environments_tearDown()
+        self.db.posts.delete_many({})
+        super().tearDown()
+
+    def test_post_create_repost(self):
+        """
+        expect: successfully create repost
+        """
+
+        request = {"post_id": str(self.post_oid), "text": "test_repost", "space": None}
+
+        self.base_checks("POST", "/repost", True, 200, body=request)
+
+        db_state = self.db.posts.find_one({"repostText": request["text"]})
+        self.assertNotEqual(db_state, None)
+
+    def test_post_create_repost_space(self):
+        """
+        expect: successfully create repost
+        """
+
+        request = {
+            "post_id": str(self.post_oid),
+            "text": "test_repost",
+            "space": self.test_space,
+        }
+
+        self.base_checks("POST", "/repost", True, 200, body=request)
+
+        db_state = self.db.posts.find_one({"repostText": request["text"]})
+        self.assertNotEqual(db_state, None)
+
+    def test_post_create_repost_error_no_text(self):
+        """
+        expect: fail message because http body missing "text" key
+        """
+
+        request = {
+            "post_id": str(self.post_oid),
+            "space": None,
+        }
+
+        response = self.base_checks("POST", "/repost", False, 400, body=request)
+
+        self.assertEqual(response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "text")
+
+    def test_post_create_repost_error_no_post_id(self):
+        """
+        expect: fail messgea because http body misses "post_id" key
+        """
+
+        request = {
+            "text": "test_repost",
+            "space": None,
+        }
+
+        response = self.base_checks("POST", "/repost", False, 400, body=request)
+
+        self.assertEqual(
+            response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "post_id"
+        )
+
+    def test_post_create_repost_error_no_space(self):
+        """
+        expect: fail message because http body misses "space" key
+        """
+
+        request = {
+            "post_id": str(self.post_oid),
+            "text": "test_repost",
+        }
+
+        response = self.base_checks("POST", "/repost", False, 400, body=request)
+
+        self.assertEqual(response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "space")
+
+    def test_post_create_repost_error_post_doesnt_exist(self):
+        """
+        expect: fail message because the original post doesnt exist
+        """
+
+        request = {
+            "post_id": str(ObjectId()),
+            "text": "test_repost",
+            "space": None,
+        }
+
+        response = self.base_checks("POST", "/repost", False, 409, body=request)
+
+        self.assertEqual(response["reason"], POST_DOESNT_EXIST_ERROR)
+
+    def test_post_create_repost_space_error_insufficient_permission(self):
+        """
+        expect: fail message because user has no permission to post into the space
+        """
+
+        # switch to user mode because user has no post permission
+        options.test_admin = False
+        options.test_user = True
+
+        request = {
+            "post_id": str(self.post_oid),
+            "text": "test_repost",
+            "space": self.test_space,
+        }
+
+        response = self.base_checks("POST", "/repost", False, 403, body=request)
+
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_post_create_repost_space_error_space_doesnt_exist(self):
+        """
+        expect: fail message because space doesnt exist
+        """
+
+        request = {
+            "post_id": str(self.post_oid),
+            "text": "test_repost",
+            "space": "non_existing_space",
+        }
+
+        response = self.base_checks("POST", "/repost", False, 409, body=request)
+
+        self.assertEqual(response["reason"], SPACE_DOESNT_EXIST_ERROR)
+
+    def test_post_edit_repost(self):
+        """
+        expect: successfully edit text of repost
+        """
+
+        # manually insert repost
+        post = self.post_json
+        post["_id"] = ObjectId()
+        post["space"] = None
+        post["isRepost"] = True
+        post["repostAuthor"] = CURRENT_ADMIN.username
+        post["repostText"] = "test_repost"
+        post["originalCreationDate"] = post["creation_date"]
+        post["creation_date"] = datetime.datetime.now()
+        self.db.posts.insert_one(post)
+
+        request = {"_id": str(post["_id"]), "text": "updated_repost_text"}
+
+        self.base_checks("POST", "/repost", True, 200, body=request)
+
+        db_state = self.db.posts.find_one({"_id": post["_id"]})
+        self.assertNotEqual(db_state, None)
+        self.assertEqual(db_state["repostText"], request["text"])
+
+    def test_post_edit_repost_post_doesnt_exist(self):
+        """
+        expect: fail message because repost doesnt exist and therefore cant be edited
+        """
+
+        # manually insert repost
+        post = self.post_json
+        post["_id"] = ObjectId()
+        post["space"] = None
+        post["isRepost"] = True
+        post["repostAuthor"] = CURRENT_ADMIN.username
+        post["repostText"] = "test_repost"
+        post["originalCreationDate"] = post["creation_date"]
+        post["creation_date"] = datetime.datetime.now()
+        self.db.posts.insert_one(post)
+
+        # use other random oid in the request that doesnt exist
+        request = {"_id": str(ObjectId()), "text": "updated_repost_text"}
+
+        response = self.base_checks("POST", "/repost", False, 409, body=request)
+        self.assertEqual(response["reason"], POST_DOESNT_EXIST_ERROR)
+
+    def test_post_edit_repost_error_post_not_repost(self):
+        """
+        expect: fail message because the post that should be edited is no repost
+        but actually a regular post
+        """
+
+        # manually insert repost
+        post = self.post_json
+        post["_id"] = ObjectId()
+        post["space"] = None
+        post["isRepost"] = True
+        post["repostAuthor"] = CURRENT_ADMIN.username
+        post["repostText"] = "test_repost"
+        post["originalCreationDate"] = post["creation_date"]
+        post["creation_date"] = datetime.datetime.now()
+        self.db.posts.insert_one(post)
+
+        # use oid of original post instead of repost
+        request = {"_id": str(self.post_oid), "text": "updated_repost_text"}
+
+        response = self.base_checks("POST", "/repost", False, 409, body=request)
+        self.assertEqual(response["reason"], "post_is_no_repost")
+
+    def test_post_edit_repost_error_user_not_author(self):
+        """
+        expect: fail message because user is not the author of the repost
+        """
+
+        # manually insert repost
+        post = self.post_json
+        post["_id"] = ObjectId()
+        post["space"] = None
+        post["isRepost"] = True
+        post["repostAuthor"] = CURRENT_USER.username
+        post["repostText"] = "test_repost"
+        post["originalCreationDate"] = post["creation_date"]
+        post["creation_date"] = datetime.datetime.now()
+        self.db.posts.insert_one(post)
+
+        request = {"_id": str(post["_id"]), "text": "updated_repost_text"}
+
+        response = self.base_checks("POST", "/repost", False, 403, body=request)
+        self.assertEqual(response["reason"], USER_NOT_AUTHOR_ERROR)
+
+    def test_post_edit_repost_space(self):
+        """
+        expect: successfully edit the repost in the space
+        """
+
+        # manually insert repost
+        post = self.post_json
+        post["_id"] = ObjectId()
+        post["space"] = self.test_space
+        post["isRepost"] = True
+        post["repostAuthor"] = CURRENT_ADMIN.username
+        post["repostText"] = "test_repost"
+        post["originalCreationDate"] = post["creation_date"]
+        post["creation_date"] = datetime.datetime.now()
+        self.db.posts.insert_one(post)
+
+        request = {"_id": str(post["_id"]), "text": "updated_repost_text"}
+
+        self.base_checks("POST", "/repost", True, 200, body=request)
+
+        db_state = self.db.posts.find_one({"_id": post["_id"]})
+        self.assertNotEqual(db_state, None)
+        self.assertEqual(db_state["repostText"], request["text"])
+
+    def test_post_edit_repost_space_error_insufficient_permission(self):
+        """
+        expect: fail message because user has no post permission in the space
+        and therefore is also not allowed to edit his post
+        """
+
+        # switch to user mode because user has no post permission in space
+        options.test_admin = False
+        options.test_user = True
+
+        # manually insert repost
+        post = self.post_json
+        post["_id"] = ObjectId()
+        post["space"] = self.test_space
+        post["isRepost"] = True
+        post["repostAuthor"] = CURRENT_USER.username
+        post["repostText"] = "test_repost"
+        post["originalCreationDate"] = post["creation_date"]
+        post["creation_date"] = datetime.datetime.now()
+        self.db.posts.insert_one(post)
+
+        request = {"_id": str(post["_id"]), "text": "updated_repost_text"}
+
+        response = self.base_checks("POST", "/repost", False, 403, body=request)
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
