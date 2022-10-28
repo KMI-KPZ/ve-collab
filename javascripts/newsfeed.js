@@ -113,6 +113,9 @@ function initNewsFeed() {
     } else {
     getTimelineUser(name, from, now);
     }
+  } else if (currURL == baseUrl + '/alt') {
+    inSpace = false;
+    getPersonalTimeline(from,now);
   }
   getSpaces();
 }
@@ -594,6 +597,7 @@ function displayTimeline(timeline) {
       $.each(comments, function (j, comment) {
         var isCommentAuthor = (currentUser.username == comment.author.username) ? true : false;
         comment["isCommentAuthor"] = isCommentAuthor;
+        comment["isPostAuthor"] = isAuthor;
         comment["authorPicURL"] = baseUrl + '/uploads/' + comment.author.profile_pic;
         comment["ago"] = calculateAgoTime(comment.creation_date);
         $commentsList.prepend(Mustache.render(commentTemplate, comment));

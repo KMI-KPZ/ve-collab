@@ -89,6 +89,7 @@ def make_app(cookie_secret):
         (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
         (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./html/"}),
         (r"/javascripts/(.*)", tornado.web.StaticFileHandler, {"path": "./javascripts/"}),
+        (r"/assets/(.*)", tornado.web.StaticFileHandler, {"path": "./assets/"}),
         (r"/uploads/(.*)", tornado.web.StaticFileHandler, {"path": "./uploads/"})
     ], cookie_secret=cookie_secret, template_path="html")
 
