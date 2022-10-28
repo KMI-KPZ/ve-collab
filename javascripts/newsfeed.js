@@ -1389,8 +1389,9 @@ function repost(id){
 function updateRepost(id) {
   dataBody = {
     '_id': id,
-    'repostText': String($('#update_repost_content').val()),
+    'text': String($('#update_repost_content').val()),
   };
+  dataBody = JSON.stringify(dataBody);
   $.ajax({
     type: 'POST',
     url: '/repost',
