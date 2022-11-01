@@ -975,7 +975,14 @@ class PinHandler(BaseHandler):
                 {"status": 401,
                  "reason": "no_logged_in_user"}
         """
-        http_body = tornado.escape.json_decode(self.request.body)
+        try:
+            http_body = json.loads(self.request.body)
+        except json.JSONDecodeError:
+            self.set_status(400)
+            self.write(
+                {"status": 400, "success": False, "reason": "json_parsing_error"}
+            )
+            return
 
         if "id" not in http_body:
             self.set_status(400)
@@ -1064,6 +1071,8 @@ class PinHandler(BaseHandler):
                 # deny pin if user is neither global admin, space admin nor post author
                 try:
                     if not (
+                        # check admin first even though it is slower, because
+                        # that way we automatically check if the space exists
                         await self.check_space_or_global_admin(post["space"])
                         or self.current_user.username == post["author"]
                     ):
@@ -1161,99 +1170,169 @@ class PinHandler(BaseHandler):
                  "reason": "no_logged_in_user"}
         """
 
-        http_body = tornado.escape.json_decode(self.request.body)
+        try:
+            http_body = json.loads(self.request.body)
+        except json.JSONDecodeError:
+            self.set_status(400)
+            self.write(
+                {"status": 400, "success": False, "reason": "json_parsing_error"}
+            )
+            return
 
         if "id" not in http_body:
             self.set_status(400)
-            self.write({"status": 400, "reason": "missing_key_in_http_body"})
+            self.write(
+                {
+                    "status": 400,
+                    "success": False,
+                    "reason": "missing_key_in_http_body:id",
+                }
+            )
             self.finish()
             return
 
         if "pin_type" not in http_body:
             self.set_status(400)
-            self.write({"status": 400, "reason": "missing_key_in_http_body"})
+            self.write(
+                {
+                    "status": 400,
+                    "success": False,
+                    "reason": "missing_key_in_http_body:pin_type",
+                }
+            )
             self.finish()
             return
 
         if http_body["pin_type"] == "post":
             post = self.db.posts.find_one({"_id": ObjectId(http_body["id"])})
-            if "space" in post and post["space"] is not None:
-                try:
-                    # check if user is either space admin or global admin
-                    if await self.check_space_or_global_admin(post["space"]):
-                        # unset the pin
-                        self.db.posts.update_one(
-                            {"_id": ObjectId(http_body["id"])},  # filter
-                            {"$set": {"pinned": False}},
-                        )
-
-                        self.set_status(200)
-                        self.write({"status": 200, "success": True})
-                    else:
-                        # user is no group admin nor global admin --> no permission to unpin
-                        self.set_status(403)
-                        self.write({"status": 403, "reason": "insufficient_permission"})
-                        return
-                except ValueError as e:
-                    self.set_status(400)
-                    self.write({"status": 400, "reason": "space_doesnt_exist"})
-                    return
-            else:
-                # cannot unpin because post is not in space
-                self.set_status(400)
-                self.write({"status": 400, "reason": "post_not_in_space"})
+            # reject if post doesnt exist
+            if not post:
+                self.set_status(409)
+                self.write(
+                    {"status": 409, "success": False, "reason": "post_doesnt_exist"}
+                )
                 return
+
+            # reject unpin if post is not in a space
+            if post["space"] is None:
+                self.set_status(409)
+                self.write(
+                    {"status": 409, "success": False, "reason": "post_not_in_space"}
+                )
+                return
+            try:
+                # reject if the user is neither space nor global admin
+                if not await self.check_space_or_global_admin(post["space"]):
+                    self.set_status(403)
+                    self.write(
+                        {
+                            "status": 403,
+                            "success": False,
+                            "reason": "insufficient_permission",
+                        }
+                    )
+                    return
+            except ValueError:
+                # error was thrown during space request --> space doesnt exist
+                self.set_status(409)
+                self.write(
+                    {
+                        "status": 409,
+                        "success": False,
+                        "reason": "space_doesnt_exist",
+                    }
+                )
+                return
+
+            # unset the pin
+            self.db.posts.update_one(
+                {"_id": ObjectId(http_body["id"])},  # filter
+                {"$set": {"pinned": False}},
+            )
+
+            self.set_status(200)
+            self.write({"status": 200, "success": True})
 
         elif http_body["pin_type"] == "comment":
             post = self.db.posts.find_one({"comments._id": ObjectId(http_body["id"])})
-            try:
-                # have to check if the post was in a space first, because then also the space admin may pin comments
-                if "space" in post and post["space"] is not None:
-                    # check if user is either space admin or global admin or the post creator
-                    if (
+            if not post:
+                self.set_status(409)
+                self.write(
+                    {"status": 409, "success": False, "reason": "post_doesnt_exist"}
+                )
+                return
+
+            # have to check if the post was in a space first, because then also the space admin may unpin comments
+            if "space" in post and post["space"] is not None:
+                # deny unpin if user is neither global admin, space admin nor post author
+                try:
+                    if not (
+                        # check admin first even though it is slower, because
+                        # that way we automatically check if the space exists
                         await self.check_space_or_global_admin(post["space"])
                         or self.current_user.username == post["author"]
                     ):
-                        # set the unpin
-                        self.db.posts.update_one(
-                            {"comments._id": ObjectId(http_body["id"])},  # filter
-                            {"$set": {"comments.$.pinned": False}},
-                        )
-
-                        self.set_status(200)
-                        self.write({"status": 200, "success": True})
-
-                    else:
-                        # user is no group admin nor global admin nor post author --> no permission to unpin
                         self.set_status(403)
-                        self.write({"status": 403, "reason": "insufficient_permission"})
-                        return
-                else:
-                    # post was not in space, only post author or global admin have permission to unpin
-                    if (
-                        self.current_user.username == post["author"]
-                        or self.get_current_user_role() == "admin"
-                    ):
-                        # set the pin
-                        self.db.posts.update_one(
-                            {"comments._id": ObjectId(http_body["id"])},  # filter
-                            {"$set": {"comments.$.pinned": False}},
+                        self.write(
+                            {
+                                "status": 403,
+                                "success": False,
+                                "reason": "insufficient_permission",
+                            }
                         )
-
-                        self.set_status(200)
-                        self.write({"status": 200, "success": True})
-
-                    else:
-                        # user is no global admin nor post author --> no permission to pin
-                        self.set_status(403)
-                        self.write({"status": 403, "reason": "insufficient_permission"})
                         return
-            except ValueError as e:
-                self.set_status(400)
-                self.write({"status": 400, "reason": "space_doesnt_exist"})
-                return
+                except ValueError:
+                    # getting the space threw an error --> space doesnt exist
+                    self.set_status(409)
+                    self.write(
+                        {
+                            "status": 409,
+                            "success": False,
+                            "reason": "space_doesnt_exist",
+                        }
+                    )
+                    return
 
+                # unset the pin
+                self.db.posts.update_one(
+                    {"comments._id": ObjectId(http_body["id"])},  # filter
+                    {"$set": {"comments.$.pinned": False}},
+                )
+
+                self.set_status(200)
+                self.write({"status": 200, "success": True})
+
+            else:
+                # post was not in space, only post author or global admin have permission to unpin
+                if not (
+                    self.current_user.username == post["author"]
+                    or self.get_current_user_role() == "admin"
+                ):
+                    self.set_status(403)
+                    self.write(
+                        {
+                            "status": 403,
+                            "success": False,
+                            "reason": "insufficient_permission",
+                        }
+                    )
+                    return
+
+                # set the unpin
+                self.db.posts.update_one(
+                    {"comments._id": ObjectId(http_body["id"])},  # filter
+                    {"$set": {"comments.$.pinned": False}},
+                )
+
+                self.set_status(200)
+                self.write({"status": 200, "success": True})
         else:
             self.set_status(400)
-            self.write({"status": 400, "reason": "invalid_pin_type_in_http_body"})
+            self.write(
+                {
+                    "status": 400,
+                    "success": False,
+                    "reason": "invalid_pin_type_in_http_body",
+                }
+            )
             return

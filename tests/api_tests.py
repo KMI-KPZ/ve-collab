@@ -2,7 +2,7 @@ import datetime
 import json
 import logging
 from typing import List
-from urllib import request
+from urllib import request, response
 
 from bson import ObjectId
 from keycloak import KeycloakAdmin, KeycloakOpenID
@@ -31,6 +31,7 @@ NON_BOOL_VALUE_ERROR = "value_not_bool_in_http_body"
 SPACE_DOESNT_EXIST_ERROR = "space_doesnt_exist"
 POST_DOESNT_EXIST_ERROR = "post_doesnt_exist"
 USER_NOT_AUTHOR_ERROR = "user_not_author"
+INVALID_PIN_TYPE_ERROR = "invalid_pin_type_in_http_body"
 
 # don't change, these values match with the ones in BaseHandler
 CURRENT_ADMIN = User(
@@ -2558,6 +2559,14 @@ class PinHandlerTest(BaseApiTestCase):
         self.db.posts.delete_many({})
         super().tearDown()
 
+    def _set_post_pin(self):
+        self.db.posts.update_one({"_id": self.post_oid}, {"$set": {"pinned": True}})
+
+    def _set_comment_pin(self):
+        self.db.posts.update_one(
+            {"comments._id": self.comment_oid}, {"$set": {"comments.0.pinned": True}}
+        )
+
     def test_post_pin_error_no_id(self):
         """
         expect: fail message because http body misses id key
@@ -2588,7 +2597,7 @@ class PinHandlerTest(BaseApiTestCase):
         request = {"id": str(self.post_oid), "pin_type": "something_else"}
 
         response = self.base_checks("POST", "/pin", False, 400, body=request)
-        self.assertEqual(response["reason"], "invalid_pin_type_in_http_body")
+        self.assertEqual(response["reason"], INVALID_PIN_TYPE_ERROR)
 
     def test_post_pin_post_global_admin(self):
         """
@@ -2807,5 +2816,341 @@ class PinHandlerTest(BaseApiTestCase):
 
         response = self.base_checks("POST", "/pin", False, 403, body=request)
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
-    
-    
+
+    def test_delete_pin_error_no_id(self):
+        """
+        expect: fail message because http body misses id key
+        """
+
+        request = {"pin_type": "post"}
+
+        response = self.base_checks("DELETE", "/pin", False, 400, body=request)
+        self.assertEqual(response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "id")
+
+    def test_delete_pin_error_no_pin_type(self):
+        """
+        expect: fail message because http body misses pin_type key
+        """
+
+        request = {"id": str(self.post_oid)}
+
+        response = self.base_checks("DELETE", "/pin", False, 400, body=request)
+        self.assertEqual(
+            response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "pin_type"
+        )
+
+    def test_delete_pin_error_invalid_pin_type(self):
+        """
+        expect: fail message because pin type is neither "post" or "comment"
+        """
+
+        request = {"id": str(self.post_oid), "pin_type": "something_else"}
+
+        response = self.base_checks("DELETE", "/pin", False, 400, body=request)
+        self.assertEqual(response["reason"], INVALID_PIN_TYPE_ERROR)
+
+    def test_delete_pin_post_global_admin(self):
+        """
+        expect: successfully unpin the post, permission is granted because
+        user is global admin
+        """
+
+        # pull user out of space admins to trigger global admin privilege
+        self.db.spaces.update_one(
+            {"name": self.test_space}, {"$pull": {"admins": CURRENT_ADMIN.username}}
+        )
+
+        # manually set pin
+        self._set_post_pin()
+
+        request = {"id": str(self.post_oid), "pin_type": "post"}
+        self.base_checks("DELETE", "/pin", True, 200, body=request)
+
+        db_state = self.db.posts.find_one({"_id": self.post_oid})
+        self.assertFalse(db_state["pinned"])
+
+    def test_delete_pin_post_space_admin(self):
+        """
+        expect: successfully unpin the post, permission is granted because
+        user is space admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # set user as space admin
+        self.db.spaces.update_one(
+            {"name": self.test_space}, {"$push": {"admins": CURRENT_USER.username}}
+        )
+
+        # manually set pin
+        self._set_post_pin()
+
+        request = {"id": str(self.post_oid), "pin_type": "post"}
+        self.base_checks("DELETE", "/pin", True, 200, body=request)
+
+        db_state = self.db.posts.find_one({"_id": self.post_oid})
+        self.assertFalse(db_state["pinned"])
+
+    def test_delete_pin_post_error_post_doesnt_exist(self):
+        """
+        expect: fail message because post doesnt exist
+        """
+
+        # manually pin the post
+        self._set_post_pin()
+
+        request = {"id": str(ObjectId()), "pin_type": "post"}
+
+        response = self.base_checks("DELETE", "/pin", False, 409, body=request)
+        self.assertEqual(response["reason"], POST_DOESNT_EXIST_ERROR)
+
+    def test_delete_pin_post_error_space_doesnt_exist(self):
+        """
+        expect: fail message because space doesnt exist
+        """
+
+        # manually pin the post
+        self._set_post_pin()
+
+        # set space as non existing
+        self.db.posts.update_one(
+            {"_id": self.post_oid}, {"$set": {"space": "not_existing_space"}}
+        )
+
+        request = {"id": str(self.post_oid), "pin_type": "post"}
+
+        response = self.base_checks("DELETE", "/pin", False, 409, body=request)
+        self.assertEqual(response["reason"], SPACE_DOESNT_EXIST_ERROR)
+
+    def test_delete_pin_post_error_post_not_in_space(self):
+        """
+        expect: fail message because post is not in a space
+        (but only posts in spaces can be pinned)
+        """
+
+        # manually pin the post
+        self._set_post_pin()
+
+        # unset space
+        self.db.posts.update_one({"_id": self.post_oid}, {"$set": {"space": None}})
+
+        request = {"id": str(self.post_oid), "pin_type": "post"}
+
+        response = self.base_checks("DELETE", "/pin", False, 409, body=request)
+        self.assertEqual(response["reason"], "post_not_in_space")
+
+    def test_delete_pin_post_error_insufficient_permission(self):
+        """
+        expect: fail message because user is neither space nor global admin
+        """
+
+        # manually pin the post
+        self._set_post_pin()
+
+        # switch to user mode, such that no admin privileges trigger
+        options.test_admin = False
+        options.test_user = True
+
+        request = {"id": str(self.post_oid), "pin_type": "post"}
+
+        response = self.base_checks("DELETE", "/pin", False, 403, body=request)
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_delete_pin_comment_author(self):
+        """
+        expect: successful unpin of comment, permission is granted because user
+        is the author of the post
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # manually pin the comment
+        self._set_comment_pin()
+
+        # manually set user as author
+        self.db.posts.update_one(
+            {"_id": self.post_oid},
+            {"$set": {"author": CURRENT_USER.username, "space": None}},
+        )
+
+        request = {"id": str(self.comment_oid), "pin_type": "comment"}
+        self.base_checks("DELETE", "/pin", True, 200, body=request)
+
+        db_state = self.db.posts.find_one({"comments._id": self.comment_oid})
+        self.assertFalse(db_state["comments"][0]["pinned"])
+
+    def test_delete_pin_comment_global_admin(self):
+        """
+        expect: successfully unpin comment, permission is granted because user
+        is global admin
+        """
+
+        # manually pin the comment
+        self._set_comment_pin()
+
+        # manually set other user as author so that admin privileges trigger
+        self.db.posts.update_one(
+            {"_id": self.post_oid},
+            {"$set": {"author": CURRENT_USER.username, "space": None}},
+        )
+
+        request = {"id": str(self.comment_oid), "pin_type": "comment"}
+        self.base_checks("DELETE", "/pin", True, 200, body=request)
+
+        db_state = self.db.posts.find_one({"comments._id": self.comment_oid})
+        self.assertFalse(db_state["comments"][0]["pinned"])
+
+    def test_delete_pin_comment_error_post_doesnt_exist(self):
+        """
+        expect: fail message because the corresponding post of the comment
+        doesnt exist
+        """
+
+        # manually pin the comment
+        self._set_comment_pin()
+
+        # remove space from post to check correct case
+        self.db.posts.update_one(
+            {"_id": self.post_oid},
+            {"$set": {"space": None}},
+        )
+
+        # use non existing object_id
+        request = {"id": str(ObjectId()), "pin_type": "comment"}
+        response = self.base_checks("DELETE", "/pin", False, 409, body=request)
+        self.assertEqual(response["reason"], POST_DOESNT_EXIST_ERROR)
+
+    def test_delete_pin_comment_error_insufficient_permission(self):
+        """
+        expect: fail message because user is neither global admin nor post author
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # manually pin the comment
+        self._set_comment_pin()
+
+        # remove space from post to check correct case
+        self.db.posts.update_one(
+            {"_id": self.post_oid},
+            {"$set": {"space": None}},
+        )
+
+        request = {"id": str(self.comment_oid), "pin_type": "comment"}
+        response = self.base_checks("DELETE", "/pin", False, 403, body=request)
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_delete_pin_comment_space_author(self):
+        """
+        expect: successful unpin of comment in space, permission is granted
+        because user is the author of the post
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # manually pin the comment
+        self._set_comment_pin()
+
+        # manually set user as author
+        self.db.posts.update_one(
+            {"_id": self.post_oid},
+            {"$set": {"author": CURRENT_USER.username}},
+        )
+
+        request = {"id": str(self.comment_oid), "pin_type": "comment"}
+        self.base_checks("DELETE", "/pin", True, 200, body=request)
+
+        db_state = self.db.posts.find_one({"comments._id": self.comment_oid})
+        self.assertFalse(db_state["comments"][0]["pinned"])
+
+    def test_delete_pin_comment_space_global_admin(self):
+        """
+        expect: successfully unpin comment, permission is granted because user
+        is global admin
+        """
+
+        # manually pin the comment
+        self._set_comment_pin()
+
+        # pull user out of space admins to trigger global admin privilege
+        self.db.spaces.update_one(
+            {"name": self.test_space}, {"$pull": {"admins": CURRENT_ADMIN.username}}
+        )
+
+        # manually set other user as author so that admin privileges trigger
+        self.db.posts.update_one(
+            {"_id": self.post_oid},
+            {"$set": {"author": CURRENT_USER.username}},
+        )
+
+        request = {"id": str(self.comment_oid), "pin_type": "comment"}
+        self.base_checks("DELETE", "/pin", True, 200, body=request)
+
+        db_state = self.db.posts.find_one({"comments._id": self.comment_oid})
+        self.assertFalse(db_state["comments"][0]["pinned"])
+
+    def test_delete_pin_comment_space_space_admin(self):
+        """
+        expect: successfully unpin comment, permission is granted
+        because user is space admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # manually pin the comment
+        self._set_comment_pin()
+
+        # set user as space admin
+        self.db.spaces.update_one(
+            {"name": self.test_space}, {"$push": {"admins": CURRENT_USER.username}}
+        )
+
+        request = {"id": str(self.comment_oid), "pin_type": "comment"}
+        self.base_checks("DELETE", "/pin", True, 200, body=request)
+
+        db_state = self.db.posts.find_one({"comments._id": self.comment_oid})
+        self.assertFalse(db_state["comments"][0]["pinned"])
+
+    def test_delete_pin_comment_space_error_space_doesnt_exist(self):
+        """
+        fail message because space doesnt exist
+        """
+
+        # manually pin the comment
+        self._set_comment_pin()
+
+        # set space to non-existing one
+        self.db.posts.update_one(
+            {"_id": self.post_oid}, {"$set": {"space": "not_existing"}}
+        )
+
+        request = {"id": str(self.comment_oid), "pin_type": "comment"}
+        response = self.base_checks("DELETE", "/pin", False, 409, body=request)
+        self.assertEqual(response["reason"], SPACE_DOESNT_EXIST_ERROR)
+
+    def test_delete_pin_comment_space_error_insufficient_permission(self):
+        """
+        expect: fail message because user is neither global admin, space admin
+        nor post author
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # manually pin the comment
+        self._set_comment_pin()
+
+        request = {"id": str(self.comment_oid), "pin_type": "comment"}
+        response = self.base_checks("DELETE", "/pin", False, 403, body=request)
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
