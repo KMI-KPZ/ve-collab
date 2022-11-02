@@ -5,7 +5,8 @@ from typing import List
 
 from bson import ObjectId
 from keycloak import KeycloakAdmin, KeycloakOpenID
-from pymongo import MongoClient
+import pymongo
+import pymongo.errors
 from requests_toolbelt import MultipartEncoder
 from tornado.options import options
 from tornado.testing import AsyncHTTPTestCase
@@ -90,7 +91,7 @@ def tearDownModule():
     in case any of the test cases missed to clean up.
     unittest will call this method itself.
     """
-    with MongoClient(
+    with pymongo.MongoClient(
         global_vars.mongodb_host,
         global_vars.mongodb_port,
         username=global_vars.mongodb_username,
@@ -165,7 +166,7 @@ class BaseApiTestCase(AsyncHTTPTestCase):
     @classmethod
     def setUpClass(cls):
         # initialize mongodb connection
-        cls._client = MongoClient(
+        cls._client = pymongo.MongoClient(
             global_vars.mongodb_host,
             global_vars.mongodb_port,
             username=global_vars.mongodb_username,
@@ -3153,3 +3154,207 @@ class PinHandlerTest(BaseApiTestCase):
         request = {"id": str(self.comment_oid), "pin_type": "comment"}
         response = self.base_checks("DELETE", "/pin", False, 403, body=request)
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+
+class SearchHandlerTest(BaseApiTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+
+        # build search indices
+        self.db.posts.create_index(
+            [("text", pymongo.TEXT), ("tags", pymongo.TEXT), ("files", pymongo.TEXT)],
+            name="posts",
+        )
+        self.db.profiles.create_index(
+            [
+                ("bio", pymongo.TEXT),
+                ("institution", pymongo.TEXT),
+                ("projects", pymongo.TEXT),
+                ("first_name", pymongo.TEXT),
+                ("last_name", pymongo.TEXT),
+                ("gender", pymongo.TEXT),
+                ("address", pymongo.TEXT),
+                ("birthday", pymongo.TEXT),
+                ("experience", pymongo.TEXT),
+                ("education", pymongo.TEXT),
+                ("user", pymongo.TEXT),
+            ],
+            name="profiles",
+        )
+
+        # setup basic environment of permissions
+        self.base_permission_environment_setUp()
+
+        self.db.profiles.insert_one(
+            {
+                "user": CURRENT_ADMIN.username,
+                "bio": "test",
+                "institution": "test",
+                "projects": "test",
+                "profile_pic": "test",
+                "first_name": "test",
+                "last_name": "test",
+                "gender": "test",
+                "address": "test",
+                "birthday": "test",
+                "experience": "test",
+                "education": "test",
+            }
+        )
+
+        self.post_oid = ObjectId()
+        self.comment_oid = ObjectId()
+        self.post_json = {
+            "_id": self.post_oid,
+            "author": CURRENT_ADMIN.username,
+            "creation_date": datetime.datetime.now(),
+            "text": "test",
+            "space": self.test_space,
+            "pinned": False,
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "files": [],
+            "comments": [
+                {
+                    "_id": self.comment_oid,
+                    "author": CURRENT_USER.username,
+                    "creation_date": datetime.datetime.now(),
+                    "text": "test_comment",
+                    "pinned": False,
+                }
+            ],
+        }
+        self.db.posts.insert_one(self.post_json)
+
+        self.search_query = "test"
+
+    def tearDown(self) -> None:
+        # cleanup test data
+        self.base_permission_environments_tearDown()
+        self.db.posts.delete_many({})
+        self.db.profiles.delete_many({})
+        try:
+            self.db.posts.drop_indexes()
+            self.db.profiles.drop_indexes()
+        except pymongo.errors.OperationFailure:
+            pass
+        super().tearDown()
+
+    def test_get_search_user(self):
+        """
+        expect: find admin user as search result
+        """
+
+        response = self.base_checks(
+            "GET",
+            "/search?query={}&users=true".format(self.search_query),
+            True,
+            200,
+        )
+
+        self.assertIn("users", response)
+        self.assertIn("posts", response)
+        self.assertIn("tags", response)
+
+        # expect our user to be in the search result
+        self.assertTrue(any("test_admin" in user["user"] for user in response["users"]))
+
+        # expect posts and tags search categories to be empty
+        # because we excluded them
+        self.assertEqual(response["tags"], [])
+        self.assertEqual(response["posts"], [])
+
+    def test_get_search_tags(self):
+        """
+        expect: find post as search result, because it has "test" specified as a tag
+        """
+
+        response = self.base_checks(
+            "GET",
+            "/search?query={}&tags=true".format(self.search_query),
+            True,
+            200,
+        )
+
+        self.assertIn("users", response)
+        self.assertIn("posts", response)
+        self.assertIn("tags", response)
+
+        # expect the post to be in the result
+        self.assertTrue(
+            any(str(self.post_oid) == post["_id"] for post in response["tags"])
+        )
+
+        # expect posts and users search categories to be empty
+        # because we excluded them
+        self.assertEqual(response["users"], [])
+        self.assertEqual(response["posts"], [])
+
+    def test_get_search_posts(self):
+        """
+        expect: find post as search result, because content contains the query
+        """
+
+        response = self.base_checks(
+            "GET",
+            "/search?query={}&posts=true".format(self.search_query),
+            True,
+            200,
+        )
+
+        self.assertIn("users", response)
+        self.assertIn("posts", response)
+        self.assertIn("tags", response)
+
+        # expect the post to be in the result
+        self.assertTrue(
+            any(str(self.post_oid) == post["_id"] for post in response["posts"])
+        )
+
+        # expect tags and users search categories to be empty
+        # because we excluded them
+        self.assertEqual(response["users"], [])
+        self.assertEqual(response["tags"], [])
+
+    def test_get_search_combined(self):
+        """
+        expect: find a search result in all categories combined in one request
+        """
+
+        response = self.base_checks(
+            "GET",
+            "/search?query={}&posts=true&users=true&tags=true".format(
+                self.search_query
+            ),
+            True,
+            200,
+        )
+
+        self.assertIn("users", response)
+        self.assertIn("posts", response)
+        self.assertIn("tags", response)
+
+        # expect a result, but dont check for further details (other test cases)
+        self.assertNotEqual(response["users"], [])
+        self.assertNotEqual(response["posts"], [])
+        self.assertNotEqual(response["tags"], [])
+
+    def test_get_search_error_no_query(self):
+        """
+        expect: fail message because query parameter is missing
+        """
+
+        response = self.base_checks("GET", "/search", False, 400)
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "query")
+
+    def test_get_search_error_no_categories(self):
+        """
+        expect: fail message because request has no search categories
+        set to true
+        """
+
+        response = self.base_checks(
+            "GET", "/search?query={}".format(self.search_query), False, 400
+        )
+
+        self.assertEqual(response["reason"], "no_search_categories_included")

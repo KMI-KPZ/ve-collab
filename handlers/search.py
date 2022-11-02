@@ -22,16 +22,26 @@ class SearchHandler(BaseHandler):
 
         returns:
             200 OK
-            {"users": [list_of_users_with_matching_profile_content],
+            {"status": 200,
+             "success": True,
+             "users": [list_of_users_with_matching_profile_content],
              "tags": [list_of_posts_with_matching_tags],
              "posts": [list_of_posts_with_matching_content]}
 
             400 Bad Request
             {"status": 400,
-             "reason": "missing_key_in_http_body"}
+             "success": False,
+             "reason": "missing_key:query"}
+
+            400 Bad Request
+            {"status": 400,
+             "success": False,
+             "reason": "no_search_categories_included"}
+            (all search category parameters are set to false, set atleast one to true)
 
             401 Unauthorized
             {"status": 401,
+             "success": False,
              "reason": "no_logged_in_user"}
         """
 
@@ -39,17 +49,29 @@ class SearchHandler(BaseHandler):
             query = self.get_argument("query")
         except tornado.web.MissingArgumentError:
             self.set_status(400)
-            self.write({"status": 400, "reason": "missing_key:query"})
+            self.write({"status": 400, "success": False, "reason": "missing_key:query"})
             return
 
-        search_posts = self.get_argument("posts", "true")
-        search_tags = self.get_argument("tags", "true")
-        search_users = self.get_argument("users", "true")
+        search_posts = self.get_argument("posts", "false")
+        search_tags = self.get_argument("tags", "false")
+        search_users = self.get_argument("users", "false")
 
         # ensure type safety: only "true" will be True, everything else will evaluate to False
         search_posts = search_posts == "true"
         search_tags = search_tags == "true"
         search_users = search_users == "true"
+
+        # reject if all search categories are false
+        if not any([search_posts, search_tags, search_users]):
+            self.set_status(400)
+            self.write(
+                {
+                    "status": 400,
+                    "success": False,
+                    "reason": "no_search_categories_included",
+                }
+            )
+            return
 
         users_search_result = []
         tags_search_result = []
@@ -66,6 +88,8 @@ class SearchHandler(BaseHandler):
             posts_search_result = self._search_posts(query)
 
         response = {
+            "status": 200,
+            "success": True,
             "users": users_search_result,
             "tags": tags_search_result,
             "posts": posts_search_result,
