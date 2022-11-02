@@ -86,7 +86,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                   <a href="profile/{{!author.username}}"><b>{{!author.username}}</b></a>
                   {{!#hasSpace}}
                   <b>></b>
-                  <span class="label label-pill label-primary">{{!space}}</span>
+                  <a href="space/{{!space}}" class="label label-pill label-primary">{{!space}}</a>
                   {{!/hasSpace}}
                   <p class="mr-4 text-sm text-muted time inline-block" id="agoPost">({{!ago}})</p>
               </div>
@@ -128,7 +128,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                   <!-- Repost Post Modal -->
                   <div class="fixed inset-0 z-30 flex items-center justify-center overflow-auto bg-black bg-opacity-50" x-show="showModal">
                     <div
-                        class="max-w-3xl px-6 py-4 mx-auto text-left bg-white rounded shadow-lg"
+                        class="w-2/3 px-6 py-4 mx-auto text-left bg-white rounded shadow-lg"
                         @click.away="showModal = false"
                         x-transition:enter="motion-safe:ease-out duration-300"
                         x-transition:enter-start="opacity-0 scale-90"
@@ -139,7 +139,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                         <div>
                           <b>Teilen</b>
                           <i>
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 16" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 16" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 inline-block">
                               <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
                             </svg>                            
                           </i>
@@ -152,7 +152,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                       </div>
 
                       <!-- Repost Post Content -->
-                      <div>
+                      <div class="mt-4">
                         <select id="selectRepostSpace{{!_id}}" class="text-s truncate w-full normal-case font-normal -mt-1 text-gray-500 border rounded p-2">
                             <option value=null>In deine Timeline teilen</option>
 
@@ -161,84 +161,84 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                         <textarea class="w-full mt-2 p-2 border rounded" id="shareText{{!_id}}" rows="2"
                                   placeholder="Worüber möchtest du berichten?"></textarea>
 
-                        <div class="panel panel-default border rounded mt-2">
-                            <div class="post-heading">
-
-                                <div class="title h5">
-                                    <a><b>{{!author.username}}</b></a>
-                                    schrieb einen Post.
-                                    {{!#hasSpace}}
-                                    <b>></b>
-                                    <span class="label label-pill label-primary">{{!space}}</span>
-                                    {{!/hasSpace}}
-                                </div>
-                                <h6 class="text-muted time" id="agoPost">{{!ago}}</h6>
-
+                        
+                        <div class="panel panel-default border border-blue-lionet rounded mt-2">
+                          <div class="post-heading border-b bg-gray-200 border-b rounded-t-md">
+                            <div class="title h5 inline-block">
+                              <a><b>{{!author.username}}</b></a>
+                              schrieb einen Post.
+                              {{!#hasSpace}}
+                              <b>></b>
+                              <span class="label label-pill label-primary">{{!space}}</span>
+                              {{!/hasSpace}}
+                            </div>
+                            <p class="mr-4 text-sm text-muted time inline-block" id="agoPost">({{!ago}})</p>
+                          </div>
+                          <div class="post-description">
+                            <div class="p-4 mb-4 rounded grid grid-cols-8 gap-2">
+                              <p id="post_content" class="col-span-8">{{!text}}</p>
                             </div>
 
-                            <div class="post-description">
-                                <p>{{!text}}</p>
-
-                                {{!#hasMedia}}
-                                <div id="{{!_id}}" class="carousel slide">
-                                    {{!#multipleMedia}}
-                                    <ol class="carousel-indicators">
-                                        <li data-slide-to="0" class="active"></li>
-                                        {{!#fileMediaCountTail}}
-                                        <li data-slide-to="{{!.}}"></li>
-                                        {{!/fileMediaCountTail}}
-                                    </ol>
-                                    {{!/multipleMedia}}
-                                    <div class="carousel-inner">
-                                        <div class="carousel-item active">
-                                            {{!#firstMediaIsImage}}
-                                            <img class="d-block w-100" src="{{!firstMediaURL}}"
-                                                 alt="post image">
-                                            {{!/firstMediaIsImage}}
-                                            {{!^firstMediaIsImage}}
-                                            <video width="100%" height="100%" autostart="false" controls>
-                                                <source src="{{!firstMediaURL}}">
-                                                Your browser does not support the video tag.
-                                            </video>
-                                            {{!/firstMediaIsImage}}
-                                        </div>
-                                        {{!#tailVideosURL}}
-                                        <div class="carousel-item">
-                                            <video width="100%" height="100%" autostart="false" controls>
-                                                <source src="{{!.}}">
-                                                Your browser does not support the video tag.
-                                            </video>
-                                        </div>
-                                        {{!/tailVideosURL}}
-
-                                        {{!#tailImagesURL}}
-                                        <div class="carousel-item">
-                                            <img class="d-block w-100" src="{{!.}}" alt="post image">
-                                        </div>
-                                        {{!/tailImagesURL}}
-
+                            {{!#hasMedia}}
+                            <div id="{{!_id}}" class="carousel slide">
+                                {{!#multipleMedia}}
+                                <ol class="carousel-indicators">
+                                    <li data-slide-to="0" class="active"></li>
+                                    {{!#fileMediaCountTail}}
+                                    <li data-slide-to="{{!.}}"></li>
+                                    {{!/fileMediaCountTail}}
+                                </ol>
+                                {{!/multipleMedia}}
+                                <div class="carousel-inner">
+                                    <div class="carousel-item active">
+                                        {{!#firstMediaIsImage}}
+                                        <img class="d-block w-100" src="{{!firstMediaURL}}"
+                                              alt="post image">
+                                        {{!/firstMediaIsImage}}
+                                        {{!^firstMediaIsImage}}
+                                        <video width="100%" height="100%" autostart="false" controls>
+                                            <source src="{{!firstMediaURL}}">
+                                            Your browser does not support the video tag.
+                                        </video>
+                                        {{!/firstMediaIsImage}}
                                     </div>
-                                    {{!#multipleMedia}}
-                                    <a class="carousel-control-prev"
-                                       href="javascript:previousSlide('{{!_id}}');" type="button">
-                                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                                    </a>
-                                    <a class="carousel-control-next" href="javascript:nextSlide('{{!_id}}');"
-                                       type="button">
-                                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                                    </a>
-                                    {{!/multipleMedia}}
+                                    {{!#tailVideosURL}}
+                                    <div class="carousel-item">
+                                        <video width="100%" height="100%" autostart="false" controls>
+                                            <source src="{{!.}}">
+                                            Your browser does not support the video tag.
+                                        </video>
+                                    </div>
+                                    {{!/tailVideosURL}}
+
+                                    {{!#tailImagesURL}}
+                                    <div class="carousel-item">
+                                        <img class="d-block w-100" src="{{!.}}" alt="post image">
+                                    </div>
+                                    {{!/tailImagesURL}}
+
                                 </div>
-                                {{!/hasMedia}}
-                                {{!#audiosURL}}
-                                <p>
-                                    <audio id=voiceInput src={{!.}} controls=true autostart="false"></audio>
-                                </p>
-                                {{!/audiosURL}}
-                                {{!#otherfiles}}
-                                <i class="fa fa-download"></i> <a href="{{!path}}" download>{{!name}}</a>
-                                {{!/otherfiles}}
+                                {{!#multipleMedia}}
+                                <a class="carousel-control-prev"
+                                    href="javascript:previousSlide('{{!_id}}');" type="button">
+                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                </a>
+                                <a class="carousel-control-next" href="javascript:nextSlide('{{!_id}}');"
+                                    type="button">
+                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                </a>
+                                {{!/multipleMedia}}
                             </div>
+                            {{!/hasMedia}}
+                            {{!#audiosURL}}
+                            <p>
+                                <audio id=voiceInput src={{!.}} controls=true autostart="false"></audio>
+                            </p>
+                            {{!/audiosURL}}
+                            {{!#otherfiles}}
+                            <i class="fa fa-download"></i> <a href="{{!path}}" download>{{!name}}</a>
+                            {{!/otherfiles}}
+                          </div>
                         </div>
 
                         <div>
@@ -400,6 +400,11 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
       <div class="write-comment-box w-full">
         <div class="input-group flex" id="commentBox">
             <input class="form-control mt-1 block w-ful flex-1 m-2 p-2" id="commentInput" placeholder="Schreibe einen Kommentar" type="text">
+            <button id="postComment" class="m-2 p-2">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 15l6-6m0 0l-6-6m6 6H9a6 6 0 000 12h3" />
+              </svg>                
+            </button>
         </div>
       </div>
       <!-- End of Write Comment Box -->
@@ -429,7 +434,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                     teilte einen Post.
                     {{!#hasSpace}}
                     <b>></b>
-                    <span class="label label-pill label-primary">{{!space}}</span>
+                    <a href="space/{{!space}}" class="label label-pill label-primary">{{!space}}</a>
                     {{!/hasSpace}}
                     <p class="mr-4 text-xs text-muted time inline-block" id="agoPost">({{!ago}})</p>
                 </div>
@@ -741,6 +746,11 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
         <div class="write-comment-box w-full">
           <div class="input-group flex" id="commentBox">
               <input class="form-control mt-1 block w-ful flex-1 m-2 p-2" id="commentInput" placeholder="Schreibe einen Kommentar" type="text">
+              <button id="postComment" class="m-2 p-2">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 15l6-6m0 0l-6-6m6 6H9a6 6 0 000 12h3" />
+                </svg>                
+              </button>
           </div>
         </div>
         <!-- End of Write Comment Box -->
