@@ -1,8 +1,8 @@
 import json
+from typing import Dict, Optional
 
 from bson.objectid import ObjectId
 from datetime import datetime
-import tornado.escape
 
 from acl import ACL
 from handlers.base_handler import BaseHandler, auth_needed
@@ -654,6 +654,7 @@ class LikePostHandler(BaseHandler):
     def delete(self):
         """
         DELETE /like
+            remove your like from the post
             http_body:
                 {
                     "post_id": <string>
@@ -718,7 +719,7 @@ class RepostHandler(BaseHandler):
             create new repost:
                 http body:
                     {
-                        "post_id": "id_of_post",
+                        "post_id": "id_of__original_post",
                         "text": "new text for the repost",
                         "space": "the space where to post, None if no space"
                     }
@@ -733,14 +734,61 @@ class RepostHandler(BaseHandler):
                 200 OK,
                 {"status": 200,
                  "success": True}
+                
+                400 Bad Request
+                {"status": 400,
+                 "success": False,
+                 "reason": "json_parsing_error"}
+                (http body is not valid json)
 
                 400 Bad Request
                 {"status": 400,
-                 "reason": "missing_key_in_http_body"}
+                 "success": False,
+                 "reason": "missing_key_in_http_body:text"}
+
+                400 Bad Request
+                {"status": 400,
+                 "success": False,
+                 "reason": "missing_key_in_http_body:post_id"}
+
+                400 Bad Request
+                {"status": 400,
+                 "success": False,
+                 "reason": "missing_key_in_http_body:space"}
 
                 401 Unauthorized
                 {"status": 401,
+                 "success": False,
                  "reason": "no_logged_in_user"}
+                (no valid session, you will be redirect to login automatically)
+
+                403 Forbidden
+                {"status": 403,
+                 "success": False,
+                 "reason": "insufficient_permissions"}
+                (acl forbids action (might also require admin role sometimes))
+
+                403 Forbidden
+                {"status": 403,
+                 "success": False,
+                 "reason": "user_not_author"}
+                (when updating your repost, you have to be the author of it)
+
+                409 Conflict
+                {"status": 409,
+                 "success": False,
+                 "reason": "post_doesnt_exist"}
+
+                409 Conflict
+                {"status": 409,
+                 "success": False,
+                 "reason": "space_doesnt_exist"}
+
+                409 Conflict
+                {"status": 409,
+                 "success": False,
+                 "reason": "post_is_no_repost"}
+                (the updating post is not a repost, use post-endpoint instead)
         """
 
         try:
@@ -931,10 +979,21 @@ class RepostHandler(BaseHandler):
 
 
 class PinHandler(BaseHandler):
-    def get_space(self, space_name):
+    def get_space(self, space_name) -> Optional[Dict]:
+        """
+        wrapper to get space from db
+        :return: space object, if it exists, None otherwise
+        """
+
         return self.db.spaces.find_one({"name": space_name})
 
-    async def check_space_or_global_admin(self, space_name):
+    async def check_space_or_global_admin(self, space_name) -> bool:
+        """
+        check if the current user is either space admin or global admin
+        :return: True if user is any of those admins, False otherwise
+        :raises: ValueError, if space doesnt exist
+        """
+
         space = self.get_space(space_name)
         if space is not None:
             if (
@@ -956,6 +1015,7 @@ class PinHandler(BaseHandler):
             pin a post or comment (posts are only pinnable if they are in a space)
                 post -> only group admin or global admin
                 comment -> any admin or creator of post
+
             http body:
                 {
                     "id": "id_of_post_or_comment"
@@ -969,12 +1029,47 @@ class PinHandler(BaseHandler):
 
                 400 Bad Request
                 {"status": 400,
-                 "reason": "missing_key_in_http_body"}
+                 "success": False,
+                 "reason": "json_parsing_error"}
+
+                400 Bad Request
+                {"status": 400,
+                 "success": False,
+                 "reason": "missing_key_in_http_body:id"}
+
+                400 Bad Request
+                {"status": 400,
+                 "success": False,
+                 "reason": "missing_key_in_http_body:pin_type"}
 
                 401 Unauthorized
                 {"status": 401,
+                 "success": False,
                  "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                {"status": 403,
+                 "success": False,
+                 "reason": "insufficient_permission"}
+                (acl forbids action (might also require admin role sometimes))
+
+                409 Conflict
+                {"status": 409,
+                 "success": False,
+                 "reason": "post_doesnt_exist"}
+
+                409 Conflict
+                {"status": 409,
+                 "success": False,
+                 "reason": "space_doesnt_exist"}
+
+                409 Conflict
+                {"status": 409,
+                 "success": False,
+                 "reason": "post_not_in_space"}
+                (a post can only be (un-)pinned, if it is in a space)
         """
+
         try:
             http_body = json.loads(self.request.body)
         except json.JSONDecodeError:
@@ -1150,6 +1245,7 @@ class PinHandler(BaseHandler):
             delete a pin of a post or a comment (posts are only pinnable if they are in a space)
                 post -> only group admin or global admin
                 comment -> any admin or creator of post
+
             http body:
                 {
                     "id": "id_of_post_or_comment"
@@ -1163,11 +1259,53 @@ class PinHandler(BaseHandler):
 
                 400 Bad Request
                 {"status": 400,
-                 "reason": "missing_key_in_http_body"}
+                 "success": False,
+                 "reason": "json_parsing_error"}
+                (http body is not valid json)
+
+                400 Bad Request
+                {"status": 400,
+                 "success": False,
+                 "reason": "missing_key_in_http_body:id"}
+
+                400 Bad Request
+                {"status": 400,
+                 "success": False,
+                 "reason": "missing_key_in_http_body:pin_type"}
+
+                400 Bad Request
+                {"status": 400,
+                 "success": False,
+                 "reason": "invalid_pin_type_in_http_body"}
+                (pin_type is neither "post" nor "comment")
 
                 401 Unauthorized
                 {"status": 401,
+                 "success": False,
                  "reason": "no_logged_in_user"}
+                (no valid session, you will be redirected to login automatically)
+
+                403 Forbidden
+                {"status": 403,
+                 "success": False,
+                 "reason": "insufficient_permission"}
+                (acl forbids action (might also require admin role sometimes))
+
+                409 Conflict
+                {"status": 409,
+                 "success": False,
+                 "reason": "post_doesnt_exist"}
+
+                409 Conflict
+                {"status": 409,
+                 "success": False,
+                 "reason": "space_doesnt_exist"}
+
+                409 Conflict
+                {"status": 409,
+                 "success": False,
+                 "reason": "post_not_in_space"}
+                (a post can only be (un-)pinned, if it is in a space)
         """
 
         try:

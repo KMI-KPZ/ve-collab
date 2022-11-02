@@ -2,7 +2,6 @@ import datetime
 import json
 import logging
 from typing import List
-from urllib import request, response
 
 from bson import ObjectId
 from keycloak import KeycloakAdmin, KeycloakOpenID
