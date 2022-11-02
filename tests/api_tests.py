@@ -3358,3 +3358,401 @@ class SearchHandlerTest(BaseApiTestCase):
         )
 
         self.assertEqual(response["reason"], "no_search_categories_included")
+
+
+class SpaceHandlerTest(BaseApiTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+
+        # setup basic environment of permissions
+        self.base_permission_environment_setUp()
+
+        self.db.profiles.insert_one(
+            {
+                "user": CURRENT_ADMIN.username,
+                "bio": "test",
+                "institution": "test",
+                "projects": "test",
+                "profile_pic": "test",
+                "first_name": "test",
+                "last_name": "test",
+                "gender": "test",
+                "address": "test",
+                "birthday": "test",
+                "experience": "test",
+                "education": "test",
+            }
+        )
+
+        self.post_oid = ObjectId()
+        self.comment_oid = ObjectId()
+        self.post_json = {
+            "_id": self.post_oid,
+            "author": CURRENT_ADMIN.username,
+            "creation_date": datetime.datetime.now(),
+            "text": "test",
+            "space": self.test_space,
+            "pinned": False,
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "files": [],
+            "comments": [
+                {
+                    "_id": self.comment_oid,
+                    "author": CURRENT_USER.username,
+                    "creation_date": datetime.datetime.now(),
+                    "text": "test_comment",
+                    "pinned": False,
+                }
+            ],
+        }
+        self.db.posts.insert_one(self.post_json)
+
+    def tearDown(self) -> None:
+        # cleanup test data
+        self.base_permission_environments_tearDown()
+        self.db.posts.delete_many({})
+        super().tearDown()
+
+    def test_get_space_list(self):
+        """
+        expect: list available spaces that are not invisible, or if invisible
+        if i am a member of them
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # insert 2 more spaces, both invisible, but in one user is a member
+        self.db.spaces.insert_many(
+            [
+                {
+                    "name": "invisible_not_member",
+                    "invisible": True,
+                    "members": [CURRENT_ADMIN.username],
+                    "admins": [CURRENT_ADMIN.username],
+                    "invites": [],
+                    "requests": [],
+                },
+                {
+                    "name": "invisible_member",
+                    "invisible": True,
+                    "members": [CURRENT_ADMIN.username, CURRENT_USER.username],
+                    "admins": [CURRENT_ADMIN.username],
+                    "invites": [],
+                    "requests": [],
+                },
+            ]
+        )
+
+        response = self.base_checks("GET", "/spaceadministration/list", True, 200)
+
+        self.assertIn("spaces", response)
+
+        # out of the 3 spaces, only the "unittest_testspace" and "invisible_member"
+        # should be visible to the normal user
+        # "invisible_not_member" is hidden, because space is invisible and user is
+        # not a member
+        self.assertTrue(
+            any(self.test_space == space["name"] for space in response["spaces"])
+        )
+        self.assertTrue(
+            any("invisible_member" == space["name"] for space in response["spaces"])
+        )
+        self.assertFalse(
+            any("invisible_not_member" == space["name"] for space in response["spaces"])
+        )
+
+    def test_get_space_list_all(self):
+        """
+        expect: return all spaces, including invisible ones. permission is granted
+        because user is a global admin
+        """
+
+        # insert 2 more spaces, both invisible, in one user is not even member
+        self.db.spaces.insert_many(
+            [
+                {
+                    "name": "invisible_member",
+                    "invisible": True,
+                    "members": [CURRENT_ADMIN.username],
+                    "admins": [CURRENT_ADMIN.username],
+                    "invites": [],
+                    "requests": [],
+                },
+                {
+                    "name": "invisible_not_member",
+                    "invisible": True,
+                    "members": [CURRENT_USER.username],
+                    "admins": [CURRENT_USER.username],
+                    "invites": [],
+                    "requests": [],
+                },
+            ]
+        )
+
+        response = self.base_checks("GET", "/spaceadministration/list_all", True, 200)
+
+        # expect all three spaces to be returned, no matter visibilty/member setting
+        # because user is a global admin
+        self.assertIn("spaces", response)
+        self.assertTrue(
+            any(self.test_space == space["name"] for space in response["spaces"])
+        )
+        self.assertTrue(
+            any("invisible_member" == space["name"] for space in response["spaces"])
+        )
+        self.assertTrue(
+            any("invisible_not_member" == space["name"] for space in response["spaces"])
+        )
+
+    def test_get_space_list_all_error_insufficient_permission(self):
+        """
+        expect: fail message because user is not a global admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        response = self.base_checks("GET", "/spaceadministration/list_all", False, 403)
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_get_space_pending_invites(self):
+        """
+        expect: see pending invites into spaces for current user
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # remove user from members and set an invite for him
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {"members": CURRENT_USER.username},
+                "$push": {"invites": CURRENT_USER.username},
+            },
+        )
+
+        response = self.base_checks(
+            "GET", "/spaceadministration/pending_invites", True, 200
+        )
+        self.assertIn("pending_invites", response)
+        self.assertIn(self.test_space, response["pending_invites"])
+
+    def test_get_space_join_requests_global_admin(self):
+        """
+        expect: get list of join requests for space, permission is granted because
+        user is global admin
+        """
+
+        # remove user from members and set him as join requested
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {"members": CURRENT_USER.username},
+                "$push": {"requests": CURRENT_USER.username},
+            },
+        )
+
+        response = self.base_checks(
+            "GET",
+            "/spaceadministration/join_requests?name={}".format(self.test_space),
+            True,
+            200,
+        )
+
+        self.assertIn("join_requests", response)
+        self.assertIn(CURRENT_USER.username, response["join_requests"])
+
+    def test_get_space_join_requests_space_admin(self):
+        """
+        expect: get list of join requests for space, permission is granted because
+        user is space admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # remove other user from members and set him as join requested
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {"members": CURRENT_ADMIN.username},
+                "$push": {
+                    "requests": CURRENT_ADMIN.username,
+                    "admins": CURRENT_USER.username,
+                },
+            },
+        )
+
+        response = self.base_checks(
+            "GET",
+            "/spaceadministration/join_requests?name={}".format(self.test_space),
+            True,
+            200,
+        )
+
+        self.assertIn("join_requests", response)
+        self.assertIn(CURRENT_ADMIN.username, response["join_requests"])
+
+    def test_get_space_join_requests_error_no_name(self):
+        """
+        expect: fail message because space name is missing in the request
+        """
+
+        response = self.base_checks(
+            "GET", "/spaceadministration/join_requests", False, 400
+        )
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "name")
+
+    def test_get_space_join_requests_error_space_doesnt_exist(self):
+        """
+        expect: fail message because space doesnt exist
+        """
+
+        response = self.base_checks(
+            "GET",
+            "/spaceadministration/join_requests?name={}".format("not_existing_space"),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], SPACE_DOESNT_EXIST_ERROR)
+
+    def test_get_space_join_requests_error_insufficient_permission(self):
+        """
+        expect: fail message because user is neither global admin nor space admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # remove other user from members and set him as join requested
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {"members": CURRENT_ADMIN.username},
+                "$push": {
+                    "requests": CURRENT_ADMIN.username,
+                },
+            },
+        )
+
+        response = self.base_checks(
+            "GET",
+            "/spaceadministration/join_requests?name={}".format(self.test_space),
+            False,
+            403,
+        )
+
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_get_space_invites_global_admin(self):
+        """
+        expect: get list of space invites, permission is granted because user is
+        global admin
+        """
+
+        # remove other user from members and set him as invited
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {"members": CURRENT_USER.username},
+                "$push": {
+                    "invites": CURRENT_USER.username,
+                },
+            },
+        )
+
+        response = self.base_checks(
+            "GET",
+            "/spaceadministration/invites?name={}".format(self.test_space),
+            True,
+            200,
+        )
+
+        self.assertIn("invites", response)
+        self.assertIn(CURRENT_USER.username, response["invites"])
+
+    def test_get_space_invites_space_admin(self):
+        """
+        expect: get list of space invites, permission is granted because user is
+        space admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # remove other user from members and set him as invited
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {"members": CURRENT_ADMIN.username},
+                "$push": {
+                    "invites": CURRENT_ADMIN.username,
+                    "admins": CURRENT_USER.username,
+                },
+            },
+        )
+
+        response = self.base_checks(
+            "GET",
+            "/spaceadministration/invites?name={}".format(self.test_space),
+            True,
+            200,
+        )
+        self.assertIn("invites", response)
+        self.assertIn(CURRENT_ADMIN.username, response["invites"])
+
+    def test_get_space_invites_error_no_name(self):
+        """
+        expect: fail message because requests misses space name parameter
+        """
+
+        response = self.base_checks("GET", "/spaceadministration/invites", False, 400)
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "name")
+
+    def test_get_space_invites_error_space_doesnt_exist(self):
+        """
+        expect: fail message because space doesnt exist
+        """
+
+        response = self.base_checks(
+            "GET",
+            "/spaceadministration/invites?name={}".format("not_existing_space"),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], SPACE_DOESNT_EXIST_ERROR)
+
+    def test_get_space_invites_error_insufficient_permission(self):
+        """
+        expect: fail message because user is neither global admin nor space admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # remove other user from members and set him as invited
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {"members": CURRENT_ADMIN.username},
+                "$push": {"invites": CURRENT_ADMIN.username},
+            },
+        )
+
+        response = self.base_checks(
+            "GET",
+            "/spaceadministration/invites?name={}".format(self.test_space),
+            False,
+            403,
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)

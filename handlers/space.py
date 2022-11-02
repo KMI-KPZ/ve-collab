@@ -29,7 +29,8 @@ class SpaceHandler(BaseHandler):
 
                 401 Unauthorized
                 {"status": 401,
-                "reason": "no_logged_in_user"}
+                 "success": False,
+                 "reason": "no_logged_in_user"}
 
         GET /spaceadministration/list_all
             (view all spaces, including invisible ones, requires global admin privilege)
@@ -41,10 +42,12 @@ class SpaceHandler(BaseHandler):
 
                 401 Unauthorized
                 {"status": 401,
-                "reason": "no_logged_in_user"}
+                 "success": False,
+                 "reason": "no_logged_in_user"}
 
                 403 Forbidden
                 {"status": 403,
+                 "success": False,
                  "reason": "insufficient_permission"}
 
         GET /spaceadministration/pending_invites
@@ -57,7 +60,8 @@ class SpaceHandler(BaseHandler):
 
                 401 Unauthorized
                 {"status": 401,
-                "reason": "no_logged_in_user"}
+                 "success": False,
+                 "reason": "no_logged_in_user"}
 
         GET /spaceadministration/join_requests
             (view join requests for the space (requires space admin or global admin privileges))
@@ -72,19 +76,23 @@ class SpaceHandler(BaseHandler):
 
                 400 Bad Request
                 {"status": 400,
+                 "success": False,
                  "reason": missing_key:name}
-
-                400 Bad Request
-                {"status": 400,
-                 "reason": "space_doesnt_exist"}
 
                 401 Unauthorized
                 {"status": 401,
+                 "success": False,
                  "reason": "no_logged_in_user"}
 
                 403 Forbidden
                 {"status": 403,
+                 "success": False,
                  "reason": "insufficient_permission"}
+
+                409 Conflict
+                {"status": 409,
+                 "success": False,
+                 "reason": "space_doesnt_exist"}
 
         GET /spaceadministration/invites
             (view invites for the space (requires space admin or global admin privileges))
@@ -99,19 +107,23 @@ class SpaceHandler(BaseHandler):
 
                 400 Bad Request
                 {"status": 400,
+                 "success": False,
                  "reason": missing_key:name}
-
-                400 Bad Request
-                {"status": 400,
-                 "reason": "space_doesnt_exist"}
 
                 401 Unauthorized
                 {"status": 401,
+                 "success": False,
                  "reason": "no_logged_in_user"}
 
                 403 Forbidden
                 {"status": 403,
+                 "success": False,
                  "reason": "insufficient_permission"}
+
+                409 Conflict
+                {"status": 409,
+                 "success": False,
+                 "reason": "space_doesnt_exist"}
         """
 
         if slug == "list":
@@ -131,7 +143,9 @@ class SpaceHandler(BaseHandler):
                 space_name = self.get_argument("name")
             except tornado.web.MissingArgumentError as e:
                 self.set_status(400)
-                self.write({"status": 400, "reason": "missing_key:name"})
+                self.write(
+                    {"status": 400, "success": False, "reason": "missing_key:name"}
+                )
                 return
 
             self.get_join_requests_for_space(space_name)
@@ -142,7 +156,9 @@ class SpaceHandler(BaseHandler):
                 space_name = self.get_argument("name")
             except:
                 self.set_status(400)
-                self.write({"status": 400, "reason": "missing_key:name"})
+                self.write(
+                    {"status": 400, "success": False, "reason": "missing_key:name"}
+                )
                 return
 
             self.get_invites_for_space(space_name)
@@ -701,7 +717,9 @@ class SpaceHandler(BaseHandler):
         # abort if user is not global admin
         if not self.get_current_user_role() == "admin":
             self.set_status(403)
-            self.write({"status": 403, "reason": "insufficient_permission"})
+            self.write(
+                {"status": 403, "success": False, "reason": "insufficient_permission"}
+            )
             return
 
         result = self.db.spaces.find({})
@@ -766,8 +784,10 @@ class SpaceHandler(BaseHandler):
 
         # abort if space doesnt exist
         if not space:
-            self.set_status(400)
-            self.write({"status": 400, "reason": "space_doesnt_exist"})
+            self.set_status(409)
+            self.write(
+                {"status": 409, "success": False, "reason": "space_doesnt_exist"}
+            )
             return
 
         # abort if user is neither space nor global admin
@@ -776,7 +796,9 @@ class SpaceHandler(BaseHandler):
             or self.get_current_user_role() == "admin"
         ):
             self.set_status(403)
-            self.write({"status": 403, "reason": "insufficient_permission"})
+            self.write(
+                {"status": 403, "success": False, "reason": "insufficient_permission"}
+            )
             return
 
         self.set_status(200)
@@ -791,8 +813,10 @@ class SpaceHandler(BaseHandler):
 
         # abort if space doesnt exist
         if not space:
-            self.set_status(400)
-            self.write({"status": 400, "reason": "space_doesnt_exist"})
+            self.set_status(409)
+            self.write(
+                {"status": 409, "success": False, "reason": "space_doesnt_exist"}
+            )
             return
 
         # abort if user is neither space nor global admin
@@ -801,7 +825,9 @@ class SpaceHandler(BaseHandler):
             or self.get_current_user_role() == "admin"
         ):
             self.set_status(403)
-            self.write({"status": 403, "reason": "insufficient_permission"})
+            self.write(
+                {"status": 403, "success": False, "reason": "insufficient_permission"}
+            )
             return
 
         self.set_status(200)
