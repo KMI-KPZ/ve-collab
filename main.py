@@ -28,6 +28,7 @@ import asyncio
 import json
 import os
 import sys
+import shutil
 
 sys.path.append(os.path.dirname(__file__))
 if sys.platform == "win32":
@@ -179,6 +180,7 @@ async def main():
     expected_config_keys = [
         "port",
         "domain",
+        "upload_directory",
         "cookie_secret",
         "keycloak_base_url",
         "keycloak_realm",
@@ -200,6 +202,7 @@ async def main():
     # set global vars from config
     global_vars.port = conf["port"]
     global_vars.domain = conf["domain"]
+    global_vars.upload_direcory = conf["upload_directory"]
     global_vars.mongodb_host = conf["mongodb_host"]
     global_vars.mongodb_port = conf["mongodb_port"]
     global_vars.mongodb_username = conf["mongodb_username"]
@@ -221,6 +224,13 @@ async def main():
     )
     global_vars.keycloak_client_id = conf["keycloak_client_id"]
     global_vars.keycloak_callback_url = conf["keycloak_callback_url"]
+
+    # set up uploads directory and default profile pic, 
+    # if it does not already exist
+    if not os.path.isdir(global_vars.upload_direcory):
+        os.mkdir(global_vars.upload_direcory)
+    if not os.path.isfile(global_vars.upload_direcory + "default_profile_pic.jpg"):
+        shutil.copy2("assets/default_profile_pic.jpg", global_vars.upload_direcory)
 
     # insert default role and acl templates if db is empty
     with ACL() as acl:

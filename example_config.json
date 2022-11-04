@@ -1,6 +1,7 @@
 {
   "port": 8888,
   "domain": "localhost",
+  "upload_directory": "uploads/",
   "cookie_secret": "<tornado_cookie_secret>",
   "keycloak_base_url": "<keycloak_host_url_including_/auth/>",
   "keycloak_realm": "<keycloak_realm>",

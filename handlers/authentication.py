@@ -51,12 +51,7 @@ class LoginCallbackHandler(tornado.web.RequestHandler, metaclass=ABCMeta):
         print(userinfo)
 
         # dump token dict to str and store it in a secure cookie (BaseHandler will decode it later to validate a user is logged in)
-        if global_vars.domain == "localhost":
-            self.set_secure_cookie("access_token", json.dumps(token))
-        else:
-            self.set_secure_cookie(
-                "access_token", json.dumps(token), domain="." + global_vars.domain
-            )
+        self.set_secure_cookie("access_token", json.dumps(token))
 
         self.redirect("/main")
 
@@ -77,10 +72,7 @@ class LogoutHandler(BaseHandler, metaclass=ABCMeta):
             n/a
         """
 
-        if global_vars.domain == "localhost":
-            self.clear_cookie("access_token")
-        else:
-            self.clear_cookie("access_token", domain="." + global_vars.domain)
+        self.clear_cookie("access_token")
 
         # perform logout in keycloak
         print(self._access_token)

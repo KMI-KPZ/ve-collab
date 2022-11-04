@@ -48,107 +48,77 @@ class BaseHandler(tornado.web.RequestHandler):
         )
         self.db = self.client[global_vars.mongodb_db_name]
 
-        self.upload_dir = "uploads/"
-        if not os.path.isdir(self.upload_dir):
-            os.mkdir(self.upload_dir)
-        if not os.path.isfile(self.upload_dir + "default_profile_pic.jpg"):
-            shutil.copy2("assets/default_profile_pic.jpg", self.upload_dir)
+        self.upload_dir = global_vars.upload_direcory
 
     def on_finish(self) -> None:
         self.client.close()
 
     async def prepare(self):
         # set user for test environments to bypass authentication in the handlers
+        # mindlessly changing those values will most certainly break the tests
         if options.test_admin:
-            self.current_userinfo = {
-                "sub": "aaaaaaaa-bbbb-0000-cccc-dddddddddddd",
-                "resource_access": {"test": {"roles": ["admin"]}},
-                "email_verified": True,
-                "name": "Test Admin",
-                "preferred_username": "test_admin",
-                "given_name": "Test",
-                "family_name": "Admin",
-                "email": "test_admin@mail.de",
-            }
             self.current_user = User(
-                self.current_userinfo["preferred_username"],
-                self.current_userinfo["sub"],
-                self.current_userinfo["email"],
+                "test_admin",
+                "aaaaaaaa-bbbb-0000-cccc-dddddddddddd",
+                "test_admin@mail.de",
             )
-            self._access_token = {
-                "access_token": "abcdefg",
-                "expires_in": 3600,
-                "refresh_expires_in": 3600,
-                "refresh_token": "hijklmn",
-                "token_type": "Bearer",
-                "not-before-policy": 0,
-                "session_state": "abcdefgh-1234-ijkl-56m7-nopqrstuv890",
-                "scope": "email profile",
-            }
             return
         elif options.test_user:
-            self.current_userinfo = {
-                "sub": "aaaaaaaa-bbbb-0000-cccc-dddddddddddd",
-                "resource_access": {"test": {"roles": ["user"]}},
-                "email_verified": True,
-                "name": "Test User",
-                "preferred_username": "test_user",
-                "given_name": "Test",
-                "family_name": "User",
-                "email": "test_user@mail.de",
-            }
             self.current_user = User(
-                self.current_userinfo["preferred_username"],
-                self.current_userinfo["sub"],
-                self.current_userinfo["email"],
+                "test_user",
+                "aaaaaaaa-bbbb-1111-cccc-dddddddddddd",
+                "test_user@mail.de",
             )
-            self._access_token = {
-                "access_token": "abcdefg",
-                "expires_in": 3600,
-                "refresh_expires_in": 3600,
-                "refresh_token": "hijklmn",
-                "token_type": "Bearer",
-                "not-before-policy": 0,
-                "session_state": "abcdefgh-1234-ijkl-56m7-nopqrstuv890",
-                "scope": "email profile",
-            }
             return
 
+        # grab token from the cookie
         token = self.get_secure_cookie("access_token")
-        if token is not None:
-            token = json.loads(token)
-        else:
+
+        # if there is no token at all, obviously there will be no valid user session
+        if not token:
             self.current_user = None
             self._access_token = None
             return
 
-        try:
-            # try to refresh the token and fetch user info. this will fail if there is no valid session
-            token = global_vars.keycloak.refresh_token(token["refresh_token"])
+        token = json.loads(token)
 
-            userinfo = global_vars.keycloak.userinfo(token["access_token"])
-            # if token is still valid --> successfull authentication --> we set the current_user
-            if userinfo:
-                self.current_user = User(
-                    userinfo["preferred_username"], userinfo["sub"], userinfo["email"]
-                )
-                self._access_token = token
-        except KeycloakGetError as e:
-            logger.info("Caught Exception: {} ".format(e))
-            # something wrong with request
-            # decode error message
-            decoded = json.loads(e.response_body.decode())
-            # no active session means user is not logged in --> redirect him straight to login
-            if (
-                decoded["error"] == "invalid_grant"
-                and decoded["error_description"] == "Session not active"
-            ):
+        # check if the token is still valid
+        # TODO this is quite costly, since its another API call round trip
+        # in case we need more performance, we can instead do offline validation
+        # by decoding the jwt and checking if it is not expired
+        # (tradeoff: we dont know if it was manually invalidated)
+        token_info = global_vars.keycloak.introspect(token["access_token"])
+
+        # access token is still valid, successfully set current_user
+        if token_info["active"]:
+            self.current_user = User(
+                token_info["preferred_username"], token_info["sub"], token_info["email"]
+            )
+            self._access_token = token
+        # token is expired, try to refresh it
+        else:
+            try:
+                # refresh the token to gain a new, valid access token
+                # if this fails, the refresh token is also no longer active
+                # and we set no current_user, demanding a new login
+                new_token = global_vars.keycloak.refresh_token(token["refresh_token"])
+                token_info = global_vars.keycloak.introspect(new_token["access_token"])
+            except KeycloakError as e:
+                logger.info("Caught Exception: {} ".format(e))
                 self.current_user = None
                 self._access_token = None
-        except KeycloakError as e:
-            logger.info("Caught Exception: {} ".format(e))
-            self.current_user = None
-            self._access_token = None
+                return
+
+            # update the cookie to the new token value
+            self.set_secure_cookie("access_token", json.dumps(new_token))
+
+            # refresh was successful, so we set current_user
+            self.current_user = User(
+                token_info["preferred_username"],
+                token_info["sub"],
+                token_info["email"],
+            )
+            self._access_token = new_token
 
     def json_serialize_posts(self, query_result):
         # parse datetime objects into ISO 8601 strings for JSON serializability
