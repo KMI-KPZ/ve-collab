@@ -23,44 +23,37 @@ class SpaceHandler(BaseHandler):
             (view all spaces, except invisible ones that current user is not a member of)
             return:
                 200 OK,
-                {"status": 200,
-                 "success": True,
+                {"success": True,
                  "spaces": [space1, space2,...]}
 
                 401 Unauthorized
-                {"status": 401,
-                 "success": False,
+                {"success": False,
                  "reason": "no_logged_in_user"}
 
         GET /spaceadministration/list_all
             (view all spaces, including invisible ones, requires global admin privilege)
             return:
                 200 OK,
-                {"status": 200,
-                 "success": True,
+                {"success": True,
                  "spaces": [space1, space2,...]}
 
                 401 Unauthorized
-                {"status": 401,
-                 "success": False,
+                {"success": False,
                  "reason": "no_logged_in_user"}
 
                 403 Forbidden
-                {"status": 403,
-                 "success": False,
+                {"success": False,
                  "reason": "insufficient_permission"}
 
         GET /spaceadministration/pending_invites
             (get pending invites into spaces for current user)
             returns:
                 200 OK
-                {"status": 200,
-                 "success": True,
+                {"success": True,
                  "pending_invites": ["space1", "space2", ...]}
 
                 401 Unauthorized
-                {"status": 401,
-                 "success": False,
+                {"success": False,
                  "reason": "no_logged_in_user"}
 
         GET /spaceadministration/join_requests
@@ -70,28 +63,23 @@ class SpaceHandler(BaseHandler):
 
             returns:
                 200 OK
-                {"status": 200,
-                 "success": True,
+                {"success": True,
                  "join_requests": ["username1", "username2", ...]}
 
                 400 Bad Request
-                {"status": 400,
-                 "success": False,
+                {"success": False,
                  "reason": missing_key:name}
 
                 401 Unauthorized
-                {"status": 401,
-                 "success": False,
+                {"success": False,
                  "reason": "no_logged_in_user"}
 
                 403 Forbidden
-                {"status": 403,
-                 "success": False,
+                {"success": False,
                  "reason": "insufficient_permission"}
 
                 409 Conflict
-                {"status": 409,
-                 "success": False,
+                {"success": False,
                  "reason": "space_doesnt_exist"}
 
         GET /spaceadministration/invites
@@ -101,28 +89,23 @@ class SpaceHandler(BaseHandler):
 
             returns:
                 200 OK
-                {"status": 200,
-                 "success": True,
+                {"success": True,
                  "join_requests": ["username1", "username2", ...]}
 
                 400 Bad Request
-                {"status": 400,
-                 "success": False,
+                {"success": False,
                  "reason": missing_key:name}
 
                 401 Unauthorized
-                {"status": 401,
-                 "success": False,
+                {"success": False,
                  "reason": "no_logged_in_user"}
 
                 403 Forbidden
-                {"status": 403,
-                 "success": False,
+                {"success": False,
                  "reason": "insufficient_permission"}
 
                 409 Conflict
-                {"status": 409,
-                 "success": False,
+                {"success": False,
                  "reason": "space_doesnt_exist"}
         """
 
@@ -143,9 +126,7 @@ class SpaceHandler(BaseHandler):
                 space_name = self.get_argument("name")
             except tornado.web.MissingArgumentError as e:
                 self.set_status(400)
-                self.write(
-                    {"status": 400, "success": False, "reason": "missing_key:name"}
-                )
+                self.write({"success": False, "reason": "missing_key:name"})
                 return
 
             self.get_join_requests_for_space(space_name)
@@ -156,9 +137,7 @@ class SpaceHandler(BaseHandler):
                 space_name = self.get_argument("name")
             except:
                 self.set_status(400)
-                self.write(
-                    {"status": 400, "success": False, "reason": "missing_key:name"}
-                )
+                self.write({"success": False, "reason": "missing_key:name"})
                 return
 
             self.get_invites_for_space(space_name)
@@ -178,23 +157,22 @@ class SpaceHandler(BaseHandler):
 
             returns:
                 200 OK,
-                {"status": 200,
-                 "success": True}
+                {"success": True}
 
                 400 Bad Request
-                {"status": 400,
+                {"success": False,
                  "reason": missing_key:name}
 
                 401 Unauthorized
-                {"status": 401,
+                {"success": False,
                  "reason": "insufficient_permission"}
 
                 401 Unauthorized
-                {"status": 401,
+                {"success": False,
                  "reason": "no_logged_in_user"}
 
                 409 Conflict
-                {"status": 409,
+                {"success": False,
                  "reason": "space_name_already_exists"}
 
         POST /spaceadministration/join
@@ -204,21 +182,20 @@ class SpaceHandler(BaseHandler):
 
             returns:
                 200 OK,
-                {"status": 200,
-                 "success": True
+                {"success": True
                  "join_type": "joined" OR "requested_join"}
 
                 400 Bad Request
-                {"status": 400,
+                {"success": False,
                  "reason": missing_key:name}
 
-                400 Bad Request
-                {"status": 400,
-                 "reason": "space_doesnt_exist"}
-
                 401 Unauthorized
-                {"status": 401,
+                {"success": False,
                  "reason": "no_logged_in_user"}
+
+                409 Conflict
+                {"success": False,
+                 "reason": "space_doesnt_exist"}
 
         POST /spaceadministration/add_admin
             (add given user to space admin list (only space admin or global admin can do that))
@@ -228,27 +205,26 @@ class SpaceHandler(BaseHandler):
 
             returns:
                 200 OK,
-                {"status": 200,
-                 "success": True}
+                {"success": True}
 
                 400 Bad Request
-                {"status": 400,
+                {"success": False,
                  "reason": missing_key:name}
 
                 400 Bad Request
-                {"status": 400,
+                {"success": False,
                  "reason": missing_key:user}
 
                 400 Bad Request
-                {"status": 400,
+                {"success": False,
                  "reason": "space_doesnt_exist"}
 
                 401 Unauthorized
-                {"status": 401,
+                {"success": False,
                  "reason": "no_logged_in_user"}
 
                 403 Forbidden
-                {"status": 403,
+                {"success": False,
                  "reason": "insufficient_permission"}
 
         POST /spaceadministration/space_picture
@@ -258,23 +234,22 @@ class SpaceHandler(BaseHandler):
 
             returns:
                 200 OK,
-                {"status": 200,
-                 "success": True}
+                {"success": True}
 
                 400 Bad Request
-                {"status": 400,
+                {"success": False,
                  "reason": missing_key:name}
 
                 400 Bad Request
-                {"status": 400,
+                {"success": False,
                  "reason": "space_doesnt_exist"}
 
                 401 Unauthorized
-                {"status": 401,
+                {"success": False,
                  "reason": "no_logged_in_user"}
 
                 403 Forbidden
-                {"status": 403,
+                {"success": False,
                  "reason": "insufficient_permission"}
 
         POST /spaceadministration/invite
@@ -285,27 +260,26 @@ class SpaceHandler(BaseHandler):
 
             returns:
                 200 OK,
-                {"status": 200,
-                 "success": True}
+                {"success": True}
 
                 400 Bad Request
-                {"status": 400,
+                {"success": False,
                  "reason": missing_key:name}
 
                 400 Bad Request
-                {"status": 400,
+                {"success": False,
                  "reason": missing_key:user}
 
                 400 Bad Request
-                {"status": 400,
+                {"success": False,
                  "reason": "space_doesnt_exist"}
 
                 401 Unauthorized
-                {"status": 401,
+                {"success": False,
                  "reason": "no_logged_in_user"}
 
                 403 Forbidden
-                {"status": 403,
+                {"success": False,
                  "reason": "insufficient_permission"}
 
         POST /spaceadministration/accept_invite
@@ -315,23 +289,22 @@ class SpaceHandler(BaseHandler):
 
             returns:
                 200 OK,
-                {"status": 200,
-                 "success": True}
+                {"success": True}
 
                 400 Bad Request
-                {"status": 400,
+                {"success": False,
                  "reason": missing_key:name}
 
                 400 Bad Request
-                {"status": 400,
+                {"success": False,
                  "reason": "space_doesnt_exist"}
 
                 400 Conflict
-                {"status": 400,
+                {"success": False,
                  "reason": "user_is_not_invited_into_space"}
 
                 401 Unauthorized
-                {"status": 401,
+                {"success": False,
                  "reason": "no_logged_in_user"}
 
         POST /spaceadministration/decline_invite
@@ -341,23 +314,22 @@ class SpaceHandler(BaseHandler):
 
             returns:
                 200 OK,
-                {"status": 200,
-                 "success": True}
+                {"success": True}
 
                 400 Bad Request
-                {"status": 400,
+                {"success": False,
                  "reason": missing_key:name}
 
                 400 Bad Request
-                {"status": 400,
+                {"success": False,
                  "reason": "space_doesnt_exist"}
 
                 400 Conflict
-                {"status": 400,
+                {"success": False,
                  "reason": "user_is_not_invited_into_space"}
 
                 401 Unauthorized
-                {"status": 401,
+                {"success": False,
                  "reason": "no_logged_in_user"}
 
         POST /spaceadministration/accept_request
@@ -368,31 +340,30 @@ class SpaceHandler(BaseHandler):
 
             returns:
                 200 OK,
-                {"status": 200,
-                 "success": True}
+                {"success": True}
 
                 400 Bad Request
-                {"status": 400,
+                {"success": False,
                  "reason": missing_key:name}
 
                 400 Bad Request
-                {"status": 400,
+                {"success": False,
                  "reason": missing_key:user}
 
                 400 Bad Request
-                {"status": 400,
+                {"success": False,
                  "reason": "space_doesnt_exist"}
 
                 400 Bad Request
-                {"status": 400,
+                {"success": False,
                  "reason": "user_didnt_request_to_join"}
 
                 401 Unauthorized
-                {"status": 401,
+                {"success": False,
                  "reason": "no_logged_in_user"}
 
                 403 Forbidden
-                {"status": 403,
+                {"success": False,
                  "reason": "insufficient_permission"}
 
         POST /spaceadministration/reject_request
@@ -403,31 +374,30 @@ class SpaceHandler(BaseHandler):
 
             returns:
                 200 OK,
-                {"status": 200,
-                 "success": True}
+                {"success": True}
 
                 400 Bad Request
-                {"status": 400,
+                {"success": False,
                  "reason": missing_key:name}
 
                 400 Bad Request
-                {"status": 400,
+                {"success": False,
                  "reason": missing_key:user}
 
                 400 Bad Request
-                {"status": 400,
+                {"success": False,
                  "reason": "space_doesnt_exist"}
 
                 400 Bad Request
-                {"status": 400,
+                {"success": False,
                  "reason": "user_didnt_request_to_join"}
 
                 401 Unauthorized
-                {"status": 401,
+                {"success": False,
                  "reason": "no_logged_in_user"}
 
                 403 Forbidden
-                {"status": 403,
+                {"success": False,
                  "reason": "insufficient_permission"}
 
         POST /spaceadministration/toggle_visibility
@@ -437,31 +407,30 @@ class SpaceHandler(BaseHandler):
 
             returns:
                 200 OK,
-                {"status": 200,
-                 "success": True}
+                {"success": True}
 
                 400 Bad Request
-                {"status": 400,
+                {"success": False,
                  "reason": missing_key:name}
 
                 400 Bad Request
-                {"status": 400,
+                {"success": False,
                  "reason": "space_doesnt_exist"}
 
                 401 Unauthorized
-                {"status": 401,
+                {"success": False,
                  "reason": "no_logged_in_user"}
 
                 403 Forbidden
-                {"status": 403,
+                {"success": False,
                  "reason": "insufficient_permission"}
         """
 
         try:
             space_name = self.get_argument("name")
-        except tornado.web.MissingArgumentError as e:
+        except tornado.web.MissingArgumentError:
             self.set_status(400)
-            self.write({"status": 400, "reason": "missing_key:name"})
+            self.write({"success": False, "reason": "missing_key:name"})
             return
 
         if slug == "create":
@@ -484,7 +453,7 @@ class SpaceHandler(BaseHandler):
                 username = self.get_argument("user")
             except tornado.web.MissingArgumentError as e:
                 self.set_status(400)
-                self.write({"status": 400, "reason": "missing_key:user"})
+                self.write({"success": False, "reason": "missing_key:user"})
                 return
 
             self.add_admin_to_space(space_name, username)
@@ -500,7 +469,7 @@ class SpaceHandler(BaseHandler):
                 username = self.get_argument("user")
             except tornado.web.MissingArgumentError as e:
                 self.set_status(400)
-                self.write({"status": 400, "reason": "missing_key:user"})
+                self.write({"success": False, "reason": "missing_key:user"})
                 return
 
             self.invite_user_into_space(space_name, username)
@@ -519,7 +488,7 @@ class SpaceHandler(BaseHandler):
                 username = self.get_argument("user")
             except tornado.web.MissingArgumentError as e:
                 self.set_status(400)
-                self.write({"status": 400, "reason": "missing_key:user"})
+                self.write({"success": False, "reason": "missing_key:user"})
                 return
 
             self.accept_join_space_request(space_name, username)
@@ -530,7 +499,7 @@ class SpaceHandler(BaseHandler):
                 username = self.get_argument("user")
             except tornado.web.MissingArgumentError as e:
                 self.set_status(400)
-                self.write({"status": 400, "reason": "missing_key:user"})
+                self.write({"success": False, "reason": "missing_key:user"})
                 return
 
             self.reject_join_space_request(space_name, username)
@@ -554,19 +523,18 @@ class SpaceHandler(BaseHandler):
 
             returns:
                 200 OK,
-                {"status": 200,
-                 "success": True}
+                {"success": True}
 
                 400 Bad Request
-                {"status": 400,
+                {"success": False,
                  "reason": "missing_key:name"}
 
                 400 Bad Request
-                {"status": 400,
+                {"success": False,
                  "reason": "space_doesnt_exist"}
 
                 401 Unauthorized
-                {"status": 401,
+                {"success": False,
                  "reason": "no_logged_in_user"}
 
         DELETE /spaceadministration/kick
@@ -577,27 +545,26 @@ class SpaceHandler(BaseHandler):
 
             returns:
                 200 OK,
-                {"status": 200,
-                 "success": True}
+                {"success": True}
 
                 400 Bad Request
-                {"status": 400,
+                {"success": False,
                  "reason": "missing_key:name"}
 
                 400 Bad Request
-                {"status": 400,
+                {"success": False,
                  "reason": "missing_key:username"}
 
                 400 Bad Request
-                {"status": 400,
+                {"success": False,
                  "reason": "space_doesnt_exist"}
 
                 401 Unauthorized
-                {"status": 401,
+                {"success": False,
                  "reason": "no_logged_in_user"}
 
                 403 Forbidden
-                {"status": 403,
+                {"success": False,
                  "reason": "insufficient_permission}
 
         DELETE /spaceadministration/remove_admin
@@ -608,27 +575,26 @@ class SpaceHandler(BaseHandler):
 
             returns:
                 200 OK,
-                {"status": 200,
-                 "success": True}
+                {"success": True}
 
                 400 Bad Request
-                {"status": 400,
+                {"success": False,
                  "reason": missing_key:name}
 
                 400 Bad Request
-                {"status": 400,
+                {"success": False,
                  "reason": missing_key:user}
 
                 400 Bad Request
-                {"status": 400,
+                {"success": False,
                  "reason": "space_doesnt_exist"}
 
                 401 Unauthorized
-                {"status": 401,
+                {"success": False,
                  "reason": "no_logged_in_user"}
 
                 403 Forbidden
-                {"status": 403,
+                {"success": False,
                  "reason": "insufficient_permission"}
 
         DELETE /spaceadministration/delete_space
@@ -638,23 +604,22 @@ class SpaceHandler(BaseHandler):
 
             returns:
                 200 OK,
-                {"status": 200,
-                 "success": True}
+                {"success": True}
 
                 400 Bad Request
-                {"status": 400,
+                {"success": False,
                  "reason": "missing_key:name"}
 
                 400 Bad Request
-                {"status": 400,
+                {"success": False,
                  "reason": "space_doesnt_exist"}
 
                 401 Unauthorized
-                {"status": 401,
+                {"success": False,
                  "reason": "no_logged_in_user"}
 
                 403 Forbidden
-                {"status": 403,
+                {"success": False,
                  "reason": "insufficient_permission}
         """
 
@@ -662,13 +627,13 @@ class SpaceHandler(BaseHandler):
             space_name = self.get_argument("name")
         except tornado.web.MissingArgumentError as e:
             self.set_status(400)
-            self.write({"status": 400, "reason": "missing_key:name"})
+            self.write({"success": False, "reason": "missing_key:name"})
             return
 
         space = self.db.spaces.find_one({"name": space_name})
         if not space:
             self.set_status(400)
-            self.write({"status": 400, "reason": "space_doesnt_exist"})
+            self.write({"success": False, "reason": "space_doesnt_exist"})
             return
 
         if slug == "leave":
@@ -680,7 +645,7 @@ class SpaceHandler(BaseHandler):
                 user_name = self.get_argument("user")
             except tornado.web.MissingArgumentError as e:
                 self.set_status(400)
-                self.write({"status": 400, "reason": "missing_key:user"})
+                self.write({"success": False, "reason": "missing_key:user"})
                 return
 
             self.user_kick(space, user_name)
@@ -691,7 +656,7 @@ class SpaceHandler(BaseHandler):
                 username = self.get_argument("user")
             except tornado.web.MissingArgumentError as e:
                 self.set_status(400)
-                self.write({"status": 400, "reason": "missing_key:user"})
+                self.write({"succes": False, "reason": "missing_key:user"})
                 return
 
             self.remove_admin_from_space(space_name, username)
@@ -717,9 +682,7 @@ class SpaceHandler(BaseHandler):
         # abort if user is not global admin
         if not self.get_current_user_role() == "admin":
             self.set_status(403)
-            self.write(
-                {"status": 403, "success": False, "reason": "insufficient_permission"}
-            )
+            self.write({"success": False, "reason": "insufficient_permission"})
             return
 
         result = self.db.spaces.find({})
@@ -730,7 +693,7 @@ class SpaceHandler(BaseHandler):
             spaces.append(space)
 
         self.set_status(200)
-        self.write({"status": 200, "success": True, "spaces": spaces})
+        self.write({"success": True, "spaces": spaces})
         return
 
     def list_spaces_except_invisible(self) -> None:
@@ -760,7 +723,7 @@ class SpaceHandler(BaseHandler):
             spaces.append(space)
 
         self.set_status(200)
-        self.write({"status": 200, "success": True, "spaces": spaces})
+        self.write({"success": True, "spaces": spaces})
         return
 
     def get_invites_for_current_user(self) -> None:
@@ -774,7 +737,7 @@ class SpaceHandler(BaseHandler):
             pending_invites.append(space["name"])
 
         self.set_status(200)
-        self.write({"status": 200, "success": True, "pending_invites": pending_invites})
+        self.write({"success": True, "pending_invites": pending_invites})
 
     def get_invites_for_space(self, space_name: str) -> None:
         """
@@ -785,9 +748,7 @@ class SpaceHandler(BaseHandler):
         # abort if space doesnt exist
         if not space:
             self.set_status(409)
-            self.write(
-                {"status": 409, "success": False, "reason": "space_doesnt_exist"}
-            )
+            self.write({"success": False, "reason": "space_doesnt_exist"})
             return
 
         # abort if user is neither space nor global admin
@@ -796,13 +757,11 @@ class SpaceHandler(BaseHandler):
             or self.get_current_user_role() == "admin"
         ):
             self.set_status(403)
-            self.write(
-                {"status": 403, "success": False, "reason": "insufficient_permission"}
-            )
+            self.write({"success": False, "reason": "insufficient_permission"})
             return
 
         self.set_status(200)
-        self.write({"status": 200, "success": True, "invites": space["invites"]})
+        self.write({"success": True, "invites": space["invites"]})
 
     def get_join_requests_for_space(self, space_name: str) -> None:
         """
@@ -814,9 +773,7 @@ class SpaceHandler(BaseHandler):
         # abort if space doesnt exist
         if not space:
             self.set_status(409)
-            self.write(
-                {"status": 409, "success": False, "reason": "space_doesnt_exist"}
-            )
+            self.write({"success": False, "reason": "space_doesnt_exist"})
             return
 
         # abort if user is neither space nor global admin
@@ -825,13 +782,11 @@ class SpaceHandler(BaseHandler):
             or self.get_current_user_role() == "admin"
         ):
             self.set_status(403)
-            self.write(
-                {"status": 403, "success": False, "reason": "insufficient_permission"}
-            )
+            self.write({"success": False, "reason": "insufficient_permission"})
             return
 
         self.set_status(200)
-        self.write({"status": 200, "success": True, "join_requests": space["requests"]})
+        self.write({"success": True, "join_requests": space["requests"]})
 
     def create_space(self, space_name: str, is_invisible: bool) -> None:
         """
@@ -842,20 +797,20 @@ class SpaceHandler(BaseHandler):
         with ACL() as acl:
             if not acl.global_acl.ask(self.get_current_user_role(), "create_space"):
                 self.set_status(403)
-                self.write({"status": 403, "reason": "insufficient_permission"})
+                self.write(
+                    {
+                        "success": False,
+                        "reason": "insufficient_permission",
+                    }
+                )
                 return
 
         members = [self.current_user.username]
 
         # if space with same name already exists dont create and return conflict
-        existing_spaces = []
-        for existing_space in self.db.spaces.find(
-            projection={"name": True, "_id": False}
-        ):
-            existing_spaces.append(existing_space["name"])
-        if space_name in existing_spaces:
+        if self.db.spaces.find_one({"name": space_name}):
             self.set_status(409)
-            self.write({"status": 409, "reason": "space_name_already_exists"})
+            self.write({"success": False, "reason": "space_name_already_exists"})
             return
 
         space = {
@@ -877,7 +832,7 @@ class SpaceHandler(BaseHandler):
                     acl.space_acl.insert_default(role, space_name)
 
         self.set_status(200)
-        self.write({"status": 200, "success": True})
+        self.write({"success": True})
 
     def join_space(self, space_name: str) -> None:
         """
@@ -888,8 +843,14 @@ class SpaceHandler(BaseHandler):
         # abort if space doesnt exist
         space = self.db.spaces.find_one({"name": space_name})
         if not space:
-            self.set_status(400)
-            self.write({"status": 400, "reason": "space_doesnt_exist"})
+            self.set_status(409)
+            self.write({"success": False, "reason": "space_doesnt_exist"})
+            return
+
+        # abort if user is already member of space
+        if self.current_user.username in space["members"]:
+            self.set_status(409)
+            self.write({"success": False, "reason": "user_already_member"})
             return
 
         with ACL() as acl:
@@ -903,9 +864,7 @@ class SpaceHandler(BaseHandler):
                 )
 
                 self.set_status(200)
-                self.write(
-                    {"status": 200, "success": True, "join_type": "requested_join"}
-                )
+                self.write({"success": True, "join_type": "requested_join"})
                 return
 
         # user has permission to join spaces, directly add him as member
@@ -914,33 +873,43 @@ class SpaceHandler(BaseHandler):
         )
 
         self.set_status(200)
-        self.write({"status": 200, "success": True, "join_type": "joined"})
+        self.write({"success": True, "join_type": "joined"})
 
     def add_admin_to_space(self, space_name: str, username: str) -> None:
         """
         add another user as a space admin to the space, requires space admin or global admin to perform this operation
         """
 
+        # reject if space doesnt exist
         space = self.db.spaces.find_one({"name": space_name})
         if not space:
-            self.set_status(400)
-            self.write({"status": 400, "reason": "space_doesnt_exist"})
+            self.set_status(409)
+            self.write({"success": False, "reason": "space_doesnt_exist"})
             return
 
-        if (self.current_user.username in space["admins"]) or (
-            self.get_current_user_role() == "admin"
+        # reject is user is not even a member of the space
+        # technically this could be allowed here and we could also set the member status
+        # but this would kinda be a side effect then
+        if username not in space["members"]:
+            self.set_status(409)
+            self.write({"success": False, "reason": "user_not_member_of_space"})
+            return
+
+        if not (
+            (self.current_user.username in space["admins"])
+            or (self.get_current_user_role() == "admin")
         ):
-            # user is either space admin or global admin and therefore is allowed to add space admin
-            self.db.spaces.update_one(
-                {"name": space_name}, {"$addToSet": {"admins": username}}
-            )
-
-            self.set_status(200)
-            self.write({"status": 200, "success": True})
-        else:
             self.set_status(403)
-            self.write({"status": 403, "reason": "insufficient_permission"})
+            self.write({"success": False, "reason": "insufficient_permission"})
             return
+
+        # user is either space admin or global admin and therefore is allowed to add space admin
+        self.db.spaces.update_one(
+            {"name": space_name}, {"$addToSet": {"admins": username}}
+        )
+
+        self.set_status(200)
+        self.write({"success": True})
 
     def update_space_information(
         self, space_name: str, space_description: Optional[str]
@@ -952,8 +921,8 @@ class SpaceHandler(BaseHandler):
         space = self.db.spaces.find_one({"name": space_name})
 
         if not space:
-            self.set_status(400)
-            self.write({"status": 400, "reason": "space_doesnt_exist"})
+            self.set_status(409)
+            self.write({"success": False, "reason": "space_doesnt_exist"})
             return
 
         # check if user is either space or global admin
@@ -962,7 +931,7 @@ class SpaceHandler(BaseHandler):
             or self.get_current_user_role() == "admin"
         ):
             self.set_status(403)
-            self.write({"status": 403, "reason": "insufficient_permission"})
+            self.write({"success": False, "reason": "insufficient_permission"})
             return
 
         new_file_name = None
@@ -988,17 +957,26 @@ class SpaceHandler(BaseHandler):
                         "space_description": space_description,
                     }
                 },
-                upsert=True,
             )
         else:
+            # if there was no picture to upload, there has to be atleast a description
+            # to update, else we would make a useless db connection
+            if not space_description:
+                self.set_status(400)
+                self.write(
+                    {
+                        "success": False,
+                        "reason": "missing_key_in_http_body:space_description",
+                    }
+                )
+                return
+
             self.db.spaces.update_one(
-                {"name": space_name},
-                {"$set": {"space_description": space_description}},
-                upsert=True,
+                {"name": space_name}, {"$set": {"space_description": space_description}}
             )
 
         self.set_status(200)
-        self.write({"status": 200, "success": True})
+        self.write({"success": True})
 
     def invite_user_into_space(self, space_name: str, username: str) -> None:
         """
@@ -1009,8 +987,14 @@ class SpaceHandler(BaseHandler):
 
         # abort if space doesnt exist
         if not space:
-            self.set_status(400)
-            self.write({"status": 400, "reason": "space_doesnt_exist"})
+            self.set_status(409)
+            self.write({"success": False, "reason": "space_doesnt_exist"})
+            return
+
+        # reject if user is already a member of the space
+        if username in space["members"]:
+            self.set_status(409)
+            self.write({"success": False, "reason": "user_already_member"})
             return
 
         # abort if user is neither space nor global admin
@@ -1019,7 +1003,7 @@ class SpaceHandler(BaseHandler):
             or self.get_current_user_role() == "admin"
         ):
             self.set_status(403)
-            self.write({"status": 403, "reason": "insufficient_permission"})
+            self.write({"success": False, "reason": "insufficient_permission"})
             return
 
         # add username to invited users set
@@ -1028,7 +1012,7 @@ class SpaceHandler(BaseHandler):
         )
 
         self.set_status(200)
-        self.write({"status": 200, "success": True})
+        self.write({"success": True})
 
     def accept_space_invite(self, space_name: str) -> None:
         """
@@ -1040,13 +1024,13 @@ class SpaceHandler(BaseHandler):
         # abort if space doesnt exist
         if not space:
             self.set_status(400)
-            self.write({"status": 400, "reason": "space_doesnt_exist"})
+            self.write({"success": False, "reason": "space_doesnt_exist"})
             return
 
         # abort if user wasn't even invited into space in first place (= prevent sneaking in)
         if self.current_user.username not in space["invites"]:
             self.set_status(400)
-            self.write({"status": 400, "reason": "user_is_not_invited_into_space"})
+            self.write({"success": False, "reason": "user_is_not_invited_into_space"})
             return
 
         # add user to members and pull them from pending invites
@@ -1059,7 +1043,7 @@ class SpaceHandler(BaseHandler):
         )
 
         self.set_status(200)
-        self.write({"status": 200, "success": True})
+        self.write({"success": True})
 
     def decline_space_invite(self, space_name: str) -> None:
         """
@@ -1071,13 +1055,13 @@ class SpaceHandler(BaseHandler):
         # abort if space doesnt exist
         if not space:
             self.set_status(400)
-            self.write({"status": 400, "reason": "space_doesnt_exist"})
+            self.write({"success": False, "reason": "space_doesnt_exist"})
             return
 
         # abort if user wasn't even invited into space in first place
         if self.current_user.username not in space["invites"]:
             self.set_status(400)
-            self.write({"status": 400, "reason": "user_is_not_invited_into_space"})
+            self.write({"success": False, "reason": "user_is_not_invited_into_space"})
             return
 
         # pull user from pending invites to decline (dont add to members obviously)
@@ -1086,7 +1070,7 @@ class SpaceHandler(BaseHandler):
         )
 
         self.set_status(200)
-        self.write({"status": 200, "success": True})
+        self.write({"success": True})
 
     def accept_join_space_request(self, space_name: str, username: str) -> None:
         """
@@ -1098,7 +1082,7 @@ class SpaceHandler(BaseHandler):
         # abort if space doesnt exist
         if not space:
             self.set_status(400)
-            self.write({"status": 400, "reason": "space_doesnt_exist"})
+            self.write({"success": False, "reason": "space_doesnt_exist"})
             return
 
         # abort if user is neither space nor global admin
@@ -1107,13 +1091,13 @@ class SpaceHandler(BaseHandler):
             or self.get_current_user_role() == "admin"
         ):
             self.set_status(403)
-            self.write({"status": 403, "reason": "insufficient_permission"})
+            self.write({"success": False, "reason": "insufficient_permission"})
             return
 
         # abort if user didn't request to join
         if username not in space["requests"]:
             self.set_status(400)
-            self.write({"status": 400, "reason": "user_didnt_request_to_join"})
+            self.write({"success": False, "reason": "user_didnt_request_to_join"})
             return
 
         # add user to members and pull them from pending requests
@@ -1123,7 +1107,7 @@ class SpaceHandler(BaseHandler):
         )
 
         self.set_status(200)
-        self.write({"status": 200, "success": True})
+        self.write({"success": True})
 
     def reject_join_space_request(self, space_name: str, username: str) -> None:
         """
@@ -1135,7 +1119,7 @@ class SpaceHandler(BaseHandler):
         # abort if space doesnt exist
         if not space:
             self.set_status(400)
-            self.write({"status": 400, "reason": "space_doesnt_exist"})
+            self.write({"success": False, "reason": "space_doesnt_exist"})
             return
 
         # abort if user is neither space nor global admin
@@ -1144,13 +1128,13 @@ class SpaceHandler(BaseHandler):
             or self.get_current_user_role() == "admin"
         ):
             self.set_status(403)
-            self.write({"status": 403, "reason": "insufficient_permission"})
+            self.write({"success": False, "reason": "insufficient_permission"})
             return
 
         # abort if user didn't request to join
         if username not in space["requests"]:
             self.set_status(400)
-            self.write({"status": 400, "reason": "user_didnt_request_to_join"})
+            self.write({"success": False, "reason": "user_didnt_request_to_join"})
             return
 
         # pull user from request to decline (obviously dont add as member)
@@ -1159,7 +1143,7 @@ class SpaceHandler(BaseHandler):
         )
 
         self.set_status(200)
-        self.write({"status": 200, "success": True})
+        self.write({"success": True})
 
     def toggle_space_visibility(self, space_name: str) -> None:
         """
@@ -1171,7 +1155,7 @@ class SpaceHandler(BaseHandler):
         # abort if space doesnt exist
         if not space:
             self.set_status(400)
-            self.write({"status": 400, "reason": "space_doesnt_exist"})
+            self.write({"success": False, "reason": "space_doesnt_exist"})
             return
 
         # abort if user is neither space nor global admin
@@ -1180,7 +1164,7 @@ class SpaceHandler(BaseHandler):
             or self.get_current_user_role() == "admin"
         ):
             self.set_status(403)
-            self.write({"status": 403, "reason": "insufficient_permission"})
+            self.write({"success": False, "reason": "insufficient_permission"})
             return
 
         # toggle visibility
@@ -1189,7 +1173,7 @@ class SpaceHandler(BaseHandler):
         )
 
         self.set_status(200)
-        self.write({"status": 200, "success": True})
+        self.write({"success": True})
 
     def user_leave(self, space: Dict) -> None:
         """
@@ -1201,7 +1185,7 @@ class SpaceHandler(BaseHandler):
             {"name": space["name"]}, {"$pull": {"members": self.current_user.username}}
         )
         self.set_status(200)
-        self.write({"status": 200, "success": True})
+        self.write({"success": True})
 
     def user_kick(self, space: Dict, user_name: str) -> None:
         """
@@ -1215,7 +1199,7 @@ class SpaceHandler(BaseHandler):
             or self.get_current_user_role() == "admin"
         ):
             self.set_status(403)
-            self.write({"status": 403, "reason": "insufficient_permission"})
+            self.write({"success": False, "reason": "insufficient_permission"})
             return
 
         # in order to kick an admin from the space, you have to be global admin (prevents space admins from kicking each other)
@@ -1228,7 +1212,7 @@ class SpaceHandler(BaseHandler):
                 self.set_status(403)
                 self.write(
                     {
-                        "status": 403,
+                        "success": False,
                         "reason": "insufficient_permission",
                         "hint": "need to be global admin to kick another admin from the space (prevent kicking of space admins between each other)",
                     }
@@ -1242,7 +1226,7 @@ class SpaceHandler(BaseHandler):
             )
 
         self.set_status(200)
-        self.write({"status": 200, "success": True})
+        self.write({"success": True})
 
     def remove_admin_from_space(self, space_name: str, username: str) -> None:
         """
@@ -1254,20 +1238,20 @@ class SpaceHandler(BaseHandler):
         # abort if space doesnt exist
         if not space:
             self.set_status(400)
-            self.write({"status": 400, "reason": "space_doesnt_exist"})
+            self.write({"success": False, "reason": "space_doesnt_exist"})
             return
 
         # abort if user is no global admin
         if not (self.get_current_user_role() == "admin"):
             self.set_status(403)
-            self.write({"status": 403, "reason": "insufficient_permission"})
+            self.write({"success": False, "reason": "insufficient_permission"})
             return
 
         # remove user from spaces admins list
         self.db.spaces.update_one({"name": space_name}, {"$pull": {"admins": username}})
 
         self.set_status(200)
-        self.write({"status": 200, "success": True})
+        self.write({"success": True})
 
     def delete_space(self, space: Dict) -> None:
         """
@@ -1280,7 +1264,7 @@ class SpaceHandler(BaseHandler):
             self.db.spaces.delete_one({"name": space["name"]})
 
             self.set_status(200)
-            self.write({"status": 200, "success": True})
+            self.write({"success": True})
         else:
             self.set_status(403)
-            self.write({"status": 403, "reason": "insufficient_permission"})
+            self.write({"success": False, "reason": "insufficient_permission"})
