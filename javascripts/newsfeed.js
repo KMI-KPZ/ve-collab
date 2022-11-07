@@ -467,6 +467,20 @@ function displayTimeline(timeline) {
     sortPostsByDateArray = timeline.posts.sort(comp);
   }
 
+  // insert post flaf for guaranteeing right post order for new posts in case there are pinned posts
+  var insert_post_flag = false
+  var last_pinned_post_id = ''
+  $.each(sortPostsByDateArray, function (i, post) {
+    if(document.body.contains(document.getElementById(post._id))){
+      insert_post_flag = true
+      if(post.pinned == true) {
+        last_pinned_post_id = post._id
+        return true;
+      }
+      return false;
+    }
+  })
+
   $.each(sortPostsByDateArray, function (i, post) {
     var countLikes = 0;
     var likerHTML = '';
@@ -478,6 +492,7 @@ function displayTimeline(timeline) {
         if(currentUser.username == liker) liked = true;
       });
     }
+
     // case if post already displayed => update values of post
     if(document.body.contains(document.getElementById(post._id))){
       // updating values
@@ -524,7 +539,7 @@ function displayTimeline(timeline) {
         });
       }
       return;
-    }
+    } 
 
     //check if there are files to display
     if(post.hasOwnProperty('files') && post.files !== null && post.files.length > 0  ) {
@@ -579,7 +594,17 @@ function displayTimeline(timeline) {
       post["originalAgo"] = calculateAgoTime(post.originalCreationDate);
       post["repostAuthorPicURL"] = baseUrl + '/uploads/' + post.repostAuthorProfilePic;
 
-      $feedContainer.append(Mustache.render(repostTemplate, post));
+      // simply always append if insert_post_flag is false, the correct order of the posts is guaranteed because it is sorted before (see function compSpace)
+      // else prepend post to feed after pinned posts or at the beginning of the timeline
+      if(insert_post_flag) {     
+        if(inSpace) {
+          $('#' + last_pinned_post_id).after(Mustache.render(repostTemplate, post))
+        } else {
+          $feedContainer.prepend(Mustache.render(repostTemplate, post));
+        }
+      } else {
+        $feedContainer.append(Mustache.render(repostTemplate, post));
+      }  
     } else{
       if (inSpace) {
           var isAdmin = true;
@@ -588,9 +613,17 @@ function displayTimeline(timeline) {
       } else {
         post["inSpace"] = false;
       }
-      // simply always append, the correct order of the posts is guaranteed because it is sorted before (see function compSpace)
-      $feedContainer.append(Mustache.render(postTemplate, post));
-
+      // simply always append if insert_post_flag is false, the correct order of the posts is guaranteed because it is sorted before (see function compSpace)
+      // else prepend post to feed after pinned posts or at the beginning of the timeline
+      if(insert_post_flag) {     
+        if(inSpace) {
+          $('#' + last_pinned_post_id).after(Mustache.render(postTemplate, post))
+        } else {
+          $feedContainer.prepend(Mustache.render(postTemplate, post));
+        }
+      } else {
+        $feedContainer.append(Mustache.render(postTemplate, post));
+      }   
     }
 
     //in both case render comments to post and tags
