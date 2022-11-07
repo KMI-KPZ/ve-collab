@@ -1023,13 +1023,13 @@ class SpaceHandler(BaseHandler):
 
         # abort if space doesnt exist
         if not space:
-            self.set_status(400)
+            self.set_status(409)
             self.write({"success": False, "reason": "space_doesnt_exist"})
             return
 
         # abort if user wasn't even invited into space in first place (= prevent sneaking in)
         if self.current_user.username not in space["invites"]:
-            self.set_status(400)
+            self.set_status(409)
             self.write({"success": False, "reason": "user_is_not_invited_into_space"})
             return
 
@@ -1054,13 +1054,13 @@ class SpaceHandler(BaseHandler):
 
         # abort if space doesnt exist
         if not space:
-            self.set_status(400)
+            self.set_status(409)
             self.write({"success": False, "reason": "space_doesnt_exist"})
             return
 
         # abort if user wasn't even invited into space in first place
         if self.current_user.username not in space["invites"]:
-            self.set_status(400)
+            self.set_status(409)
             self.write({"success": False, "reason": "user_is_not_invited_into_space"})
             return
 
@@ -1081,8 +1081,14 @@ class SpaceHandler(BaseHandler):
 
         # abort if space doesnt exist
         if not space:
-            self.set_status(400)
+            self.set_status(409)
             self.write({"success": False, "reason": "space_doesnt_exist"})
+            return
+
+        # abort if user didn't request to join
+        if username not in space["requests"]:
+            self.set_status(409)
+            self.write({"success": False, "reason": "user_didnt_request_to_join"})
             return
 
         # abort if user is neither space nor global admin
@@ -1092,12 +1098,6 @@ class SpaceHandler(BaseHandler):
         ):
             self.set_status(403)
             self.write({"success": False, "reason": "insufficient_permission"})
-            return
-
-        # abort if user didn't request to join
-        if username not in space["requests"]:
-            self.set_status(400)
-            self.write({"success": False, "reason": "user_didnt_request_to_join"})
             return
 
         # add user to members and pull them from pending requests

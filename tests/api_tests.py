@@ -33,6 +33,7 @@ POST_DOESNT_EXIST_ERROR = "post_doesnt_exist"
 USER_NOT_AUTHOR_ERROR = "user_not_author"
 INVALID_PIN_TYPE_ERROR = "invalid_pin_type_in_http_body"
 USER_ALREADY_MEMBER_ERROR = "user_already_member"
+USER_NOT_INVITED_ERROR = "user_is_not_invited_into_space"
 
 # don't change, these values match with the ones in BaseHandler
 CURRENT_ADMIN = User(
@@ -4265,9 +4266,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/invite?name={}".format(
-                self.test_space
-            ),
+            "/spaceadministration/invite?name={}".format(self.test_space),
             False,
             400,
         )
@@ -4324,6 +4323,312 @@ class SpaceHandlerTest(BaseApiTestCase):
             "POST",
             "/spaceadministration/invite?name={}&user={}".format(
                 self.test_space, CURRENT_ADMIN.username
+            ),
+            False,
+            403,
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_post_space_accept_invite(self):
+        """
+        expect: current user successfully accepts invite into space and is then a member
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # set user as invited
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {"members": CURRENT_USER.username},
+                "$push": {"invites": CURRENT_USER.username},
+            },
+        )
+
+        self.base_checks(
+            "POST",
+            "/spaceadministration/accept_invite?name={}".format(self.test_space),
+            True,
+            200,
+        )
+
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertIn(CURRENT_USER.username, db_state["members"])
+
+    def test_post_space_accept_invite_error_space_doesnt_exist(self):
+        """
+        expect: fail message because space doesnt exist
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # set user as invited
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {"members": CURRENT_USER.username},
+                "$push": {"invites": CURRENT_USER.username},
+            },
+        )
+
+        response = self.base_checks(
+            "POST",
+            "/spaceadministration/accept_invite?name={}".format("not_existing_space"),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], SPACE_DOESNT_EXIST_ERROR)
+
+    def test_post_space_accept_invite_error_user_not_invited(self):
+        """
+        expect: fail message because user wasnt event invited into the space
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # pull user from members, but dont invite him either
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {"members": CURRENT_USER.username},
+            },
+        )
+
+        response = self.base_checks(
+            "POST",
+            "/spaceadministration/accept_invite?name={}".format(self.test_space),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], USER_NOT_INVITED_ERROR)
+
+    def test_post_space_decline_invite(self):
+        """
+        expect: current user declines invite and will not become member of the space
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # set user as invited
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {"members": CURRENT_USER.username},
+                "$push": {"invites": CURRENT_USER.username},
+            },
+        )
+
+        self.base_checks(
+            "POST",
+            "/spaceadministration/decline_invite?name={}".format(self.test_space),
+            True,
+            200,
+        )
+
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertNotIn(CURRENT_USER.username, db_state["members"])
+
+    def test_post_space_decline_invite_error_space_doesnt_exist(self):
+        """
+        expect: fail message because space doesnt exist
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # set user as invited
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {"members": CURRENT_USER.username},
+                "$push": {"invites": CURRENT_USER.username},
+            },
+        )
+
+        response = self.base_checks(
+            "POST",
+            "/spaceadministration/decline_invite?name={}".format("not_existing_space"),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], SPACE_DOESNT_EXIST_ERROR)
+
+    def test_post_space_decline_invite_error_user_not_invited(self):
+        """
+        expect: fail message because user wasnt event invited into the space
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # pull user from members, but dont invite him either
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {"members": CURRENT_USER.username},
+            },
+        )
+
+        response = self.base_checks(
+            "POST",
+            "/spaceadministration/decline_invite?name={}".format(self.test_space),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], USER_NOT_INVITED_ERROR)
+
+    def test_post_space_accept_request_global_admin(self):
+        """
+        expect: successfully accept join request of a user, making him a member
+        permission is granted because current user is global admin
+        """
+
+        # pull user from members and set him as requested
+        # also pull current user from admin to trigger global admin privileges
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {
+                    "members": CURRENT_USER.username,
+                    "admins": CURRENT_ADMIN.username,
+                },
+                "$push": {"requests": CURRENT_USER.username},
+            },
+        )
+
+        self.base_checks(
+            "POST",
+            "/spaceadministration/accept_request?name={}&user={}".format(
+                self.test_space, CURRENT_USER.username
+            ),
+            True,
+            200,
+        )
+
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertIn(CURRENT_USER.username, db_state["members"])
+
+    def test_post_space_accept_request_space_admin(self):
+        """
+        expect: successfully accept join request of a user, making him a member
+        permission is granted because current user is space admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # set user as space admin and other user as requested
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$set": {
+                    "members": [CURRENT_USER.username],
+                    "admins": [CURRENT_USER.username],
+                    "requests": [CURRENT_ADMIN.username],
+                }
+            },
+        )
+
+        self.base_checks(
+            "POST",
+            "/spaceadministration/accept_request?name={}&user={}".format(
+                self.test_space, CURRENT_ADMIN.username
+            ),
+            True,
+            200,
+        )
+
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertIn(CURRENT_ADMIN.username, db_state["members"])
+
+    def test_post_space_accept_request_error_no_user(self):
+        """
+        expect: fail message because request misses "user" parameter
+        """
+
+        response = self.base_checks(
+            "POST",
+            "/spaceadministration/accept_request?name={}".format(self.test_space),
+            False,
+            400,
+        )
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "user")
+
+    def test_post_space_accept_request_error_space_doesnt_exist(self):
+        """
+        expect: fail message because space doesnt exist
+        """
+
+        response = self.base_checks(
+            "POST",
+            "/spaceadministration/accept_request?name={}&user={}".format(
+                "not_existing_space", CURRENT_ADMIN.username
+            ),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], SPACE_DOESNT_EXIST_ERROR)
+
+    def test_post_space_accept_request_error_user_didnt_request(self):
+        """
+        expect: fail message because user didnt even request to join the space
+        """
+
+        # pull user from members, but dont set join request
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {
+                    "members": CURRENT_USER.username,
+                }
+            },
+        )
+
+        response = self.base_checks(
+            "POST",
+            "/spaceadministration/accept_request?name={}&user={}".format(
+                self.test_space, CURRENT_USER.username
+            ),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], "user_didnt_request_to_join")
+
+    def test_post_space_accept_request_error_insufficient_permission(self):
+        """
+        expect: fail message because user is neither global admin nor space admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # pull user from members and set him as requested
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {
+                    "members": CURRENT_USER.username,
+                },
+                "$push": {"requests": CURRENT_USER.username},
+            },
+        )
+
+        response = self.base_checks(
+            "POST",
+            "/spaceadministration/accept_request?name={}&user={}".format(
+                self.test_space, CURRENT_USER.username
             ),
             False,
             403,
