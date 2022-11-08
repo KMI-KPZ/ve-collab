@@ -242,7 +242,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                         </div>
 
                         <div>
-                          <button type="button" id="repost" onclick="javascript:repost('{{!_id}}');"
+                          <button type="button" id="repost" onclick="javascript:repost('{{!_id}}');" @click="showModal = false"
                                   class="bg-blue-lionet hover:bg-blue-500 text-white font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"  data-dismiss="modal">Repost
                           </button>
                         </div>
@@ -274,10 +274,47 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                     class="origin-top-right absolute ml-10 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none"
                     >
                     <div class="block w-full p-2 hover:bg-blue-100">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="inline-block w-5 h-5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>                     
-                      <a href="javascript:deletePost('{{!_id}}');">Löschen</a>
+                      <div x-data="{'deleteConfirmationModal': false}" @keydown.escape="deleteConfirmationModal:false" class="inline-block block w-full hover:bg-blue-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="inline-block w-5 h-5">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg> 
+                        <button id="deletePostBtn" class="text-left" type="button" @click="deleteConfirmationModal = true">
+                          <p class="" href="">Löschen</p>
+                        </button>
+                        <div class="fixed inset-0 z-30 flex items-center justify-center overflow-auto bg-black bg-opacity-50" x-show="deleteConfirmationModal">
+                          <div
+                              class="max-w-3xl w-1/2 px-6 py-4 mx-auto text-left bg-white rounded shadow-lg"
+                              @click.away="deleteConfirmationModal = false"
+                              x-transition:enter="motion-safe:ease-out duration-300"
+                              x-transition:enter-start="opacity-0 scale-90"
+                              x-transition:enter-end="opacity-100 scale-100"
+                          >
+                            <div class="flex itemes-center justify-between m-2">
+                              <div>                               
+                                <b>Willst du den Post wirklich löschen?</b></i>
+                              </div>
+                              <button type="button" class="z-50 cursor-pointer" @click="deleteConfirmationModal = false">
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                              </button>
+                            </div>                     
+                            <div>
+                              <div class="m-2">
+                                <p class="text-sm text-gray-500">Alle Inhalte gehen durch das löschen verloren!</p>
+                              </div>
+                              <div class="mt-2">
+                                <button type="button" class="z-50 cursor-pointer font-semibold py-2 px-4 border border-gray-300 hover:bg-gray-200 rounded" @click="deleteConfirmationModal = false" data-dismiss="modal">
+                                  Abbrechen
+                                </button>
+                                <button type="button" id="update" @click="deleteConfirmationModal = false" onclick="javascript:deletePost('{{!_id}}');" class="bg-red-600 text-white font-semibold hover:text-white hover:bg-red-700 py-2 px-4 border border-red-500 hover:border-transparent rounded"  data-dismiss="modal">
+                                  Löschen
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                     
                     <div x-data="{'showModal': false}" @keydown.escape="showModal:false" class="inline-block block w-full p-2 hover:bg-blue-100">
@@ -567,7 +604,7 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                             </div>
 
                             <div>
-                              <button type="button" id="repost" onclick="javascript:repost('{{!_id}}');"
+                              <button type="button" id="repost" onclick="javascript:repost('{{!_id}}');" @click="showModal = false"
                                       class="bg-blue-lionet hover:bg-blue-500 text-white font-semibold hover:text-white py-2 px-4 border border-blue-lionet hover:border-transparent rounded"  data-dismiss="modal">Repost
                               </button>
                             </div>
@@ -596,10 +633,47 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
                       class="origin-top-right absolute ml-8 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none"
                       >
                       <div class="block w-full p-2 hover:bg-blue-100">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="inline-block w-5 h-5">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>     
-                        <a href="javascript:deletePost('{{!_id}}');">Löschen</a>
+                        <div x-data="{'deleteConfirmationModal': false}" @keydown.escape="deleteConfirmationModal:false" class="inline-block block w-full hover:bg-blue-100">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="inline-block w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg> 
+                          <button id="deletePostBtn" class="text-left" type="button" @click="deleteConfirmationModal = true">
+                            <p class="" href="">Löschen</p>
+                          </button>
+                          <div class="fixed inset-0 z-30 flex items-center justify-center overflow-auto bg-black bg-opacity-50" x-show="deleteConfirmationModal">
+                            <div
+                                class="max-w-3xl w-1/2 px-6 py-4 mx-auto text-left bg-white rounded shadow-lg"
+                                @click.away="deleteConfirmationModal = false"
+                                x-transition:enter="motion-safe:ease-out duration-300"
+                                x-transition:enter-start="opacity-0 scale-90"
+                                x-transition:enter-end="opacity-100 scale-100"
+                            >
+                              <div class="flex itemes-center justify-between m-2">
+                                <div>
+                                  <b>Willst du den Post wirklich löschen?</b></i>
+                                </div>
+                                <button type="button" class="z-50 cursor-pointer" @click="deleteConfirmationModal = false">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                              </div>                     
+                              <div>
+                                <div class="m-2">
+                                  <p class="text-sm text-gray-500">Alle Inhalte gehen durch das löschen verloren!</p>
+                                </div>
+                                <div class="mt-2">
+                                  <button type="button" class="z-50 cursor-pointer font-semibold py-2 px-4 border border-gray-300 hover:bg-gray-200 rounded" @click="deleteConfirmationModal = false" data-dismiss="modal">
+                                    Abbrechen
+                                  </button>
+                                  <button type="button" id="update" @click="deleteConfirmationModal = false" onclick="javascript:deletePost('{{!_id}}');" class="bg-red-600 text-white font-semibold hover:text-white hover:bg-red-700 py-2 px-4 border border-red-500 hover:border-transparent rounded"  data-dismiss="modal">
+                                    Löschen
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                       <div x-data="{'showModal': false}" @keydown.escape="showModal:false" class="inline-block block w-full p-2 hover:bg-blue-100">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="inline-block w-5 h-5">
