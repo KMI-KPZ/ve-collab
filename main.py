@@ -181,6 +181,7 @@ async def main():
         "port",
         "domain",
         "upload_directory",
+        "wordpress_url",
         "cookie_secret",
         "keycloak_base_url",
         "keycloak_realm",
@@ -203,6 +204,7 @@ async def main():
     global_vars.port = conf["port"]
     global_vars.domain = conf["domain"]
     global_vars.upload_direcory = conf["upload_directory"]
+    global_vars.wordpress_url = conf["wordpress_url"]
     global_vars.mongodb_host = conf["mongodb_host"]
     global_vars.mongodb_port = conf["mongodb_port"]
     global_vars.mongodb_username = conf["mongodb_username"]

@@ -10,6 +10,7 @@ domain: str = ""
 port: int = 0
 upload_direcory: str = ""
 cookie_secret: str = ""
+wordpress_url: str = ""
 mongodb_host: str = ""
 mongodb_port: int = 0
 mongodb_username: str = ""
