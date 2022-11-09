@@ -133,7 +133,7 @@ async def main():
         conf = json.load(fp)
 
     # assure config contains expected keys
-    expected_config_keys = ["port", "domain", "cookie_secret", "keycloak_base_url", "keycloak_realm", "keycloak_client_id",
+    expected_config_keys = ["port", "domain", "cookie_secret", "wordpress_url", "keycloak_base_url", "keycloak_realm", "keycloak_client_id",
                             "keycloak_client_secret", "keycloak_admin_username", "keycloak_admin_password",
                             "keycloak_callback_url", "mongodb_host", "mongodb_port", "mongodb_username", "mongodb_password", "mongodb_db_name"]
     for key in expected_config_keys:
@@ -143,6 +143,7 @@ async def main():
     # set global vars from config
     global_vars.port = conf["port"]
     global_vars.domain = conf["domain"]
+    global_vars.wordpress_url = conf["wordpress_url"]
     global_vars.mongodb_host = conf["mongodb_host"]
     global_vars.mongodb_port = conf["mongodb_port"]
     global_vars.mongodb_username = conf["mongodb_username"]
