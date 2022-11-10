@@ -58,9 +58,9 @@ def get_user_list() -> dict:
             "users": {
                 "test_admin": {
                     "id": "aaaaaaaa-bbbb-1111-cccc-dddddddddddd",
-                    "email": "test_user@mail.de",
-                    "username": "test_user",
-                    "role": "user",
+                    "email": "test_admin@mail.de",
+                    "username": "test_admin",
+                    "role": "admin",
                 },
                 "test_user": {
                     "id": "aaaaaaaa-bbbb-1111-cccc-dddddddddddd",
