@@ -614,6 +614,7 @@ function displayTimeline(timeline) {
       }
       // simply always append if insert_post_flag is false, the correct order of the posts is guaranteed because it is sorted before (see function compSpace)
       // else prepend post to feed after pinned posts or at the beginning of the timeline
+      //
       if(insert_post_flag) {     
         if(inSpace) {
           $('#' + last_pinned_post_id).after(Mustache.render(postTemplate, post))
