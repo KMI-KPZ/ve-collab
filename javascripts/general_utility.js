@@ -12,22 +12,6 @@ $(document).ready(function () {
 })
 
 /**
- * Gets routing table from server
- */
-function getRouting(){
-  $.ajax({
-    type: "GET",
-    url: "/routing",
-    success: function(response){
-      routingTable = response.routing;
-    },
-    error: function(){
-      alert("Critical Server Error, Please visit the Platform Page!");
-    }
-  })
-}
-
-/**
  *  Utility functions for nav search bar  
  *  
  */ 

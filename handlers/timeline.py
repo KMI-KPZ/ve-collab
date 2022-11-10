@@ -1,16 +1,18 @@
 from datetime import datetime, timedelta
 import dateutil.parser
 
-from acl import get_acl
+from acl import ACL
 from handlers.base_handler import BaseHandler, auth_needed
 from logger_factory import log_access
 import util
+
 
 class TimelineHandler(BaseHandler):
     """
     Timeline of all posts (all users and all spaces)
     no use case in production, maybe use case for moderators?
     """
+
     @log_access
     @auth_needed
     async def get(self):
@@ -24,8 +26,12 @@ class TimelineHandler(BaseHandler):
             {"posts": [post1, post2,...]}
         """
         if await util.is_admin(self.current_user.username):
-            time_from = self.get_argument("from", (datetime.utcnow() - timedelta(days=1)).isoformat())  # default value is 24h ago
-            time_to = self.get_argument("to", datetime.utcnow().isoformat())  # default value is now
+            time_from = self.get_argument(
+                "from", (datetime.utcnow() - timedelta(days=1)).isoformat()
+            )  # default value is 24h ago
+            time_to = self.get_argument(
+                "to", datetime.utcnow().isoformat()
+            )  # default value is now
 
             # parse time strings into datetime objects (dateutil is able to guess format)
             # however safe way is to use ISO 8601 format
@@ -33,7 +39,8 @@ class TimelineHandler(BaseHandler):
             time_to = dateutil.parser.parse(time_to)
 
             result = self.db.posts.find(
-                            filter={"creation_date": {"$gte": time_from, "$lte": time_to}})
+                filter={"creation_date": {"$gte": time_from, "$lte": time_to}}
+            )
 
             posts = self.json_serialize_posts(result)
             # TODO more efficient
@@ -51,10 +58,14 @@ class TimelineHandler(BaseHandler):
                         comment_author_name = comment["author"]
                         comment["author"] = {}
                         comment["author"]["profile_pic"] = "default_profile_pic.jpg"
-                        comment_author_profile = self.db.profiles.find_one({"user": comment_author_name})
+                        comment_author_profile = self.db.profiles.find_one(
+                            {"user": comment_author_name}
+                        )
                         if comment_author_profile:
                             if "profile_pic" in comment_author_profile:
-                                comment["author"]["profile_pic"] = comment_author_profile["profile_pic"]
+                                comment["author"][
+                                    "profile_pic"
+                                ] = comment_author_profile["profile_pic"]
                         comment["author"]["username"] = comment_author_name
 
             self.set_status(200)
@@ -62,8 +73,7 @@ class TimelineHandler(BaseHandler):
 
         else:
             self.set_status(401)
-            self.write({"status": 401,
-                        "reason": "not_admin"})
+            self.write({"status": 401, "reason": "not_admin"})
 
 
 class SpaceTimelineHandler(BaseHandler):
@@ -92,8 +102,12 @@ class SpaceTimelineHandler(BaseHandler):
               "reason": "no_logged_in_user"}
         """
 
-        time_from = self.get_argument("from", (datetime.utcnow() - timedelta(days=1)).isoformat())  # default value is 24h ago
-        time_to = self.get_argument("to", datetime.utcnow().isoformat())  # default value is now
+        time_from = self.get_argument(
+            "from", (datetime.utcnow() - timedelta(days=1)).isoformat()
+        )  # default value is 24h ago
+        time_to = self.get_argument(
+            "to", datetime.utcnow().isoformat()
+        )  # default value is now
 
         # parse time strings into datetime objects (dateutil is able to guess format)
         # however safe way is to use ISO 8601 format
@@ -101,56 +115,60 @@ class SpaceTimelineHandler(BaseHandler):
         time_to = dateutil.parser.parse(time_to)
 
         # check if current_user is in the space and only query for posts if yes
-        space_data = self.db.spaces.find(
-            {"name": space_name}
-        )
-        for space in space_data:
-            if self.current_user.username in space["members"]:
-                # ask for permission to read timeline
-                acl = get_acl().space_acl
-                if not acl.ask(self.get_current_user_role(), space_name, "read_timeline"):
+        space = self.db.spaces.find_one({"name": space_name})
+        if self.current_user.username in space["members"]:
+            # ask for permission to read timeline
+            with ACL() as acl:
+                if not acl.space_acl.ask(
+                    self.get_current_user_role(), space_name, "read_timeline"
+                ):
                     self.set_status(403)
-                    self.write({"status": 403,
-                                "reason": "insufficient_permission"})
+                    self.write({"status": 403, "reason": "insufficient_permission"})
                     return
 
-                result = self.db.posts.find(filter={
+            result = self.db.posts.find(
+                filter={
                     "$or": [
                         {"creation_date": {"$gte": time_from, "$lte": time_to}},
-                        {"pinned": True}
+                        {"pinned": True},
                     ],
-                    "space": {"$eq": space_name}
-                })
+                    "space": {"$eq": space_name},
+                }
+            )
 
-                posts = self.json_serialize_posts(result)
-                # TODO more efficient
-                for post in posts:
-                    author_name = post["author"]
-                    post["author"] = {}
-                    post["author"]["profile_pic"] = "default_profile_pic.jpg"
-                    profile = self.db.profiles.find_one({"user": author_name})
-                    if profile:
-                        if "profile_pic" in profile:
-                            post["author"]["profile_pic"] = profile["profile_pic"]
-                    post["author"]["username"] = author_name
-                    if "comments" in post and post['comments'] is not None: #PLACEHOLDER FOR HANDLING COMMENTS WITH NULL VALUE
-                        for comment in post["comments"]:
-                            comment_author_name = comment["author"]
-                            comment["author"] = {}
-                            comment["author"]["profile_pic"] = "default_profile_pic.jpg"
-                            comment_author_profile = self.db.profiles.find_one({"user": comment_author_name})
-                            if comment_author_profile:
-                                if "profile_pic" in comment_author_profile:
-                                    comment["author"]["profile_pic"] = comment_author_profile["profile_pic"]
-                            comment["author"]["username"] = comment_author_name
+            posts = self.json_serialize_posts(result)
+            # TODO more efficient
+            for post in posts:
+                author_name = post["author"]
+                post["author"] = {}
+                post["author"]["profile_pic"] = "default_profile_pic.jpg"
+                profile = self.db.profiles.find_one({"user": author_name})
+                if profile:
+                    if "profile_pic" in profile:
+                        post["author"]["profile_pic"] = profile["profile_pic"]
+                post["author"]["username"] = author_name
+                # PLACEHOLDER FOR HANDLING COMMENTS WITH NULL VALUE
+                if "comments" in post and post["comments"] is not None:
+                    for comment in post["comments"]:
+                        comment_author_name = comment["author"]
+                        comment["author"] = {}
+                        comment["author"]["profile_pic"] = "default_profile_pic.jpg"
+                        comment_author_profile = self.db.profiles.find_one(
+                            {"user": comment_author_name}
+                        )
+                        if comment_author_profile:
+                            if "profile_pic" in comment_author_profile:
+                                comment["author"][
+                                    "profile_pic"
+                                ] = comment_author_profile["profile_pic"]
+                        comment["author"]["username"] = comment_author_name
 
-                self.set_status(200)
-                self.write({"posts": posts})
+            self.set_status(200)
+            self.write({"posts": posts})
 
-            else:
-                self.set_status(409)
-                self.write({"status": 409,
-                            "reason": "user_not_member_of_space"})
+        else:
+            self.set_status(409)
+            self.write({"status": 409, "reason": "user_not_member_of_space"})
 
 
 class UserTimelineHandler(BaseHandler):
@@ -175,8 +193,12 @@ class UserTimelineHandler(BaseHandler):
              "reason": "no_logged_in_user"}
         """
 
-        time_from = self.get_argument("from", (datetime.utcnow() - timedelta(days=1)).isoformat())  # default value is 24h ago
-        time_to = self.get_argument("to", datetime.utcnow().isoformat())  # default value is now
+        time_from = self.get_argument(
+            "from", (datetime.utcnow() - timedelta(days=1)).isoformat()
+        )  # default value is 24h ago
+        time_to = self.get_argument(
+            "to", datetime.utcnow().isoformat()
+        )  # default value is now
 
         # parse time strings into datetime objects (dateutil is able to guess format)
         # however safe way is to use ISO 8601 format
@@ -185,8 +207,11 @@ class UserTimelineHandler(BaseHandler):
 
         # TODO what about posts in spaces? include? exclude? include only those that current user is also in?
         result = self.db.posts.find(
-                        filter={"creation_date": {"$gte": time_from, "$lte": time_to},
-                                "author":         {"$eq": author}})
+            filter={
+                "creation_date": {"$gte": time_from, "$lte": time_to},
+                "author": {"$eq": author},
+            }
+        )
 
         posts = self.json_serialize_posts(result)
         # TODO more efficient
@@ -199,15 +224,20 @@ class UserTimelineHandler(BaseHandler):
                 if "profile_pic" in profile:
                     post["author"]["profile_pic"] = profile["profile_pic"]
             post["author"]["username"] = author_name
-            if "comments" in post and post['comments'] is not None: #PLACEHOLDER FOR HANDLING COMMENTS WITH NULL VALUE:
+            # PLACEHOLDER FOR HANDLING COMMENTS WITH NULL VALUE:
+            if "comments" in post and post["comments"] is not None:
                 for comment in post["comments"]:
                     comment_author_name = comment["author"]
                     comment["author"] = {}
                     comment["author"]["profile_pic"] = "default_profile_pic.jpg"
-                    comment_author_profile = self.db.profiles.find_one({"user": comment_author_name})
+                    comment_author_profile = self.db.profiles.find_one(
+                        {"user": comment_author_name}
+                    )
                     if comment_author_profile:
                         if "profile_pic" in comment_author_profile:
-                            comment["author"]["profile_pic"] = comment_author_profile["profile_pic"]
+                            comment["author"]["profile_pic"] = comment_author_profile[
+                                "profile_pic"
+                            ]
                     comment["author"]["username"] = comment_author_name
 
         self.set_status(200)
@@ -237,8 +267,12 @@ class PersonalTimelineHandler(BaseHandler):
                  "reason": "no_logged_in_user"}
         """
 
-        time_from = self.get_argument("from", (datetime.utcnow() - timedelta(days=1)).isoformat())  # default value is 24h ago
-        time_to = self.get_argument("to", datetime.utcnow().isoformat())  # default value is now
+        time_from = self.get_argument(
+            "from", (datetime.utcnow() - timedelta(days=1)).isoformat()
+        )  # default value is 24h ago
+        time_to = self.get_argument(
+            "to", datetime.utcnow().isoformat()
+        )  # default value is now
 
         # parse time strings into datetime objects (dateutil is able to guess format)
         # however safe way is to use ISO 8601 format
@@ -249,20 +283,22 @@ class PersonalTimelineHandler(BaseHandler):
             filter={"members": self.current_user.username}
         )
         spaces = []
-        for space in spaces_cursor:
-            # only allow posts from spaces that you are in and have permission to read the timeline
-            acl = get_acl().space_acl
-            if acl.ask(self.get_current_user_role(), space["name"], "read_timeline"):
-                spaces.append(space["name"])
+        with ACL() as acl:
+            for space in spaces_cursor:
+                # only allow posts from spaces that you are in and have permission to read the timeline
+                if acl.space_acl.ask(
+                    self.get_current_user_role(), space["name"], "read_timeline"
+                ):
+                    spaces.append(space["name"])
 
         follows_cursor = self.db.follows.find(
-            filter={"user": self.current_user.username},
-            projection={"_id": False}
+            filter={"user": self.current_user.username}, projection={"_id": False}
         )
         follows = []
         for user in follows_cursor:
             follows = user["follows"]
-        follows.append(self.current_user.username)  # append yourself for easier query of posts
+        # append yourself for easier query of posts
+        follows.append(self.current_user.username)
 
         result = self.db.posts.find(
             filter={"creation_date": {"$gte": time_from, "$lte": time_to}}
@@ -270,7 +306,9 @@ class PersonalTimelineHandler(BaseHandler):
 
         posts_to_keep = []
         for post in result:
-            if ("author" in post and post["author"] in follows) or ("space" in post and post["space"] in spaces):
+            if ("author" in post and post["author"] in follows) or (
+                "space" in post and post["space"] in spaces
+            ):
                 posts_to_keep.append(post)
 
         posts = self.json_serialize_posts(posts_to_keep)
@@ -284,15 +322,20 @@ class PersonalTimelineHandler(BaseHandler):
                 if "profile_pic" in profile:
                     post["author"]["profile_pic"] = profile["profile_pic"]
             post["author"]["username"] = author_name
-            if "comments" in post and post['comments'] is not None: #PLACEHOLDER FOR HANDLING COMMENTS WITH NULL VALUE:
+            # PLACEHOLDER FOR HANDLING COMMENTS WITH NULL VALUE:
+            if "comments" in post and post["comments"] is not None:
                 for comment in post["comments"]:
                     comment_author_name = comment["author"]
                     comment["author"] = {}
                     comment["author"]["profile_pic"] = "default_profile_pic.jpg"
-                    comment_author_profile = self.db.profiles.find_one({"user": comment_author_name})
+                    comment_author_profile = self.db.profiles.find_one(
+                        {"user": comment_author_name}
+                    )
                     if comment_author_profile:
                         if "profile_pic" in comment_author_profile:
-                            comment["author"]["profile_pic"] = comment_author_profile["profile_pic"]
+                            comment["author"]["profile_pic"] = comment_author_profile[
+                                "profile_pic"
+                            ]
                     comment["author"]["username"] = comment_author_name
 
         self.set_status(200)
@@ -315,16 +358,26 @@ class NewPostsSinceTimestampHandler(BaseHandler):
                 304 Not Modified --> no new posts since timestamp, no need to query timeline handlers
         """
 
-        timestamp = self.get_argument("from", (datetime.utcnow() - timedelta(days=1)).isoformat())
+        timestamp = self.get_argument(
+            "from", (datetime.utcnow() - timedelta(days=1)).isoformat()
+        )
         timestamp = dateutil.parser.parse(timestamp)
 
         # TODO refine query: check only the valid posts for the current user (i.e. the spaces he's in, users he is following)
-        new_posts_count = self.db.posts.count_documents(filter={"creation_date": {"$gte": timestamp}})
+        new_posts_count = self.db.posts.count_documents(
+            filter={"creation_date": {"$gte": timestamp}}
+        )
 
-        if new_posts_count != 0:  # new posts since timestamp, user has to query the timeline handlers
+        if (
+            new_posts_count != 0
+        ):  # new posts since timestamp, user has to query the timeline handlers
             self.set_status(200)
-            self.write({"status": 200,
-                        "new_posts": True,
-                        "since_timestamp": timestamp.isoformat()})
+            self.write(
+                {
+                    "status": 200,
+                    "new_posts": True,
+                    "since_timestamp": timestamp.isoformat(),
+                }
+            )
         else:  # no new posts since timestamp, return 304 not changed
             self.set_status(304)

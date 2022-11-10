@@ -1,13 +1,13 @@
-from socket_client import get_socket_instance
+import mock_platform
 
 
 async def request_role(username):
-    client = await get_socket_instance()
-    result = await client.write({"type": "check_permission",
-                                 "username": username})
-
-    return result["role"]
+    return mock_platform.check_permission(username)
 
 
 async def is_admin(username):
-    return (await request_role(username) == "admin")
+    return await request_role(username) == "admin"
+
+
+async def is_platform_admin(username):
+    return await request_role(username) == "admin"

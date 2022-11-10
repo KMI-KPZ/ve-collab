@@ -1,97 +1,117 @@
+from logger_factory import get_logger
+from handlers.wordpress import WordpressCollectionHandler, WordpressPostHandler
+from handlers.user import *
+from handlers.timeline import *
+from handlers.space import SpaceHandler
+from handlers.search import SearchHandler
+from handlers.render import *
+from handlers.post import *
+from handlers.permissions import (
+    GlobalACLHandler,
+    PermissionHandler,
+    RoleHandler,
+    SpaceACLHandler,
+)
+from handlers.follow import FollowHandler
+from handlers.authentication import LoginHandler, LoginCallbackHandler, LogoutHandler
+import global_vars
+from acl import ACL
+from tornado.options import define, options, parse_command_line
+import tornado.web
+import tornado.locks
+import tornado.ioloop
+import tornado.httpserver
+import pymongo.errors
+import pymongo
+from keycloak import KeycloakOpenID, KeycloakAdmin
 import asyncio
 import json
 import os
 import sys
+import shutil
 
 sys.path.append(os.path.dirname(__file__))
-if sys.platform == 'win32':
+if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
-from keycloak import KeycloakOpenID
-import pymongo
-import pymongo.errors
-import tornado.httpserver
-import tornado.ioloop
-import tornado.locks
-from tornado.options import define, options
-
-import global_vars
-from handlers.follow import FollowHandler
-from handlers.permissions import GlobalACLHandler, PermissionHandler, RoleHandler, SpaceACLHandler
-from handlers.post import *
-from handlers.render import *
-from handlers.search import SearchHandler
-from handlers.space import SpaceHandler
-from handlers.task import TaskHandler
-from handlers.timeline import *
-from handlers.user import *
-from handlers.wiki import *
-from logger_factory import get_logger, log_access
-import signing
-from socket_client import get_socket_instance
 
 logger = get_logger(__name__)
 
-define("no_wiki", default=False, type=bool,
-       help="start without wiki integration (use if u don't have the wiki software installed and running)")
-define("config", default="config.json", type=str,
-       help="path to config file, defaults to config.json")
-define("build_text_index", default=False, type=bool,
-       help="force the application to (re)build the text index for full text search")
+define(
+    "config",
+    default="config.json",
+    type=str,
+    help="path to config file, defaults to config.json",
+)
+define(
+    "build_text_index",
+    default=False,
+    type=bool,
+    help="force the application to (re)build the text index for full text search",
+)
 
-
-class RoutingHandler(BaseHandler):
-
-    @log_access
-    def get(self):
-        """
-        /routing
-        """
-
-        self.set_status(200)
-        self.write({"routing": global_vars.routing_table})
+# never start app in test mode, only needed for unit tests
+define(
+    "test_admin",
+    default=False,
+    type=bool,
+    help="start application in test mode (bypass authentication) as an admin. never run the app in this mode, it is purely for unit tests!",
+)
+define(
+    "test_user",
+    default=False,
+    type=bool,
+    help="start application in test mode (bypass authentication) as a user. never run the app in this mode, it is purely for unit tests!",
+)
 
 
 def make_app(cookie_secret):
-    return tornado.web.Application([
-        (r"/", MainRedirectHandler),
-        (r"/main", MainHandler),
-        (r"/admin", AdminHandler),
-        (r"/acl", ACLHandler),
-        (r"/myprofile", MyProfileHandler),
-        (r"/profile/([a-zA-Z\-0-9\.:,_%]+)", ProfileHandler),
-        (r"/posts", PostHandler),
-        (r"/comment", CommentHandler),
-        (r"/like", LikePostHandler),
-        (r"/repost", RepostHandler),
-        (r"/pin", PinHandler),
-        (r"/follow", FollowHandler),
-        (r"/updates", NewPostsSinceTimestampHandler),
-        (r"/spaceadministration/([a-zA-Z\-0-9\.:,_%]+)", SpaceHandler),
-        (r"/space/([a-zA-Z\-0-9\.:,_%]+)", SpaceRenderHandler),
-        (r"/spaces", SpaceOverviewHandler),
-        (r"/timeline", TimelineHandler),
-        (r"/timeline/space/([a-zA-Z\-0-9\.:,_%]+)", SpaceTimelineHandler),
-        (r"/timeline/user/([a-zA-Z\-0-9\.:,_%]+)", UserTimelineHandler),
-        (r"/timeline/you", PersonalTimelineHandler),
-        (r"/profileinformation", ProfileInformationHandler),
-        (r"/users/([a-zA-Z\-0-9\.:,_%]+)", UserHandler),
-        (r"/tasks", TaskHandler),
-        (r"/wiki_pages", WikiPageNamesHandler),
-        (r"/wiki_page", WikiPageHandler),
-        (r"/permissions", PermissionHandler),
-        (r"/role/([a-zA-Z\-0-9\.:,_%]+)", RoleHandler),
-        (r"/global_acl/([a-zA-Z\-0-9\.:,_%]+)", GlobalACLHandler),
-        (r"/space_acl/([a-zA-Z\-0-9\.:,_%]+)", SpaceACLHandler),
-        (r"/search", SearchHandler),
-        (r"/routing", RoutingHandler),
-        (r"/template", TemplateHandler),
-        (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
-        (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./html/"}),
-        (r"/javascripts/(.*)", tornado.web.StaticFileHandler, {"path": "./javascripts/"}),
-        (r"/assets/(.*)", tornado.web.StaticFileHandler, {"path": "./assets/"}),
-        (r"/uploads/(.*)", tornado.web.StaticFileHandler, {"path": "./uploads/"})
-    ], cookie_secret=cookie_secret, template_path="html")
+    return tornado.web.Application(
+        [
+            (r"/", MainRedirectHandler),
+            (r"/login", LoginHandler),
+            (r"/login/callback", LoginCallbackHandler),
+            (r"/logout", LogoutHandler),
+            (r"/main", MainHandler),
+            (r"/acl", ACLHandler),
+            (r"/myprofile", MyProfileHandler),
+            (r"/profile/([a-zA-Z\-0-9\.:,_%]+)", ProfileHandler),
+            (r"/posts", PostHandler),
+            (r"/comment", CommentHandler),
+            (r"/like", LikePostHandler),
+            (r"/repost", RepostHandler),
+            (r"/pin", PinHandler),
+            (r"/follow", FollowHandler),
+            (r"/updates", NewPostsSinceTimestampHandler),
+            (r"/spaceadministration/([a-zA-Z\-0-9\.:,_%]+)", SpaceHandler),
+            (r"/space/([a-zA-Z\-0-9\.:,_%]+)", SpaceRenderHandler),
+            (r"/spaces", SpaceOverviewHandler),
+            (r"/timeline", TimelineHandler),
+            (r"/timeline/space/([a-zA-Z\-0-9\.:,_%]+)", SpaceTimelineHandler),
+            (r"/timeline/user/([a-zA-Z\-0-9\.:,_%]+)", UserTimelineHandler),
+            (r"/timeline/you", PersonalTimelineHandler),
+            (r"/profileinformation", ProfileInformationHandler),
+            (r"/users/([a-zA-Z\-0-9\.:,_%]+)", UserHandler),
+            (r"/permissions", PermissionHandler),
+            (r"/role/([a-zA-Z\-0-9\.:,_%]+)", RoleHandler),
+            (r"/global_acl/([a-zA-Z\-0-9\.:,_%]+)", GlobalACLHandler),
+            (r"/space_acl/([a-zA-Z\-0-9\.:,_%]+)", SpaceACLHandler),
+            (r"/search", SearchHandler),
+            (r"/template", TemplateHandler),
+            (r"/wordpress/posts", WordpressCollectionHandler),
+            (r"/wordpress/posts/([0-9]+)", WordpressPostHandler),
+            (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
+            (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./html/"}),
+            (
+                r"/javascripts/(.*)",
+                tornado.web.StaticFileHandler,
+                {"path": "./javascripts/"},
+            ),
+            (r"/uploads/(.*)", tornado.web.StaticFileHandler, {"path": "./uploads/"}),
+        ],
+        cookie_secret=cookie_secret,
+        template_path="html",
+    )
 
 
 def init_text_indexes(force_rebuild: bool) -> None:
@@ -99,12 +119,16 @@ def init_text_indexes(force_rebuild: bool) -> None:
     build the text indexes for posts and profiles.
     the weights of the fields are left default (1).
     indexes will be build if a) they don't exist or b) if rebuild is forced by setting force_rebuild to True)
-    
+
     :param force_rebuild: boolean switch to trigger a forced rebuild of the text indexes
     """
-    
-    client = pymongo.MongoClient(global_vars.mongodb_host, global_vars.mongodb_port,
-                              username=global_vars.mongodb_username, password=global_vars.mongodb_password)
+
+    client = pymongo.MongoClient(
+        global_vars.mongodb_host,
+        global_vars.mongodb_port,
+        username=global_vars.mongodb_username,
+        password=global_vars.mongodb_password,
+    )
     db = client[global_vars.mongodb_db_name]
 
     # only build the index if they are either not present or we forced a rebuild
@@ -113,63 +137,119 @@ def init_text_indexes(force_rebuild: bool) -> None:
             db.posts.drop_index("posts")
         except pymongo.errors.OperationFailure:
             pass
-        db.posts.create_index([("text", pymongo.TEXT),
-                               ("tags", pymongo.TEXT),
-                               ("files", pymongo.TEXT)],
-                               name="posts")
-        logger.info("Built text index named {} on collection {}".format("posts", "posts"))
+        db.posts.create_index(
+            [("text", pymongo.TEXT), ("tags", pymongo.TEXT), ("files", pymongo.TEXT)],
+            name="posts",
+        )
+        logger.info(
+            "Built text index named {} on collection {}".format("posts", "posts")
+        )
 
     if "profiles" not in db.profiles.index_information() or force_rebuild:
         try:
             db.profiles.drop_index("profiles")
         except pymongo.errors.OperationFailure:
             pass
-        db.profiles.create_index([("bio", pymongo.TEXT),
-                                  ("institution", pymongo.TEXT),
-                                  ("projects", pymongo.TEXT),
-                                  ("first_name", pymongo.TEXT),
-                                  ("last_name", pymongo.TEXT),
-                                  ("gender", pymongo.TEXT),
-                                  ("address", pymongo.TEXT),
-                                  ("birthday", pymongo.TEXT),
-                                  ("experience", pymongo.TEXT),
-                                  ("education", pymongo.TEXT),
-                                  ("user", pymongo.TEXT)],
-                                  name="profiles")   
-        logger.info("Built text index named {} on collection {}".format(
-            "profiles", "profiles"))
+        db.profiles.create_index(
+            [
+                ("bio", pymongo.TEXT),
+                ("institution", pymongo.TEXT),
+                ("projects", pymongo.TEXT),
+                ("first_name", pymongo.TEXT),
+                ("last_name", pymongo.TEXT),
+                ("gender", pymongo.TEXT),
+                ("address", pymongo.TEXT),
+                ("birthday", pymongo.TEXT),
+                ("experience", pymongo.TEXT),
+                ("education", pymongo.TEXT),
+                ("user", pymongo.TEXT),
+            ],
+            name="profiles",
+        )
+        logger.info(
+            "Built text index named {} on collection {}".format("profiles", "profiles")
+        )
 
 
 async def main():
-    signing.create_signing_key_if_not_exists()
-
-    tornado.options.parse_command_line()
+    parse_command_line()
     with open(options.config, "r") as fp:
         conf = json.load(fp)
 
     # assure config contains expected keys
-    expected_config_keys = ["port", "platform_host", "platform_port", "cookie_secret", "keycloak_base_url", "keycloak_realm",
-                            "keycloak_client_id", "keycloak_client_secret", "mongodb_host", "mongodb_port", "mongodb_username",
-                            "mongodb_password", "mongodb_db_name", "wiki_url", "wiki_username", "wiki_password", "routing_table"]
+    expected_config_keys = [
+        "port",
+        "domain",
+        "upload_directory",
+        "wordpress_url",
+        "cookie_secret",
+        "keycloak_base_url",
+        "keycloak_realm",
+        "keycloak_client_id",
+        "keycloak_client_secret",
+        "keycloak_admin_username",
+        "keycloak_admin_password",
+        "keycloak_callback_url",
+        "mongodb_host",
+        "mongodb_port",
+        "mongodb_username",
+        "mongodb_password",
+        "mongodb_db_name",
+    ]
     for key in expected_config_keys:
         if key not in conf:
             raise RuntimeError("config misses {}".format(key))
 
     # set global vars from config
     global_vars.port = conf["port"]
-    global_vars.platform_host = conf["platform_host"]
-    global_vars.platform_port = conf["platform_port"]
+    global_vars.domain = conf["domain"]
+    global_vars.upload_direcory = conf["upload_directory"]
+    global_vars.wordpress_url = conf["wordpress_url"]
     global_vars.mongodb_host = conf["mongodb_host"]
     global_vars.mongodb_port = conf["mongodb_port"]
     global_vars.mongodb_username = conf["mongodb_username"]
     global_vars.mongodb_password = conf["mongodb_password"]
     global_vars.mongodb_db_name = conf["mongodb_db_name"]
-    global_vars.wiki_url = conf["wiki_url"]
-    global_vars.wiki_username = conf["wiki_username"]
-    global_vars.wiki_password = conf["wiki_password"]
-    global_vars.routing_table = conf["routing_table"]
-    global_vars.keycloak = KeycloakOpenID(conf["keycloak_base_url"], realm_name=conf["keycloak_realm"],
-                                          client_id=conf["keycloak_client_id"], client_secret_key=conf["keycloak_client_secret"])
+    global_vars.keycloak = KeycloakOpenID(
+        conf["keycloak_base_url"],
+        realm_name=conf["keycloak_realm"],
+        client_id=conf["keycloak_client_id"],
+        client_secret_key=conf["keycloak_client_secret"],
+    )
+    global_vars.keycloak_admin = KeycloakAdmin(
+        conf["keycloak_base_url"],
+        realm_name=conf["keycloak_realm"],
+        username=conf["keycloak_admin_username"],
+        password=conf["keycloak_admin_password"],
+        verify=True,
+        auto_refresh_token=["get", "put", "post", "delete"],
+    )
+    global_vars.keycloak_client_id = conf["keycloak_client_id"]
+    global_vars.keycloak_callback_url = conf["keycloak_callback_url"]
+
+    # set up uploads directory and default profile pic, 
+    # if it does not already exist
+    if not os.path.isdir(global_vars.upload_direcory):
+        os.mkdir(global_vars.upload_direcory)
+    if not os.path.isfile(global_vars.upload_direcory + "default_profile_pic.jpg"):
+        shutil.copy2("assets/default_profile_pic.jpg", global_vars.upload_direcory)
+
+    # insert default role and acl templates if db is empty
+    with ACL() as acl:
+        existing_roles = acl.global_acl.db.roles.find_one({})
+        if not existing_roles:
+            with open("DummyData/role_templates.json", "r") as fp:
+                role_templates = json.load(fp)
+            for role in role_templates["roles"]:
+                acl.global_acl.db.roles.insert_one(
+                    {"username": role["username"], "role": role["role"]}
+                )
+
+        if not acl.global_acl.get_all():
+            with open("DummyData/acl_templates.json", "r") as fp:
+                acl_templates = json.load(fp)
+            for entry in acl_templates["global_acl"]:
+                acl.global_acl.set_all(entry)
 
     # build and start server
     cookie_secret = conf["cookie_secret"]
@@ -181,17 +261,9 @@ async def main():
     # setup text indexes for searching
     init_text_indexes(options.build_text_index)
 
-    # register with the platform
-    client = await get_socket_instance()
-    response = await client.write({"type": "module_start",
-                                   "module_name": "lionet",
-                                   "port": global_vars.port})
-    if response["status"] == "recognized":
-        logger.info("Lionet has been recognized by platform")
-        shutdown_event = tornado.locks.Event()
-        await shutdown_event.wait()
-    else:
-        logger.critical("Lionet has not been recognized by the platform, app will exit now")
+    shutdown_event = tornado.locks.Event()
+    await shutdown_event.wait()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     tornado.ioloop.IOLoop.current().run_sync(main)
