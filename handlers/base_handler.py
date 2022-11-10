@@ -21,7 +21,8 @@ def auth_needed(
     method: Callable[..., Optional[Awaitable[None]]]
 ) -> Callable[..., Optional[Awaitable[None]]]:
     """
-    authentication decorator that checks if a valid session exists, otherwise redirects to platform for the login procedure
+    authentication decorator that checks if a valid session exists (by checking that self.current_user has been set from the Basehandler's prepare()-function ), 
+    otherwise redirects to platform for the login procedure
     """
 
     @functools.wraps(method)
@@ -79,7 +80,7 @@ class BaseHandler(tornado.web.RequestHandler):
             self.current_user = None
             self._access_token = None
             return
-
+        
         token = json.loads(token)
 
         # check if the token is still valid
