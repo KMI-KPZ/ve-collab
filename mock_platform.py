@@ -1,4 +1,6 @@
 from keycloak import KeycloakError
+from tornado.options import options
+
 
 import global_vars
 from logger_factory import get_logger
@@ -7,6 +9,24 @@ logger = get_logger(__name__)
 
 
 def get_user(username: str) -> dict:
+    if options.test_admin:
+        return {
+            "user": {
+                "id": "aaaaaaaa-bbbb-0000-cccc-dddddddddddd",
+                "email": "test_admin@mail.de",
+                "username": "test_admin",
+                "role": "admin",
+            }
+        }
+    if options.test_user:
+        return {
+            "user": {
+                "id": "aaaaaaaa-bbbb-1111-cccc-dddddddddddd",
+                "email": "test_user@mail.de",
+                "username": "test_user",
+                "role": "user",
+            }
+        }
     # wrap keycloak requests in try/except to catch error that are not our fault here
     try:
         # refresh the token to keycloak admin portal, because it might have timed out (resulting in the following requests not succeeding)
@@ -33,6 +53,24 @@ def get_user(username: str) -> dict:
 
 
 def get_user_list() -> dict:
+    if options.test_admin or options.test_user:
+        return {
+            "users": {
+                "test_admin": {
+                    "id": "aaaaaaaa-bbbb-1111-cccc-dddddddddddd",
+                    "email": "test_user@mail.de",
+                    "username": "test_user",
+                    "role": "user",
+                },
+                "test_user": {
+                    "id": "aaaaaaaa-bbbb-1111-cccc-dddddddddddd",
+                    "email": "test_user@mail.de",
+                    "username": "test_user",
+                    "role": "user",
+                },
+            }
+        }
+
     # wrap keycloak requests in try/except to catch error that are not our fault here
     try:
         # refresh the token to keycloak admin portal, because it might have timed out (resulting in the following requests not succeeding)
@@ -62,6 +100,11 @@ def get_user_list() -> dict:
 
 
 def check_permission(username: str) -> dict:
+    if options.test_admin:
+        return "admin"
+    if options.test_user:
+        return "user"
+
     # wrap keycloak requests in try/except to catch error that are not our fault here
     try:
         # refresh the token to keycloak admin portal, because it might have timed out (resulting in the following requests not succeeding)

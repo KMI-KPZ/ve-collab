@@ -55,7 +55,7 @@
     </style>
 </head>
 
-<body class="font-sans bg-blue-50">
+<body class="font-sans bg-yellow-50">
 
 <!-- Navbar -->
 <nav class="mb-4">
@@ -75,13 +75,13 @@
                 <div class="ml-4">
                     <div id="navbar_items" class="text-sm flex items-center">
                         <div>
-                            <a href="/main" class="no-underline text-white px-6 text-base">Startseite</a>
+                            <a href="/main" class="no-underline text-black px-6 text-base">Startseite</a>
                         </div>
                         <div>
-                            <a href="/myprofile" class="no-underline text-white px-6 text-base">Profil</a>
+                            <a href="/myprofile" class="no-underline text-black px-6 text-base">Profil</a>
                         </div>
                         <div>
-                            <a href="/spaces" class="no-underline text-white px-6 text-base">Gruppen</a>
+                            <a href="/spaces" class="no-underline text-black px-6 text-base">Gruppen</a>
                         </div>
                     </div>
                 </div>
@@ -120,7 +120,7 @@
                 <ul class="flex">
                     <template x-for="(tab, index) in tabs" :key="index">
                         <li class="cursor-pointer py-3 px-4 transition"
-                            :class="activeTab===index ? 'bg-white text-black' : ' text-white'" @click="activeTab = index; handleTabChange(tab);"
+                            :class="activeTab===index ? 'bg-white text-black' : ' text-black'" @click="activeTab = index; handleTabChange(tab);"
                             x-text="tab"></li>
                     </template>
                 </ul>
@@ -321,7 +321,7 @@
 <!-- ACL button template -->
 <script id="acl_button" type="text/html">
   <div>
-      <a href="./acl" class="no-underline text-white px-6 text-base">ACL</a>
+      <a href="./acl" class="no-underline text-black px-6 text-base">ACL</a>
   </div>
 </script>
 <!-- End of ACL button template -->

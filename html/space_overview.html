@@ -20,7 +20,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300&family=Titillium+Web:wght@300&display=swap" rel="stylesheet">
 </head>
-<body class="font-sans bg-blue-50">
+<body class="font-sans bg-yellow-50">
 
   <!-- Navbar -->
   <nav class="mb-4">
@@ -39,13 +39,13 @@
           <div class="ml-4">
             <div id="navbar_items" class="text-sm flex items-center">
               <div>
-                <a href="/main" class="no-underline text-white px-6 text-base">Startseite</a>
+                <a href="/main" class="no-underline text-black px-6 text-base">Startseite</a>
               </div>
               <div>
-                <a href="/myprofile" class="no-underline text-white px-6 text-base">Profil</a>
+                <a href="/myprofile" class="no-underline text-black px-6 text-base">Profil</a>
               </div>
               <div>
-                <a href="/spaces" class="no-underline text-white px-6 text-base">Gruppen</a>
+                <a href="/spaces" class="no-underline text-black px-6 text-base">Gruppen</a>
               </div>
             </div>
             </div>
@@ -77,7 +77,7 @@
                     <th id="space_overview_utils" scope="col" class="flex px-6 py-3 text-left text-base font-medium text-gray-500 uppercase tracking-wider w-1/5">
 
                       <div class="relative text-base" x-data="{ showModal: false}" @keydown.escape="showModal:false">
-                        <button @click="showModal = true" @keydown.escape="isOpen = false"type="button" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full">
+                        <button @click="showModal = true" @keydown.escape="isOpen = false"type="button" class="bg-green-500 hover:bg-green-700 text-black font-bold py-2 px-4 rounded-full">
                           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                           </svg>
@@ -103,7 +103,7 @@
                               </form>
                             </div>
                             <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                              <button id="createSpace" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-500 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm">
+                              <button id="createSpace" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-500 text-base font-medium text-black hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm">
                                 Space erstellen
                               </button>
                               <button type="button" @click="showModal = false" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
@@ -189,10 +189,10 @@
       <td class="px-6 py-4 whitespace-nowrap">
          {{!^isRequested}}
          {{!^inSpace}}
-            <button type="button" id="joinSpace" name={{!project_name}} class="bg-blue-lionet hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-full">Beitreten </button>
+            <button type="button" id="joinSpace" name={{!project_name}} class="bg-blue-lionet hover:bg-blue-500 text-black font-bold py-2 px-4 rounded-full">Beitreten </button>
           {{!/inSpace}}</a>
           {{!#inSpace}}
-            <button type="button" id="leaveSpace" name={{!project_name}} class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full">Leave </button>
+            <button type="button" id="leaveSpace" name={{!project_name}} class="bg-red-500 hover:bg-red-700 text-black font-bold py-2 px-4 rounded-full">Leave </button>
           {{!/inSpace}}
          {{!/isRequested}}
          {{!#isRequested}}
@@ -219,10 +219,10 @@
               
             </div>
             <div class="col-span-1">
-              <button onclick="javascript:acceptInvite('{{!spacename}}', '{{!username}}')" type="button" onclick="" class="inline-block px-6 py-2.5 bg-green-600 text-white font-medium text-xs leading-tight uppercase rounded-md shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out">Akzeptieren</button>
+              <button onclick="javascript:acceptInvite('{{!spacename}}', '{{!username}}')" type="button" onclick="" class="inline-block px-6 py-2.5 bg-green-600 text-black font-medium text-xs leading-tight uppercase rounded-md shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out">Akzeptieren</button>
             </div>
             <div class="col-span-1">
-              <button onclick="javascript:declineInvite('{{!spacename}}', '{{!username}}')" type="button" onclick="" class="inline-block px-6 py-2.5 bg-red-600 text-white font-medium text-xs leading-tight uppercase rounded-md shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out ml-1">Ablehnen</button>
+              <button onclick="javascript:declineInvite('{{!spacename}}', '{{!username}}')" type="button" onclick="" class="inline-block px-6 py-2.5 bg-red-600 text-black font-medium text-xs leading-tight uppercase rounded-md shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out ml-1">Ablehnen</button>
             </div>
           </div>
         </li>
@@ -232,7 +232,7 @@
   
   <script id="pending_invite_modal" type="text/html">
     <div id="pending_invite_button" class="relative text-base" x-data="{ showModal: false}" @keydown.escape="showModal:false">
-      <button @click="showModal = true; getPendingInvites()" @keydown.escape="isOpen = false"type="button" class="bg-blue-500 hover:bg-blue-700 text-white font-bold ml-2 py-2 px-4 rounded-full">
+      <button @click="showModal = true; getPendingInvites()" @keydown.escape="isOpen = false"type="button" class="bg-blue-500 hover:bg-blue-700 text-black font-bold ml-2 py-2 px-4 rounded-full">
         <span>{{!number_of_invites}}</span>
       </button>
       <div class="fixed inset-0 z-30 items-center justify-center overflow-auto bg-black bg-opacity-50" x-show="showModal" style="display: none;">

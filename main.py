@@ -101,6 +101,7 @@ def make_app(cookie_secret):
             (r"/wordpress/posts", WordpressCollectionHandler),
             (r"/wordpress/posts/([0-9]+)", WordpressPostHandler),
             (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
+            (r"/assets/(.*)", tornado.web.StaticFileHandler, {"path": "./assets/"}),
             (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./html/"}),
             (
                 r"/javascripts/(.*)",
@@ -210,24 +211,26 @@ async def main():
     global_vars.mongodb_username = conf["mongodb_username"]
     global_vars.mongodb_password = conf["mongodb_password"]
     global_vars.mongodb_db_name = conf["mongodb_db_name"]
-    global_vars.keycloak = KeycloakOpenID(
-        conf["keycloak_base_url"],
-        realm_name=conf["keycloak_realm"],
-        client_id=conf["keycloak_client_id"],
-        client_secret_key=conf["keycloak_client_secret"],
-    )
-    global_vars.keycloak_admin = KeycloakAdmin(
-        conf["keycloak_base_url"],
-        realm_name=conf["keycloak_realm"],
-        username=conf["keycloak_admin_username"],
-        password=conf["keycloak_admin_password"],
-        verify=True,
-        auto_refresh_token=["get", "put", "post", "delete"],
-    )
+
+    if not (options.test_admin or options.test_user):
+        global_vars.keycloak = KeycloakOpenID(
+            conf["keycloak_base_url"],
+            realm_name=conf["keycloak_realm"],
+            client_id=conf["keycloak_client_id"],
+            client_secret_key=conf["keycloak_client_secret"],
+        )
+        global_vars.keycloak_admin = KeycloakAdmin(
+            conf["keycloak_base_url"],
+            realm_name=conf["keycloak_realm"],
+            username=conf["keycloak_admin_username"],
+            password=conf["keycloak_admin_password"],
+            verify=True,
+            auto_refresh_token=["get", "put", "post", "delete"],
+        )
     global_vars.keycloak_client_id = conf["keycloak_client_id"]
     global_vars.keycloak_callback_url = conf["keycloak_callback_url"]
 
-    # set up uploads directory and default profile pic, 
+    # set up uploads directory and default profile pic,
     # if it does not already exist
     if not os.path.isdir(global_vars.upload_direcory):
         os.mkdir(global_vars.upload_direcory)

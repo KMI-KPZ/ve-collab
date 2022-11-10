@@ -444,17 +444,17 @@ a.wikilink1 {
 
 .bg-blue-lionet {
  --tw-bg-opacity:1;
- background-color:rgba(43,128,180,var(--tw-bg-opacity))
+ background-color:rgba(252, 163, 29,var(--tw-bg-opacity))
 }
 
 .border-blue-lionet {
 --tw-border-opacity: 0.5;
-border-color:rgba(43,128,180,var(--tw-bg-opacity))
+border-color:rgba(252, 163, 29,var(--tw-bg-opacity))
 }
 
 .divide-blue-lionet {
 --tw-divide-opacity: 1;
-border-color: rgba(43,128,180, var(--tw-divide-opacity))
+border-color: rgba(252, 163, 29, var(--tw-divide-opacity))
 }
 
 .bg-kmi-violet {
