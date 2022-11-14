@@ -34,6 +34,7 @@ USER_NOT_AUTHOR_ERROR = "user_not_author"
 INVALID_PIN_TYPE_ERROR = "invalid_pin_type_in_http_body"
 USER_ALREADY_MEMBER_ERROR = "user_already_member"
 USER_NOT_INVITED_ERROR = "user_is_not_invited_into_space"
+USER_DIDNT_REQUEST_TO_JOIN_ERROR = "user_didnt_request_to_join"
 
 # don't change, these values match with the ones in BaseHandler
 CURRENT_ADMIN = User(
@@ -4603,7 +4604,7 @@ class SpaceHandlerTest(BaseApiTestCase):
             False,
             409,
         )
-        self.assertEqual(response["reason"], "user_didnt_request_to_join")
+        self.assertEqual(response["reason"], USER_DIDNT_REQUEST_TO_JOIN_ERROR)
 
     def test_post_space_accept_request_error_insufficient_permission(self):
         """
@@ -4630,6 +4631,268 @@ class SpaceHandlerTest(BaseApiTestCase):
             "/spaceadministration/accept_request?name={}&user={}".format(
                 self.test_space, CURRENT_USER.username
             ),
+            False,
+            403,
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_post_space_reject_request_global_admin(self):
+        """
+        expect: reject join request of a user, permission is granted
+        because user is global admin
+        """
+
+        # pull user from members and set him as requested,
+        # also remove admin from space_admins to trigger global admin
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {
+                    "members": CURRENT_USER.username,
+                    "admins": CURRENT_ADMIN.username,
+                },
+                "$push": {"requests": CURRENT_USER.username},
+            },
+        )
+
+        self.base_checks(
+            "POST",
+            "/spaceadministration/reject_request?name={}&user={}".format(
+                self.test_space, CURRENT_USER.username  #
+            ),
+            True,
+            200,
+        )
+
+        # expect user to be no longer requested and also not member
+        # (because he was declined)
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertNotIn(CURRENT_USER.username, db_state["requests"])
+        self.assertNotIn(CURRENT_USER.username, db_state["members"])
+
+    def test_post_space_reject_request_space_admin(self):
+        """
+        expect: reject join request of a user, permission is granted
+        because user is space admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # pull user as space admin and
+        # pull other user from members and set him as requested,
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$set": {
+                    "members": [CURRENT_USER.username],
+                    "admins": [CURRENT_USER.username],
+                    "requests": [CURRENT_ADMIN.username],
+                },
+            },
+        )
+
+        self.base_checks(
+            "POST",
+            "/spaceadministration/reject_request?name={}&user={}".format(
+                self.test_space, CURRENT_ADMIN.username
+            ),
+            True,
+            200,
+        )
+
+        # expect user to be no longer requested and also not member
+        # (because he was declined)
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertNotIn(CURRENT_ADMIN.username, db_state["requests"])
+        self.assertNotIn(CURRENT_ADMIN.username, db_state["members"])
+
+    def test_post_space_reject_request_error_no_user(self):
+        """
+        expect: fail message because request is missing user parameter
+        """
+
+        response = self.base_checks(
+            "POST",
+            "/spaceadministration/reject_request?name={}".format(self.test_space),
+            False,
+            400,
+        )
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "user")
+
+    def test_post_space_reject_request_error_space_doesnt_exist(self):
+        """
+        expect: fail message because space doesnt exist
+        """
+
+        response = self.base_checks(
+            "POST",
+            "/spaceadministration/reject_request?name={}&user={}".format(
+                "not_existing_space", CURRENT_USER.username
+            ),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], SPACE_DOESNT_EXIST_ERROR)
+
+    def test_post_space_reject_request_error_user_didnt_request(self):
+        """
+        expect: fail message because user didnt even request to join
+        """
+
+        # pull user from members and dont set him as requested
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {
+                    "members": CURRENT_USER.username,
+                },
+            },
+        )
+
+        response = self.base_checks(
+            "POST",
+            "/spaceadministration/reject_request?name={}&user={}".format(
+                self.test_space, CURRENT_USER.username
+            ),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], USER_DIDNT_REQUEST_TO_JOIN_ERROR)
+
+    def test_post_space_reject_request_error_insufficient_permission(self):
+        """
+        expect: fail message because user is neither global admin nor space admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # pull user from members and dont set him as requested
+        # also dont set current user as space admin
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {
+                    "members": CURRENT_ADMIN.username,
+                    "admins": CURRENT_ADMIN.username,
+                },
+                "$push": {"requests": CURRENT_ADMIN.username},
+            },
+        )
+
+        response = self.base_checks(
+            "POST",
+            "/spaceadministration/reject_request?name={}&user={}".format(
+                self.test_space, CURRENT_ADMIN.username
+            ),
+            False,
+            403,
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_post_space_toggle_visibility_global_admin(self):
+        """
+        expect: successfully toggle visibility of space (false -> true, true -> false),
+        permission is granted because user is global admin
+        """
+
+        visibility = False
+
+        # pull user from space admins to trigger global admin
+        # and set visibility explicitely
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {
+                    "admins": CURRENT_ADMIN.username,
+                },
+                "$set": {"invisible": visibility},
+            },
+        )
+
+        self.base_checks(
+            "POST",
+            "/spaceadministration/toggle_visibility?name={}".format(self.test_space),
+            True,
+            200,
+        )
+
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertEqual(db_state["invisible"], not visibility)
+
+        # do the same thing once more to test the other toggle direction
+        visibility = not visibility
+        self.base_checks(
+            "POST",
+            "/spaceadministration/toggle_visibility?name={}".format(self.test_space),
+            True,
+            200,
+        )
+
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertEqual(db_state["invisible"], not visibility)
+
+    def test_post_space_toggle_visibility_space_admin(self):
+        """
+        expect: successfully toggle visibility of space, permission is granted
+        because user is space admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        visibility = False
+
+        # set user as space admin
+        # and set visibility explicitely
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$push": {
+                    "admins": CURRENT_USER.username,
+                },
+                "$set": {"invisible": visibility},
+            },
+        )
+
+        self.base_checks(
+            "POST",
+            "/spaceadministration/toggle_visibility?name={}".format(self.test_space),
+            True,
+            200,
+        )
+
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertEqual(db_state["invisible"], not visibility)
+
+        # do the same thing once more to test the other toggle direction
+        visibility = not visibility
+        self.base_checks(
+            "POST",
+            "/spaceadministration/toggle_visibility?name={}".format(self.test_space),
+            True,
+            200,
+        )
+
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertEqual(db_state["invisible"], not visibility)
+
+    def test_post_space_toggle_visibility_error_insufficient_permission(self):
+        """
+        expect: fail message because user is neither global admin nor space admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        response = self.base_checks(
+            "POST",
+            "/spaceadministration/toggle_visibility?name={}".format(self.test_space),
             False,
             403,
         )
