@@ -1,5 +1,5 @@
 body{margin-top:20px;
-  
+  background-image: url(../assets/hexagon.svg);
 }
 
 .profile-widget {
@@ -444,16 +444,90 @@ a.wikilink1 {
 
 .bg-blue-lionet {
  --tw-bg-opacity:1;
- background-color:rgba(43,128,180,var(--tw-bg-opacity))
+ background-color:rgba(252, 163, 29,var(--tw-bg-opacity))
 }
 
 .border-blue-lionet {
 --tw-border-opacity: 0.5;
-border-color:rgba(43,128,180,var(--tw-bg-opacity))
+border-color:rgba(252, 163, 29,var(--tw-bg-opacity))
 }
 
 .divide-blue-lionet {
 --tw-divide-opacity: 1;
-border-color: rgba(43,128,180, var(--tw-divide-opacity))
+border-color: rgba(252, 163, 29, var(--tw-divide-opacity))
 }
 
+.bg-kmi-violet {
+  --tw-bg-opacity:1;
+  background-color:rgba(207,215,229,var(--tw-bg-opacity))
+}
+.bg-kmi-blue {
+  --tw-bg-opacity:1;
+  background-color:rgba(172,199,215,var(--tw-bg-opacity))
+}
+.bg-kmi-green {
+  --tw-bg-opacity:1;
+  background-color:rgba(195,217,198,var(--tw-bg-opacity))
+}
+.bg-kmi-violet-dark {
+  --tw-bg-opacity:1;
+  background-color:rgba(161,172,191,var(--tw-bg-opacity))
+}
+.bg-kmi-blue-dark {
+  --tw-bg-opacity:1;
+  background-color:rgba(140,173,191,var(--tw-bg-opacity))
+}
+.bg-kmi-green-dark {
+  --tw-bg-opacity:1;
+  background-color:rgba(173,204,178,var(--tw-bg-opacity))
+}
+
+.border-kmi-violet {
+  --tw-border-opacity: 0.5;
+  border-color:rgba(207,215,229,var(--tw-bg-opacity))
+}
+.border-kmi-blue {
+  --tw-border-opacity: 0.5;
+  border-color:rgba(172,199,215,var(--tw-bg-opacity))
+}
+.border-kmi-green {
+  --tw-border-opacity: 0.5;
+  border-color:rgba(195,217,198,var(--tw-bg-opacity))
+}
+.border-kmi-violet-dark {
+  --tw-border-opacity: 0.5;
+  border-color:rgba(161,172,191,var(--tw-bg-opacity))
+}
+.border-kmi-blue-dark {
+  --tw-border-opacity: 0.5;
+  border-color:rgba(140,173,191,var(--tw-bg-opacity))
+}
+.border-kmi-green-dark {
+  --tw-border-opacity: 0.5;
+  border-color:rgba(173,204,178,var(--tw-bg-opacity))
+}
+
+.divide-kmi-violet {
+  --tw-divide-opacity: 1;
+  border-color:rgba(207,215,229,var(--tw-bg-opacity))
+}
+.divide-kmi-blue {
+  --tw-divide-opacity: 1;
+  border-color:rgba(172,199,215,var(--tw-bg-opacity))
+}
+.divide-kmi-green {
+  --tw-divide-opacity: 1;
+  border-color:rgba(195,217,198,var(--tw-bg-opacity))
+}
+.divide-kmi-violet-dark {
+  --tw-divide-opacity: 1;
+  border-color:rgba(161,172,191,var(--tw-bg-opacity))
+}
+.divide-kmi-blue-dark {
+  --tw-divide-opacity: 1;
+  border-color:rgba(140,173,191,var(--tw-bg-opacity))
+}
+.divide-kmi-green-dark {
+  --tw-divide-opacity: 1;
+  border-color:rgba(173,204,178,var(--tw-bg-opacity))
+}
