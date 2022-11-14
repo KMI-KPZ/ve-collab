@@ -632,7 +632,7 @@ class SpaceHandler(BaseHandler):
 
         space = self.db.spaces.find_one({"name": space_name})
         if not space:
-            self.set_status(400)
+            self.set_status(409)
             self.write({"success": False, "reason": "space_doesnt_exist"})
             return
 
@@ -1180,9 +1180,23 @@ class SpaceHandler(BaseHandler):
         let the current user leave the space
         """
 
-        # TODO when group admin is implemented: block leaving if user is the only admin, he has to transfer this role first before being able to leave
+        # if user is the only space admin, block leaving
+        # (he has to transform permission to someone else first)
+        if self.current_user.username in space["admins"]:
+            if len(space["admins"]) == 1:
+                self.set_status(409)
+                self.write({"success": False, "reason": "no_other_admins_left"})
+                return
+
+        # remove user from members and also admins (if he was one)
         self.db.spaces.update_one(
-            {"name": space["name"]}, {"$pull": {"members": self.current_user.username}}
+            {"name": space["name"]},
+            {
+                "$pull": {
+                    "members": self.current_user.username,
+                    "admins": self.current_user.username,
+                }
+            },
         )
         self.set_status(200)
         self.write({"success": True})
@@ -1192,6 +1206,11 @@ class SpaceHandler(BaseHandler):
         kick a user from the space, requires space admin or global admin privileges
         if the to-be-kicked user is a space admin himself, global admin privileges are required to prevent space admins from kicking each other
         """
+
+        if user_name not in space["members"]:
+            self.set_status(409)
+            self.write({"success": False, "reason": "user_not_member_of_space"})
+            return
 
         # check if user is either space or global admin
         if not (
@@ -1204,11 +1223,7 @@ class SpaceHandler(BaseHandler):
 
         # in order to kick an admin from the space, you have to be global admin (prevents space admins from kicking each other)
         if user_name in space["admins"]:
-            if self.get_current_user_role() == "admin":
-                self.db.spaces.update_one(
-                    {"name": space["name"]}, {"$pull": {"members": user_name}}
-                )
-            else:
+            if not self.get_current_user_role() == "admin":
                 self.set_status(403)
                 self.write(
                     {
@@ -1219,11 +1234,10 @@ class SpaceHandler(BaseHandler):
                 )
                 return
 
-        # user is not an admin, can kick him without doubt
-        else:
-            self.db.spaces.update_one(
-                {"name": space["name"]}, {"$pull": {"members": user_name}}
-            )
+        self.db.spaces.update_one(
+            {"name": space["name"]},
+            {"$pull": {"members": user_name, "admins": user_name}},
+        )
 
         self.set_status(200)
         self.write({"success": True})

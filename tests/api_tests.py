@@ -35,6 +35,7 @@ INVALID_PIN_TYPE_ERROR = "invalid_pin_type_in_http_body"
 USER_ALREADY_MEMBER_ERROR = "user_already_member"
 USER_NOT_INVITED_ERROR = "user_is_not_invited_into_space"
 USER_DIDNT_REQUEST_TO_JOIN_ERROR = "user_didnt_request_to_join"
+USER_NOT_MEMBER_ERROR = "user_not_member_of_space"
 
 # don't change, these values match with the ones in BaseHandler
 CURRENT_ADMIN = User(
@@ -4047,7 +4048,7 @@ class SpaceHandlerTest(BaseApiTestCase):
             False,
             409,
         )
-        self.assertEqual(response["reason"], "user_not_member_of_space")
+        self.assertEqual(response["reason"], USER_NOT_MEMBER_ERROR)
 
     def test_post_space_add_admin_error_insufficient_permission(self):
         """
@@ -4893,6 +4894,222 @@ class SpaceHandlerTest(BaseApiTestCase):
         response = self.base_checks(
             "POST",
             "/spaceadministration/toggle_visibility?name={}".format(self.test_space),
+            False,
+            403,
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_delete_space_error_no_name(self):
+        """
+        expect: fail message because request is missing name parameter
+        """
+
+        response = self.base_checks("DELETE", "/spaceadministration/leave", False, 400)
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "name")
+
+    def test_delete_space_error_space_doesnt_exist(self):
+        """
+        expect: fail message because space doesnt exist
+        """
+
+        response = self.base_checks(
+            "DELETE",
+            "/spaceadministration/leave?name={}".format("not_existing_space"),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], SPACE_DOESNT_EXIST_ERROR)
+
+    def test_delete_space_leave_space(self):
+        """
+        expect: successfully leave space
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        self.base_checks(
+            "DELETE",
+            "/spaceadministration/leave?name={}".format(self.test_space),
+            True,
+            200,
+        )
+
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertNotIn(CURRENT_USER.username, db_state["members"])
+
+    def test_delete_space_leave_space_space_admin(self):
+        """
+        expect: succesfully leave space as a space admin,
+        allowed because there is another admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # set user as space admin
+        self.db.spaces.update_one(
+            {"name": self.test_space}, {"$push": {"admins": CURRENT_USER.username}}
+        )
+
+        self.base_checks(
+            "DELETE",
+            "/spaceadministration/leave?name={}".format(self.test_space),
+            True,
+            200,
+        )
+
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertNotIn(CURRENT_USER.username, db_state["members"])
+        self.assertNotIn(CURRENT_USER.username, db_state["admins"])
+
+    def test_delete_space_leave_space_error_no_other_admins(self):
+        """
+        expect: fail message because there would be no other space admin left
+        """
+
+        response = self.base_checks(
+            "DELETE",
+            "/spaceadministration/leave?name={}".format(self.test_space),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], "no_other_admins_left")
+
+    def test_delete_space_kick_user_global_admin(self):
+        """
+        expect: successfully kick another user,
+        permission is granted because user is global admin
+        """
+
+        # pull user from space admins to trigger global admin
+        self.db.spaces.update_one(
+            {"name": self.test_space}, {"$pull": {"admins": CURRENT_ADMIN.username}}
+        )
+
+        self.base_checks(
+            "DELETE",
+            "/spaceadministration/kick?name={}&user={}".format(
+                self.test_space, CURRENT_USER.username
+            ),
+            True,
+            200,
+        )
+
+        # expect other user to no longer be member
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertNotIn(CURRENT_USER.username, db_state["members"])
+
+    def test_delete_space_kick_user_space_admin(self):
+        """
+        expect: successfull kick another user,
+        permission is granted because user is space admin
+        """
+
+        self.base_checks(
+            "DELETE",
+            "/spaceadministration/kick?name={}&user={}".format(
+                self.test_space, CURRENT_USER.username
+            ),
+            True,
+            200,
+        )
+
+        # expect other user to no longer be member
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertNotIn(CURRENT_USER.username, db_state["members"])
+
+    def test_delete_space_kick_space_admin_as_global_admin(self):
+        """
+        expect: successfully kick another space admin,
+        permission is granted because user is global admin
+        """
+
+        # set other user as space admin
+        self.db.spaces.update_one(
+            {"name": self.test_space}, {"$push": {"admins": CURRENT_USER.username}}
+        )
+
+        self.base_checks(
+            "DELETE",
+            "/spaceadministration/kick?name={}&user={}".format(
+                self.test_space, CURRENT_USER.username
+            ),
+            True,
+            200,
+        )
+
+        # expect other user to no longer be member
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertNotIn(CURRENT_USER.username, db_state["members"])
+        self.assertNotIn(CURRENT_USER.username, db_state["admins"])
+
+    def test_delete_space_kick_user_error_user_not_member(self):
+        """
+        expect: fail message because user is not even member
+        """
+
+        self.db.spaces.update_one(
+            {"name": self.test_space}, {"$pull": {"members": CURRENT_USER.username}}
+        )
+
+        response = self.base_checks(
+            "DELETE",
+            "/spaceadministration/kick?name={}&user={}".format(
+                self.test_space, CURRENT_USER.username
+            ),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], USER_NOT_MEMBER_ERROR)
+
+    def test_delete_space_kick_user_error_insufficient_permission(self):
+        """
+        expect: fail message because user is neither global admin nor space admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # remove other user from admin, because kicking an admin is another case
+        self.db.spaces.update_one(
+            {"name": self.test_space}, {"$pull": {"admins": CURRENT_ADMIN.username}}
+        )
+
+        response = self.base_checks(
+            "DELETE",
+            "/spaceadministration/kick?name={}&user={}".format(
+                self.test_space, CURRENT_ADMIN.username
+            ),
+            False,
+            403,
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_delete_space_kick_space_admin_error_insufficient_permission(self):
+        """
+        expect: fail message because is not global admin
+        (kicking space admin requires global admin)
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # set user as space admin, which would be enough to kick a normal user
+        # but not another space admin
+        self.db.spaces.update_one(
+            {"name": self.test_space}, {"$push": {"admins": CURRENT_USER.username}}
+        )
+
+        response = self.base_checks(
+            "DELETE",
+            "/spaceadministration/kick?name={}&user={}".format(
+                self.test_space, CURRENT_ADMIN.username
+            ),
             False,
             403,
         )
