@@ -216,12 +216,11 @@ function getWikiPage(page){
  */
 $body.delegate('#post', 'click', function () {
     var text = String($('#postFeed').val());
-    var tags = $("input[id=addTag]").tagsinput('items');
     //check if there is a space selected to post into
     var selectedValue = ($( "#selectSpace option:selected" ).val() === "null") ? null : $( "#selectSpace option:selected" ).val();
     //while in space page: post in this space
     var space = (inSpace) ? spacename.replace("%20", " ") : selectedValue;
-    if(text!='') post(text, tags, space);
+    if(text!='') post(text, space);
     else {
       $("#postAlert").html('Add some text to your post!');
       $("#postAlert").addClass("alert alert-danger");
@@ -438,15 +437,12 @@ function compSpace(a,b) {
 /**
 
  * displayTimeline - renders Timeline
- * initialize tagsinput and tooltip
  * @param  {JSON} timeline description
  */
 function displayTimeline(timeline) {
 
   console.log("get timeline success");
-  $('input[data-role=tagsinput]').tagsinput({
-    allowDuplicates: false
-  });
+
   //$('[data-toggle="tooltip"]').tooltip();
   $('.carousel').carousel();
   //loading posts => set from-Date until there is a post in interval from - to
@@ -870,7 +866,7 @@ function getTimelineUser(username, from, to) {
  * @param  {String} tags
  * @param  {String} space
  */
-function post(text, tags, space) {
+function post(text, space) {
   var formData = new FormData();
   fileList.forEach(function (file, i) {
     formData.append("file"+i, file);
@@ -901,7 +897,6 @@ function post(text, tags, space) {
     success: function (data) {
       initNewsFeed();
       $('#postFeed').val('');
-      $("input[id=addTag]").tagsinput('removeAll');
 
       fileList = [];
       $('#postdiv span').remove();
