@@ -1,5 +1,6 @@
 body{margin-top:20px;
   background-image: url(../assets/hexagon.svg);
+  background-size: 100%;
 }
 
 .profile-widget {
