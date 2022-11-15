@@ -656,10 +656,10 @@ class SpaceHandler(BaseHandler):
                 username = self.get_argument("user")
             except tornado.web.MissingArgumentError as e:
                 self.set_status(400)
-                self.write({"succes": False, "reason": "missing_key:user"})
+                self.write({"success": False, "reason": "missing_key:user"})
                 return
 
-            self.remove_admin_from_space(space_name, username)
+            self.remove_admin_from_space(space, username)
             return
 
         elif slug == "delete_space":
@@ -1242,27 +1242,25 @@ class SpaceHandler(BaseHandler):
         self.set_status(200)
         self.write({"success": True})
 
-    def remove_admin_from_space(self, space_name: str, username: str) -> None:
+    def remove_admin_from_space(self, space: Dict, username: str) -> None:
         """
         remove user as space admin, requires global admin privileges to prevent space admins from degrading each other
         """
 
-        space = self.db.spaces.find_one({"name": space_name})
-
-        # abort if space doesnt exist
-        if not space:
-            self.set_status(400)
-            self.write({"success": False, "reason": "space_doesnt_exist"})
+        # abort if to-delete-user isnt even an admin
+        if username not in space["admins"]:
+            self.set_status(409)
+            self.write({"success": False, "reason": "user_not_space_admin"})
             return
 
-        # abort if user is no global admin
+        # abort if current user is no global admin
         if not (self.get_current_user_role() == "admin"):
             self.set_status(403)
             self.write({"success": False, "reason": "insufficient_permission"})
             return
 
         # remove user from spaces admins list
-        self.db.spaces.update_one({"name": space_name}, {"$pull": {"admins": username}})
+        self.db.spaces.update_one({"name": space["name"]}, {"$pull": {"admins": username}})
 
         self.set_status(200)
         self.write({"success": True})
@@ -1272,13 +1270,21 @@ class SpaceHandler(BaseHandler):
         delete a space, requires space admin or global admin privileges
         """
 
-        if (self.current_user.username in space["admins"]) or (
-            self.get_current_user_role() == "admin"
+        # reject if user is neither space nor global admin
+        if not (
+            self.current_user.username in space["admins"]
+            or self.get_current_user_role() == "admin"
         ):
-            self.db.spaces.delete_one({"name": space["name"]})
-
-            self.set_status(200)
-            self.write({"success": True})
-        else:
             self.set_status(403)
             self.write({"success": False, "reason": "insufficient_permission"})
+            return
+
+        # delete the space itself
+        # and also clean up all posts that were in that space
+        # and the rules of the space_acl
+        self.db.spaces.delete_one({"name": space["name"]})
+        self.db.posts.delete_many({"space": space["name"]})
+        self.db.space_acl.delete_many({"space": space["name"]})
+
+        self.set_status(200)
+        self.write({"success": True})

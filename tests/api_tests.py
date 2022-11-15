@@ -5114,3 +5114,157 @@ class SpaceHandlerTest(BaseApiTestCase):
             403,
         )
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_delete_space_remove_admin(self):
+        """
+        expect: successfully remove space admin, permission is granted
+        because user is global admin
+        """
+
+        # set other user as admin
+        self.db.spaces.update_one(
+            {"name": self.test_space}, {"$push": {"admins": CURRENT_USER.username}}
+        )
+
+        self.base_checks(
+            "DELETE",
+            "/spaceadministration/remove_admin?name={}&user={}".format(
+                self.test_space, CURRENT_USER.username
+            ),
+            True,
+            200,
+        )
+
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertNotIn(CURRENT_USER.username, db_state["admins"])
+
+    def test_delete_space_remove_admin_error_no_user(self):
+        """
+        expect: fail message because request misses "user" parameter
+        """
+
+        # set other user as admin
+        self.db.spaces.update_one(
+            {"name": self.test_space}, {"$push": {"admins": CURRENT_USER.username}}
+        )
+
+        response = self.base_checks(
+            "DELETE",
+            "/spaceadministration/remove_admin?name={}".format(self.test_space),
+            False,
+            400,
+        )
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "user")
+
+    def test_delete_space_remove_admin_error_user_not_space_admin(self):
+        """
+        expect: fail message because to-delete-user isnt event a space admin
+        """
+
+        response = self.base_checks(
+            "DELETE",
+            "/spaceadministration/remove_admin?name={}&user={}".format(
+                self.test_space, CURRENT_USER.username
+            ),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], "user_not_space_admin")
+
+    def test_delete_space_remove_admin_error_insufficient_permission(self):
+        """
+        expect: fail message because user is not a global admin
+        (even space admin is not enough to kick another space admin)
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # set user as space admin
+        self.db.spaces.update_one(
+            {"name": self.test_space}, {"$push": {"admins": CURRENT_USER.username}}
+        )
+
+        response = self.base_checks(
+            "DELETE",
+            "/spaceadministration/remove_admin?name={}&user={}".format(
+                self.test_space, CURRENT_ADMIN.username
+            ),
+            False,
+            403,
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_delete_space_global_admin(self):
+        """
+        expect: successfully delete space and all associated data (posts, space_acl),
+        permission is granted because user is global admin
+        """
+
+        # remove user from space admins to trigger global admin
+        self.db.spaces.update_one(
+            {"name": self.test_space}, {"$pull": {"admins": CURRENT_ADMIN.username}}
+        )
+
+        self.base_checks(
+            "DELETE",
+            "/spaceadministration/delete_space?name={}".format(self.test_space),
+            True,
+            200,
+        )
+
+        # expect all associated data to be deleted
+        space = self.db.spaces.find_one({"name": self.test_space})
+        posts = list(self.db.posts.find({"space": self.test_space}))
+        space_acl = list(self.db.space_acl.find({"space": self.test_space}))
+        self.assertEqual(space, None)
+        self.assertEqual(posts, [])
+        self.assertEqual(space_acl, [])
+
+    def test_delete_space_space_admin(self):
+        """
+        expect: successfully delete space and all associated data (posts, space_acl),
+        permission is granted ebcause user is space admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # set user as space admin
+        self.db.spaces.update_one(
+            {"name": self.test_space}, {"$push": {"admins": CURRENT_USER.username}}
+        )
+
+        self.base_checks(
+            "DELETE",
+            "/spaceadministration/delete_space?name={}".format(self.test_space),
+            True,
+            200,
+        )
+
+        # expect all associated data to be deleted
+        space = self.db.spaces.find_one({"name": self.test_space})
+        posts = list(self.db.posts.find({"space": self.test_space}))
+        space_acl = list(self.db.space_acl.find({"space": self.test_space}))
+        self.assertEqual(space, None)
+        self.assertEqual(posts, [])
+        self.assertEqual(space_acl, [])
+
+    def test_delete_space_error_insufficient_permission(self):
+        """
+        expect: fail message because user is neither space admin nor global admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        response = self.base_checks(
+            "DELETE",
+            "/spaceadministration/delete_space?name={}".format(self.test_space),
+            False,
+            403,
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
