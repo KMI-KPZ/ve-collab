@@ -5268,3 +5268,338 @@ class SpaceHandlerTest(BaseApiTestCase):
             403,
         )
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+
+class TimelineHandlerTest(BaseApiTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+
+        # setup basic environment of permissions
+        self.base_permission_environment_setUp()
+
+        self.db.profiles.insert_one(
+            {
+                "user": CURRENT_ADMIN.username,
+                "bio": "test",
+                "institution": "test",
+                "projects": "test",
+                "profile_pic": "test",
+                "first_name": "test",
+                "last_name": "test",
+                "gender": "test",
+                "address": "test",
+                "birthday": "test",
+                "experience": "test",
+                "education": "test",
+            }
+        )
+        # 4 test posts, one in space and one normal for admin and for user
+        self.post_oids = [ObjectId(), ObjectId(), ObjectId(), ObjectId()]
+        self.posts = [
+            {
+                "_id": self.post_oids[0],
+                "author": CURRENT_ADMIN.username,
+                "creation_date": datetime.datetime.utcnow(),
+                "text": "space_post_admin",
+                "space": self.test_space,
+                "pinned": False,
+                "wordpress_post_id": None,
+                "tags": [],
+                "files": [],
+                "comments": [
+                    {
+                        "_id": ObjectId(),
+                        "author": CURRENT_USER.username,
+                        "creation_date": datetime.datetime.utcnow(),
+                        "text": "test_comment",
+                        "pinned": False,
+                    }
+                ],
+                "likers": []
+            },
+            {
+                "_id": self.post_oids[1],
+                "author": CURRENT_ADMIN.username,
+                "creation_date": datetime.datetime.utcnow(),
+                "text": "normal_post_admin",
+                "space": None,
+                "pinned": False,
+                "wordpress_post_id": None,
+                "tags": [],
+                "files": [],
+                "comments": [],
+                "likers": []
+            },
+            {
+                "_id": self.post_oids[2],
+                "author": CURRENT_USER.username,
+                "creation_date": datetime.datetime.utcnow(),
+                "text": "space_post_user",
+                "space": self.test_space,
+                "pinned": False,
+                "wordpress_post_id": None,
+                "tags": [],
+                "files": [],
+                "comments": [],
+                "likers": []
+            },
+            {
+                "_id": self.post_oids[3],
+                "author": CURRENT_USER.username,
+                "creation_date": datetime.datetime.utcnow(),
+                "text": "normal_post_user",
+                "space": None,
+                "pinned": False,
+                "wordpress_post_id": None,
+                "tags": [],
+                "files": [],
+                "comments": [],
+                "likers": []
+            },
+        ]
+        self.db.posts.insert_many(self.posts)
+
+    def tearDown(self) -> None:
+        # cleanup test data
+        self.base_permission_environments_tearDown()
+        self.db.posts.delete_many({})
+        self.db.follows.delete_many({})
+        super().tearDown()
+
+    def assert_author_enhanced(self, posts: List[dict]):
+        for post in posts:
+            # expect author to be enhanced with profile pic
+            self.assertIn("author", post)
+            self.assertIn("username", post["author"])
+            self.assertIn("profile_pic", post["author"])
+
+            # admin has a profile pic set,
+            # therefore expect his pic to not be the default one
+            if post["author"]["username"] == CURRENT_ADMIN.username:
+                self.assertEqual(post["author"]["profile_pic"], "test")
+            elif post["author"]["username"] == CURRENT_USER.username:
+                self.assertEqual(
+                    post["author"]["profile_pic"], "default_profile_pic.jpg"
+                )
+
+    def test_get_timeline(self):
+        """
+        expect: get all 4 test posts in the global timeline, permission is granted
+        because user is global admin
+        """
+
+        response = self.base_checks("GET", "/timeline", True, 200)
+        self.assertIn("posts", response)
+
+        # expect every test post to be in the response
+        self.assertEqual(len(response["posts"]), 4)
+
+        # expect the author to be enhanced with the correct profile picture
+        self.assert_author_enhanced(response["posts"])
+
+    def test_get_timeline_out_of_range(self):
+        """
+        expect: no posts returned because they are not within the requested time frame
+        """
+
+        # request from 2 hours ago to 1 hour ago
+        response = self.base_checks(
+            "GET",
+            "/timeline?from={}&to={}".format(
+                (datetime.datetime.utcnow() - datetime.timedelta(hours=2)).isoformat(),
+                (datetime.datetime.utcnow() - datetime.timedelta(hours=1)).isoformat(),
+            ),
+            True,
+            200,
+        )
+        self.assertIn("posts", response)
+        self.assertEqual(response["posts"], [])
+
+    def test_get_timeline_error_insufficient_permission(self):
+        """
+        expect: fail message because user is not global admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        response = self.base_checks("GET", "/timeline", False, 403)
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_get_space_timeline(self):
+        """
+        expect: only 2 posts (the one's in spaces the be returned)
+        """
+
+        response = self.base_checks(
+            "GET", "/timeline/space/{}".format(self.test_space), True, 200
+        )
+        self.assertIn("posts", response)
+
+        # expect only the posts in spaces to be in the response
+        self.assertEqual(len(response["posts"]), 2)
+
+        # expect the author to be enhanced with the correct profile picture
+        self.assert_author_enhanced(response["posts"])
+
+    def test_get_space_timeline_error_user_not_member(self):
+        """
+        expect: fail message because user is not member of the space
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # pull user from members
+        self.db.spaces.update_one(
+            {"name": self.test_space}, {"$pull": {"members": CURRENT_USER.username}}
+        )
+
+        response = self.base_checks(
+            "GET", "/timeline/space/{}".format(self.test_space), False, 409
+        )
+        self.assertEqual(response["reason"], USER_NOT_MEMBER_ERROR)
+
+    def test_get_space_timeline_error_insufficient_permission(self):
+        """
+        expect: fail message because user has no permission to read the timeline
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # revoke permission to view the timeline
+        self.db.space_acl.update_one(
+            {"space": self.test_space, "role": self.test_roles[CURRENT_USER.username]},
+            {"$set": {"read_timeline": False}},
+        )
+
+        response = self.base_checks(
+            "GET", "/timeline/space/{}".format(self.test_space), False, 403
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_get_user_timeline(self):
+        """
+        expect: only 2 posts (those where requested user is the author)
+        """
+
+        response = self.base_checks(
+            "GET", "/timeline/user/{}".format(CURRENT_USER.username), True, 200
+        )
+        self.assertIn("posts", response)
+
+        # expect only the posts in spaces to be in the response
+        self.assertEqual(len(response["posts"]), 2)
+
+        # expect the author to be enhanced with the correct profile picture
+        self.assert_author_enhanced(response["posts"])
+
+    def test_get_personal_timeline_not_following_not_space_member(self):
+        """
+        expect: only 2 posts (own ones)
+        """
+        print("expect 2, not follow not member")
+        # pull user from space
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {
+                    "members": CURRENT_ADMIN.username,
+                    "admins": CURRENT_ADMIN.username,
+                }
+            },
+        )
+
+        response = self.base_checks("GET", "/timeline/you", True, 200)
+        self.assertIn("posts", response)
+
+        # expect only the posts in spaces to be in the response
+        self.assertEqual(len(response["posts"]), 2)
+
+        # expect the author to be enhanced with the correct profile picture
+        self.assert_author_enhanced(response["posts"])
+
+        # expect only my own posts
+        for post in response["posts"]:
+            self.assertEqual(CURRENT_ADMIN.username, post["author"]["username"])
+
+    def test_get_personal_timeline_not_following_space_member(self):
+        """
+        expect: 3 posts (own ones and the one in space from other user)
+        """
+        print("expect 3, not follow member")
+        response = self.base_checks("GET", "/timeline/you", True, 200)
+        self.assertIn("posts", response)
+
+        # expect only the posts in spaces to be in the response
+        self.assertEqual(len(response["posts"]), 3)
+
+        # expect the author to be enhanced with the correct profile picture
+        self.assert_author_enhanced(response["posts"])
+
+        # expect only my own posts and the one from the other user that is in space
+        ids = [ObjectId(post["_id"]) for post in response["posts"]]
+        self.assertEqual(
+            sorted(ids),
+            sorted([self.post_oids[0], self.post_oids[1], self.post_oids[2]]),
+        )
+
+    def test_get_personal_timeline_following_not_space_member(self):
+        """
+        expect: 3 posts (own ones and the one not in space from other user)
+        """
+        print("expect 3, follow not member")
+        # follow other user
+        self.db.follows.insert_one(
+            {"user": CURRENT_ADMIN.username, "follows": [CURRENT_USER.username]}
+        )
+
+        # pull user from space
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {
+                    "members": CURRENT_ADMIN.username,
+                    "admins": CURRENT_ADMIN.username,
+                }
+            },
+        )
+
+        response = self.base_checks("GET", "/timeline/you", True, 200)
+        self.assertIn("posts", response)
+
+        # expect only the posts in spaces to be in the response
+        self.assertEqual(len(response["posts"]), 3)
+
+        # expect the author to be enhanced with the correct profile picture
+        self.assert_author_enhanced(response["posts"])
+
+        # expect only my own posts and the one from the other user that is in space
+        ids = [ObjectId(post["_id"]) for post in response["posts"]]
+        self.assertEqual(
+            sorted(ids),
+            sorted([self.post_oids[0], self.post_oids[1], self.post_oids[3]]),
+        )
+
+    def test_get_personal_timeline_follow_space_member(self):
+        """
+        expect: all 4 posts
+        """
+        print("expect 4, follow member")
+        # follow other user
+        self.db.follows.insert_one(
+            {"user": CURRENT_ADMIN.username, "follows": [CURRENT_USER.username]}
+        )
+
+        response = self.base_checks("GET", "/timeline/you", True, 200)
+        self.assertIn("posts", response)
+
+        # expect only the posts in spaces to be in the response
+        self.assertEqual(len(response["posts"]), 4)
+
+        # expect the author to be enhanced with the correct profile picture
+        self.assert_author_enhanced(response["posts"])
