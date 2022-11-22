@@ -451,7 +451,6 @@ class PersonalTimelineHandler(BaseTimelineHandler):
             ]
         )
 
-        # TODO profile pic can also be added into the pipeline
         posts = self.add_profile_pic_to_author(self.json_serialize_posts(pipeline))
 
         self.set_status(200)

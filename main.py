@@ -44,10 +44,10 @@ define(
     help="path to config file, defaults to config.json",
 )
 define(
-    "build_text_index",
+    "build_indexes",
     default=False,
     type=bool,
-    help="force the application to (re)build the text index for full text search",
+    help="force the application to (re)build the indexes for full text search and query optimization. Warning: this might take a long time depending on your database size",
 )
 
 # never start app in test mode, only needed for unit tests
@@ -63,6 +63,8 @@ define(
     type=bool,
     help="start application in test mode (bypass authentication) as a user. never run the app in this mode, it is purely for unit tests!",
 )
+
+# TODO init parameter to create inital admin user in acl --> then we can get rid of platform mocking
 
 
 def make_app(cookie_secret):
@@ -115,9 +117,10 @@ def make_app(cookie_secret):
     )
 
 
-def init_text_indexes(force_rebuild: bool) -> None:
+def init_indexes(force_rebuild: bool) -> None:
     """
-    build the text indexes for posts and profiles.
+    build the indexes for posts and profiles (for searching)
+    and spaces, posts and follows (for faster lookups).
     the weights of the fields are left default (1).
     indexes will be build if a) they don't exist or b) if rebuild is forced by setting force_rebuild to True)
 
@@ -132,7 +135,7 @@ def init_text_indexes(force_rebuild: bool) -> None:
     )
     db = client[global_vars.mongodb_db_name]
 
-    # only build the index if they are either not present or we forced a rebuild
+    # full text search index on posts
     if "posts" not in db.posts.index_information() or force_rebuild:
         try:
             db.posts.drop_index("posts")
@@ -146,6 +149,20 @@ def init_text_indexes(force_rebuild: bool) -> None:
             "Built text index named {} on collection {}".format("posts", "posts")
         )
 
+    # ascending index on "creation_date" in posts
+    if "posts_creation_date" not in db.posts.index_information() or force_rebuild:
+        try:
+            db.posts.drop_index("posts_creation_date")
+        except pymongo.errors.OperationFailure:
+            pass
+        db.posts.create_index("creation_date", name="posts_creation_date")
+        logger.info(
+            "Built text index named {} on collection {}".format(
+                "posts_creation_date", "posts"
+            )
+        )
+
+    # full text search index on profiles
     if "profiles" not in db.profiles.index_information() or force_rebuild:
         try:
             db.profiles.drop_index("profiles")
@@ -169,6 +186,39 @@ def init_text_indexes(force_rebuild: bool) -> None:
         )
         logger.info(
             "Built text index named {} on collection {}".format("profiles", "profiles")
+        )
+
+    # ascending index on "user" field in follows
+    if "follows_user" not in db.follows.index_information() or force_rebuild:
+        try:
+            db.follows.drop_index("follows_user")
+        except pymongo.errors.OperationFailure:
+            pass
+        db.follows.create_index("user", name="follows_user")
+        logger.info(
+            "Built index named {} on collection {}".format("follows_user", "follows")
+        )
+
+    # ascending index on "name" field in spaces
+    if "space_name" not in db.spaces.index_information() or force_rebuild:
+        try:
+            db.spaces.drop_index("space_name")
+        except pymongo.errors.OperationFailure:
+            pass
+        db.spaces.create_index("name", name="space_name")
+        logger.info(
+            "Built index named {} on collection {}".format("space_name", "spaces")
+        )
+
+    # ascending index on "user" field in follows
+    if "follows_user" not in db.follows.index_information() or force_rebuild:
+        try:
+            db.follows.drop_index("follows_user")
+        except pymongo.errors.OperationFailure:
+            pass
+        db.follows.create_index("user", name="follows_user")
+        logger.info(
+            "Built index named {} on collection {}".format("follows_user", "follows")
         )
 
 
@@ -262,7 +312,7 @@ async def main():
     server.listen(global_vars.port)
 
     # setup text indexes for searching
-    init_text_indexes(options.build_text_index)
+    init_indexes(options.build_indexes)
 
     shutdown_event = tornado.locks.Event()
     await shutdown_event.wait()
