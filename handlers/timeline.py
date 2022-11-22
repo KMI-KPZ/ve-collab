@@ -479,21 +479,21 @@ class NewPostsSinceTimestampHandler(BaseHandler):
         )
         timestamp = dateutil.parser.parse(timestamp)
 
-        # TODO refine query: check only the valid posts for the current user (i.e. the spaces he's in, users he is following)
         new_posts_count = self.db.posts.count_documents(
-            filter={"creation_date": {"$gte": timestamp}}
+            {"creation_date": {"$gte": timestamp}}
         )
 
-        if (
-            new_posts_count != 0
-        ):  # new posts since timestamp, user has to query the timeline handlers
-            self.set_status(200)
-            self.write(
-                {
-                    "success": True,
-                    "new_posts": True,
-                    "since_timestamp": timestamp.isoformat(),
-                }
-            )
-        else:  # no new posts since timestamp, return 304 not changed
+        # no new posts happened since the requested timestamp, reply with 304 Not Modified
+        if new_posts_count == 0:
             self.set_status(304)
+            return
+
+        # new posts since timestamp, user should query the timeline handlers
+        self.set_status(200)
+        self.write(
+            {
+                "success": True,
+                "new_posts": True,
+                "since_timestamp": timestamp.isoformat(),
+            }
+        )

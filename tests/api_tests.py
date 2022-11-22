@@ -5315,7 +5315,7 @@ class TimelineHandlerTest(BaseApiTestCase):
                         "pinned": False,
                     }
                 ],
-                "likers": []
+                "likers": [],
             },
             {
                 "_id": self.post_oids[1],
@@ -5328,7 +5328,7 @@ class TimelineHandlerTest(BaseApiTestCase):
                 "tags": [],
                 "files": [],
                 "comments": [],
-                "likers": []
+                "likers": [],
             },
             {
                 "_id": self.post_oids[2],
@@ -5341,7 +5341,7 @@ class TimelineHandlerTest(BaseApiTestCase):
                 "tags": [],
                 "files": [],
                 "comments": [],
-                "likers": []
+                "likers": [],
             },
             {
                 "_id": self.post_oids[3],
@@ -5354,7 +5354,7 @@ class TimelineHandlerTest(BaseApiTestCase):
                 "tags": [],
                 "files": [],
                 "comments": [],
-                "likers": []
+                "likers": [],
             },
         ]
         self.db.posts.insert_many(self.posts)
@@ -5502,7 +5502,7 @@ class TimelineHandlerTest(BaseApiTestCase):
         """
         expect: only 2 posts (own ones)
         """
-        print("expect 2, not follow not member")
+
         # pull user from space
         self.db.spaces.update_one(
             {"name": self.test_space},
@@ -5531,7 +5531,7 @@ class TimelineHandlerTest(BaseApiTestCase):
         """
         expect: 3 posts (own ones and the one in space from other user)
         """
-        print("expect 3, not follow member")
+
         response = self.base_checks("GET", "/timeline/you", True, 200)
         self.assertIn("posts", response)
 
@@ -5552,7 +5552,7 @@ class TimelineHandlerTest(BaseApiTestCase):
         """
         expect: 3 posts (own ones and the one not in space from other user)
         """
-        print("expect 3, follow not member")
+
         # follow other user
         self.db.follows.insert_one(
             {"user": CURRENT_ADMIN.username, "follows": [CURRENT_USER.username]}
@@ -5589,7 +5589,7 @@ class TimelineHandlerTest(BaseApiTestCase):
         """
         expect: all 4 posts
         """
-        print("expect 4, follow member")
+
         # follow other user
         self.db.follows.insert_one(
             {"user": CURRENT_ADMIN.username, "follows": [CURRENT_USER.username]}
@@ -5603,3 +5603,46 @@ class TimelineHandlerTest(BaseApiTestCase):
 
         # expect the author to be enhanced with the correct profile picture
         self.assert_author_enhanced(response["posts"])
+
+    def test_get_new_posts(self):
+        """
+        expect: handler replies that there were new posts
+        """
+
+        # query for new posts in the last 30 minutes
+        # plenty of time, since setup happens right before the test
+        timestamp = (
+            datetime.datetime.utcnow() - datetime.timedelta(minutes=30)
+        ).isoformat()
+
+        response = self.base_checks(
+            "GET", "/updates?from={}".format(timestamp), True, 200
+        )
+        self.assertIn("new_posts", response)
+        self.assertTrue(response["new_posts"])
+
+        self.assertIn("since_timestamp", response)
+        self.assertEqual(response["since_timestamp"], timestamp)
+
+    def test_get_new_posts_no_posts(self):
+        """
+        expect: 304 reply since there are no new posts
+        """
+
+        # set the creation dates of posts 10 days into the past
+        self.db.posts.update_many(
+            {},
+            {
+                "$set": {
+                    "creation_date": (
+                        datetime.datetime.utcnow() - datetime.timedelta(days=10)
+                    ).isoformat()
+                }
+            },
+        )
+
+        # cannot use the base checks here because 304 doesnt allow sending a response body
+        response = self.fetch("/updates", method="GET", allow_nonstandard_methods=True)
+
+        # match expected response code
+        self.assertEqual(response.code, 304)
