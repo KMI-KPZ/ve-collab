@@ -27,7 +27,7 @@ class LoginHandler(tornado.web.RequestHandler, metaclass=ABCMeta):
         self.redirect(url)
 
 
-class LoginCallbackHandler(tornado.web.RequestHandler, metaclass=ABCMeta):
+class LoginCallbackHandler(BaseHandler, metaclass=ABCMeta):
     @log_access
     async def get(self):
         # keycloak redirects you back here with this code
@@ -46,9 +46,32 @@ class LoginCallbackHandler(tornado.web.RequestHandler, metaclass=ABCMeta):
         )
         print(token)
 
-        # get user info, (not really necessary here though)
+        # get user info
         userinfo = global_vars.keycloak.userinfo(token["access_token"])
         print(userinfo)
+
+        # ensure that a profile exists for the user
+        # if not, create one
+        profile = self.db.profiles.find_one({"user": userinfo["preferred_username"]})
+        if not profile:
+            self.db.profiles.insert_one(
+                {
+                    "user": userinfo[
+                        "preferred_username",
+                        "bio": None,
+                        "institution": None,
+                        "projects": None,
+                        "profile_pic": "default_profile_pic.jpg",
+                        "first_name": userinfo["given_name"],
+                        "last_name": userinfo["family_name"],
+                        "gender": None,
+                        "address": None,
+                        "birthday": None,
+                        "experience": None,
+                        "education": None,
+                    ]
+                }
+            )
 
         # dump token dict to str and store it in a secure cookie (BaseHandler will decode it later to validate a user is logged in)
         self.set_secure_cookie("access_token", json.dumps(token))
