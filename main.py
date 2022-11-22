@@ -49,6 +49,12 @@ define(
     type=bool,
     help="force the application to (re)build the indexes for full text search and query optimization. Warning: this might take a long time depending on your database size",
 )
+define(
+    "create_admin",
+    default="admin",
+    type=str,
+    help="Create an initial admin user with this username in the ACL",
+)
 
 # never start app in test mode, only needed for unit tests
 define(
@@ -63,8 +69,6 @@ define(
     type=bool,
     help="start application in test mode (bypass authentication) as a user. never run the app in this mode, it is purely for unit tests!",
 )
-
-# TODO init parameter to create inital admin user in acl --> then we can get rid of platform mocking
 
 
 def make_app(cookie_secret):
@@ -127,105 +131,174 @@ def init_indexes(force_rebuild: bool) -> None:
     :param force_rebuild: boolean switch to trigger a forced rebuild of the text indexes
     """
 
-    client = pymongo.MongoClient(
+    with pymongo.MongoClient(
         global_vars.mongodb_host,
         global_vars.mongodb_port,
         username=global_vars.mongodb_username,
         password=global_vars.mongodb_password,
-    )
-    db = client[global_vars.mongodb_db_name]
+    ) as client:
+        db = client[global_vars.mongodb_db_name]
 
-    # full text search index on posts
-    if "posts" not in db.posts.index_information() or force_rebuild:
-        try:
-            db.posts.drop_index("posts")
-        except pymongo.errors.OperationFailure:
-            pass
-        db.posts.create_index(
-            [("text", pymongo.TEXT), ("tags", pymongo.TEXT), ("files", pymongo.TEXT)],
-            name="posts",
-        )
-        logger.info(
-            "Built text index named {} on collection {}".format("posts", "posts")
-        )
-
-    # ascending index on "creation_date" in posts
-    if "posts_creation_date" not in db.posts.index_information() or force_rebuild:
-        try:
-            db.posts.drop_index("posts_creation_date")
-        except pymongo.errors.OperationFailure:
-            pass
-        db.posts.create_index("creation_date", name="posts_creation_date")
-        logger.info(
-            "Built text index named {} on collection {}".format(
-                "posts_creation_date", "posts"
+        # full text search index on posts
+        if "posts" not in db.posts.index_information() or force_rebuild:
+            try:
+                db.posts.drop_index("posts")
+            except pymongo.errors.OperationFailure:
+                pass
+            db.posts.create_index(
+                [
+                    ("text", pymongo.TEXT),
+                    ("tags", pymongo.TEXT),
+                    ("files", pymongo.TEXT),
+                ],
+                name="posts",
             )
-        )
+            logger.info(
+                "Built text index named {} on collection {}".format("posts", "posts")
+            )
 
-    # full text search index on profiles
-    if "profiles" not in db.profiles.index_information() or force_rebuild:
-        try:
-            db.profiles.drop_index("profiles")
-        except pymongo.errors.OperationFailure:
-            pass
-        db.profiles.create_index(
-            [
-                ("bio", pymongo.TEXT),
-                ("institution", pymongo.TEXT),
-                ("projects", pymongo.TEXT),
-                ("first_name", pymongo.TEXT),
-                ("last_name", pymongo.TEXT),
-                ("gender", pymongo.TEXT),
-                ("address", pymongo.TEXT),
-                ("birthday", pymongo.TEXT),
-                ("experience", pymongo.TEXT),
-                ("education", pymongo.TEXT),
-                ("user", pymongo.TEXT),
-            ],
-            name="profiles",
-        )
+        # ascending index on "creation_date" in posts
+        if "posts_creation_date" not in db.posts.index_information() or force_rebuild:
+            try:
+                db.posts.drop_index("posts_creation_date")
+            except pymongo.errors.OperationFailure:
+                pass
+            db.posts.create_index("creation_date", name="posts_creation_date")
+            logger.info(
+                "Built text index named {} on collection {}".format(
+                    "posts_creation_date", "posts"
+                )
+            )
+
+        # full text search index on profiles
+        if "profiles" not in db.profiles.index_information() or force_rebuild:
+            try:
+                db.profiles.drop_index("profiles")
+            except pymongo.errors.OperationFailure:
+                pass
+            db.profiles.create_index(
+                [
+                    ("bio", pymongo.TEXT),
+                    ("institution", pymongo.TEXT),
+                    ("projects", pymongo.TEXT),
+                    ("first_name", pymongo.TEXT),
+                    ("last_name", pymongo.TEXT),
+                    ("gender", pymongo.TEXT),
+                    ("address", pymongo.TEXT),
+                    ("birthday", pymongo.TEXT),
+                    ("experience", pymongo.TEXT),
+                    ("education", pymongo.TEXT),
+                    ("user", pymongo.TEXT),
+                ],
+                name="profiles",
+            )
+            logger.info(
+                "Built text index named {} on collection {}".format(
+                    "profiles", "profiles"
+                )
+            )
+
+        # ascending index on "user" field in follows
+        if "follows_user" not in db.follows.index_information() or force_rebuild:
+            try:
+                db.follows.drop_index("follows_user")
+            except pymongo.errors.OperationFailure:
+                pass
+            db.follows.create_index("user", name="follows_user")
+            logger.info(
+                "Built index named {} on collection {}".format(
+                    "follows_user", "follows"
+                )
+            )
+
+        # ascending index on "name" field in spaces
+        if "space_name" not in db.spaces.index_information() or force_rebuild:
+            try:
+                db.spaces.drop_index("space_name")
+            except pymongo.errors.OperationFailure:
+                pass
+            db.spaces.create_index("name", name="space_name")
+            logger.info(
+                "Built index named {} on collection {}".format("space_name", "spaces")
+            )
+
+        # ascending index on "user" field in follows
+        if "follows_user" not in db.follows.index_information() or force_rebuild:
+            try:
+                db.follows.drop_index("follows_user")
+            except pymongo.errors.OperationFailure:
+                pass
+            db.follows.create_index("user", name="follows_user")
+            logger.info(
+                "Built index named {} on collection {}".format(
+                    "follows_user", "follows"
+                )
+            )
+
+
+def create_initial_admin(username: str) -> None:
+    """
+    create an initial admin with the given username
+    """
+
+    with pymongo.MongoClient(
+        global_vars.mongodb_host,
+        global_vars.mongodb_port,
+        username=global_vars.mongodb_username,
+        password=global_vars.mongodb_password,
+    ) as client:
+        db = client[global_vars.mongodb_db_name]
+
+        # check if the user already has a non-admin role and issue a warning
+        # about elevated permissions if so
+        existing = db.roles.find_one({"username": username})
+        if existing:
+            if existing["role"] != "admin":
+                logger.warning(
+                    """
+                    The user already exists with a non-admin role.
+                    If you really wish to elevate his/her role, remove the corresponding
+                    entry from the roles collection manually and restart.
+                    For now, this operation is ignored. 
+                    """
+                )
+            return
+
+        # user + admin-role combination didnt exist, create it
+        db.roles.insert_one({"username": username, "role": "admin"})
+
+        # also insert admin acl rules
+        with ACL() as acl:
+            acl.global_acl.insert_admin()
+
+            existing_spaces = list(db.spaces.find({}))
+            if existing_spaces:
+                for space in existing_spaces:
+                    acl.space_acl.insert_admin(space["name"])
+
         logger.info(
-            "Built text index named {} on collection {}".format("profiles", "profiles")
-        )
-
-    # ascending index on "user" field in follows
-    if "follows_user" not in db.follows.index_information() or force_rebuild:
-        try:
-            db.follows.drop_index("follows_user")
-        except pymongo.errors.OperationFailure:
-            pass
-        db.follows.create_index("user", name="follows_user")
-        logger.info(
-            "Built index named {} on collection {}".format("follows_user", "follows")
-        )
-
-    # ascending index on "name" field in spaces
-    if "space_name" not in db.spaces.index_information() or force_rebuild:
-        try:
-            db.spaces.drop_index("space_name")
-        except pymongo.errors.OperationFailure:
-            pass
-        db.spaces.create_index("name", name="space_name")
-        logger.info(
-            "Built index named {} on collection {}".format("space_name", "spaces")
-        )
-
-    # ascending index on "user" field in follows
-    if "follows_user" not in db.follows.index_information() or force_rebuild:
-        try:
-            db.follows.drop_index("follows_user")
-        except pymongo.errors.OperationFailure:
-            pass
-        db.follows.create_index("user", name="follows_user")
-        logger.info(
-            "Built index named {} on collection {}".format("follows_user", "follows")
+            "inserted admin user '{}' and corresponding ACL rules".format(username)
         )
 
 
-async def main():
-    parse_command_line()
-    with open(options.config, "r") as fp:
-        conf = json.load(fp)
+def init_uploads_directory() -> None:
+    """
+    create the uploads directory if it does not already exist
+    and add the default_profile_pic.jpg into it
+    """
+
+    if not os.path.isdir(global_vars.upload_direcory):
+        os.mkdir(global_vars.upload_direcory)
+    if not os.path.isfile(
+        os.path.join(global_vars.upload_direcory, "default_profile_pic.jpg")
+    ):
+        shutil.copy2("assets/default_profile_pic.jpg", global_vars.upload_direcory)
+
+
+def set_global_vars(conf: dict) -> None:
+    """
+    setup global_vars from config properties
+    """
 
     # assure config contains expected keys
     expected_config_keys = [
@@ -280,29 +353,23 @@ async def main():
     global_vars.keycloak_client_id = conf["keycloak_client_id"]
     global_vars.keycloak_callback_url = conf["keycloak_callback_url"]
 
-    # set up uploads directory and default profile pic,
-    # if it does not already exist
-    if not os.path.isdir(global_vars.upload_direcory):
-        os.mkdir(global_vars.upload_direcory)
-    if not os.path.isfile(global_vars.upload_direcory + "default_profile_pic.jpg"):
-        shutil.copy2("assets/default_profile_pic.jpg", global_vars.upload_direcory)
 
-    # insert default role and acl templates if db is empty
-    with ACL() as acl:
-        existing_roles = acl.global_acl.db.roles.find_one({})
-        if not existing_roles:
-            with open("DummyData/role_templates.json", "r") as fp:
-                role_templates = json.load(fp)
-            for role in role_templates["roles"]:
-                acl.global_acl.db.roles.insert_one(
-                    {"username": role["username"], "role": role["role"]}
-                )
+async def main():
+    parse_command_line()
 
-        if not acl.global_acl.get_all():
-            with open("DummyData/acl_templates.json", "r") as fp:
-                acl_templates = json.load(fp)
-            for entry in acl_templates["global_acl"]:
-                acl.global_acl.set_all(entry)
+    # setup global vars from config
+    with open(options.config, "r") as fp:
+        conf = json.load(fp)
+        set_global_vars(conf)
+
+    # setup uploads directory
+    init_uploads_directory()
+
+    # insert default admin role and acl templates
+    create_initial_admin(options.create_admin)
+
+    # setup text indexes for searching
+    init_indexes(options.build_indexes)
 
     # build and start server
     cookie_secret = conf["cookie_secret"]
@@ -310,9 +377,6 @@ async def main():
     server = tornado.httpserver.HTTPServer(app)
     logger.info("Starting server on port: " + str(global_vars.port))
     server.listen(global_vars.port)
-
-    # setup text indexes for searching
-    init_indexes(options.build_indexes)
 
     shutdown_event = tornado.locks.Event()
     await shutdown_event.wait()
