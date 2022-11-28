@@ -200,6 +200,19 @@ def init_indexes(force_rebuild: bool) -> None:
                 )
             )
 
+        # ascending index on "username" field in profiles
+        if "profiles_username" not in db.profiles.index_information() or force_rebuild:
+            try:
+                db.profiles.drop_index("profiles_username")
+            except pymongo.errors.OperationFailure:
+                pass
+            db.profiles.create_index("username", name="profiles_username")
+            logger.info(
+                "Built index named {} on collection {}".format(
+                    "profiles_username", "profiles"
+                )
+            )
+
         # ascending index on "user" field in follows
         if "follows_user" not in db.follows.index_information() or force_rebuild:
             try:
@@ -253,21 +266,38 @@ def create_initial_admin(username: str) -> None:
 
         # check if the user already has a non-admin role and issue a warning
         # about elevated permissions if so
-        existing = db.roles.find_one({"username": username})
+        existing = db.profiles.find_one({"username": username})
         if existing:
             if existing["role"] != "admin":
                 logger.warning(
                     """
                     The user already exists with a non-admin role.
                     If you really wish to elevate his/her role, remove the corresponding
-                    entry from the roles collection manually and restart.
+                    entry from the profiles collection manually and restart (warning: loss of profile data)
+                    or simply set the value manually in a mongoshell.
                     For now, this operation is ignored. 
                     """
                 )
             return
 
         # user + admin-role combination didnt exist, create it
-        db.roles.insert_one({"username": username, "role": "admin"})
+        db.profiles.insert_one(
+            {
+                "username": username,
+                "role": "admin",
+                "bio": None,
+                "institution": None,
+                "projects": None,
+                "profile_pic": "default_profile_pic.jpg",
+                "first_name": None,
+                "last_name": None,
+                "gender": None,
+                "address": None,
+                "birthday": None,
+                "experience": None,
+                "education": None,
+            }
+        )
 
         # also insert admin acl rules
         with ACL() as acl:

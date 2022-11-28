@@ -32,7 +32,7 @@ class RoleHandler(BaseHandler):
             request the role of the current user
         """
         if slug == "my":
-            role_result = self.db.roles.find_one(
+            role_result = self.db.profiles.find_one(
                 {"username": self.current_user.username}
             )
 
@@ -47,8 +47,22 @@ class RoleHandler(BaseHandler):
                 )
             else:
                 # no record for this user was found, insert as guest (default role)
-                self.db.roles.insert_one(
-                    {"username": self.current_user.username, "role": "guest"}
+                self.db.profiles.insert_one(
+                    {
+                        "username": self.current_user.username,
+                        "role": "guest",
+                        "bio": None,
+                        "institution": None,
+                        "projects": None,
+                        "profile_pic": "default_profile_pic.jpg",
+                        "first_name": None,
+                        "last_name": None,
+                        "gender": None,
+                        "address": None,
+                        "birthday": None,
+                        "experience": None,
+                        "education": None,
+                    }
                 )
                 self._create_acl_entry_if_not_exists("guest")
 
@@ -66,8 +80,11 @@ class RoleHandler(BaseHandler):
             if self.is_current_user_lionet_admin():
                 ret_list = []
                 user_list_kc = self.get_keycloak_user_list()
-                existin_users_and_roles = self.db.roles.find(projection={"_id": False})
-                existing_users_and_roles = [item for item in existin_users_and_roles]
+                existing_users_and_roles = list(
+                    self.db.profiles.find(
+                        projection={"_id": False, "username": True, "role": True}
+                    )
+                )
 
                 # match the platform users and if they have, existing lionet roles
                 for platform_user in user_list_kc:
@@ -84,8 +101,19 @@ class RoleHandler(BaseHandler):
                     payload = {
                         "username": platform_user["username"],
                         "role": "guest",
+                        "bio": None,
+                        "institution": None,
+                        "projects": None,
+                        "profile_pic": "default_profile_pic.jpg",
+                        "first_name": None,
+                        "last_name": None,
+                        "gender": None,
+                        "address": None,
+                        "birthday": None,
+                        "experience": None,
+                        "education": None,
                     }
-                    self.db.roles.insert_one(payload)
+                    self.db.profiles.insert_one(payload)
 
                     # manually create return entry
                     # because otherwise non-json-serializable ObjectId is in payload
@@ -117,7 +145,7 @@ class RoleHandler(BaseHandler):
 
         elif slug == "distinct":
             if self.is_current_user_lionet_admin():
-                roles = self.db.roles.distinct("role")
+                roles = self.db.profiles.distinct("role")
                 self.set_status(200)
                 self.write({"success": True, "existing_roles": roles})
 
@@ -207,10 +235,8 @@ class RoleHandler(BaseHandler):
                 username = http_body["username"]
                 role = http_body["role"]
 
-                self.db.roles.update_one(
-                    {"username": username},
-                    {"$set": {"username": username, "role": role}},
-                    upsert=True,
+                self.db.profiles.update_one(
+                    {"username": username}, {"$set": {"role": role}}
                 )
 
                 self._create_acl_entry_if_not_exists(role)
@@ -312,7 +338,7 @@ class GlobalACLHandler(BaseHandler):
                 entries = []
                 with ACL() as acl:
                     # solve inconsistency problem of role existing but no acl_entry: whenever there is a role that has no acl_entry, create a default one
-                    distinct_roles = self.db.roles.distinct("role")
+                    distinct_roles = self.db.profiles.distinct("role")
                     for role in distinct_roles:
                         if role not in [
                             entry["role"] for entry in acl.global_acl.get_all()
@@ -405,7 +431,7 @@ class GlobalACLHandler(BaseHandler):
                         return
 
                     # reject setting an entry of a role that does not exist to prevent dangling entries
-                    if not self.db.roles.find_one({"role": http_body["role"]}):
+                    if not self.db.profiles.find_one({"role": http_body["role"]}):
                         self.set_status(409)
                         self.write(
                             {
@@ -692,7 +718,7 @@ class SpaceACLHandler(BaseHandler):
                         return
 
                 # reject setting an entry of a role that does not exist to prevent dangling entries
-                if not self.db.roles.find_one({"role": http_body["role"]}):
+                if not self.db.profiles.find_one({"role": http_body["role"]}):
                     self.set_status(409)
                     self.write(
                         {"status": 409, "success": False, "reason": "role_doesnt_exist"}

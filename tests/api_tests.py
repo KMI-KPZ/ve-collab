@@ -106,7 +106,6 @@ def tearDownModule():
         db.drop_collection("spaces")
         db.drop_collection("profiles")
         db.drop_collection("follows")
-        db.drop_collection("roles")
         db.drop_collection("global_acl")
         db.drop_collection("space_acl")
 
@@ -207,6 +206,40 @@ class BaseApiTestCase(AsyncHTTPTestCase):
             CURRENT_ADMIN.username: "admin",
             CURRENT_USER.username: "user",
         }
+
+        self.test_profiles = {
+            CURRENT_ADMIN.username: {
+                "username": CURRENT_ADMIN.username,
+                "role": self.test_roles[CURRENT_ADMIN.username],
+                "bio": None,
+                "institution": None,
+                "projects": None,
+                "profile_pic": "default_profile_pic.jpg",
+                "first_name": None,
+                "last_name": None,
+                "gender": None,
+                "address": None,
+                "birthday": None,
+                "experience": None,
+                "education": None,
+            },
+            CURRENT_USER.username: {
+                "username": CURRENT_USER.username,
+                "role": self.test_roles[CURRENT_USER.username],
+                "bio": None,
+                "institution": None,
+                "projects": None,
+                "profile_pic": "default_profile_pic.jpg",
+                "first_name": None,
+                "last_name": None,
+                "gender": None,
+                "address": None,
+                "birthday": None,
+                "experience": None,
+                "education": None,
+            },
+        }
+
         self.test_global_acl_rules = {
             CURRENT_ADMIN.username: {
                 "role": self.test_roles[CURRENT_ADMIN.username],
@@ -255,8 +288,8 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                 "requests": [],
             }
         )
-        self.db.roles.insert_many(
-            [{"username": key, "role": value} for key, value in self.test_roles.items()]
+        self.db.profiles.insert_many(
+            [value.copy() for value in self.test_profiles.values()]
         )
         # pymongo modifies parameters in place (adds _id fields), like WHAT THE FUCK!? anyway, thats why we give it a copy...
         self.db.space_acl.insert_many(
@@ -268,7 +301,7 @@ class BaseApiTestCase(AsyncHTTPTestCase):
 
     def base_permission_environments_tearDown(self) -> None:
         # cleanup test data
-        self.db.roles.delete_many({})
+        self.db.profiles.delete_many({})
         self.db.global_acl.delete_many({})
         self.db.space_acl.delete_many({})
         self.db.spaces.delete_many({})
@@ -477,13 +510,46 @@ class RoleHandlerTest(BaseApiTestCase):
             CURRENT_ADMIN.username: "admin",
             CURRENT_USER.username: "user",
         }
-        self.db.roles.insert_many(
-            [{"username": key, "role": value} for key, value in self.test_roles.items()]
+
+        self.test_profiles = {
+            CURRENT_ADMIN.username: {
+                "username": CURRENT_ADMIN.username,
+                "role": self.test_roles[CURRENT_ADMIN.username],
+                "bio": None,
+                "institution": None,
+                "projects": None,
+                "profile_pic": "default_profile_pic.jpg",
+                "first_name": None,
+                "last_name": None,
+                "gender": None,
+                "address": None,
+                "birthday": None,
+                "experience": None,
+                "education": None,
+            },
+            CURRENT_USER.username: {
+                "username": CURRENT_USER.username,
+                "role": self.test_roles[CURRENT_USER.username],
+                "bio": None,
+                "institution": None,
+                "projects": None,
+                "profile_pic": "default_profile_pic.jpg",
+                "first_name": None,
+                "last_name": None,
+                "gender": None,
+                "address": None,
+                "birthday": None,
+                "experience": None,
+                "education": None,
+            },
+        }
+        self.db.profiles.insert_many(
+            [value.copy() for value in self.test_profiles.values()]
         )
 
     def tearDown(self) -> None:
         # cleanup test data
-        self.db.roles.delete_many({})
+        self.db.profiles.delete_many({})
         # since acl entries get created as a side effect, clean those as well
         self.db.global_acl.delete_many({})
         self.db.space_acl.delete_many({})
@@ -509,7 +575,7 @@ class RoleHandlerTest(BaseApiTestCase):
         """
 
         # gotta clean up first to see effect if no record is stored
-        self.db.roles.delete_many({})
+        self.db.profiles.delete_many({})
 
         response = self._get_my_role()
 
@@ -584,7 +650,7 @@ class RoleHandlerTest(BaseApiTestCase):
 
         self.base_checks("POST", "/role/update", True, 200, body=http_body)
 
-        db_state = self.db.roles.find_one({"username": CURRENT_USER.username})
+        db_state = self.db.profiles.find_one({"username": CURRENT_USER.username})
         self.assertIn("role", db_state)
         self.assertEqual(db_state["role"], updated_user_role)
 
@@ -637,13 +703,45 @@ class GlobalACLHandlerTest(BaseApiTestCase):
             CURRENT_ADMIN.username: "admin",
             CURRENT_USER.username: "user",
         }
+        self.test_profiles = {
+            CURRENT_ADMIN.username: {
+                "username": CURRENT_ADMIN.username,
+                "role": self.test_roles[CURRENT_ADMIN.username],
+                "bio": None,
+                "institution": None,
+                "projects": None,
+                "profile_pic": "default_profile_pic.jpg",
+                "first_name": None,
+                "last_name": None,
+                "gender": None,
+                "address": None,
+                "birthday": None,
+                "experience": None,
+                "education": None,
+            },
+            CURRENT_USER.username: {
+                "username": CURRENT_USER.username,
+                "role": self.test_roles[CURRENT_USER.username],
+                "bio": None,
+                "institution": None,
+                "projects": None,
+                "profile_pic": "default_profile_pic.jpg",
+                "first_name": None,
+                "last_name": None,
+                "gender": None,
+                "address": None,
+                "birthday": None,
+                "experience": None,
+                "education": None,
+            },
+        }
+        self.db.profiles.insert_many(
+            [value.copy() for value in self.test_profiles.values()]
+        )
         self.test_global_acl_rules = {
             CURRENT_ADMIN.username: {"role": "admin", "create_space": True},
             CURRENT_USER.username: {"role": "user", "create_space": False},
         }
-        self.db.roles.insert_many(
-            [{"username": key, "role": value} for key, value in self.test_roles.items()]
-        )
         # pymongo modifies parameters in place (adds _id fields), like WHAT THE FUCK!? anyway, thats why we give it a copy...
         self.db.global_acl.insert_many(
             [value.copy() for value in self.test_global_acl_rules.values()]
@@ -651,7 +749,7 @@ class GlobalACLHandlerTest(BaseApiTestCase):
 
     def tearDown(self) -> None:
         # cleanup test data
-        self.db.roles.delete_many({})
+        self.db.profiles.delete_many({})
         self.db.global_acl.delete_many({})
         super().tearDown()
 
@@ -672,7 +770,7 @@ class GlobalACLHandlerTest(BaseApiTestCase):
         expect: fail message because user has no role
         """
 
-        self.db.roles.delete_many({})
+        self.db.profiles.delete_many({})
 
         response = self.base_checks("GET", "/global_acl/get", False, 409)
 
@@ -798,6 +896,39 @@ class SpaceACLHandlerTest(BaseApiTestCase):
             CURRENT_ADMIN.username: "admin",
             CURRENT_USER.username: "user",
         }
+        self.test_profiles = {
+            CURRENT_ADMIN.username: {
+                "username": CURRENT_ADMIN.username,
+                "role": self.test_roles[CURRENT_ADMIN.username],
+                "bio": None,
+                "institution": None,
+                "projects": None,
+                "profile_pic": "default_profile_pic.jpg",
+                "first_name": None,
+                "last_name": None,
+                "gender": None,
+                "address": None,
+                "birthday": None,
+                "experience": None,
+                "education": None,
+            },
+            CURRENT_USER.username: {
+                "username": CURRENT_USER.username,
+                "role": self.test_roles[CURRENT_USER.username],
+                "bio": None,
+                "institution": None,
+                "projects": None,
+                "profile_pic": "default_profile_pic.jpg",
+                "first_name": None,
+                "last_name": None,
+                "gender": None,
+                "address": None,
+                "birthday": None,
+                "experience": None,
+                "education": None,
+            },
+        }
+
         self.test_space_acl_rules = {
             CURRENT_ADMIN.username: {
                 "role": "admin",
@@ -835,17 +966,17 @@ class SpaceACLHandlerTest(BaseApiTestCase):
                 "requests": [],
             }
         )
-        self.db.roles.insert_many(
-            [{"username": key, "role": value} for key, value in self.test_roles.items()]
-        )
         # pymongo modifies parameters in place (adds _id fields), like WHAT THE FUCK!? anyway, thats why we give it a copy...
         self.db.space_acl.insert_many(
             [value.copy() for value in self.test_space_acl_rules.values()]
         )
+        self.db.profiles.insert_many(
+            [value.copy() for value in self.test_profiles.values()]
+        )
 
     def tearDown(self) -> None:
         # cleanup test data
-        self.db.roles.delete_many({})
+        self.db.profiles.delete_many({})
         self.db.space_acl.delete_many({})
         self.db.spaces.delete_many({})
         super().tearDown()
@@ -897,7 +1028,7 @@ class SpaceACLHandlerTest(BaseApiTestCase):
         expect: fail message because user has no role
         """
 
-        self.db.roles.delete_many({})
+        self.db.profiles.delete_many({})
 
         response = self.base_checks(
             "GET", "/space_acl/get?space={}".format(self.test_space), False, 409
@@ -1156,7 +1287,7 @@ class RoleACLIntegrationTest(BaseApiTestCase):
         options.test_user = True
 
         # delete the role entry
-        self.db.roles.delete_one({"username": CURRENT_USER.username})
+        self.db.profiles.delete_one({"username": CURRENT_USER.username})
 
         role_response = self.base_checks("GET", "/role/my", True, 200)
 
@@ -1195,10 +1326,12 @@ class RoleACLIntegrationTest(BaseApiTestCase):
 
     def test_cleanup_unused_acl_rules(self):
         """
-        expect: removing all roles should cleanup the full acl according to the cleanup procedure removing any entries, that no longer have a matching role or space
+        expect: removing all roles should cleanup the full acl
+        according to the cleanup procedure removing any entries,
+        that no longer have a matching role or space
         """
 
-        self.db.roles.delete_many({})
+        self.db.profiles.delete_many({})
 
         with ACL() as acl_manager:
             acl_manager._cleanup_unused_rules()
@@ -3260,7 +3393,9 @@ class SearchHandlerTest(BaseApiTestCase):
         self.assertIn("tags", response)
 
         # expect our user to be in the search result
-        self.assertTrue(any("test_admin" in user["username"] for user in response["users"]))
+        self.assertTrue(
+            any("test_admin" in user["username"] for user in response["users"])
+        )
 
         # expect posts and tags search categories to be empty
         # because we excluded them
@@ -5276,21 +5411,11 @@ class TimelineHandlerTest(BaseApiTestCase):
         # setup basic environment of permissions
         self.base_permission_environment_setUp()
 
-        self.db.profiles.insert_one(
-            {
-                "username": CURRENT_ADMIN.username,
-                "bio": "test",
-                "institution": "test",
-                "projects": "test",
-                "profile_pic": "test",
-                "first_name": "test",
-                "last_name": "test",
-                "gender": "test",
-                "address": "test",
-                "birthday": "test",
-                "experience": "test",
-                "education": "test",
-            }
+        self.db.profiles.update_one(
+            {"username": CURRENT_ADMIN.username}, {"$set": {"profile_pic": "test"}}
+        )
+        self.db.profiles.update_one(
+            {"username": CURRENT_USER.username}, {"$set": {"profile_pic": "default_profile_pic.jpg"}}
         )
         # 4 test posts, one in space and one normal for admin and for user
         self.post_oids = [ObjectId(), ObjectId(), ObjectId(), ObjectId()]

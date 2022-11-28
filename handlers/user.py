@@ -52,17 +52,11 @@ class ProfileInformationHandler(BaseHandler):
         # get account information from keycloak
         keycloak_info = self.get_keycloak_user(username)
 
-        user_role = self.db.roles.find_one({"username": username})
-        if user_role:
-            # remove nesting from db response
-            user_role = user_role["role"]
-
         # add user data to response
         user_information_response = {
             "user_id": keycloak_info["id"],
             "username": username,
             "email": keycloak_info["email"],
-            "role": user_role,
         }
 
         # grab and add spaces
@@ -85,7 +79,31 @@ class ProfileInformationHandler(BaseHandler):
         profile = {}
         profile = self.db.profiles.find_one({"username": username})
         if profile:
+            role = profile["role"]
             del profile["_id"]
+            del profile["role"]
+        else:
+            # if for some reason no profile exists, create a default one
+            profile = {
+                "username": username,
+                "role": "guest",
+                "bio": None,
+                "institution": None,
+                "projects": None,
+                "profile_pic": "default_profile_pic.jpg",
+                "first_name": None,
+                "last_name": None,
+                "gender": None,
+                "address": None,
+                "birthday": None,
+                "experience": None,
+                "education": None,
+            }
+            self.db.profiles.insert_one(profile)
+            self._create_acl_entry_if_not_exists("guest")
+            role = "guest"
+            del profile["role"]
+        user_information_response["role"] = role
         user_information_response["profile"] = profile
 
         self.set_status(200)
@@ -172,7 +190,7 @@ class ProfileInformationHandler(BaseHandler):
                         "education": education,
                     }
                 },
-                upsert=True,
+                upsert=True, # TODO on upsert case also set profile "guest"
             )
         else:
             self.db.profiles.update_one(
@@ -191,7 +209,7 @@ class ProfileInformationHandler(BaseHandler):
                         "education": education,
                     }
                 },
-                upsert=True,
+                upsert=True, # TODO on upsert case also set profile "guest"
             )
 
         self.set_status(200)
@@ -204,7 +222,7 @@ class UserHandler(BaseHandler):
     """
 
     def get_user_role(self, username: str) -> Optional[str]:
-        user_role = self.db.roles.find_one({"username": username})
+        user_role = self.db.profiles.find_one({"username": username}, projection={"role": True})
         if user_role:
             return user_role["role"]
         else:
@@ -221,7 +239,7 @@ class UserHandler(BaseHandler):
         return [user["user"] for user in self.db.follows.find({"follows": username})]
 
     def get_profile_pic_of_user(self, username: str) -> str:
-        profile = self.db.profiles.find_one({"username": username})
+        profile = self.db.profiles.find_one({"username": username}, projection={"profile_pic": True})
         if profile:
             if "profile_pic" in profile:
                 return profile["profile_pic"]
@@ -264,25 +282,25 @@ class UserHandler(BaseHandler):
             # get account information from keycloak
             keycloak_info = self.get_keycloak_user(username)
 
-            user_role = self.get_user_role(username)
-
             # add user data to response
             user_information_response = {
                 "id": keycloak_info["id"],
                 "username": username,
                 "email": keycloak_info["email"],
-                "role": user_role,
             }
 
             # add full profile data to response
             profile = self.db.profiles.find_one(
-                {"username": username}, projection={"_id": False, "user": False}
+                {"username": username}, projection={"_id": False, "username": False}
             )
             if profile:
                 user_information_response["profile_pic"] = profile["profile_pic"]
+                user_information_response["role"] = profile["role"]
+                del profile["role"]
                 user_information_response["profile"] = profile
             else:
                 user_information_response["profile_pic"] = "default_profile_pic.jpg"
+                user_information_response["role"] = None
 
             # add users that the user follows
             user_information_response["follows"] = self.get_user_follows(username)

@@ -55,6 +55,7 @@ class LoginCallbackHandler(BaseHandler, metaclass=ABCMeta):
             self.db.profiles.insert_one(
                 {
                     "username": token_info["preferred_username"],
+                    "role": "guest",
                     "bio": None,
                     "institution": None,
                     "projects": None,
@@ -67,14 +68,6 @@ class LoginCallbackHandler(BaseHandler, metaclass=ABCMeta):
                     "experience": None,
                     "education": None,
                 }
-            )
-
-        # ensure that a role exists for the user
-        # if not, create default one
-        role = self.db.roles.find_one({"username": token_info["preferred_username"]})
-        if not role:
-            self.db.roles.insert_one(
-                {"username": token_info["preferred_username"], "role": "guest"}
             )
             self._create_acl_entry_if_not_exists("guest")
 

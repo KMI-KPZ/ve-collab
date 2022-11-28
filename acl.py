@@ -53,7 +53,7 @@ class ACL:
 
         with self:
             db = self.client[global_vars.mongodb_db_name]
-            currently_existing_roles = db.roles.distinct("role")
+            currently_existing_roles = db.profiles.distinct("role")
             currently_existing_spaces = db.spaces.distinct("name")
 
             # clean global acl (roles no longer exists)

@@ -142,14 +142,14 @@ class BaseHandler(tornado.web.RequestHandler):
         return posts
 
     def get_current_user_role(self):
-        if self.current_user:
-            current_user_role = self.db.roles.find_one(
-                {"username": self.current_user.username}
-            )
-            if current_user_role:
-                return current_user_role["role"]
-            else:
-                return None
+        if not self.current_user:
+            return None  # TODO could also raise exception?
+
+        current_user_role = self.db.profiles.find_one(
+            {"username": self.current_user.username}, projection={"role": True}
+        )
+        if current_user_role:
+            return current_user_role["role"]
         else:
             return None
 
@@ -161,13 +161,13 @@ class BaseHandler(tornado.web.RequestHandler):
             return {
                 "id": "aaaaaaaa-bbbb-0000-cccc-dddddddddddd",
                 "email": "test_admin@mail.de",
-                "username": "test_admin"
+                "username": "test_admin",
             }
         if options.test_user:
             return {
                 "id": "aaaaaaaa-bbbb-1111-cccc-dddddddddddd",
                 "email": "test_user@mail.de",
-                "username": "test_user"
+                "username": "test_user",
             }
 
         try:
@@ -238,11 +238,13 @@ class BaseHandler(tornado.web.RequestHandler):
         else:
             try:
                 # refresh the token to keycloak admin portal, because it might have timed out (resulting in the following requests not succeeding)
-                global_vars.keycloak_admin.refresh_token()  
+                global_vars.keycloak_admin.refresh_token()
                 return global_vars.keycloak_admin.get_users()
             except KeycloakError as e:
                 logger.info(
-                    "Keycloak Error occured while trying to request user data: {}".format(e)
+                    "Keycloak Error occured while trying to request user data: {}".format(
+                        e
+                    )
                 )
                 raise
 

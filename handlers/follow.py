@@ -35,22 +35,10 @@ class FollowHandler(BaseHandler):
             self.write({"status": 400, "success": False, "reason": "missing_key:user"})
             return
 
-        result = self.db.follows.find(
-            filter={"user": username}, projection={"_id": False}
-        )
-
-        follows = (
-            []
-        )  # need to instantiate it because if user follows nobody the iteration wont be run "follows" would get unassigned
-        for (
-            user
-        ) in (
-            result
-        ):  # even though there is only one item in result set we need to iterate because query returns a cursor instance
-            follows = user["follows"]
+        result = self.db.follows.find_one({"user": username})
 
         self.set_status(200)
-        self.write({"success": True, "user": username, "follows": follows})
+        self.write({"success": True, "user": username, "follows": result["follows"]})
 
     @log_access
     @auth_needed

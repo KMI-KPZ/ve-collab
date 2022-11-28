@@ -826,7 +826,7 @@ class SpaceHandler(BaseHandler):
         # create default acl entry for all different roles
         with ACL() as acl:
             acl.space_acl.insert_admin(space_name)
-            roles = self.db.roles.distinct("role")
+            roles = self.db.profiles.distinct("role")
             for role in roles:
                 if role != "admin":
                     acl.space_acl.insert_default(role, space_name)
