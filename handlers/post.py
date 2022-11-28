@@ -845,7 +845,7 @@ class RepostHandler(BaseHandler):
             # TODO move this profile stuff to requesting timeline
             # because saving this info to the post is useless since it is changeable
             # when requesting timeline, up to date info is grabbed from profiles collection
-            profile = self.db.profiles.find_one({"user": self.current_user.username})
+            profile = self.db.profiles.find_one({"username": self.current_user.username})
             if profile:
                 if "profile_pic" in profile:
                     post["repostAuthorProfilePic"] = profile["profile_pic"]

@@ -19,12 +19,11 @@ class ProfileInformationHandler(BaseHandler):
 
             returns:
                 200 OK
-                {user: {
-                    "user_id": <int>,
-                    "username": <string>,
-                    "email": <string>,
-                    "role": <string>
-                 },
+                {
+                 "user_id": <int>,
+                 "username": <string>,
+                 "email": <string>,
+                 "role": <string>,
                  "profile": {
                     "bio": <string>,
                     "institution": <string>,
@@ -46,9 +45,6 @@ class ProfileInformationHandler(BaseHandler):
                 {"status": 401,
                  "reason": "no_logged_in_user"}
         """
-
-        user_information_response = {}
-
         username = self.get_argument("username", None)
         if not username:
             username = self.current_user.username
@@ -62,7 +58,7 @@ class ProfileInformationHandler(BaseHandler):
             user_role = user_role["role"]
 
         # add user data to response
-        user_information_response["user"] = {
+        user_information_response = {
             "user_id": keycloak_info["id"],
             "username": username,
             "email": keycloak_info["email"],
@@ -87,7 +83,7 @@ class ProfileInformationHandler(BaseHandler):
 
         # grab and add profile details
         profile = {}
-        profile = self.db.profiles.find_one({"user": username})
+        profile = self.db.profiles.find_one({"username": username})
         if profile:
             del profile["_id"]
         user_information_response["profile"] = profile
@@ -160,7 +156,7 @@ class ProfileInformationHandler(BaseHandler):
 
         if new_file_name:
             self.db.profiles.update_one(
-                {"user": self.current_user.username},
+                {"username": self.current_user.username},
                 {
                     "$set": {
                         "bio": bio,
@@ -180,7 +176,7 @@ class ProfileInformationHandler(BaseHandler):
             )
         else:
             self.db.profiles.update_one(
-                {"user": self.current_user.username},
+                {"username": self.current_user.username},
                 {
                     "$set": {
                         "bio": bio,
@@ -225,7 +221,7 @@ class UserHandler(BaseHandler):
         return [user["user"] for user in self.db.follows.find({"follows": username})]
 
     def get_profile_pic_of_user(self, username: str) -> str:
-        profile = self.db.profiles.find_one({"user": username})
+        profile = self.db.profiles.find_one({"username": username})
         if profile:
             if "profile_pic" in profile:
                 return profile["profile_pic"]
@@ -280,7 +276,7 @@ class UserHandler(BaseHandler):
 
             # add full profile data to response
             profile = self.db.profiles.find_one(
-                {"user": username}, projection={"_id": False, "user": False}
+                {"username": username}, projection={"_id": False, "user": False}
             )
             if profile:
                 user_information_response["profile_pic"] = profile["profile_pic"]

@@ -54,7 +54,7 @@ class BaseTimelineHandler(BaseHandler):
             # we haven't yet requested the profile picture
             # query it from the db and save it in the cache for further iterations
             else:
-                profile = self.db.profiles.find_one({"user": author_name})
+                profile = self.db.profiles.find_one({"username": author_name})
                 pic_val = (
                     profile["profile_pic"] if profile else "default_profile_pic.jpg"
                 )
@@ -75,7 +75,7 @@ class BaseTimelineHandler(BaseHandler):
                         "profile_pic": pic_cache[comment_author_name],
                     }
                 else:
-                    profile = self.db.profiles.find_one({"user": comment_author_name})
+                    profile = self.db.profiles.find_one({"username": comment_author_name})
                     comment_pic_val = (
                         profile["profile_pic"] if profile else "default_profile_pic.jpg"
                     )

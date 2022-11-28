@@ -498,7 +498,6 @@ class RoleHandlerTest(BaseApiTestCase):
         """
 
         response = self._get_my_role()
-
         # expect returned role to be as in set up
         self.assertIn("role", response)
         self.assertEqual(response["role"], self.test_roles[CURRENT_ADMIN.username])
@@ -3181,7 +3180,7 @@ class SearchHandlerTest(BaseApiTestCase):
                 ("birthday", pymongo.TEXT),
                 ("experience", pymongo.TEXT),
                 ("education", pymongo.TEXT),
-                ("user", pymongo.TEXT),
+                ("username", pymongo.TEXT),
             ],
             name="profiles",
         )
@@ -3191,7 +3190,7 @@ class SearchHandlerTest(BaseApiTestCase):
 
         self.db.profiles.insert_one(
             {
-                "user": CURRENT_ADMIN.username,
+                "username": CURRENT_ADMIN.username,
                 "bio": "test",
                 "institution": "test",
                 "projects": "test",
@@ -3261,7 +3260,7 @@ class SearchHandlerTest(BaseApiTestCase):
         self.assertIn("tags", response)
 
         # expect our user to be in the search result
-        self.assertTrue(any("test_admin" in user["user"] for user in response["users"]))
+        self.assertTrue(any("test_admin" in user["username"] for user in response["users"]))
 
         # expect posts and tags search categories to be empty
         # because we excluded them
@@ -3373,7 +3372,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.db.profiles.insert_one(
             {
-                "user": CURRENT_ADMIN.username,
+                "username": CURRENT_ADMIN.username,
                 "bio": "test",
                 "institution": "test",
                 "projects": "test",
@@ -5279,7 +5278,7 @@ class TimelineHandlerTest(BaseApiTestCase):
 
         self.db.profiles.insert_one(
             {
-                "user": CURRENT_ADMIN.username,
+                "username": CURRENT_ADMIN.username,
                 "bio": "test",
                 "institution": "test",
                 "projects": "test",

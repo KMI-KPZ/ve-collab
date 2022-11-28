@@ -190,7 +190,7 @@ def init_indexes(force_rebuild: bool) -> None:
                     ("birthday", pymongo.TEXT),
                     ("experience", pymongo.TEXT),
                     ("education", pymongo.TEXT),
-                    ("user", pymongo.TEXT),
+                    ("username", pymongo.TEXT),
                 ],
                 name="profiles",
             )

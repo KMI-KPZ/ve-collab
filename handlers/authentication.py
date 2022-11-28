@@ -50,11 +50,11 @@ class LoginCallbackHandler(BaseHandler, metaclass=ABCMeta):
 
         # ensure that a profile exists for the user
         # if not, create one
-        profile = self.db.profiles.find_one({"user": token_info["preferred_username"]})
+        profile = self.db.profiles.find_one({"username": token_info["preferred_username"]})
         if not profile:
             self.db.profiles.insert_one(
                 {
-                    "user": token_info["preferred_username"],
+                    "username": token_info["preferred_username"],
                     "bio": None,
                     "institution": None,
                     "projects": None,
