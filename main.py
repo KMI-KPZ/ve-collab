@@ -1,29 +1,3 @@
-from logger_factory import get_logger
-from handlers.wordpress import WordpressCollectionHandler, WordpressPostHandler
-from handlers.user import *
-from handlers.timeline import *
-from handlers.space import SpaceHandler
-from handlers.search import SearchHandler
-from handlers.render import *
-from handlers.post import *
-from handlers.permissions import (
-    GlobalACLHandler,
-    PermissionHandler,
-    RoleHandler,
-    SpaceACLHandler,
-)
-from handlers.follow import FollowHandler
-from handlers.authentication import LoginHandler, LoginCallbackHandler, LogoutHandler
-import global_vars
-from acl import ACL
-from tornado.options import define, options, parse_command_line
-import tornado.web
-import tornado.locks
-import tornado.ioloop
-import tornado.httpserver
-import pymongo.errors
-import pymongo
-from keycloak import KeycloakOpenID, KeycloakAdmin
 import asyncio
 import json
 import os
@@ -33,6 +7,34 @@ import shutil
 sys.path.append(os.path.dirname(__file__))
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+from keycloak import KeycloakOpenID, KeycloakAdmin
+import pymongo
+import pymongo.errors
+import tornado.httpserver
+import tornado.ioloop
+import tornado.locks
+from tornado.options import define, options, parse_command_line
+import tornado.web
+
+from acl import ACL
+import global_vars
+from handlers.authentication import LoginHandler, LoginCallbackHandler, LogoutHandler
+from handlers.follow import FollowHandler
+from handlers.permissions import (
+    GlobalACLHandler,
+    PermissionHandler,
+    RoleHandler,
+    SpaceACLHandler,
+)
+from handlers.post import *
+from handlers.render import *
+from handlers.search import SearchHandler
+from handlers.space import SpaceHandler
+from handlers.timeline import *
+from handlers.user import *
+from handlers.wordpress import WordpressCollectionHandler, WordpressPostHandler
+from logger_factory import get_logger
 
 
 logger = get_logger(__name__)
@@ -165,7 +167,7 @@ def init_indexes(force_rebuild: bool) -> None:
                 pass
             db.posts.create_index("creation_date", name="posts_creation_date")
             logger.info(
-                "Built text index named {} on collection {}".format(
+                "Built index named {} on collection {}".format(
                     "posts_creation_date", "posts"
                 )
             )

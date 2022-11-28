@@ -6,10 +6,6 @@ import dateutil.parser
 from acl import ACL
 from handlers.base_handler import BaseHandler, auth_needed
 from logger_factory import log_access
-import util
-import tornado.web
-
-import pprint
 
 
 class BaseTimelineHandler(BaseHandler):
@@ -115,11 +111,8 @@ class TimelineHandler(BaseTimelineHandler):
             {"success": False, "reason": "insufficient_permission"}
         """
 
-        # abort if user is not global admin or platform admin
-        if not (
-            self.is_current_user_lionet_admin()
-            or await util.is_platform_admin(self.current_user.username)
-        ):
+        # abort if user is not global admin
+        if not self.is_current_user_lionet_admin():
             self.set_status(403)
             self.write({"success": False, "reason": "insufficient_permission"})
             return

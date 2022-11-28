@@ -103,7 +103,7 @@ function initNewsFeed() {
 
   } else if (currURL == baseUrl + '/myprofile') {
     inSpace = false;
-    getTimelineUser(currentUser.username, from, now);
+    getTimelineUser(currentUser.user.username, from, now);
 
   } else if (currURL.indexOf(baseUrl + '/profile') !== -1) {
     inSpace = false;

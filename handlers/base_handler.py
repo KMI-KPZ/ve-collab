@@ -1,15 +1,13 @@
 import functools
 import json
-import os
-import shutil
-from typing import Awaitable, Callable, Optional
+from typing import Awaitable, Callable, Dict, List, Optional
 
-from keycloak import KeycloakGetError
 from keycloak.exceptions import KeycloakError
 from pymongo import MongoClient
 from tornado.options import options
 import tornado.web
 
+from acl import ACL
 import global_vars
 from logger_factory import get_logger
 from model import User
@@ -21,7 +19,7 @@ def auth_needed(
     method: Callable[..., Optional[Awaitable[None]]]
 ) -> Callable[..., Optional[Awaitable[None]]]:
     """
-    authentication decorator that checks if a valid session exists (by checking that self.current_user has been set from the Basehandler's prepare()-function ), 
+    authentication decorator that checks if a valid session exists (by checking that self.current_user has been set from the Basehandler's prepare()-function ),
     otherwise redirects to platform for the login procedure
     """
 
@@ -80,7 +78,7 @@ class BaseHandler(tornado.web.RequestHandler):
             self.current_user = None
             self._access_token = None
             return
-        
+
         token = json.loads(token)
 
         # check if the token is still valid
@@ -157,3 +155,110 @@ class BaseHandler(tornado.web.RequestHandler):
 
     def is_current_user_lionet_admin(self):
         return bool(self.get_current_user_role() == "admin")
+
+    def get_keycloak_user(self, username: str) -> Dict:
+        if options.test_admin:
+            return {
+                "id": "aaaaaaaa-bbbb-0000-cccc-dddddddddddd",
+                "email": "test_admin@mail.de",
+                "username": "test_admin"
+            }
+        if options.test_user:
+            return {
+                "id": "aaaaaaaa-bbbb-1111-cccc-dddddddddddd",
+                "email": "test_user@mail.de",
+                "username": "test_user"
+            }
+
+        try:
+            # refresh the token to keycloak admin portal, because it might have timed out (resulting in the following requests not succeeding)
+            global_vars.keycloak_admin.refresh_token()
+
+            # request user data from keycloak
+            user_id = global_vars.keycloak_admin.get_user_id(username)
+            return global_vars.keycloak_admin.get_user(user_id)
+        except KeycloakError as e:
+            logger.info(
+                "Keycloak Error occured while trying to request user data: {}".format(e)
+            )
+            raise
+
+    def get_keycloak_user_list(self) -> List[Dict]:
+        """
+        get a list of user from keycloak. if we are in test mode,
+        get list of test users in the same format
+        """
+
+        if options.test_admin or options.test_user:
+            # dont change these values, they match with the unit tests
+            return [
+                {
+                    "access": {
+                        "impersonate": False,
+                        "manage": False,
+                        "manageGroupMembership": False,
+                        "mapRoles": False,
+                        "view": True,
+                    },
+                    "createdTimestamp": 1000000000000,
+                    "disableableCredentialTypes": [],
+                    "email": "test_admin@mail.de",
+                    "emailVerified": True,
+                    "enabled": True,
+                    "firstName": "Test",
+                    "id": "aaaaaaaa-bbbb-0000-cccc-dddddddddddd",
+                    "lastName": "Admin",
+                    "notBefore": 0,
+                    "requiredActions": [],
+                    "totp": False,
+                    "username": "test_admin",
+                },
+                {
+                    "access": {
+                        "impersonate": False,
+                        "manage": False,
+                        "manageGroupMembership": False,
+                        "mapRoles": False,
+                        "view": True,
+                    },
+                    "createdTimestamp": 1000000000000,
+                    "disableableCredentialTypes": [],
+                    "email": "test_user@mail.de",
+                    "emailVerified": True,
+                    "enabled": True,
+                    "firstName": "Test",
+                    "id": "aaaaaaaa-bbbb-1111-cccc-dddddddddddd",
+                    "lastName": "User",
+                    "notBefore": 0,
+                    "requiredActions": [],
+                    "totp": False,
+                    "username": "test_user",
+                },
+            ]
+        else:
+            try:
+                # refresh the token to keycloak admin portal, because it might have timed out (resulting in the following requests not succeeding)
+                global_vars.keycloak_admin.refresh_token()  
+                return global_vars.keycloak_admin.get_users()
+            except KeycloakError as e:
+                logger.info(
+                    "Keycloak Error occured while trying to request user data: {}".format(e)
+                )
+                raise
+
+    def _create_acl_entry_if_not_exists(self, role: str) -> None:
+        """
+        given the role, initialize a default acl entry,
+        such that we don't ever have inconsistency problems that roles exist but no acl entries
+        """
+
+        with ACL() as acl:
+            # insert into global acl
+            if not acl.global_acl.get(role):
+                acl.global_acl.insert_default(role)
+
+            # insert into space acl of all spaces
+            spaces = [space["name"] for space in self.db.spaces.find()]
+            for space in spaces:
+                if not acl.space_acl.get(role, space):
+                    acl.space_acl.insert_default(role, space)

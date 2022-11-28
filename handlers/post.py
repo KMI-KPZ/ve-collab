@@ -7,7 +7,6 @@ from datetime import datetime
 from acl import ACL
 from handlers.base_handler import BaseHandler, auth_needed
 from logger_factory import get_logger, log_access
-import util
 
 
 logger = get_logger(__name__)
@@ -276,33 +275,11 @@ class PostHandler(BaseHandler):
         # 1. user is author of the post
         # 2. user is lionet global admin
         # 3. user is space admin
-        # 4. user is platform admin (check this last because it is the slowest request)
         if post_to_delete["space"]:
             if self.current_user.username != post_to_delete["author"]:
                 if not self.is_current_user_lionet_admin():
                     space = self.db.spaces.find_one({"name": post_to_delete["space"]})
                     if self.current_user.username not in space["admins"]:
-                        if not await util.is_platform_admin(self.current_user.username):
-                            # none of the four permission cases apply, deny removal
-                            self.set_status(403)
-                            self.write(
-                                {
-                                    "status": 403,
-                                    "success": False,
-                                    "reason": "insufficient_permission",
-                                }
-                            )
-                            return
-
-            # one of the four conditions applied, remove the post
-            self.db.posts.delete_one({"_id": post_to_delete["_id"]})
-
-        # if the post is not in a space, the option to be space admin
-        # to remove the post doesnt hold anymore, check only the other 3 options
-        else:
-            if self.current_user.username != post_to_delete["author"]:
-                if not self.is_current_user_lionet_admin():
-                    if not await util.is_platform_admin(self.current_user.username):
                         # none of the three permission cases apply, deny removal
                         self.set_status(403)
                         self.write(
@@ -313,6 +290,25 @@ class PostHandler(BaseHandler):
                             }
                         )
                         return
+
+            # one of the three conditions applied, remove the post
+            self.db.posts.delete_one({"_id": post_to_delete["_id"]})
+
+        # if the post is not in a space, the option to be space admin
+        # to remove the post doesnt hold anymore, check only the other 2 options
+        else:
+            if self.current_user.username != post_to_delete["author"]:
+                if not self.is_current_user_lionet_admin():
+                    # none of the two permission cases apply, deny removal
+                    self.set_status(403)
+                    self.write(
+                        {
+                            "status": 403,
+                            "success": False,
+                            "reason": "insufficient_permission",
+                        }
+                    )
+                    return
 
             # one of the three conditions applied, remove the post
             self.db.posts.delete_one({"_id": ObjectId(http_body["post_id"])})
@@ -539,36 +535,11 @@ class CommentHandler(BaseHandler):
         # 1. user is author of the comment
         # 2. user is lionet global admin
         # 3. user is space admin
-        # 4. user is platform admin (check this last because it is the slowest request)
         if post["space"]:
             if self.current_user.username != comment["author"]:
                 if not self.is_current_user_lionet_admin():
                     space = self.db.spaces.find_one({"name": post["space"]})
                     if self.current_user.username not in space["admins"]:
-                        if not await util.is_platform_admin(self.current_user.username):
-                            # none of the four permission cases apply, deny removal
-                            self.set_status(403)
-                            self.write(
-                                {
-                                    "status": 403,
-                                    "success": False,
-                                    "reason": "insufficient_permission",
-                                }
-                            )
-                            return
-
-            # one of the four conditions applied, remove the post
-            self.db.posts.update_one(
-                {"_id": post["_id"]},  # filter
-                {"$pull": {"comments": {"_id": comment_id}}},  # update
-            )
-
-        # if the post is not in a space, the option to be space admin
-        # to remove the comment doesnt hold anymore, check only the other 3 options
-        else:
-            if self.current_user.username != comment["author"]:
-                if not self.is_current_user_lionet_admin():
-                    if not await util.is_platform_admin(self.current_user.username):
                         # none of the three permission cases apply, deny removal
                         self.set_status(403)
                         self.write(
@@ -581,6 +552,28 @@ class CommentHandler(BaseHandler):
                         return
 
             # one of the three conditions applied, remove the post
+            self.db.posts.update_one(
+                {"_id": post["_id"]},  # filter
+                {"$pull": {"comments": {"_id": comment_id}}},  # update
+            )
+
+        # if the post is not in a space, the option to be space admin
+        # to remove the comment doesnt hold anymore, check only the other 2 options
+        else:
+            if self.current_user.username != comment["author"]:
+                if not self.is_current_user_lionet_admin():
+                    # none of the three permission cases apply, deny removal
+                    self.set_status(403)
+                    self.write(
+                        {
+                            "status": 403,
+                            "success": False,
+                            "reason": "insufficient_permission",
+                        }
+                    )
+                    return
+
+            # one of the two conditions applied, remove the post
             self.db.posts.update_one(
                 {"_id": post["_id"]},  # filter
                 {"$pull": {"comments": {"_id": comment_id}}},  # update
@@ -734,7 +727,7 @@ class RepostHandler(BaseHandler):
                 200 OK,
                 {"status": 200,
                  "success": True}
-                
+
                 400 Bad Request
                 {"status": 400,
                  "success": False,
@@ -996,10 +989,8 @@ class PinHandler(BaseHandler):
 
         space = self.get_space(space_name)
         if space is not None:
-            if (
-                (self.current_user.username in space["admins"])
-                or (self.get_current_user_role() == "admin")
-                or (await util.is_platform_admin(self.current_user.username))
+            if (self.current_user.username in space["admins"]) or (
+                self.get_current_user_role() == "admin"
             ):
                 return True
             else:

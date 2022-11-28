@@ -1,12 +1,12 @@
 from base64 import b64encode
 import os
 import re
+from typing import List, Optional
 
 import tornado.web
 
 from handlers.base_handler import BaseHandler, auth_needed
 from logger_factory import log_access
-import mock_platform
 
 
 class ProfileInformationHandler(BaseHandler):
@@ -23,6 +23,7 @@ class ProfileInformationHandler(BaseHandler):
                     "user_id": <int>,
                     "username": <string>,
                     "email": <string>,
+                    "role": <string>
                  },
                  "profile": {
                     "bio": <string>,
@@ -37,7 +38,8 @@ class ProfileInformationHandler(BaseHandler):
                     "education": [<string1>, <string2>, ...]
                  },
                  "spaces": [<string1>, <string2>, ...],
-                 "follows": [<string1>, <string2>, ...]
+                 "follows": [<string1>, <string2>, ...],
+                 "followers": [<string1>, <string2>, ...]
                 }
 
                 401 Unauthorized
@@ -45,59 +47,53 @@ class ProfileInformationHandler(BaseHandler):
                  "reason": "no_logged_in_user"}
         """
 
+        user_information_response = {}
+
         username = self.get_argument("username", None)
         if not username:
             username = self.current_user.username
 
-        # get account information from platform
-        user_result = mock_platform.get_user(username)
+        # get account information from keycloak
+        keycloak_info = self.get_keycloak_user(username)
 
-        # grab spaces
-        spaces_cursor = self.db.spaces.find(filter={"members": username})
-        spaces = []
-        for space in spaces_cursor:
-            spaces.append(space["name"])
+        user_role = self.db.roles.find_one({"username": username})
+        if user_role:
+            # remove nesting from db response
+            user_role = user_role["role"]
 
-        # grab users that the current_user follows
-        follows_cursor = self.db.follows.find(filter={"user": username})
-        follows = []
-        for user in follows_cursor:
-            follows = user["follows"]
-
-        # grab users that follow current_user
-        follower_cursor = self.db.follows.find({"follows": username})
-        followers = []
-        for user in follower_cursor:
-            print(user)
-            followers.append(user["user"])
-
-        profile_cursor = self.db.profiles.find(filter={"user": username})
-        profile = {}
-        profile["profile_pic"] = "default_profile_pic.jpg"
-        for user_profile in profile_cursor:
-            profile["bio"] = user_profile["bio"]
-            profile["institution"] = user_profile["institution"]
-            profile["projects"] = user_profile["projects"]
-            if "profile_pic" in user_profile:
-                profile["profile_pic"] = user_profile["profile_pic"]
-            profile["first_name"] = user_profile["first_name"]
-            profile["last_name"] = user_profile["last_name"]
-            profile["gender"] = user_profile["gender"]
-            profile["address"] = user_profile["address"]
-            profile["birthday"] = user_profile["birthday"]
-            profile["experience"] = user_profile["experience"]
-            profile["education"] = user_profile["education"]
-
-        user_information = {
-            key: user_result["user"][key] for key in user_result["user"]
+        # add user data to response
+        user_information_response["user"] = {
+            "user_id": keycloak_info["id"],
+            "username": username,
+            "email": keycloak_info["email"],
+            "role": user_role,
         }
-        user_information["spaces"] = spaces
-        user_information["follows"] = follows
-        user_information["followers"] = followers
-        user_information["profile"] = profile
+
+        # grab and add spaces
+        spaces = [space["name"] for space in self.db.spaces.find({"members": username})]
+        user_information_response["spaces"] = spaces
+
+        # grab and add users that the user follows
+        user_information_response["follows"] = []
+        user_follows = self.db.follows.find_one({"user": username})
+        if user_follows:
+            user_information_response["follows"] = user_follows["follows"]
+
+        # grab users that follow the user
+        followers = [
+            user["user"] for user in self.db.follows.find({"follows": username})
+        ]
+        user_information_response["followers"] = followers
+
+        # grab and add profile details
+        profile = {}
+        profile = self.db.profiles.find_one({"user": username})
+        if profile:
+            del profile["_id"]
+        user_information_response["profile"] = profile
 
         self.set_status(200)
-        self.write(user_information)
+        self.write(user_information_response)
 
     @log_access
     @auth_needed
@@ -211,6 +207,30 @@ class UserHandler(BaseHandler):
     User management
     """
 
+    def get_user_role(self, username: str) -> Optional[str]:
+        user_role = self.db.roles.find_one({"username": username})
+        if user_role:
+            return user_role["role"]
+        else:
+            return None
+
+    def get_user_follows(self, username: str) -> Optional[List[str]]:
+        user_follows = self.db.follows.find_one({"user": username})
+        if user_follows:
+            return user_follows["follows"]
+        else:
+            return []
+
+    def get_followers_of_user(self, username: str) -> Optional[List[str]]:
+        return [user["user"] for user in self.db.follows.find({"follows": username})]
+
+    def get_profile_pic_of_user(self, username: str) -> str:
+        profile = self.db.profiles.find_one({"user": username})
+        if profile:
+            if "profile_pic" in profile:
+                return profile["profile_pic"]
+        return "default_profile_pic.jpg"
+
     @log_access
     @auth_needed
     async def get(self, slug):
@@ -245,77 +265,58 @@ class UserHandler(BaseHandler):
                 self.write({"status": 400, "reason": "missing_key:username"})
                 return
 
-            user_result = mock_platform.get_user(username)
+            # get account information from keycloak
+            keycloak_info = self.get_keycloak_user(username)
 
-            user_result["user"]["profile_pic"] = "default_profile_pic.jpg"
-            user_result["user"]["profile"] = {}
-            profile = self.db.profiles.find_one({"user": username})
+            user_role = self.get_user_role(username)
+
+            # add user data to response
+            user_information_response = {
+                "id": keycloak_info["id"],
+                "username": username,
+                "email": keycloak_info["email"],
+                "role": user_role,
+            }
+
+            # add full profile data to response
+            profile = self.db.profiles.find_one(
+                {"user": username}, projection={"_id": False, "user": False}
+            )
             if profile:
-                if "profile_pic" in profile:
-                    user_result["user"]["profile_pic"] = profile["profile_pic"]
+                user_information_response["profile_pic"] = profile["profile_pic"]
+                user_information_response["profile"] = profile
+            else:
+                user_information_response["profile_pic"] = "default_profile_pic.jpg"
 
-                """
-                Here set Profile Information to user in profile view
-                """
-                user_result["user"]["profile"]["first_name"] = profile["first_name"]
-                user_result["user"]["profile"]["last_name"] = profile["last_name"]
-                user_result["user"]["profile"]["gender"] = profile["gender"]
-                user_result["user"]["profile"]["bio"] = profile["bio"]
-                user_result["user"]["profile"]["address"] = profile["address"]
-                user_result["user"]["profile"]["birthday"] = profile["birthday"]
-                user_result["user"]["profile"]["institution"] = profile["institution"]
-                user_result["user"]["profile"]["education"] = profile["education"]
-                user_result["user"]["profile"]["experience"] = profile["experience"]
+            # add users that the user follows
+            user_information_response["follows"] = self.get_user_follows(username)
 
-            # add all names of people that the user follows
-            followers_result = self.db.follows.find_one({"user": username})
-            user_result["user"]["follows"] = (
-                followers_result["follows"] if followers_result else []
+            # add users that follow the user
+            user_information_response["followers"] = self.get_followers_of_user(
+                username
             )
 
-            # also add all names of people that follow the user
-            followers_result = self.db.follows.find({"follows": username})
-            followers = []
-            for follower in followers_result:
-                followers.append(follower["user"])
-            user_result["user"]["followers"] = followers
-
             self.set_status(200)
-            self.write(user_result["user"])
+            self.write(user_information_response)
 
         elif slug == "list":
-            user_list = mock_platform.get_user_list()
+            user_list_kc = self.get_keycloak_user_list()
 
-            for user in user_list["users"]:
-                # add profile and optionally profile picture
-                user_list["users"][user]["profile_pic"] = "default_profile_pic.jpg"
-                profile = self.db.profiles.find_one({"user": user})
-                if profile:
-                    if "profile_pic" in profile:
-                        user_list["users"][user]["profile_pic"] = profile["profile_pic"]
-
-                # add all names of people that the user follows
-                follows_result = self.db.follows.find_one({"user": user})
-                user_list["users"][user]["follows"] = (
-                    follows_result["follows"] if follows_result else []
-                )
-
-                # also add all names of people that follow the user
-                followers_result = self.db.follows.find({"follows": user})
-                followers = []
-                for follower in followers_result:
-                    followers.append(follower["user"])
-                user_list["users"][user]["followers"] = followers
-
-                # override role of the platform by the own role of lionet, because lionet does its own role management
-                # only admins will not be overridden --> admin always stays admin
-                role = self.db.roles.find_one({"username": user})
-                if role:
-                    if user_list["users"][user]["role"] != "admin":
-                        user_list["users"][user]["role"] = role["role"]
+            user_list_response = {}
+            for user in user_list_kc:
+                user_info = {
+                    "id": user["id"],
+                    "username": user["username"],
+                    "email": user["email"],
+                    "role": self.get_user_role(user["username"]),
+                    "follows": self.get_user_follows(user["username"]),
+                    "followers": self.get_followers_of_user(user["username"]),
+                    "profile_pic": self.get_profile_pic_of_user(user["username"]),
+                }
+                user_list_response[user["username"]] = user_info
 
             self.set_status(200)
-            self.write(user_list["users"])
+            self.write(user_list_response)
 
         else:
             self.set_status(404)

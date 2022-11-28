@@ -128,10 +128,9 @@ class _GlobalACL:
             )
 
         record = self.db.global_acl.find_one({"role": role})
-        if record:
-            return record[permission_key]
-        else:
-            return False
+        if not record:
+            raise ValueError("no Global ACL entry exists for role '{}'".format(role))
+        return record[permission_key]
 
     def get(self, role: str) -> Optional[Dict]:
         """
@@ -304,10 +303,13 @@ class _SpaceACL:
             )
 
         record = self.db.space_acl.find_one({"role": role, "space": space})
-        if record:
-            return record[permission_key]
-        else:
-            return False
+        if not record:
+            raise ValueError(
+                "no Space ACL entry exists for role '{}' in space '{}'".format(
+                    role, space
+                )
+            )
+        return record[permission_key]
 
     def get(self, role: str, space: str) -> Optional[Dict]:
         """

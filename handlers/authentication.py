@@ -45,33 +45,38 @@ class LoginCallbackHandler(BaseHandler, metaclass=ABCMeta):
             redirect_uri=global_vars.keycloak_callback_url,
         )
         print(token)
-
-        # get user info
-        userinfo = global_vars.keycloak.userinfo(token["access_token"])
-        print(userinfo)
+        token_info = global_vars.keycloak.introspect(token["access_token"])
+        print(token_info)
 
         # ensure that a profile exists for the user
         # if not, create one
-        profile = self.db.profiles.find_one({"user": userinfo["preferred_username"]})
+        profile = self.db.profiles.find_one({"user": token_info["preferred_username"]})
         if not profile:
             self.db.profiles.insert_one(
                 {
-                    "user": userinfo[
-                        "preferred_username",
-                        "bio": None,
-                        "institution": None,
-                        "projects": None,
-                        "profile_pic": "default_profile_pic.jpg",
-                        "first_name": userinfo["given_name"],
-                        "last_name": userinfo["family_name"],
-                        "gender": None,
-                        "address": None,
-                        "birthday": None,
-                        "experience": None,
-                        "education": None,
-                    ]
+                    "user": token_info["preferred_username"],
+                    "bio": None,
+                    "institution": None,
+                    "projects": None,
+                    "profile_pic": "default_profile_pic.jpg",
+                    "first_name": token_info["given_name"],
+                    "last_name": token_info["family_name"],
+                    "gender": None,
+                    "address": None,
+                    "birthday": None,
+                    "experience": None,
+                    "education": None,
                 }
             )
+
+        # ensure that a role exists for the user
+        # if not, create default one
+        role = self.db.roles.find_one({"username": token_info["preferred_username"]})
+        if not role:
+            self.db.roles.insert_one(
+                {"username": token_info["preferred_username"], "role": "guest"}
+            )
+            self._create_acl_entry_if_not_exists("guest")
 
         # dump token dict to str and store it in a secure cookie (BaseHandler will decode it later to validate a user is logged in)
         self.set_secure_cookie("access_token", json.dumps(token))

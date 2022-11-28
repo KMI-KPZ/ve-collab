@@ -5,8 +5,6 @@ import tornado.web
 from acl import ACL
 from handlers.base_handler import BaseHandler, auth_needed
 from logger_factory import get_logger, log_access
-import mock_platform
-import util
 
 
 logger = get_logger(__name__)
@@ -18,31 +16,14 @@ class PermissionHandler(BaseHandler):
     async def get(self):
         """
         GET /permissions
-            request the role that was assigned by the platform (might differ from lionet-internal role)
+            DEPRECATED, USE /role/my INSTEAD!
+            request the current_user's role
         """
-
-        role = await util.request_role(self.current_user.username)
-        self.set_status(200)
-        self.write({"status": 200, "success": True, "role": role})
+        logger.warning("using deprecated endpoint /permission")
+        self.redirect("/role/my")
 
 
 class RoleHandler(BaseHandler):
-    def _create_acl_entry_if_not_exists(self, role: str) -> None:
-        """
-        given the role, initialize a default acl entry, such that we don't ever have inconsistency problems that roles exist but no acl entries
-        """
-
-        with ACL() as acl:
-            # insert into global acl
-            if not acl.global_acl.get(role):
-                acl.global_acl.insert_default(role)
-
-            # insert into space acl of all spaces
-            spaces = [space["name"] for space in self.db.spaces.find()]
-            for space in spaces:
-                if not acl.space_acl.get(role, space):
-                    acl.space_acl.insert_default(role, space)
-
     @log_access
     @auth_needed
     async def get(self, slug):
@@ -82,22 +63,17 @@ class RoleHandler(BaseHandler):
                 )
 
         elif slug == "all":
-            if self.is_current_user_lionet_admin() or await util.is_platform_admin(
-                self.current_user.username
-            ):
+            if self.is_current_user_lionet_admin():
                 ret_list = []
-                user_list = mock_platform.get_user_list()
+                user_list_kc = self.get_keycloak_user_list()
                 existin_users_and_roles = self.db.roles.find(projection={"_id": False})
                 existing_users_and_roles = [item for item in existin_users_and_roles]
 
                 # match the platform users and if they have, existing lionet roles
-                for platform_user in user_list["users"]:
+                for platform_user in user_list_kc:
                     already_in = False
                     for existing_user in existing_users_and_roles:
-                        if (
-                            user_list["users"][platform_user]["username"]
-                            == existing_user["username"]
-                        ):
+                        if platform_user["username"] == existing_user["username"]:
                             ret_list.append(existing_user)
                             already_in = True
                             break
@@ -106,19 +82,26 @@ class RoleHandler(BaseHandler):
 
                     # if the user does not already exist, add him with guest role
                     payload = {
-                        "username": user_list["users"][platform_user]["username"],
+                        "username": platform_user["username"],
                         "role": "guest",
                     }
                     self.db.roles.insert_one(payload)
-                    # manually create return entry because otherwise non-json-serializable ObjectId is in payload
+
+                    # manually create return entry
+                    # because otherwise non-json-serializable ObjectId is in payload
                     ret_list.append(
                         {
-                            "username": user_list["users"][platform_user]["username"],
+                            "username": platform_user["username"],
                             "role": "guest",
                         }
                     )
 
-                    # check once if the guest role was present (once is enough, there might be many keycloak users coming in, checking for the same role on everyone is useless overhead)
+                    # check once if the guest role was present
+                    # (once is enough, there might be many keycloak users coming in,
+                    # checking for the same role on everyone is useless overhead)
+                    # if there was no user that has been added as guest, we dont even
+                    # need to do the check at all because this statement would always
+                    # be skipped
                     checked_guest_role_present = False
                     if not checked_guest_role_present:
                         self._create_acl_entry_if_not_exists(payload["role"])
@@ -133,9 +116,7 @@ class RoleHandler(BaseHandler):
                 )
 
         elif slug == "distinct":
-            if self.is_current_user_lionet_admin() or await util.is_platform_admin(
-                self.current_user.username
-            ):
+            if self.is_current_user_lionet_admin():
                 roles = self.db.roles.distinct("role")
                 self.set_status(200)
                 self.write({"success": True, "existing_roles": roles})
@@ -188,9 +169,7 @@ class RoleHandler(BaseHandler):
                  "reason": "user_not_admin"}
         """
         if slug == "update":
-            if self.is_current_user_lionet_admin() or await util.is_platform_admin(
-                self.current_user.username
-            ):
+            if self.is_current_user_lionet_admin():
                 try:
                     http_body = json.loads(self.request.body)
                 except json.JSONDecodeError:
@@ -250,8 +229,10 @@ class RoleHandler(BaseHandler):
 class GlobalACLHandler(BaseHandler):
     def resolve_inconsistency(self, role: str) -> dict:
         """
-        resolve inconsistency problem when the role exists, but no acl entry for it: insert the default rule and return it
+        resolve inconsistency problem when the role exists,
+        but no acl entry for it: insert the default rule and return it
         """
+
         logger.warning(
             "Inconsistency Problem: the role '{}' exists, but no Global ACL entry for it. Inserting default rule".format(
                 role
@@ -314,7 +295,7 @@ class GlobalACLHandler(BaseHandler):
                 with ACL() as acl:
                     acl_entry = acl.global_acl.get(current_user_role)
 
-                # inconsistency problem: the role exists, but no acl entry. construct an acl entry that has all permissions set to false (except it is for some reason the admin role, then set everything to true)
+                # inconsistency problem: the role exists, but no acl entry. construct a default entry
                 if not acl_entry:
                     acl_entry = self.resolve_inconsistency(current_user_role)
 
@@ -327,9 +308,7 @@ class GlobalACLHandler(BaseHandler):
                 )
 
         elif slug == "get_all":
-            if self.is_current_user_lionet_admin() or await util.is_platform_admin(
-                self.current_user.username
-            ):
+            if self.is_current_user_lionet_admin():
                 entries = []
                 with ACL() as acl:
                     # solve inconsistency problem of role existing but no acl_entry: whenever there is a role that has no acl_entry, create a default one
@@ -369,9 +348,7 @@ class GlobalACLHandler(BaseHandler):
         """
 
         if slug == "update":
-            if self.is_current_user_lionet_admin() or await util.is_platform_admin(
-                self.current_user.username
-            ):
+            if self.is_current_user_lionet_admin():
                 try:
                     http_body = json.loads(self.request.body)
                 except json.JSONDecodeError:
@@ -533,10 +510,7 @@ class SpaceACLHandler(BaseHandler):
             optional_role = self.get_argument("role", None)
             if optional_role:
                 # check if the user is either global admin or space admin, if not return
-                if not (
-                    self.is_current_user_lionet_admin()
-                    or await util.is_platform_admin(self.current_user.username)
-                ):
+                if not self.is_current_user_lionet_admin():
                     space = self.db.spaces.find_one({"name": space_name})
                     if not space:
                         self.set_status(400)
@@ -596,10 +570,7 @@ class SpaceACLHandler(BaseHandler):
 
         elif slug == "get_all":
             # check if the user is either global admin or space admin, if not return
-            if not (
-                self.is_current_user_lionet_admin()
-                or await util.is_platform_admin(self.current_user.username)
-            ):
+            if not self.is_current_user_lionet_admin():
                 space = self.db.spaces.find_one({"name": space_name})
                 if not space:
                     self.set_status(400)
@@ -708,10 +679,7 @@ class SpaceACLHandler(BaseHandler):
                     return
 
                 # check if the user is either global admin or space admin, if not return
-                if not (
-                    self.is_current_user_lionet_admin()
-                    or await util.is_platform_admin(self.current_user.username)
-                ):
+                if not self.is_current_user_lionet_admin():
                     if self.current_user.username not in space["admins"]:
                         self.set_status(403)
                         self.write(
