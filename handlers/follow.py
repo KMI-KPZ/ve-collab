@@ -35,7 +35,11 @@ class FollowHandler(BaseHandler):
             self.write({"status": 400, "success": False, "reason": "missing_key:user"})
             return
 
-        result = self.db.follows.find_one({"user": username})
+        result = self.db.profiles.find_one(
+            {"username": username}, projection={"_id": False, "follows": True}
+        )
+        if not result:
+            result = {"follows": []}
 
         self.set_status(200)
         self.write({"success": True, "user": username, "follows": result["follows"]})
@@ -72,11 +76,9 @@ class FollowHandler(BaseHandler):
 
         username = self.current_user.username
 
-        self.db.follows.update_one(
-            {"user": username},  # fitler
+        self.db.profiles.update_one(
+            {"username": username},  # fitler
             {"$addToSet": {"follows": user_to_follow}},  # update
-            # if no document already present, create one (i.e. user follows somebody for first time)
-            upsert=True,
         )
 
         self.set_status(200)
@@ -112,8 +114,8 @@ class FollowHandler(BaseHandler):
             self.write({"status": 400, "success": False, "reason": "missing_key:user"})
             return
 
-        self.db.follows.update_one(
-            {"user": self.current_user.username}, {"$pull": {"follows": username}}
+        self.db.profiles.update_one(
+            {"username": self.current_user.username}, {"$pull": {"follows": username}}
         )
 
         self.set_status(200)

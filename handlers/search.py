@@ -187,7 +187,8 @@ class SearchHandler(BaseHandler):
         get a list of users that the current_user follows (i.e. current_user FOLLOWS other_users)
         """
 
-        followers_result = self.db.follows.find_one(
-            {"user": self.current_user.username}
+        followers_result = self.db.profiles.find_one(
+            {"username": self.current_user.username},
+            projection={"_id": False, "follows": True},
         )
         return followers_result["follows"] if followers_result else []

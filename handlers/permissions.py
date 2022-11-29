@@ -38,6 +38,7 @@ class RoleHandler(BaseHandler):
                     {
                         "username": self.current_user.username,
                         "role": "guest",
+                        "follows": [],
                         "bio": None,
                         "institution": None,
                         "projects": None,
@@ -88,6 +89,7 @@ class RoleHandler(BaseHandler):
                     payload = {
                         "username": platform_user["username"],
                         "role": "guest",
+                        "follows": [],
                         "bio": None,
                         "institution": None,
                         "projects": None,

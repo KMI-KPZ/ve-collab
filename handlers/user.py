@@ -1,7 +1,7 @@
 from base64 import b64encode
 import os
 import re
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import tornado.web
 
@@ -63,15 +63,12 @@ class ProfileInformationHandler(BaseHandler):
         spaces = [space["name"] for space in self.db.spaces.find({"members": username})]
         user_information_response["spaces"] = spaces
 
-        # grab and add users that the user follows
-        user_information_response["follows"] = []
-        user_follows = self.db.follows.find_one({"user": username})
-        if user_follows:
-            user_information_response["follows"] = user_follows["follows"]
-
         # grab users that follow the user
         followers = [
-            user["user"] for user in self.db.follows.find({"follows": username})
+            user["username"]
+            for user in self.db.profiles.find(
+                {"follows": username}, projection={"username": True}
+            )
         ]
         user_information_response["followers"] = followers
 
@@ -80,13 +77,16 @@ class ProfileInformationHandler(BaseHandler):
         profile = self.db.profiles.find_one({"username": username})
         if profile:
             role = profile["role"]
+            follows = profile["follows"]
             del profile["_id"]
             del profile["role"]
+            del profile["follows"]
         else:
             # if for some reason no profile exists, create a default one
             profile = {
                 "username": username,
                 "role": "guest",
+                "follows": [],
                 "bio": None,
                 "institution": None,
                 "projects": None,
@@ -102,8 +102,12 @@ class ProfileInformationHandler(BaseHandler):
             self.db.profiles.insert_one(profile)
             self._create_acl_entry_if_not_exists("guest")
             role = "guest"
+            follows = []
             del profile["role"]
+            del profile["follows"]
+
         user_information_response["role"] = role
+        user_information_response["follows"] = follows
         user_information_response["profile"] = profile
 
         self.set_status(200)
@@ -162,6 +166,7 @@ class ProfileInformationHandler(BaseHandler):
         if "profile_pic" in self.request.files:
             profile_pic_obj = self.request.files["profile_pic"][0]
 
+            # TODO deobfuscate
             # save file
             file_ext = os.path.splitext(profile_pic_obj["filename"])[1]
             new_file_name = b64encode(os.urandom(32)).decode("utf-8")
@@ -190,7 +195,7 @@ class ProfileInformationHandler(BaseHandler):
                         "education": education,
                     }
                 },
-                upsert=True, # TODO on upsert case also set profile "guest"
+                upsert=True,  # TODO on upsert case also set role "guest" and follows = []
             )
         else:
             self.db.profiles.update_one(
@@ -209,7 +214,7 @@ class ProfileInformationHandler(BaseHandler):
                         "education": education,
                     }
                 },
-                upsert=True, # TODO on upsert case also set profile "guest"
+                upsert=True,  # TODO on upsert case also set role "guest" and follows = []
             )
 
         self.set_status(200)
@@ -221,29 +226,34 @@ class UserHandler(BaseHandler):
     User management
     """
 
-    def get_user_role(self, username: str) -> Optional[str]:
-        user_role = self.db.profiles.find_one({"username": username}, projection={"role": True})
-        if user_role:
-            return user_role["role"]
-        else:
-            return None
+    def get_user_role_follows_and_profile_pic(
+        self, username: str
+    ) -> Tuple[str, List[str], str]:
+        role = None
+        follows = []
+        profile_pic = "default_profile_pic.jpg"
 
-    def get_user_follows(self, username: str) -> Optional[List[str]]:
-        user_follows = self.db.follows.find_one({"user": username})
-        if user_follows:
-            return user_follows["follows"]
-        else:
-            return []
+        result = self.db.profiles.find_one(
+            {"username": username},
+            projection={"role": True, "follows": True, "profile_pic": True},
+        )
+        if result:
+            if "role" in result:
+                role = result["role"]
+            if "follows" in result:
+                follows = result["follows"]
+            if "profile_pic" in result:
+                profile_pic = result["profile_pic"]
+
+        return role, follows, profile_pic
 
     def get_followers_of_user(self, username: str) -> Optional[List[str]]:
-        return [user["user"] for user in self.db.follows.find({"follows": username})]
-
-    def get_profile_pic_of_user(self, username: str) -> str:
-        profile = self.db.profiles.find_one({"username": username}, projection={"profile_pic": True})
-        if profile:
-            if "profile_pic" in profile:
-                return profile["profile_pic"]
-        return "default_profile_pic.jpg"
+        return [
+            user["username"]
+            for user in self.db.profiles.find(
+                {"follows": username}, projection={"username": True}
+            )
+        ]
 
     @log_access
     @auth_needed
@@ -296,14 +306,14 @@ class UserHandler(BaseHandler):
             if profile:
                 user_information_response["profile_pic"] = profile["profile_pic"]
                 user_information_response["role"] = profile["role"]
+                user_information_response["follows"] = profile["follows"]
                 del profile["role"]
+                del profile["follows"]
                 user_information_response["profile"] = profile
             else:
                 user_information_response["profile_pic"] = "default_profile_pic.jpg"
                 user_information_response["role"] = None
-
-            # add users that the user follows
-            user_information_response["follows"] = self.get_user_follows(username)
+                user_information_response["follows"] = []
 
             # add users that follow the user
             user_information_response["followers"] = self.get_followers_of_user(
@@ -318,14 +328,17 @@ class UserHandler(BaseHandler):
 
             user_list_response = {}
             for user in user_list_kc:
+                role, follows, profile_pic = self.get_user_role_follows_and_profile_pic(
+                    user["username"]
+                )
                 user_info = {
                     "id": user["id"],
                     "username": user["username"],
                     "email": user["email"],
-                    "role": self.get_user_role(user["username"]),
-                    "follows": self.get_user_follows(user["username"]),
+                    "role": role,
+                    "follows": follows,
                     "followers": self.get_followers_of_user(user["username"]),
-                    "profile_pic": self.get_profile_pic_of_user(user["username"]),
+                    "profile_pic": profile_pic,
                 }
                 user_list_response[user["username"]] = user_info
 

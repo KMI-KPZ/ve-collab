@@ -285,12 +285,10 @@ class PersonalTimelineHandler(BaseTimelineHandler):
                 # join with the follows collection on the current user
                 {
                     "$lookup": {
-                        "from": "follows",
+                        "from": "profiles",
                         "localField": "curr_user",
-                        "foreignField": "user",
-                        "as": "follows_obj",
-                        "let": {"cur_user": "$author"},
-                        "pipeline": [],
+                        "foreignField": "username",
+                        "as": "profile_obj",
                     }
                 },
                 # lookup result is a list, but since it is a n:1-relation,
@@ -306,7 +304,7 @@ class PersonalTimelineHandler(BaseTimelineHandler):
                 # and can safely flatten the list to a dict
                 {
                     "$unwind": {
-                        "path": "$follows_obj",
+                        "path": "$profile_obj",
                         "preserveNullAndEmptyArrays": True,
                     }
                 },
@@ -320,10 +318,10 @@ class PersonalTimelineHandler(BaseTimelineHandler):
                     "$addFields": {
                         "flattened_follows": {
                             "$cond": {
-                                "if": {"$ne": [{"$type": "$follows_obj"}, "missing"]},
+                                "if": {"$ne": [{"$type": "$profile_obj"}, "missing"]},
                                 "then": {
                                     "$concatArrays": [
-                                        "$follows_obj.follows",
+                                        "$profile_obj.follows",
                                         [self.current_user.username],
                                     ]
                                 },
@@ -437,7 +435,7 @@ class PersonalTimelineHandler(BaseTimelineHandler):
                     "$unset": [
                         "curr_user",
                         "flattened_follows",
-                        "follows_obj",
+                        "profile_obj",
                         "space_obj",
                     ]
                 },

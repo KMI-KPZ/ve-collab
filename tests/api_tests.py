@@ -105,7 +105,6 @@ def tearDownModule():
         db.drop_collection("posts")
         db.drop_collection("spaces")
         db.drop_collection("profiles")
-        db.drop_collection("follows")
         db.drop_collection("global_acl")
         db.drop_collection("space_acl")
 
@@ -211,6 +210,7 @@ class BaseApiTestCase(AsyncHTTPTestCase):
             CURRENT_ADMIN.username: {
                 "username": CURRENT_ADMIN.username,
                 "role": self.test_roles[CURRENT_ADMIN.username],
+                "follows": [],
                 "bio": None,
                 "institution": None,
                 "projects": None,
@@ -226,6 +226,7 @@ class BaseApiTestCase(AsyncHTTPTestCase):
             CURRENT_USER.username: {
                 "username": CURRENT_USER.username,
                 "role": self.test_roles[CURRENT_USER.username],
+                "follows": [],
                 "bio": None,
                 "institution": None,
                 "projects": None,
@@ -392,11 +393,14 @@ class FollowHandlerTest(BaseApiTestCase):
     def setUp(self) -> None:
         super().setUp()
 
+        self.base_permission_environment_setUp()
+
         self.user_follows = ["test_user1", "test_user2"]
 
         # insert test data
-        self.db.follows.insert_one(
-            {"user": CURRENT_ADMIN.username, "follows": self.user_follows}
+        self.db.profiles.update_one(
+            {"username": CURRENT_ADMIN.username},
+            {"$set": {"follows": self.user_follows}},
         )
 
     def _db_get_follows(self) -> List[str]:
@@ -404,7 +408,9 @@ class FollowHandlerTest(BaseApiTestCase):
         get list of follows for CURRENT_USER from db
         """
 
-        db_response = self.db.follows.find_one({"user": CURRENT_ADMIN.username})
+        db_response = self.db.profiles.find_one(
+            {"username": CURRENT_ADMIN.username}, projection={"follows": True}
+        )
         if db_response:
             return db_response["follows"]
 
@@ -483,7 +489,7 @@ class FollowHandlerTest(BaseApiTestCase):
 
     def tearDown(self) -> None:
         # cleanup test data
-        self.db.follows.delete_many({})
+        self.base_permission_environments_tearDown()
         super().tearDown()
 
 
@@ -491,6 +497,7 @@ class RoleHandlerTest(BaseApiTestCase):
     def setUp(self) -> None:
         super().setUp()
 
+        # TODO use base instead of self made
         # insert test data
         self.test_roles = {
             CURRENT_ADMIN.username: "admin",
@@ -501,6 +508,7 @@ class RoleHandlerTest(BaseApiTestCase):
             CURRENT_ADMIN.username: {
                 "username": CURRENT_ADMIN.username,
                 "role": self.test_roles[CURRENT_ADMIN.username],
+                "follows": [],
                 "bio": None,
                 "institution": None,
                 "projects": None,
@@ -516,6 +524,7 @@ class RoleHandlerTest(BaseApiTestCase):
             CURRENT_USER.username: {
                 "username": CURRENT_USER.username,
                 "role": self.test_roles[CURRENT_USER.username],
+                "follows": [],
                 "bio": None,
                 "institution": None,
                 "projects": None,
@@ -684,6 +693,7 @@ class GlobalACLHandlerTest(BaseApiTestCase):
     def setUp(self) -> None:
         super().setUp()
 
+        # TODO use base instead of self made
         # insert test data
         self.test_roles = {
             CURRENT_ADMIN.username: "admin",
@@ -693,6 +703,7 @@ class GlobalACLHandlerTest(BaseApiTestCase):
             CURRENT_ADMIN.username: {
                 "username": CURRENT_ADMIN.username,
                 "role": self.test_roles[CURRENT_ADMIN.username],
+                "follows": [],
                 "bio": None,
                 "institution": None,
                 "projects": None,
@@ -708,6 +719,7 @@ class GlobalACLHandlerTest(BaseApiTestCase):
             CURRENT_USER.username: {
                 "username": CURRENT_USER.username,
                 "role": self.test_roles[CURRENT_USER.username],
+                "follows": [],
                 "bio": None,
                 "institution": None,
                 "projects": None,
@@ -876,6 +888,7 @@ class SpaceACLHandlerTest(BaseApiTestCase):
     def setUp(self) -> None:
         super().setUp()
 
+        # TODO use base
         # insert test data
         self.test_space = "unittest_space"
         self.test_roles = {
@@ -886,6 +899,7 @@ class SpaceACLHandlerTest(BaseApiTestCase):
             CURRENT_ADMIN.username: {
                 "username": CURRENT_ADMIN.username,
                 "role": self.test_roles[CURRENT_ADMIN.username],
+                "follows": [],
                 "bio": None,
                 "institution": None,
                 "projects": None,
@@ -901,6 +915,7 @@ class SpaceACLHandlerTest(BaseApiTestCase):
             CURRENT_USER.username: {
                 "username": CURRENT_USER.username,
                 "role": self.test_roles[CURRENT_USER.username],
+                "follows": [],
                 "bio": None,
                 "institution": None,
                 "projects": None,
@@ -3307,21 +3322,26 @@ class SearchHandlerTest(BaseApiTestCase):
         # setup basic environment of permissions
         self.base_permission_environment_setUp()
 
-        self.db.profiles.insert_one(
+        self.db.profiles.update_one(
+            {"username": CURRENT_ADMIN.username},
             {
-                "username": CURRENT_ADMIN.username,
-                "bio": "test",
-                "institution": "test",
-                "projects": "test",
-                "profile_pic": "test",
-                "first_name": "test",
-                "last_name": "test",
-                "gender": "test",
-                "address": "test",
-                "birthday": "test",
-                "experience": "test",
-                "education": "test",
-            }
+                "$set": {
+                    "username": CURRENT_ADMIN.username,
+                    "role": "admin",
+                    "follows": [],
+                    "bio": "test",
+                    "institution": "test",
+                    "projects": "test",
+                    "profile_pic": "test",
+                    "first_name": "test",
+                    "last_name": "test",
+                    "gender": "test",
+                    "address": "test",
+                    "birthday": "test",
+                    "experience": "test",
+                    "education": "test",
+                }
+            },
         )
 
         self.post_oid = ObjectId()
@@ -3491,21 +3511,26 @@ class SpaceHandlerTest(BaseApiTestCase):
         # setup basic environment of permissions
         self.base_permission_environment_setUp()
 
-        self.db.profiles.insert_one(
+        self.db.profiles.update_one(
+            {"username": CURRENT_ADMIN.username},
             {
-                "username": CURRENT_ADMIN.username,
-                "bio": "test",
-                "institution": "test",
-                "projects": "test",
-                "profile_pic": "test",
-                "first_name": "test",
-                "last_name": "test",
-                "gender": "test",
-                "address": "test",
-                "birthday": "test",
-                "experience": "test",
-                "education": "test",
-            }
+                "$set": {
+                    "username": CURRENT_ADMIN.username,
+                    "role": "admin",
+                    "follows": [],
+                    "bio": "test",
+                    "institution": "test",
+                    "projects": "test",
+                    "profile_pic": "test",
+                    "first_name": "test",
+                    "last_name": "test",
+                    "gender": "test",
+                    "address": "test",
+                    "birthday": "test",
+                    "experience": "test",
+                    "education": "test",
+                }
+            },
         )
 
         self.post_oid = ObjectId()
@@ -5401,7 +5426,8 @@ class TimelineHandlerTest(BaseApiTestCase):
             {"username": CURRENT_ADMIN.username}, {"$set": {"profile_pic": "test"}}
         )
         self.db.profiles.update_one(
-            {"username": CURRENT_USER.username}, {"$set": {"profile_pic": "default_profile_pic.jpg"}}
+            {"username": CURRENT_USER.username},
+            {"$set": {"profile_pic": "default_profile_pic.jpg"}},
         )
         # 4 test posts, one in space and one normal for admin and for user
         self.post_oids = [ObjectId(), ObjectId(), ObjectId(), ObjectId()]
@@ -5473,7 +5499,6 @@ class TimelineHandlerTest(BaseApiTestCase):
         # cleanup test data
         self.base_permission_environments_tearDown()
         self.db.posts.delete_many({})
-        self.db.follows.delete_many({})
         super().tearDown()
 
     def assert_author_enhanced(self, posts: List[dict]):
@@ -5664,8 +5689,9 @@ class TimelineHandlerTest(BaseApiTestCase):
         """
 
         # follow other user
-        self.db.follows.insert_one(
-            {"user": CURRENT_ADMIN.username, "follows": [CURRENT_USER.username]}
+        self.db.profiles.update_one(
+            {"username": CURRENT_ADMIN.username},
+            {"$set": {"follows": [CURRENT_USER.username]}},
         )
 
         # pull user from space
@@ -5701,8 +5727,9 @@ class TimelineHandlerTest(BaseApiTestCase):
         """
 
         # follow other user
-        self.db.follows.insert_one(
-            {"user": CURRENT_ADMIN.username, "follows": [CURRENT_USER.username]}
+        self.db.profiles.update_one(
+            {"username": CURRENT_ADMIN.username},
+            {"$set": {"follows": [CURRENT_USER.username]}},
         )
 
         response = self.base_checks("GET", "/timeline/you", True, 200)

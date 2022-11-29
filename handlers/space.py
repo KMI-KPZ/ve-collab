@@ -938,6 +938,7 @@ class SpaceHandler(BaseHandler):
         if "space_pic" in self.request.files:
             space_pic_obj = self.request.files["space_pic"][0]
 
+            # TODO deobfuscate
             # save file
             file_ext = os.path.splitext(space_pic_obj["filename"])[1]
             new_file_name = b64encode(os.urandom(32)).decode("utf-8")

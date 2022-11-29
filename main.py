@@ -124,7 +124,7 @@ def make_app(cookie_secret):
 def init_indexes(force_rebuild: bool) -> None:
     """
     build the indexes for posts and profiles (for searching)
-    and spaces, posts and follows (for faster lookups).
+    and spaces, posts and profiles (for faster lookups).
     the weights of the fields are left default (1).
     indexes will be build if a) they don't exist or b) if rebuild is forced by setting force_rebuild to True)
 
@@ -211,19 +211,6 @@ def init_indexes(force_rebuild: bool) -> None:
                 )
             )
 
-        # ascending index on "user" field in follows
-        if "follows_user" not in db.follows.index_information() or force_rebuild:
-            try:
-                db.follows.drop_index("follows_user")
-            except pymongo.errors.OperationFailure:
-                pass
-            db.follows.create_index("user", name="follows_user")
-            logger.info(
-                "Built index named {} on collection {}".format(
-                    "follows_user", "follows"
-                )
-            )
-
         # ascending index on "name" field in spaces
         if "space_name" not in db.spaces.index_information() or force_rebuild:
             try:
@@ -233,19 +220,6 @@ def init_indexes(force_rebuild: bool) -> None:
             db.spaces.create_index("name", name="space_name")
             logger.info(
                 "Built index named {} on collection {}".format("space_name", "spaces")
-            )
-
-        # ascending index on "user" field in follows
-        if "follows_user" not in db.follows.index_information() or force_rebuild:
-            try:
-                db.follows.drop_index("follows_user")
-            except pymongo.errors.OperationFailure:
-                pass
-            db.follows.create_index("user", name="follows_user")
-            logger.info(
-                "Built index named {} on collection {}".format(
-                    "follows_user", "follows"
-                )
             )
 
 
@@ -283,6 +257,7 @@ def create_initial_admin(username: str) -> None:
             {
                 "username": username,
                 "role": "admin",
+                "follows": [],
                 "bio": None,
                 "institution": None,
                 "projects": None,

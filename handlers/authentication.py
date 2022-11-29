@@ -44,9 +44,8 @@ class LoginCallbackHandler(BaseHandler, metaclass=ABCMeta):
             grant_type=["authorization_code"],
             redirect_uri=global_vars.keycloak_callback_url,
         )
-        print(token)
+
         token_info = global_vars.keycloak.introspect(token["access_token"])
-        print(token_info)
 
         # ensure that a profile exists for the user
         # if not, create one
@@ -56,6 +55,7 @@ class LoginCallbackHandler(BaseHandler, metaclass=ABCMeta):
                 {
                     "username": token_info["preferred_username"],
                     "role": "guest",
+                    "follows": [],
                     "bio": None,
                     "institution": None,
                     "projects": None,
@@ -96,7 +96,6 @@ class LogoutHandler(BaseHandler, metaclass=ABCMeta):
         self.clear_cookie("access_token")
 
         # perform logout in keycloak
-        print(self._access_token)
         global_vars.keycloak.logout(self._access_token["refresh_token"])
 
         self.set_status(200)
