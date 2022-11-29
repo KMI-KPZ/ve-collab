@@ -5,7 +5,7 @@ from typing import Dict, Optional
 
 import tornado.web
 
-from acl import ACL
+from resources.acl import ACL
 from handlers.base_handler import BaseHandler, auth_needed
 from logger_factory import log_access
 

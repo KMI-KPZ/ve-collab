@@ -17,7 +17,7 @@ import tornado.locks
 from tornado.options import define, options, parse_command_line
 import tornado.web
 
-from acl import ACL
+from resources.acl import ACL
 import global_vars
 from handlers.authentication import LoginHandler, LoginCallbackHandler, LogoutHandler
 from handlers.follow import FollowHandler

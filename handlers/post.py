@@ -1,13 +1,16 @@
 import json
+import os
 from typing import Dict, Optional
 
 from bson.objectid import ObjectId
 from datetime import datetime
+import tornado.web
 
-from acl import ACL
 from handlers.base_handler import BaseHandler, auth_needed
 from logger_factory import get_logger, log_access
-
+from resources.acl import ACL
+from resources.post import Posts
+from resources.space import Spaces
 
 logger = get_logger(__name__)
 
@@ -85,39 +88,34 @@ class PostHandler(BaseHandler):
 
             # check if space exists, if not, end with 400 Bad Request
             if space is not None:
-                existing_spaces = []
-                for existing_space in self.db.spaces.find(
-                    projection={"name": True, "_id": False}
-                ):
-                    existing_spaces.append(existing_space["name"])
-                if space not in existing_spaces:
-                    self.set_status(400)
-                    self.write(
-                        {
-                            "status": 400,
-                            "success": False,
-                            "reason": "space_doesnt_exist",
-                        }
-                    )
-                    return
+                with Spaces() as db_manager:
+                    if not db_manager.check_space_exists(space):
+                        self.set_status(400)
+                        self.write(
+                            {
+                                "status": 400,
+                                "success": False,
+                                "reason": "space_doesnt_exist",
+                            }
+                        )
+                        return
 
                 # space exists, now determine if user has permission
                 # to post into that space, if not end with 403 insufficient permission
-                user_can_post = False
                 with ACL() as acl:
                     user_can_post = acl.space_acl.ask(
                         self.get_current_user_role(), space, "post"
                     )
-                if not user_can_post:
-                    self.set_status(403)
-                    self.write(
-                        {
-                            "status": 403,
-                            "success": False,
-                            "reason": "insufficient_permission",
-                        }
-                    )
-                    return
+                    if not user_can_post:
+                        self.set_status(403)
+                        self.write(
+                            {
+                                "status": 403,
+                                "success": False,
+                                "reason": "insufficient_permission",
+                            }
+                        )
+                        return
 
             # handle files
             file_amount = self.get_body_argument("file_amount", None)
@@ -127,7 +125,9 @@ class PostHandler(BaseHandler):
                 # save every file
                 for i in range(0, int(file_amount)):
                     file_obj = self.request.files["file" + str(i)][0]
-                    with open(self.upload_dir + file_obj["filename"], "wb") as fp:
+                    with open(
+                        os.path.join(self.upload_dir, file_obj["filename"]), "wb"
+                    ) as fp:
                         fp.write(file_obj["body"])
 
                     files.append(file_obj["filename"])
@@ -145,58 +145,60 @@ class PostHandler(BaseHandler):
                 "likers": [],
             }
 
-            self.db.posts.insert_one(post)
+            with Posts() as db_manager:
+                db_manager.insert_post(post)
 
             self.set_status(200)
             self.write({"status": 200, "success": True})
 
         # _id field present in request, therefore update the existing post
         else:
-            post = self.db.posts.find_one({"_id": ObjectId(_id)})
-            # reject update if the post doesnt exist
-            if not post:
-                self.set_status(409)
-                self.write(
-                    {"status": 409, "success": False, "reason": "post_doesnt_exist"}
-                )
+            try:
+                text = self.get_body_argument("text")
+            except tornado.web.MissingArgumentError:
+                self.set_status(400)
+                self.write({"success": False, "reason": "missing_body_argument:text"})
                 return
 
-            # reject update if current_user is not the author
-            if self.current_user.username != post["author"]:
-                self.set_status(403)
-                self.write(
-                    {"status": 403, "success": False, "reason": "user_not_author"}
-                )
-                return
+            with Posts() as db_manager:
+                post = db_manager.get_post(_id)
 
-            # if the post is in a space, enforce write permission
-            if post["space"]:
-                user_can_post = False
-                with ACL() as acl:
-                    user_can_post = acl.space_acl.ask(
-                        self.get_current_user_role(), post["space"], "post"
-                    )
-                if not user_can_post:
-                    self.set_status(403)
+                # reject update if the post doesnt exist
+                if not post:
+                    self.set_status(409)
                     self.write(
-                        {
-                            "status": 403,
-                            "success": False,
-                            "reason": "insufficient_permission",
-                        }
+                        {"status": 409, "success": False, "reason": "post_doesnt_exist"}
                     )
                     return
 
-            # update the text
-            text = self.get_body_argument("text")
-            self.db.posts.update_one(
-                {"_id": ObjectId(_id)},
-                {
-                    "$set": {
-                        "text": text,
-                    }
-                },
-            )
+                # reject update if current_user is not the author
+                if self.current_user.username != post["author"]:
+                    self.set_status(403)
+                    self.write(
+                        {"status": 403, "success": False, "reason": "user_not_author"}
+                    )
+                    return
+
+                # if the post is in a space, enforce write permission
+                if post["space"]:
+                    user_can_post = False
+                    with ACL() as acl:
+                        user_can_post = acl.space_acl.ask(
+                            self.get_current_user_role(), post["space"], "post"
+                        )
+                    if not user_can_post:
+                        self.set_status(403)
+                        self.write(
+                            {
+                                "status": 403,
+                                "success": False,
+                                "reason": "insufficient_permission",
+                            }
+                        )
+                        return
+
+                # update the text
+                db_manager.update_post_text(_id, text)
 
             self.set_status(200)
             self.write({"status": 200, "success": True})
@@ -262,25 +264,47 @@ class PostHandler(BaseHandler):
             )
             return
 
-        post_to_delete = self.db.posts.find_one(
-            {"_id": ObjectId(http_body["post_id"])},
-        )
+        with Posts() as db_manager:
+            post_to_delete = db_manager.get_post(http_body["post_id"])
 
-        if not post_to_delete:
-            self.set_status(409)
-            self.write({"status": 409, "success": False, "reason": "post_doesnt_exist"})
-            return
+            if not post_to_delete:
+                self.set_status(409)
+                self.write(
+                    {"status": 409, "success": False, "reason": "post_doesnt_exist"}
+                )
+                return
 
-        # if the post is in a space, one of the following allows the user to delete the post:
-        # 1. user is author of the post
-        # 2. user is lionet global admin
-        # 3. user is space admin
-        if post_to_delete["space"]:
-            if self.current_user.username != post_to_delete["author"]:
-                if not self.is_current_user_lionet_admin():
-                    space = self.db.spaces.find_one({"name": post_to_delete["space"]})
-                    if self.current_user.username not in space["admins"]:
-                        # none of the three permission cases apply, deny removal
+            # if the post is in a space, one of the following allows the user to delete the post:
+            # 1. user is author of the post
+            # 2. user is lionet global admin
+            # 3. user is space admin
+            if post_to_delete["space"]:
+                if self.current_user.username != post_to_delete["author"]:
+                    if not self.is_current_user_lionet_admin():
+                        with Spaces() as space_manager:
+                            if not space_manager.check_user_is_space_admin(
+                                post_to_delete["space"], self.current_user.username
+                            ):
+                                # none of the three permission cases apply, deny removal
+                                self.set_status(403)
+                                self.write(
+                                    {
+                                        "status": 403,
+                                        "success": False,
+                                        "reason": "insufficient_permission",
+                                    }
+                                )
+                                return
+
+                # one of the three conditions applied, remove the post
+                db_manager.delete_post(post_to_delete["_id"])
+
+            # if the post is not in a space, the option to be space admin
+            # to remove the post doesnt hold anymore, check only the other 2 options
+            else:
+                if self.current_user.username != post_to_delete["author"]:
+                    if not self.is_current_user_lionet_admin():
+                        # none of the two permission cases apply, deny removal
                         self.set_status(403)
                         self.write(
                             {
@@ -291,27 +315,8 @@ class PostHandler(BaseHandler):
                         )
                         return
 
-            # one of the three conditions applied, remove the post
-            self.db.posts.delete_one({"_id": post_to_delete["_id"]})
-
-        # if the post is not in a space, the option to be space admin
-        # to remove the post doesnt hold anymore, check only the other 2 options
-        else:
-            if self.current_user.username != post_to_delete["author"]:
-                if not self.is_current_user_lionet_admin():
-                    # none of the two permission cases apply, deny removal
-                    self.set_status(403)
-                    self.write(
-                        {
-                            "status": 403,
-                            "success": False,
-                            "reason": "insufficient_permission",
-                        }
-                    )
-                    return
-
-            # one of the three conditions applied, remove the post
-            self.db.posts.delete_one({"_id": ObjectId(http_body["post_id"])})
+                # one of the three conditions applied, remove the post
+                db_manager.delete_post(post_to_delete["_id"])
 
         self.set_status(200)
         self.write({"status": 200, "success": True})
@@ -845,7 +850,9 @@ class RepostHandler(BaseHandler):
             # TODO move this profile stuff to requesting timeline
             # because saving this info to the post is useless since it is changeable
             # when requesting timeline, up to date info is grabbed from profiles collection
-            profile = self.db.profiles.find_one({"username": self.current_user.username})
+            profile = self.db.profiles.find_one(
+                {"username": self.current_user.username}
+            )
             if profile:
                 if "profile_pic" in profile:
                     post["repostAuthorProfilePic"] = profile["profile_pic"]

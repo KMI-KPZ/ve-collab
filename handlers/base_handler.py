@@ -7,7 +7,7 @@ from pymongo import MongoClient
 from tornado.options import options
 import tornado.web
 
-from acl import ACL
+from resources.acl import ACL
 import global_vars
 from logger_factory import get_logger
 from model import User

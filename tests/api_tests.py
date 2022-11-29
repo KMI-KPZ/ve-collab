@@ -11,7 +11,7 @@ from requests_toolbelt import MultipartEncoder
 from tornado.options import options
 from tornado.testing import AsyncHTTPTestCase
 
-from acl import ACL
+from resources.acl import ACL
 import global_vars
 from main import make_app
 from model import User
