@@ -497,57 +497,11 @@ class RoleHandlerTest(BaseApiTestCase):
     def setUp(self) -> None:
         super().setUp()
 
-        # TODO use base instead of self made
         # insert test data
-        self.test_roles = {
-            CURRENT_ADMIN.username: "admin",
-            CURRENT_USER.username: "user",
-        }
-
-        self.test_profiles = {
-            CURRENT_ADMIN.username: {
-                "username": CURRENT_ADMIN.username,
-                "role": self.test_roles[CURRENT_ADMIN.username],
-                "follows": [],
-                "bio": None,
-                "institution": None,
-                "projects": None,
-                "profile_pic": "default_profile_pic.jpg",
-                "first_name": None,
-                "last_name": None,
-                "gender": None,
-                "address": None,
-                "birthday": None,
-                "experience": None,
-                "education": None,
-            },
-            CURRENT_USER.username: {
-                "username": CURRENT_USER.username,
-                "role": self.test_roles[CURRENT_USER.username],
-                "follows": [],
-                "bio": None,
-                "institution": None,
-                "projects": None,
-                "profile_pic": "default_profile_pic.jpg",
-                "first_name": None,
-                "last_name": None,
-                "gender": None,
-                "address": None,
-                "birthday": None,
-                "experience": None,
-                "education": None,
-            },
-        }
-        self.db.profiles.insert_many(
-            [value.copy() for value in self.test_profiles.values()]
-        )
+        self.base_permission_environment_setUp()
 
     def tearDown(self) -> None:
-        # cleanup test data
-        self.db.profiles.delete_many({})
-        # since acl entries get created as a side effect, clean those as well
-        self.db.global_acl.delete_many({})
-        self.db.space_acl.delete_many({})
+        self.base_permission_environments_tearDown()
         super().tearDown()
 
     def _get_my_role(self):
@@ -693,62 +647,10 @@ class GlobalACLHandlerTest(BaseApiTestCase):
     def setUp(self) -> None:
         super().setUp()
 
-        # TODO use base instead of self made
-        # insert test data
-        self.test_roles = {
-            CURRENT_ADMIN.username: "admin",
-            CURRENT_USER.username: "user",
-        }
-        self.test_profiles = {
-            CURRENT_ADMIN.username: {
-                "username": CURRENT_ADMIN.username,
-                "role": self.test_roles[CURRENT_ADMIN.username],
-                "follows": [],
-                "bio": None,
-                "institution": None,
-                "projects": None,
-                "profile_pic": "default_profile_pic.jpg",
-                "first_name": None,
-                "last_name": None,
-                "gender": None,
-                "address": None,
-                "birthday": None,
-                "experience": None,
-                "education": None,
-            },
-            CURRENT_USER.username: {
-                "username": CURRENT_USER.username,
-                "role": self.test_roles[CURRENT_USER.username],
-                "follows": [],
-                "bio": None,
-                "institution": None,
-                "projects": None,
-                "profile_pic": "default_profile_pic.jpg",
-                "first_name": None,
-                "last_name": None,
-                "gender": None,
-                "address": None,
-                "birthday": None,
-                "experience": None,
-                "education": None,
-            },
-        }
-        self.db.profiles.insert_many(
-            [value.copy() for value in self.test_profiles.values()]
-        )
-        self.test_global_acl_rules = {
-            CURRENT_ADMIN.username: {"role": "admin", "create_space": True},
-            CURRENT_USER.username: {"role": "user", "create_space": False},
-        }
-        # pymongo modifies parameters in place (adds _id fields), like WHAT THE FUCK!? anyway, thats why we give it a copy...
-        self.db.global_acl.insert_many(
-            [value.copy() for value in self.test_global_acl_rules.values()]
-        )
+        self.base_permission_environment_setUp()
 
     def tearDown(self) -> None:
-        # cleanup test data
-        self.db.profiles.delete_many({})
-        self.db.global_acl.delete_many({})
+        self.base_permission_environments_tearDown()
         super().tearDown()
 
     def test_get_global_acl(self):
@@ -888,98 +790,10 @@ class SpaceACLHandlerTest(BaseApiTestCase):
     def setUp(self) -> None:
         super().setUp()
 
-        # TODO use base
-        # insert test data
-        self.test_space = "unittest_space"
-        self.test_roles = {
-            CURRENT_ADMIN.username: "admin",
-            CURRENT_USER.username: "user",
-        }
-        self.test_profiles = {
-            CURRENT_ADMIN.username: {
-                "username": CURRENT_ADMIN.username,
-                "role": self.test_roles[CURRENT_ADMIN.username],
-                "follows": [],
-                "bio": None,
-                "institution": None,
-                "projects": None,
-                "profile_pic": "default_profile_pic.jpg",
-                "first_name": None,
-                "last_name": None,
-                "gender": None,
-                "address": None,
-                "birthday": None,
-                "experience": None,
-                "education": None,
-            },
-            CURRENT_USER.username: {
-                "username": CURRENT_USER.username,
-                "role": self.test_roles[CURRENT_USER.username],
-                "follows": [],
-                "bio": None,
-                "institution": None,
-                "projects": None,
-                "profile_pic": "default_profile_pic.jpg",
-                "first_name": None,
-                "last_name": None,
-                "gender": None,
-                "address": None,
-                "birthday": None,
-                "experience": None,
-                "education": None,
-            },
-        }
-
-        self.test_space_acl_rules = {
-            CURRENT_ADMIN.username: {
-                "role": "admin",
-                "space": self.test_space,
-                "join_space": True,
-                "read_timeline": True,
-                "post": True,
-                "comment": True,
-                "read_wiki": True,
-                "write_wiki": True,
-                "read_files": True,
-                "write_files": True,
-            },
-            CURRENT_USER.username: {
-                "role": "user",
-                "space": self.test_space,
-                "join_space": True,
-                "read_timeline": True,
-                "post": True,
-                "comment": True,
-                "read_wiki": False,
-                "write_wiki": False,
-                "read_files": True,
-                "write_files": False,
-            },
-        }
-
-        self.db.spaces.insert_one(
-            {
-                "name": self.test_space,
-                "invisible": False,
-                "members": [CURRENT_ADMIN.username, CURRENT_USER.username],
-                "admins": [CURRENT_ADMIN.username],
-                "invites": [],
-                "requests": [],
-            }
-        )
-        # pymongo modifies parameters in place (adds _id fields), like WHAT THE FUCK!? anyway, thats why we give it a copy...
-        self.db.space_acl.insert_many(
-            [value.copy() for value in self.test_space_acl_rules.values()]
-        )
-        self.db.profiles.insert_many(
-            [value.copy() for value in self.test_profiles.values()]
-        )
+        self.base_permission_environment_setUp()
 
     def tearDown(self) -> None:
-        # cleanup test data
-        self.db.profiles.delete_many({})
-        self.db.space_acl.delete_many({})
-        self.db.spaces.delete_many({})
+        self.base_permission_environments_tearDown()
         super().tearDown()
 
     def test_get_space_acl(self):

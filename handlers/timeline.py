@@ -34,7 +34,7 @@ class BaseTimelineHandler(BaseHandler):
 
     def add_profile_pic_to_author(self, posts: List[Dict]) -> List[Dict]:
         """
-        modify the "author" key of the post to not only be the username,
+        modify the "author" key of the post and comments to not only be the username,
         but a mix of "username" and "profile_pic" as a nested dict
         :returns: the modified posts
         """
