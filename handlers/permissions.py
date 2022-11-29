@@ -10,19 +10,6 @@ from logger_factory import get_logger, log_access
 logger = get_logger(__name__)
 
 
-class PermissionHandler(BaseHandler):
-    @log_access
-    @auth_needed
-    async def get(self):
-        """
-        GET /permissions
-            DEPRECATED, USE /role/my INSTEAD!
-            request the current_user's role
-        """
-        logger.warning("using deprecated endpoint /permission")
-        self.redirect("/role/my")
-
-
 class RoleHandler(BaseHandler):
     @log_access
     @auth_needed

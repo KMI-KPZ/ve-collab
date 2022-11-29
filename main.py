@@ -23,7 +23,6 @@ from handlers.authentication import LoginHandler, LoginCallbackHandler, LogoutHa
 from handlers.follow import FollowHandler
 from handlers.permissions import (
     GlobalACLHandler,
-    PermissionHandler,
     RoleHandler,
     SpaceACLHandler,
 )
@@ -100,7 +99,6 @@ def make_app(cookie_secret):
             (r"/timeline/you", PersonalTimelineHandler),
             (r"/profileinformation", ProfileInformationHandler),
             (r"/users/([a-zA-Z\-0-9\.:,_%]+)", UserHandler),
-            (r"/permissions", PermissionHandler),
             (r"/role/([a-zA-Z\-0-9\.:,_%]+)", RoleHandler),
             (r"/global_acl/([a-zA-Z\-0-9\.:,_%]+)", GlobalACLHandler),
             (r"/space_acl/([a-zA-Z\-0-9\.:,_%]+)", SpaceACLHandler),

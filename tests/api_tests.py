@@ -487,20 +487,6 @@ class FollowHandlerTest(BaseApiTestCase):
         super().tearDown()
 
 
-class PermissionHandlerTest(BaseApiTestCase):
-    def test_get_permissions(self):
-        """
-        expect: a role to be transmitted from keycloak
-        """
-
-        response = self.base_checks("GET", "/permissions", True, 200)
-
-        # since we don't directly control setting what role the user has because it is done in keycloak,
-        # we shouldn't assert any fixed value here. as long as a non-empty role is responded, we are fine
-        self.assertIn("role", response)
-        self.assertNotEqual(response["role"], None)
-
-
 class RoleHandlerTest(BaseApiTestCase):
     def setUp(self) -> None:
         super().setUp()

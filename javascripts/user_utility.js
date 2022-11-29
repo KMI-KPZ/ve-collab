@@ -4,7 +4,7 @@
 function getUserRole(){
   $.ajax({
     type: 'GET',
-    url: '/permissions',
+    url: '/role/my',
     dataType: 'json',
     async: false,
     success: function (data) {
