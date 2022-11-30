@@ -390,48 +390,41 @@ class CommentHandler(BaseHandler):
             )
             return
 
-        post_ref = ObjectId(http_body["post_id"])
+        with Posts() as db_manager:
+            post = db_manager.get_post(http_body["post_id"])
 
-        post = self.db.posts.find_one({"_id": post_ref})
-        if not post:
-            self.set_status(409)
-            self.write({"status": 409, "success": False, "reason": "post_doesnt_exist"})
-            return
+            # abort if post doesnt exist at all
+            if not post:
+                self.set_status(409)
+                self.write(
+                    {"status": 409, "success": False, "reason": "post_doesnt_exist"}
+                )
+                return
 
-        # if post is in a space, we have to check the permissions to comment
-        if post["space"]:
-            with ACL() as acl:
-                if not acl.space_acl.ask(
-                    self.get_current_user_role(), post["space"], "comment"
-                ):
-                    self.set_status(403)
-                    self.write(
-                        {
-                            "status": 403,
-                            "success": False,
-                            "reason": "insufficient_permission",
-                        }
-                    )
-                    return
+            # if post is in a space, we have to check the permissions to comment
+            if post["space"]:
+                with ACL() as acl:
+                    if not acl.space_acl.ask(
+                        self.get_current_user_role(), post["space"], "comment"
+                    ):
+                        self.set_status(403)
+                        self.write(
+                            {
+                                "status": 403,
+                                "success": False,
+                                "reason": "insufficient_permission",
+                            }
+                        )
+                        return
 
-        author = self.current_user.username
-        creation_date = datetime.utcnow()
-        text = http_body["text"]
-
-        self.db.posts.update_one(
-            {"_id": post_ref},  # filter
-            {  # update
-                "$push": {
-                    "comments": {
-                        "_id": ObjectId(),
-                        "author": author,
-                        "creation_date": creation_date,
-                        "text": text,
-                        "pinned": False,
-                    }
-                }
-            },
-        )
+            # create and store the comment
+            comment = {
+                "author": self.current_user.username,
+                "creation_date": datetime.utcnow(),
+                "text": http_body["text"],
+                "pinned": False,
+            }
+            db_manager.add_comment(post["_id"], comment)
 
         self.set_status(200)
         self.write({"status": 200, "success": True})
@@ -502,49 +495,59 @@ class CommentHandler(BaseHandler):
             )
             return
 
-        comment_id = ObjectId(http_body["comment_id"])
+        with Posts() as db_manager:
+            comment_id = ObjectId(http_body["comment_id"])
 
-        post = self.db.posts.find_one({"comments": {"$elemMatch": {"_id": comment_id}}})
-
-        # reject if the post doesnt exist
-        if not post:
-            self.set_status(409)
-            self.write({"status": 409, "success": False, "reason": "post_doesnt_exist"})
-            return
-
-        # reject if there are no comments at all, meaning the desired comment to delete cannot exist
-        if not post["comments"]:
-            self.set_status(409)
-            self.write(
-                {"status": 409, "success": False, "reason": "comment_doesnt_exist"}
+            post = db_manager.get_post_by_comment_id(
+                comment_id, projection={"comments": True, "space": True}
             )
-            return
 
-        # search for the desired comment
-        comment = None
-        for comment_iter in post["comments"]:
-            if comment_iter["_id"] == comment_id:
-                comment = comment_iter
-                break
+            # reject if the post doesnt exist
+            if not post:
+                self.set_status(409)
+                self.write(
+                    {"status": 409, "success": False, "reason": "post_doesnt_exist"}
+                )
+                return
 
-        # reject if the comment was not found
-        if not comment:
-            self.set_status(409)
-            self.write(
-                {"status": 409, "success": False, "reason": "comment_doesnt_exist"}
-            )
-            return
+            # get the author of the desired comment
+            comment_author = None
+            for comment_iter in post["comments"]:
+                if comment_iter["_id"] == comment_id:
+                    comment_author = comment_iter["author"]
+                    break
 
-        # if the post is in a space,
-        # one of the following allows the user to delete the desired comment:
-        # 1. user is author of the comment
-        # 2. user is lionet global admin
-        # 3. user is space admin
-        if post["space"]:
-            if self.current_user.username != comment["author"]:
-                if not self.is_current_user_lionet_admin():
-                    space = self.db.spaces.find_one({"name": post["space"]})
-                    if self.current_user.username not in space["admins"]:
+            # if the post is in a space,
+            # one of the following allows the user to delete the desired comment:
+            # 1. user is author of the comment
+            # 2. user is lionet global admin
+            # 3. user is space admin
+            if post["space"]:
+                if self.current_user.username != comment_author:
+                    if not self.is_current_user_lionet_admin():
+                        with Spaces() as space_manager:
+                            if not space_manager.check_user_is_space_admin(
+                                post["space"], self.current_user.username
+                            ):
+                                # none of the three permission cases apply, deny removal
+                                self.set_status(403)
+                                self.write(
+                                    {
+                                        "status": 403,
+                                        "success": False,
+                                        "reason": "insufficient_permission",
+                                    }
+                                )
+                                return
+
+                # one of the three conditions applied, remove the post
+                db_manager.delete_comment(comment_id, post_id=post["_id"])
+
+            # if the post is not in a space, the option to be space admin
+            # to remove the comment doesnt hold anymore, check only the other 2 options
+            else:
+                if self.current_user.username != comment_author:
+                    if not self.is_current_user_lionet_admin():
                         # none of the three permission cases apply, deny removal
                         self.set_status(403)
                         self.write(
@@ -556,33 +559,8 @@ class CommentHandler(BaseHandler):
                         )
                         return
 
-            # one of the three conditions applied, remove the post
-            self.db.posts.update_one(
-                {"_id": post["_id"]},  # filter
-                {"$pull": {"comments": {"_id": comment_id}}},  # update
-            )
-
-        # if the post is not in a space, the option to be space admin
-        # to remove the comment doesnt hold anymore, check only the other 2 options
-        else:
-            if self.current_user.username != comment["author"]:
-                if not self.is_current_user_lionet_admin():
-                    # none of the three permission cases apply, deny removal
-                    self.set_status(403)
-                    self.write(
-                        {
-                            "status": 403,
-                            "success": False,
-                            "reason": "insufficient_permission",
-                        }
-                    )
-                    return
-
-            # one of the two conditions applied, remove the post
-            self.db.posts.update_one(
-                {"_id": post["_id"]},  # filter
-                {"$pull": {"comments": {"_id": comment_id}}},  # update
-            )
+                # one of the two conditions applied, remove the post
+                db_manager.delete_comment(comment_id, post_id=post["_id"])
 
         self.set_status(200)
         self.write({"status": 200, "success": True})
