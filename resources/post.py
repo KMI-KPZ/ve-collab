@@ -38,6 +38,13 @@ class Posts:
             "likers",
         ]
 
+        self.repost_attributes = [
+            "isRepost",
+            "repostAuthor",
+            "originalCreationDate",
+            "repostText",
+        ]
+
         self.comment_attributes = [
             "author",
             "creation_date",
@@ -109,7 +116,7 @@ class Posts:
         comment_id = self._parse_object_id(comment_id)
 
         return self.db.posts.find_one(
-            {"comments": {"$elemMatch": {"_id": comment_id}}}, projection=projection
+            {"comments._id": comment_id}, projection=projection
         )
 
     def insert_post(self, post: dict) -> None:
@@ -161,6 +168,58 @@ class Posts:
         # we know that there was no post with the given _id
         if delete_result.deleted_count != 1:
             raise PostNotExistingException()
+
+    def like_post(self, post_id: str | ObjectId, username: str) -> None:
+        """
+        Let the given user like a post given by its id
+        :param post_id: the id of the post the user wants to like
+        :param username: the username of the user
+        """
+
+        post_id = self._parse_object_id(post_id)
+
+        # this time we cannot use the modified_count of the update_result to check
+        # existence of the post, because since we will add to a set, the user might
+        # already be a liker, so nothing would change, even though the post does exist
+        post = self.get_post(post_id, projection={"_id": True})
+        if not post:
+            raise PostNotExistingException()
+
+        update_result = self.db.posts.update_one(
+            {"_id": post_id},
+            {"$addToSet": {"likers": username}},
+        )
+
+        # we know that the post existed, so if this time no document was updated
+        # the user already had liked the post before
+        if update_result.modified_count != 1:
+            raise AlreadyLikerException()
+
+    def unlike_post(self, post_id: str | ObjectId, username: str) -> None:
+        """
+        remove the users like on the post given by its id
+        :param post_id: the id of the post to unlike
+        :param username: the username of the user
+        """
+
+        post_id = self._parse_object_id(post_id)
+
+        # this time we cannot use the modified_count of the update_result to check
+        # existence of the post, because since we will add to a set, the user might
+        # already be a liker, so nothing would change, even though the post does exist
+        post = self.get_post(post_id, projection={"_id": True})
+        if not post:
+            raise PostNotExistingException()
+
+        update_result = self.db.posts.update_one(
+            {"_id": post_id},
+            {"$pull": {"likers": username}},
+        )
+
+        # we know that the post existed, so if no document was updated, the user hadn't
+        # liked the post before
+        if update_result.modified_count != 1:
+            raise NotLikerException()
 
     def add_comment(self, post_id: str | ObjectId, comment: dict) -> None:
         """
@@ -218,6 +277,123 @@ class Posts:
         if update_result.modified_count != 1:
             raise PostNotExistingException()
 
+    def insert_repost(self, repost: dict) -> None:
+        """
+        insert a repost, validating the attributes beforehand.
+        If the supplied repost has an _id field,
+        update the existing repost text instead.
+        :param repost: the repost to save as a dict
+        """
+
+        # if the post has an _id, update its text instead
+        if "_id" in repost:
+            if "repostText" not in repost:
+                raise ValueError("Post misses required attribute")
+            return self.update_repost_text(repost["_id"], repost["repostText"])
+
+        # verify post has all the necessary attributes
+        if not all(
+            attr in repost for attr in self.post_attributes + self.repost_attributes
+        ):
+            raise ValueError("Post misses required attribute")
+
+        self.db.posts.insert_one(repost)
+
+    def update_repost_text(self, repost_id: str | ObjectId, text: str) -> None:
+        """
+        update the text of an existing repost
+        """
+
+        repost_id = self._parse_object_id(repost_id)
+
+        # do the update
+        update_result = self.db.posts.update_one(
+            {"_id": repost_id}, {"$set": {"repostText": text}}
+        )
+
+        # if no documents have been modified by the update
+        # we know that there was no post with the given _id
+        if update_result.modified_count != 1:
+            raise PostNotExistingException()
+
+    def pin_post(self, post_id: str | ObjectId) -> None:
+        """
+        pin a post
+        :param post_id: the id of the post
+        """
+
+        post_id = self._parse_object_id(post_id)
+
+        update_result = self.db.posts.update_one(
+            {"_id": post_id}, {"$set": {"pinned": True}}
+        )
+
+        # if no documents have been modified by the update
+        # we know that there was no post with the given _id
+        if update_result.modified_count != 1:
+            raise PostNotExistingException()
+
+    def unpin_post(self, post_id: str | ObjectId) -> None:
+        """
+        remove the pin of a post
+        :param post_id: the id of the post
+        """
+
+        post_id = self._parse_object_id(post_id)
+
+        update_result = self.db.posts.update_one(
+            {"_id": post_id}, {"$set": {"pinned": False}}
+        )
+
+        # if no documents have been modified by the update
+        # we know that there was no post with the given _id
+        if update_result.modified_count != 1:
+            raise PostNotExistingException()
+
+
+    def pin_comment(self, comment_id: str | ObjectId) -> None:
+        """
+        pin a comment
+        :param comment_id: the id of the comment
+        """
+
+        comment_id = self._parse_object_id(comment_id)
+
+        update_result = self.db.posts.update_one(
+            {"comments._id": comment_id}, {"$set": {"comments.$.pinned": True}}
+        )
+
+        # if no documents have been modified by the update
+        # we know that there was no post with the given _id
+        if update_result.modified_count != 1:
+            raise PostNotExistingException()
+
+    def unpin_comment(self, comment_id: str | ObjectId) -> None:
+        """
+        remove the pin of a comment
+        :param comment_id: the id of the comment
+        """
+
+        comment_id = self._parse_object_id(comment_id)
+
+        update_result = self.db.posts.update_one(
+            {"comments._id": comment_id}, {"$set": {"comments.$.pinned": False}}
+        )
+
+        # if no documents have been modified by the update
+        # we know that there was no post with the given _id
+        if update_result.modified_count != 1:
+            raise PostNotExistingException()
+
+
 
 class PostNotExistingException(Exception):
+    pass
+
+
+class AlreadyLikerException(Exception):
+    pass
+
+
+class NotLikerException(Exception):
     pass

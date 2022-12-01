@@ -66,24 +66,44 @@ class BaseTimelineHandler(BaseHandler):
                     "profile_pic": pic_val,
                 }
 
-            # exactly the same procedure for the comments
-            for comment in post["comments"]:
-                comment_author_name = comment["author"]
-                if comment_author_name in pic_cache:
-                    comment["author"] = {
-                        "username": comment_author_name,
-                        "profile_pic": pic_cache[comment_author_name],
-                    }
+            # if the post is a repost, we also have to handle their profile pic
+            if "isRepost" in post and post["isRepost"]:
+                repost_author_name = post["repostAuthor"]
+                if repost_author_name in pic_cache:
+                    post["repostAuthorProfilePic"] = pic_cache[repost_author_name]
                 else:
-                    profile = self.db.profiles.find_one({"username": comment_author_name})
-                    comment_pic_val = (
-                        profile["profile_pic"] if profile else "default_profile_pic.jpg"
+                    repost_profile = self.db.profiles.find_one(
+                        {"username": repost_author_name}
                     )
-                    pic_cache[comment_author_name] = comment_pic_val
-                    comment["author"] = {
-                        "username": comment_author_name,
-                        "profile_pic": comment_pic_val,
-                    }
+                    repost_pic_val = (
+                        repost_profile["profile_pic"]
+                        if repost_profile
+                        else "default_profile_pic.jpg"
+                    )
+                    pic_cache[repost_author_name] = repost_pic_val
+                    post["repostAuthorProfilePic"] = repost_pic_val
+
+            # exactly the same procedure for the comments
+            if "comments" in post and post["comments"]:
+                for comment in post["comments"]:
+                    comment_author_name = comment["author"]
+                    if comment_author_name in pic_cache:
+                        comment["author"] = {
+                            "username": comment_author_name,
+                            "profile_pic": pic_cache[comment_author_name],
+                        }
+                    else:
+                        profile = self.db.profiles.find_one(
+                            {"username": comment_author_name}
+                        )
+                        comment_pic_val = (
+                            profile["profile_pic"] if profile else "default_profile_pic.jpg"
+                        )
+                        pic_cache[comment_author_name] = comment_pic_val
+                        comment["author"] = {
+                            "username": comment_author_name,
+                            "profile_pic": comment_pic_val,
+                        }
 
         return posts
 

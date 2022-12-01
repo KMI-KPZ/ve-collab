@@ -52,7 +52,7 @@ class Spaces:
         )
 
         if not space:
-            return False
+            raise ValueError("Space doesnt exist")
 
         if username in space["admins"]:
             return True
