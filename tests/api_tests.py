@@ -346,9 +346,6 @@ class BaseApiTestCase(AsyncHTTPTestCase):
         )
         content = response.buffer.getvalue().decode()
 
-        # match expected response code
-        self.assertEqual(response.code, expect_response_code)
-
         # expect valid json as response content
         self.assertIsInstance(content, str)
         is_json = validate_json_str(content)
@@ -356,13 +353,20 @@ class BaseApiTestCase(AsyncHTTPTestCase):
 
         content = json.loads(content)
 
-        # expect a "success" key and match expected value
-        self.assertIn("success", content)
-        self.assertEqual(content["success"], expect_success)
+        try:
+            # match expected response code
+            self.assertEqual(response.code, expect_response_code)
 
-        # if we expect an error, we also need to have reason in the message
-        if expect_success == False:
-            self.assertIn("reason", content)
+            # expect a "success" key and match expected value
+            self.assertIn("success", content)
+            self.assertEqual(content["success"], expect_success)
+
+            # if we expect an error, we also need to have reason in the message
+            if expect_success == False:
+                self.assertIn("reason", content)
+        except AssertionError:
+            print(content)
+            raise
 
         return content
 
