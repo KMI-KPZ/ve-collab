@@ -406,10 +406,14 @@ class FollowHandlerTest(BaseApiTestCase):
             {"username": CURRENT_ADMIN.username},
             {"$set": {"follows": self.user_follows}},
         )
+        self.db.profiles.update_one(
+            {"username": CURRENT_USER.username},
+            {"$set": {"follows": self.user_follows}},
+        )
 
     def _db_get_follows(self) -> List[str]:
         """
-        get list of follows for CURRENT_USER from db
+        get list of follows for CURRENT_ADMIN from db
         """
 
         db_response = self.db.profiles.find_one(
@@ -424,7 +428,7 @@ class FollowHandlerTest(BaseApiTestCase):
         """
 
         response = self.base_checks(
-            "GET", "/follow?user={}".format(CURRENT_ADMIN.username), True, 200
+            "GET", "/follow?user={}".format(CURRENT_USER.username), True, 200
         )
 
         # expect a users and a follows key
@@ -432,18 +436,23 @@ class FollowHandlerTest(BaseApiTestCase):
         self.assertIn("follows", response)
 
         # expect user to be the requested one and the users he follows as stated in the setup
-        self.assertEqual(response["user"], CURRENT_ADMIN.username)
+        self.assertEqual(response["user"], CURRENT_USER.username)
         self.assertEqual(response["follows"], self.user_follows)
 
-    def test_get_follows_error_missing_key(self):
+    def test_get_follows_default_current_user(self):
         """
-        expect: missing key error due to user parameter left out of request
+        expect: current user is used, since user query param is not specified
         """
 
-        response = self.base_checks("GET", "/follow", False, 400)
+        response = self.base_checks("GET", "/follow", True, 200)
 
-        # expect a missing_key:user error as the reason
-        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "user")
+        # expect a users and a follows key
+        self.assertIn("user", response)
+        self.assertIn("follows", response)
+
+        # expect user to be the current user and the users he follows as stated in the setup
+        self.assertEqual(response["user"], CURRENT_ADMIN.username)
+        self.assertEqual(response["follows"], self.user_follows)
 
     def test_post_follow(self):
         """
@@ -468,6 +477,26 @@ class FollowHandlerTest(BaseApiTestCase):
         # expect a missing_key:user error as the reason
         self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "user")
 
+    def test_post_follow_error_already_following(self):
+        """
+        expect: fail message because user already follows the other user
+        """
+
+        # manually follow user
+        followed_username = "test_user_added"
+        self.db.profiles.update_one(
+            {"username": CURRENT_ADMIN.username},
+            {"$addToSet": {"follows": followed_username}},
+        )
+
+        # post the request to follow this user and expect 304
+        response = self.fetch(
+            "/follow?user={}".format(followed_username),
+            method="POST",
+            allow_nonstandard_methods=True,
+        )
+        self.assertEqual(response.code, 304)
+
     def test_delete_follow(self):
         """
         expect: the removed follow disappears from the list
@@ -490,6 +519,16 @@ class FollowHandlerTest(BaseApiTestCase):
 
         # expect a missing_key:user error as the reason
         self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "user")
+
+    def test_delete_follow_error_not_following(self):
+        """
+        expect: 304 because we didnt follow the user at all
+        """
+
+        response = self.fetch(
+            "/follow?user={}".format("not_followed_user"), method="DELETE"
+        )
+        self.assertEqual(response.code, 304)
 
     def tearDown(self) -> None:
         # cleanup test data
