@@ -1,3 +1,5 @@
+from typing import List
+
 from pymongo import MongoClient
 
 import global_vars
@@ -58,3 +60,12 @@ class Spaces:
             return True
         else:
             return False
+
+    def get_space_names(self) -> List[str]:
+        """
+        retrieve a list of all existing space names
+        """
+
+        return [
+            space["name"] for space in self.db.spaces.find(projection={"name": True})
+        ]

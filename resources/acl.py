@@ -43,6 +43,24 @@ class ACL:
     def __exit__(self, exc_type, exc_value, exc_traceback):
         self.client.close()
 
+    def ensure_acl_entries(self, role: str) -> None:
+        """
+        ensure that acl entries exist for the current role, 
+        i.e. the role is present in both global acl and the space acl of all spaces.
+        if any one does not exist, create it
+        """
+        from resources.space import Spaces
+
+        if not self.global_acl.get(role):
+            self.global_acl.insert_default(role)
+
+        # insert into space acl of all spaces
+        with Spaces() as space_manager:
+            spaces = space_manager.get_space_names()
+            for space in spaces:
+                if not self.space_acl.get(role, space):
+                    self.space_acl.insert_default(role, space)
+
     def _cleanup_unused_rules(self):
         """
         Delete all ACL entries whose role (or space) does no longer exist, because those entries are orphans.

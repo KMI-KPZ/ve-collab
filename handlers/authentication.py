@@ -6,6 +6,7 @@ import tornado.web
 import global_vars
 from handlers.base_handler import BaseHandler
 from logger_factory import log_access
+from resources.profile import Profiles
 
 
 class LoginHandler(tornado.web.RequestHandler, metaclass=ABCMeta):
@@ -49,27 +50,12 @@ class LoginCallbackHandler(BaseHandler, metaclass=ABCMeta):
 
         # ensure that a profile exists for the user
         # if not, create one
-        profile = self.db.profiles.find_one({"username": token_info["preferred_username"]})
-        if not profile:
-            self.db.profiles.insert_one(
-                {
-                    "username": token_info["preferred_username"],
-                    "role": "guest",
-                    "follows": [],
-                    "bio": None,
-                    "institution": None,
-                    "projects": None,
-                    "profile_pic": "default_profile_pic.jpg",
-                    "first_name": token_info["given_name"],
-                    "last_name": token_info["family_name"],
-                    "gender": None,
-                    "address": None,
-                    "birthday": None,
-                    "experience": None,
-                    "education": None,
-                }
+        with Profiles() as profile_manager:
+            profile_manager.ensure_profile_exists(
+                token_info["preferred_username"],
+                token_info["given_name"],
+                token_info["family_name"],
             )
-            self._create_acl_entry_if_not_exists("guest")
 
         # dump token dict to str and store it in a secure cookie (BaseHandler will decode it later to validate a user is logged in)
         self.set_secure_cookie("access_token", json.dumps(token))
