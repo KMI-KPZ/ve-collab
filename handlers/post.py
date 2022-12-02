@@ -126,7 +126,7 @@ class PostHandler(BaseHandler):
             file_amount = self.get_body_argument("file_amount", None)
             files = []
             if file_amount:
-                # TODO store files in mongodb instead of filesystem
+                # TODO maybe store files in mongodb instead of filesystem
                 # save every file
                 for i in range(0, int(file_amount)):
                     file_obj = self.request.files["file" + str(i)][0]
@@ -675,7 +675,7 @@ class LikePostHandler(BaseHandler):
         with Posts() as db_manager:
             try:
                 db_manager.like_post(http_body["post_id"], self.current_user.username)
-            except AlreadyLikerException:  # TODO catch those cases in tests
+            except AlreadyLikerException:
                 self.set_status(304)
                 return
             except PostNotExistingException:
@@ -751,7 +751,7 @@ class LikePostHandler(BaseHandler):
         with Posts() as db_manager:
             try:
                 db_manager.unlike_post(http_body["post_id"], self.current_user.username)
-            except NotLikerException:  # TODO catch those cases in tests
+            except NotLikerException:
                 self.set_status(304)
                 return
             except PostNotExistingException:

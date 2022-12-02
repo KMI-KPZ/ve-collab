@@ -2158,6 +2158,37 @@ class LikePostHandlerTest(BaseApiTestCase):
             response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "post_id"
         )
 
+    def test_post_like_error_post_doesnt_exist(self):
+        """
+        expect: fail message because post doesnt exist
+        """
+
+        request = {"post_id": str(ObjectId())}
+
+        response = self.base_checks("POST", "/like", False, 409, body=request)
+        self.assertEqual(response["reason"], POST_DOESNT_EXIST_ERROR)
+
+    def test_post_like_error_already_liker(self):
+        """
+        expect: fail message because person already liked post
+        """
+
+        # set user as liked
+        self.db.posts.update_one(
+            {"_id": self.post_oid}, {"$addToSet": {"likers": CURRENT_ADMIN.username}}
+        )
+
+        request = {"post_id": str(self.post_oid)}
+
+        # cannot use base_checks because 304 doesnt not allow to send content
+        response = self.fetch(
+            "/like",
+            method="POST",
+            body=json.dumps(request),
+            allow_nonstandard_methods=True,
+        )
+        self.assertEqual(response.code, 304)
+
     def test_delete_like(self):
         """
         like gets deleted from db
@@ -2186,6 +2217,32 @@ class LikePostHandlerTest(BaseApiTestCase):
         self.assertEqual(
             response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "post_id"
         )
+
+    def test_delete_like_error_post_doesnt_exist(self):
+        """
+        expect: fail message because post doesnt exist
+        """
+
+        request = {"post_id": str(ObjectId())}
+
+        response = self.base_checks("DELETE", "/like", False, 409, body=request)
+        self.assertEqual(response["reason"], POST_DOESNT_EXIST_ERROR)
+
+    def test_delete_like_error_not_liker(self):
+        """
+        expect: fail message because person already liked post
+        """
+
+        request = {"post_id": str(self.post_oid)}
+
+        # cannot use base_checks because 304 doesnt not allow to send content
+        response = self.fetch(
+            "/like",
+            method="DELETE",
+            body=json.dumps(request),
+            allow_nonstandard_methods=True,
+        )
+        self.assertEqual(response.code, 304)
 
 
 class RepostHandlerTest(BaseApiTestCase):
