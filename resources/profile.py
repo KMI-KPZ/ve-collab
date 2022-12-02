@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict, List, Optional
 
 from pymongo import MongoClient
 
@@ -30,6 +30,52 @@ class Profiles:
     def __exit__(self, exc_type, exc_value, exc_traceback):
         self.client.close()
 
+    def get_profile(self, username: str, projection: dict = None) -> Optional[Dict]:
+        """
+        get the profile data of the given user. optionally specify a projection
+        to reduce query to the necessary fields (increases performance)
+        :return: the profile data as a dict
+        """
+
+        return self.db.profiles.find_one({"username": username}, projection=projection)
+
+    def get_all_profiles(self, projection: dict = None) -> List[Dict]:
+        """
+        get all profiles from the database. optionally specify a projection to
+        reduce response to the necessary fields (increases performance)
+        """
+
+        return list(self.db.profiles.find(projection=projection))
+
+    def insert_default_profile(
+        self, username: str, first_name: str = None, last_name: str = None
+    ) -> None:
+        """
+        insert a default profile into the db, initializing the role as 'guest' and the
+        default profile picture and setting all other values to false.
+        Optionally, if known, the first and last name can be already set.
+        :param username: the username of the new user
+        """
+
+        self.db.profiles.insert_one(
+            {
+                "username": username,
+                "role": "guest",
+                "follows": [],
+                "bio": None,
+                "institution": None,
+                "projects": None,
+                "profile_pic": "default_profile_pic.jpg",
+                "first_name": first_name,
+                "last_name": last_name,
+                "gender": None,
+                "address": None,
+                "birthday": None,
+                "experience": None,
+                "education": None,
+            }
+        )
+
     def ensure_profile_exists(
         self, username: str, first_name: str = None, last_name: str = None
     ) -> None:
@@ -45,29 +91,10 @@ class Profiles:
         """
 
         # create a profile if it does not exist
-        if not self.db.profiles.find_one(
-            {"username": username}, projection={"_id": True}
-        ):
-            self.db.profiles.insert_one(
-                {
-                    "username": username,
-                    "role": "guest",
-                    "follows": [],
-                    "bio": None,
-                    "institution": None,
-                    "projects": None,
-                    "profile_pic": "default_profile_pic.jpg",
-                    "first_name": first_name,
-                    "last_name": last_name,
-                    "gender": None,
-                    "address": None,
-                    "birthday": None,
-                    "experience": None,
-                    "education": None,
-                }
-            )
+        if not self.get_profile(username, projection={"_id": True}):
+            self.insert_default_profile(username, first_name, last_name)
 
-            # check if the guest role exists, if we created a new user
+            # check if the guest role exists, since we might do this for the very first time
             from resources.acl import ACL
 
             with ACL() as acl_manager:
@@ -80,9 +107,7 @@ class Profiles:
         :return: list of usernames the user follows, or an empty list
         """
 
-        result = self.db.profiles.find_one(
-            {"username": username}, projection={"_id": False, "follows": True}
-        )
+        result = self.get_profile(username, projection={"_id": False, "follows": True})
         return result["follows"] if result else []
 
     def add_follows(self, username: str, username_to_follow: str) -> None:
@@ -119,10 +144,102 @@ class Profiles:
         if update_result.modified_count != 1:
             raise NotFollowedException()
 
+    def get_role(self, username: str) -> Optional[str]:
+        """
+        get the role of the user. If no profile exists for the user,
+        a `ProfileDoesntExistException` is thrown.
+        """
+
+        role_result = self.get_profile(username, projection={"role": True})
+
+        if not role_result:
+            raise ProfileDoesntExistException()
+
+        return role_result["role"]
+
+    def set_role(self, username: str, role: str) -> None:
+        """
+        set the role of a user. If no profile exists for the user,
+        a `ProfileDoesntExistException` is thrown.
+        """
+
+        update_result = self.db.profiles.update_one(
+            {"username": username}, {"$set": {"role": role}}
+        )
+        # if no document was modified, the user profile doesnt exist
+        if update_result.modified_count != 1:
+            raise ProfileDoesntExistException()
+
+
+    def get_all_roles(self, keycloak_user_list: List[Dict]) -> List[dict]:
+        """
+        produce a list of dicts containing the following information:
+        {"username": <username>, "role": <role>}
+        by joining a list of keycloak user with our profile database on the username.
+        This extra step is needed, because users are only recognized in our database
+        when they first log in, but they should be referencable by other users before that.
+        To achieve that, we create a profile for them if it does not already exist
+        """
+
+        existing_users_and_roles = self.get_all_profiles(
+            projection={"_id": False, "username": True, "role": True}
+        )
+
+        ret_list = []
+
+        # match the platform users and if they have, existing lionet roles
+        for platform_user in keycloak_user_list:
+            already_in = False
+            for existing_user in existing_users_and_roles:
+                if platform_user["username"] == existing_user["username"]:
+                    ret_list.append(existing_user)
+                    already_in = True
+                    break
+            if already_in:  # skip if user is already processed
+                continue
+
+            # if the user does not already exist, add him with guest role
+            self.insert_default_profile(platform_user["username"])
+            # manually create return entry
+            # because otherwise non-json-serializable ObjectId is in payload
+            ret_list.append(
+                {
+                    "username": platform_user["username"],
+                    "role": "guest",
+                }
+            )
+
+            # check once if the guest role was present
+            # (once is enough, there might be many keycloak users coming in,
+            # checking for the same role on everyone is useless overhead)
+            # if there was no user that has been added as guest, we dont even
+            # need to do the check at all because this statement would always
+            # be skipped
+            checked_guest_role_present = False
+            if not checked_guest_role_present:
+                from resources.acl import ACL
+
+                with ACL() as acl_manager:
+                    acl_manager.ensure_acl_entries("guest")
+                checked_guest_role_present = True
+
+        return ret_list
+
+    def get_distinct_roles(self) -> List[str]:
+        """
+        get a list of distinct roles, i.e. all roles that atleast one user has
+        """
+
+        return self.db.profiles.distinct("role")
+
 
 class AlreadyFollowedException(Exception):
     pass
 
 
 class NotFollowedException(Exception):
+    pass
+
+
+class ProfileDoesntExistException(Exception):
     pass

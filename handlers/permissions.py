@@ -2,9 +2,10 @@ import json
 
 import tornado.web
 
-from resources.acl import ACL
 from handlers.base_handler import BaseHandler, auth_needed
 from logger_factory import get_logger, log_access
+from resources.acl import ACL
+from resources.profile import Profiles, ProfileDoesntExistException
 
 
 logger = get_logger(__name__)
@@ -19,110 +20,39 @@ class RoleHandler(BaseHandler):
             request the role of the current user
         """
         if slug == "my":
-            role_result = self.db.profiles.find_one(
-                {"username": self.current_user.username}
-            )
-
-            if role_result:
-                self.set_status(200)
-                self.write(
-                    {
-                        "success": True,
-                        "username": role_result["username"],
-                        "role": role_result["role"],
-                    }
-                )
-            else:
-                # no record for this user was found, insert as guest (default role)
-                self.db.profiles.insert_one(
-                    {
-                        "username": self.current_user.username,
-                        "role": "guest",
-                        "follows": [],
-                        "bio": None,
-                        "institution": None,
-                        "projects": None,
-                        "profile_pic": "default_profile_pic.jpg",
-                        "first_name": None,
-                        "last_name": None,
-                        "gender": None,
-                        "address": None,
-                        "birthday": None,
-                        "experience": None,
-                        "education": None,
-                    }
-                )
-                self._create_acl_entry_if_not_exists("guest")
-
-                self.set_status(200)
-                self.write(
-                    {
-                        "success": True,
-                        "username": self.current_user.username,
-                        "role": "guest",
-                        "note": "created_because_no_previous_record",
-                    }
-                )
+            with Profiles() as db_manager:
+                try:
+                    role_result = db_manager.get_role(self.current_user.username)
+                    self.set_status(200)
+                    self.write(
+                        {
+                            "success": True,
+                            "username": self.current_user.username,
+                            "role": role_result,
+                        }
+                    )
+                    return
+                except ProfileDoesntExistException:
+                    # if user has no profile, ensure to create one (as "guest" role)
+                    db_manager.ensure_profile_exists(self.current_user.username)
+                    self.set_status(200)
+                    self.write(
+                        {
+                            "success": True,
+                            "username": self.current_user.username,
+                            "role": "guest",
+                            "note": "created_because_no_previous_record",
+                        }
+                    )
+                    return
 
         elif slug == "all":
             if self.is_current_user_lionet_admin():
                 ret_list = []
                 user_list_kc = self.get_keycloak_user_list()
-                existing_users_and_roles = list(
-                    self.db.profiles.find(
-                        projection={"_id": False, "username": True, "role": True}
-                    )
-                )
 
-                # match the platform users and if they have, existing lionet roles
-                for platform_user in user_list_kc:
-                    already_in = False
-                    for existing_user in existing_users_and_roles:
-                        if platform_user["username"] == existing_user["username"]:
-                            ret_list.append(existing_user)
-                            already_in = True
-                            break
-                    if already_in:  # skip if user is already processed
-                        continue
-
-                    # if the user does not already exist, add him with guest role
-                    payload = {
-                        "username": platform_user["username"],
-                        "role": "guest",
-                        "follows": [],
-                        "bio": None,
-                        "institution": None,
-                        "projects": None,
-                        "profile_pic": "default_profile_pic.jpg",
-                        "first_name": None,
-                        "last_name": None,
-                        "gender": None,
-                        "address": None,
-                        "birthday": None,
-                        "experience": None,
-                        "education": None,
-                    }
-                    self.db.profiles.insert_one(payload)
-
-                    # manually create return entry
-                    # because otherwise non-json-serializable ObjectId is in payload
-                    ret_list.append(
-                        {
-                            "username": platform_user["username"],
-                            "role": "guest",
-                        }
-                    )
-
-                    # check once if the guest role was present
-                    # (once is enough, there might be many keycloak users coming in,
-                    # checking for the same role on everyone is useless overhead)
-                    # if there was no user that has been added as guest, we dont even
-                    # need to do the check at all because this statement would always
-                    # be skipped
-                    checked_guest_role_present = False
-                    if not checked_guest_role_present:
-                        self._create_acl_entry_if_not_exists(payload["role"])
-                        checked_guest_role_present = True
+                with Profiles() as db_manager:
+                    ret_list = db_manager.get_all_roles(user_list_kc)
 
                 self.set_status(200)
                 self.write({"success": True, "users": ret_list})
@@ -134,7 +64,8 @@ class RoleHandler(BaseHandler):
 
         elif slug == "distinct":
             if self.is_current_user_lionet_admin():
-                roles = self.db.profiles.distinct("role")
+                with Profiles() as db_manager:
+                    roles = db_manager.get_distinct_roles()
                 self.set_status(200)
                 self.write({"success": True, "existing_roles": roles})
 
@@ -221,14 +152,11 @@ class RoleHandler(BaseHandler):
                     )
                     return
 
-                username = http_body["username"]
-                role = http_body["role"]
+                with Profiles() as db_manager:
+                    db_manager.set_role(http_body["username"], http_body["role"])
 
-                self.db.profiles.update_one(
-                    {"username": username}, {"$set": {"role": role}}
-                )
-
-                self._create_acl_entry_if_not_exists(role)
+                with ACL() as acl_manager:
+                    acl_manager.ensure_acl_entries(http_body["role"])
 
                 self.set_status(200)
                 self.write({"status": 200, "success": True})
