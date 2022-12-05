@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from pymongo import MongoClient
 
@@ -60,6 +60,15 @@ class Spaces:
             return True
         else:
             return False
+
+    def get_space(self, space_name: str, projection: dict = None) -> Optional[dict]:
+        """
+        get the space data of the space given by its name. optionally specify a projection
+        to reduce query to the necessary fields (increases performance)
+        :return: the space data as a dict or None, if the space doesnt exist
+        """
+
+        return self.db.spaces.find_one({"name": space_name}, projection=projection)
 
     def get_space_names(self) -> List[str]:
         """

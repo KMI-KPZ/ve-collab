@@ -170,6 +170,18 @@ class Profiles:
         if update_result.modified_count != 1:
             raise ProfileDoesntExistException()
 
+    def check_role_exists(self, role: str) -> bool:
+        """
+        check if the given role exists, i.e. atleast one user has this role.
+        :param role: the role to check for
+        :return: True if the role exists, False otherwise
+        """
+
+        if self.db.profiles.find_one({"role": role}, projection={"_id": True}):
+            return True
+        else:
+            return False
+
 
     def get_all_roles(self, keycloak_user_list: List[Dict]) -> List[dict]:
         """
