@@ -5,9 +5,18 @@ from typing import Dict, Optional
 
 import tornado.web
 
-from resources.acl import ACL
 from handlers.base_handler import BaseHandler, auth_needed
 from logger_factory import log_access
+from resources.acl import ACL
+from resources.profile import Profiles
+from resources.space import (
+    AlreadyAdminError,
+    Spaces,
+    SpaceAlreadyExistsError,
+    SpaceDoesntExistError,
+    AlreadyMemberError,
+    AlreadyRequestedJoinError,
+)
 
 
 class SpaceHandler(BaseHandler):
@@ -630,7 +639,8 @@ class SpaceHandler(BaseHandler):
             self.write({"success": False, "reason": "missing_key:name"})
             return
 
-        space = self.db.spaces.find_one({"name": space_name})
+        with Spaces() as space_manager:
+            space = space_manager.get_space(space_name)
         if not space:
             self.set_status(409)
             self.write({"success": False, "reason": "space_doesnt_exist"})
@@ -676,7 +686,8 @@ class SpaceHandler(BaseHandler):
 
     def list_spaces(self) -> None:
         """
-        list all available spaces, requires admin privilegs because it includes invisible spaces
+        list all available spaces, requires admin privilegs
+        because it includes invisible spaces
         """
 
         # abort if user is not global admin
@@ -685,12 +696,13 @@ class SpaceHandler(BaseHandler):
             self.write({"success": False, "reason": "insufficient_permission"})
             return
 
-        result = self.db.spaces.find({})
+        with Spaces() as space_manager:
+            spaces = space_manager.get_all_spaces()
 
-        spaces = []
-        for space in result:
-            space["_id"] = str(space["_id"])
-            spaces.append(space)
+        # make _ids json-serializable
+        for space in spaces:
+            if "_id" in space:
+                space["_id"] = str(space["_id"])
 
         self.set_status(200)
         self.write({"success": True, "spaces": spaces})
@@ -705,22 +717,15 @@ class SpaceHandler(BaseHandler):
             - you are a member of (no matter visibility setting)
         """
 
-        # query 3 criteria above
-        result = self.db.spaces.find(
-            {
-                "$or": [
-                    {"invisible": False},
-                    {"invisible": {"$exists": False}},
-                    {"members": self.current_user.username},
-                ]
-            }
-        )
+        with Spaces() as space_manager:
+            spaces = space_manager.get_all_spaces_visible_to_user(
+                self.current_user.username
+            )
 
-        # stringify ObjectId instance
-        spaces = []
-        for space in result:
-            space["_id"] = str(space["_id"])
-            spaces.append(space)
+        # make _ids json-serializable
+        for space in spaces:
+            if "_id" in space:
+                space["_id"] = str(space["_id"])
 
         self.set_status(200)
         self.write({"success": True, "spaces": spaces})
@@ -731,10 +736,10 @@ class SpaceHandler(BaseHandler):
         get all pending invites into spaces for the current user
         """
 
-        spaces = self.db.spaces.find({"invites": self.current_user.username})
-        pending_invites = []
-        for space in spaces:
-            pending_invites.append(space["name"])
+        with Spaces() as space_manager:
+            pending_invites = space_manager.get_space_invites_of_user(
+                self.current_user.username
+            )
 
         self.set_status(200)
         self.write({"success": True, "pending_invites": pending_invites})
@@ -743,7 +748,11 @@ class SpaceHandler(BaseHandler):
         """
         view invites for the given space (requires space admin or global admin privileges)
         """
-        space = self.db.spaces.find_one({"name": space_name})
+        with Spaces() as space_manager:
+            space = space_manager.get_space(
+                space_name,
+                projection={"_id": False, "admins": True, "invites": True},
+            )
 
         # abort if space doesnt exist
         if not space:
@@ -768,7 +777,11 @@ class SpaceHandler(BaseHandler):
         view join requests for the given space (requires space admin or global admin privileges)
         """
 
-        space = self.db.spaces.find_one({"name": space_name})
+        with Spaces() as space_manager:
+            space = space_manager.get_space(
+                space_name,
+                projection={"_id": False, "admins": True, "requests": True},
+            )
 
         # abort if space doesnt exist
         if not space:
@@ -790,11 +803,12 @@ class SpaceHandler(BaseHandler):
 
     def create_space(self, space_name: str, is_invisible: bool) -> None:
         """
-        create a new space if it does not already exist and if the current user has sufficient permissions
+        create a new space if it does not already exist and if the
+        current user has sufficient permissions
         """
 
-        # check if the user has permission
-        with ACL() as acl:
+        with (Spaces() as space_manager, Profiles() as profile_manager, ACL() as acl):
+            # check if the user has permission
             if not acl.global_acl.ask(self.get_current_user_role(), "create_space"):
                 self.set_status(403)
                 self.write(
@@ -805,29 +819,39 @@ class SpaceHandler(BaseHandler):
                 )
                 return
 
-        members = [self.current_user.username]
+            space = {
+                "name": space_name,
+                "invisible": is_invisible,
+                "members": [self.current_user.username],
+                "admins": [self.current_user.username],
+                "invites": [],
+                "requests": [],
+            }
 
-        # if space with same name already exists dont create and return conflict
-        if self.db.spaces.find_one({"name": space_name}):
-            self.set_status(409)
-            self.write({"success": False, "reason": "space_name_already_exists"})
-            return
+            try:
+                # create the space
+                space_manager.create_space(space)
+            except ValueError:
+                self.set_status(500)
+                self.write(
+                    {
+                        "success": False,
+                        "reason": "unexpectedly_missing_required_attribute",
+                    }
+                )
+                return
+            except TypeError:
+                self.set_status(500)
+                self.write({"success": False, "reason": "unexpected_type_mismatch"})
+                return
+            except SpaceAlreadyExistsError:
+                self.set_status(409)
+                self.write({"success": False, "reason": "space_name_already_exists"})
+                return
 
-        space = {
-            "name": space_name,
-            "invisible": is_invisible,
-            "members": members,
-            "admins": [self.current_user.username],
-            "invites": [],
-            "requests": [],
-        }
-        self.db.spaces.insert_one(space)
-
-        # create default acl entry for all different roles
-        with ACL() as acl:
+            # also create default acl entry for all different roles
             acl.space_acl.insert_admin(space_name)
-            roles = self.db.profiles.distinct("role")
-            for role in roles:
+            for role in profile_manager.get_distinct_roles():
                 if role != "admin":
                     acl.space_acl.insert_default(role, space_name)
 
@@ -840,76 +864,82 @@ class SpaceHandler(BaseHandler):
         if not, let him send a join request instead
         """
 
-        # abort if space doesnt exist
-        space = self.db.spaces.find_one({"name": space_name})
-        if not space:
-            self.set_status(409)
-            self.write({"success": False, "reason": "space_doesnt_exist"})
-            return
+        with (Spaces() as space_manager, ACL() as acl):
+            try:
+                # reject if the user is already a space member
+                if space_manager.check_user_is_member(
+                    space_name, self.current_user.username
+                ):
+                    self.set_status(409)
+                    self.write({"success": False, "reason": "user_already_member"})
+                    return
+            except SpaceDoesntExistError:
+                self.set_status(409)
+                self.write({"success": False, "reason": "space_doesnt_exist"})
+                return
 
-        # abort if user is already member of space
-        if self.current_user.username in space["members"]:
-            self.set_status(409)
-            self.write({"success": False, "reason": "user_already_member"})
-            return
-
-        with ACL() as acl:
-            # user is not allowed to join spaces directly, therefore send join request instead of joining directly
+            # if user is not allowed to join spaces directly,
+            # send join request instead of joining directly
             if not acl.space_acl.ask(
                 self.get_current_user_role(), space_name, "join_space"
             ):
-                self.db.spaces.update_one(
-                    {"name": space_name},
-                    {"$addToSet": {"requests": self.current_user.username}},
-                )
+                space_manager.join_space_request(space_name, self.current_user.username)
 
                 self.set_status(200)
                 self.write({"success": True, "join_type": "requested_join"})
                 return
 
-        # user has permission to join spaces, directly add him as member
-        self.db.spaces.update_one(
-            {"name": space_name}, {"$addToSet": {"members": self.current_user.username}}
-        )
+            # user has permission to join spaces, directly add him as member
+            space_manager.join_space(space_name, self.current_user.username)
 
-        self.set_status(200)
-        self.write({"success": True, "join_type": "joined"})
+            self.set_status(200)
+            self.write({"success": True, "join_type": "joined"})
 
     def add_admin_to_space(self, space_name: str, username: str) -> None:
         """
         add another user as a space admin to the space, requires space admin or global admin to perform this operation
         """
 
-        # reject if space doesnt exist
-        space = self.db.spaces.find_one({"name": space_name})
-        if not space:
-            self.set_status(409)
-            self.write({"success": False, "reason": "space_doesnt_exist"})
-            return
+        with (Spaces() as space_manager):
+            space = space_manager.get_space(
+                space_name, projection={"_id": False, "members": True, "admins": True}
+            )
 
-        # reject is user is not even a member of the space
-        # technically this could be allowed here and we could also set the member status
-        # but this would kinda be a side effect then
-        if username not in space["members"]:
-            self.set_status(409)
-            self.write({"success": False, "reason": "user_not_member_of_space"})
-            return
+            # reject if space doesnt exist
+            if not space:
+                self.set_status(409)
+                self.write({"success": False, "reason": "space_doesnt_exist"})
+                return
 
-        if not (
-            (self.current_user.username in space["admins"])
-            or (self.get_current_user_role() == "admin")
-        ):
-            self.set_status(403)
-            self.write({"success": False, "reason": "insufficient_permission"})
-            return
+            # reject is user is not even a member of the space
+            # technically this could be allowed here and 
+            # we could also set the member status
+            # but this would kinda be a side effect then
+            if username not in space["members"]:
+                self.set_status(409)
+                self.write({"success": False, "reason": "user_not_member_of_space"})
+                return
 
-        # user is either space admin or global admin and therefore is allowed to add space admin
-        self.db.spaces.update_one(
-            {"name": space_name}, {"$addToSet": {"admins": username}}
-        )
+            # reject if calling user is neither global nor space admin
+            if not (
+                (self.current_user.username in space["admins"])
+                or (self.get_current_user_role() == "admin")
+            ):
+                self.set_status(403)
+                self.write({"success": False, "reason": "insufficient_permission"})
+                return
 
-        self.set_status(200)
-        self.write({"success": True})
+            # user is either space admin or global admin and
+            # therefore is allowed to add space admin
+            try:
+                space_manager.add_space_admin(space_name, username)
+                self.set_status(200)
+                self.write({"success": True})
+            except AlreadyAdminError:
+                self.set_status(409)
+                self.write({"success": False, "reason": "user_already_admin"})
+                # TODO test
+                return
 
     def update_space_information(
         self, space_name: str, space_description: Optional[str]
@@ -1261,7 +1291,9 @@ class SpaceHandler(BaseHandler):
             return
 
         # remove user from spaces admins list
-        self.db.spaces.update_one({"name": space["name"]}, {"$pull": {"admins": username}})
+        self.db.spaces.update_one(
+            {"name": space["name"]}, {"$pull": {"admins": username}}
+        )
 
         self.set_status(200)
         self.write({"success": True})
