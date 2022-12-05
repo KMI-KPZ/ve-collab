@@ -61,7 +61,7 @@ class Spaces:
         else:
             return False
 
-    def get_space(self, space_name: str, projection: dict = None) -> Optional[dict]:
+    def get_space(self, space_name: str, projection: dict = {}) -> Optional[dict]:
         """
         get the space data of the space given by its name. optionally specify a projection
         to reduce query to the necessary fields (increases performance)
@@ -77,4 +77,18 @@ class Spaces:
 
         return [
             space["name"] for space in self.db.spaces.find(projection={"name": True})
+        ]
+
+    def get_spaces_of_user(self, username: str) -> List[str]:
+        """
+        retrieve a list of space names that the given user is a member of.
+        :param username: the user to query for
+        :return: list of space names, or an empty list, if the user is not a member of any space
+        """
+
+        return [
+            space["name"]
+            for space in self.db.spaces.find(
+                {"members": username}, projection={"name": True}
+            )
         ]

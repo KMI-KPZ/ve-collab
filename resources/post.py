@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 from bson.objectid import ObjectId
 from pymongo import MongoClient
@@ -118,6 +118,27 @@ class Posts:
         return self.db.posts.find_one(
             {"comments._id": comment_id}, projection=projection
         )
+
+    def get_posts_by_tags(self, tags: List[str], projection: dict = {}) -> List[Dict]:
+        """
+        query all posts from the database that have the given tags.
+        :param tags: the tag to search the posts for
+        :param projection: optionally specify a projection to only return
+                           a subset of the document's fields (limit your query
+                           to only the necessary fields to increase performance)
+        :return: List of posts (as dicts) that have the desired tag
+        """
+
+        return list(self.db.posts.find({"tags": {"$all": tags}}, projection=projection))
+
+    def fulltext_search(self, query: str) -> List[Dict]:
+        """
+        do a fulltext search on the post text index and return the matching posts.
+        :param query: the full text search query
+        :return: List of posts (as dicts) matching the query
+        """
+
+        return list(self.db.posts.find({"$text": {"$search": query}}))
 
     def insert_post(self, post: dict) -> None:
         """
@@ -350,7 +371,6 @@ class Posts:
         if update_result.modified_count != 1:
             raise PostNotExistingException()
 
-
     def pin_comment(self, comment_id: str | ObjectId) -> None:
         """
         pin a comment
@@ -384,7 +404,6 @@ class Posts:
         # we know that there was no post with the given _id
         if update_result.modified_count != 1:
             raise PostNotExistingException()
-
 
 
 class PostNotExistingException(Exception):

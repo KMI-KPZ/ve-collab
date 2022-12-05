@@ -244,6 +244,15 @@ class Profiles:
 
         return self.db.profiles.distinct("role")
 
+    def fulltext_search(self, query: str) -> List[Dict]:
+        """
+        do a fulltext search on the profile text index and return the matching profiles.
+        :param query: the full text search query
+        :return: List of profiles (as dicts) matching the query
+        """
+
+        return list(self.db.profiles.find({"$text": {"$search": query}}))
+
 
 class AlreadyFollowedException(Exception):
     pass

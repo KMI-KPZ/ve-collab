@@ -3,6 +3,9 @@ import tornado.web
 
 from handlers.base_handler import BaseHandler, auth_needed
 from logger_factory import log_access
+from resources.post import Posts
+from resources.profile import Profiles
+from resources.space import Spaces
 
 
 class SearchHandler(BaseHandler):
@@ -14,6 +17,7 @@ class SearchHandler(BaseHandler):
         search the database for posts, tags, and users
         required parameters:
             query - search query
+                (if you search for tags, u may use a comma-delimited list of strings to search for multiple tags)
 
         optional parameters: (at least one needs to be true obviously, default behaviour is "false", i.e. not included in search)
             posts - bool to include posts in the search (only "true" will evaluate to True!)
@@ -82,7 +86,7 @@ class SearchHandler(BaseHandler):
             users_search_result = self._search_users(query)
 
         if search_tags:
-            tags_search_result = self._search_tags(query)
+            tags_search_result = self._search_tags(query.split(","))
 
         if search_posts:
             posts_search_result = self._search_posts(query)
@@ -106,89 +110,87 @@ class SearchHandler(BaseHandler):
         """
 
         # TODO decide if user search should be limited to name, because like this it searches for anything on the profile
-        res = self.db.profiles.find({"$text": {"$search": query}})
-        ret = []
-        for elem in res:
-            elem["_id"] = str(elem["_id"])
-            ret.append(elem)
-        return ret
 
-    def _search_tags(self, query: str) -> List[Dict]:
+        with Profiles() as db_manager:
+            search_result = db_manager.fulltext_search(query)
+
+        # make _id json-serializable
+        for elem in search_result:
+            if "_id" in elem:
+                elem["_id"] = str(elem["_id"])
+
+        return search_result
+
+    def _search_tags(self, tags: List[str]) -> List[Dict]:
         """
-        search tags of posts. since tags are only short and precise, this search is an exact match instead of full text search.
-        :param query: search query
+        search tags of posts. since tags are only short and precise, 
+        this search is an exact match instead of full text search.
+        Results are restricted to posts that the current_user is allowed to see
+        (i.e. his own posts, posts in his spaces, posts from persons that he follows)
+        :param tags: search tags
         :return: any posts that has tags that match the query
         """
 
         # tags is an exact match query, therefore explicitely search without using index
-        matched_posts = self.db.posts.find({"tags": query})
+        with Posts() as post_manager:
+            matched_posts = post_manager.get_posts_by_tags(tags)
 
-        remaining_posts = []
-        # iterate matched posts and sort out those that user is not allowed to see
-        for post in matched_posts:
-            # if the post was in a space, the user has to be a member of it
-            if post["space"]:
-                if post["space"] in self._get_spaces_of_current_user():
-                    remaining_posts.append(post)
-
-            # if the post was not in a space, the user has to follow the author (or be the author himself)
-            else:
-                if (
-                    post["author"] in self._get_follows_of_current_user()
-                    or post["author"] == self.current_user.username
-                ):
-                    remaining_posts.append(post)
-
-        return self.json_serialize_posts(remaining_posts)
+        if matched_posts:
+            return self.json_serialize_posts(self.reduce_disallowed_posts(matched_posts))
+        else:
+            return []
 
     def _search_posts(self, query: str) -> List[Dict]:
         """
         full text search on the contents of a post (i.e. text, tags, and files(-names))
+        Results are restricted to posts that the current_user is allowed to see
+        (i.e. his own posts, posts in his spaces, posts from persons that he follows)
         :param query: search query
         :return: any posts whose contents match the query
         """
 
         # full text search
-        matched_posts = self.db.posts.find({"$text": {"$search": query}})
+        with Posts() as post_manager:
+            matched_posts = post_manager.fulltext_search(query)
 
-        remaining_posts = []
+        if matched_posts:
+            return self.json_serialize_posts(self.reduce_disallowed_posts(matched_posts))
+        else:
+            return []
+
+    def reduce_disallowed_posts(self, posts: List[Dict]) -> List[Dict]:
+        """
+        Sort out posts from the input list that the current_user is not allowed to see,
+        i.e. only posts will remain, that are
+        a) in spaces where the current_user is a member of, or
+        b) from users that he follows, or
+        c) his own posts
+        :param posts: list of posts (as dicts) that should be reduced
+        :return: the reduced list of posts        
+        """
+
+        reduced = []
+        with (Spaces() as space_manager, Profiles() as profile_manager):
+            spaces_of_user = space_manager.get_spaces_of_user(
+                self.current_user.username
+            )
+            follows_of_user = profile_manager.get_follows(
+                self.current_user.username
+            )
+
         # iterate matched posts and sort out those that user is not allowed to see
-        for post in matched_posts:
+        for post in posts:
             # if the post was in a space, the user has to be a member of it
             if post["space"]:
-                if post["space"] in self._get_spaces_of_current_user():
-                    remaining_posts.append(post)
+                if post["space"] in spaces_of_user:
+                    reduced.append(post)
 
             # if the post was not in a space, the user has to follow the author (or be the author himself)
             else:
                 if (
-                    post["author"] in self._get_follows_of_current_user()
+                    post["author"] in follows_of_user
                     or post["author"] == self.current_user.username
                 ):
-                    remaining_posts.append(post)
-
-        return self.json_serialize_posts(remaining_posts)
-
-    def _get_spaces_of_current_user(self) -> List[str]:
-        """
-        get a list of spaces the current_user is a member of
-        """
-
-        spaces_cursor = self.db.spaces.find(
-            filter={"members": self.current_user.username}
-        )
-        spaces = []
-        for space in spaces_cursor:
-            spaces.append(space["name"])
-        return spaces
-
-    def _get_follows_of_current_user(self) -> List[str]:
-        """
-        get a list of users that the current_user follows (i.e. current_user FOLLOWS other_users)
-        """
-
-        followers_result = self.db.profiles.find_one(
-            {"username": self.current_user.username},
-            projection={"_id": False, "follows": True},
-        )
-        return followers_result["follows"] if followers_result else []
+                    reduced.append(post)
+        
+        return reduced
