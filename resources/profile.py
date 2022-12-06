@@ -1,3 +1,4 @@
+import os
 from typing import Dict, List, Optional
 
 from pymongo import MongoClient
@@ -24,6 +25,19 @@ class Profiles:
         )
         self.db = self.client[global_vars.mongodb_db_name]
 
+        self.profile_attributes = {
+            "bio": str,
+            "institution": str,
+            "projects": list,
+            "first_name": str,
+            "last_name": str,
+            "gender": str,
+            "address": str,
+            "birthday": str,
+            "experience": list,
+            "education": list,
+        }
+
     def __enter__(self):
         return self
 
@@ -49,38 +63,42 @@ class Profiles:
 
     def insert_default_profile(
         self, username: str, first_name: str = None, last_name: str = None
-    ) -> None:
+    ) -> Dict:
         """
         insert a default profile into the db, initializing the role as 'guest' and the
         default profile picture and setting all other values to false.
         Optionally, if known, the first and last name can be already set.
         :param username: the username of the new user
+        :return: the freshly created profile
         """
-
-        self.db.profiles.insert_one(
-            {
-                "username": username,
-                "role": "guest",
-                "follows": [],
-                "bio": None,
-                "institution": None,
-                "projects": None,
-                "profile_pic": "default_profile_pic.jpg",
-                "first_name": first_name,
-                "last_name": last_name,
-                "gender": None,
-                "address": None,
-                "birthday": None,
-                "experience": None,
-                "education": None,
-            }
-        )
+        profile = {
+            "username": username,
+            "role": "guest",
+            "follows": [],
+            "bio": None,
+            "institution": None,
+            "projects": None,
+            "profile_pic": "default_profile_pic.jpg",
+            "first_name": first_name,
+            "last_name": last_name,
+            "gender": None,
+            "address": None,
+            "birthday": None,
+            "experience": None,
+            "education": None,
+        }
+        self.db.profiles.insert_one(profile)
+        return profile
 
     def ensure_profile_exists(
-        self, username: str, first_name: str = None, last_name: str = None
-    ) -> None:
+        self,
+        username: str,
+        first_name: str = None,
+        last_name: str = None,
+        projection: Dict = None,
+    ) -> Dict:
         """
-        ensure that a profile exists for the given user.
+        ensure that a profile exists for the given user and return it.
         if no profile exists, create a default one, and also let the
         acl create a default entry if it does not exist
         :param username: the username of which to check for a profile
@@ -88,17 +106,21 @@ class Profiles:
                            (only used for creation, can be added later)
         :param last_name: optional, the last name of the user
                           (only used for creation, can be added later)
+        :return: the profile of the user, either existing or created
         """
 
+        profile = self.get_profile(username, projection=projection)
         # create a profile if it does not exist
-        if not self.get_profile(username, projection={"_id": True}):
-            self.insert_default_profile(username, first_name, last_name)
+        if not profile:
+            profile = self.insert_default_profile(username, first_name, last_name)
 
             # check if the guest role exists, since we might do this for the very first time
             from resources.acl import ACL
 
             with ACL() as acl_manager:
                 acl_manager.ensure_acl_entries("guest")
+
+        return profile
 
     def get_follows(self, username: str) -> List[str]:
         """
@@ -143,6 +165,18 @@ class Profiles:
         # if no document was modified, the username was not in the follows set
         if update_result.modified_count != 1:
             raise NotFollowedException()
+
+    def get_followers(self, username: str) -> List[str]:
+        """
+        get a list of usernames that follow the given user
+        """
+
+        return [
+            user["username"]
+            for user in self.db.profiles.find(
+                {"follows": username}, projection={"_id": False, "username": True}
+            )
+        ]
 
     def get_role(self, username: str) -> Optional[str]:
         """
@@ -262,6 +296,64 @@ class Profiles:
             username, projection={"_id": False, "profile_pic": True}
         )
         return profile["profile_pic"] if profile else "default_profile_pic.jpg"
+
+    def update_profile_information(
+        self,
+        username: str,
+        updated_profile: Dict,
+        upload_dir: str = None,
+        profile_pic: bytes = None,
+    ) -> None:
+        """
+        update the profile information including (optionally) the profile picture.
+        The following keys are necessary in the `updated_profile` dict:
+        bio, institution, projects, first_name, last_name, gender, address, birthday,
+        experience, education.
+        The following keys are optional:
+        profile_pic
+        """
+
+        # verify space has all the necessary attributes
+        if not all(attr in updated_profile for attr in self.profile_attributes.keys()):
+            raise ValueError("Profile misses required attribute")
+
+        # verify types of attributes
+        for attr_key in updated_profile:
+            if attr_key in self.profile_attributes:
+                if type(updated_profile[attr_key]) != self.profile_attributes[attr_key]:
+                    raise TypeError(
+                        "Type mismatch on attribute '{}'. expected type '{}', got '{}'".format(
+                            attr_key,
+                            self.profile_attributes[attr_key],
+                            updated_profile[attr_key],
+                        )
+                    )
+
+        # handle optional profile image
+        if "profile_pic" in updated_profile:
+            # if dict supplies one, we need the actual image and upload directory
+            # to save the file to disk
+            if (profile_pic is None) or (upload_dir is None):
+                raise TypeError(
+                    """if profile_pic is supplied in the dict, 
+                    provide an actual image as bytes!"""
+                )
+
+            # save image to disk
+            with open(
+                os.path.join(upload_dir, updated_profile["profile_pic"]), "wb"
+            ) as fp:
+                fp.write(profile_pic)
+
+        self.db.profiles.update_one(
+            {"username": username},
+            {
+                "$set": updated_profile,
+                # set default values only on insert
+                "$setOnInsert": {"username": username, "role": "guest", "follows": []},
+            },
+            upsert=True,
+        )
 
 
 class AlreadyFollowedException(Exception):

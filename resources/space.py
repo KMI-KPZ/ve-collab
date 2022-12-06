@@ -157,7 +157,7 @@ class Spaces:
 
         # verify space has all the necessary attributes
         if not all(attr in space for attr in self.space_attributes.keys()):
-            raise ValueError("Post misses required attribute")
+            raise ValueError("Space misses required attribute")
 
         # verify types of attributes
         for attr_key in space:
