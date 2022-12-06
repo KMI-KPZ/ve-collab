@@ -77,19 +77,46 @@ class Profiles:
             "follows": [],
             "bio": None,
             "institution": None,
-            "projects": None,
+            "projects": [],
             "profile_pic": "default_profile_pic.jpg",
-            "first_name": first_name,
-            "last_name": last_name,
+            "first_name": None,
+            "last_name": None,
             "gender": None,
             "address": None,
             "birthday": None,
-            "experience": None,
-            "education": None,
+            "experience": [],
+            "education": [],
         }
         self.db.profiles.insert_one(profile)
         return profile
 
+    def insert_default_admin_profile(self, username: str) -> Dict:
+        """
+        insert a default admin profile into the db, 
+        initializing the role as 'admin' and the default profile picture and 
+        setting all other values to false.
+        :param username: the username of the new user
+        :return: the freshly created profile
+        """
+        
+        profile = {
+            "username": username,
+            "role": "admin",
+            "follows": [],
+            "bio": None,
+            "institution": None,
+            "projects": [],
+            "profile_pic": "default_profile_pic.jpg",
+            "first_name": None,
+            "last_name": None,
+            "gender": None,
+            "address": None,
+            "birthday": None,
+            "experience": [],
+            "education": [],
+        }
+        self.db.profiles.insert_one(profile)
+        return profile
     def ensure_profile_exists(
         self,
         username: str,
@@ -178,7 +205,7 @@ class Profiles:
             )
         ]
 
-    def get_role(self, username: str) -> Optional[str]:
+    def get_role(self, username: str) -> str:
         """
         get the role of the user. If no profile exists for the user,
         a `ProfileDoesntExistException` is thrown.

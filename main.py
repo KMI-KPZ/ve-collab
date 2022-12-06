@@ -17,7 +17,6 @@ import tornado.locks
 from tornado.options import define, options, parse_command_line
 import tornado.web
 
-from resources.acl import ACL
 import global_vars
 from handlers.authentication import LoginHandler, LoginCallbackHandler, LogoutHandler
 from handlers.follow import FollowHandler
@@ -34,6 +33,9 @@ from handlers.timeline import *
 from handlers.user import *
 from handlers.wordpress import WordpressCollectionHandler, WordpressPostHandler
 from logger_factory import get_logger
+from resources.acl import ACL
+from resources.profile import ProfileDoesntExistException, Profiles
+from resources.space import Spaces
 
 
 logger = get_logger(__name__)
@@ -228,19 +230,13 @@ def create_initial_admin(username: str) -> None:
     create an initial admin with the given username
     """
 
-    with pymongo.MongoClient(
-        global_vars.mongodb_host,
-        global_vars.mongodb_port,
-        username=global_vars.mongodb_username,
-        password=global_vars.mongodb_password,
-    ) as client:
-        db = client[global_vars.mongodb_db_name]
+    with Profiles() as profile_manager:
 
         # check if the user already has a non-admin role and issue a warning
         # about elevated permissions if so
-        existing = db.profiles.find_one({"username": username})
-        if existing:
-            if existing["role"] != "admin":
+        try:
+            existing_role = profile_manager.get_role(username)
+            if existing_role != "admin":
                 logger.warning(
                     """
                     The user already exists with a non-admin role.
@@ -251,35 +247,18 @@ def create_initial_admin(username: str) -> None:
                     """
                 )
             return
+        except ProfileDoesntExistException:
+            pass
 
         # user + admin-role combination didnt exist, create it
-        db.profiles.insert_one(
-            {
-                "username": username,
-                "role": "admin",
-                "follows": [],
-                "bio": None,
-                "institution": None,
-                "projects": None,
-                "profile_pic": "default_profile_pic.jpg",
-                "first_name": None,
-                "last_name": None,
-                "gender": None,
-                "address": None,
-                "birthday": None,
-                "experience": None,
-                "education": None,
-            }
-        )
+        profile_manager.insert_default_admin_profile(username)
 
         # also insert admin acl rules
-        with ACL() as acl:
+        with (ACL() as acl, Spaces() as space_manager):
             acl.global_acl.insert_admin()
 
-            existing_spaces = list(db.spaces.find({}))
-            if existing_spaces:
-                for space in existing_spaces:
-                    acl.space_acl.insert_admin(space["name"])
+            for space in space_manager.get_space_names():
+                acl.space_acl.insert_admin(space)
 
         logger.info(
             "inserted admin user '{}' and corresponding ACL rules".format(username)
