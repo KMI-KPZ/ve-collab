@@ -3,9 +3,12 @@ from typing import Dict, List, Tuple
 from datetime import datetime, timedelta
 import dateutil.parser
 
-from resources.acl import ACL
 from handlers.base_handler import BaseHandler, auth_needed
 from logger_factory import log_access
+from resources.acl import ACL
+from resources.profile import Profiles
+from resources.post import Posts
+from resources.space import SpaceDoesntExistError, Spaces
 
 
 class BaseTimelineHandler(BaseHandler):
@@ -41,71 +44,61 @@ class BaseTimelineHandler(BaseHandler):
 
         pic_cache = {}
 
-        for post in posts:
-            author_name = post["author"]
-            # if we have already requested the picture in this loop,
-            # simply use a cached version of the picture to reduce db
-            # connections
-            if author_name in pic_cache:
-                post["author"] = {
-                    "username": author_name,
-                    "profile_pic": pic_cache[author_name],
-                }
-            # we haven't yet requested the profile picture
-            # query it from the db and save it in the cache for further iterations
-            else:
-                profile = self.db.profiles.find_one({"username": author_name})
-                pic_val = (
-                    profile["profile_pic"] if profile else "default_profile_pic.jpg"
-                )
-
-                pic_cache[author_name] = pic_val
-
-                post["author"] = {
-                    "username": author_name,
-                    "profile_pic": pic_val,
-                }
-
-            # if the post is a repost, we also have to handle their profile pic
-            if "isRepost" in post and post["isRepost"]:
-                repost_author_name = post["repostAuthor"]
-                if repost_author_name in pic_cache:
-                    post["repostAuthorProfilePic"] = pic_cache[repost_author_name]
+        with Profiles() as profile_manager:
+            for post in posts:
+                author_name = post["author"]
+                # if we have already requested the picture in this loop,
+                # simply use a cached version of the picture to reduce db
+                # connections
+                if author_name in pic_cache:
+                    post["author"] = {
+                        "username": author_name,
+                        "profile_pic": pic_cache[author_name],
+                    }
+                # we haven't yet requested the profile picture
+                # query it from the db and save it in the cache for further iterations
                 else:
-                    repost_profile = self.db.profiles.find_one(
-                        {"username": repost_author_name}
-                    )
-                    repost_pic_val = (
-                        repost_profile["profile_pic"]
-                        if repost_profile
-                        else "default_profile_pic.jpg"
-                    )
-                    pic_cache[repost_author_name] = repost_pic_val
-                    post["repostAuthorProfilePic"] = repost_pic_val
+                    pic_val = profile_manager.get_profile_pic(author_name)
 
-            # exactly the same procedure for the comments
-            if "comments" in post and post["comments"]:
-                for comment in post["comments"]:
-                    comment_author_name = comment["author"]
-                    if comment_author_name in pic_cache:
-                        comment["author"] = {
-                            "username": comment_author_name,
-                            "profile_pic": pic_cache[comment_author_name],
-                        }
+                    pic_cache[author_name] = pic_val
+
+                    post["author"] = {
+                        "username": author_name,
+                        "profile_pic": pic_val,
+                    }
+
+                # if the post is a repost, we also have to handle their profile pic
+                if "isRepost" in post and post["isRepost"]:
+                    repost_author_name = post["repostAuthor"]
+                    if repost_author_name in pic_cache:
+                        post["repostAuthorProfilePic"] = pic_cache[repost_author_name]
                     else:
-                        profile = self.db.profiles.find_one(
-                            {"username": comment_author_name}
+                        repost_pic_val = profile_manager.get_profile_pic(
+                            repost_author_name
                         )
-                        comment_pic_val = (
-                            profile["profile_pic"] if profile else "default_profile_pic.jpg"
-                        )
-                        pic_cache[comment_author_name] = comment_pic_val
-                        comment["author"] = {
-                            "username": comment_author_name,
-                            "profile_pic": comment_pic_val,
-                        }
+                        pic_cache[repost_author_name] = repost_pic_val
+                        post["repostAuthorProfilePic"] = repost_pic_val
 
-        return posts
+                # exactly the same procedure for the comments
+                if "comments" in post and post["comments"]:
+                    for comment in post["comments"]:
+                        comment_author_name = comment["author"]
+                        if comment_author_name in pic_cache:
+                            comment["author"] = {
+                                "username": comment_author_name,
+                                "profile_pic": pic_cache[comment_author_name],
+                            }
+                        else:
+                            comment_pic_val = profile_manager.get_profile_pic(
+                                comment_author_name
+                            )
+                            pic_cache[comment_author_name] = comment_pic_val
+                            comment["author"] = {
+                                "username": comment_author_name,
+                                "profile_pic": comment_pic_val,
+                            }
+
+            return posts
 
 
 class TimelineHandler(BaseTimelineHandler):
@@ -139,9 +132,8 @@ class TimelineHandler(BaseTimelineHandler):
 
         time_from, time_to = self.parse_timeframe_args()
 
-        result = self.db.posts.find(
-            {"creation_date": {"$gte": time_from, "$lte": time_to}}
-        )
+        with Posts() as post_manager:
+            result = post_manager.get_full_timeline(time_from, time_to)
 
         # serialize post objects to dicts and enhance author information
         posts = self.add_profile_pic_to_author(self.json_serialize_posts(result))
@@ -160,6 +152,8 @@ class SpaceTimelineHandler(BaseTimelineHandler):
     def get(self, space_name):
         """
         GET /timeline/space/[name]
+            includes posts into that space that are either within the specified time frame
+            or pinned
         query params:
             "from" : ISO timestamp string (fetch posts not older than this), default: now-24h
             "to" : ISO timestamp string (fetch posts younger than this), default: now
@@ -184,11 +178,18 @@ class SpaceTimelineHandler(BaseTimelineHandler):
         time_from, time_to = self.parse_timeframe_args()
 
         # reject if user is not member of the space
-        space = self.db.spaces.find_one({"name": space_name})
-        if self.current_user.username not in space["members"]:
-            self.set_status(409)
-            self.write({"success": False, "reason": "user_not_member_of_space"})
-            return
+        with Spaces() as space_manager:
+            try:
+                if not space_manager.check_user_is_member(
+                    space_name, self.current_user.username
+                ):
+                    self.set_status(409)
+                    self.write({"success": False, "reason": "user_not_member_of_space"})
+                    return
+            except SpaceDoesntExistError:
+                self.set_status(409)
+                self.write({"success": False, "reason": "space_doesnt_exist"})
+                return
 
         # ask for permission to read timeline
         with ACL() as acl:
@@ -199,17 +200,11 @@ class SpaceTimelineHandler(BaseTimelineHandler):
                 self.write({"success": False, "reason": "insufficient_permission"})
                 return
 
-        # query posts in the space that match the timeframe or have been pinned
-        result = self.db.posts.find(
-            {
-                "space": {"$eq": space_name},
-                "$or": [
-                    {"creation_date": {"$gte": time_from, "$lte": time_to}},
-                    {"pinned": True},
-                ],
-            }
-        )
+        # query space timeline
+        with Posts() as post_manager:
+            result = post_manager.get_space_timeline(space_name, time_from, time_to)
 
+        # postprocessing
         posts = self.add_profile_pic_to_author(self.json_serialize_posts(result))
 
         self.set_status(200)
@@ -240,14 +235,9 @@ class UserTimelineHandler(BaseTimelineHandler):
 
         time_from, time_to = self.parse_timeframe_args()
 
-        # TODO what about posts in spaces? include? exclude?
-        # include only those that current user is also in?
-        result = self.db.posts.find(
-            {
-                "creation_date": {"$gte": time_from, "$lte": time_to},
-                "author": {"$eq": author},
-            }
-        )
+        # query user timeline
+        with Posts() as post_manager:
+            result = post_manager.get_user_timeline(author, time_from, time_to)
 
         posts = self.add_profile_pic_to_author(self.json_serialize_posts(result))
 
@@ -280,189 +270,13 @@ class PersonalTimelineHandler(BaseTimelineHandler):
 
         time_from, time_to = self.parse_timeframe_args()
 
-        # the full pipeline to gather the timeline, it includes posts that:
-        # you posted yourself,
-        # are posted by users that you follow,
-        # are in spaces that you are a member of.
-        # but only, if they are within the specified time frame
-        pipeline = self.db.posts.aggregate(
-            [
-                # pre-filter for the time-frame (further operations are expensive
-                # thats why it's smart to sort out as many as possible)
-                {"$match": {"creation_date": {"$gte": time_from, "$lte": time_to}}},
-                # add the current_user as a field,
-                # we need this because looksups have to be on fields
-                {"$addFields": {"curr_user": self.current_user.username}},
-                # join with the space collection on the space name
-                {
-                    "$lookup": {
-                        "from": "spaces",
-                        "localField": "space",
-                        "foreignField": "name",
-                        "as": "space_obj",
-                    }
-                },
-                # join with the follows collection on the current user
-                {
-                    "$lookup": {
-                        "from": "profiles",
-                        "localField": "curr_user",
-                        "foreignField": "username",
-                        "as": "profile_obj",
-                    }
-                },
-                # lookup result is a list, but since it is a n:1-relation,
-                # we only expect one space and can safely flatten the list to a dict
-                {
-                    "$unwind": {
-                        "path": "$space_obj",
-                        "preserveNullAndEmptyArrays": True,
-                    }
-                },
-                # lookup result is a list, but since it is a n:1-relation,
-                # we only expect one follow-record
-                # and can safely flatten the list to a dict
-                {
-                    "$unwind": {
-                        "path": "$profile_obj",
-                        "preserveNullAndEmptyArrays": True,
-                    }
-                },
-                # to make our lives easier with matching later
-                # we extract the list of users the current_user follows from the dict
-                # and also append the current_user himself to it
-                # (that way we can simply match "author in flattened_follows").
-                # this is rather complex, because if the lookup doesnt find any match,
-                # the result is missing (instead of None or []), so we have to check for that
-                {
-                    "$addFields": {
-                        "flattened_follows": {
-                            "$cond": {
-                                "if": {"$ne": [{"$type": "$profile_obj"}, "missing"]},
-                                "then": {
-                                    "$concatArrays": [
-                                        "$profile_obj.follows",
-                                        [self.current_user.username],
-                                    ]
-                                },
-                                "else": {
-                                    "$concatArrays": [
-                                        [],
-                                        [self.current_user.username],
-                                    ]
-                                },
-                            }
-                        }
-                    }
-                },
-                # now the actual filtering begins:
-                # - the time-frame was already checked above, so no need to do that here
-                # we now have to check for the 3 cases described on top of the pipeline,
-                # that allow for the post to be in the timeline
-                {
-                    "$match": {
-                        "$or": [
-                            # this catches the first and the second case
-                            # (being either the author yourself or you are following
-                            # the author of the post)
-                            {"$expr": {"$in": ["$author", "$flattened_follows"]}},
-                            # this catches the third case, being a member of the space
-                            # the post was put into
-                            # same story as for the flattened_follows:
-                            # this is rather complex, because if the lookup doesnt find anything
-                            # the expected dict is not present (instead of None or []),
-                            # so we have to check existence, and only if it exists, if current_user
-                            # is really a member of the space
-                            {
-                                "$expr": {
-                                    "$in": [
-                                        self.current_user.username,
-                                        {
-                                            "$cond": {
-                                                "if": {
-                                                    "$ne": [
-                                                        {"$type": "$space_obj"},
-                                                        "missing",
-                                                    ]
-                                                },
-                                                "then": "$space_obj.members",
-                                                "else": [],
-                                            }
-                                        },
-                                    ]
-                                }
-                            },
-                        ],
-                        # the matches above actually cover all relevant cases, but one single detail is missing:
-                        # they include posts from user that i follow, that they have posted into spaces
-                        # where i am not a member.
-                        # since i am not a member of that space, i shouldnt be allowed to view that post,
-                        # so we have to filter those out as well by checking:
-                        #   author is not current_user
-                        #   AND post is in a space
-                        #   AND current_user is not member of that space
-                        # if that is true, we leave out the post
-                        "$expr": {
-                            "$eq": [
-                                False,
-                                {
-                                    "$cond": {
-                                        "if": {
-                                            "$and": [
-                                                # check author != cur_user
-                                                {
-                                                    "$ne": [
-                                                        "$author",
-                                                        "$curr_user",
-                                                    ]
-                                                },
-                                                # check space not None
-                                                {"$ne": ["$space", None]},
-                                                # check cur_user not member of space
-                                                {
-                                                    "$not": {
-                                                        "$in": [
-                                                            self.current_user.username,
-                                                            {
-                                                                "$cond": {
-                                                                    "if": {
-                                                                        "$ne": [
-                                                                            {
-                                                                                "$type": "$space_obj"
-                                                                            },
-                                                                            "missing",
-                                                                        ]
-                                                                    },
-                                                                    "then": "$space_obj.members",
-                                                                    "else": [],
-                                                                }
-                                                            },
-                                                        ]
-                                                    }
-                                                },
-                                            ]
-                                        },
-                                        "then": True,
-                                        "else": False,
-                                    }
-                                },
-                            ]
-                        },
-                    }
-                },
-                # last step, cleanup all the extra fields we had to use along
-                {
-                    "$unset": [
-                        "curr_user",
-                        "flattened_follows",
-                        "profile_obj",
-                        "space_obj",
-                    ]
-                },
-            ]
-        )
+        # query personal timeline
+        with Posts() as post_manager:
+            result = post_manager.get_personal_timeline(
+                self.current_user.username, time_from, time_to
+            )
 
-        posts = self.add_profile_pic_to_author(self.json_serialize_posts(pipeline))
+        posts = self.add_profile_pic_to_author(self.json_serialize_posts(result))
 
         self.set_status(200)
         self.write({"success": True, "posts": posts})
@@ -489,21 +303,18 @@ class NewPostsSinceTimestampHandler(BaseHandler):
         )
         timestamp = dateutil.parser.parse(timestamp)
 
-        new_posts_count = self.db.posts.count_documents(
-            {"creation_date": {"$gte": timestamp}}
-        )
-
-        # no new posts happened since the requested timestamp, reply with 304 Not Modified
-        if new_posts_count == 0:
-            self.set_status(304)
-            return
-
-        # new posts since timestamp, user should query the timeline handlers
-        self.set_status(200)
-        self.write(
-            {
-                "success": True,
-                "new_posts": True,
-                "since_timestamp": timestamp.isoformat(),
-            }
-        )
+        with Posts() as post_manager:
+            if post_manager.check_new_posts_since_timestamp(timestamp):
+                # new posts since timestamp, user should query the timeline handlers
+                self.set_status(200)
+                self.write(
+                    {
+                        "success": True,
+                        "new_posts": True,
+                        "since_timestamp": timestamp.isoformat(),
+                    }
+                )
+            else:
+                # no new posts happened since the requested timestamp,
+                # reply with 304 Not Modified
+                self.set_status(304)

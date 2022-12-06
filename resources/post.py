@@ -1,3 +1,4 @@
+import datetime
 from typing import Dict, List, Optional
 
 from bson.objectid import ObjectId
@@ -411,6 +412,274 @@ class Posts:
         # we know that there was no post with the given _id
         if update_result.modified_count != 1:
             raise PostNotExistingException()
+
+    def get_full_timeline(
+        self, time_from: datetime.datetime, time_to: datetime.datetime
+    ) -> List[Dict]:
+        """
+        get the full timeline of all posts within the specified time frame.
+        :param time_from: the starting datetime of the window in utc time
+        :param time_to: the end datetime of the window in utc time
+        """
+
+        return list(
+            self.db.posts.find({"creation_date": {"$gte": time_from, "$lte": time_to}})
+        )
+
+    def get_space_timeline(
+        self, space_name: str, time_from: datetime.datetime, time_to: datetime.datetime
+    ) -> List[Dict]:
+        """
+        get the timeline of a space within the time window specified by time_from and time_to.
+        This will always include posts that are pinned, no matter if they fit the timeframe.
+        :param space_name: the name of the space to view the timeline of
+        :param time_from: the starting datetime of the window in utc time
+        :param time_to: the end datetime of the window in utc time
+        """
+
+        return list(
+            self.db.posts.find(
+                {
+                    "space": space_name,
+                    "$or": [
+                        {"creation_date": {"$gte": time_from, "$lte": time_to}},
+                        {"pinned": True},
+                    ],
+                }
+            )
+        )
+
+    def get_user_timeline(
+        self, username: str, time_from: datetime.datetime, time_to: datetime.datetime
+    ) -> List[Dict]:
+        """
+        get the timeline of the given user (aka the timeline on his profile) within
+        the time windows specified by `time_from` and `time_to`.
+        :param username: the name of the user whose timeline is requested
+        :param time_from: the starting datetime of the window in utc time
+        :param time_to: the end datetime of the window in utc time
+        """
+
+        # TODO what about posts in spaces? include? exclude?
+        # include only those that current user is also in?
+        return list(
+            self.db.posts.find(
+                {
+                    "creation_date": {"$gte": time_from, "$lte": time_to},
+                    "author": username,
+                }
+            )
+        )
+
+    def get_personal_timeline(
+        self, username: str, time_from: datetime.datetime, time_to: datetime.datetime
+    ) -> List[Dict]:
+        """
+        get the "personal" or rather frontpage timeline of a user, i.e.
+        - your own posts
+        - posts of people that you follow,
+        - posts in spaces that you are a member of
+        within the specified time frame. Usually this function is designed for the user
+        requesting his own landing page
+        :param username: the name of the user whose personal timeline is requested
+        :param time_from: the starting datetime of the window in utc time
+        :param time_to: the end datetime of the window in utc time
+        """
+
+        pipeline = self.db.posts.aggregate(
+            [
+                # pre-filter for the time-frame (further operations are expensive
+                # thats why it's smart to sort out as many as possible)
+                {"$match": {"creation_date": {"$gte": time_from, "$lte": time_to}}},
+                # add the current_user as a field,
+                # we need this because looksups have to be on fields
+                {"$addFields": {"curr_user": username}},
+                # join with the space collection on the space name
+                {
+                    "$lookup": {
+                        "from": "spaces",
+                        "localField": "space",
+                        "foreignField": "name",
+                        "as": "space_obj",
+                    }
+                },
+                # join with the follows collection on the current user
+                {
+                    "$lookup": {
+                        "from": "profiles",
+                        "localField": "curr_user",
+                        "foreignField": "username",
+                        "as": "profile_obj",
+                    }
+                },
+                # lookup result is a list, but since it is a n:1-relation,
+                # we only expect one space and can safely flatten the list to a dict
+                {
+                    "$unwind": {
+                        "path": "$space_obj",
+                        "preserveNullAndEmptyArrays": True,
+                    }
+                },
+                # lookup result is a list, but since it is a n:1-relation,
+                # we only expect one follow-record
+                # and can safely flatten the list to a dict
+                {
+                    "$unwind": {
+                        "path": "$profile_obj",
+                        "preserveNullAndEmptyArrays": True,
+                    }
+                },
+                # to make our lives easier with matching later
+                # we extract the list of users the current_user follows from the dict
+                # and also append the current_user himself to it
+                # (that way we can simply match "author in flattened_follows").
+                # this is rather complex, because if the lookup doesnt find any match,
+                # the result is missing (instead of None or []), so we have to check for that
+                {
+                    "$addFields": {
+                        "flattened_follows": {
+                            "$cond": {
+                                "if": {"$ne": [{"$type": "$profile_obj"}, "missing"]},
+                                "then": {
+                                    "$concatArrays": [
+                                        "$profile_obj.follows",
+                                        [username],
+                                    ]
+                                },
+                                "else": {
+                                    "$concatArrays": [
+                                        [],
+                                        [username],
+                                    ]
+                                },
+                            }
+                        }
+                    }
+                },
+                # now the actual filtering begins:
+                # - the time-frame was already checked above, so no need to do that here
+                # we now have to check for the 3 cases described on top of the pipeline,
+                # that allow for the post to be in the timeline
+                {
+                    "$match": {
+                        "$or": [
+                            # this catches the first and the second case
+                            # (being either the author yourself or you are following
+                            # the author of the post)
+                            {"$expr": {"$in": ["$author", "$flattened_follows"]}},
+                            # this catches the third case, being a member of the space
+                            # the post was put into
+                            # same story as for the flattened_follows:
+                            # this is rather complex, because if the lookup doesnt find anything
+                            # the expected dict is not present (instead of None or []),
+                            # so we have to check existence, and only if it exists, if current_user
+                            # is really a member of the space
+                            {
+                                "$expr": {
+                                    "$in": [
+                                        username,
+                                        {
+                                            "$cond": {
+                                                "if": {
+                                                    "$ne": [
+                                                        {"$type": "$space_obj"},
+                                                        "missing",
+                                                    ]
+                                                },
+                                                "then": "$space_obj.members",
+                                                "else": [],
+                                            }
+                                        },
+                                    ]
+                                }
+                            },
+                        ],
+                        # the matches above actually cover all relevant cases, but one single detail is missing:
+                        # they include posts from user that i follow, that they have posted into spaces
+                        # where i am not a member.
+                        # since i am not a member of that space, i shouldnt be allowed to view that post,
+                        # so we have to filter those out as well by checking:
+                        #   author is not current_user
+                        #   AND post is in a space
+                        #   AND current_user is not member of that space
+                        # if that is true, we leave out the post
+                        "$expr": {
+                            "$eq": [
+                                False,
+                                {
+                                    "$cond": {
+                                        "if": {
+                                            "$and": [
+                                                # check author != cur_user
+                                                {
+                                                    "$ne": [
+                                                        "$author",
+                                                        "$curr_user",
+                                                    ]
+                                                },
+                                                # check space not None
+                                                {"$ne": ["$space", None]},
+                                                # check cur_user not member of space
+                                                {
+                                                    "$not": {
+                                                        "$in": [
+                                                            username,
+                                                            {
+                                                                "$cond": {
+                                                                    "if": {
+                                                                        "$ne": [
+                                                                            {
+                                                                                "$type": "$space_obj"
+                                                                            },
+                                                                            "missing",
+                                                                        ]
+                                                                    },
+                                                                    "then": "$space_obj.members",
+                                                                    "else": [],
+                                                                }
+                                                            },
+                                                        ]
+                                                    }
+                                                },
+                                            ]
+                                        },
+                                        "then": True,
+                                        "else": False,
+                                    }
+                                },
+                            ]
+                        },
+                    }
+                },
+                # last step, cleanup all the extra fields we had to use along
+                {
+                    "$unset": [
+                        "curr_user",
+                        "flattened_follows",
+                        "profile_obj",
+                        "space_obj",
+                    ]
+                },
+            ]
+        )
+
+        return list(pipeline)
+
+    def check_new_posts_since_timestamp(self, timestamp: datetime.datetime) -> bool:
+        """
+        check if there are new posts since the given time stamp.
+        This can be used instead of running the (much more expensive) timeline queries 
+        over and over again uselessly.
+        """
+
+        new_posts_count = self.db.posts.count_documents(
+            {"creation_date": {"$gte": timestamp}}, limit=1
+        )
+
+        if new_posts_count == 0:
+            return False
+        else:
+            return True
 
 
 class PostNotExistingException(Exception):

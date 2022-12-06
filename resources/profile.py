@@ -182,7 +182,6 @@ class Profiles:
         else:
             return False
 
-
     def get_all_roles(self, keycloak_user_list: List[Dict]) -> List[dict]:
         """
         produce a list of dicts containing the following information:
@@ -252,6 +251,17 @@ class Profiles:
         """
 
         return list(self.db.profiles.find({"$text": {"$search": query}}))
+
+    def get_profile_pic(self, username: str) -> str:
+        """
+        get the profile pic of the given user, or the default value, if he has not set
+        a custom profile picture
+        """
+
+        profile = self.get_profile(
+            username, projection={"_id": False, "profile_pic": True}
+        )
+        return profile["profile_pic"] if profile else "default_profile_pic.jpg"
 
 
 class AlreadyFollowedException(Exception):
