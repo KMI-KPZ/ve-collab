@@ -66,19 +66,57 @@ var fileList = [];
 
 
 var routingTable = {};
+
+async function getWordpressPosts(){
+  let titlesAndIds = [];
+  await $.ajax({
+    type: 'GET',
+    url: '/wordpress/posts',
+    dataType: 'json',
+    success: function (response) {
+      console.log(response);
+      $.each(response.wordpress_posts, function(idx, post){
+        titlesAndIds.push({"post_id": post.id, "post_title": post.title.rendered});
+      })
+    },
+
+    error: function (xhr, status, error) {
+      console.log(xhr);
+      console.log(status);
+      console.log(error);
+      window.createNotification({
+        theme: 'error',
+        showDuration: 5000
+      })({
+        title: 'Error!',
+        message: 'see console'
+      });
+    }
+  });
+
+  return titlesAndIds
+}
+
+function getWordpressPost(postId){
+  const request = new XMLHttpRequest();
+  request.open('GET', '/wordpress/posts/' + postId, false);  // `false` makes the request synchronous
+  request.send(null);
+  let wordpressPostJson = JSON.parse(request.responseText);
+  return wordpressPostJson.wp_post
+}
+
 /**
  * initNewsFeed - renders the timeline depending on the current URL
  * update Datetimes and get information about all Spaces
  */
-function initNewsFeed() {
+async function initNewsFeed() {
   if(!document.body.contains(document.getElementById('newPostPanel'))) {
     currentUser["profile_pic_URL"] = baseUrl + '/uploads/' + currentUser["profile"]["profile_pic"];
 
-    // Timeout fix error, where no templates are loading
-    // Error: Uncaught TypeError: Invalid template! Template should be a "string" but "undefined" was given as the first argument for mustache#render
-    //setTimeout(function(){
-    $('#newPostContainer').prepend(Mustache.render(newPostTemplate, currentUser));
-    //}, 10);
+    // query up to date wordpress posts and then construct post box
+    let wordpressPosts = await getWordpressPosts();
+    console.log(wordpressPosts);
+    $('#newPostContainer').prepend(Mustache.render(newPostTemplate, { "username": currentUser["username"], "profile_pic_URL": currentUser["profile_pic_URL"], "wordpressPosts":wordpressPosts}));
   }
   //Initializing dates to get post between from and now
   today = new Date();
@@ -228,7 +266,7 @@ $body.delegate('#post', 'click', function () {
       selectedWordpressPostId = null;
     }
 
-    if(text!='') post(text, tags, space, selectedWordpressPostId);
+    if(text!='') post(text, null, space, selectedWordpressPostId);
     else {
       $("#postAlert").html('Add some text to your post!');
       $("#postAlert").addClass("alert alert-danger");
@@ -592,6 +630,13 @@ function displayTimeline(timeline) {
       post["hasSpace"] = false;
     } else post["hasSpace"] = true;
 
+    if (post.wordpress_post_id != null) {
+      let wordpressPost = getWordpressPost(post.wordpress_post_id);
+      console.log(wordpressPost);
+      post["wordpressPost"] = {};
+      post["wordpressPost"]["content"] = wordpressPost["content"]["rendered"]
+    }
+
     if(post['isRepost'] == true){
       post["isRepostAuthor"] = isRepostAuthor;
       post["originalAgo"] = calculateAgoTime(post.originalCreationDate);
@@ -874,7 +919,7 @@ function getTimelineUser(username, from, to) {
  * @param  {String} tags
  * @param  {String} space
  */
-function post(text, space) {
+function post(text, tags, space, wordpressPostId) {
   var formData = new FormData();
   fileList.forEach(function (file, i) {
     formData.append("file"+i, file);
@@ -893,6 +938,9 @@ function post(text, space) {
   formData.append("tags", JSON.stringify(hashtags));
   if(space != null){
     formData.append("space", space);
+  }
+  if(wordpressPostId !== null){
+    formData.append("wordpress_post_id", wordpressPostId);
   }
 
   $.ajax({
@@ -1381,7 +1429,7 @@ function repost(id){
 function updateRepost(id) {
   dataBody = {
     '_id': id,
-    'repostText': String($('#update_repost_content').val()),
+    'text': String($('#update_repost_content').val()),
   };
   $.ajax({
     type: 'POST',
