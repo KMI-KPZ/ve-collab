@@ -11,11 +11,14 @@ from resources.acl import ACL
 from resources.profile import Profiles
 from resources.space import (
     AlreadyAdminError,
+    OnlyAdminError,
     Spaces,
     SpaceAlreadyExistsError,
     SpaceDoesntExistError,
     AlreadyMemberError,
     AlreadyRequestedJoinError,
+    UserNotAdminError,
+    UserNotMemberError,
 )
 
 
@@ -639,15 +642,8 @@ class SpaceHandler(BaseHandler):
             self.write({"success": False, "reason": "missing_key:name"})
             return
 
-        with Spaces() as space_manager:
-            space = space_manager.get_space(space_name)
-        if not space:
-            self.set_status(409)
-            self.write({"success": False, "reason": "space_doesnt_exist"})
-            return
-
         if slug == "leave":
-            self.user_leave(space)
+            self.user_leave(space_name)
             return
 
         elif slug == "kick":
@@ -658,7 +654,7 @@ class SpaceHandler(BaseHandler):
                 self.write({"success": False, "reason": "missing_key:user"})
                 return
 
-            self.user_kick(space, user_name)
+            self.user_kick(space_name, user_name)
             return
 
         elif slug == "remove_admin":
@@ -669,11 +665,11 @@ class SpaceHandler(BaseHandler):
                 self.write({"success": False, "reason": "missing_key:user"})
                 return
 
-            self.remove_admin_from_space(space, username)
+            self.remove_admin_from_space(space_name, username)
             return
 
         elif slug == "delete_space":
-            self.delete_space(space)
+            self.delete_space(space_name)
             return
 
         else:
@@ -900,7 +896,7 @@ class SpaceHandler(BaseHandler):
         add another user as a space admin to the space, requires space admin or global admin to perform this operation
         """
 
-        with (Spaces() as space_manager):
+        with Spaces() as space_manager:
             space = space_manager.get_space(
                 space_name, projection={"_id": False, "members": True, "admins": True}
             )
@@ -912,7 +908,7 @@ class SpaceHandler(BaseHandler):
                 return
 
             # reject is user is not even a member of the space
-            # technically this could be allowed here and 
+            # technically this could be allowed here and
             # we could also set the member status
             # but this would kinda be a side effect then
             if username not in space["members"]:
@@ -945,379 +941,359 @@ class SpaceHandler(BaseHandler):
         self, space_name: str, space_description: Optional[str]
     ) -> None:
         """
-        update space picture and space description, requires space admin or global admin privileges
+        update space picture and space description,
+        requires space admin or global admin privileges
         """
 
-        space = self.db.spaces.find_one({"name": space_name})
-
-        if not space:
-            self.set_status(409)
-            self.write({"success": False, "reason": "space_doesnt_exist"})
-            return
-
-        # check if user is either space or global admin
-        if not (
-            self.current_user.username in space["admins"]
-            or self.get_current_user_role() == "admin"
-        ):
-            self.set_status(403)
-            self.write({"success": False, "reason": "insufficient_permission"})
-            return
-
-        new_file_name = None
-        if "space_pic" in self.request.files:
-            space_pic_obj = self.request.files["space_pic"][0]
-
-            # TODO deobfuscate
-            # save file
-            file_ext = os.path.splitext(space_pic_obj["filename"])[1]
-            new_file_name = b64encode(os.urandom(32)).decode("utf-8")
-            new_file_name = (
-                re.sub("[^0-9a-zäöüßA-ZÄÖÜ]+", "_", new_file_name).lower() + file_ext
-            )
-
-            with open(self.upload_dir + new_file_name, "wb") as fp:
-                fp.write(space_pic_obj["body"])
-
-        if new_file_name:
-            self.db.spaces.update_one(
-                {"name": space_name},
-                {
-                    "$set": {
-                        "space_pic": new_file_name,
-                        "space_description": space_description,
-                    }
-                },
-            )
-        else:
-            # if there was no picture to upload, there has to be atleast a description
-            # to update, else we would make a useless db connection
-            if not space_description:
-                self.set_status(400)
-                self.write(
-                    {
-                        "success": False,
-                        "reason": "missing_key_in_http_body:space_description",
-                    }
-                )
+        with Spaces() as space_manager:
+            # check if user is either space or global admin
+            try:
+                if not (
+                    space_manager.check_user_is_space_admin(
+                        space_name, self.current_user.username
+                    )
+                    or self.is_current_user_lionet_admin()
+                ):
+                    self.set_status(403)
+                    self.write({"success": False, "reason": "insufficient_permission"})
+                    return
+            except SpaceDoesntExistError:
+                self.set_status(409)
+                self.write({"success": False, "reason": "space_doesnt_exist"})
                 return
 
-            self.db.spaces.update_one(
-                {"name": space_name}, {"$set": {"space_description": space_description}}
-            )
+            # save the new picture to disk and store the filename
+            if "space_pic" in self.request.files:
+                space_pic_obj = self.request.files["space_pic"][0]
+                space_manager.set_space_picture(
+                    space_name,
+                    self.upload_dir,
+                    space_pic_obj["filename"],
+                    space_pic_obj["body"],
+                )
 
-        self.set_status(200)
-        self.write({"success": True})
+            # update the space description
+            if space_description:
+                space_manager.set_space_description(space_name, space_description)
+
+            self.set_status(200)
+            self.write({"success": True})
 
     def invite_user_into_space(self, space_name: str, username: str) -> None:
         """
         invite a user into the space
         """
+        with Spaces() as space_manager:
+            space = space_manager.get_space(
+                space_name, projection={"_id": False, "members": True, "admins": True}
+            )
 
-        space = self.db.spaces.find_one({"name": space_name})
+            # abort if space doesnt exist
+            if not space:
+                self.set_status(409)
+                self.write({"success": False, "reason": "space_doesnt_exist"})
+                return
 
-        # abort if space doesnt exist
-        if not space:
-            self.set_status(409)
-            self.write({"success": False, "reason": "space_doesnt_exist"})
-            return
+            # reject if user is already a member of the space
+            if username in space["members"]:
+                self.set_status(409)
+                self.write({"success": False, "reason": "user_already_member"})
+                return
 
-        # reject if user is already a member of the space
-        if username in space["members"]:
-            self.set_status(409)
-            self.write({"success": False, "reason": "user_already_member"})
-            return
+            # abort if user is neither space nor global admin
+            if not (
+                self.current_user.username in space["admins"]
+                or self.get_current_user_role() == "admin"
+            ):
+                self.set_status(403)
+                self.write({"success": False, "reason": "insufficient_permission"})
+                return
 
-        # abort if user is neither space nor global admin
-        if not (
-            self.current_user.username in space["admins"]
-            or self.get_current_user_role() == "admin"
-        ):
-            self.set_status(403)
-            self.write({"success": False, "reason": "insufficient_permission"})
-            return
+            # add username to invited users set
+            space_manager.invite_user(space_name, username)
 
-        # add username to invited users set
-        self.db.spaces.update_one(
-            {"name": space_name}, {"$addToSet": {"invites": username}}
-        )
-
-        self.set_status(200)
-        self.write({"success": True})
+            self.set_status(200)
+            self.write({"success": True})
 
     def accept_space_invite(self, space_name: str) -> None:
         """
         current user accept invite into space
         """
+        with Spaces() as space_manager:
+            space = space_manager.get_space(
+                space_name, projection={"_id": False, "invites": True}
+            )
 
-        space = self.db.spaces.find_one({"name": space_name})
+            # abort if space doesnt exist
+            if not space:
+                self.set_status(409)
+                self.write({"success": False, "reason": "space_doesnt_exist"})
+                return
 
-        # abort if space doesnt exist
-        if not space:
-            self.set_status(409)
-            self.write({"success": False, "reason": "space_doesnt_exist"})
-            return
+            # abort if user wasn't even invited into space in first place (= prevent sneaking in)
+            if self.current_user.username not in space["invites"]:
+                self.set_status(409)
+                self.write(
+                    {"success": False, "reason": "user_is_not_invited_into_space"}
+                )
+                return
 
-        # abort if user wasn't even invited into space in first place (= prevent sneaking in)
-        if self.current_user.username not in space["invites"]:
-            self.set_status(409)
-            self.write({"success": False, "reason": "user_is_not_invited_into_space"})
-            return
+            # add user to members and pull them from pending invites
+            space_manager.accept_space_invite(space_name, self.current_user.username)
 
-        # add user to members and pull them from pending invites
-        self.db.spaces.update_one(
-            {"name": space_name},
-            {
-                "$addToSet": {"members": self.current_user.username},
-                "$pull": {"invites": self.current_user.username},
-            },
-        )
-
-        self.set_status(200)
-        self.write({"success": True})
+            self.set_status(200)
+            self.write({"success": True})
 
     def decline_space_invite(self, space_name: str) -> None:
         """
         current user declines invite into space
         """
 
-        space = self.db.spaces.find_one({"name": space_name})
+        with Spaces() as space_manager:
+            space = space_manager.get_space(
+                space_name, projection={"_id": False, "invites": True}
+            )
 
-        # abort if space doesnt exist
-        if not space:
-            self.set_status(409)
-            self.write({"success": False, "reason": "space_doesnt_exist"})
-            return
+            # abort if space doesnt exist
+            if not space:
+                self.set_status(409)
+                self.write({"success": False, "reason": "space_doesnt_exist"})
+                return
 
-        # abort if user wasn't even invited into space in first place
-        if self.current_user.username not in space["invites"]:
-            self.set_status(409)
-            self.write({"success": False, "reason": "user_is_not_invited_into_space"})
-            return
+            # abort if user wasn't even invited into space in first place
+            if self.current_user.username not in space["invites"]:
+                self.set_status(409)
+                self.write(
+                    {"success": False, "reason": "user_is_not_invited_into_space"}
+                )
+                return
 
-        # pull user from pending invites to decline (dont add to members obviously)
-        self.db.spaces.update_one(
-            {"name": space_name}, {"$pull": {"invites": self.current_user.username}}
-        )
+            # decline the invite
+            space_manager.decline_space_invite(space_name, self.current_user.username)
 
-        self.set_status(200)
-        self.write({"success": True})
+            self.set_status(200)
+            self.write({"success": True})
 
     def accept_join_space_request(self, space_name: str, username: str) -> None:
         """
         space admin or global admin accepts the request of a user to join the space
         """
 
-        space = self.db.spaces.find_one({"name": space_name})
+        with Spaces() as space_manager:
+            space = space_manager.get_space(
+                space_name, projection={"_id": False, "requests": True, "admins": True}
+            )
 
-        # abort if space doesnt exist
-        if not space:
-            self.set_status(409)
-            self.write({"success": False, "reason": "space_doesnt_exist"})
-            return
+            # abort if space doesnt exist
+            if not space:
+                self.set_status(409)
+                self.write({"success": False, "reason": "space_doesnt_exist"})
+                return
 
-        # abort if user didn't request to join
-        if username not in space["requests"]:
-            self.set_status(409)
-            self.write({"success": False, "reason": "user_didnt_request_to_join"})
-            return
+            # abort if user didn't request to join
+            if username not in space["requests"]:
+                self.set_status(409)
+                self.write({"success": False, "reason": "user_didnt_request_to_join"})
+                return
 
-        # abort if user is neither space nor global admin
-        if not (
-            self.current_user.username in space["admins"]
-            or self.get_current_user_role() == "admin"
-        ):
-            self.set_status(403)
-            self.write({"success": False, "reason": "insufficient_permission"})
-            return
+            # abort if user is neither space nor global admin
+            if not (
+                self.current_user.username in space["admins"]
+                or self.is_current_user_lionet_admin()
+            ):
+                self.set_status(403)
+                self.write({"success": False, "reason": "insufficient_permission"})
+                return
 
-        # add user to members and pull them from pending requests
-        self.db.spaces.update_one(
-            {"name": space_name},
-            {"$addToSet": {"members": username}, "$pull": {"requests": username}},
-        )
+            # accept request
+            space_manager.accept_join_request(space_name, username)
 
-        self.set_status(200)
-        self.write({"success": True})
+            self.set_status(200)
+            self.write({"success": True})
 
     def reject_join_space_request(self, space_name: str, username: str) -> None:
         """
         space admin or global admin rejects join request of a user
         """
 
-        space = self.db.spaces.find_one({"name": space_name})
+        with Spaces() as space_manager:
+            space = space_manager.get_space(
+                space_name, projection={"_id": False, "requests": True, "admins": True}
+            )
 
-        # abort if space doesnt exist
-        if not space:
-            self.set_status(409)
-            self.write({"success": False, "reason": "space_doesnt_exist"})
-            return
+            # abort if space doesnt exist
+            if not space:
+                self.set_status(409)
+                self.write({"success": False, "reason": "space_doesnt_exist"})
+                return
 
-        # abort if user didn't request to join
-        if username not in space["requests"]:
-            self.set_status(409)
-            self.write({"success": False, "reason": "user_didnt_request_to_join"})
-            return
+            # abort if user didn't request to join
+            if username not in space["requests"]:
+                self.set_status(409)
+                self.write({"success": False, "reason": "user_didnt_request_to_join"})
+                return
 
-        # abort if user is neither space nor global admin
-        if not (
-            self.current_user.username in space["admins"]
-            or self.get_current_user_role() == "admin"
-        ):
-            self.set_status(403)
-            self.write({"success": False, "reason": "insufficient_permission"})
-            return
+            # abort if user is neither space nor global admin
+            if not (
+                self.current_user.username in space["admins"]
+                or self.is_current_user_lionet_admin()
+            ):
+                self.set_status(403)
+                self.write({"success": False, "reason": "insufficient_permission"})
+                return
 
-        # pull user from request to decline (obviously dont add as member)
-        self.db.spaces.update_one(
-            {"name": space_name}, {"$pull": {"requests": username}}
-        )
+            # decline request
+            space_manager.reject_join_request(space_name, username)
 
-        self.set_status(200)
-        self.write({"success": True})
+            self.set_status(200)
+            self.write({"success": True})
 
     def toggle_space_visibility(self, space_name: str) -> None:
         """
         toggle invisible state of space depending on current state, i.e. true --> false, false --> true
         """
 
-        space = self.db.spaces.find_one({"name": space_name})
+        with Spaces() as space_manager:
+            try:
+                # abort if user is neither space nor global admin
+                if not (
+                    space_manager.check_user_is_space_admin(
+                        space_name, self.current_user.username
+                    )
+                    or self.is_current_user_lionet_admin()
+                ):
+                    self.set_status(403)
+                    self.write({"success": False, "reason": "insufficient_permission"})
+                    return
+            except SpaceDoesntExistError:
+                self.set_status(409)
+                self.write({"success": False, "reason": "space_doesnt_exist"})
+                return
 
-        # abort if space doesnt exist
-        if not space:
-            self.set_status(400)
-            self.write({"success": False, "reason": "space_doesnt_exist"})
-            return
+            # toggle visibility
+            space_manager.toggle_visibility(space_name)
 
-        # abort if user is neither space nor global admin
-        if not (
-            self.current_user.username in space["admins"]
-            or self.get_current_user_role() == "admin"
-        ):
-            self.set_status(403)
-            self.write({"success": False, "reason": "insufficient_permission"})
-            return
+            self.set_status(200)
+            self.write({"success": True})
 
-        # toggle visibility
-        self.db.spaces.update_one(
-            {"name": space_name}, {"$set": {"invisible": not space["invisible"]}}
-        )
-
-        self.set_status(200)
-        self.write({"success": True})
-
-    def user_leave(self, space: Dict) -> None:
+    def user_leave(self, space_name: str) -> None:
         """
         let the current user leave the space
         """
 
-        # if user is the only space admin, block leaving
-        # (he has to transform permission to someone else first)
-        if self.current_user.username in space["admins"]:
-            if len(space["admins"]) == 1:
+        with Spaces() as space_manager:
+            try:
+                space_manager.leave_space(space_name, self.current_user.username)
+            except SpaceDoesntExistError:
+                self.set_status(409)
+                self.write({"success": False, "reason": "space_doesnt_exist"})
+                return
+            except OnlyAdminError:
                 self.set_status(409)
                 self.write({"success": False, "reason": "no_other_admins_left"})
                 return
 
-        # remove user from members and also admins (if he was one)
-        self.db.spaces.update_one(
-            {"name": space["name"]},
-            {
-                "$pull": {
-                    "members": self.current_user.username,
-                    "admins": self.current_user.username,
-                }
-            },
-        )
-        self.set_status(200)
-        self.write({"success": True})
+            self.set_status(200)
+            self.write({"success": True})
 
-    def user_kick(self, space: Dict, user_name: str) -> None:
+    def user_kick(self, space_name: str, user_name: str) -> None:
         """
         kick a user from the space, requires space admin or global admin privileges
         if the to-be-kicked user is a space admin himself, global admin privileges are required to prevent space admins from kicking each other
         """
 
-        if user_name not in space["members"]:
-            self.set_status(409)
-            self.write({"success": False, "reason": "user_not_member_of_space"})
-            return
-
-        # check if user is either space or global admin
-        if not (
-            self.current_user.username in space["admins"]
-            or self.get_current_user_role() == "admin"
-        ):
-            self.set_status(403)
-            self.write({"success": False, "reason": "insufficient_permission"})
-            return
-
-        # in order to kick an admin from the space, you have to be global admin (prevents space admins from kicking each other)
-        if user_name in space["admins"]:
-            if not self.get_current_user_role() == "admin":
-                self.set_status(403)
-                self.write(
-                    {
-                        "success": False,
-                        "reason": "insufficient_permission",
-                        "hint": "need to be global admin to kick another admin from the space (prevent kicking of space admins between each other)",
-                    }
-                )
+        with Spaces() as space_manager:
+            try:
+                # in order to kick an admin from the space,
+                # you have to be global admin (prevents space admins from kicking each other)
+                if space_manager.check_user_is_space_admin(space_name, user_name):
+                    if not self.is_current_user_lionet_admin():
+                        self.set_status(403)
+                        self.write(
+                            {
+                                "success": False,
+                                "reason": "insufficient_permission",
+                                "hint": """need to be global admin to kick another admin from the space 
+                                        (prevent kicking of space admins between each other)""",
+                            }
+                        )
+                        return
+                # if the user is just a normal member, a space admin is also eligible to kick him
+                else:
+                    # check if user is either space or global admin
+                    if not (
+                        space_manager.check_user_is_space_admin(
+                            space_name, self.current_user.username
+                        )
+                        or self.is_current_user_lionet_admin()
+                    ):
+                        self.set_status(403)
+                        self.write(
+                            {"success": False, "reason": "insufficient_permission"}
+                        )
+                        return
+            except SpaceDoesntExistError:
+                self.set_status(409)
+                self.write({"success": False, "reason": "space_doesnt_exist"})
                 return
 
-        self.db.spaces.update_one(
-            {"name": space["name"]},
-            {"$pull": {"members": user_name, "admins": user_name}},
-        )
+            # permission were successful, kick user
+            try:
+                space_manager.kick_user(space_name, user_name)
+            except UserNotMemberError:
+                self.set_status(409)
+                self.write({"success": False, "reason": "user_not_member_of_space"})
+                return
 
-        self.set_status(200)
-        self.write({"success": True})
+            self.set_status(200)
+            self.write({"success": True})
 
-    def remove_admin_from_space(self, space: Dict, username: str) -> None:
+    def remove_admin_from_space(self, space_name: str, username: str) -> None:
         """
         remove user as space admin, requires global admin privileges to prevent space admins from degrading each other
         """
 
-        # abort if to-delete-user isnt even an admin
-        if username not in space["admins"]:
-            self.set_status(409)
-            self.write({"success": False, "reason": "user_not_space_admin"})
-            return
+        with Spaces() as space_manager:
+            # abort if current user is no global admin
+            if not (self.is_current_user_lionet_admin()):
+                self.set_status(403)
+                self.write({"success": False, "reason": "insufficient_permission"})
+                return
 
-        # abort if current user is no global admin
-        if not (self.get_current_user_role() == "admin"):
-            self.set_status(403)
-            self.write({"success": False, "reason": "insufficient_permission"})
-            return
+            try:
+                space_manager.revoke_space_admin_privilege(space_name, username)
+                self.set_status(200)
+                self.write({"success": True})
+            except SpaceDoesntExistError:
+                self.set_status(409)
+                self.write({"success": False, "reason": "space_doesnt_exist"})
+                return
+            except UserNotAdminError:
+                self.set_status(409)
+                self.write({"success": False, "reason": "user_not_space_admin"})
+                return
 
-        # remove user from spaces admins list
-        self.db.spaces.update_one(
-            {"name": space["name"]}, {"$pull": {"admins": username}}
-        )
-
-        self.set_status(200)
-        self.write({"success": True})
-
-    def delete_space(self, space: Dict) -> None:
+    def delete_space(self, space_name: str) -> None:
         """
         delete a space, requires space admin or global admin privileges
         """
+        with Spaces() as space_manager:
+            try:
+                # abort if user is neither space nor global admin
+                if not (
+                    space_manager.check_user_is_space_admin(
+                        space_name, self.current_user.username
+                    )
+                    or self.is_current_user_lionet_admin()
+                ):
+                    self.set_status(403)
+                    self.write({"success": False, "reason": "insufficient_permission"})
+                    return
 
-        # reject if user is neither space nor global admin
-        if not (
-            self.current_user.username in space["admins"]
-            or self.get_current_user_role() == "admin"
-        ):
-            self.set_status(403)
-            self.write({"success": False, "reason": "insufficient_permission"})
-            return
-
-        # delete the space itself
-        # and also clean up all posts that were in that space
-        # and the rules of the space_acl
-        self.db.spaces.delete_one({"name": space["name"]})
-        self.db.posts.delete_many({"space": space["name"]})
-        self.db.space_acl.delete_many({"space": space["name"]})
-
-        self.set_status(200)
-        self.write({"success": True})
+                space_manager.delete_space(space_name)
+                self.set_status(200)
+                self.write({"success": True})
+            except SpaceDoesntExistError:
+                self.set_status(409)
+                self.write({"success": False, "reason": "space_doesnt_exist"})
+                return

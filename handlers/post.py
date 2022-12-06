@@ -15,7 +15,7 @@ from resources.post import (
     Posts,
     PostNotExistingException,
 )
-from resources.space import Spaces
+from resources.space import Spaces, SpaceDoesntExistError
 
 logger = get_logger(__name__)
 
@@ -1042,7 +1042,7 @@ class PinHandler(BaseHandler):
                     return True
                 else:
                     return False
-            except ValueError:
+            except SpaceDoesntExistError:
                 raise  # just re-raise the exception to the caller (handler)
 
     @log_access
@@ -1171,7 +1171,7 @@ class PinHandler(BaseHandler):
                             }
                         )
                         return
-                except ValueError:
+                except SpaceDoesntExistError:
                     # getting space threw an error --> reject because space doesnt exist
                     self.set_status(409)
                     self.write(
@@ -1230,7 +1230,7 @@ class PinHandler(BaseHandler):
                                 }
                             )
                             return
-                    except ValueError:
+                    except SpaceDoesntExistError:
                         # getting the space threw an error --> space doesnt exist
                         self.set_status(409)
                         self.write(
@@ -1435,7 +1435,7 @@ class PinHandler(BaseHandler):
                             }
                         )
                         return
-                except ValueError:
+                except SpaceDoesntExistError:
                     # error was thrown during space request --> space doesnt exist
                     self.set_status(409)
                     self.write(
@@ -1496,7 +1496,7 @@ class PinHandler(BaseHandler):
                                 }
                             )
                             return
-                    except ValueError:
+                    except SpaceDoesntExistError:
                         # getting the space threw an error --> space doesnt exist
                         self.set_status(409)
                         self.write(

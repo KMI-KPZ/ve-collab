@@ -6,7 +6,7 @@ from handlers.base_handler import BaseHandler, auth_needed
 from logger_factory import get_logger, log_access
 from resources.acl import ACL
 from resources.profile import Profiles, ProfileDoesntExistException
-from resources.space import Spaces
+from resources.space import Spaces, SpaceDoesntExistError
 
 
 logger = get_logger(__name__)
@@ -475,7 +475,7 @@ class SpaceACLHandler(BaseHandler):
                                 }
                             )
                             return
-                except ValueError:
+                except SpaceDoesntExistError:
                     self.set_status(400)
                     self.write(
                         {
@@ -530,7 +530,7 @@ class SpaceACLHandler(BaseHandler):
                             }
                         )
                         return
-            except ValueError:
+            except SpaceDoesntExistError:
                 self.set_status(400)
                 self.write(
                     {

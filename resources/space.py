@@ -1,3 +1,4 @@
+import os
 from typing import List, Optional
 
 from pymongo import MongoClient
@@ -61,7 +62,7 @@ class Spaces:
         space = self.get_space(space_name, projection={"_id": False, "admins": True})
 
         if not space:
-            raise ValueError("Space doesnt exist")
+            raise SpaceDoesntExistError()
 
         if username in space["admins"]:
             return True
@@ -174,6 +175,25 @@ class Spaces:
         # finally, create it
         self.db.spaces.insert_one(space)
 
+    def delete_space(self, space_name: str) -> None:
+        """
+        delete the space and all data associated with it, i.e.:
+        - space data (description, ...)
+        - all posts that were posted into the space
+        - all space acl rules
+        """
+
+        delete_result = self.db.spaces.delete_one({"name": space_name})
+        if delete_result.deleted_count != 1:
+            raise SpaceDoesntExistError()
+
+        from resources.post import Posts
+        from resources.acl import ACL
+
+        with (Posts() as post_manager, ACL() as acl):
+            post_manager.delete_post_by_space(space_name)
+            acl.space_acl.delete(space=space_name)
+
     def join_space(self, space_name: str, username: str) -> None:
         """
         let the user given by his username join the space identified by space_name
@@ -248,6 +268,222 @@ class Spaces:
         if update_result.modified_count != 1:
             raise AlreadyAdminError()
 
+    def set_space_picture(
+        self, space_name: str, upload_dir: str, filename: str, picture: bytes
+    ) -> None:
+        """
+        set a new picture for the space, i.e. store the picture on disk in the given directory
+        and set the filename in the db
+        :param space_name: the space to update the picture of
+        :param upload_dir: the directory where to save the picture. This should be `BaseHandler`'s
+                           `self.upload_dir` to be then accessible via static file handler
+        :param filename: the filename (including file extension) of the picture
+        :param picture: the actual picture as bytes
+        """
+
+        with open(os.path.join(upload_dir, filename), "wb") as fp:
+            fp.write(picture)
+
+        update_result = self.db.spaces.update_one(
+            {"name": space_name},
+            {
+                "$set": {
+                    "space_pic": filename,
+                }
+            },
+        )
+
+        # the filter didnt match any document, so the space doesnt exist
+        if update_result.matched_count != 1:
+            raise SpaceDoesntExistError()
+
+    def set_space_description(self, space_name: str, description: str) -> None:
+        """
+        set (or update) the description of the space.
+        :param space_name: the space which description should be updated
+        :param description: the new description of the space
+        """
+
+        update_result = self.db.spaces.update_one(
+            {"name": space_name}, {"$set": {"space_description": description}}
+        )
+
+        # the filter didnt match any document, so the space doesnt exist
+        if update_result.matched_count != 1:
+            raise SpaceDoesntExistError()
+
+    def invite_user(self, space_name: str, username: str) -> None:
+        """
+        invite a user into the give space, i.e. add him to the invites list
+        """
+
+        update_result = self.db.spaces.update_one(
+            {"name": space_name}, {"$addToSet": {"invites": username}}
+        )
+
+        # the filter didnt match any document, so the space doesnt exist
+        if update_result.matched_count != 1:
+            raise SpaceDoesntExistError()
+
+    def accept_space_invite(self, space_name: str, username: str) -> None:
+        """
+        the given user accepts his invite into the given space and
+        is therefore moved from the invited list into the members list
+        :param space_name: the space in which the invitation is accepted
+        :param username: the user who accepts his invite
+        """
+
+        # pull user from invites and add him to members
+        update_result = self.db.spaces.update_one(
+            {"name": space_name},
+            {
+                "$addToSet": {"members": username},
+                "$pull": {"invites": username},
+            },
+        )
+
+        # the filter didnt match any document, so the space doesnt exist
+        if update_result.matched_count != 1:
+            raise SpaceDoesntExistError()
+
+    def decline_space_invite(self, space_name: str, username: str) -> None:
+        """
+        the given user declines his invite into the given space,
+        therefore he is removed from the invite list, but not added to the members
+        obviously.
+        :param space_name: the space in which the invitation is declined
+        :param username: the user who declines his invite
+        """
+
+        # pull user from pending invites to decline (dont add to members obviously)
+        update_result = self.db.spaces.update_one(
+            {"name": space_name}, {"$pull": {"invites": username}}
+        )
+
+        # the filter didnt match any document, so the space doesnt exist
+        if update_result.matched_count != 1:
+            raise SpaceDoesntExistError()
+
+    def accept_join_request(self, space_name: str, username: str) -> None:
+        """
+        the join request of the given user is accepted (usually by an admin, but permissions
+        are not checked here!). Therefore the user will become a member
+        :param space_name: the space where the join request is accepted.
+        :param username: the user whose request is accepted
+        """
+
+        # add user to members and pull them from pending requests
+        update_result = self.db.spaces.update_one(
+            {"name": space_name},
+            {"$addToSet": {"members": username}, "$pull": {"requests": username}},
+        )
+
+        # the filter didnt match any document, so the space doesnt exist
+        if update_result.matched_count != 1:
+            raise SpaceDoesntExistError()
+
+    def reject_join_request(self, space_name: str, username: str) -> None:
+        """
+        the join request of the given user is declined (usually by an admin, but permissions
+        are not checked here!). Therefore the user will not become a member
+        :param space_name: the space where the join request is declined.
+        :param username: the user whose request is declined
+        """
+
+        # pull user from request to decline (obviously dont add as member)
+        update_result = self.db.spaces.update_one(
+            {"name": space_name}, {"$pull": {"requests": username}}
+        )
+
+        # the filter didnt match any document, so the space doesnt exist
+        if update_result.matched_count != 1:
+            raise SpaceDoesntExistError()
+
+    def toggle_visibility(self, space_name: str) -> None:
+        """
+        toggle the visiblity of the space, i.e. visible --> invisible, invisible --> visible
+        """
+
+        # toggle visibility
+        update_result = self.db.spaces.update_one(
+            {"name": space_name}, [{"$set": {"invisible": {"$not": "$invisible"}}}]
+        )
+
+        # the filter didnt match any document, so the space doesnt exist
+        if update_result.matched_count != 1:
+            raise SpaceDoesntExistError()
+
+    def leave_space(self, space_name: str, username: str) -> None:
+        """
+        the given user leaves the space. if he is a space admin, there has to be
+        atleast one more admin, otherwise the operation is ignored, because it
+        would leave the space without an admin. In that case the user has
+        to nominate another space admin first
+        :param space_name: the space the user want to leave from
+        :param username: the user who wants to leave the space
+        """
+
+        space = self.get_space(space_name, projection={"_id": False, "admins": True})
+        if not space:
+            raise SpaceDoesntExistError()
+
+        # if user is the only space admin, block leaving
+        # (he has to transform permission to someone else first)
+        if username in space["admins"]:
+            if len(space["admins"]) == 1:
+                raise OnlyAdminError()
+
+        # remove user from members and also admins (if he was one)
+        self.db.spaces.update_one(
+            {"name": space_name},
+            {
+                "$pull": {
+                    "members": username,
+                    "admins": username,
+                }
+            },
+        )
+
+    def kick_user(self, space_name: str, username: str) -> None:
+        """
+        the given user is kicked from the space (usually by an admin, but permission are
+        not checked here!). Therefore he will be removed from the members list.
+        """
+
+        update_result = self.db.spaces.update_one(
+            {"name": space_name},
+            {"$pull": {"members": username, "admins": username}},
+        )
+
+        # the filter didnt match any document, so the space doesnt exist
+        if update_result.matched_count != 1:
+            raise SpaceDoesntExistError()
+
+        # if no document was modified, we know that the user wasnt a member
+        if update_result.modified_count != 1:
+            raise UserNotMemberError()
+
+    def revoke_space_admin_privilege(self, space_name: str, username: str) -> None:
+        """
+        the given user gets his space admin privilege revoked, leaving him only as a
+        normal member
+        :param space_name: the space in which the permission will be revoked
+        :param username: the user whose permissions will be revoked
+        """
+
+        # remove user from spaces admins list
+        update_result = self.db.spaces.update_one(
+            {"name": space_name}, {"$pull": {"admins": username}}
+        )
+
+        # the filter didnt match any document, so the space doesnt exist
+        if update_result.matched_count != 1:
+            raise SpaceDoesntExistError()
+
+        # if no documents were modified, we know that the user was no admin
+        if update_result.modified_count != 1:
+            raise UserNotAdminError()
+
 
 class SpaceDoesntExistError(Exception):
     pass
@@ -270,4 +506,12 @@ class AlreadyRequestedJoinError(Exception):
 
 
 class UserNotMemberError(Exception):
+    pass
+
+
+class UserNotAdminError(Exception):
+    pass
+
+
+class OnlyAdminError(Exception):
     pass

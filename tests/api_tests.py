@@ -4191,26 +4191,6 @@ class SpaceHandlerTest(BaseApiTestCase):
             db_state["space_description"], request_json["space_description"]
         )
 
-    def test_post_space_description_error_no_space_description(self):
-        """
-        expect: fail message because request misses "space_description" key in body
-        """
-
-        request_json = {}
-        request = MultipartEncoder(fields=request_json)
-
-        response = self.base_checks(
-            "POST",
-            "/spaceadministration/space_picture?name={}".format(self.test_space),
-            False,
-            400,
-            headers={"Content-Type": request.content_type},
-            body=request.to_string(),
-        )
-        self.assertEqual(
-            response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "space_description"
-        )
-
     def test_post_space_description_error_space_doesnt_exist(self):
         """
         expect: fail message because space doesnt exist

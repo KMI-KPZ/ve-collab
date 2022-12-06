@@ -190,6 +190,13 @@ class Posts:
         if delete_result.deleted_count != 1:
             raise PostNotExistingException()
 
+    def delete_post_by_space(self, space_name: str) -> None:
+        """
+        delete all posts that were in the space given by its name
+        """
+
+        self.db.posts.delete_many({"space": space_name})
+
     def like_post(self, post_id: str | ObjectId, username: str) -> None:
         """
         Let the given user like a post given by its id
