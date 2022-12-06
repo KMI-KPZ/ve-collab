@@ -3,14 +3,13 @@ import json
 from typing import Awaitable, Callable, Dict, List, Optional
 
 from keycloak.exceptions import KeycloakError
-from pymongo import MongoClient
 from tornado.options import options
 import tornado.web
 
-from resources.acl import ACL
 import global_vars
 from logger_factory import get_logger
 from model import User
+from resources.profile import ProfileDoesntExistException, Profiles
 
 logger = get_logger(__name__)
 
@@ -39,22 +38,11 @@ def auth_needed(
 
 class BaseHandler(tornado.web.RequestHandler):
     def initialize(self):
-        self.client = MongoClient(
-            global_vars.mongodb_host,
-            global_vars.mongodb_port,
-            username=global_vars.mongodb_username,
-            password=global_vars.mongodb_password,
-        )
-        self.db = self.client[global_vars.mongodb_db_name]
-
         self.upload_dir = global_vars.upload_direcory
-
-    def on_finish(self) -> None:
-        self.client.close()
 
     async def prepare(self):
         # set user for test environments to bypass authentication in the handlers
-        # mindlessly changing those values will most certainly break the tests
+        # warning: mindlessly changing those values will most certainly break the tests
         if options.test_admin:
             self.current_user = User(
                 "test_admin",
@@ -119,39 +107,35 @@ class BaseHandler(tornado.web.RequestHandler):
             )
             self._access_token = new_token
 
-    def json_serialize_posts(self, query_result):
-        # parse datetime objects into ISO 8601 strings for JSON serializability
-        posts = []
+    def json_serialize_posts(self, query_result: dict) -> List[dict]:
+        """
+        parse creation dates and _id's into string representations to achieve
+        json-serializability
+        """
+
         for post in query_result:
-            # post creation date
+            # post creation date and _id
+            post["_id"] = str(post["_id"])
             post["creation_date"] = post["creation_date"].isoformat()
             if "originalCreationDate" in post:
                 post["originalCreationDate"] = post["originalCreationDate"].isoformat()
 
-            # PLACEHOLDER FOR HANDLING COMMENTS WITH NULL VALUE
+            # creation date and _id of each comment
             if "comments" in post and post["comments"] is not None:
-                # creation date of each comment
-
-                for i in range(len(post["comments"])):
-                    post["comments"][i]["creation_date"] = post["comments"][i][
-                        "creation_date"
-                    ].isoformat()
-                    post["comments"][i]["_id"] = str(post["comments"][i]["_id"])
-            post["_id"] = str(post["_id"])
-            posts.append(post)
-        return posts
+                for comment in post["comments"]:
+                    comment["creation_date"] = comment["creation_date"].isoformat()
+                    comment["_id"] = str(comment["_id"])
+        return query_result
 
     def get_current_user_role(self):
         if not self.current_user:
             return None  # TODO could also raise exception?
 
-        current_user_role = self.db.profiles.find_one(
-            {"username": self.current_user.username}, projection={"role": True}
-        )
-        if current_user_role:
-            return current_user_role["role"]
-        else:
-            return None
+        with Profiles() as profile_manager:
+            try:
+                return profile_manager.get_role(self.current_user.username)
+            except ProfileDoesntExistException:
+                return None
 
     def is_current_user_lionet_admin(self):
         return bool(self.get_current_user_role() == "admin")
@@ -247,20 +231,3 @@ class BaseHandler(tornado.web.RequestHandler):
                     )
                 )
                 raise
-
-    def _create_acl_entry_if_not_exists(self, role: str) -> None:
-        """
-        given the role, initialize a default acl entry,
-        such that we don't ever have inconsistency problems that roles exist but no acl entries
-        """
-
-        with ACL() as acl:
-            # insert into global acl
-            if not acl.global_acl.get(role):
-                acl.global_acl.insert_default(role)
-
-            # insert into space acl of all spaces
-            spaces = [space["name"] for space in self.db.spaces.find()]
-            for space in spaces:
-                if not acl.space_acl.get(role, space):
-                    acl.space_acl.insert_default(role, space)
