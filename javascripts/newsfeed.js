@@ -66,59 +66,19 @@ var fileList = [];
 
 
 var routingTable = {};
-
-
-async function getWordpressPosts(){
-  let titlesAndIds = [];
-  await $.ajax({
-    type: 'GET',
-    url: '/wordpress/posts',
-    dataType: 'json',
-    success: function (response) {
-      console.log(response);
-      $.each(response.wordpress_posts, function(idx, post){
-        titlesAndIds.push({"post_id": post.id, "post_title": post.title.rendered});
-      })
-    },
-
-    error: function (xhr, status, error) {
-      console.log(xhr);
-      console.log(status);
-      console.log(error);
-      window.createNotification({
-        theme: 'error',
-        showDuration: 5000
-      })({
-        title: 'Error!',
-        message: 'see console'
-      });
-    }
-  });
-
-  return titlesAndIds
-}
-
-function getWordpressPost(postId){
-  const request = new XMLHttpRequest();
-  request.open('GET', '/wordpress/posts/' + postId, false);  // `false` makes the request synchronous
-  request.send(null);
-  let wordpressPostJson = JSON.parse(request.responseText);
-  return wordpressPostJson.wp_post
-}
-
-
 /**
  * initNewsFeed - renders the timeline depending on the current URL
  * update Datetimes and get information about all Spaces
  */
-async function initNewsFeed() {
+function initNewsFeed() {
   if(!document.body.contains(document.getElementById('newPostPanel'))) {
     currentUser["profile_pic_URL"] = baseUrl + '/uploads/' + currentUser["profile"]["profile_pic"];
 
-    // query up to date wordpress posts and then construct post box
-    let wordpressPosts = await getWordpressPosts();
-    console.log(wordpressPosts);
-    $('#newPostContainer').prepend(Mustache.render(newPostTemplate, { "username": currentUser["username"], "profile_pic_URL": currentUser["profile_pic_URL"], "wordpressPosts":wordpressPosts}));
+    // Timeout fix error, where no templates are loading
+    // Error: Uncaught TypeError: Invalid template! Template should be a "string" but "undefined" was given as the first argument for mustache#render
+    //setTimeout(function(){
+    $('#newPostContainer').prepend(Mustache.render(newPostTemplate, currentUser));
+    //}, 10);
   }
   //Initializing dates to get post between from and now
   today = new Date();
@@ -154,6 +114,9 @@ async function initNewsFeed() {
     } else {
     getTimelineUser(name, from, now);
     }
+  } else if (currURL == baseUrl + '/alt') {
+    inSpace = false;
+    getPersonalTimeline(from,now);
   }
   getSpaces();
 }
@@ -254,7 +217,6 @@ function getWikiPage(page){
  */
 $body.delegate('#post', 'click', function () {
     var text = String($('#postFeed').val());
-    var tags = $("input[id=addTag]").tagsinput('items');
     //check if there is a space selected to post into
     var selectedValue = ($( "#selectSpace option:selected" ).val() === "null") ? null : $( "#selectSpace option:selected" ).val();
     //while in space page: post in this space
@@ -346,9 +308,15 @@ $body.delegate('#files', 'change', function () {
   for(var i=0; i < fileInput.files.length; i++) {
     console.log(fileInput.files[i]);
     fileList.push(fileInput.files[i]);
-    $('#postdiv').append('<span class="name">'+fileInput.files[i].name+'</span></br>');
+    $('#postdiv').append('<div><span id="trash_item">'+fileInput.files[i].name+'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 ml-2 inline-block"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg></span></div></br>');
   }
 });
+
+$body.delegate('#trash_item', 'click', function(e) {
+  e.currentTarget.parentNode.remove()
+  var fileName = e.currentTarget.innerText
+  var fileList = fileList.filter(file => file.name != fileName);
+}) 
 
 /**
  * getExtension - get extension of a filename
@@ -477,15 +445,12 @@ function compSpace(a,b) {
 /**
 
  * displayTimeline - renders Timeline
- * initialize tagsinput and tooltip
  * @param  {JSON} timeline description
  */
 function displayTimeline(timeline) {
 
   console.log("get timeline success");
-  $('input[data-role=tagsinput]').tagsinput({
-    allowDuplicates: false
-  });
+
   //$('[data-toggle="tooltip"]').tooltip();
   $('.carousel').carousel();
   //loading posts => set from-Date until there is a post in interval from - to
@@ -505,6 +470,20 @@ function displayTimeline(timeline) {
     sortPostsByDateArray = timeline.posts.sort(comp);
   }
 
+  // insert post flaf for guaranteeing right post order for new posts in case there are pinned posts
+  var insert_post_flag = false
+  var last_pinned_post_id = ''
+  $.each(sortPostsByDateArray, function (i, post) {
+    if(document.body.contains(document.getElementById(post._id))){
+      insert_post_flag = true
+      if(post.pinned == true) {
+        last_pinned_post_id = post._id
+        return true;
+      }
+      return false;
+    }
+  })
+
   $.each(sortPostsByDateArray, function (i, post) {
     var countLikes = 0;
     var likerHTML = '';
@@ -516,6 +495,7 @@ function displayTimeline(timeline) {
         if(currentUser.username == liker) liked = true;
       });
     }
+
     // case if post already displayed => update values of post
     if(document.body.contains(document.getElementById(post._id))){
       // updating values
@@ -562,7 +542,7 @@ function displayTimeline(timeline) {
         });
       }
       return;
-    }
+    } 
 
     //check if there are files to display
     if(post.hasOwnProperty('files') && post.files !== null && post.files.length > 0  ) {
@@ -612,19 +592,22 @@ function displayTimeline(timeline) {
       post["hasSpace"] = false;
     } else post["hasSpace"] = true;
 
-    if (post.wordpress_post_id != null) {
-      let wordpressPost = getWordpressPost(post.wordpress_post_id);
-      console.log(wordpressPost);
-      post["wordpressPost"] = {};
-      post["wordpressPost"]["content"] = wordpressPost["content"]["rendered"]
-    }
-
     if(post['isRepost'] == true){
       post["isRepostAuthor"] = isRepostAuthor;
       post["originalAgo"] = calculateAgoTime(post.originalCreationDate);
       post["repostAuthorPicURL"] = baseUrl + '/uploads/' + post.repostAuthorProfilePic;
 
-      $feedContainer.append(Mustache.render(repostTemplate, post));
+      // simply always append if insert_post_flag is false, the correct order of the posts is guaranteed because it is sorted before (see function compSpace)
+      // else prepend post to feed after pinned posts or at the beginning of the timeline
+      if(insert_post_flag) {     
+        if(inSpace) {
+          $('#' + last_pinned_post_id).after(Mustache.render(repostTemplate, post))
+        } else {
+          $feedContainer.prepend(Mustache.render(repostTemplate, post));
+        }
+      } else {
+        $feedContainer.append(Mustache.render(repostTemplate, post));
+      }  
     } else{
       if (inSpace) {
           var isAdmin = true;
@@ -633,9 +616,18 @@ function displayTimeline(timeline) {
       } else {
         post["inSpace"] = false;
       }
-      // simply always append, the correct order of the posts is guaranteed because it is sorted before (see function compSpace)
-      $feedContainer.append(Mustache.render(postTemplate, post));
-
+      // simply always append if insert_post_flag is false, the correct order of the posts is guaranteed because it is sorted before (see function compSpace)
+      // else prepend post to feed after pinned posts or at the beginning of the timeline
+      //
+      if(insert_post_flag) {     
+        if(inSpace) {
+          $('#' + last_pinned_post_id).after(Mustache.render(postTemplate, post))
+        } else {
+          $feedContainer.prepend(Mustache.render(postTemplate, post));
+        }
+      } else {
+        $feedContainer.append(Mustache.render(postTemplate, post));
+      }   
     }
 
     //in both case render comments to post and tags
@@ -648,6 +640,7 @@ function displayTimeline(timeline) {
       $.each(comments, function (j, comment) {
         var isCommentAuthor = (currentUser.username == comment.author.username) ? true : false;
         comment["isCommentAuthor"] = isCommentAuthor;
+        comment["isPostAuthor"] = isAuthor;
         comment["authorPicURL"] = baseUrl + '/uploads/' + comment.author.profile_pic;
         comment["ago"] = calculateAgoTime(comment.creation_date);
         $commentsList.prepend(Mustache.render(commentTemplate, comment));
@@ -881,7 +874,7 @@ function getTimelineUser(username, from, to) {
  * @param  {String} tags
  * @param  {String} space
  */
-function post(text, tags, space, wordpressPostId) {
+function post(text, space) {
   var formData = new FormData();
   fileList.forEach(function (file, i) {
     formData.append("file"+i, file);
@@ -901,9 +894,6 @@ function post(text, tags, space, wordpressPostId) {
   if(space != null){
     formData.append("space", space);
   }
-  if(wordpressPostId !== null){
-    formData.append("wordpress_post_id", wordpressPostId);
-  }
 
   $.ajax({
     type: 'POST',
@@ -915,7 +905,6 @@ function post(text, tags, space, wordpressPostId) {
     success: function (data) {
       initNewsFeed();
       $('#postFeed').val('');
-      $("input[id=addTag]").tagsinput('removeAll');
 
       fileList = [];
       $('#postdiv span').remove();
@@ -1321,8 +1310,10 @@ function likeDislike(e, id) {
   var likeIcon = e.firstElementChild;
   if(likeIcon.classList.contains("text-green-700")) {
     deleteLike(id);
+    likeIcon.classList.remove("text-green-700")
   } else {
     postLike(id);
+    likeIcon.classList.add("text-green-700")
   }
 }
 

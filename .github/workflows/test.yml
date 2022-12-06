@@ -1,0 +1,17 @@
+name: Test
+
+# run on push to any branches except master or when manually triggered
+# on push to master the other deploy.yml workflows handles the test call itself
+on:
+  push:
+    branches-ignore:
+      - "master"
+  workflow_dispatch:
+
+jobs:
+  test:
+    uses: ./.github/workflows/test_caller.yml
+    secrets:
+      CONFIG: ${{ secrets.CONFIG }}
+      MONGODB_USERNAME: ${{ secrets.MONGODB_USERNAME }}
+      MONGODB_PASSWORD: ${{ secrets.MONGODB_PASSWORD }}

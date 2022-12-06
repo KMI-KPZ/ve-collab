@@ -12,7 +12,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css">
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="../css/newsfeed.css">
-    <link rel="stylesheet" href="../css/tagsinput.css">
     <link rel="stylesheet" type="text/css" href="../css/modal.css">
     <link rel="stylesheet" type="text/css" href="../css/notifications.css">
     <!--Fonts-->
@@ -20,7 +19,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300&family=Titillium+Web:wght@300&display=swap" rel="stylesheet">
 </head>
-<body class="font-sans bg-blue-50">
+<body class="font-sans bg-yellow-50">
 <!-- Navbar -->
 <nav class="mb-4">
   <div class="bg-blue-lionet mx-4 px-8" style="font-family: 'Titillium Web', sans-serif;">
@@ -38,13 +37,13 @@
         <div class="ml-4">
           <div id="navbar_items" class="text-sm flex items-center">
             <div>
-              <a href="/main" class="no-underline text-white px-6 text-base">Startseite</a>
+              <a href="/main" class="no-underline text-black px-6 text-base">Startseite</a>
             </div>
             <div>
-              <a href="/myprofile" class="no-underline text-white px-6 text-base">Profil</a>
+              <a href="/myprofile" class="no-underline text-black px-6 text-base">Profil</a>
             </div>
             <div>
-              <a href="/spaces" class="no-underline text-white px-6 text-base">Gruppen</a>
+              <a href="/spaces" class="no-underline text-black px-6 text-base">Gruppen</a>
             </div>
           </div>
           </div>
@@ -175,10 +174,10 @@
             
           </div>
           <div class="col-span-1">
-            <button onclick="javascript:acceptJoinRequest('{{!spacename}}', '{{!username}}')" type="button" onclick="" class="inline-block px-6 py-2.5 bg-green-600 text-white font-medium text-xs leading-tight uppercase rounded shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out">Akzeptieren</button>
+            <button onclick="javascript:acceptJoinRequest('{{!spacename}}', '{{!username}}')" type="button" onclick="" class="inline-block px-6 py-2.5 bg-green-600 text-black font-medium text-xs leading-tight uppercase rounded shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out">Akzeptieren</button>
           </div>
           <div class="col-span-1">
-            <button onclick="javascript:declineJoinRequest('{{!spacename}}', '{{!username}}')" type="button" onclick="" class="inline-block px-6 py-2.5 bg-red-600 text-white font-medium text-xs leading-tight uppercase rounded shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out">Ablehnen</button>
+            <button onclick="javascript:declineJoinRequest('{{!spacename}}', '{{!username}}')" type="button" onclick="" class="inline-block px-6 py-2.5 bg-red-600 text-black font-medium text-xs leading-tight uppercase rounded shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out">Ablehnen</button>
           </div>
         </div>
       </li>
@@ -199,7 +198,7 @@
 
           </div>
           <div class="col-span-1">
-            <button onclick="javascript:sendInvitation('{{!spacename}}', '{{!username}}')" type="button" onclick="" class="inline-block px-6 py-2.5 bg-green-600 text-white font-medium text-xs leading-tight uppercase rounded shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out">Einladen</button>
+            <button onclick="javascript:sendInvitation('{{!spacename}}', '{{!username}}')" type="button" onclick="" class="inline-block px-6 py-2.5 bg-green-600 text-black font-medium text-xs leading-tight uppercase rounded shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out">Einladen</button>
           </div>
         </div>
       </li>
@@ -220,7 +219,7 @@
     </div>
     <div class="row-span-1 col-span-1"></div>
     <div class="row-span-1 col-span-1">
-      <button id="invitation_btn_{{!user.username}}" type="button" onclick="javascript:sendInvitation('{{!spacename}}','{{!user.username}}')" class="inline-block px-6 py-2 bg-green-600 text-white font-medium text-xs leading-tight uppercase rounded shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out">Einladen</button>
+      <button id="invitation_btn_{{!user.username}}" type="button" onclick="javascript:sendInvitation('{{!spacename}}','{{!user.username}}')" class="inline-block px-6 py-2 bg-green-600 text-black font-medium text-xs leading-tight uppercase rounded shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out">Einladen</button>
     </div>
   </div>
 </script>
@@ -229,7 +228,7 @@
   <div class="flex flex-col items-center pb-10" >
     <p>
       <img class="mb-3 w-12 h-12 mx-auto rounded-full shadow-lg" src="../uploads/{{!profilePic}}"/>
-      <a href="../profile/{{!username}}" class="mb-1 text-xl font-medium text-gray-900 dark:text-white">{{!username}}</a>
+      <a href="../profile/{{!username}}" class="mb-1 text-xl font-medium text-gray-900 dark:text-black">{{!username}}</a>
       <p class="text-sm text-center text-green-600">{{!memberRole}}
 
       </p>
@@ -249,8 +248,6 @@
 
 <script src="../javascripts/newsfeed.js"></script>
 <script src="../javascripts/space.js"></script>
-
-<script src="../javascripts/tagsinput.js"></script>
 <script src="../javascripts/notifications.js"></script>
 
 <script>
@@ -263,8 +260,7 @@
       tabs: [
           "Dashboard",
           "Team",
-          "Wiki",
-          "Dokumente",
+          //"Dokumente",
       ]
     };
   };

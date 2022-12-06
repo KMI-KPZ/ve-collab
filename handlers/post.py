@@ -1,12 +1,21 @@
 import json
+import os
+from typing import Dict, Optional
 
 from bson.objectid import ObjectId
 from datetime import datetime
-import tornado.escape
+import tornado.web
 
 from handlers.base_handler import BaseHandler, auth_needed
 from logger_factory import get_logger, log_access
-
+from resources.acl import ACL
+from resources.post import (
+    AlreadyLikerException,
+    NotLikerException,
+    Posts,
+    PostNotExistingException,
+)
+from resources.space import Spaces, SpaceDoesntExistError
 
 logger = get_logger(__name__)
 
@@ -18,7 +27,7 @@ class PostHandler(BaseHandler):
 
     def get(self):
         pass
-    
+
     @log_access
     @auth_needed
     def post(self):
@@ -26,11 +35,11 @@ class PostHandler(BaseHandler):
         POST /posts
         IF id is in body, update post
         ELSE add new post
-        http body:
+        http body (as form data, json here is only for readability):
             {
-                "_id": "id",
+                "_id": "optional, _id, if supplied, the post is updated instead of freshly inserted",
                 "text": "text_of_post",
-                "tags": ["tag1", "tag2"],
+                "tags": ["tag1", "tag2"], (json encoded list)
                 "space": "optional, post this post into a space, not directly into your profile",
                 "wordpress_post_id": "optional, id of associated wordpress post"
             }
@@ -41,12 +50,30 @@ class PostHandler(BaseHandler):
 
             400 Bad Request,
             {"status": 400,
+             "success": False,
              "reason": "space_does_not_exist"}
 
             401 Unauthorized,
             {"status": 401,
+             "success": False,
              "reason": "no_logged_in_user"}
+
+            403 Forbidden
+            {"status": 403,
+             "success": False,
+             "reason": "insufficient_permission"}
+
+            403 Forbidden
+            {"status": 403,
+             "success": False,
+             "reason": "user_not_author"}
+
+            409 Conflict
+            {"status": 409,
+             "success": False,
+             "reason": "post_doesnt_exist"}
         """
+
         _id = self.get_body_argument("_id", None)
 
         # no _id field means a new post is made
@@ -61,70 +88,136 @@ class PostHandler(BaseHandler):
                 tags = json.loads(tags)
             except Exception:
                 pass
-            space = self.get_body_argument("space", None)  # if space is set, this post belongs to a space (only visible inside)
+            # if space is set, this post belongs to a space (only visible inside)
+            space = self.get_body_argument("space", None)
 
             # check if space exists, if not, end with 400 Bad Request
             if space is not None:
-                existing_spaces = []
-                for existing_space in self.db.spaces.find(projection={"name": True, "_id": False}):
-                    existing_spaces.append(existing_space["name"])
-                if space not in existing_spaces:
-                    self.set_status(400)
-                    self.write({"status": 400,
-                                "reason": "space_does_not_exist"})
-                    self.finish()
-                    return
+                with Spaces() as db_manager:
+                    if not db_manager.check_space_exists(space):
+                        self.set_status(400)
+                        self.write(
+                            {
+                                "status": 400,
+                                "success": False,
+                                "reason": "space_doesnt_exist",
+                            }
+                        )
+                        return
+
+                # space exists, now determine if user has permission
+                # to post into that space, if not end with 403 insufficient permission
+                with ACL() as acl:
+                    user_can_post = acl.space_acl.ask(
+                        self.get_current_user_role(), space, "post"
+                    )
+                    if not user_can_post:
+                        self.set_status(403)
+                        self.write(
+                            {
+                                "status": 403,
+                                "success": False,
+                                "reason": "insufficient_permission",
+                            }
+                        )
+                        return
 
             # handle files
             file_amount = self.get_body_argument("file_amount", None)
             files = []
             if file_amount:
-
+                # TODO maybe store files in mongodb instead of filesystem
                 # save every file
                 for i in range(0, int(file_amount)):
                     file_obj = self.request.files["file" + str(i)][0]
-                    with open(self.upload_dir + file_obj["filename"], "wb") as fp:
+                    with open(
+                        os.path.join(self.upload_dir, file_obj["filename"]), "wb"
+                    ) as fp:
                         fp.write(file_obj["body"])
 
                     files.append(file_obj["filename"])
 
-            post = {"author": author,
-                    "creation_date": creation_date,
-                    "text": text,
-                    "space": space,
-                    "pinned": False,
-                    "wordpress_post_id": wordpress_post_id,
-                    "tags": tags,
-                    "files": files}
+            post = {
+                "author": author,
+                "creation_date": creation_date,
+                "text": text,
+                "space": space,
+                "pinned": False,
+                "wordpress_post_id": wordpress_post_id,
+                "tags": tags,
+                "files": files,
+                "comments": [],
+                "likers": [],
+            }
 
-            self.db.posts.insert_one(post)
+            with Posts() as db_manager:
+                db_manager.insert_post(post)
 
             self.set_status(200)
-            self.write({'status': 200,
-                        'success': True})
-        
+            self.write({"status": 200, "success": True})
+
         # _id field present in request, therefore update the existing post
         else:
-            author = self.current_user.username
-            text = self.get_body_argument("text")  # http_body['text']
+            try:
+                text = self.get_body_argument("text")
+            except tornado.web.MissingArgumentError:
+                self.set_status(400)
+                self.write({"success": False, "reason": "missing_body_argument:text"})
+                return
 
-            self.db.posts.update_one(
-                {"_id": ObjectId(_id)},
-                {"$set":
-                    {
-                        "text": text,
-                    }
-                },
-                upsert=True
-            )
+            with Posts() as db_manager:
+                post = db_manager.get_post(_id)
+
+                # reject update if the post doesnt exist
+                if not post:
+                    self.set_status(409)
+                    self.write(
+                        {"status": 409, "success": False, "reason": "post_doesnt_exist"}
+                    )
+                    return
+
+                # reject update if current_user is not the author
+                if self.current_user.username != post["author"]:
+                    self.set_status(403)
+                    self.write(
+                        {"status": 403, "success": False, "reason": "user_not_author"}
+                    )
+                    return
+
+                # if the post is in a space, enforce write permission
+                if post["space"]:
+                    user_can_post = False
+                    with ACL() as acl:
+                        user_can_post = acl.space_acl.ask(
+                            self.get_current_user_role(), post["space"], "post"
+                        )
+                    if not user_can_post:
+                        self.set_status(403)
+                        self.write(
+                            {
+                                "status": 403,
+                                "success": False,
+                                "reason": "insufficient_permission",
+                            }
+                        )
+                        return
+
+                # update the text
+                try:
+                    db_manager.update_post_text(_id, text)
+                except PostNotExistingException:
+                    self.set_status(409)
+                    self.write(
+                        {"status": 409, "success": False, "reason": "post_doesnt_exist"}
+                    )
+                    return
 
             self.set_status(200)
-            self.write({'status': 200,
-                        'success': True})
+            self.write({"status": 200, "success": True})
 
     @log_access
     @auth_needed
-    def delete(self):
+    async def delete(self):
         """
         DELETE /posts
             http_body:
@@ -139,25 +232,120 @@ class PostHandler(BaseHandler):
 
                 400 Bad Request,
                 {"status": 400,
-                 "reason": <string>}
+                 "success": False,
+                 "reason": "json_parsing_error"}
 
-                 401 Unauthorized
-                 {"status": 401,
-                  "reason": "no_logged_in_user"}
+                400 Bad Request,
+                {"status": 400,
+                 "success": False,
+                 "reason": "missing_key_in_http_body:post_id"}
+
+                401 Unauthorized
+                {"status": 401,
+                 "success": False,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden,
+                {"status": 403,
+                 "success": False,
+                 "reason": "insufficient_permission"}
+
+                409 Conflict,
+                {"status": 409,
+                 "success": False,
+                 "reason": "post_doesnt_exist"}
         """
 
-        http_body = tornado.escape.json_decode(self.request.body)
-
-        if "post_id" in http_body:
-            self.db.posts.delete_one({"_id": ObjectId(http_body["post_id"])})
-
-            self.set_status(200)
-            self.write({"status": 200,
-                        "success": True})
-        else:
+        try:
+            http_body = json.loads(self.request.body)
+        except json.JSONDecodeError:
             self.set_status(400)
-            self.write({"status": 400,
-                        "reason": "missing_key_in_http_body"})
+            self.write(
+                {"status": 400, "success": False, "reason": "json_parsing_error"}
+            )
+            return
+
+        if "post_id" not in http_body:
+            self.set_status(400)
+            self.write(
+                {
+                    "status": 400,
+                    "success": False,
+                    "reason": "missing_key_in_http_body:post_id",
+                }
+            )
+            return
+
+        with Posts() as db_manager:
+            post_to_delete = db_manager.get_post(http_body["post_id"])
+
+            if not post_to_delete:
+                self.set_status(409)
+                self.write(
+                    {"status": 409, "success": False, "reason": "post_doesnt_exist"}
+                )
+                return
+
+            # if the post is in a space, one of the following allows the user to delete the post:
+            # 1. user is author of the post
+            # 2. user is lionet global admin
+            # 3. user is space admin
+            if post_to_delete["space"]:
+                if self.current_user.username != post_to_delete["author"]:
+                    if not self.is_current_user_lionet_admin():
+                        with Spaces() as space_manager:
+                            if not space_manager.check_user_is_space_admin(
+                                post_to_delete["space"], self.current_user.username
+                            ):
+                                # none of the three permission cases apply, deny removal
+                                self.set_status(403)
+                                self.write(
+                                    {
+                                        "status": 403,
+                                        "success": False,
+                                        "reason": "insufficient_permission",
+                                    }
+                                )
+                                return
+
+                # one of the three conditions applied, remove the post
+                try:
+                    db_manager.delete_post(post_to_delete["_id"])
+                except PostNotExistingException:
+                    self.set_status(409)
+                    self.write(
+                        {"status": 409, "success": False, "reason": "post_doesnt_exist"}
+                    )
+                    return
+
+            # if the post is not in a space, the option to be space admin
+            # to remove the post doesnt hold anymore, check only the other 2 options
+            else:
+                if self.current_user.username != post_to_delete["author"]:
+                    if not self.is_current_user_lionet_admin():
+                        # none of the two permission cases apply, deny removal
+                        self.set_status(403)
+                        self.write(
+                            {
+                                "status": 403,
+                                "success": False,
+                                "reason": "insufficient_permission",
+                            }
+                        )
+                        return
+
+                # one of the three conditions applied, remove the post
+                try:
+                    db_manager.delete_post(post_to_delete["_id"])
+                except PostNotExistingException:
+                    self.set_status(409)
+                    self.write(
+                        {"status": 409, "success": False, "reason": "post_doesnt_exist"}
+                    )
+                    return
+
+        self.set_status(200)
+        self.write({"status": 200, "success": True})
 
 
 class CommentHandler(BaseHandler):
@@ -176,7 +364,7 @@ class CommentHandler(BaseHandler):
         http body:
             {
                 "text": "content_of_comment",
-                "post_id": "id_von_post"
+                "post_id": "id_of_post"
             }
         return:
             200 OK
@@ -185,43 +373,98 @@ class CommentHandler(BaseHandler):
 
             400 Bad Request
             {"status": 400,
-             "reason": "missing_key_in_http_body"}
+             "success": False,
+             "reason": "json_parsing_error"}
+
+            400 Bad Request
+            {"status": 400,
+             "success": False,
+             "reason": "missing_key_in_http_body:post_id"}
 
             401 Unauthorized
             {"status": 401,
              "reason": "no_logged_in_user"}
+
+            403 Forbidden
+            {"status": 403,
+             "success": False,
+             "reason": "insufficient_permission"}
+
+            409 Conflict
+            {"status": 409,
+             "success": False,
+             "reason": "post_doesnt_exist"}
         """
 
-        http_body = tornado.escape.json_decode(self.request.body)
-
-        if "post_id" not in http_body:  # exit if there is no post_id to associate the comment to
+        try:
+            http_body = json.loads(self.request.body)
+        except json.JSONDecodeError:
             self.set_status(400)
-            self.write({"status": 400,
-                        "reason": "missing_key_in_http_body"})
-            self.finish()
+            self.write(
+                {"status": 400, "success": False, "reason": "json_parsing_error"}
+            )
             return
 
-        author = self.current_user.username
-        creation_date = datetime.utcnow()
-        text = http_body['text']
-        post_ref = ObjectId(http_body['post_id'])
-
-        self.db.posts.update_one(
-            {"_id": post_ref},  # filter
-            {                   # update
-                "$push": {
-                    "comments": {"_id": ObjectId(), "author": author, "creation_date": creation_date, "text": text, "pinned": False}
+        if "post_id" not in http_body:
+            self.set_status(400)
+            self.write(
+                {
+                    "status": 400,
+                    "success": False,
+                    "reason": "missing_key_in_http_body:post_id",
                 }
+            )
+            return
+
+        with Posts() as db_manager:
+            post = db_manager.get_post(http_body["post_id"])
+
+            # abort if post doesnt exist at all
+            if not post:
+                self.set_status(409)
+                self.write(
+                    {"status": 409, "success": False, "reason": "post_doesnt_exist"}
+                )
+                return
+
+            # if post is in a space, we have to check the permissions to comment
+            if post["space"]:
+                with ACL() as acl:
+                    if not acl.space_acl.ask(
+                        self.get_current_user_role(), post["space"], "comment"
+                    ):
+                        self.set_status(403)
+                        self.write(
+                            {
+                                "status": 403,
+                                "success": False,
+                                "reason": "insufficient_permission",
+                            }
+                        )
+                        return
+
+            # create and store the comment
+            comment = {
+                "author": self.current_user.username,
+                "creation_date": datetime.utcnow(),
+                "text": http_body["text"],
+                "pinned": False,
             }
-        )
+            try:
+                db_manager.add_comment(post["_id"], comment)
+            except PostNotExistingException:
+                self.set_status(409)
+                self.write(
+                    {"status": 409, "success": False, "reason": "post_doesnt_exist"}
+                )
+                return
 
         self.set_status(200)
-        self.write({"status": 200,
-                    "success": True})
+        self.write({"status": 200, "success": True})
 
     @log_access
     @auth_needed
-    def delete(self):
+    async def delete(self):
         """
         DELETE /comment
             http_body:
@@ -236,36 +479,141 @@ class CommentHandler(BaseHandler):
 
                 400 Bad Request
                 {"status": 400,
-                 "reason": "missing_key_in_http_body"}
+                 "success": False,
+                 "reason": "json_parsing_error"}
+
+                400 Bad Request
+                {"status": 400,
+                 "success": False,
+                 "reason": "missing_key_in_http_body:comment_id"}
 
                 401 Unauthorized
                 {"status": 401,
+                 "success": False,
                  "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                {"status": 403,
+                 "success": False,
+                 "reason": "insufficient_permission"}
+
+                409 Conflict
+                {"status": 409,
+                 "success": False,
+                 "reason": "post_doesnt_exist"}
+
+                409 Conflict
+                {"status": 409,
+                 "success": False,
+                 "reason": "comment_doesnt_exist"}
         """
 
-        http_body = tornado.escape.json_decode(self.request.body)
+        try:
+            http_body = json.loads(self.request.body)
+        except json.JSONDecodeError:
+            self.set_status(400)
+            self.write(
+                {"status": 400, "success": False, "reason": "json_parsing_error"}
+            )
+            return
 
-        if "comment_id" in http_body:
-            self.db.posts.update_many(
-                {},  # filter
-                {    # update
-                    "$pull": {
-                        "comments": {"_id": ObjectId(http_body["comment_id"])}
-                    }
+        if "comment_id" not in http_body:
+            self.set_status(400)
+            self.write(
+                {
+                    "status": 400,
+                    "success": False,
+                    "reason": "missing_key_in_http_body:comment_id",
                 }
             )
+            return
 
-            self.set_status(200)
-            self.write({"status": 200,
-                        "success": True})
-        else:
-            self.set_status(400)
-            self.write({"status": 400,
-                        "reason": "missing_key_in_http_body"})
+        with Posts() as db_manager:
+            comment_id = ObjectId(http_body["comment_id"])
+
+            post = db_manager.get_post_by_comment_id(
+                comment_id, projection={"comments": True, "space": True}
+            )
+
+            # reject if the post doesnt exist
+            if not post:
+                self.set_status(409)
+                self.write(
+                    {"status": 409, "success": False, "reason": "post_doesnt_exist"}
+                )
+                return
+
+            # get the author of the desired comment
+            comment_author = None
+            for comment_iter in post["comments"]:
+                if comment_iter["_id"] == comment_id:
+                    comment_author = comment_iter["author"]
+                    break
+
+            # if the post is in a space,
+            # one of the following allows the user to delete the desired comment:
+            # 1. user is author of the comment
+            # 2. user is lionet global admin
+            # 3. user is space admin
+            if post["space"]:
+                if self.current_user.username != comment_author:
+                    if not self.is_current_user_lionet_admin():
+                        with Spaces() as space_manager:
+                            if not space_manager.check_user_is_space_admin(
+                                post["space"], self.current_user.username
+                            ):
+                                # none of the three permission cases apply, deny removal
+                                self.set_status(403)
+                                self.write(
+                                    {
+                                        "status": 403,
+                                        "success": False,
+                                        "reason": "insufficient_permission",
+                                    }
+                                )
+                                return
+
+                # one of the three conditions applied, remove the post
+                try:
+                    db_manager.delete_comment(comment_id, post_id=post["_id"])
+                except PostNotExistingException:
+                    self.set_status(409)
+                    self.write(
+                        {"status": 409, "success": False, "reason": "post_doesnt_exist"}
+                    )
+                    return
+
+            # if the post is not in a space, the option to be space admin
+            # to remove the comment doesnt hold anymore, check only the other 2 options
+            else:
+                if self.current_user.username != comment_author:
+                    if not self.is_current_user_lionet_admin():
+                        # none of the three permission cases apply, deny removal
+                        self.set_status(403)
+                        self.write(
+                            {
+                                "status": 403,
+                                "success": False,
+                                "reason": "insufficient_permission",
+                            }
+                        )
+                        return
+
+                # one of the two conditions applied, remove the post
+                try:
+                    db_manager.delete_comment(comment_id, post_id=post["_id"])
+                except PostNotExistingException:
+                    self.set_status(409)
+                    self.write(
+                        {"status": 409, "success": False, "reason": "post_doesnt_exist"}
+                    )
+                    return
+
+        self.set_status(200)
+        self.write({"status": 200, "success": True})
 
 
 class LikePostHandler(BaseHandler):
-
     @log_access
     @auth_needed
     def post(self):
@@ -281,44 +629,71 @@ class LikePostHandler(BaseHandler):
                 {"status": 200,
                  "success": True}
 
+                304 Not Modified
+                --> current_user already likes the post
+
                 400 Bad Request
                 {"status": 400,
-                 "reason": "missing_key_in_http_body"}
+                 "success": False,
+                 "reason": "json_parsing_error"}
+
+                400 Bad Request
+                {"status": 400,
+                 "reason": "missing_key_in_http_body:post_id"}
 
                 401 Unauthorized
                 {"status": 401,
+                 "success": False,
                  "reason": "no_logged_in_user"}
+
+                409 Conflict
+                {"status": 409,
+                 "success": False,
+                 "reason": "post_doesnt_exist"}
         """
 
-        http_body = tornado.escape.json_decode(self.request.body)
+        try:
+            http_body = json.loads(self.request.body)
+        except json.JSONDecodeError:
+            self.set_status(400)
+            self.write(
+                {"status": 400, "success": False, "reason": "json_parsing_error"}
+            )
+            return
 
         if "post_id" not in http_body:
             self.set_status(400)
-            self.write({"status": 400,
-                        "reason": "missing_key_in_http_body"})
-            self.finish()
+            self.write(
+                {
+                    "status": 400,
+                    "success": False,
+                    "reason": "missing_key_in_http_body:post_id",
+                }
+            )
             return
 
-        post_ref = ObjectId(http_body['post_id'])
-
-        self.db.posts.update_one(
-            {"_id": post_ref},  # filter
-            {                   # update
-                "$addToSet": {
-                    "likers": self.current_user.username
-                }
-            }
-        )
+        with Posts() as db_manager:
+            try:
+                db_manager.like_post(http_body["post_id"], self.current_user.username)
+            except AlreadyLikerException:
+                self.set_status(304)
+                return
+            except PostNotExistingException:
+                self.set_status(409)
+                self.write(
+                    {"status": 409, "success": False, "reason": "post_doesnt_exist"}
+                )
+                return
 
         self.set_status(200)
-        self.write({"status": 200,
-                    "success": True})
+        self.write({"status": 200, "success": True})
 
     @log_access
     @auth_needed
     def delete(self):
         """
         DELETE /like
+            remove your like from the post
             http_body:
                 {
                     "post_id": <string>
@@ -329,49 +704,86 @@ class LikePostHandler(BaseHandler):
                 {"status": 200,
                  "success": True}
 
+                304 Not Modified
+                --> user hadn't liked the post before
+
                 400 Bad Request
                 {"status": 400,
-                 "reason": "missing_key_in_http_body"}
+                 "success": False,
+                 "reason": "json_parsing_error"}
+
+                400 Bad Request
+                {"status": 400,
+                 "success": False,
+                 "reason": "missing_key_in_http_body:post_id"}
 
                 401 Unauthorized
                 {"status": 401,
+                 "success": False,
                  "reason": "no_logged_in_user"}
+
+                409 Conflict
+                {"status": 409,
+                 "success": False,
+                 "reason": "post_doesnt_exist"}
         """
 
-        http_body = tornado.escape.json_decode(self.request.body)
+        try:
+            http_body = json.loads(self.request.body)
+        except json.JSONDecodeError:
+            self.set_status(400)
+            self.write(
+                {"status": 400, "success": False, "reason": "json_parsing_error"}
+            )
+            return
 
-        if "post_id" in http_body:
-            self.db.posts.update_one(
-                {"_id": ObjectId(http_body["post_id"])},
+        if "post_id" not in http_body:
+            self.set_status(400)
+            self.write(
                 {
-                    "$pull": {
-                        "likers": self.current_user.username
-                    }
+                    "status": 400,
+                    "success": False,
+                    "reason": "missing_key_in_http_body:post_id",
                 }
             )
+            return
 
-            self.set_status(200)
-            self.write({"status": 200,
-                        "success": True})
-        else:
-            self.set_status(400)
-            self.write({"status": 400,
-                        "reason": "missing_key_in_http_body"})
+        with Posts() as db_manager:
+            try:
+                db_manager.unlike_post(http_body["post_id"], self.current_user.username)
+            except NotLikerException:
+                self.set_status(304)
+                return
+            except PostNotExistingException:
+                self.set_status(409)
+                self.write(
+                    {"status": 409, "success": False, "reason": "post_doesnt_exist"}
+                )
+                return
+
+        self.set_status(200)
+        self.write({"status": 200, "success": True})
 
 
 class RepostHandler(BaseHandler):
-
     @log_access
     @auth_needed
     def post(self):
         """
         POST /repost
-            http body:
-                {
-                    "post_id": "id_of_post",
-                    "text": "new text for the repost",
-                    "space": "the space where to post"
-                }
+            create new repost:
+                http body:
+                    {
+                        "post_id": "id_of__original_post",
+                        "text": "new text for the repost",
+                        "space": "the space where to post, None if no space"
+                    }
+            or update existing repost:
+                http_body:
+                    {
+                        "_id": "id_of_repost",
+                        "text": "updated_repost_text"
+                    }
 
             returns:
                 200 OK,
@@ -380,113 +792,268 @@ class RepostHandler(BaseHandler):
 
                 400 Bad Request
                 {"status": 400,
-                 "reason": "missing_key_in_http_body"}
+                 "success": False,
+                 "reason": "json_parsing_error"}
+                (http body is not valid json)
+
+                400 Bad Request
+                {"status": 400,
+                 "success": False,
+                 "reason": "missing_key_in_http_body:text"}
+
+                400 Bad Request
+                {"status": 400,
+                 "success": False,
+                 "reason": "missing_key_in_http_body:post_id"}
+
+                400 Bad Request
+                {"status": 400,
+                 "success": False,
+                 "reason": "missing_key_in_http_body:space"}
 
                 401 Unauthorized
                 {"status": 401,
+                 "success": False,
                  "reason": "no_logged_in_user"}
+                (no valid session, you will be redirect to login automatically)
+
+                403 Forbidden
+                {"status": 403,
+                 "success": False,
+                 "reason": "insufficient_permissions"}
+                (acl forbids action (might also require admin role sometimes))
+
+                403 Forbidden
+                {"status": 403,
+                 "success": False,
+                 "reason": "user_not_author"}
+                (when updating your repost, you have to be the author of it)
+
+                409 Conflict
+                {"status": 409,
+                 "success": False,
+                 "reason": "post_doesnt_exist"}
+
+                409 Conflict
+                {"status": 409,
+                 "success": False,
+                 "reason": "space_doesnt_exist"}
+
+                409 Conflict
+                {"status": 409,
+                 "success": False,
+                 "reason": "post_is_no_repost"}
+                (the updating post is not a repost, use post-endpoint instead)
         """
 
-        _id = self.get_body_argument("_id", None)
+        try:
+            http_body = json.loads(self.request.body)
+        except json.JSONDecodeError:
+            self.set_status(400)
+            self.write(
+                {"status": 400, "success": False, "reason": "json_parsing_error"}
+            )
+            return
+
+        # in both cases text has to be in http body
+        if "text" not in http_body:
+            self.set_status(400)
+            self.write(
+                {
+                    "status": 400,
+                    "success": False,
+                    "reason": "missing_key_in_http_body:text",
+                }
+            )
+            return
 
         # no _id field in the request means a new repost is made (not to confuse with post_id, which is the _id of the original post that is being reposted here)
-        if _id is None:
-            http_body = tornado.escape.json_decode(self.request.body)
-
+        if "_id" not in http_body:
             if "post_id" not in http_body:
                 self.set_status(400)
-                self.write({"status": 400,
-                            "reason": "missing_key_in_http_body"})
-                self.finish()
+                self.write(
+                    {
+                        "status": 400,
+                        "success": False,
+                        "reason": "missing_key_in_http_body:post_id",
+                    }
+                )
                 return
 
-            post_ref = ObjectId(http_body['post_id'])
-            text = http_body['text']
-
-            post = self.db.posts.find_one(
-                {"_id": post_ref}
-            )
-            profile = self.db.profiles.find_one({"user": self.current_user.username})
-            if profile:
-                if "profile_pic" in profile:
-                    post["repostAuthorProfilePic"] = profile["profile_pic"]
-            post["isRepost"] = True
-            post["repostAuthor"] = self.current_user.username
-            post["originalCreationDate"] = post['creation_date']
-            post["creation_date"] = datetime.utcnow()
-            post["repostText"] = text
-
-            space = http_body['space']
-
-            # check if space exists, if not, end with 400 Bad Request
-            if space is not None:
-                existing_spaces = []
-                for existing_space in self.db.spaces.find(projection={"name": True, "_id": False}):
-                    existing_spaces.append(existing_space["name"])
-                if space not in existing_spaces:
-                    self.set_status(400)
-                    self.write({"status": 400,
-                                "reason": "space_does_not_exist"})
-                    self.finish()
-                    return
-            post["space"] = space
-
-            del post["_id"]
-            if "likers" in post:
-                del post["likers"]
-            if "comments" in post:
-                del post["comments"]
-            if "tags" in post:
-                post["tags"] = ""
-
-            self.db.posts.insert_one(post)
-
-            self.set_status(200)
-            self.write({"status": 200,
-                        "success": True})
-
-        else:
-            #author = self.current_user.username
-            text = self.get_body_argument("repostText")  # http_body['text']
-
-            self.db.posts.update_one(
-                {"_id": ObjectId(_id)},
-                {"$set":
+            if "space" not in http_body:
+                self.set_status(400)
+                self.write(
                     {
-                        "repostText": text,
+                        "status": 400,
+                        "success": False,
+                        "reason": "missing_key_in_http_body:space",
                     }
-                },
-                upsert=True
-            )
+                )
+                return
+
+            with Posts() as db_manager:
+                post_ref = ObjectId(http_body["post_id"])
+                post = db_manager.get_post(post_ref)
+
+                # reject if original post doesnt exist
+                if not post:
+                    self.set_status(409)
+                    self.write(
+                        {"status": 409, "success": False, "reason": "post_doesnt_exist"}
+                    )
+                    return
+
+                space_name = http_body["space"]
+                # user requested to post into space
+                # --> check if space exists
+                if space_name is not None:
+                    with Spaces() as space_manager:
+                        if not space_manager.check_space_exists(space_name):
+                            self.set_status(409)
+                            self.write(
+                                {
+                                    "status": 409,
+                                    "success": False,
+                                    "reason": "space_doesnt_exist",
+                                }
+                            )
+                            return
+
+                    # space exists, but also determine if user has permission
+                    # to post into that space
+                    user_can_post = False
+                    with ACL() as acl:
+                        user_can_post = acl.space_acl.ask(
+                            self.get_current_user_role(), space_name, "post"
+                        )
+                    if not user_can_post:
+                        self.set_status(403)
+                        self.write(
+                            {
+                                "status": 403,
+                                "success": False,
+                                "reason": "insufficient_permission",
+                            }
+                        )
+                        return
+
+                # set values for repost and remove old values of original post in the copy
+                post["isRepost"] = True
+                post["repostAuthor"] = self.current_user.username
+                post["originalCreationDate"] = post["creation_date"]
+                post["creation_date"] = datetime.utcnow()
+                post["repostText"] = http_body["text"]
+                post["space"] = space_name
+                post["likers"] = []
+                post["comments"] = []
+                post["tags"] = []
+                del post["_id"]
+
+                db_manager.insert_repost(post)
+
+                self.set_status(200)
+                self.write({"status": 200, "success": True})
+
+        # _id was specified in the request: update the existing repost
+        else:
+            with Posts() as db_manager:
+                _id = ObjectId(http_body["_id"])
+                repost = db_manager.get_post(
+                    _id,
+                    projection={"isRepost": True, "repostAuthor": True, "space": True},
+                )
+
+                if not repost:
+                    self.set_status(409)
+                    self.write(
+                        {"status": 409, "success": False, "reason": "post_doesnt_exist"}
+                    )
+                    return
+
+                # reject if it is actually a normal post instead of a repost
+                if "isRepost" not in repost or repost["isRepost"] == False:
+                    self.set_status(409)
+                    self.write(
+                        {"status": 409, "success": False, "reason": "post_is_no_repost"}
+                    )
+                    return
+
+                # reject if user is not the author
+                if repost["repostAuthor"] != self.current_user.username:
+                    self.set_status(403)
+                    self.write(
+                        {
+                            "status": 403,
+                            "success": False,
+                            "reason": "user_not_author",
+                        }
+                    )
+                    return
+
+                # if repost is in a space, reject if the user has no posting permission
+                if repost["space"]:
+                    user_can_post = False
+                    with ACL() as acl:
+                        user_can_post = acl.space_acl.ask(
+                            self.get_current_user_role(), repost["space"], "post"
+                        )
+                    if not user_can_post:
+                        self.set_status(403)
+                        self.write(
+                            {
+                                "status": 403,
+                                "success": False,
+                                "reason": "insufficient_permission",
+                            }
+                        )
+                        return
+                try:
+                    db_manager.update_repost_text(_id, http_body["text"])
+                except PostNotExistingException:
+                        self.set_status(409)
+                        self.write(
+                            {
+                                "status": 409,
+                                "success": False,
+                                "reason": "post_doesnt_exist",
+                            }
+                        )
+                        return
 
             self.set_status(200)
-            self.write({'status': 200,
-                        'success': True})
+            self.write({"status": 200, "success": True})
 
 
 class PinHandler(BaseHandler):
+    def check_space_or_global_admin(self, space_name) -> bool:
+        """
+        check if the current user is either space admin or global admin
+        :return: True if user is any of those admins, False otherwise
+        :raises: ValueError, if space doesnt exist
+        """
 
-    def get_space(self, space_name):
-        return self.db.spaces.find_one({"name": space_name})
-
-    def check_space_or_global_admin(self, space_name):
-        space = self.get_space(space_name)
-        if space is not None:
-            if (self.current_user.username in space["admins"]) or (self.get_current_user_role() == "admin"):
-                return True
-            else:
-                return False
-        else:
-            raise ValueError("Space doesnt exist")
+        with Spaces() as db_manager:
+            try:
+                if (
+                    db_manager.check_user_is_space_admin(
+                        space_name, self.current_user.username
+                    )
+                ) or (self.get_current_user_role() == "admin"):
+                    return True
+                else:
+                    return False
+            except SpaceDoesntExistError:
+                raise  # just re-raise the exception to the caller (handler)
 
     @log_access
     @auth_needed
-    def post(self):
+    async def post(self):
         """
         POST /pin
             pin a post or comment (posts are only pinnable if they are in a space)
                 post -> only group admin or global admin
                 comment -> any admin or creator of post
+
             http body:
                 {
                     "id": "id_of_post_or_comment"
@@ -500,129 +1067,248 @@ class PinHandler(BaseHandler):
 
                 400 Bad Request
                 {"status": 400,
-                 "reason": "missing_key_in_http_body"}
+                 "success": False,
+                 "reason": "json_parsing_error"}
+
+                400 Bad Request
+                {"status": 400,
+                 "success": False,
+                 "reason": "missing_key_in_http_body:id"}
+
+                400 Bad Request
+                {"status": 400,
+                 "success": False,
+                 "reason": "missing_key_in_http_body:pin_type"}
 
                 401 Unauthorized
                 {"status": 401,
+                 "success": False,
                  "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                {"status": 403,
+                 "success": False,
+                 "reason": "insufficient_permission"}
+                (acl forbids action (might also require admin role sometimes))
+
+                409 Conflict
+                {"status": 409,
+                 "success": False,
+                 "reason": "post_doesnt_exist"}
+
+                409 Conflict
+                {"status": 409,
+                 "success": False,
+                 "reason": "space_doesnt_exist"}
+
+                409 Conflict
+                {"status": 409,
+                 "success": False,
+                 "reason": "post_not_in_space"}
+                (a post can only be (un-)pinned, if it is in a space)
         """
-        http_body = tornado.escape.json_decode(self.request.body)
+
+        try:
+            http_body = json.loads(self.request.body)
+        except json.JSONDecodeError:
+            self.set_status(400)
+            self.write(
+                {"status": 400, "success": False, "reason": "json_parsing_error"}
+            )
+            return
 
         if "id" not in http_body:
             self.set_status(400)
-            self.write({"status": 400,
-                        "reason": "missing_key_in_http_body"})
-            self.finish()
+            self.write(
+                {
+                    "status": 400,
+                    "success": False,
+                    "reason": "missing_key_in_http_body:id",
+                }
+            )
             return
 
         if "pin_type" not in http_body:
             self.set_status(400)
-            self.write({"status": 400,
-                        "reason": "missing_key_in_http_body"})
-            self.finish()
+            self.write(
+                {
+                    "status": 400,
+                    "success": False,
+                    "reason": "missing_key_in_http_body:pin_type",
+                }
+            )
             return
 
         if http_body["pin_type"] == "post":
-            post = self.db.posts.find_one({"_id": ObjectId(http_body["id"])})
-            if "space" in post and post["space"] is not None:
+            with Posts() as db_manager:
+                post = db_manager.get_post(http_body["id"], projection={"space": True})
+
+                if not post:
+                    self.set_status(409)
+                    self.write(
+                        {"status": 409, "success": False, "reason": "post_doesnt_exist"}
+                    )
+                    return
+
+                # reject pin if post is not in a space
+                if post["space"] is None:
+                    self.set_status(409)
+                    self.write(
+                        {"status": 409, "success": False, "reason": "post_not_in_space"}
+                    )
+                    return
+
                 try:
                     # check if user is either space admin or global admin
-                    if self.check_space_or_global_admin(post["space"]):
-                        # set the pin
-                        self.db.posts.update_one(
-                            {"_id": ObjectId(http_body["id"])},  # filter
-                            {
-                                "$set": {"pinned": True}
-                            }
-                        )
-
-                        self.set_status(200)
-                        self.write({"status": 200,
-                                    "success": True})
-                    else:
+                    if not self.check_space_or_global_admin(post["space"]):
                         # user is no group admin nor global admin --> no permission to pin
                         self.set_status(403)
-                        self.write({"status": 403,
-                                    "reason": "insufficient_permission"})
+                        self.write(
+                            {
+                                "status": 403,
+                                "success": False,
+                                "reason": "insufficient_permission",
+                            }
+                        )
                         return
-                except ValueError as e:
-                    self.set_status(400)
-                    self.write({'status': 400,
-                                'reason': "space_doesnt_exist"})
+                except SpaceDoesntExistError:
+                    # getting space threw an error --> reject because space doesnt exist
+                    self.set_status(409)
+                    self.write(
+                        {
+                            "status": 409,
+                            "success": False,
+                            "reason": "space_doesnt_exist",
+                        }
+                    )
                     return
-            else:
-                #cannot pin because post is not in space
-                self.set_status(400)
-                self.write({'status': 400,
-                            'reason': "post_not_in_space"})
-                return
+
+                # set the pin
+                try:
+                    db_manager.pin_post(http_body["id"])
+                except PostNotExistingException:
+                        self.set_status(409)
+                        self.write(
+                            {
+                                "status": 409,
+                                "success": False,
+                                "reason": "post_doesnt_exist",
+                            }
+                        )
+                        return
+
+            self.set_status(200)
+            self.write({"status": 200, "success": True})
 
         elif http_body["pin_type"] == "comment":
-            post = self.db.posts.find_one({"comments._id": ObjectId(http_body["id"])})
-            try:
+            with Posts() as db_manager:
+                post = db_manager.get_post_by_comment_id(
+                    http_body["id"], projection={"space": True, "author": True}
+                )
+
+                if not post:
+                    self.set_status(409)
+                    self.write(
+                        {"status": 409, "success": False, "reason": "post_doesnt_exist"}
+                    )
+                    return
+
                 # have to check if the post was in a space first, because then also the space admin may pin comments
                 if "space" in post and post["space"] is not None:
-                    # check if user is either space admin or global admin or the post creator
-                    if self.check_space_or_global_admin(post["space"]) or self.current_user.username == post["author"]:
-                        # set the pin
-                        self.db.posts.update_one(
-                            {"comments._id": ObjectId(http_body["id"])},  # filter
+                    # deny pin if user is neither global admin, space admin nor post author
+                    try:
+                        if not (
+                            self.check_space_or_global_admin(post["space"])
+                            or self.current_user.username == post["author"]
+                        ):
+                            self.set_status(403)
+                            self.write(
+                                {
+                                    "status": 403,
+                                    "success": False,
+                                    "reason": "insufficient_permission",
+                                }
+                            )
+                            return
+                    except SpaceDoesntExistError:
+                        # getting the space threw an error --> space doesnt exist
+                        self.set_status(409)
+                        self.write(
                             {
-                                "$set": {"comments.$.pinned": True}
+                                "status": 409,
+                                "success": False,
+                                "reason": "space_doesnt_exist",
                             }
                         )
-
-                        self.set_status(200)
-                        self.write({"status": 200,
-                                    "success": True})
-
-                    else:
-                        # user is no group admin nor global admin nor post author --> no permission to pin
-                        self.set_status(403)
-                        self.write({"status": 403,
-                                    "reason": "insufficient_permission"})
                         return
+
+                    # set the pin
+                    try:
+                        db_manager.pin_comment(http_body["id"])
+                    except PostNotExistingException:
+                        self.set_status(409)
+                        self.write(
+                            {
+                                "status": 409,
+                                "success": False,
+                                "reason": "post_doesnt_exist",
+                            }
+                        )
+                        return
+
                 else:
                     # post was not in space, only post author or global admin have permission to pin
-                    if self.current_user.username == post["author"] or self.get_current_user_role() == "admin":
-                        # set the pin
-                        self.db.posts.update_one(
-                            {"comments._id": ObjectId(http_body["id"])},  # filter
+                    if not (
+                        self.current_user.username == post["author"]
+                        or self.get_current_user_role() == "admin"
+                    ):
+                        self.set_status(403)
+                        self.write(
                             {
-                                "$set": {"comments.$.pinned": True}
+                                "status": 403,
+                                "success": False,
+                                "reason": "insufficient_permission",
                             }
                         )
-
-                        self.set_status(200)
-                        self.write({"status": 200,
-                                    "success": True})
-
-                    else:
-                        # user is no global admin nor post author --> no permission to pin
-                        self.set_status(403)
-                        self.write({"status": 403,
-                                    "reason": "insufficient_permission"})
                         return
-            except ValueError as e:
-                self.set_status(400)
-                self.write({'status': 400,
-                            'reason': "space_doesnt_exist"})
-                return
+
+                    # set the pin
+                    try:
+                        db_manager.pin_comment(http_body["id"])
+                    except PostNotExistingException:
+                        self.set_status(409)
+                        self.write(
+                            {
+                                "status": 409,
+                                "success": False,
+                                "reason": "post_doesnt_exist",
+                            }
+                        )
+                        return
+
+                self.set_status(200)
+                self.write({"status": 200, "success": True})
 
         else:
             self.set_status(400)
-            self.write({'status': 400,
-                        'reason': "invalid_pin_type_in_http_body"})
+            self.write(
+                {
+                    "status": 400,
+                    "success": False,
+                    "reason": "invalid_pin_type_in_http_body",
+                }
+            )
             return
 
     @log_access
     @auth_needed
-    def delete(self):
+    async def delete(self):
         """
         DELETE /pin
             delete a pin of a post or a comment (posts are only pinnable if they are in a space)
                 post -> only group admin or global admin
                 comment -> any admin or creator of post
+
             http body:
                 {
                     "id": "id_of_post_or_comment"
@@ -636,118 +1322,234 @@ class PinHandler(BaseHandler):
 
                 400 Bad Request
                 {"status": 400,
-                 "reason": "missing_key_in_http_body"}
+                 "success": False,
+                 "reason": "json_parsing_error"}
+                (http body is not valid json)
+
+                400 Bad Request
+                {"status": 400,
+                 "success": False,
+                 "reason": "missing_key_in_http_body:id"}
+
+                400 Bad Request
+                {"status": 400,
+                 "success": False,
+                 "reason": "missing_key_in_http_body:pin_type"}
+
+                400 Bad Request
+                {"status": 400,
+                 "success": False,
+                 "reason": "invalid_pin_type_in_http_body"}
+                (pin_type is neither "post" nor "comment")
 
                 401 Unauthorized
                 {"status": 401,
+                 "success": False,
                  "reason": "no_logged_in_user"}
+                (no valid session, you will be redirected to login automatically)
+
+                403 Forbidden
+                {"status": 403,
+                 "success": False,
+                 "reason": "insufficient_permission"}
+                (acl forbids action (might also require admin role sometimes))
+
+                409 Conflict
+                {"status": 409,
+                 "success": False,
+                 "reason": "post_doesnt_exist"}
+
+                409 Conflict
+                {"status": 409,
+                 "success": False,
+                 "reason": "space_doesnt_exist"}
+
+                409 Conflict
+                {"status": 409,
+                 "success": False,
+                 "reason": "post_not_in_space"}
+                (a post can only be (un-)pinned, if it is in a space)
         """
 
-        http_body = tornado.escape.json_decode(self.request.body)
+        try:
+            http_body = json.loads(self.request.body)
+        except json.JSONDecodeError:
+            self.set_status(400)
+            self.write(
+                {"status": 400, "success": False, "reason": "json_parsing_error"}
+            )
+            return
 
         if "id" not in http_body:
             self.set_status(400)
-            self.write({"status": 400,
-                        "reason": "missing_key_in_http_body"})
+            self.write(
+                {
+                    "status": 400,
+                    "success": False,
+                    "reason": "missing_key_in_http_body:id",
+                }
+            )
             self.finish()
             return
 
         if "pin_type" not in http_body:
             self.set_status(400)
-            self.write({"status": 400,
-                        "reason": "missing_key_in_http_body"})
+            self.write(
+                {
+                    "status": 400,
+                    "success": False,
+                    "reason": "missing_key_in_http_body:pin_type",
+                }
+            )
             self.finish()
             return
 
         if http_body["pin_type"] == "post":
-            post = self.db.posts.find_one({"_id": ObjectId(http_body["id"])})
-            if "space" in post and post["space"] is not None:
+            with Posts() as db_manager:
+                post = db_manager.get_post(http_body["id"], projection={"space": True})
+
+                # reject if post doesnt exist
+                if not post:
+                    self.set_status(409)
+                    self.write(
+                        {"status": 409, "success": False, "reason": "post_doesnt_exist"}
+                    )
+                    return
+
+                # reject unpin if post is not in a space
+                if post["space"] is None:
+                    self.set_status(409)
+                    self.write(
+                        {"status": 409, "success": False, "reason": "post_not_in_space"}
+                    )
+                    return
                 try:
-                    # check if user is either space admin or global admin
-                    if self.check_space_or_global_admin(post["space"]):
-                        # set the pin
-                        self.db.posts.update_one(
-                            {"_id": ObjectId(http_body["id"])},  # filter
+                    # reject if the user is neither space nor global admin
+                    if not self.check_space_or_global_admin(post["space"]):
+                        self.set_status(403)
+                        self.write(
                             {
-                                "$set": {"pinned": False}
+                                "status": 403,
+                                "success": False,
+                                "reason": "insufficient_permission",
                             }
                         )
-
-                        self.set_status(200)
-                        self.write({"status": 200,
-                                    "success": True})
-                    else:
-                        # user is no group admin nor global admin --> no permission to pin
-                        self.set_status(403)
-                        self.write({"status": 403,
-                                    "reason": "insufficient_permission"})
                         return
-                except ValueError as e:
-                    self.set_status(400)
-                    self.write({'status': 400,
-                                'reason': "space_doesnt_exist"})
+                except SpaceDoesntExistError:
+                    # error was thrown during space request --> space doesnt exist
+                    self.set_status(409)
+                    self.write(
+                        {
+                            "status": 409,
+                            "success": False,
+                            "reason": "space_doesnt_exist",
+                        }
+                    )
                     return
-            else:
-                #cannot pin because post is not in space
-                self.set_status(400)
-                self.write({'status': 400,
-                            'reason': "post_not_in_space"})
-                return
+
+                # unset the pin
+                try:
+                    db_manager.unpin_post(http_body["id"])
+                except PostNotExistingException:
+                        self.set_status(409)
+                        self.write(
+                            {
+                                "status": 409,
+                                "success": False,
+                                "reason": "post_doesnt_exist",
+                            }
+                        )
+                        return
+
+            self.set_status(200)
+            self.write({"status": 200, "success": True})
 
         elif http_body["pin_type"] == "comment":
-            post = self.db.posts.find_one({"comments._id": ObjectId(http_body["id"])})
-            try:
-                # have to check if the post was in a space first, because then also the space admin may pin comments
+            with Posts() as db_manager:
+                post = db_manager.get_post_by_comment_id(
+                    http_body["id"], projection={"space": True, "author": True}
+                )
+
+                if not post:
+                    self.set_status(409)
+                    self.write(
+                        {"status": 409, "success": False, "reason": "post_doesnt_exist"}
+                    )
+                    return
+
+                # have to check if the post was in a space first, because then also the space admin may unpin comments
                 if "space" in post and post["space"] is not None:
-                    # check if user is either space admin or global admin or the post creator
-                    if self.check_space_or_global_admin(post["space"]) or self.current_user.username == post["author"]:
-                        # set the pin
-                        self.db.posts.update_one(
-                            {"comments._id": ObjectId(http_body["id"])},  # filter
+                    # deny unpin if user is neither global admin, space admin nor post author
+                    try:
+                        if not (
+                            # check admin first even though it is slower, because
+                            # that way we automatically check if the space exists
+                            self.check_space_or_global_admin(post["space"])
+                            or self.current_user.username == post["author"]
+                        ):
+                            self.set_status(403)
+                            self.write(
+                                {
+                                    "status": 403,
+                                    "success": False,
+                                    "reason": "insufficient_permission",
+                                }
+                            )
+                            return
+                    except SpaceDoesntExistError:
+                        # getting the space threw an error --> space doesnt exist
+                        self.set_status(409)
+                        self.write(
                             {
-                                "$set": {"comments.$.pinned": False}
+                                "status": 409,
+                                "success": False,
+                                "reason": "space_doesnt_exist",
                             }
                         )
-
-                        self.set_status(200)
-                        self.write({"status": 200,
-                                    "success": True})
-
-                    else:
-                        # user is no group admin nor global admin nor post author --> no permission to pin
-                        self.set_status(403)
-                        self.write({"status": 403,
-                                    "reason": "insufficient_permission"})
                         return
+
+                    # unset the pin
+                    db_manager.unpin_comment(http_body["id"])
+
                 else:
-                    # post was not in space, only post author or global admin have permission to pin
-                    if self.current_user.username == post["author"] or self.get_current_user_role() == "admin":
-                        # set the pin
-                        self.db.posts.update_one(
-                            {"comments._id": ObjectId(http_body["id"])},  # filter
+                    # post was not in space, only post author or global admin have permission to unpin
+                    if not (
+                        self.current_user.username == post["author"]
+                        or self.get_current_user_role() == "admin"
+                    ):
+                        self.set_status(403)
+                        self.write(
                             {
-                                "$set": {"comments.$.pinned": False}
+                                "status": 403,
+                                "success": False,
+                                "reason": "insufficient_permission",
                             }
                         )
-
-                        self.set_status(200)
-                        self.write({"status": 200,
-                                    "success": True})
-
-                    else:
-                        # user is no global admin nor post author --> no permission to pin
-                        self.set_status(403)
-                        self.write({"status": 403,
-                                    "reason": "insufficient_permission"})
                         return
-            except ValueError as e:
-                self.set_status(400)
-                self.write({'status': 400,
-                            'reason': "space_doesnt_exist"})
-                return
 
+                    # set the unpin
+                    try:
+                        db_manager.unpin_comment(http_body["id"])
+                    except PostNotExistingException:
+                        self.set_status(409)
+                        self.write(
+                            {
+                                "status": 409,
+                                "success": False,
+                                "reason": "post_doesnt_exist",
+                            }
+                        )
+                        return
+
+                self.set_status(200)
+                self.write({"status": 200, "success": True})
         else:
             self.set_status(400)
-            self.write({'status': 400,
-                        'reason': "invalid_pin_type_in_http_body"})
+            self.write(
+                {
+                    "status": 400,
+                    "success": False,
+                    "reason": "invalid_pin_type_in_http_body",
+                }
+            )
             return
