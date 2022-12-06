@@ -304,6 +304,7 @@ def set_global_vars(conf: dict) -> None:
         "mongodb_password",
         "mongodb_db_name",
     ]
+
     for key in expected_config_keys:
         if key not in conf:
             raise RuntimeError("config misses {}".format(key))

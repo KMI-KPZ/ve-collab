@@ -49,6 +49,7 @@ var load_templates = async function () {
     profileInformation_listItem = $(template).filter('#profileInformation_listItem').html()
 
     acl_button = $(template).filter('#acl_button').html()
+    wordpress_button = $(template).filter("#wordpress_button").html()
 
   });
 };
@@ -134,8 +135,8 @@ $(document).ready(function () {
   // load templates for construction of page
   load_templates().then(initNewsFeed);
 
-  // add acl button if admin
-  add_acl_button()
+  // add acl and wordpress button if admin
+  add_acl_and_wordpress_button();
 
   const interval  = setInterval(function() {
      checkUpdate();
@@ -220,7 +221,14 @@ $body.delegate('#post', 'click', function () {
     var selectedValue = ($( "#selectSpace option:selected" ).val() === "null") ? null : $( "#selectSpace option:selected" ).val();
     //while in space page: post in this space
     var space = (inSpace) ? spacename.replace("%20", " ") : selectedValue;
-    if(text!='') post(text, space);
+
+    let selectedWordpressPostId = $("#wordpressPostSelect").val();
+    console.log(selectedWordpressPostId);
+    if (selectedWordpressPostId === "" || selectedWordpressPostId === undefined){
+      selectedWordpressPostId = null;
+    }
+
+    if(text!='') post(text, tags, space, selectedWordpressPostId);
     else {
       $("#postAlert").html('Add some text to your post!');
       $("#postAlert").addClass("alert alert-danger");

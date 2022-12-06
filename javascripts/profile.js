@@ -7,7 +7,6 @@ $(document).ready(function () {
     getUserInfo(name);
     getFollows(name);
     updateProfileContainer();
-    //add_acl_button()
   }, 200);
 });
 

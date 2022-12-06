@@ -22,8 +22,9 @@ var spaceTemplate
 var acl_button
 
 $.get("/template", function(template, textStatus, jqXhr) {
-  spaceTemplate = $(template).filter('#spaceTemplate').html()
-  acl_button = $(template).filter('#acl_button').html()
+  spaceTemplate = $(template).filter('#spaceTemplate').html();
+  acl_button = $(template).filter('#acl_button').html();
+  wordpress_button = $(template).filter("#wordpress_button").html();
 })
 
 var Spaces = [];
@@ -37,7 +38,7 @@ $(document).ready(function () {
   getSpaces()
   //addPendingInvitesButton()
   getPendingInvites()
-  add_acl_button()
+  add_acl_and_wordpress_button();
 })
 
 /**
