@@ -1,41 +1,43 @@
+import tornado.web
+
 from handlers.base_handler import BaseHandler, auth_needed
 from logger_factory import log_access
+from resources.profile import AlreadyFollowedException, NotFollowedException, Profiles
 
 
 class FollowHandler(BaseHandler):
-
     @log_access
     @auth_needed
     def get(self):
         """
         GET /follow
-            get list of usernames that the current user follows
-            query param: user : string (required)
+            get list of usernames that the user follows
+            query param: user : string (if not supplied, the current_user is used)
 
             returns:
                 200 OK,
                 {"user": <string>,
                  "follows": ["username1", "username2", ...]}
 
+                400 Bad Request
+                {"status": 400,
+                 "success": False,
+                 "reason": "missing_key:user}
+
                 401 Unauthorized
                 {"status": 401,
                  "reason": "no_logged_in_user"}
         """
 
-        username = self.get_argument("user")
+        username = self.get_argument("user", None)
+        if username is None:
+            username = self.current_user.username
 
-        result = self.db.follows.find(
-            filter={"user": username},
-            projection={"_id": False}
-        )
-
-        follows = []  # need to instantiate it because if user follows nobody the iteration wont be run "follows" would get unassigned
-        for user in result:  # even though there is only one item in result set we need to iterate because query returns a cursor instance
-            follows = user["follows"]
+        with Profiles() as db_manager:
+            follows = db_manager.get_follows(username)
 
         self.set_status(200)
-        self.write({"user": username,
-                    "follows": follows})
+        self.write({"success": True, "user": username, "follows": follows})
 
     @log_access
     @auth_needed
@@ -50,27 +52,35 @@ class FollowHandler(BaseHandler):
                 {"status": 200,
                  "success": True}
 
+                304 Not Modified
+                --> current user already follows this user
+
+                400 Bad Request
+                {"status": 400,
+                 "success": False,
+                 "reason": "missing_key:user}
+
                 401 Unauthorized
                 {"status": 401,
                  "reason": "no_logged_in_user"}
         """
 
-        username = self.current_user.username
-        user_to_follow = self.get_argument("user")
+        try:
+            user_to_follow = self.get_argument("user")
+        except tornado.web.MissingArgumentError:
+            self.set_status(400)
+            self.write({"status": 400, "success": False, "reason": "missing_key:user"})
+            return
 
-        self.db.follows.update_one(
-            {"user": username},  # fitler
-            {
-                "$addToSet": {  # update
-                    "follows": user_to_follow
-                }
-            },
-            upsert=True  # if no document already present, create one (i.e. user follows somebody for first time)
-        )
+        with Profiles() as db_manager:
+            try:
+                db_manager.add_follows(self.current_user.username, user_to_follow)
+            except AlreadyFollowedException:
+                self.set_status(304)
+                return
 
         self.set_status(200)
-        self.write({"status": 200,
-                    "success": True})
+        self.write({"status": 200, "success": True})
 
     @log_access
     @auth_needed
@@ -85,22 +95,29 @@ class FollowHandler(BaseHandler):
                 {"status": 200,
                  "success": True}
 
+                400 Bad Request
+                {"status": 400,
+                 "success": False,
+                 "reason": "missing_key:user}
+
                 401 Unauthorized
                 {"status": 401,
                  "reason": "no_logged_in_user"}
         """
 
-        username = self.get_argument("user")
+        try:
+            username = self.get_argument("user")
+        except tornado.web.MissingArgumentError:
+            self.set_status(400)
+            self.write({"status": 400, "success": False, "reason": "missing_key:user"})
+            return
 
-        self.db.follows.update_one(
-            {"user": self.current_user.username},
-            {
-                "$pull": {
-                    "follows": username
-                }
-            }
-        )
+        with Profiles() as db_manager:
+            try:
+                db_manager.remove_follows(self.current_user.username, username)
+            except NotFollowedException:
+                self.set_status(304)
+                return
 
         self.set_status(200)
-        self.write({"status": 200,
-                    "success": True})
+        self.write({"status": 200, "success": True})
