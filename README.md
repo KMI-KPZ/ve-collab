@@ -9,6 +9,7 @@ Disclaimer: Features are in a very early Alpha stage and might change drasticall
 
 ## Prerequisites:
 
+- Install Python3.10 (lower versions will not work)
 - Install [MongoDB](https://docs.mongodb.com/manual/installation/) for your OS and [enable Authentication](https://www.mongodb.com/features/mongodb-authentication)
 - Setup a [Keycloak](https://www.keycloak.org/) Server and create a realm and users.
 - Setup (or rent) a [Wordpress](https://wordpress.com/de/) Instance anywhere and install [this](https://de.wordpress.org/plugins/oauth-client-for-user-authentication/) OAuth plugin to make the integration with Keycloak work. Configure it according to your Keycloak setting.
