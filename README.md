@@ -1,17 +1,21 @@
-# lionet
+# KAVA Q
+![Build](https://github.com/KMI-KPZ/kavaq/actions/workflows/deploy.yml/badge.svg)
 
-This is a simple implementation of a social network. It provides all standard functionality such as posting, liking, following, etc.
+Digital Assistance System to plan Virtual Exchanges collaboratively and internationally.
+
+In the current stage, the baseline is layed out: a social network. It provides all standard functionality such as posting, liking, following, etc.
+
+Disclaimer: Features are in a very early Alpha stage and might change drastically.
 
 ## Prerequisites:
 
-- Install [MongoDB](https://docs.mongodb.com/manual/installation/) for your OS on default port
-- Install & set up a [DokuWiki](https://www.dokuwiki.org/install#distribution_os_specifics) in order to use the integrated Wiki
-
-- This project is not supposed to be standalone, but rather used in our [platform application](https://github.com/Smunfr/sse-platform). Therefore you first need to install this platform. Follow the instructions in the repository.
+- Install [MongoDB](https://docs.mongodb.com/manual/installation/) for your OS and [enable Authentication](https://www.mongodb.com/features/mongodb-authentication)
+- Setup a [Keycloak](https://www.keycloak.org/) Server and create a realm and users.
+- Setup (or rent) a [Wordpress](https://wordpress.com/de/) Instance anywhere and install [this](https://de.wordpress.org/plugins/oauth-client-for-user-authentication/) OAuth plugin to make the integration with Keycloak work. Configure it according to your Keycloak setting.
 
 ## Installation
 
-- you can install the social network's requirements using pip. simply execute:
+- you can install the kavaq platform's requirements using pip. simply execute:
   ```sh
   $ pip install -r requirements.txt
   ```
@@ -19,25 +23,21 @@ This is a simple implementation of a social network. It provides all standard fu
 
 ## Running the social network
 
-- fire up the platform application (please refer to the guide in the repo)
-- check the port you started the platform on. If it is not 8888, change the values of ```PLATFORM_PORT``` and ```ROUTING_TABLE``` in CONSTANTS.py to your port
-- run
+- copy the ```example_config.json``` into ```config.json``` and fill in the values according to your Keycloak, MongoDB settings and setups
+- run the following command to start the network (parameters in square brackets are optional, read explanation below):
   ```sh
-  $ python signing.py
+  $ python3 main.py [--config=/path/to/config.json] [--build_indexes] [--create_admin=<username>]
   ```
-  once to generate the files ```signing_key.key``` and ```verify_key.key```. Keep the signing key secret AT ALL COST. Take the verify_key and insert ```"lionet": "<verify_key_here>"```, into the ```verify_keys.json``` file over at the platform
-- run the following to start the network:
-  ```sh
-  $ python3 main.py
-  ```
-  - you have the option to start without the integration of DokuWiki (e.g. if you don't have it installed and/or don't plan to use it). Use the ```--no_wiki``` flag in this case
-
- Login to Platform | User View
- :------------------------------------:|:-------------------------:
- ![login](Features/platform/login.png) | ![Admin Platform](Features/platform/user.png)
+  - if you desire to store your config file anywhere else than in the main directory, you can use the ```--config=path/to/config/file``` flag
+  - on your very first run, it is highly recommended to create an admin user, because otherwise ACL permissions will most certainly not be granted right. Use the ```--create_admin=<username>``` flag. Make sure this username also exists in Keycloak to actually be able to log into this account.
+  - The application uses multiple indexes for query optimization and faster reads. They are built automatically if they don't exist. However you can force to rebuild those indexes using the ```--build_indexes``` flag
 
 
 ## Features
+```diff
+- Disclaimer: pictures are highly out of date, updates of screenshots required
+```
+
 The pictures below show examples for the current visualization state of the features.
 ### Newsfeed, Streaming and Timelines
 

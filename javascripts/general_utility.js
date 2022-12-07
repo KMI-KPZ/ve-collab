@@ -12,22 +12,6 @@ $(document).ready(function () {
 })
 
 /**
- * Gets routing table from server
- */
-function getRouting(){
-  $.ajax({
-    type: "GET",
-    url: "/routing",
-    success: function(response){
-      routingTable = response.routing;
-    },
-    error: function(){
-      alert("Critical Server Error, Please visit the Platform Page!");
-    }
-  })
-}
-
-/**
  *  Utility functions for nav search bar  
  *  
  */ 
@@ -102,7 +86,7 @@ function jumpto(jump_id) {
 function search(query) {
   $.ajax({
     type: 'GET',
-    url: '/search?query=' + query,
+    url: '/search?posts=true&tags=true&users=true&query=' + query,
     dataType: 'json',
     success: function (data) {
         $('#result').html('');
@@ -118,7 +102,7 @@ function search(query) {
           $.each(posts, function(entry) {
             $('#result').find("div").last().append(`
               <li class="link-class p-2 grid grid-cols-10" onclick="jumpto('${posts[entry]._id}')">        
-                <img src="http://localhost:8903/uploads/default_group_pic.jpg" class="shadow rounded-full h-10 align-middle border-none avatar"></img>
+                <img src="/uploads/default_group_pic.jpg" class="shadow rounded-full h-10 align-middle border-none avatar"></img>
                 <p class="col-span-9">${posts[entry].text}</p> 
               </li>
             `);
@@ -132,7 +116,7 @@ function search(query) {
           $.each(tags, function(entry) {
             $('#result').find("div").last().append(`
               <li class="link-class p-2 grid grid-cols-10" onclick="jumpto('${tags[entry]._id}')">        
-                <img src="http://localhost:8903/uploads/default_group_pic.jpg" class="shadow rounded-full h-10 align-middle border-none avatar"></img>
+                <img src="/uploads/default_group_pic.jpg" class="shadow rounded-full h-10 align-middle border-none avatar"></img>
                 <p class="col-span-9">${tags[entry].text}</p> 
               </li>
             `);
@@ -146,8 +130,8 @@ function search(query) {
           $.each(users, function(entry) {
             $('#result').find("div").last().append(`
               <li class="link-class p-2">
-                <a class="grid grid-cols-10" href="http://localhost:8903/profile/${users[entry].user}">        
-                  <img src="http://localhost:8903/uploads/${users[entry].profile_pic}" class="shadow rounded-full h-10 align-middle border-none avatar"></img>
+                <a class="grid grid-cols-10" href="/profile/${users[entry].user}">        
+                  <img src="/uploads/${users[entry].profile_pic}" class="shadow rounded-full h-10 align-middle border-none avatar"></img>
                   <p class="col-span-9">${users[entry].user}</p> 
                 </a>
               </li>
@@ -210,16 +194,17 @@ $('body').delegate('.link-class', 'click', function() {
 })
 
 /**
- * if user role is admin, adds button to navbar to access acl tables
+ * if user role is admin, adds button to navbar to access acl tables and wordpress instance
  */
-function add_acl_button() {
+function add_acl_and_wordpress_button() {
   $.ajax({
       type: 'GET',
       url: '/role/my',
       dataType: 'json',
       success: function (data) {
           if(data.role == "admin") {
-            $("#navbar_items").append(Mustache.render(acl_button))
+            $("#navbar_items").append(Mustache.render(acl_button));
+            $("#navbar_items").append(Mustache.render(wordpress_button));
           }
 
       },

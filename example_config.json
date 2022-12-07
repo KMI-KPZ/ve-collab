@@ -1,21 +1,19 @@
 {
-  "port": 8903,
-  "platform_host": "localhost",
-  "platform_port": 8888,
+  "port": 8888,
+  "domain": "localhost",
+  "upload_directory": "uploads/",
   "cookie_secret": "<tornado_cookie_secret>",
+  "wordpress_url": "http://base_url_of_wordpress_without_trailing_/",
   "keycloak_base_url": "<keycloak_host_url_including_/auth/>",
   "keycloak_realm": "<keycloak_realm>",
   "keycloak_client_id": "<keycloak_client_id>",
   "keycloak_client_secret": "<keycloak_client_secret>",
+  "keycloak_callback_url": "http://localhost:8888/login/callback",
+  "keycloak_admin_username": "soserve_admin",
+  "keycloak_admin_password": "sse_admin_2",
   "mongodb_host": "localhost",
   "mongodb_port": 27017,
   "mongodb_username": "<mongo_username>",
   "mongodb_password": "<mongo_password>",
-  "mongodb_db_name": "lionet",
-  "wiki_url": "<absolute_url>",
-  "wiki_username": "<wiki_username>",
-  "wiki_password": "<wiki_password>",
-  "routing_table": {
-    "platform": "http://localhost:8888"
-  }
+  "mongodb_db_name": "lionet_kavaq"
 }

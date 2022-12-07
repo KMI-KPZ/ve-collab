@@ -1,16 +1,18 @@
 from base64 import b64encode
 import os
 import re
+from typing import List, Optional, Tuple
 
 import tornado.web
 
 from handlers.base_handler import BaseHandler, auth_needed
 from logger_factory import log_access
-from socket_client import get_socket_instance
+from resources.acl import ACL
+from resources.profile import Profiles
+from resources.space import Spaces
 
 
 class ProfileInformationHandler(BaseHandler):
-
     @log_access
     @auth_needed
     async def get(self):
@@ -20,11 +22,11 @@ class ProfileInformationHandler(BaseHandler):
 
             returns:
                 200 OK
-                {user: {
-                    "user_id": <int>,
-                    "username": <string>,
-                    "email": <string>,
-                 },
+                {
+                 "user_id": <int>,
+                 "username": <string>,
+                 "email": <string>,
+                 "role": <string>,
                  "profile": {
                     "bio": <string>,
                     "institution": <string>,
@@ -38,73 +40,55 @@ class ProfileInformationHandler(BaseHandler):
                     "education": [<string1>, <string2>, ...]
                  },
                  "spaces": [<string1>, <string2>, ...],
-                 "follows": [<string1>, <string2>, ...]
+                 "follows": [<string1>, <string2>, ...],
+                 "followers": [<string1>, <string2>, ...]
                 }
 
                 401 Unauthorized
                 {"status": 401,
                  "reason": "no_logged_in_user"}
         """
-
         username = self.get_argument("username", None)
         if not username:
             username = self.current_user.username
 
-        # get account information from platform
-        client = await get_socket_instance()
-        user_result = await client.write({"type": "get_user",
-                                          "username": username})
+        # get account information from keycloak
+        keycloak_info = self.get_keycloak_user(username)
 
-        # grab spaces
-        spaces_cursor = self.db.spaces.find(
-            filter={"members": username}
-        )
-        spaces = []
-        for space in spaces_cursor:
-            spaces.append(space["name"])
+        # add user data to response
+        user_information_response = {
+            "user_id": keycloak_info["id"],
+            "username": username,
+            "email": keycloak_info["email"],
+        }
 
-        # grab users that the current_user follows
-        follows_cursor = self.db.follows.find(
-            filter={"user": username}
-        )
-        follows = []
-        for user in follows_cursor:
-            follows = user["follows"]
+        with Profiles() as profile_manager:
+            # grab and add profile details, putting role and follows out of
+            # the nested profile dict
+            profile = {}
+            profile = profile_manager.ensure_profile_exists(username)
+            role = profile["role"]
+            follows = profile["follows"]
+            # remove unnecessary (duplicate) keys from nested dict
+            del profile["_id"]
+            del profile["role"]
+            del profile["follows"]
 
-        # grab users that follow current_user
-        follower_cursor = self.db.follows.find({"follows": username})
-        followers = []
-        for user in follower_cursor:
-            print(user)
-            followers.append(user["user"]) 
+            # grab users that follow the user separately, because db model is 1:n
+            followers = profile_manager.get_followers(username)
+            user_information_response["followers"] = followers
 
-        profile_cursor = self.db.profiles.find(
-            filter={"user": username}
-        )
-        profile = {}
-        profile["profile_pic"] = "default_profile_pic.jpg"
-        for user_profile in profile_cursor:
-            profile["bio"] = user_profile["bio"]
-            profile["institution"] = user_profile["institution"]
-            profile["projects"] = user_profile["projects"]
-            if "profile_pic" in user_profile:
-                profile["profile_pic"] = user_profile["profile_pic"]
-            profile["first_name"] = user_profile["first_name"]
-            profile["last_name"] = user_profile["last_name"]
-            profile["gender"] = user_profile["gender"]
-            profile["address"] = user_profile["address"]
-            profile["birthday"] = user_profile["birthday"]
-            profile["experience"] = user_profile["experience"]
-            profile["education"] = user_profile["education"]
+            user_information_response["role"] = role
+            user_information_response["follows"] = follows
+            user_information_response["profile"] = profile
 
-        user_information = {key: user_result["user"][key] for key in user_result["user"]}
-        user_information["spaces"] = spaces
-        user_information["follows"] = follows
-        user_information["followers"] = followers
-        user_information["profile"] = profile
+        # grab and add spaces
+        with Spaces() as space_manager:
+            spaces = space_manager.get_spaces_of_user(username)
+            user_information_response["spaces"] = spaces
 
         self.set_status(200)
-        self.write(user_information)
+        self.write(user_information_response)
 
     @log_access
     @auth_needed
@@ -154,62 +138,37 @@ class ProfileInformationHandler(BaseHandler):
         experience = self.get_body_argument("experience", None).split(",")
         education = self.get_body_argument("education", None).split(",")
 
-        # handle profile pic
-        new_file_name = None
-        if "profile_pic" in self.request.files:
-            profile_pic_obj = self.request.files["profile_pic"][0]
+        updated_attribute_dict = {
+            "bio": bio,
+            "institution": institution,
+            "projects": projects,
+            "first_name": first_name,
+            "last_name": last_name,
+            "gender": gender,
+            "address": address,
+            "birthday": birthday,
+            "experience": experience,
+            "education": education,
+        }
 
-            # save file
-            file_ext = os.path.splitext(profile_pic_obj["filename"])[1]
-            new_file_name = b64encode(os.urandom(32)).decode("utf-8")
-            new_file_name = re.sub('[^0-9a-zäöüßA-ZÄÖÜ]+', '_', new_file_name).lower() + file_ext
+        with Profiles() as profile_manager:
+            # handle profile pic
+            if "profile_pic" in self.request.files:
+                profile_pic_obj = self.request.files["profile_pic"][0]
+                updated_attribute_dict["profile_pic"] = profile_pic_obj["filename"]
+                profile_manager.update_profile_information(
+                    self.current_user.username,
+                    updated_attribute_dict,
+                    self.upload_dir,
+                    profile_pic_obj["body"],
+                )
+            else:
+                profile_manager.update_profile_information(
+                    self.current_user.username, updated_attribute_dict
+                )
 
-            with open(self.upload_dir + new_file_name, "wb") as fp:
-                fp.write(profile_pic_obj["body"])
-
-        if new_file_name:
-            self.db.profiles.update_one(
-                {"user": self.current_user.username},
-                {"$set":
-                    {
-                        "bio": bio,
-                        "institution": institution,
-                        "projects": projects,
-                        "profile_pic": new_file_name,
-                        "first_name": first_name,
-                        "last_name": last_name,
-                        "gender": gender,
-                        "address": address,
-                        "birthday": birthday,
-                        "experience": experience,
-                        "education": education
-                    }
-                },
-                upsert=True
-            )
-        else:
-            self.db.profiles.update_one(
-                {"user": self.current_user.username},
-                {"$set":
-                    {
-                        "bio": bio,
-                        "institution": institution,
-                        "projects": projects,
-                        "first_name": first_name,
-                        "last_name": last_name,
-                        "gender": gender,
-                        "address": address,
-                        "birthday": birthday,
-                        "experience": experience,
-                        "education": education
-                    }
-                },
-                upsert=True
-            )
-
-        self.set_status(200)
-        self.write({"status": 200,
-                    "success": True})
+            self.set_status(200)
+            self.write({"status": 200, "success": True})
 
 
 class UserHandler(BaseHandler):
@@ -248,80 +207,68 @@ class UserHandler(BaseHandler):
                 username = self.get_argument("username")
             except tornado.web.MissingArgumentError:
                 self.set_status(400)
-                self.write({"status": 400,
-                            "reason": "missing_key:username"})
+                self.write({"status": 400, "reason": "missing_key:username"})
                 return
 
-            client = await get_socket_instance()
-            user_result = await client.write({"type": "get_user",
-                                              "username": username})
-            user_result["user"]["profile_pic"] = "default_profile_pic.jpg"
-            user_result["user"]["profile"] = {}
-            profile = self.db.profiles.find_one({"user": username})
-            if profile:
-                if "profile_pic" in profile:
-                    user_result["user"]["profile_pic"] = profile["profile_pic"]
+            # get account information from keycloak
+            keycloak_info = self.get_keycloak_user(username)
 
-                """
-                Here set Profile Information to user in profile view
-                """
-                user_result["user"]["profile"]["first_name"] = profile["first_name"]
-                user_result["user"]["profile"]["last_name"] = profile["last_name"]
-                user_result["user"]["profile"]["gender"] = profile["gender"]
-                user_result["user"]["profile"]["bio"] = profile["bio"]
-                user_result["user"]["profile"]["address"] = profile["address"]
-                user_result["user"]["profile"]["birthday"] = profile["birthday"]
-                user_result["user"]["profile"]["institution"] = profile["institution"]
-                user_result["user"]["profile"]["education"] = profile["education"]
-                user_result["user"]["profile"]["experience"] = profile["experience"]
+            # add user data to response
+            user_information_response = {
+                "id": keycloak_info["id"],
+                "username": username,
+                "email": keycloak_info["email"],
+            }
 
-            # add all names of people that the user follows
-            followers_result = self.db.follows.find_one({"user": username})
-            user_result["user"]["follows"] = followers_result["follows"] if followers_result else []
+            with Profiles() as profile_manager:
+                # add full profile data to response, moving role and follows out of
+                # the nested profile dict
+                profile = profile_manager.ensure_profile_exists(username)
+                user_information_response["profile_pic"] = profile["profile_pic"]
+                user_information_response["role"] = profile["role"]
+                user_information_response["follows"] = profile["follows"]
+                del profile["role"]
+                del profile["follows"]
+                user_information_response["profile"] = profile
 
-            # also add all names of people that follow the user
-            followers_result = self.db.follows.find({"follows": username})
-            followers = []
-            for follower in followers_result:
-                followers.append(follower["user"])
-            user_result["user"]["followers"] = followers
-
+                # add users that follow the user
+                user_information_response["followers"] = profile_manager.get_followers(
+                    username
+                )
 
             self.set_status(200)
-            self.write(user_result["user"])
+            self.write(user_information_response)
 
         elif slug == "list":
-            client = await get_socket_instance()
-            user_list = await client.write({"type": "get_user_list"})
+            user_list_kc = self.get_keycloak_user_list()
 
-            for user in user_list["users"]:
-                # add profile and optionally profile picture
-                user_list["users"][user]["profile_pic"] = "default_profile_pic.jpg"
-                profile = self.db.profiles.find_one({"user": user})
-                if profile:
-                    if "profile_pic" in profile:
-                        user_list["users"][user]["profile_pic"] = profile["profile_pic"]
-                
-                # add all names of people that the user follows
-                follows_result = self.db.follows.find_one({"user": user})
-                user_list["users"][user]["follows"] = follows_result["follows"] if follows_result else []
-
-                # also add all names of people that follow the user
-                followers_result = self.db.follows.find({"follows": user})
-                followers = []
-                for follower in followers_result:
-                    followers.append(follower["user"])
-                user_list["users"][user]["followers"] = followers
-
-                # override role of the platform by the own role of lionet, because lionet does its own role management
-                # only admins will not be overridden --> admin always stays admin
-                role = self.db.roles.find_one({"username": user})
-                if role:
-                    if user_list["users"][user]["role"] != "admin":
-                        user_list["users"][user]["role"] = role["role"]
+            # for the full user list, we dont include the full profile,
+            # but only role, follows, followers and profile_pic
+            user_list_response = {}
+            with Profiles() as profile_manager:
+                for user in user_list_kc:
+                    profile_obj = profile_manager.ensure_profile_exists(
+                        user["username"],
+                        projection={
+                            "_id": False,
+                            "role": True,
+                            "follows": True,
+                            "profile_pic": True,
+                        },
+                    )
+                    user_info = {
+                        "id": user["id"],
+                        "username": user["username"],
+                        "email": user["email"],
+                        "role": profile_obj["role"],
+                        "follows": profile_obj["follows"],
+                        "followers": profile_manager.get_followers(user["username"]),
+                        "profile_pic": profile_obj["profile_pic"],
+                    }
+                    user_list_response[user["username"]] = user_info
 
             self.set_status(200)
-            self.write(user_list["users"])
+            self.write(user_list_response)
 
         else:
             self.set_status(404)
