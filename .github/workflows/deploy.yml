@@ -15,9 +15,6 @@ jobs:
       MONGODB_USERNAME: ${{ secrets.MONGODB_USERNAME }}
       MONGODB_PASSWORD: ${{ secrets.MONGODB_PASSWORD }}
 
-  deploy:
-    needs: test
-    name: Deploy to Production Server
-    runs-on: ubuntu-latest
-    steps:
-      # leave actual deployment empty for now
+  # leave actual deployment empty for now
+  #deploy:
+    
