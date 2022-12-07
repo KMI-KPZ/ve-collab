@@ -506,7 +506,7 @@ class SpaceACLHandler(BaseHandler):
 
             # inconsistency problem: the role exists, but no acl entry. construct an acl entry that has all permissions set to false
             if not acl_entry:
-                acl_entry = self.resolve_inconsistency(current_user_role, space_name)
+                acl_entry = self.resolve_inconsistency(role_to_query, space_name)
 
             self.set_status(200)
             self.write({"status": 200, "success": True, "acl_entry": acl_entry})
