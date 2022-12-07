@@ -171,10 +171,12 @@ $(document).ready(function () {
   getAllUsers();
 
   // load templates for construction of page
-  load_templates().then(initNewsFeed);
-
-  // add acl and wordpress button if admin
-  add_acl_and_wordpress_button();
+  load_templates().then(function(){
+    // init newsfeed block and add acl/wp buttons only after the templates are loaded,
+    // otherwise there would be a race condition causing the templates to not be ready in the worst case
+    initNewsFeed(); 
+    add_acl_and_wordpress_button();
+  });
 
   const interval  = setInterval(function() {
      checkUpdate();
