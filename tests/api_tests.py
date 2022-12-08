@@ -63,20 +63,6 @@ def setUpModule():
     with open(options.config) as json_file:
         config = json.load(json_file)
 
-    global_vars.keycloak = KeycloakOpenID(
-        config["keycloak_base_url"],
-        realm_name=config["keycloak_realm"],
-        client_id=config["keycloak_client_id"],
-        client_secret_key=config["keycloak_client_secret"],
-    )
-    global_vars.keycloak_admin = KeycloakAdmin(
-        config["keycloak_base_url"],
-        realm_name=config["keycloak_realm"],
-        username=config["keycloak_admin_username"],
-        password=config["keycloak_admin_password"],
-        verify=True,
-        auto_refresh_token=["get", "put", "post", "delete"],
-    )
     global_vars.keycloak_callback_url = config["keycloak_callback_url"]
     global_vars.domain = config["domain"]
     global_vars.keycloak_client_id = config["keycloak_client_id"]
@@ -369,28 +355,6 @@ class BaseApiTestCase(AsyncHTTPTestCase):
             raise
 
         return content
-
-
-class AuthenticationHandlersTest(BaseApiTestCase):
-    # the only authentication we can really effectively test is the redirect to keycloak and the error case for the callback...
-
-    def test_login_redirect(self):
-        """
-        expect: 302 redirect to keycloak
-        """
-
-        response = self.fetch("/login", follow_redirects=False)
-        self.assertEqual(response.code, 302)
-
-    def test_login_callback_error_no_code(self):
-        """
-        expect: 400 Bad request, reason missing_key
-        """
-
-        response = self.base_checks("GET", "/login/callback", False, 400)
-
-        # expect a missing_key:code error as the reason
-        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "code")
 
 
 class FollowHandlerTest(BaseApiTestCase):
