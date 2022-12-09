@@ -304,6 +304,25 @@ class _SpaceACL:
         )
         return admin_rule
 
+    def insert_default_discussion(self, role: str, space: str):
+        default_rule = {
+            "role": role,
+            "space": space,
+            "join_space": True,
+            "read_timeline": True,
+            "post": True,
+            "comment": True,
+            "read_wiki": True,
+            "write_wiki": False,
+            "read_files": True,
+            "write_files": True,
+        }
+
+        self.db.space_acl.update_one(  # use update + upsert so this function can also be used to restore to default
+            {"role": role, "space": space}, {"$set": default_rule}, upsert=True
+        )
+        return default_rule
+
     def ask(self, role: str, space: str, permission_key: str) -> bool:
         """
         "ask" the acl for a permission value on a give role

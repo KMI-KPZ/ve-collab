@@ -484,6 +484,37 @@ class Spaces:
         if update_result.modified_count != 1:
             raise UserNotAdminError()
 
+    def create_or_join_discussion_space(self, wp_post: dict, username: str) -> str:
+        """
+        the given user joins the discussion space about the given wordpress post.
+        If this space doesnt exist, create one and let the user join
+        :param wp_post: the wordpress from the wordpress api (needs at least id and title keys)
+        :param username: the user who wants to create or join the space
+        :return: the name of the space
+        """
+
+        self.db.spaces.update_one(
+            {"wp_post_id": wp_post["id"]},
+            {
+                "$addToSet": {"members": username},
+                # in case the wordpress post name was changed, simply always update the name
+                "$set": {"name": "Discussion: {}".format(wp_post["title"]["rendered"])},
+                # only when inserting a new space, those additional parameters will be set
+                "$setOnInsert": {
+                    "invisible": True,
+                    "admins": [],
+                    "invites": [],
+                    "requests": [],
+                    "is_discussion": True,
+                    "wp_post_id": wp_post["id"],
+                },
+            },
+            upsert=True,
+        )
+
+        # return name of the space
+        return "Discussion: {}".format(wp_post["title"]["rendered"])
+
 
 class SpaceDoesntExistError(Exception):
     pass

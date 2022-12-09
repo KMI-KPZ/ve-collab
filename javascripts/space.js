@@ -1,4 +1,4 @@
-var spacename = currURL.substring(currURL.lastIndexOf('/') + 1);
+var spacename = currURL.substring(currURL.lastIndexOf('/') + 1).replaceAll("%20", " ");
 
 // On document ready get routing
 $(document).ready(function () {
@@ -28,7 +28,7 @@ function triggerDisplay(index) {
       //alert("Hallo")
       $('#space_members').empty()
       $.each(Spaces, function(entry) {
-        if(Spaces[entry].name == spacename.replace("%20", " ")) {
+        if(Spaces[entry].name == spacename.replaceAll("%20", " ")) {
           $.each(users, function(user) {
             if(Spaces[entry].members.includes(users[user].username)) {
               $('#space_members').append(Mustache.render($('#space_member').html(), {username:users[user].username, memberRole:users[user].role, profilePic:users[user].profile_pic}))
@@ -46,7 +46,9 @@ function triggerDisplay(index) {
          $feedContainer = $('#feedContainer');
       }
     }
-    addContainer().then(initNewsFeed())
+    addContainer().then(function(){
+      initNewsFeed();
+  })
   }
 }
 
@@ -66,7 +68,7 @@ function handleSpaceAdministrationTabChange(tab) {
       $('#invite_select').empty()
       var currentSpace = "";
       $.each(Spaces, function(entry) {
-        if(Spaces[entry].name == spacename.replace("%20", " ")) {
+        if(Spaces[entry].name == spacename.replaceAll("%20", " ")) {
           currentSpace = Spaces[entry]
         }
       })
@@ -88,7 +90,7 @@ function handleSpaceAdministrationTabChange(tab) {
  */
 function populateSpaceInformationModal()  {
   $.each(Spaces, function(entry) {
-    if(Spaces[entry].name == spacename.replace("%20", " ")) {
+    if(Spaces[entry].name == spacename.replaceAll("%20", " ")) {
       if(Spaces[entry].space_description) {
         $("#space_description").val(Spaces[entry].space_description)
       }
@@ -171,6 +173,7 @@ function update_invite_change_select() {
 });
 
 function addAdmin(spacename, user) {
+  spacename = spacename.replaceAll("%20", " ");
   var formData = new FormData();
   formData.append("name", spacename)
   formData.append("user", user)
@@ -478,7 +481,7 @@ function renderUserManagementModal() {
   getSpaces()
   $("#user_management_table tr").remove()
   $.each(Spaces, function(space_entry) {
-    if(Spaces[space_entry].name == spacename.replace("%20"," ")) {
+    if(Spaces[space_entry].name == spacename.replaceAll("%20"," ")) {
       $.each(Spaces[space_entry].members, function(member_entry) {
         var role = "member"
         var isAdmin = false
@@ -505,7 +508,7 @@ var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
 function searchUserInvites(users) {
   var currentSpace;
   $.each(Spaces, function(space_entry) {
-    if(Spaces[space_entry].name == spacename.replace("%20"," ")) {
+    if(Spaces[space_entry].name == spacename.replaceAll("%20"," ")) {
       currentSpace = Spaces[space_entry]
     }
   })

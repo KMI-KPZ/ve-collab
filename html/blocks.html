@@ -441,7 +441,13 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
 
           <div class="wordpress_post">
             {{!#wordpressPost}}
-              <h2><b>Post from Wordpress:</b></h2>
+                <div class="flex justify-between">
+                    <h2><b>Post from Wordpress:</b></h2>
+                    <button type="button" onclick="joinDiscussionSpace('{{{!id}}}');"
+                            class="bg-transparent hover:bg-blue-300 bg-blue-lionet h-7 text-black font-semibold text-xs hover:text-black py-1 px-2 border border-blue-lionet hover:border-transparent rounded" data-toggle="tooltip" data-placement="right" data-html="true">
+                      <span>Discuss about this Post</span>
+                    </button>
+                </div>
               <div class="wordpress_post_content">{{{!content}}}</div>
             {{!/wordpressPost}}
           </div>
@@ -1256,9 +1262,14 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
 
 <!-- Space header template - displayed on every space site at the top of the page -->
 <script id="spaceHeaderTemplate" type="text/html">
-  <div class="flex" x-data="setup()">
+  <div class="flex">
+    <div class="flex-none w-1/5 p-2 ml-6 mr-2"></div>
+    <div class="flex-none w-3/5 border rounded-md border-blue-lionet bg-white p-2 ml-7" id="wpPostPlaceholder"></div>
+    <div class="flex-none w-1/5 p-2 mr-2"></div>
+  </div>
+  <div class="flex mt-2" x-data="setup()">
 
-    <div class="flex-none w-1/6 border rounded-md border-blue-lionet bg-white p-2 ml-6 mr-2" style="height: 0%">
+    <div class="flex-none w-1/5 border rounded-md border-blue-lionet bg-white p-2 ml-6 mr-2" style="height: 0%">
       <!-- Main space header panel - contains information like space pic and name -->
       <div id="spaceProfilePanel">
         <div class="flex flex-col flex-1 bg-white" >
@@ -1612,6 +1623,16 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
   </div>
 </script>
 <!-- End of space header template -->
+
+<script id="discussionWordpressPostTemplate" type="text/html">
+  <div id="wp_post_container" class="p-2 w-full">
+    <div class="wordpress_post">
+        <h2><b>Wordpress Post: {{{!title}}}</b></h2>
+        <div class="wordpress_post_content">{{{!post_content}}}</div>
+    </div>
+  </div>
+</script>
+
 
 <!-- -->
 <script id="profileInformation_listItem" type="text/html">

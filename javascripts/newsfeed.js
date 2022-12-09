@@ -28,6 +28,8 @@ var profileTemplate
 var profileInformation_listItem
 
 var acl_button
+var wordpress_button
+var wordpressDiscussionTemplate
 
 /**
  * load_templates - load templates from GET response to /template
@@ -50,6 +52,8 @@ var load_templates = async function () {
 
     acl_button = $(template).filter('#acl_button').html()
     wordpress_button = $(template).filter("#wordpress_button").html()
+
+    wordpressDiscussionTemplate = $(template).filter("#discussionWordpressPostTemplate").html()
 
   });
 };
@@ -260,7 +264,7 @@ $body.delegate('#post', 'click', function () {
     //check if there is a space selected to post into
     var selectedValue = ($( "#selectSpace option:selected" ).val() === "null") ? null : $( "#selectSpace option:selected" ).val();
     //while in space page: post in this space
-    var space = (inSpace) ? spacename.replace("%20", " ") : selectedValue;
+    var space = (inSpace) ? spacename.replaceAll("%20", " ") : selectedValue;
 
     let selectedWordpressPostId = $("#wordpressPostSelect").val();
     console.log(selectedWordpressPostId);
@@ -489,7 +493,7 @@ function compSpace(a,b) {
  */
 function displayTimeline(timeline) {
 
-  console.log("get timeline success");
+  //console.log("get timeline success");
 
   //$('[data-toggle="tooltip"]').tooltip();
   $('.carousel').carousel();
@@ -636,6 +640,7 @@ function displayTimeline(timeline) {
       let wordpressPost = getWordpressPost(post.wordpress_post_id);
       console.log(wordpressPost);
       post["wordpressPost"] = {};
+      post["wordpressPost"]["id"] = wordpressPost.id
       post["wordpressPost"]["content"] = wordpressPost["content"]["rendered"]
     }
 
@@ -799,7 +804,8 @@ function getTimelineSpace(spacename, from, to) {
     dataType: 'json',
     success: function (timeline) {
       displayTimeline(timeline);
-      var members = localStorage.getItem(spacename.split(' ').join('').replace("%20","")).split(",");
+      renderWordpressPostIfDiscussion();
+      var members = localStorage.getItem(spacename.replaceAll("%20", "").split(' ').join('')).split(",");
 
       // collects documents and corresponding tags from post for "Dokumente"-Tab in Space
       var documents = []
@@ -818,9 +824,9 @@ function getTimelineSpace(spacename, from, to) {
       var memberPictures = []
 
       $.each(Spaces, function(entry) {
-        if(Spaces[entry].name == spacename.replace("%20"," ")) {
+        if(Spaces[entry].name == spacename.replaceAll("%20"," ")) {
           this_space = Spaces[entry]
-          if(Spaces[entry].admins.includes(currentUser.username)) {
+          if(Spaces[entry].admins.includes(currentUser.username) || userRole == "admin") {
             isAdmin.push(currentUser.username);
           }
 
@@ -845,7 +851,7 @@ function getTimelineSpace(spacename, from, to) {
       })
 
       // construct spaceProfilePanel
-      if(!document.body.contains(document.getElementById('spaceProfilePanel'))) $('#spaceProfileContainer').prepend(Mustache.render(spaceHeaderTemplate, {spacename: '' + spacename.replace("%20", " ") + '', space_pic:  space_pic, member_pics : memberPictures, documents : documents, user: currentUser, isAdmin: isAdmin}));
+      if(!document.body.contains(document.getElementById('spaceProfilePanel'))) $('#spaceProfileContainer').prepend(Mustache.render(spaceHeaderTemplate, {spacename: '' + spacename.replaceAll("%20", " ") + '', space_pic:  space_pic, member_pics : memberPictures, documents : documents, user: currentUser, isAdmin: isAdmin}));
     },
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
@@ -1306,7 +1312,6 @@ function getSpaces() {
         if (currURL.indexOf(baseUrl + '/space') == -1) {
           $('#selectSpace').append(Mustache.render(spaceTemplateSelect, space));
         }
-
       });
     },
 
@@ -1695,5 +1700,103 @@ function loadSpacesRepost(id){
         }
     }
     $('#selectRepostSpace'+id).append(Mustache.render(spaceTemplate, space));
+  });
+}
+
+function renderWordpressPostIfDiscussion(){
+  // get spaces
+  // check current space (via spacename) == discussion (via is_discussion)
+  // if yes, get wordpress post (wp_post_id) --> display on top of timeline (make new template)
+
+  $.ajax({
+    type: "GET",
+    url: "/spaceadministration/info?name=" + spacename.replaceAll("%20", " "),
+    success: function (data) {
+      // if space is a discussion, request the wordpress post and display it on top of the newsfeed
+      if (data.space.is_discussion === true){
+        $.ajax({
+          type: "GET",
+          url: "/wordpress/posts/" + data.space.wp_post_id,
+          success: function (wordpressPostData) {
+            displayWordpressPostAboveNewsfeed(wordpressPostData);
+          },
+          error: function (xhr, status, error) {
+            if (xhr.status == 401) {
+              window.location.href = routingTable.platform;
+            }
+            else if(xhr.status === 404){
+              window.createNotification({
+                  theme: 'error',
+                  showDuration: 5000
+              })({
+                  title: 'Error!',
+                  message: 'Unexpected Wordpress API Error'
+              });
+            }
+          },
+      });
+    }
+  },
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 403){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Insufficient Permission'
+        });
+      }
+      else {
+        alert('error posting user information');
+        console.log(error);
+        console.log(status);
+        console.log(xhr);
+      }
+    },
+  });
+}
+
+function displayWordpressPostAboveNewsfeed(wordpressPostData){
+  console.log(wordpressPostData);
+  $("#wpPostPlaceholder").empty();
+  $("#wpPostPlaceholder").append(Mustache.render(wordpressDiscussionTemplate, {title: wordpressPostData.wp_post.title.rendered, post_content: wordpressPostData.wp_post.content.rendered}));
+}
+
+function joinDiscussionSpace(wordpressPostId){
+  console.log(wordpressPostId);
+  $.ajax({
+    type: "POST",
+    url: "/spaceadministration/join_discussion?wp_post_id=" + wordpressPostId,
+    success: function (data) {
+      // redirect user to freshly created or joined space
+      window.location.href = "/space/" + data.space_name
+  },
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if(xhr.status === 404){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Wordpress Error'
+        });
+      }
+      else if(xhr.status === 500){
+        window.createNotification({
+            theme: 'error',
+            showDuration: 5000
+        })({
+            title: 'Error!',
+            message: 'Wordpress Error'
+        });
+      }
+    },
   });
 }

@@ -3546,6 +3546,136 @@ class SpaceHandlerTest(BaseApiTestCase):
         response = self.base_checks("GET", "/spaceadministration/list_all", False, 403)
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
 
+    def test_get_space_info(self):
+        """
+        expect: successfully request info about that space even though user is not member
+        nor admin, because space is public
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # pull user from space
+        self.db.spaces.update_one(
+            {"name": self.test_space}, {"$pull": {"members": CURRENT_USER.username}}
+        )
+
+        response = self.base_checks(
+            "GET",
+            "/spaceadministration/info?name={}".format(self.test_space),
+            True,
+            200,
+        )
+
+        self.assertIn("space", response)
+        self.assertIsNotNone(response["space"])
+        self.assertNotEqual(response["space"], {})
+
+    def test_get_space_info_invisible_member(self):
+        """
+        expect: successfully request info of invisible space because user is member
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # make space invisible
+        self.db.spaces.update_one(
+            {"name": self.test_space}, {"$set": {"invisible": True}}
+        )
+
+        response = self.base_checks(
+            "GET",
+            "/spaceadministration/info?name={}".format(self.test_space),
+            True,
+            200,
+        )
+
+        self.assertIn("space", response)
+        self.assertIsNotNone(response["space"])
+        self.assertNotEqual(response["space"], {})
+
+    def test_get_space_info_invisible_admin(self):
+        """
+        expect: successfully request info of invisible space because user is global admin
+        """
+
+        # make space invisible and pull user from members
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$set": {"invisible": True},
+                "$pull": {
+                    "members": CURRENT_ADMIN.username,
+                    "admins": CURRENT_ADMIN.username,
+                },
+            },
+        )
+
+        response = self.base_checks(
+            "GET",
+            "/spaceadministration/info?name={}".format(self.test_space),
+            True,
+            200,
+        )
+
+        self.assertIn("space", response)
+        self.assertIsNotNone(response["space"])
+        self.assertNotEqual(response["space"], {})
+
+    def test_get_space_info_error_no_space_name(self):
+        """
+        expect: fail message because request misses name key
+        """
+
+        response = self.base_checks("GET", "/spaceadministration/info?", False, 400)
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "name")
+
+    def test_get_space_infor_error_space_doesnt_exist(self):
+        """
+        expect: fail message because space doesnt exist
+        """
+
+        response = self.base_checks(
+            "GET",
+            "/spaceadministration/info?name={}".format("not_existing_space"),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], SPACE_DOESNT_EXIST_ERROR)
+
+    def test_get_space_info_error_insufficient_permission(self):
+        """
+        expect: fail message because space is invisible and user neither member nor
+        global admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # make space invisible and pull user from members
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$set": {"invisible": True},
+                "$pull": {
+                    "members": CURRENT_USER.username,
+                    "admins": CURRENT_USER.username,
+                },
+            },
+        )
+
+        response = self.base_checks(
+            "GET",
+            "/spaceadministration/info?name={}".format(self.test_space),
+            False,
+            403,
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
     def test_get_space_pending_invites(self):
         """
         expect: see pending invites into spaces for current user

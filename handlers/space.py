@@ -1,12 +1,9 @@
-from base64 import b64encode
-import os
-import re
-from typing import Dict, Optional
+from typing import Optional
 
 import tornado.web
 
 from handlers.base_handler import BaseHandler, auth_needed
-from logger_factory import log_access
+from logger_factory import get_logger, log_access
 from resources.acl import ACL
 from resources.profile import Profiles
 from resources.space import (
@@ -20,6 +17,9 @@ from resources.space import (
     UserNotAdminError,
     UserNotMemberError,
 )
+from resources.wordpress import Wordpress
+
+logger = get_logger(__name__)
 
 
 class SpaceHandler(BaseHandler):
@@ -48,6 +48,24 @@ class SpaceHandler(BaseHandler):
                 200 OK,
                 {"success": True,
                  "spaces": [space1, space2,...]}
+
+                401 Unauthorized
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                {"success": False,
+                 "reason": "insufficient_permission"}
+
+        GET /spaceadministration/info
+            (view details about one space, if it is invisible, you need to be a member of the space
+            or an admin)
+            query param:
+                name: the name of the space you want details about
+            return:
+                200 OK,
+                {"success": True,
+                 "space": {...}}
 
                 401 Unauthorized
                 {"success": False,
@@ -127,6 +145,17 @@ class SpaceHandler(BaseHandler):
 
         elif slug == "list_all":
             self.list_spaces()
+            return
+
+        elif slug == "info":
+            try:
+                space_name = self.get_argument("name")
+            except tornado.web.MissingArgumentError as e:
+                self.set_status(400)
+                self.write({"success": False, "reason": "missing_key:name"})
+                return
+
+            self.get_space_info(space_name)
             return
 
         elif slug == "pending_invites":
@@ -436,14 +465,35 @@ class SpaceHandler(BaseHandler):
                 403 Forbidden
                 {"success": False,
                  "reason": "insufficient_permission"}
+
+        POST /spaceadministration/join_discussion
+            start or join the space that discusses about a wordpress post
+            query param:
+                "wp_post_id": id of wordpress post to discuss about
+
+            returns:
+                200 OK,
+                {"success": True}
+
+                400 Bad Request
+                {"success": False,
+                 "reason": missing_key:name}
+
+                401 Unauthorized
+                {"success": False,
+                 "reason": "no_logged_in_user"}
         """
 
-        try:
-            space_name = self.get_argument("name")
-        except tornado.web.MissingArgumentError:
-            self.set_status(400)
-            self.write({"success": False, "reason": "missing_key:name"})
-            return
+        # join_discussion route doesnt need space name, so only
+        # throw 400 for missing space name
+        # if request is not towards this route
+        if slug != "join_discussion":
+            try:
+                space_name = self.get_argument("name")
+            except tornado.web.MissingArgumentError:
+                self.set_status(400)
+                self.write({"success": False, "reason": "missing_key:name"})
+                return
 
         if slug == "create":
             invisible = self.get_argument("invisible", False)
@@ -519,6 +569,17 @@ class SpaceHandler(BaseHandler):
 
         elif slug == "toggle_visibility":
             self.toggle_space_visibility(space_name)
+            return
+
+        elif slug == "join_discussion":
+            try:
+                wp_post_id = self.get_argument("wp_post_id")
+            except tornado.web.MissingArgumentError:
+                self.set_status(400)
+                self.write({"success": False, "reason": "missing_key:wp_post_id"})
+                return
+
+            self.create_or_join_discussion_space(wp_post_id)
             return
 
         else:
@@ -725,6 +786,35 @@ class SpaceHandler(BaseHandler):
 
         self.set_status(200)
         self.write({"success": True, "spaces": spaces})
+        return
+
+    def get_space_info(self, space_name: str) -> None:
+        """
+        get details about the space given by its name.
+        if it is invisible, you need to be a member or an admin to be allowed to see it
+        """
+
+        with Spaces() as space_manager:
+            space = space_manager.get_space(space_name)
+
+        if not space:
+            self.set_status(409)
+            self.write({"success": False, "reason": "space_doesnt_exist"})
+            return
+
+        if "invisible" in space and space["invisible"] is True:
+            if not (
+                self.current_user.username in space["members"]
+                or self.is_current_user_lionet_admin()
+            ):
+                self.set_status(403)
+                self.write({"success": False, "reason": "insufficient_permission"})
+                return
+
+        space["_id"] = str(space["_id"])
+
+        self.set_status(200)
+        self.write({"success": True, "space": space})
         return
 
     def get_invites_for_current_user(self) -> None:
@@ -1175,6 +1265,41 @@ class SpaceHandler(BaseHandler):
 
             self.set_status(200)
             self.write({"success": True})
+
+    def create_or_join_discussion_space(self, wordpress_post_id: str) -> None:
+        """
+        current user joins the discussion space about a wordpress post. If it does not already
+        exist, create it as an invisible space that everybody is allowed to join.
+        """
+
+        # get the post data from wordpress
+        # at the same time, abort with error if wordpress api gives an error
+        try:
+            wp_post = Wordpress().get_wordpress_post(wordpress_post_id)
+        except ValueError as e:
+            self.set_status(404)
+            self.write({"success": False, "reason": str(e)})
+            return
+        except Exception as e:
+            logger.error(e)
+            self.set_status(500)
+            self.write({"success": False, "reason": "wordpress_error"})
+            return
+
+        with Spaces() as space_manager:
+            space_name = space_manager.create_or_join_discussion_space(
+                wp_post, self.current_user.username
+            )
+
+        with (ACL() as acl, Profiles() as profile_manager):
+            for role in profile_manager.get_distinct_roles():
+                if role == "admin":
+                    acl.space_acl.insert_admin(space_name)
+                else:
+                    acl.space_acl.insert_default_discussion(role, space_name)
+
+        self.set_status(200)
+        self.write({"success": True, "space_name": space_name})
 
     def user_leave(self, space_name: str) -> None:
         """
