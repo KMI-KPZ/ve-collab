@@ -137,6 +137,18 @@ class SpaceHandler(BaseHandler):
                 409 Conflict
                 {"success": False,
                  "reason": "space_doesnt_exist"}
+
+        GET /spaceadministration/join_discussion
+            start or join the space that discusses about a wordpress post
+            and get redirected directly to the space.
+            use this endpoint only as an incoming request from wordpress, because
+            it suppresses error messages.
+            if you are already in the network, use the equivalent POST request instead
+            query param:
+                "wp_post_id": id of wordpress post to discuss about
+
+            returns:
+                redirect to the freshly created or joined space
         """
 
         if slug == "list":
@@ -182,6 +194,17 @@ class SpaceHandler(BaseHandler):
                 return
 
             self.get_invites_for_space(space_name)
+            return
+
+        elif slug == "join_discussion":
+            try:
+                wp_post_id = self.get_argument("wp_post_id")
+            except tornado.web.MissingArgumentError:
+                self.set_status(400)
+                self.write({"success": False, "reason": "missing_key:wp_post_id"})
+                return
+
+            self.create_or_join_discussion_space_redirect(wp_post_id)
             return
 
         else:
@@ -579,7 +602,7 @@ class SpaceHandler(BaseHandler):
                 self.write({"success": False, "reason": "missing_key:wp_post_id"})
                 return
 
-            self.create_or_join_discussion_space(wp_post_id)
+            self.create_or_join_discussion_space_messages(wp_post_id)
             return
 
         else:
@@ -1266,25 +1289,19 @@ class SpaceHandler(BaseHandler):
             self.set_status(200)
             self.write({"success": True})
 
-    def create_or_join_discussion_space(self, wordpress_post_id: str) -> None:
+    def _create_or_join_discussion_space(self, wordpress_post_id: str) -> None:
         """
-        current user joins the discussion space about a wordpress post. If it does not already
-        exist, create it as an invisible space that everybody is allowed to join.
+        helper function the create or join the discussion space about the wordpress post.
+        do not use directly, user provided wrappers `create_or_join_discussion_space_messages`
+        or `create_or_join_discussion_space_redirect` instead.
         """
 
         # get the post data from wordpress
         # at the same time, abort with error if wordpress api gives an error
         try:
             wp_post = Wordpress().get_wordpress_post(wordpress_post_id)
-        except ValueError as e:
-            self.set_status(404)
-            self.write({"success": False, "reason": str(e)})
-            return
-        except Exception as e:
-            logger.error(e)
-            self.set_status(500)
-            self.write({"success": False, "reason": "wordpress_error"})
-            return
+        except Exception:
+            raise
 
         with Spaces() as space_manager:
             space_name = space_manager.create_or_join_discussion_space(
@@ -1298,8 +1315,48 @@ class SpaceHandler(BaseHandler):
                 else:
                     acl.space_acl.insert_default_discussion(role, space_name)
 
+        return space_name
+
+    def create_or_join_discussion_space_redirect(self, wordpress_post_id: str):
+        """
+        current user joins the discussion space about a wordpress post. If it does not already
+        exist, create it as an invisible space that everybody is allowed to join.
+        Instead of a success message, redirects you to the space. use this for endpoints
+        coming from wordpress
+        """
+
+        try:
+            space_name = self._create_or_join_discussion_space(wordpress_post_id)
+        except Exception as e:
+            logger.error(e)
+            self.redirect("/main")
+            return
+
+        self.redirect("/space/{}".format(space_name))
+
+    def create_or_join_discussion_space_messages(self, wordpress_post_id: str):
+        """
+        current user joins the discussion space about a wordpress post. If it does not already
+        exist, create it as an invisible space that everybody is allowed to join.
+        Answers of this endpoint are reqular success/error messages.
+        use this function for endpoints that come from within the network
+        """
+
+        try:
+            space_name = self._create_or_join_discussion_space(wordpress_post_id)
+        except ValueError as e:
+            self.set_status(404)
+            self.write({"success": False, "reason": str(e)})
+            return
+        except Exception as e:
+            logger.error(e)
+            self.set_status(500)
+            self.write({"success": False, "reason": "wordpress_error"})
+            return
+
         self.set_status(200)
         self.write({"success": True, "space_name": space_name})
+
 
     def user_leave(self, space_name: str) -> None:
         """
