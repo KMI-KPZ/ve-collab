@@ -1,7 +1,7 @@
 /**
  *  getUserRole - returns role of the current user
  */
-function getUserRole(){
+function getUserRole() {
   $.ajax({
     type: 'GET',
     url: '/role/my',
@@ -9,29 +9,29 @@ function getUserRole(){
     async: false,
     success: function (data) {
       userRole = data.role;
-      if(userRole != 'admin') $('#adminLink').attr("href", baseUrl + '/main');
+      if (userRole != 'admin') $('#adminLink').attr("href", baseUrl + '/main');
     },
 
     error: function (xhr, status, error) {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
       }
-      else if(xhr.status === 403){
+      else if (xhr.status === 403) {
         window.createNotification({
-            theme: 'error',
-            showDuration: 5000
+          theme: 'error',
+          showDuration: 5000
         })({
-            title: 'Error!',
-            message: 'Insufficient Permission'
+          title: 'Error!',
+          message: 'Insufficient Permission'
         });
       }
       else {
         window.createNotification({
-            theme: 'error',
-            showDuration: 5000
+          theme: 'error',
+          showDuration: 5000
         })({
-            title: 'Server error!',
-            message: 'Request users role'
+          title: 'Server error!',
+          message: 'Request users role'
         });
       }
     },
@@ -57,22 +57,22 @@ function getCurrentUserInfo() {
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
       }
-      else if(xhr.status === 403){
+      else if (xhr.status === 403) {
         window.createNotification({
-            theme: 'error',
-            showDuration: 5000
+          theme: 'error',
+          showDuration: 5000
         })({
-            title: 'Error!',
-            message: 'Insufficient Permission'
+          title: 'Error!',
+          message: 'Insufficient Permission'
         });
       }
       else {
         window.createNotification({
-            theme: 'error',
-            showDuration: 5000
+          theme: 'error',
+          showDuration: 5000
         })({
-            title: 'Server error!',
-            message: 'Request current user information'
+          title: 'Server error!',
+          message: 'Request current user information'
         });
       }
     }
@@ -82,7 +82,7 @@ function getCurrentUserInfo() {
 /**
  * getAllUsers - stores all Users in "users" and calls searchUser
  */
-function getAllUsers(){
+function getAllUsers() {
   $.ajax({
     type: 'GET',
     url: '/users/list',
@@ -96,22 +96,22 @@ function getAllUsers(){
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
       }
-      else if(xhr.status === 403){
+      else if (xhr.status === 403) {
         window.createNotification({
-            theme: 'error',
-            showDuration: 5000
+          theme: 'error',
+          showDuration: 5000
         })({
-            title: 'Error!',
-            message: 'Insufficient Permission'
+          title: 'Error!',
+          message: 'Insufficient Permission'
         });
       }
       else {
         window.createNotification({
-            theme: 'error',
-            showDuration: 5000
+          theme: 'error',
+          showDuration: 5000
         })({
-            title: 'Server error!',
-            message: 'Request all user information'
+          title: 'Server error!',
+          message: 'Request all user information'
         });
       }
     },

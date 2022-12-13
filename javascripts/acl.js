@@ -36,10 +36,10 @@ $(document).ready(function () {
 
     //fill the space acl table
     get_all_spaces().done(function (space_response) {
-      currentSpaceTab = space_response.spaces[0].name
-      get_all_space_acl_entries(currentSpaceTab, currentSpaceRole).done(function (acl_response) {
-        render_space_acl_table(acl_response)
-      })
+        currentSpaceTab = space_response.spaces[0].name
+        get_all_space_acl_entries(currentSpaceTab, currentSpaceRole).done(function (acl_response) {
+            render_space_acl_table(acl_response)
+        })
     })
 
 
@@ -61,7 +61,7 @@ function get_all_users() {
             // add all users to user selection in space acl tab
             $.each(users, function (entry) {
                 Users.push(users[entry])
-                $('#space_user_list').append(Mustache.render($('#select_item').html(), {item: users[entry].username}))
+                $('#space_user_list').append(Mustache.render($('#select_item').html(), { item: users[entry].username }))
             })
         },
         error: function (xhr, status, error) {
@@ -100,12 +100,12 @@ function get_all_spaces() {
         url: '/spaceadministration/list',
         dataType: 'json',
         success: function (data) {
-          $('#space_space_list').empty()
-          $.each(data.spaces, function (entry) {
-            $('#space_space_list').append(Mustache.render($('#select_item').html(), {item: data.spaces[entry].name}))
-          })
+            $('#space_space_list').empty()
+            $.each(data.spaces, function (entry) {
+                $('#space_space_list').append(Mustache.render($('#select_item').html(), { item: data.spaces[entry].name }))
+            })
         }
-      })
+    })
 
 
 }
@@ -149,11 +149,11 @@ function get_all_acl_entries() {
  * @param  {String} name role
  */
 function get_all_space_acl_entries(space, role) {
-  return $.ajax({
-      type: "GET",
-      url: "/space_acl/get?space="+space+"&role="+role,
-      dataType: "json"
-  });
+    return $.ajax({
+        type: "GET",
+        url: "/space_acl/get?space=" + space + "&role=" + role,
+        dataType: "json"
+    });
 }
 
 /**
@@ -169,7 +169,7 @@ function render_role_table(users_response, roles_response) {
     user_role_table.empty();
 
     //render template
-    user_role_table.append(Mustache.render(user_role_table_template, {users: users_response.users, options: roles_response.existing_roles}));
+    user_role_table.append(Mustache.render(user_role_table_template, { users: users_response.users, options: roles_response.existing_roles }));
 
     $.each(users_response.users, function (idx, user) {
         //set the correct role to be select for each user
@@ -203,7 +203,7 @@ function render_role_table(users_response, roles_response) {
  */
 function render_global_acl_table(acl_response) {
     //empty first and then append new, because of hot reload there might be old data that would be duplicated if not emptied before
-    $("#global_acl_rules").empty().append(Mustache.render($("#global_acl_entry_template").html(), {acl_entries: acl_response.acl_entries}));
+    $("#global_acl_rules").empty().append(Mustache.render($("#global_acl_entry_template").html(), { acl_entries: acl_response.acl_entries }));
 }
 
 /**
@@ -211,13 +211,13 @@ function render_global_acl_table(acl_response) {
  * @param  {JSON} name acl_response - respons, typically from function get_all_space_acl_entries()
  */
 function render_space_acl_table(acl_response) {
-  var permissions = [];
-  $.each(acl_response.acl_entry, function(key, value) {
-    if(key != "space" && key != "role") {
-      permissions.push({"permission" : key, "value" : value})
-    }
-  })
-  $("#space_acl_rules").empty().append(Mustache.render($("#space_acl_entry_template").html(), {acl_entries: permissions}));
+    var permissions = [];
+    $.each(acl_response.acl_entry, function (key, value) {
+        if (key != "space" && key != "role") {
+            permissions.push({ "permission": key, "value": value })
+        }
+    })
+    $("#space_acl_rules").empty().append(Mustache.render($("#space_acl_entry_template").html(), { acl_entries: permissions }));
 }
 
 /*
@@ -245,7 +245,7 @@ function post_update_userrole(username, role) {
     return $.ajax({
         type: 'POST',
         url: '/role/update',
-        data: JSON.stringify({"username": username, "role": role}),
+        data: JSON.stringify({ "username": username, "role": role }),
         dataType: 'json',
     });
 }
@@ -260,7 +260,7 @@ function update_global_acl_entry(permission_key, role) {
     let val = $("#toggle_" + role).is(":checked");
 
     //construct : {"role": <role, "create_space": <bool>}
-    let payload = {role: role}
+    let payload = { role: role }
     payload[permission_key] = val
 
     $.ajax({
@@ -281,26 +281,26 @@ function update_global_acl_entry(permission_key, role) {
  * @param  {String} name permission_key
  */
 function update_space_acl_entry(permission_key) {
-  let val = $("#toggle_" + permission_key).is(":checked")
-  let space = $("#space_space_list").val()
-  let role = $("#space_role_list").val()
-  let payload = {role: role, space: space}
-  payload[permission_key] = val
-  $.ajax({
-      type: "POST",
-      url: "/space_acl/update",
-      data: JSON.stringify(payload)
-  }).done(function () {
-      //re-render the table
-      get_all_spaces().done(function (space_response) {
-        get_all_space_acl_entries(currentSpaceTab, currentSpaceRole).done(function (acl_response) {
-          render_space_acl_table(acl_response)
-          $("#space_space_list").val(currentSpaceTab).change()
-          $("#space_role_list").val(currentSpaceRole).change()
+    let val = $("#toggle_" + permission_key).is(":checked")
+    let space = $("#space_space_list").val()
+    let role = $("#space_role_list").val()
+    let payload = { role: role, space: space }
+    payload[permission_key] = val
+    $.ajax({
+        type: "POST",
+        url: "/space_acl/update",
+        data: JSON.stringify(payload)
+    }).done(function () {
+        //re-render the table
+        get_all_spaces().done(function (space_response) {
+            get_all_space_acl_entries(currentSpaceTab, currentSpaceRole).done(function (acl_response) {
+                render_space_acl_table(acl_response)
+                $("#space_space_list").val(currentSpaceTab).change()
+                $("#space_role_list").val(currentSpaceRole).change()
+            })
         })
-      })
 
-  });
+    });
 }
 
 /**
@@ -308,9 +308,9 @@ function update_space_acl_entry(permission_key) {
  * @param {JSON} name acl_response - respons, typically from function get_distinct_roles()
  */
 function update_space_acl_roles_select(roles_response) {
-  $.each(roles_response.existing_roles, function(entry) {
-    $('#space_role_list').append(Mustache.render($('#select_item').html(), {item: roles_response.existing_roles[entry]}))
-  })
+    $.each(roles_response.existing_roles, function (entry) {
+        $('#space_role_list').append(Mustache.render($('#select_item').html(), { item: roles_response.existing_roles[entry] }))
+    })
 }
 
 /**
@@ -318,13 +318,13 @@ function update_space_acl_roles_select(roles_response) {
  * sets variables currentSpaceTab and currentSpaceRole to correctly set selector values on update
  */
 function update_space_acl_container() {
-  let spacename = $("#space_space_list").val()
-  let role = $("#space_role_list").val()
-  currentSpaceTab = spacename
-  currentSpaceRole = role
-  get_all_space_acl_entries(spacename, role).done(function (acl_response) {
-    render_space_acl_table(acl_response)
-  })
+    let spacename = $("#space_space_list").val()
+    let role = $("#space_role_list").val()
+    currentSpaceTab = spacename
+    currentSpaceRole = role
+    get_all_space_acl_entries(spacename, role).done(function (acl_response) {
+        render_space_acl_table(acl_response)
+    })
 }
 /**
  * Setup for tab system

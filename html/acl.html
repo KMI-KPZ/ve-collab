@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <title>Lionet</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://code.jquery.com/jquery-1.12.4.min.js"
-            integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ"
-            crossorigin="anonymous">
-    </script>
+        integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ" crossorigin="anonymous">
+        </script>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css">
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
@@ -17,7 +17,8 @@
     <!--Fonts-->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300&family=Titillium+Web:wght@300&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300&family=Titillium+Web:wght@300&display=swap"
+        rel="stylesheet">
 
     <link rel="stylesheet" href="//code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
     <style>
@@ -47,7 +48,7 @@
             border-color: #68D391;
         }
 
-        .toggle-checkbox:checked + .toggle-label {
+        .toggle-checkbox:checked+.toggle-label {
             @apply: bg-green-400;
             background-color: #68D391;
         }
@@ -56,398 +57,402 @@
 
 <body class="font-sans bg-yellow-50">
 
-<!-- Navbar -->
-<nav class="mb-4">
-    <div class="bg-blue-lionet mx-4 px-8" style="font-family: 'Titillium Web', sans-serif;">
-        <div class="flex items-center py-2 px-10">
-            <div class="w-full mx-auto flex items-center">
-                <div class="ml-24">
-                    <img src="/uploads/SO-SERVE_Logo_solo-285x300.png" width="50" height="50"/>
-                </div>
-                <div class="ml-4">
-                    <li class="mt-1 block w-80 border border-gray-300 bg-white focus:outline-none rounded-md shadow-sm text-sm">
-                        <input type="text" name="search" id="search" placeholder="Suchen"
-                               class="px-2 py-3 block w-full shadow-sm text-sm border-gray-300 focus:outline-none rounded-md"/>
-                        <ul class="bg-white" id="result"></ul>
-                    </li>
-                </div>
-                <div class="ml-4">
-                    <div id="navbar_items" class="text-sm flex items-center">
-                        <div>
-                            <a href="/main" class="no-underline text-black px-6 text-base">Startseite</a>
-                        </div>
-                        <div>
-                            <a href="/myprofile" class="no-underline text-black px-6 text-base">Profil</a>
-                        </div>
-                        <div>
-                            <a href="/spaces" class="no-underline text-black px-6 text-base">Gruppen</a>
+    <!-- Navbar -->
+    <nav class="mb-4">
+        <div class="bg-blue-lionet mx-4 px-8" style="font-family: 'Titillium Web', sans-serif;">
+            <div class="flex items-center py-2 px-10">
+                <div class="w-full mx-auto flex items-center">
+                    <div class="ml-24">
+                        <img src="/uploads/SO-SERVE_Logo_solo-285x300.png" width="50" height="50" />
+                    </div>
+                    <div class="ml-4">
+                        <li
+                            class="mt-1 block w-80 border border-gray-300 bg-white focus:outline-none rounded-md shadow-sm text-sm">
+                            <input type="text" name="search" id="search" placeholder="Suchen"
+                                class="px-2 py-3 block w-full shadow-sm text-sm border-gray-300 focus:outline-none rounded-md" />
+                            <ul class="bg-white" id="result"></ul>
+                        </li>
+                    </div>
+                    <div class="ml-4">
+                        <div id="navbar_items" class="text-sm flex items-center">
+                            <div>
+                                <a href="/main" class="no-underline text-black px-6 text-base">Startseite</a>
+                            </div>
+                            <div>
+                                <a href="/myprofile" class="no-underline text-black px-6 text-base">Profil</a>
+                            </div>
+                            <div>
+                                <a href="/spaces" class="no-underline text-black px-6 text-base">Gruppen</a>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="ml-4 w-full flex justify-end">
-                    <div class="ml-4">
-                      <button
-                        class="m-0 inline-flex justify-center py-2 px-4 border border-transparent 
+                    <div class="ml-4 w-full flex justify-end">
+                        <div class="ml-4">
+                            <button
+                                class="m-0 inline-flex justify-center py-2 px-4 border border-transparent 
                       shadow-sm text-base font-medium rounded-md text-black bg-blue-lionet border-blue-lionet 
                       hover:bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 m-0 float-right"
-                        id="logoutBtn" onclick="logout();">Logout</button>
+                                id="logoutBtn" onclick="logout();">Logout</button>
+                        </div>
                     </div>
-                  </div>
+                </div>
             </div>
         </div>
-    </div>
-</nav>
-<!-- End of navbar -->
+    </nav>
+    <!-- End of navbar -->
 
-<!-- Main Container-->
-<div class="flex">
-  <!-- Sidebar -->
-    <div id="acl_sidebar" class="flex-none h-full m-4 p-2 bg-white border border-gray-200 rounded">
-        Sidebar
-        <ul class="relative">
-            <li class="relative">
-                <a class="flex items-center text-sm py-4 px-6 h-12 overflow-hidden text-gray-700 text-ellipsis whitespace-nowrap rounded hover:text-gray-900 hover:bg-gray-100 transition duration-300 ease-in-out"
-                   href="#!" data-mdb-ripple="true" data-mdb-ripple-color="dark">Sidenav link 1</a>
-            </li>
-            <li class="relative">
-                <a class="flex items-center text-sm py-4 px-6 h-12 overflow-hidden text-gray-700 text-ellipsis whitespace-nowrap rounded hover:text-gray-900 hover:bg-gray-100 transition duration-300 ease-in-out"
-                   href="#!" data-mdb-ripple="true" data-mdb-ripple-color="dark">Sidenav link 2</a>
-            </li>
-            <li class="relative">
-                <a class="flex items-center text-sm py-4 px-6 h-12 overflow-hidden text-gray-700 text-ellipsis whitespace-nowrap rounded hover:text-gray-900 hover:bg-gray-100 transition duration-300 ease-in-out"
-                   href="#!" data-mdb-ripple="true" data-mdb-ripple-color="dark">Sidenav link 2</a>
-            </li>
-        </ul>
-    </div>
-    <!-- End of sidebar -->
+    <!-- Main Container-->
+    <div class="flex">
+        <!-- Sidebar -->
+        <div id="acl_sidebar" class="flex-none h-full m-4 p-2 bg-white border border-gray-200 rounded">
+            Sidebar
+            <ul class="relative">
+                <li class="relative">
+                    <a class="flex items-center text-sm py-4 px-6 h-12 overflow-hidden text-gray-700 text-ellipsis whitespace-nowrap rounded hover:text-gray-900 hover:bg-gray-100 transition duration-300 ease-in-out"
+                        href="#!" data-mdb-ripple="true" data-mdb-ripple-color="dark">Sidenav link 1</a>
+                </li>
+                <li class="relative">
+                    <a class="flex items-center text-sm py-4 px-6 h-12 overflow-hidden text-gray-700 text-ellipsis whitespace-nowrap rounded hover:text-gray-900 hover:bg-gray-100 transition duration-300 ease-in-out"
+                        href="#!" data-mdb-ripple="true" data-mdb-ripple-color="dark">Sidenav link 2</a>
+                </li>
+                <li class="relative">
+                    <a class="flex items-center text-sm py-4 px-6 h-12 overflow-hidden text-gray-700 text-ellipsis whitespace-nowrap rounded hover:text-gray-900 hover:bg-gray-100 transition duration-300 ease-in-out"
+                        href="#!" data-mdb-ripple="true" data-mdb-ripple-color="dark">Sidenav link 2</a>
+                </li>
+            </ul>
+        </div>
+        <!-- End of sidebar -->
 
-    <!-- ACL main container -->
-    <div id="acl_main" class="flex-auto m-4 bg-white border border-gray-200 rounded">
-        <div x-data="setup()">
-            <nav class="bg-blue-lionet">
-                <ul class="flex">
-                    <template x-for="(tab, index) in tabs" :key="index">
-                        <li class="cursor-pointer py-3 px-4 transition"
-                            :class="activeTab===index ? 'bg-white text-black' : ' text-black'" @click="activeTab = index; handleTabChange(tab);"
-                            x-text="tab"></li>
-                    </template>
-                </ul>
-            </nav>
+        <!-- ACL main container -->
+        <div id="acl_main" class="flex-auto m-4 bg-white border border-gray-200 rounded">
+            <div x-data="setup()">
+                <nav class="bg-blue-lionet">
+                    <ul class="flex">
+                        <template x-for="(tab, index) in tabs" :key="index">
+                            <li class="cursor-pointer py-3 px-4 transition"
+                                :class="activeTab===index ? 'bg-white text-black' : ' text-black'"
+                                @click="activeTab = index; handleTabChange(tab);" x-text="tab"></li>
+                        </template>
+                    </ul>
+                </nav>
 
-            <!-- tab system -->
-            <div id="tabs" class="w-full bg-white p-8">
-                <!-- User Roles -->
-                <div x-show="activeTab===0" class="m-1 p-2 w-full h-full">
-                  <div id="user_roles" class="p-2">
-                    <table class="table-auto w-full border border-gray-400 rounded">
-                        <thead class="bg-gray-100 border-b border-gray-400">
-                        <tr>
-                            <th class="w-4/5 p-2 text-left">User</th>
-                            <th class="w-1/5 p-2">Rolle</th>
-                        </tr>
-                        </thead>
-                        <tbody id="user_role_table_list">
+                <!-- tab system -->
+                <div id="tabs" class="w-full bg-white p-8">
+                    <!-- User Roles -->
+                    <div x-show="activeTab===0" class="m-1 p-2 w-full h-full">
+                        <div id="user_roles" class="p-2">
+                            <table class="table-auto w-full border border-gray-400 rounded">
+                                <thead class="bg-gray-100 border-b border-gray-400">
+                                    <tr>
+                                        <th class="w-4/5 p-2 text-left">User</th>
+                                        <th class="w-1/5 p-2">Rolle</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="user_role_table_list">
 
-                        </tbody>
-                    </table>
+                                </tbody>
+                            </table>
 
-                  </div>
-                </div>
-                <!-- End of User Roles -->
-
-                <!-- Global ACL -->
-                <div x-show="activeTab===1" class="m-1 p-2 w-full h-full">
-                    <div id="global_acl_container" class="p-2">
-                        <!-- Global ACL Permission Table-->
-                        <table class="table-auto w-full border border-gray-400 rounded">
-                            <thead class="bg-gray-100 border-b border-gray-400">
-                            <tr>
-                                <th class="w-3/5 p-2 text-left">Rolle</th>
-                                <th class="w-2/5 p-2">Space erstellen</th>
-                            </tr>
-                            </thead>
-                            <tbody id="global_acl_rules">
-
-                            </tbody>
-                        </table>
+                        </div>
                     </div>
-                </div>
-                <!-- End of Global ACL -->
+                    <!-- End of User Roles -->
 
-                <!-- Space ACL -->
-                <div x-show="activeTab===2" class="m-1 p-2 w-full h-full">
-                    <div class="flex">
-                      <!-- Role selector -->
-                        <div class="m-1 xl:w-96">
-                            <select id="space_role_list" onchange="update_space_acl_container()"
+                    <!-- Global ACL -->
+                    <div x-show="activeTab===1" class="m-1 p-2 w-full h-full">
+                        <div id="global_acl_container" class="p-2">
+                            <!-- Global ACL Permission Table-->
+                            <table class="table-auto w-full border border-gray-400 rounded">
+                                <thead class="bg-gray-100 border-b border-gray-400">
+                                    <tr>
+                                        <th class="w-3/5 p-2 text-left">Rolle</th>
+                                        <th class="w-2/5 p-2">Space erstellen</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="global_acl_rules">
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <!-- End of Global ACL -->
+
+                    <!-- Space ACL -->
+                    <div x-show="activeTab===2" class="m-1 p-2 w-full h-full">
+                        <div class="flex">
+                            <!-- Role selector -->
+                            <div class="m-1 xl:w-96">
+                                <select id="space_role_list" onchange="update_space_acl_container()"
                                     class="form-select appearance-none block w-full px-3 py-1.5 text-base font-normal text-gray-700 bg-white bg-clip-padding bg-no-repeat border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none"
                                     aria-label="Default select example">
 
-                            </select>
-                        </div>
-                        <!-- Space selector -->
-                        <div class="m-1 xl:w-96">
-                            <select id="space_space_list" onchange="update_space_acl_container()"
+                                </select>
+                            </div>
+                            <!-- Space selector -->
+                            <div class="m-1 xl:w-96">
+                                <select id="space_space_list" onchange="update_space_acl_container()"
                                     class="form-select appearance-none block w-full px-3 py-1.5 text-base font-normal text-gray-700 bg-white bg-clip-padding bg-no-repeat border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none"
                                     aria-label="Default select example">
 
-                            </select>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="space_acl_container" class="p-2">
+                            <!-- Space ACL Permission Table-->
+                            <table class="table-auto w-full border border-gray-400 rounded">
+                                <thead class="bg-gray-100 border-b border-gray-400">
+                                    <tr>
+                                        <th class="w-3/5 p-2 text-left">Permission</th>
+                                        <th class="w-2/5 p-2">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="space_acl_rules">
+
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                    <div id="space_acl_container" class="p-2">
-                        <!-- Space ACL Permission Table-->
-                        <table class="table-auto w-full border border-gray-400 rounded">
-                            <thead class="bg-gray-100 border-b border-gray-400">
-                              <tr>
-                                  <th class="w-3/5 p-2 text-left">Permission</th>
-                                  <th class="w-2/5 p-2">Status</th>
-                              </tr>
-                            </thead>
-                            <tbody id="space_acl_rules">
-
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <!-- End of Space ACL -->
-
-            </div>
-        </div>
-    </div>
-</div>
-<!-- End of acl main container -->
-<!-- End of main container -->
-
-<!-- Footer -->
-<div class="mt-8" style="font-family: 'Titillium Web', sans-serif;">
-    <div class="container mx-auto px-8">
-        <div class="px-10">
-            <div class="flex items-center justify-between border-t py-8">
-                <div id="footer_items" class="justify-start justify-between w-4/5 flex">
-                    <div class="mr-4 w-24 text-sm">
-                        &copy; 2021 lionet.
-                    </div>
-                    <div class="mr-4 text-sm">
-                        <a href="#" class="no-underline">Nutzungsbedingungen</a>
-                    </div>
-                    <div class="mr-4 text-sm">
-                        <a href="#" class="no-underline">Datenschutz</a>
-                    </div>
-                    <div class="mr-4 text-sm">
-                        <a href="#" class="no-underline">Sicherheit</a>
-                    </div>
-                    <div class="mr-4 text-sm">
-                        <a href="#" class="no-underline">Hilfe</a>
-                    </div>
-
-                    <div class="justify-end justify-between w-2/5 flex text-right">
-                        <div class="ml-4 text-sm">
-                            <a href="#" class="no-underline">Über lionet</a>
-                        </div>
-                    </div>
+                    <!-- End of Space ACL -->
 
                 </div>
             </div>
         </div>
     </div>
-</div>
-<!-- End of footer -->
+    <!-- End of acl main container -->
+    <!-- End of main container -->
 
-<!-- Components -->
-<!-- User role table entry template -->
-<script id="user_role_table_template" type="text/html">
+    <!-- Footer -->
+    <div class="mt-8" style="font-family: 'Titillium Web', sans-serif;">
+        <div class="container mx-auto px-8">
+            <div class="px-10">
+                <div class="flex items-center justify-between border-t py-8">
+                    <div id="footer_items" class="justify-start justify-between w-4/5 flex">
+                        <div class="mr-4 w-24 text-sm">
+                            &copy; 2021 lionet.
+                        </div>
+                        <div class="mr-4 text-sm">
+                            <a href="#" class="no-underline">Nutzungsbedingungen</a>
+                        </div>
+                        <div class="mr-4 text-sm">
+                            <a href="#" class="no-underline">Datenschutz</a>
+                        </div>
+                        <div class="mr-4 text-sm">
+                            <a href="#" class="no-underline">Sicherheit</a>
+                        </div>
+                        <div class="mr-4 text-sm">
+                            <a href="#" class="no-underline">Hilfe</a>
+                        </div>
+
+                        <div class="justify-end justify-between w-2/5 flex text-right">
+                            <div class="ml-4 text-sm">
+                                <a href="#" class="no-underline">Über lionet</a>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End of footer -->
+
+    <!-- Components -->
+    <!-- User role table entry template -->
+    <script id="user_role_table_template" type="text/html">
     {{#users}}
-    <tr id="user_role_table_{{username}}">
-        <td>{{username}}</td>
-        <td>
-            <div class="flex justify-center">
-                <div class="m-1 xl:w-96">
-                    <select id="user_role_{{username}}" onchange="update_user_role('{{username}}')"
+        <tr id="user_role_table_{{username}}">
+            <td>{{username}}</td>
+            <td>
+                <div class="flex justify-center">
+                    <div class="m-1 xl:w-96">
+                        <select id="user_role_{{username}}" onchange="update_user_role('{{username}}')"
                             class="form-select appearance-none block w-full px-3 py-1.5 text-base font-normal text-gray-700 bg-white bg-clip-padding bg-no-repeat border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none"
                             aria-label="Default select example">
-                        {{#options}}
-                        <option value="{{.}}">{{.}}</option>
-                        {{/options}}
-                    </select>
+                            {{#options}}
+                                <option value="{{.}}">{{.}}</option>
+                            {{/options}}
+                        </select>
+                    </div>
                 </div>
-            </div>
-        </td>
-    </tr>
+            </td>
+        </tr>
     {{/users}}
-</script>
-<!-- End of role table entry template -->
+    </script>
+    <!-- End of role table entry template -->
 
-<!-- Template for generic select item -->
-<script id="select_item" type="text/html">
+    <!-- Template for generic select item -->
+    <script id="select_item" type="text/html">
     <option value="{{item}}">{{item}}</option>
 </script>
-<!-- End of generic select item template-->
+    <!-- End of generic select item template-->
 
-<!-- TODO entfernen -->
-<script id="user_list_template" type="text/html">
+    <!-- TODO entfernen -->
+    <script id="user_list_template" type="text/html">
     <option value="{{username}}">{{username}}</option>
 </script>
 
-<!-- Template for global acl entry -->
-<script id="global_acl_entry_template" type="text/html">
+    <!-- Template for global acl entry -->
+    <script id="global_acl_entry_template" type="text/html">
     {{#acl_entries}}
-    <tr id="row_{{role}}">
-        <td class="p-2">{{role}}</td>
-        <td class="p-2 text-center">
-            <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
-                <input type="checkbox" name="toggle" id="toggle_{{role}}"
-                       class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" onclick="update_global_acl_entry('create_space', '{{role}}')"
-                       {{#create_space}}checked="checked" {{/create_space}}/>
-                <label for="toggle_{{role}}"
-                       class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
-            </div>
-        </td>
-    </tr>
+        <tr id="row_{{role}}">
+            <td class="p-2">{{role}}</td>
+            <td class="p-2 text-center">
+                <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                    <input type="checkbox" name="toggle" id="toggle_{{role}}"
+                        class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
+                        onclick="update_global_acl_entry('create_space', '{{role}}')" {{#create_space}}checked="checked"
+                        {{/create_space}} />
+                    <label for="toggle_{{role}}"
+                        class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                </div>
+            </td>
+        </tr>
     {{/acl_entries}}
-</script>
-<!-- End of global acl entry template-->
+    </script>
+    <!-- End of global acl entry template-->
 
-<!-- Template for space acl entry -->
-<script id="space_acl_entry_template" type="text/html">
+    <!-- Template for space acl entry -->
+    <script id="space_acl_entry_template" type="text/html">
     {{#acl_entries}}
-    <tr id="row_{{permission}}">
-      <td class="p-2">{{permission}}</td>
-      <td class="p-2 text-center">
-          <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
-              <input type="checkbox" name="toggle" id="toggle_{{permission}}"
-                     class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" onclick="update_space_acl_entry('{{permission}}')"
-                     {{#value}}checked="checked" {{/value}}/>
-              <label for="toggle_{{permission}}"
-                     class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
-          </div>
-      </td>
-    </tr>
+        <tr id="row_{{permission}}">
+            <td class="p-2">{{permission}}</td>
+            <td class="p-2 text-center">
+                <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                    <input type="checkbox" name="toggle" id="toggle_{{permission}}"
+                        class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
+                        onclick="update_space_acl_entry('{{permission}}')" {{#value}}checked="checked" {{/value}} />
+                    <label for="toggle_{{permission}}"
+                        class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                </div>
+            </td>
+        </tr>
     {{/acl_entries}}
-</script>
-<!-- End for space acl entry template -->
+    </script>
+    <!-- End for space acl entry template -->
 
-<!-- ACL button template -->
-<script id="acl_button" type="text/html">
+    <!-- ACL button template -->
+    <script id="acl_button" type="text/html">
   <div>
       <a href="./acl" class="no-underline text-black px-6 text-base">ACL</a>
   </div>
 </script>
-<!-- End of ACL button template -->
+    <!-- End of ACL button template -->
 
-<!-- End of components -->
+    <!-- End of components -->
 
-<script src="https://code.jquery.com/ui/1.13.1/jquery-ui.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/2.3.0/alpine.js" integrity="sha512-nIwdJlD5/vHj23CbO2iHCXtsqzdTTx3e3uAmpTm4x2Y8xCIFyWu4cSIV8GaGe2UNVq86/1h9EgUZy7tn243qdA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/2.3.0/alpine.js"
+        integrity="sha512-nIwdJlD5/vHj23CbO2iHCXtsqzdTTx3e3uAmpTm4x2Y8xCIFyWu4cSIV8GaGe2UNVq86/1h9EgUZy7tn243qdA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
-<script src="../javascripts/mustache.js"></script>
+    <script src="../javascripts/mustache.js"></script>
 
-<script src="../javascripts/general_utility.js"></script>
-<script src="../javascripts/acl.js"></script>
+    <script src="../javascripts/general_utility.js"></script>
+    <script src="../javascripts/acl.js"></script>
 
-<script src="../javascripts/notifications.js"></script>
+    <script src="../javascripts/notifications.js"></script>
 
 
-<!-- TODO documentation -->
-<script>
-    $(function () {
-        $.widget("custom.combobox", {
-            _create: function () {
-                this.wrapper = $("<span>")
-                    .addClass("custom-combobox")
-                    .insertAfter(this.element);
+    <!-- TODO documentation -->
+    <script>
+        $(function () {
+            $.widget("custom.combobox", {
+                _create: function () {
+                    this.wrapper = $("<span>")
+                        .addClass("custom-combobox")
+                        .insertAfter(this.element);
 
-                this.element.hide();
-                this._createAutocomplete();
-                this._createShowAllButton();
-            },
+                    this.element.hide();
+                    this._createAutocomplete();
+                    this._createShowAllButton();
+                },
 
-            _createAutocomplete: function () {
-                var selected = this.element.children(":selected"),
-                    value = selected.val() ? selected.text() : "";
+                _createAutocomplete: function () {
+                    var selected = this.element.children(":selected"),
+                        value = selected.val() ? selected.text() : "";
 
-                this.input = $("<input>")
-                    .appendTo(this.wrapper)
-                    .val(value)
-                    .attr("title", "")
-                    .attr("id", "select_input")
-                    .addClass("custom-combobox-input ui-widget ui-widget-content ui-state-default ui-corner-left")
-                    .autocomplete({
-                        delay: 0,
-                        minLength: 0,
-                        source: this._source.bind(this)
-                    })
-                    .tooltip({
-                        classes: {
-                            "ui-tooltip": "ui-state-highlight"
-                        }
-                    });
-
-                this._on(this.input, {
-                    autocompleteselect: function (event, ui) {
-                        ui.item.option.selected = true;
-                        this._trigger("select", event, {
-                            item: ui.item.option.value
+                    this.input = $("<input>")
+                        .appendTo(this.wrapper)
+                        .val(value)
+                        .attr("title", "")
+                        .attr("id", "select_input")
+                        .addClass("custom-combobox-input ui-widget ui-widget-content ui-state-default ui-corner-left")
+                        .autocomplete({
+                            delay: 0,
+                            minLength: 0,
+                            source: this._source.bind(this)
+                        })
+                        .tooltip({
+                            classes: {
+                                "ui-tooltip": "ui-state-highlight"
+                            }
                         });
-                    },
-                    autocompletechange: function (event, ui) {
-                        this._trigger("select_typed", event, event.target.value);
-                    }
-                });
-            },
 
-            _createShowAllButton: function () {
-                var input = this.input,
-                    wasOpen = false;
-
-                $("<a>")
-                    .attr("tabIndex", -1)
-                    .attr("title", "Show All Items")
-                    .tooltip()
-                    .appendTo(this.wrapper)
-                    .button({
-                        icons: {
-                            primary: "ui-icon-triangle-1-s"
+                    this._on(this.input, {
+                        autocompleteselect: function (event, ui) {
+                            ui.item.option.selected = true;
+                            this._trigger("select", event, {
+                                item: ui.item.option.value
+                            });
                         },
-                        text: false
-                    })
-                    .removeClass("ui-corner-all")
-                    .addClass("custom-combobox-toggle ui-corner-right")
-                    .on("mousedown", function () {
-                        wasOpen = input.autocomplete("widget").is(":visible");
-                    })
-                    .on("click", function () {
-                        input.trigger("focus");
-
-                        // Close if already visible
-                        if (wasOpen) {
-                            return;
+                        autocompletechange: function (event, ui) {
+                            this._trigger("select_typed", event, event.target.value);
                         }
-
-                        // Pass empty string as value to search for, displaying all results
-                        input.autocomplete("search", "");
                     });
-            },
+                },
 
-            _source: function (request, response) {
-                var matcher = new RegExp($.ui.autocomplete.escapeRegex(request.term), "i");
-                response(this.element.children("option").map(function () {
-                    var text = $(this).text();
-                    if (this.value && (!request.term || matcher.test(text)))
-                        return {
-                            label: text,
-                            value: text,
-                            option: this
-                        };
-                }));
-            },
+                _createShowAllButton: function () {
+                    var input = this.input,
+                        wasOpen = false;
 
-            _destroy: function () {
-                this.wrapper.remove();
-                this.element.show();
-            }
+                    $("<a>")
+                        .attr("tabIndex", -1)
+                        .attr("title", "Show All Items")
+                        .tooltip()
+                        .appendTo(this.wrapper)
+                        .button({
+                            icons: {
+                                primary: "ui-icon-triangle-1-s"
+                            },
+                            text: false
+                        })
+                        .removeClass("ui-corner-all")
+                        .addClass("custom-combobox-toggle ui-corner-right")
+                        .on("mousedown", function () {
+                            wasOpen = input.autocomplete("widget").is(":visible");
+                        })
+                        .on("click", function () {
+                            input.trigger("focus");
+
+                            // Close if already visible
+                            if (wasOpen) {
+                                return;
+                            }
+
+                            // Pass empty string as value to search for, displaying all results
+                            input.autocomplete("search", "");
+                        });
+                },
+
+                _source: function (request, response) {
+                    var matcher = new RegExp($.ui.autocomplete.escapeRegex(request.term), "i");
+                    response(this.element.children("option").map(function () {
+                        var text = $(this).text();
+                        if (this.value && (!request.term || matcher.test(text)))
+                            return {
+                                label: text,
+                                value: text,
+                                option: this
+                            };
+                    }));
+                },
+
+                _destroy: function () {
+                    this.wrapper.remove();
+                    this.element.show();
+                }
+            });
         });
-    });
-</script>
+    </script>
 
 </body>
 

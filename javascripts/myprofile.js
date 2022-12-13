@@ -8,7 +8,7 @@ $(document).ready(function () {
  */
 $body.delegate('#settingsTab a', 'click', function () {
   $(this).tab('show');
-  });
+});
 
 $body.delegate('#photoFile', 'change', function () {
   var photoFile = document.getElementById('photoFile');
@@ -19,38 +19,39 @@ $body.delegate('#photoFile', 'change', function () {
 /**
  * updateProfileContainer - update profile container with data from user
  */
-function updateProfileContainer(){
+function updateProfileContainer() {
   currentUser['followSize'] = currentUser['follows'].length;
   currentUser['spaceSize'] = currentUser['spaces'].length;
   currentUser["profile_pic_URL"] = baseUrl + '/uploads/' + currentUser["profile"]["profile_pic"];
   currentUser['profile_owner'] = true;
-  if(currentUser.hasOwnProperty('projects')) currentUser['projectSize'] = currentUser['projects'].length;
+  if (currentUser.hasOwnProperty('projects')) currentUser['projectSize'] = currentUser['projects'].length;
   var follows_list = []
   var follower_list = []
-  var timeout = setInterval(function() {
-    if(users != undefined) {
-      $.each(currentUser["follows"], function(user) {       
+  var timeout = setInterval(function () {
+    if (users != undefined) {
+      $.each(currentUser["follows"], function (user) {
         var pic_url = baseUrl + '/uploads/' + users[currentUser["follows"][user]]["profile_pic"]
         follows_list.push({
           user_name: currentUser["follows"][user], user_picture: pic_url
         })
-        clearInterval(timeout); 
+        clearInterval(timeout);
       })
-      $.each(currentUser["followers"], function(user) {       
+      $.each(currentUser["followers"], function (user) {
         var pic_url = baseUrl + '/uploads/' + users[currentUser["followers"][user]]["profile_pic"]
         follower_list.push({
           user_name: currentUser["followers"][user], user_picture: pic_url
         })
-        clearInterval(timeout); 
+        clearInterval(timeout);
       })
     }
   }, 100)
   currentUser['follows_list'] = follows_list
   currentUser['follower_list'] = follower_list
-  if(!document.body.contains(document.getElementById('profilePanel'))){
-    setTimeout(function(){
+  if (!document.body.contains(document.getElementById('profilePanel'))) {
+    setTimeout(function () {
       $('#profileContainer').empty()
-      $('#profileContainer').prepend(Mustache.render(profileTemplate, currentUser)); }
+      $('#profileContainer').prepend(Mustache.render(profileTemplate, currentUser));
+    }
       , 1000);
   } else {
     Mustache.parse(profileTemplate);
@@ -73,23 +74,23 @@ function saveProfileInformation() {
   var gender = $('#gender').val();
   var address = $('#address').val();
   var birthday = $('#date_of_birth').val();
-  var experience =[];
-  $.each($('[id="experience"]'), function(entry) {
+  var experience = [];
+  $.each($('[id="experience"]'), function (entry) {
     experience.push($('[id="experience"]')[entry].value)
   })
   console.log(experience)
 
   var education = [];
-  $.each($('[id="education"]'), function(entry) {
+  $.each($('[id="education"]'), function (entry) {
     education.push($('[id="education"]')[entry].value)
   })
 
   var photoFile = document.getElementById('photoFile');
   var photo = null;
   console.log(photoFile)
-  if(photoFile === null){
+  if (photoFile === null) {
     console.log("Error photo file")
-  } else if(photoFile.files.length > 0){
+  } else if (photoFile.files.length > 0) {
     photo = (isImage(photoFile.files[0].name)) ? photoFile.files[0] : null;
   } else {
     console.log("Error photo file")
@@ -100,7 +101,7 @@ function saveProfileInformation() {
 /**
  * initSettingTabs - shows the first settingsTab
  */
-function initSettingTabs(){
+function initSettingTabs() {
   $('#settingsTab li:first-child a').tab('show');
 }
 
@@ -129,7 +130,7 @@ function postProfileInformation(photo, bio, institution, projects, first_name, l
   formData.append("education", education); //Allow mutliple
 
   for (var pair of formData.entries()) {
-      console.log(pair[0]+ ', ' + pair[1]);
+    console.log(pair[0] + ', ' + pair[1]);
   }
   $.ajax({
     type: 'POST',
@@ -149,13 +150,13 @@ function postProfileInformation(photo, bio, institution, projects, first_name, l
       if (xhr.status == 401) {
         window.location.href = routingTable.platform;
       }
-      else if(xhr.status === 403){
+      else if (xhr.status === 403) {
         window.createNotification({
-            theme: 'error',
-            showDuration: 5000
+          theme: 'error',
+          showDuration: 5000
         })({
-            title: 'Error!',
-            message: 'Insufficient Permission'
+          title: 'Error!',
+          message: 'Insufficient Permission'
         });
       }
       else {
@@ -169,10 +170,10 @@ function postProfileInformation(photo, bio, institution, projects, first_name, l
 }
 
 function addListItem(type) {
-  if(type === 'experience') {
-    $('#experience_list').prepend(Mustache.render(profileInformation_listItem, {item_type:"experience", value:""}))
-  } else if (type ==='education') {
-    $('#education_list').prepend(Mustache.render(profileInformation_listItem, {item_type:"education", value:""}))
+  if (type === 'experience') {
+    $('#experience_list').prepend(Mustache.render(profileInformation_listItem, { item_type: "experience", value: "" }))
+  } else if (type === 'education') {
+    $('#education_list').prepend(Mustache.render(profileInformation_listItem, { item_type: "education", value: "" }))
   } else {
     console.log("Error")
   }
@@ -200,15 +201,15 @@ function populateProfileInformationModal() {
 
       $('#experience_list').empty()
       if (user.profile.experience !== 'undefined') {
-        $.each(user.profile.experience, function(entry) {
-          $('#experience_list').prepend(Mustache.render(profileInformation_listItem, {item_type:"experience", value:user.profile.experience[entry]}))
+        $.each(user.profile.experience, function (entry) {
+          $('#experience_list').prepend(Mustache.render(profileInformation_listItem, { item_type: "experience", value: user.profile.experience[entry] }))
         })
       }
 
       $('#education_list').empty()
       if (user.profile.education !== 'undefined') {
-        $.each(user.profile.education, function(entry) {
-          $('#education_list').prepend(Mustache.render(profileInformation_listItem, {item_type:"education", value:user.profile.education[entry]}))
+        $.each(user.profile.education, function (entry) {
+          $('#education_list').prepend(Mustache.render(profileInformation_listItem, { item_type: "education", value: user.profile.education[entry] }))
         })
       }
     },
