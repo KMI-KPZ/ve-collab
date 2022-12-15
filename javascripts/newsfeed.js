@@ -1763,7 +1763,7 @@ function renderWordpressPostIfDiscussion() {
 function displayWordpressPostAboveNewsfeed(wordpressPostData) {
   console.log(wordpressPostData);
   $("#wpPostPlaceholder").empty();
-  $("#wpPostPlaceholder").append(Mustache.render(wordpressDiscussionTemplate, { title: wordpressPostData.wp_post.title.rendered, post_content: wordpressPostData.wp_post.content.rendered }));
+  $("#wpPostPlaceholder").prepend(Mustache.render(wordpressDiscussionTemplate, { title: wordpressPostData.wp_post.title.rendered, post_content: wordpressPostData.wp_post.content.rendered }));
 }
 
 function joinDiscussionSpace(wordpressPostId) {
