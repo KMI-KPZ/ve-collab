@@ -519,6 +519,7 @@ class Spaces:
                 # only when inserting a new space, those additional parameters will be set
                 "$setOnInsert": {
                     "invisible": True,
+                    "joinable": True,
                     "admins": [],
                     "invites": [],
                     "requests": [],
