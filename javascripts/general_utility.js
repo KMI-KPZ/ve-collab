@@ -22,7 +22,6 @@ $(document).ready(function () {
  * @param  {JSON} users all Users from getAllUsers()
  */
 function searchUser(users) {
-  $.ajaxSetup({ cache: false });
   //triggers if a char is changed at input
   $('#search').keyup(function () {
     $('#result').html('');
@@ -42,7 +41,6 @@ function searchUser(users) {
 }
 
 function searchPopulation(users, spaces) {
-  $.ajaxSetup({ cache: false });
   //triggers if a char is changed at input
   $('#search').keyup(function () {
     $('#result').html('');
@@ -86,6 +84,7 @@ function search(query) {
   $.ajax({
     type: 'GET',
     url: '/search?posts=true&tags=true&users=true&query=' + query,
+    cache: false,
     dataType: 'json',
     success: function (data) {
       $('#result').html('');

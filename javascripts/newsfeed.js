@@ -126,6 +126,9 @@ async function initNewsFeed() {
   today = new Date();
   now = today.toISOString();
   from = yesterday.toISOString();
+  console.log(today);
+  console.log(now);
+  console.log(from);
   console.log("now initalizing date")
 
   // based on URL get specific timeline with time paramaeters

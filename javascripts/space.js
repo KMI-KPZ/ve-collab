@@ -513,7 +513,6 @@ function searchUserInvites(users) {
     }
   })
 
-  $.ajaxSetup({ cache: false });
   //triggers if a char is changed at input
   $('#invite_search').keyup(function () {
     $('#invite_list').html('');
