@@ -526,7 +526,12 @@ class SpaceHandler(BaseHandler):
             # explicit bool cast in case user puts any string or int value that is not already "true" (will be interpreted as true then)
             invisible = bool(invisible)
 
-            self.create_space(space_name, invisible)
+            joinable = self.get_argument("joinable", False)
+            if joinable == "false":
+                joinable = False
+            joinable = bool(joinable)
+
+            self.create_space(space_name, invisible, joinable)
             return
 
         elif slug == "join":
@@ -910,7 +915,9 @@ class SpaceHandler(BaseHandler):
         self.set_status(200)
         self.write({"success": True, "join_requests": space["requests"]})
 
-    def create_space(self, space_name: str, is_invisible: bool) -> None:
+    def create_space(
+        self, space_name: str, is_invisible: bool, is_joinable: bool
+    ) -> None:
         """
         create a new space if it does not already exist and if the
         current user has sufficient permissions
@@ -931,6 +938,7 @@ class SpaceHandler(BaseHandler):
             space = {
                 "name": space_name,
                 "invisible": is_invisible,
+                "joinable": is_joinable,
                 "members": [self.current_user.username],
                 "admins": [self.current_user.username],
                 "invites": [],
@@ -988,15 +996,19 @@ class SpaceHandler(BaseHandler):
                 return
 
             # if user is not allowed to join spaces directly,
+            # or user doesnt have elevated permissions to join any space,
             # send join request instead of joining directly
-            if not acl.space_acl.ask(
-                self.get_current_user_role(), space_name, "join_space"
-            ):
-                space_manager.join_space_request(space_name, self.current_user.username)
+            if not space_manager.is_space_directly_joinable(space_name):
+                if not acl.space_acl.ask(
+                    self.get_current_user_role(), space_name, "join_space"
+                ):
+                    space_manager.join_space_request(
+                        space_name, self.current_user.username
+                    )
 
-                self.set_status(200)
-                self.write({"success": True, "join_type": "requested_join"})
-                return
+                    self.set_status(200)
+                    self.write({"success": True, "join_type": "requested_join"})
+                    return
 
             # user has permission to join spaces, directly add him as member
             space_manager.join_space(space_name, self.current_user.username)
@@ -1356,7 +1368,6 @@ class SpaceHandler(BaseHandler):
 
         self.set_status(200)
         self.write({"success": True, "space_name": space_name})
-
 
     def user_leave(self, space_name: str) -> None:
         """

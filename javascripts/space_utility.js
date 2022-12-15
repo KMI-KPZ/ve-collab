@@ -10,7 +10,7 @@ function leaveSpace(name) {
     success: function (data) {
       //console.log("leaved space " + name);
       //reloads page to update table
-      location.reload()
+      window.location.href = "/spaces";
     },
 
     error: function (xhr, status, error) {

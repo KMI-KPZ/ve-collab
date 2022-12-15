@@ -145,7 +145,7 @@ function joinSpace(name) {
       console.log("joined space " + name);
       console.log(data)
       //location.reload()
-      if (data.join_type == "join") {
+      if (data.join_type == "joined") {
         location.reload()
       } else {
 
@@ -190,7 +190,7 @@ function leaveSpace(name) {
     success: function (data) {
       //console.log("leaved space " + name);
       //reloads page to update table
-      location.reload()
+      location.reload();
     },
 
     error: function (xhr, status, error) {
@@ -225,7 +225,8 @@ function leaveSpace(name) {
 $body.delegate('#createSpace', 'click', function () {
   var name = $body.find('#newSpaceName').val();
   var invisible = $("#newSpaceInvisibility").is(":checked");
-  if (name != '') createSpace(name, invisible);
+  var joinable = $("#newSpaceJoinability").is(":checked");
+  if (name != '') createSpace(name, invisible, joinable);
 });
 
 /**
@@ -233,10 +234,10 @@ $body.delegate('#createSpace', 'click', function () {
  * resets input value and calls getSpaces for update
  * @param  {String} name name of new Space
  */
-function createSpace(name, visibilty) {
+function createSpace(name, visibilty, joinability) {
   $.ajax({
     type: 'POST',
-    url: '/spaceadministration/create?name=' + name + '&invisible=' + visibilty,
+    url: '/spaceadministration/create?name=' + name + '&invisible=' + visibilty + '&joinable=' + joinability,
     success: function (data) {
       //console.log("created space " + name);
       $body.find('#newSpaceName').val('');

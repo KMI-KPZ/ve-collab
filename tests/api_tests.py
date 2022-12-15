@@ -269,6 +269,7 @@ class BaseApiTestCase(AsyncHTTPTestCase):
             {
                 "name": self.test_space,
                 "invisible": False,
+                "joinable": False,
                 "members": [CURRENT_ADMIN.username, CURRENT_USER.username],
                 "admins": [CURRENT_ADMIN.username],
                 "invites": [],
@@ -3457,6 +3458,7 @@ class SpaceHandlerTest(BaseApiTestCase):
                 {
                     "name": "invisible_not_member",
                     "invisible": True,
+                    "joinable": False,
                     "members": [CURRENT_ADMIN.username],
                     "admins": [CURRENT_ADMIN.username],
                     "invites": [],
@@ -3465,6 +3467,7 @@ class SpaceHandlerTest(BaseApiTestCase):
                 {
                     "name": "invisible_member",
                     "invisible": True,
+                    "joinable": False,
                     "members": [CURRENT_ADMIN.username, CURRENT_USER.username],
                     "admins": [CURRENT_ADMIN.username],
                     "invites": [],
@@ -3503,6 +3506,7 @@ class SpaceHandlerTest(BaseApiTestCase):
                 {
                     "name": "invisible_member",
                     "invisible": True,
+                    "joinable": False,
                     "members": [CURRENT_ADMIN.username],
                     "admins": [CURRENT_ADMIN.username],
                     "invites": [],
@@ -3511,6 +3515,7 @@ class SpaceHandlerTest(BaseApiTestCase):
                 {
                     "name": "invisible_not_member",
                     "invisible": True,
+                    "joinable": False,
                     "members": [CURRENT_USER.username],
                     "admins": [CURRENT_USER.username],
                     "invites": [],
@@ -3962,6 +3967,47 @@ class SpaceHandlerTest(BaseApiTestCase):
         self.assertIsNotNone(db_state)
         self.assertTrue(db_state["invisible"])
 
+    def test_post_create_space_joinable(self):
+        """
+        expect: successfully create joinable (=public) space
+        """
+
+        new_space_name = "new_space"
+
+        self.base_checks(
+            "POST",
+            "/spaceadministration/create?name={}&joinable=true".format(new_space_name),
+            True,
+            200,
+        )
+
+        # expect record for the space to be created
+        db_state = self.db.spaces.find_one({"name": new_space_name})
+        self.assertIsNotNone(db_state)
+        self.assertTrue(db_state["joinable"])
+
+    def test_post_create_space_invisible_and_joinable(self):
+        """
+        expect: successfully create invisible and joinable space
+        """
+
+        new_space_name = "new_space"
+
+        self.base_checks(
+            "POST",
+            "/spaceadministration/create?name={}&invisible=true&joinable=true".format(
+                new_space_name
+            ),
+            True,
+            200,
+        )
+
+        # expect record for the space to be created
+        db_state = self.db.spaces.find_one({"name": new_space_name})
+        self.assertIsNotNone(db_state)
+        self.assertTrue(db_state["invisible"])
+        self.assertTrue(db_state["joinable"])
+
     def test_post_create_space_error_no_name(self):
         """
         expect: fail message because request misses "name" parameter
@@ -4002,9 +4048,47 @@ class SpaceHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], "space_name_already_exists")
 
-    def test_post_join_space_join(self):
+    def test_post_join_space_joinable(self):
         """
-        expect: successfully join space because user has permission
+        expect: successfully join space because it is joinable
+        (no extra permission needed)
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # remove user from member list first
+        # and set space as joinable (=public)
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {"$pull": {"members": CURRENT_USER.username}, "$set": {"joinable": True}},
+        )
+
+        # unset role permission to join any space
+        self.db.space_acl.update_one(
+            {"role": self.test_roles[CURRENT_USER.username], "space": self.test_space},
+            {"$set": {"join_space": False}},
+        )
+
+        response = self.base_checks(
+            "POST",
+            "/spaceadministration/join?name={}".format(self.test_space),
+            True,
+            200,
+        )
+
+        # expect joined response
+        self.assertIn("join_type", response)
+        self.assertEqual(response["join_type"], "joined")
+
+        # expect user to be a member now
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertIn(CURRENT_USER.username, db_state["members"])
+
+    def test_post_join_space_role_permission(self):
+        """
+        expect: successfully join space because user has permission to join any space
         """
 
         # switch to user mode
@@ -4033,8 +4117,8 @@ class SpaceHandlerTest(BaseApiTestCase):
 
     def test_post_join_space_join_request(self):
         """
-        expect: user has no permission to directly join, so request sets a join request
-        instead
+        expect: user has no permission to directly join and space is not joinable, 
+        so request sets a join request instead
         """
 
         # switch to user mode

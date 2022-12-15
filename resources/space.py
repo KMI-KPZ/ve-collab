@@ -28,6 +28,7 @@ class Spaces:
         self.space_attributes = {
             "name": str,
             "invisible": bool,
+            "joinable": bool,
             "members": list,
             "admins": list,
             "invites": list,
@@ -193,6 +194,22 @@ class Spaces:
         with (Posts() as post_manager, ACL() as acl):
             post_manager.delete_post_by_space(space_name)
             acl.space_acl.delete(space=space_name)
+
+    def is_space_directly_joinable(self, space_name: str) -> bool:
+        """
+        determine if the space is directly joinable (regardless of role).
+        This is equivalent to checking if the space is public or private.
+        :param space_name: the name of the space to check the joinable attribute of
+        """
+
+        space = self.db.spaces.find_one(
+            {"name": space_name}, projection={"_id": False, "joinable": True}
+        )
+
+        if not space:
+            raise SpaceDoesntExistError()
+
+        return space["joinable"]
 
     def join_space(self, space_name: str, username: str) -> None:
         """
