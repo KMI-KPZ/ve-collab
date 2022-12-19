@@ -227,6 +227,7 @@ class UserHandler(BaseHandler):
                 user_information_response["profile_pic"] = profile["profile_pic"]
                 user_information_response["role"] = profile["role"]
                 user_information_response["follows"] = profile["follows"]
+                profile["_id"] = str(profile["_id"])
                 del profile["role"]
                 del profile["follows"]
                 user_information_response["profile"] = profile
