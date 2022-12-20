@@ -116,6 +116,8 @@ def make_app(cookie_secret):
                 tornado.web.StaticFileHandler,
                 {"path": "./javascripts/"},
             ),
+            # TODO custom handler for uploads that checks if user is in space or admin if
+            # request is towards files of a space
             (r"/uploads/(.*)", tornado.web.StaticFileHandler, {"path": "./uploads/"}),
         ],
         cookie_secret=cookie_secret,

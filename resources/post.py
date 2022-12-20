@@ -185,6 +185,7 @@ class Posts:
         post_id = self._parse_object_id(post_id)
 
         delete_result = self.db.posts.delete_one({"_id": post_id})
+        # TODO if post had an uploaded file, delete it from FS, if it was in space as well, also remove the file metadata from space
 
         # if no documents have been removed by the delete
         # we know that there was no post with the given _id

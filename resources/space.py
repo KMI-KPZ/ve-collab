@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from pymongo import MongoClient
 
@@ -33,6 +33,7 @@ class Spaces:
             "admins": list,
             "invites": list,
             "requests": list,
+            "files": list,
         }
 
     def __enter__(self):
@@ -66,6 +67,21 @@ class Spaces:
             raise SpaceDoesntExistError()
 
         if username in space["admins"]:
+            return True
+        else:
+            return False
+
+    def check_user_is_member(self, space_name: str, username: str) -> bool:
+        """
+        check if the given user is a member of the given space
+        """
+
+        space = self.get_space(space_name, projection={"_id": False, "members": True})
+
+        if not space:
+            raise SpaceDoesntExistError()
+
+        if username in space["members"]:
             return True
         else:
             return False
@@ -523,6 +539,7 @@ class Spaces:
                     "admins": [],
                     "invites": [],
                     "requests": [],
+                    "files": [],
                     "is_discussion": True,
                     "wp_post_id": wp_post["id"],
                 },
@@ -532,6 +549,118 @@ class Spaces:
 
         # return name of the space
         return "Discussion: {}".format(wp_post["title"]["rendered"])
+
+    def get_files(self, space_name: str) -> List[Dict]:
+        """
+        get the metadata of the files from the given space as a list of dicts.
+        If no files are in the space, an empty list is returned instead.
+        Metdata contains the `author` and the `filename` as a dict.
+        use the filenames to retrieve the actual files via the `StaticFileHandler`
+        on the /uploads - endpoint by using /uploads/<space_name>/<filename>
+        :param space_name: the name of the space to get the files of
+        :return: list of dicts of file metadata, or an empty list, if no files are
+                 in the space
+        """
+
+        db_result = self.db.spaces.find_one(
+            {"name": space_name}, projection={"_id": False, "files": True}
+        )
+
+        if db_result is None:
+            raise SpaceDoesntExistError()
+
+        return db_result["files"]
+
+    def _ensure_space_uploads_directory_exists(self, space_name: str) -> None:
+        """
+        check if the given space has a dedicated uploads subdirectory inside the uploads-directory.
+        if not, create one
+        """
+
+        if not os.path.isdir(os.path.join(global_vars.upload_direcory, space_name)):
+            os.mkdir(os.path.join(global_vars.upload_direcory, space_name))
+
+    def add_new_file(
+        self, space_name: str, author: str, file_name: str, file_content: bytes
+    ) -> None:
+        """
+        add a new file to the space's 'repository'.
+        each space has an own directory in the uploads directory, where the files will be stored.
+        if this directory doesnt exist, it will be created.
+        """
+
+        space = self.get_space(space_name, projection={"_id": False, "files": True})
+
+        # raise error if space doesnt exist
+        if not space:
+            raise SpaceDoesntExistError()
+
+        # check if the same filename already exists in that space, raise error if so
+        for file_obj in space["files"]:
+            if file_obj["filename"] == file_name:
+                raise FilenameCollisionError()
+
+        # append file metadata to files array of space
+        self.db.spaces.update_one(
+            {"name": space_name},
+            {
+                "$push": {
+                    "files": {
+                        "author": author,
+                        "filename": file_name,
+                        "manually_uploaded": True,
+                    }
+                }
+            },
+        )
+
+        # store file content on the FS
+        self._ensure_space_uploads_directory_exists(space_name)
+        with open(
+            os.path.join(global_vars.upload_direcory, space_name, file_name), "wb"
+        ) as fp:
+            fp.write(file_content)
+
+    def remove_file(self, space_name: str, file_name: str) -> None:
+        """
+        remove a file from the space, i.e. remove the reference from the db and
+        also remove it physically from disk
+        """
+
+        # search for the file first to check existence of the space and the file
+        # in the first place. if it is found, do the necessary checks before commiting
+        # to the deletion
+        try:
+            files = self.get_files(space_name)
+        except SpaceDoesntExistError:
+            raise
+        for file in files:
+            if file["filename"] == file_name:
+                # if the file was not manually uploaded to the file repo,
+                # it belongs to a post, which makes it only deletable by
+                # deleting the post itself.
+                if (
+                    "manually_uploaded" not in file
+                    or file["manually_uploaded"] is False
+                ):
+                    raise PostFileNotDeleteableError()
+                # finally we can delete the file from space and from the FS
+                else:
+                    self.db.spaces.update_one(
+                        {"name": space_name},
+                        {"$pull": {"files": {"filename": file_name}}},
+                    )
+                    try:
+                        os.remove(
+                            os.path.join(
+                                global_vars.upload_direcory, space_name, file_name
+                            )
+                        )
+                    except FileNotFoundError:
+                        pass
+            return
+        # after iterating the whole loop, the file wasnt found, so we raise an error
+        raise FileDoesntExistError()
 
 
 class SpaceDoesntExistError(Exception):
@@ -563,4 +692,16 @@ class UserNotAdminError(Exception):
 
 
 class OnlyAdminError(Exception):
+    pass
+
+
+class FilenameCollisionError(Exception):
+    pass
+
+
+class FileDoesntExistError(Exception):
+    pass
+
+
+class PostFileNotDeleteableError(Exception):
     pass
