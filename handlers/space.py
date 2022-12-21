@@ -1592,7 +1592,7 @@ class SpaceHandler(BaseHandler):
 
             try:
                 space_manager.add_new_file(
-                    space_name, self.current_user.username, file_name, file_content
+                    space_name, self.current_user.username, file_name, file_content, True
                 )
             except FilenameCollisionError:
                 self.set_status(409)

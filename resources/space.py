@@ -581,12 +581,15 @@ class Spaces:
             os.mkdir(os.path.join(global_vars.upload_direcory, space_name))
 
     def add_new_file(
-        self, space_name: str, author: str, file_name: str, file_content: bytes
+        self, space_name: str, author: str, file_name: str, file_content: bytes, manually_uploaded: bool
     ) -> None:
         """
         add a new file to the space's 'repository'.
         each space has an own directory in the uploads directory, where the files will be stored.
         if this directory doesnt exist, it will be created.
+        the `manually_uploaded` flag indicates if the file was uploaded into the space by a user (== True)
+        or inserted by uploading this file as part of a post (==False). If it was uploaded as
+        part of a post, it can only be deleted by deleting the post, but not the file itself!
         """
 
         space = self.get_space(space_name, projection={"_id": False, "files": True})
@@ -608,7 +611,7 @@ class Spaces:
                     "files": {
                         "author": author,
                         "filename": file_name,
-                        "manually_uploaded": True,
+                        "manually_uploaded": manually_uploaded,
                     }
                 }
             },

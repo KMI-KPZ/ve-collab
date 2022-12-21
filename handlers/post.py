@@ -15,7 +15,7 @@ from resources.post import (
     Posts,
     PostNotExistingException,
 )
-from resources.space import Spaces, SpaceDoesntExistError
+from resources.space import FilenameCollisionError, Spaces, SpaceDoesntExistError
 
 logger = get_logger(__name__)
 
@@ -126,10 +126,35 @@ class PostHandler(BaseHandler):
             file_amount = self.get_body_argument("file_amount", None)
             files = []
             if file_amount:
-                # TODO maybe store files in mongodb instead of filesystem
                 # save every file
                 for i in range(0, int(file_amount)):
                     file_obj = self.request.files["file" + str(i)][0]
+                    # if the post was in a space, also store the file in the repo,
+                    # indicating it is part of a post by setting manually_uploaded to False
+                    if space:
+                        with Spaces() as space_manager:
+                            try:
+                                space_manager.add_new_file(
+                                    space,
+                                    self.current_user.username,
+                                    file_obj["filename"],
+                                    file_obj["body"],
+                                    False,
+                                )
+                            except FilenameCollisionError:
+                                self.set_status(409)
+                                self.write(
+                                    {"success": False, "reason": "filename_collision"}
+                                )
+                                return
+                    # save a copy in the "normal" uploads, but also check for name collisions there
+                    # to prevent overriding other files
+                    if os.path.isfile(
+                        os.path.join(self.upload_dir, file_obj["filename"])
+                    ):
+                        self.set_status(409)
+                        self.write({"success": False, "reason": "filename_collision"})
+                        return
                     with open(
                         os.path.join(self.upload_dir, file_obj["filename"]), "wb"
                     ) as fp:
@@ -1010,15 +1035,15 @@ class RepostHandler(BaseHandler):
                 try:
                     db_manager.update_repost_text(_id, http_body["text"])
                 except PostNotExistingException:
-                        self.set_status(409)
-                        self.write(
-                            {
-                                "status": 409,
-                                "success": False,
-                                "reason": "post_doesnt_exist",
-                            }
-                        )
-                        return
+                    self.set_status(409)
+                    self.write(
+                        {
+                            "status": 409,
+                            "success": False,
+                            "reason": "post_doesnt_exist",
+                        }
+                    )
+                    return
 
             self.set_status(200)
             self.write({"status": 200, "success": True})
@@ -1187,15 +1212,15 @@ class PinHandler(BaseHandler):
                 try:
                     db_manager.pin_post(http_body["id"])
                 except PostNotExistingException:
-                        self.set_status(409)
-                        self.write(
-                            {
-                                "status": 409,
-                                "success": False,
-                                "reason": "post_doesnt_exist",
-                            }
-                        )
-                        return
+                    self.set_status(409)
+                    self.write(
+                        {
+                            "status": 409,
+                            "success": False,
+                            "reason": "post_doesnt_exist",
+                        }
+                    )
+                    return
 
             self.set_status(200)
             self.write({"status": 200, "success": True})
@@ -1451,15 +1476,15 @@ class PinHandler(BaseHandler):
                 try:
                     db_manager.unpin_post(http_body["id"])
                 except PostNotExistingException:
-                        self.set_status(409)
-                        self.write(
-                            {
-                                "status": 409,
-                                "success": False,
-                                "reason": "post_doesnt_exist",
-                            }
-                        )
-                        return
+                    self.set_status(409)
+                    self.write(
+                        {
+                            "status": 409,
+                            "success": False,
+                            "reason": "post_doesnt_exist",
+                        }
+                    )
+                    return
 
             self.set_status(200)
             self.write({"status": 200, "success": True})
