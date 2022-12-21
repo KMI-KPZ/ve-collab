@@ -665,6 +665,36 @@ class Spaces:
         # after iterating the whole loop, the file wasnt found, so we raise an error
         raise FileDoesntExistError()
 
+    def remove_post_file(self, space_name: str, file_name: str) -> None:
+        """
+        remove a file from the space that belongs to a post. this function should ONLY be used,
+        when the corresponding post is deleted. For any files that were uploaded via
+        the regular space's repository, use `remove_file` instead, otherwise inconsistent states would
+        arise.
+        """
+
+        update_result = self.db.spaces.update_one(
+            {"name": space_name},
+            {"$pull": {"files": {"filename": file_name}}},
+        )
+
+        # if no document was matched, the space doesnt exist
+        if update_result.matched_count != 1:
+            raise SpaceDoesntExistError()
+
+        # if no document was modified, the file wasn't in the space files metadata
+        if update_result.modified_count != 1:
+            raise FileDoesntExistError()
+
+        # if the file was removed from the space's metadata, also delete it from disk
+        try:
+            os.remove(
+                os.path.join(
+                    global_vars.upload_direcory, space_name, file_name
+                )
+            )
+        except FileNotFoundError:
+            pass
 
 class SpaceDoesntExistError(Exception):
     pass

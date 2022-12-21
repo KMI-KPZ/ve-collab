@@ -1,10 +1,12 @@
 import datetime
+import os
 from typing import Dict, List, Optional
 
 from bson.objectid import ObjectId
 from pymongo import MongoClient
 
 import global_vars
+from resources.space import FileDoesntExistError, SpaceDoesntExistError, Spaces
 
 
 class Posts:
@@ -184,8 +186,30 @@ class Posts:
 
         post_id = self._parse_object_id(post_id)
 
+        post = self.get_post(post_id, projection={"space": True, "files": True})
+        if not post:
+            raise PostNotExistingException()
+
+        # delete files from disk and - if post was in a space, 
+        # from the space's files and metadata
+        if post["files"]:
+            for filename in post["files"]:
+                try:
+                    os.remove(os.path.join(global_vars.upload_direcory, filename))
+                except FileNotFoundError:
+                    pass
+            if post["space"]:
+                with Spaces() as space_manager:
+                    for filename in post["files"]:
+                        try:
+                            space_manager.remove_post_file(post["space"], filename)
+                        except SpaceDoesntExistError:
+                            pass
+                        except FileDoesntExistError:
+                            pass
+
+        # finally delete the post itself
         delete_result = self.db.posts.delete_one({"_id": post_id})
-        # TODO if post had an uploaded file, delete it from FS, if it was in space as well, also remove the file metadata from space
 
         # if no documents have been removed by the delete
         # we know that there was no post with the given _id

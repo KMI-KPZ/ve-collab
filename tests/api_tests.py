@@ -71,13 +71,16 @@ def setUpModule():
     global_vars.domain = config["domain"]
     global_vars.keycloak_client_id = config["keycloak_client_id"]
     global_vars.cookie_secret = config["cookie_secret"]
-    global_vars.upload_direcory = config["upload_directory"]
+    global_vars.upload_direcory = "unitest_uploads"
 
     global_vars.mongodb_host = config["mongodb_host"]
     global_vars.mongodb_port = config["mongodb_port"]
     global_vars.mongodb_username = config["mongodb_username"]
     global_vars.mongodb_password = config["mongodb_password"]
     global_vars.mongodb_db_name = "test_db"
+
+    if not os.path.isdir(global_vars.upload_direcory):
+        os.mkdir(global_vars.upload_direcory)
 
 
 def tearDownModule():
@@ -98,6 +101,8 @@ def tearDownModule():
         db.drop_collection("profiles")
         db.drop_collection("global_acl")
         db.drop_collection("space_acl")
+
+    shutil.rmtree(global_vars.upload_direcory, ignore_errors=True)
 
 
 class RenderHandlerTest(AsyncHTTPTestCase):
@@ -1182,6 +1187,10 @@ class PostHandlerTest(BaseApiTestCase):
         self.base_permission_environment_setUp()
 
         self.test_file_name = "test_file.txt"
+        if not os.path.isdir(
+            os.path.join(global_vars.upload_direcory, self.test_space)
+        ):
+            os.mkdir(os.path.join(global_vars.upload_direcory, self.test_space))
 
     def tearDown(self) -> None:
         # cleanup test data
@@ -1803,6 +1812,87 @@ class PostHandlerTest(BaseApiTestCase):
         self.base_checks("DELETE", "/posts", True, 200, body={"post_id": str(oid)})
 
         self.assertEqual(list(self.db.posts.find()), [])
+
+    def test_delete_post_space_with_file(self):
+        """
+        expect: successfully delete post, "regular" file and file in space
+        """
+
+        # create file in uploads and space repo
+        with open(
+            os.path.join(global_vars.upload_direcory, self.test_file_name), "wb"
+        ) as fp:
+            fp.write(b"this is a test file")
+        with open(
+            os.path.join(
+                global_vars.upload_direcory, self.test_space, self.test_file_name
+            ),
+            "wb",
+        ) as fp:
+            fp.write(b"this is a test file")
+
+        # manually insert test post and into space
+        oid = ObjectId()
+        self.db.posts.insert_one(
+            {
+                "_id": oid,
+                "author": CURRENT_ADMIN.username,
+                "creation_date": datetime.datetime.now(),
+                "text": "initial_post_text",
+                "space": self.test_space,
+                "pinned": False,
+                "wordpress_post_id": None,
+                "tags": [],
+                "files": [self.test_file_name],
+            }
+        )
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$push": {
+                    "files": {
+                        "author": CURRENT_ADMIN.username,
+                        "filename": self.test_file_name,
+                    }
+                }
+            },
+        )
+
+        self.assertTrue(
+            os.path.isfile(
+                os.path.join(global_vars.upload_direcory, self.test_file_name)
+            )
+        )
+
+        self.assertTrue(
+            os.path.isfile(
+                os.path.join(
+                    global_vars.upload_direcory, self.test_space, self.test_file_name
+                )
+            )
+        )
+
+        self.base_checks("DELETE", "/posts", True, 200, body={"post_id": str(oid)})
+
+        # expect post deleted
+        self.assertEqual(list(self.db.posts.find()), [])
+
+        # expect files to be removed from disk and from space
+        self.assertFalse(
+            os.path.isfile(
+                os.path.join(global_vars.upload_direcory, self.test_file_name)
+            )
+        )
+        self.assertFalse(
+            os.path.isfile(
+                os.path.join(
+                    global_vars.upload_direcory, self.test_space, self.test_file_name
+                )
+            )
+        )
+        self.assertEqual(
+            self.db.spaces.find_one({"name": self.test_space})["files"], []
+        )
 
     def test_delete_post_error_post_doesnt_exist(self):
         """
