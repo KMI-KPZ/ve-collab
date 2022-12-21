@@ -1,7 +1,9 @@
+import os
 from typing import Optional
 
 import tornado.web
 
+import global_vars
 from handlers.base_handler import BaseHandler, auth_needed
 from logger_factory import get_logger, log_access
 from resources.acl import ACL
@@ -14,8 +16,6 @@ from resources.space import (
     Spaces,
     SpaceAlreadyExistsError,
     SpaceDoesntExistError,
-    AlreadyMemberError,
-    AlreadyRequestedJoinError,
     UserNotAdminError,
     UserNotMemberError,
 )
@@ -1716,8 +1716,21 @@ class SpaceHandler(BaseHandler):
                     self.write({"success": False, "reason": "insufficient_permission"})
                     return
 
+                # delete all space files from disk and the space itself from the db
+                files_in_space = space_manager.get_files(space_name)
+                for file in files_in_space:
+                    try:
+                        os.remove(
+                            os.path.join(
+                                global_vars.upload_direcory,
+                                space_name,
+                                file["filename"],
+                            )
+                        )
+                    except FileNotFoundError:
+                        pass
                 space_manager.delete_space(space_name)
-                # TODO also remove all file of this space from FS
+
                 self.set_status(200)
                 self.write({"success": True})
             except SpaceDoesntExistError:
@@ -1763,7 +1776,7 @@ class SpaceHandler(BaseHandler):
 
                     # permission checks have passed, delete the file
                     # last error is if the file belongs to a post
-                    # in this case, it is not deletable directly, 
+                    # in this case, it is not deletable directly,
                     # but only by deleting the whole post
                     try:
                         space_manager.remove_file(space_name, file_name)
@@ -1774,7 +1787,7 @@ class SpaceHandler(BaseHandler):
                         self.set_status(409)
                         self.write({"success": False, "reason": "file_belongs_to_post"})
                         return
-            
+
             # after iterating all files of the space, no match was found --> reply error
             self.set_status(409)
             self.write({"success": False, "reason": "file_doesnt_exist_in_space"})

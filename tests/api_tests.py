@@ -6065,6 +6065,34 @@ class SpaceHandlerTest(BaseApiTestCase):
         self.assertEqual(posts, [])
         self.assertEqual(space_acl, [])
 
+    def test_delete_space_with_files(self):
+        """
+        expect: successfully delete space and all files that were in the space
+        """
+
+        # setup file in space
+        filename = self._setup_space_file(CURRENT_ADMIN.username)
+
+        self.base_checks(
+            "DELETE",
+            "/spaceadministration/delete_space?name={}".format(self.test_space),
+            True,
+            200,
+        )
+
+        # expect all associated data to be deleted
+        space = self.db.spaces.find_one({"name": self.test_space})
+        posts = list(self.db.posts.find({"space": self.test_space}))
+        space_acl = list(self.db.space_acl.find({"space": self.test_space}))
+        self.assertEqual(space, None)
+        self.assertEqual(posts, [])
+        self.assertEqual(space_acl, [])
+        self.assertFalse(
+            os.path.isfile(
+                os.path.join(global_vars.upload_direcory, self.test_space, filename)
+            )
+        )
+
     def test_delete_space_error_insufficient_permission(self):
         """
         expect: fail message because user is neither space admin nor global admin
