@@ -190,12 +190,12 @@ class Posts:
         if not post:
             raise PostNotExistingException()
 
-        # delete files from disk and - if post was in a space, 
+        # delete files from disk and - if post was in a space,
         # from the space's files and metadata
         if post["files"]:
             for filename in post["files"]:
                 try:
-                    os.remove(os.path.join(global_vars.upload_direcory, filename))
+                    os.remove(os.path.join(global_vars.upload_directory, filename))
                 except FileNotFoundError:
                     pass
             if post["space"]:
@@ -437,6 +437,16 @@ class Posts:
         # we know that there was no post with the given _id
         if update_result.modified_count != 1:
             raise PostNotExistingException()
+
+    def add_new_post_file(self, file_name: str, file_content: bytes) -> None:
+        """
+        store a new file in the uploads directory
+        """
+
+        if os.path.isfile(os.path.join(global_vars.upload_directory, file_name)):
+            raise FilenameCollisionError()
+        with open(os.path.join(global_vars.upload_directory, file_name), "wb") as fp:
+            fp.write(file_content)
 
     def get_full_timeline(
         self, time_from: datetime.datetime, time_to: datetime.datetime
@@ -693,7 +703,7 @@ class Posts:
     def check_new_posts_since_timestamp(self, timestamp: datetime.datetime) -> bool:
         """
         check if there are new posts since the given time stamp.
-        This can be used instead of running the (much more expensive) timeline queries 
+        This can be used instead of running the (much more expensive) timeline queries
         over and over again uselessly.
         """
 
@@ -716,4 +726,8 @@ class AlreadyLikerException(Exception):
 
 
 class NotLikerException(Exception):
+    pass
+
+
+class FilenameCollisionError(Exception):
     pass

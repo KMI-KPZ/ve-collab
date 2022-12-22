@@ -38,7 +38,7 @@ def auth_needed(
 
 class BaseHandler(tornado.web.RequestHandler):
     def initialize(self):
-        self.upload_dir = global_vars.upload_direcory
+        self.upload_dir = global_vars.upload_directory
 
     async def prepare(self):
         # set user for test environments to bypass authentication in the handlers

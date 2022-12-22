@@ -122,64 +122,63 @@ class PostHandler(BaseHandler):
                         )
                         return
 
-            # handle files
-            file_amount = self.get_body_argument("file_amount", None)
-            files = []
-            if file_amount:
-                # save every file
-                for i in range(0, int(file_amount)):
-                    file_obj = self.request.files["file" + str(i)][0]
-                    # if the post was in a space, also store the file in the repo,
-                    # indicating it is part of a post by setting manually_uploaded to False
-                    if space:
-                        with Spaces() as space_manager:
-                            try:
-                                space_manager.add_new_file(
-                                    space,
-                                    self.current_user.username,
-                                    file_obj["filename"],
-                                    file_obj["body"],
-                                    False,
-                                )
-                            except FilenameCollisionError:
-                                self.set_status(409)
-                                self.write(
-                                    {"success": False, "reason": "filename_collision"}
-                                )
-                                return
-                    # save a copy in the "normal" uploads, but also check for name collisions there
-                    # to prevent overriding other files
-                    if os.path.isfile(
-                        os.path.join(self.upload_dir, file_obj["filename"])
-                    ):
-                        self.set_status(409)
-                        self.write({"success": False, "reason": "filename_collision"})
-                        return
-                    with open(
-                        os.path.join(self.upload_dir, file_obj["filename"]), "wb"
-                    ) as fp:
-                        fp.write(file_obj["body"])
+            with Posts() as post_manager:
 
-                    files.append(file_obj["filename"])
+                # handle files
+                file_amount = self.get_body_argument("file_amount", None)
+                files = []
+                if file_amount:
+                    # save every file
+                    for i in range(0, int(file_amount)):
+                        file_obj = self.request.files["file" + str(i)][0]
+                        # if the post was in a space, also store the file in the repo,
+                        # indicating it is part of a post by setting manually_uploaded to False
+                        if space:
+                            with Spaces() as space_manager:
+                                try:
+                                    space_manager.add_new_file(
+                                        space,
+                                        self.current_user.username,
+                                        file_obj["filename"],
+                                        file_obj["body"],
+                                        False,
+                                    )
+                                except FilenameCollisionError:
+                                    self.set_status(409)
+                                    self.write(
+                                        {"success": False, "reason": "filename_collision"}
+                                    )
+                                    return
+                        # save a copy in the "normal" uploads, but also check for name collisions there
+                        # to prevent overriding other files
+                        try:
+                            post_manager.add_new_post_file(file_obj["filename"], file_obj["body"])
+                        except FilenameCollisionError:
+                            self.set_status(409)
+                            self.write(
+                                {"success": False, "reason": "filename_collision"}
+                            )
+                            return
+                        files.append(file_obj["filename"])
 
-            post = {
-                "author": author,
-                "creation_date": creation_date,
-                "text": text,
-                "space": space,
-                "pinned": False,
-                "wordpress_post_id": wordpress_post_id,
-                "tags": tags,
-                "files": files,
-                "comments": [],
-                "likers": [],
-            }
+                post = {
+                    "author": author,
+                    "creation_date": creation_date,
+                    "text": text,
+                    "space": space,
+                    "pinned": False,
+                    "wordpress_post_id": wordpress_post_id,
+                    "tags": tags,
+                    "files": files,
+                    "comments": [],
+                    "likers": [],
+                }
 
-            with Posts() as db_manager:
-                db_manager.insert_post(post)
+                with Posts() as db_manager:
+                    db_manager.insert_post(post)
 
-            self.set_status(200)
-            self.write({"status": 200, "success": True})
+                self.set_status(200)
+                self.write({"status": 200, "success": True})
 
         # _id field present in request, therefore update the existing post
         else:

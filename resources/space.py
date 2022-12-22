@@ -577,8 +577,8 @@ class Spaces:
         if not, create one
         """
 
-        if not os.path.isdir(os.path.join(global_vars.upload_direcory, space_name)):
-            os.mkdir(os.path.join(global_vars.upload_direcory, space_name))
+        if not os.path.isdir(os.path.join(global_vars.upload_directory, space_name)):
+            os.mkdir(os.path.join(global_vars.upload_directory, space_name))
 
     def add_new_file(
         self, space_name: str, author: str, file_name: str, file_content: bytes, manually_uploaded: bool
@@ -620,7 +620,7 @@ class Spaces:
         # store file content on the FS
         self._ensure_space_uploads_directory_exists(space_name)
         with open(
-            os.path.join(global_vars.upload_direcory, space_name, file_name), "wb"
+            os.path.join(global_vars.upload_directory, space_name, file_name), "wb"
         ) as fp:
             fp.write(file_content)
 
@@ -656,7 +656,7 @@ class Spaces:
                     try:
                         os.remove(
                             os.path.join(
-                                global_vars.upload_direcory, space_name, file_name
+                                global_vars.upload_directory, space_name, file_name
                             )
                         )
                     except FileNotFoundError:
@@ -690,7 +690,7 @@ class Spaces:
         try:
             os.remove(
                 os.path.join(
-                    global_vars.upload_direcory, space_name, file_name
+                    global_vars.upload_directory, space_name, file_name
                 )
             )
         except FileNotFoundError:

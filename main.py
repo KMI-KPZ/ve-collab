@@ -273,12 +273,12 @@ def init_uploads_directory() -> None:
     and add the default_profile_pic.jpg into it
     """
 
-    if not os.path.isdir(global_vars.upload_direcory):
-        os.mkdir(global_vars.upload_direcory)
+    if not os.path.isdir(global_vars.upload_directory):
+        os.mkdir(global_vars.upload_directory)
     if not os.path.isfile(
-        os.path.join(global_vars.upload_direcory, "default_profile_pic.jpg")
+        os.path.join(global_vars.upload_directory, "default_profile_pic.jpg")
     ):
-        shutil.copy2("assets/default_profile_pic.jpg", global_vars.upload_direcory)
+        shutil.copy2("assets/default_profile_pic.jpg", global_vars.upload_directory)
 
 
 def set_global_vars(conf: dict) -> None:
@@ -314,7 +314,7 @@ def set_global_vars(conf: dict) -> None:
     # set global vars from config
     global_vars.port = conf["port"]
     global_vars.domain = conf["domain"]
-    global_vars.upload_direcory = conf["upload_directory"]
+    global_vars.upload_directory = conf["upload_directory"]
     global_vars.wordpress_url = conf["wordpress_url"]
     global_vars.mongodb_host = conf["mongodb_host"]
     global_vars.mongodb_port = conf["mongodb_port"]

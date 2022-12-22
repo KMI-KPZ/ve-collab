@@ -1722,7 +1722,7 @@ class SpaceHandler(BaseHandler):
                     try:
                         os.remove(
                             os.path.join(
-                                global_vars.upload_direcory,
+                                global_vars.upload_directory,
                                 space_name,
                                 file["filename"],
                             )
