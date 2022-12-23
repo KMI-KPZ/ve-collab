@@ -3,6 +3,7 @@ import os
 from typing import Dict, List, Optional
 
 from bson.objectid import ObjectId
+import gridfs
 from pymongo import MongoClient
 
 import global_vars
@@ -190,19 +191,17 @@ class Posts:
         if not post:
             raise PostNotExistingException()
 
-        # delete files from disk and - if post was in a space,
-        # from the space's files and metadata
+        # delete files from gridfs and - if post was in a space,
+        # from the space's repository
         if post["files"]:
-            for filename in post["files"]:
-                try:
-                    os.remove(os.path.join(global_vars.upload_directory, filename))
-                except FileNotFoundError:
-                    pass
+            fs = gridfs.GridFS(self.db)
+            for file_id in post["files"]:
+                fs.delete(file_id)
             if post["space"]:
                 with Spaces() as space_manager:
-                    for filename in post["files"]:
+                    for file_id in post["files"]:
                         try:
-                            space_manager.remove_post_file(post["space"], filename)
+                            space_manager.remove_post_file(post["space"], file_id)
                         except SpaceDoesntExistError:
                             pass
                         except FileDoesntExistError:
@@ -438,15 +437,24 @@ class Posts:
         if update_result.modified_count != 1:
             raise PostNotExistingException()
 
-    def add_new_post_file(self, file_name: str, file_content: bytes) -> None:
+    def add_new_post_file(
+        self, file_name: str, file_content: bytes, content_type: str, uploader: str
+    ) -> None:
         """
         store a new file in the uploads directory
         """
 
-        if os.path.isfile(os.path.join(global_vars.upload_directory, file_name)):
-            raise FilenameCollisionError()
-        with open(os.path.join(global_vars.upload_directory, file_name), "wb") as fp:
-            fp.write(file_content)
+        fs = gridfs.GridFS(self.db)
+
+        # store in gridfs
+        _id = fs.put(
+            file_content,
+            filename=file_name,
+            content_type=content_type,
+            metadata={"uploader": uploader},
+        )
+
+        return _id
 
     def get_full_timeline(
         self, time_from: datetime.datetime, time_to: datetime.datetime

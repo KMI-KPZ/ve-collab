@@ -2,12 +2,12 @@ import asyncio
 import json
 import os
 import sys
-import shutil
 
 sys.path.append(os.path.dirname(__file__))
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
+import gridfs
 from keycloak import KeycloakOpenID, KeycloakAdmin
 import pymongo
 import pymongo.errors
@@ -19,6 +19,7 @@ import tornado.web
 
 import global_vars
 from handlers.authentication import LoginHandler, LoginCallbackHandler, LogoutHandler
+from handlers.db_static_files import GridFSStaticFileHandler
 from handlers.follow import FollowHandler
 from handlers.permissions import (
     GlobalACLHandler,
@@ -116,9 +117,7 @@ def make_app(cookie_secret):
                 tornado.web.StaticFileHandler,
                 {"path": "./javascripts/"},
             ),
-            # TODO custom handler for uploads that checks if user is in space or admin if
-            # request is towards files of a space
-            (r"/uploads/(.*)", tornado.web.StaticFileHandler, {"path": "./uploads/"}),
+            (r"/uploads/(.*)", GridFSStaticFileHandler, {"path": ""}),
         ],
         cookie_secret=cookie_secret,
         template_path="html",
@@ -266,21 +265,6 @@ def create_initial_admin(username: str) -> None:
             "inserted admin user '{}' and corresponding ACL rules".format(username)
         )
 
-
-def init_uploads_directory() -> None:
-    """
-    create the uploads directory if it does not already exist
-    and add the default_profile_pic.jpg into it
-    """
-
-    if not os.path.isdir(global_vars.upload_directory):
-        os.mkdir(global_vars.upload_directory)
-    if not os.path.isfile(
-        os.path.join(global_vars.upload_directory, "default_profile_pic.jpg")
-    ):
-        shutil.copy2("assets/default_profile_pic.jpg", global_vars.upload_directory)
-
-
 def set_global_vars(conf: dict) -> None:
     """
     setup global_vars from config properties
@@ -290,7 +274,6 @@ def set_global_vars(conf: dict) -> None:
     expected_config_keys = [
         "port",
         "domain",
-        "upload_directory",
         "wordpress_url",
         "cookie_secret",
         "keycloak_base_url",
@@ -314,7 +297,6 @@ def set_global_vars(conf: dict) -> None:
     # set global vars from config
     global_vars.port = conf["port"]
     global_vars.domain = conf["domain"]
-    global_vars.upload_directory = conf["upload_directory"]
     global_vars.wordpress_url = conf["wordpress_url"]
     global_vars.mongodb_host = conf["mongodb_host"]
     global_vars.mongodb_port = conf["mongodb_port"]
@@ -341,6 +323,50 @@ def set_global_vars(conf: dict) -> None:
     global_vars.keycloak_callback_url = conf["keycloak_callback_url"]
 
 
+def init_default_pictures():
+    """
+    copy the logo.png, default_profile_pic.jpg and default_group_pic.jpg from the
+    assets folder into gridfs to be serveable by the GridFSFileHandler
+    """
+
+    with pymongo.MongoClient(
+        global_vars.mongodb_host,
+        global_vars.mongodb_port,
+        username=global_vars.mongodb_username,
+        password=global_vars.mongodb_password,
+    ) as client:
+        db = client[global_vars.mongodb_db_name]
+        fs = gridfs.GridFS(db)
+
+        if not fs.exists("default_profile_pic.jpg"):
+            with open("assets/default_profile_pic.jpg", "rb") as fp:
+                fs.put(
+                    fp.read(),
+                    _id="default_profile_pic.jpg",
+                    content_type="image/jpg",
+                    metadata={"uploader": "system"},
+                )
+                logger.info("default_profile_pic created")
+        if not fs.exists("default_group_pic.jpg"):
+            with open("assets/default_group_pic.jpg", "rb") as fp:
+                fs.put(
+                    fp.read(),
+                    _id="default_group_pic.jpg",
+                    content_type="image/jpg",
+                    metadata={"uploader": "system"},
+                )
+                logger.info("default_group_pic created")
+        if not fs.exists("logo.png"):
+            with open("assets/logo.png", "rb") as fp:
+                fs.put(
+                    fp.read(),
+                    _id="logo.png",
+                    content_type="image/png",
+                    metadata={"uploader": "system"},
+                )
+                logger.info("logo created")
+
+
 async def main():
     parse_command_line()
 
@@ -349,14 +375,14 @@ async def main():
         conf = json.load(fp)
         set_global_vars(conf)
 
-    # setup uploads directory
-    init_uploads_directory()
-
     # insert default admin role and acl templates
     create_initial_admin(options.create_admin)
 
     # setup text indexes for searching
     init_indexes(options.build_indexes)
+
+    # setup default group and profile pictures
+    init_default_pictures()
 
     # build and start server
     cookie_secret = conf["cookie_secret"]

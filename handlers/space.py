@@ -1,5 +1,6 @@
 import os
 from typing import Optional
+from bson import ObjectId
 
 import tornado.web
 
@@ -28,6 +29,15 @@ class SpaceHandler(BaseHandler):
     """
     handle existing and creation of new spaces
     """
+
+    def _serialize_object_ids(self, payload: dict) -> dict:
+        """
+        turn any ObjectId's into their str-representation
+        """
+
+        if "files" in payload:
+            for file in payload["files"]:
+                file["file_id"] = str(file["file_id"])
 
     @log_access
     @auth_needed
@@ -708,7 +718,12 @@ class SpaceHandler(BaseHandler):
                 return
 
             file_obj = self.request.files["file"][0]
-            self.put_new_file(space_name, file_obj["filename"], file_obj["body"])
+            self.put_new_file(
+                space_name,
+                file_obj["filename"],
+                file_obj["body"],
+                file_obj["content_type"],
+            )
             return
 
         else:
@@ -804,7 +819,7 @@ class SpaceHandler(BaseHandler):
             or space admin / global admin
             query param:
                 "name" : space name of which space to delete, mandatory argument
-                "file_name": name of the file to delete, mandatory argument
+                "file_id": id of the file to delete, mandatory argument
 
             returns:
                 200 OK,
@@ -897,13 +912,13 @@ class SpaceHandler(BaseHandler):
 
         elif slug == "delete_file":
             try:
-                filename = self.get_argument("file_name")
+                file_id = self.get_argument("file_id")
             except tornado.web.MissingArgumentError:
                 self.set_status(400)
-                self.write({"success": False, "reason": "missing_key:file_name"})
+                self.write({"success": False, "reason": "missing_key:file_id"})
                 return
 
-            self.delete_file(space_name, filename)
+            self.delete_file(space_name, file_id)
             return
 
         elif slug == "delete_space":
@@ -960,6 +975,11 @@ class SpaceHandler(BaseHandler):
         for space in spaces:
             if "_id" in space:
                 space["_id"] = str(space["_id"])
+            if "files" in space:
+                for file in space["files"]:
+                    file["file_id"] = str(file["file_id"])
+            if "space_pic" in space:
+                space["space_pic"] = str(space["space_pic"])
 
         self.set_status(200)
         self.write({"success": True, "spaces": spaces})
@@ -989,6 +1009,11 @@ class SpaceHandler(BaseHandler):
                 return
 
         space["_id"] = str(space["_id"])
+        if "files" in space:
+            for file in space["files"]:
+                file["file_id"] = str(file["file_id"])
+        if "space_pic" in space:
+                space["space_pic"] = str(space["space_pic"])
 
         self.set_status(200)
         self.write({"success": True, "space": space})
@@ -1095,6 +1120,8 @@ class SpaceHandler(BaseHandler):
                 return
 
             files = space_manager.get_files(space_name)
+            for file in files:
+                file["file_id"] = str(file["file_id"])
 
             self.set_status(200)
             self.write({"success": True, "files": files})
@@ -1277,9 +1304,9 @@ class SpaceHandler(BaseHandler):
                 space_pic_obj = self.request.files["space_pic"][0]
                 space_manager.set_space_picture(
                     space_name,
-                    self.upload_dir,
                     space_pic_obj["filename"],
                     space_pic_obj["body"],
+                    space_pic_obj["content_type"]
                 )
 
             # update the space description
@@ -1555,7 +1582,7 @@ class SpaceHandler(BaseHandler):
         self.write({"success": True, "space_name": space_name})
 
     def put_new_file(
-        self, space_name: str, file_name: str, file_content: bytes
+        self, space_name: str, file_name: str, file_content: bytes, content_type: str
     ) -> None:
         """
         add a new file to the space's 'repository'.
@@ -1590,14 +1617,14 @@ class SpaceHandler(BaseHandler):
                 self.write({"success": False, "reason": "insufficient_permission"})
                 return
 
-            try:
-                space_manager.add_new_file(
-                    space_name, self.current_user.username, file_name, file_content, True
-                )
-            except FilenameCollisionError:
-                self.set_status(409)
-                self.write({"success": False, "reason": "filename_collision"})
-                return
+
+            space_manager.add_new_repo_file(
+                space_name,
+                file_name,
+                file_content,
+                content_type,
+                self.current_user.username,
+            )
 
             self.set_status(200)
             self.write({"success": True})
@@ -1716,19 +1743,6 @@ class SpaceHandler(BaseHandler):
                     self.write({"success": False, "reason": "insufficient_permission"})
                     return
 
-                # delete all space files from disk and the space itself from the db
-                files_in_space = space_manager.get_files(space_name)
-                for file in files_in_space:
-                    try:
-                        os.remove(
-                            os.path.join(
-                                global_vars.upload_directory,
-                                space_name,
-                                file["filename"],
-                            )
-                        )
-                    except FileNotFoundError:
-                        pass
                 space_manager.delete_space(space_name)
 
                 self.set_status(200)
@@ -1738,12 +1752,15 @@ class SpaceHandler(BaseHandler):
                 self.write({"success": False, "reason": "space_doesnt_exist"})
                 return
 
-    def delete_file(self, space_name: str, file_name: str) -> None:
+    def delete_file(self, space_name: str, file_id: str | ObjectId) -> None:
         """
         delete an uploaded file from the space
         the user has to be either global or space admin, or the author (==uploader)
         of the file.
         """
+
+        if isinstance(file_id, str):
+            file_id = ObjectId(file_id)
 
         with Spaces() as space_manager:
             space = space_manager.get_space(
@@ -1758,7 +1775,7 @@ class SpaceHandler(BaseHandler):
 
             # search for the desired file, if found, do permission checks
             for file_obj in space["files"]:
-                if file_obj["filename"] == file_name:
+                if file_obj["file_id"] == file_id:
                     # to delete a file, the user either has to be the author (==uploader),
                     # a space admin or a global admin. if he is not any of these, reply
                     # with insufficient permission
@@ -1779,7 +1796,7 @@ class SpaceHandler(BaseHandler):
                     # in this case, it is not deletable directly,
                     # but only by deleting the whole post
                     try:
-                        space_manager.remove_file(space_name, file_name)
+                        space_manager.remove_file(space_name, file_id)
                         self.set_status(200)
                         self.write({"success": True})
                         return

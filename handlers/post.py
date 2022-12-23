@@ -15,7 +15,7 @@ from resources.post import (
     Posts,
     PostNotExistingException,
 )
-from resources.space import FilenameCollisionError, Spaces, SpaceDoesntExistError
+from resources.space import FileAlreadyInRepoError, FilenameCollisionError, Spaces, SpaceDoesntExistError
 
 logger = get_logger(__name__)
 
@@ -131,35 +131,28 @@ class PostHandler(BaseHandler):
                     # save every file
                     for i in range(0, int(file_amount)):
                         file_obj = self.request.files["file" + str(i)][0]
+
+                        stored_id = post_manager.add_new_post_file(
+                            file_obj["filename"],
+                            file_obj["body"],
+                            file_obj["content_type"],
+                            self.current_user.username,
+                        )
+
+                        files.append(stored_id)
+
                         # if the post was in a space, also store the file in the repo,
                         # indicating it is part of a post by setting manually_uploaded to False
                         if space:
                             with Spaces() as space_manager:
                                 try:
-                                    space_manager.add_new_file(
+                                    space_manager.add_new_post_file(
                                         space,
                                         self.current_user.username,
-                                        file_obj["filename"],
-                                        file_obj["body"],
-                                        False,
+                                        stored_id,
                                     )
-                                except FilenameCollisionError:
-                                    self.set_status(409)
-                                    self.write(
-                                        {"success": False, "reason": "filename_collision"}
-                                    )
-                                    return
-                        # save a copy in the "normal" uploads, but also check for name collisions there
-                        # to prevent overriding other files
-                        try:
-                            post_manager.add_new_post_file(file_obj["filename"], file_obj["body"])
-                        except FilenameCollisionError:
-                            self.set_status(409)
-                            self.write(
-                                {"success": False, "reason": "filename_collision"}
-                            )
-                            return
-                        files.append(file_obj["filename"])
+                                except FileAlreadyInRepoError:
+                                    pass
 
                 post = {
                     "author": author,

@@ -37,8 +37,6 @@ def auth_needed(
 
 
 class BaseHandler(tornado.web.RequestHandler):
-    def initialize(self):
-        self.upload_dir = global_vars.upload_directory
 
     async def prepare(self):
         # set user for test environments to bypass authentication in the handlers
@@ -125,6 +123,9 @@ class BaseHandler(tornado.web.RequestHandler):
                 for comment in post["comments"]:
                     comment["creation_date"] = comment["creation_date"].isoformat()
                     comment["_id"] = str(comment["_id"])
+
+            if "files" in post:
+                post["files"] = [str(file_id) for file_id in post["files"]]
         return query_result
 
     def get_current_user_role(self):

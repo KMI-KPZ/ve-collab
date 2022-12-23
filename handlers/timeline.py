@@ -58,7 +58,7 @@ class BaseTimelineHandler(BaseHandler):
                 # we haven't yet requested the profile picture
                 # query it from the db and save it in the cache for further iterations
                 else:
-                    pic_val = profile_manager.get_profile_pic(author_name)
+                    pic_val = str(profile_manager.get_profile_pic(author_name))
 
                     pic_cache[author_name] = pic_val
 
@@ -73,9 +73,9 @@ class BaseTimelineHandler(BaseHandler):
                     if repost_author_name in pic_cache:
                         post["repostAuthorProfilePic"] = pic_cache[repost_author_name]
                     else:
-                        repost_pic_val = profile_manager.get_profile_pic(
+                        repost_pic_val = str(profile_manager.get_profile_pic(
                             repost_author_name
-                        )
+                        ))
                         pic_cache[repost_author_name] = repost_pic_val
                         post["repostAuthorProfilePic"] = repost_pic_val
 
@@ -89,9 +89,9 @@ class BaseTimelineHandler(BaseHandler):
                                 "profile_pic": pic_cache[comment_author_name],
                             }
                         else:
-                            comment_pic_val = profile_manager.get_profile_pic(
+                            comment_pic_val = str(profile_manager.get_profile_pic(
                                 comment_author_name
-                            )
+                            ))
                             pic_cache[comment_author_name] = comment_pic_val
                             comment["author"] = {
                                 "username": comment_author_name,

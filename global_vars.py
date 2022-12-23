@@ -8,7 +8,6 @@ keycloak_client_id: str = ""
 keycloak_callback_url: str = ""
 domain: str = ""
 port: int = 0
-upload_directory: str = ""
 cookie_secret: str = ""
 wordpress_url: str = ""
 mongodb_host: str = ""

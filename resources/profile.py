@@ -1,6 +1,7 @@
 import os
 from typing import Dict, List, Optional
 
+import gridfs
 from pymongo import MongoClient
 
 import global_vars
@@ -328,8 +329,8 @@ class Profiles:
         self,
         username: str,
         updated_profile: Dict,
-        upload_dir: str = None,
         profile_pic: bytes = None,
+        profile_pic_content_type: str = None,
     ) -> None:
         """
         update the profile information including (optionally) the profile picture.
@@ -358,19 +359,22 @@ class Profiles:
 
         # handle optional profile image
         if "profile_pic" in updated_profile:
-            # if dict supplies one, we need the actual image and upload directory
-            # to save the file to disk
-            if (profile_pic is None) or (upload_dir is None):
+            # if dict supplies one, we need the actual image
+            if profile_pic is None:
                 raise TypeError(
                     """if profile_pic is supplied in the dict, 
                     provide an actual image as bytes!"""
                 )
 
-            # save image to disk
-            with open(
-                os.path.join(upload_dir, updated_profile["profile_pic"]), "wb"
-            ) as fp:
-                fp.write(profile_pic)
+            # save image to gridfs
+            fs = gridfs.GridFS(self.db)
+            _id = fs.put(
+                profile_pic,
+                filename=updated_profile["profile_pic"],
+                content_type=profile_pic_content_type,
+                metadata={"uploader": "system"},
+            )
+            updated_profile["profile_pic"] = _id
 
         self.db.profiles.update_one(
             {"username": username},
