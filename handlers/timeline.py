@@ -58,7 +58,7 @@ class BaseTimelineHandler(BaseHandler):
                 # we haven't yet requested the profile picture
                 # query it from the db and save it in the cache for further iterations
                 else:
-                    pic_val = str(profile_manager.get_profile_pic(author_name))
+                    pic_val = profile_manager.get_profile_pic(author_name)
 
                     pic_cache[author_name] = pic_val
 
@@ -73,9 +73,9 @@ class BaseTimelineHandler(BaseHandler):
                     if repost_author_name in pic_cache:
                         post["repostAuthorProfilePic"] = pic_cache[repost_author_name]
                     else:
-                        repost_pic_val = str(profile_manager.get_profile_pic(
+                        repost_pic_val = profile_manager.get_profile_pic(
                             repost_author_name
-                        ))
+                        )
                         pic_cache[repost_author_name] = repost_pic_val
                         post["repostAuthorProfilePic"] = repost_pic_val
 
@@ -89,9 +89,9 @@ class BaseTimelineHandler(BaseHandler):
                                 "profile_pic": pic_cache[comment_author_name],
                             }
                         else:
-                            comment_pic_val = str(profile_manager.get_profile_pic(
+                            comment_pic_val = profile_manager.get_profile_pic(
                                 comment_author_name
-                            ))
+                            )
                             pic_cache[comment_author_name] = comment_pic_val
                             comment["author"] = {
                                 "username": comment_author_name,
@@ -136,10 +136,10 @@ class TimelineHandler(BaseTimelineHandler):
             result = post_manager.get_full_timeline(time_from, time_to)
 
         # serialize post objects to dicts and enhance author information
-        posts = self.add_profile_pic_to_author(self.json_serialize_posts(result))
+        posts = self.add_profile_pic_to_author(result)
 
         self.set_status(200)
-        self.write({"success": True, "posts": posts})
+        self.write(self.json_serialize_response({"success": True, "posts": posts}))
 
 
 class SpaceTimelineHandler(BaseTimelineHandler):
@@ -205,10 +205,10 @@ class SpaceTimelineHandler(BaseTimelineHandler):
             result = post_manager.get_space_timeline(space_name, time_from, time_to)
 
         # postprocessing
-        posts = self.add_profile_pic_to_author(self.json_serialize_posts(result))
+        posts = self.add_profile_pic_to_author(result)
 
         self.set_status(200)
-        self.write({"success": True, "posts": posts})
+        self.write(self.json_serialize_response({"success": True, "posts": posts}))
 
 
 class UserTimelineHandler(BaseTimelineHandler):
@@ -239,10 +239,10 @@ class UserTimelineHandler(BaseTimelineHandler):
         with Posts() as post_manager:
             result = post_manager.get_user_timeline(author, time_from, time_to)
 
-        posts = self.add_profile_pic_to_author(self.json_serialize_posts(result))
+        posts = self.add_profile_pic_to_author(result)
 
         self.set_status(200)
-        self.write({"success": True, "posts": posts})
+        self.write(self.json_serialize_response({"success": True, "posts": posts}))
 
 
 class PersonalTimelineHandler(BaseTimelineHandler):
@@ -276,11 +276,10 @@ class PersonalTimelineHandler(BaseTimelineHandler):
                 self.current_user.username, time_from, time_to
             )
 
-        posts = self.add_profile_pic_to_author(self.json_serialize_posts(result))
+        posts = self.add_profile_pic_to_author(result)
 
         self.set_status(200)
-        self.write({"success": True, "posts": posts})
-
+        self.write(self.json_serialize_response({"success": True, "posts": posts}))
 
 class NewPostsSinceTimestampHandler(BaseHandler):
     """
@@ -308,11 +307,13 @@ class NewPostsSinceTimestampHandler(BaseHandler):
                 # new posts since timestamp, user should query the timeline handlers
                 self.set_status(200)
                 self.write(
-                    {
-                        "success": True,
-                        "new_posts": True,
-                        "since_timestamp": timestamp.isoformat(),
-                    }
+                    self.json_serialize_response(
+                        {
+                            "success": True,
+                            "new_posts": True,
+                            "since_timestamp": timestamp.isoformat(),
+                        }
+                    )
                 )
             else:
                 # no new posts happened since the requested timestamp,

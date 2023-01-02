@@ -91,13 +91,15 @@ class SearchHandler(BaseHandler):
         if search_posts:
             posts_search_result = self._search_posts(query)
 
-        response = {
-            "status": 200,
-            "success": True,
-            "users": users_search_result,
-            "tags": tags_search_result,
-            "posts": posts_search_result,
-        }
+        response = self.json_serialize_response(
+            {
+                "status": 200,
+                "success": True,
+                "users": users_search_result,
+                "tags": tags_search_result,
+                "posts": posts_search_result,
+            }
+        )
 
         self.set_status(200)
         self.write(response)
@@ -112,18 +114,11 @@ class SearchHandler(BaseHandler):
         # TODO decide if user search should be limited to name, because like this it searches for anything on the profile
 
         with Profiles() as db_manager:
-            search_result = db_manager.fulltext_search(query)
-
-        # make _id json-serializable
-        for elem in search_result:
-            if "_id" in elem:
-                elem["_id"] = str(elem["_id"])
-
-        return search_result
+            return db_manager.fulltext_search(query)
 
     def _search_tags(self, tags: List[str]) -> List[Dict]:
         """
-        search tags of posts. since tags are only short and precise, 
+        search tags of posts. since tags are only short and precise,
         this search is an exact match instead of full text search.
         Results are restricted to posts that the current_user is allowed to see
         (i.e. his own posts, posts in his spaces, posts from persons that he follows)
@@ -136,7 +131,7 @@ class SearchHandler(BaseHandler):
             matched_posts = post_manager.get_posts_by_tags(tags)
 
         if matched_posts:
-            return self.json_serialize_posts(self.reduce_disallowed_posts(matched_posts))
+            return self.reduce_disallowed_posts(matched_posts)
         else:
             return []
 
@@ -154,7 +149,7 @@ class SearchHandler(BaseHandler):
             matched_posts = post_manager.fulltext_search(query)
 
         if matched_posts:
-            return self.json_serialize_posts(self.reduce_disallowed_posts(matched_posts))
+            return self.reduce_disallowed_posts(matched_posts)
         else:
             return []
 
@@ -166,7 +161,7 @@ class SearchHandler(BaseHandler):
         b) from users that he follows, or
         c) his own posts
         :param posts: list of posts (as dicts) that should be reduced
-        :return: the reduced list of posts        
+        :return: the reduced list of posts
         """
 
         reduced = []
@@ -174,9 +169,7 @@ class SearchHandler(BaseHandler):
             spaces_of_user = space_manager.get_spaces_of_user(
                 self.current_user.username
             )
-            follows_of_user = profile_manager.get_follows(
-                self.current_user.username
-            )
+            follows_of_user = profile_manager.get_follows(self.current_user.username)
 
         # iterate matched posts and sort out those that user is not allowed to see
         for post in posts:
@@ -192,5 +185,5 @@ class SearchHandler(BaseHandler):
                     or post["author"] == self.current_user.username
                 ):
                     reduced.append(post)
-        
+
         return reduced

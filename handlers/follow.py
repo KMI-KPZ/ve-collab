@@ -37,7 +37,11 @@ class FollowHandler(BaseHandler):
             follows = db_manager.get_follows(username)
 
         self.set_status(200)
-        self.write({"success": True, "user": username, "follows": follows})
+        self.write(
+            self.json_serialize_response(
+                {"success": True, "user": username, "follows": follows}
+            )
+        )
 
     @log_access
     @auth_needed
@@ -94,6 +98,10 @@ class FollowHandler(BaseHandler):
                 200 OK,
                 {"status": 200,
                  "success": True}
+
+                304 Not Modified
+                current_user doesn't follow this user,
+                therefore nothing is changed
 
                 400 Bad Request
                 {"status": 400,

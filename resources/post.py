@@ -1,5 +1,4 @@
 import datetime
-import os
 from typing import Dict, List, Optional
 
 from bson.objectid import ObjectId

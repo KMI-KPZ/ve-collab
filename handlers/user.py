@@ -1,13 +1,7 @@
-from base64 import b64encode
-import os
-import re
-from typing import List, Optional, Tuple
-
 import tornado.web
 
 from handlers.base_handler import BaseHandler, auth_needed
 from logger_factory import log_access
-from resources.acl import ACL
 from resources.profile import Profiles
 from resources.space import Spaces
 
@@ -73,8 +67,6 @@ class ProfileInformationHandler(BaseHandler):
             del profile["_id"]
             del profile["role"]
             del profile["follows"]
-            if "profile_pic" in profile:
-                profile["profile_pic"] = str(profile["profile_pic"])
 
             # grab users that follow the user separately, because db model is 1:n
             followers = profile_manager.get_followers(username)
@@ -90,7 +82,7 @@ class ProfileInformationHandler(BaseHandler):
             user_information_response["spaces"] = spaces
 
         self.set_status(200)
-        self.write(user_information_response)
+        self.write(self.json_serialize_response(user_information_response))
 
     @log_access
     @auth_needed
@@ -162,7 +154,7 @@ class ProfileInformationHandler(BaseHandler):
                     self.current_user.username,
                     updated_attribute_dict,
                     profile_pic_obj["body"],
-                    profile_pic_obj["content_type"]
+                    profile_pic_obj["content_type"],
                 )
             else:
                 profile_manager.update_profile_information(
@@ -226,10 +218,9 @@ class UserHandler(BaseHandler):
                 # add full profile data to response, moving role and follows out of
                 # the nested profile dict
                 profile = profile_manager.ensure_profile_exists(username)
-                user_information_response["profile_pic"] = str(profile["profile_pic"])
+                user_information_response["profile_pic"] = profile["profile_pic"]
                 user_information_response["role"] = profile["role"]
                 user_information_response["follows"] = profile["follows"]
-                profile["_id"] = str(profile["_id"])
                 del profile["role"]
                 del profile["follows"]
                 user_information_response["profile"] = profile
@@ -240,7 +231,7 @@ class UserHandler(BaseHandler):
                 )
 
             self.set_status(200)
-            self.write(user_information_response)
+            self.write(self.json_serialize_response(user_information_response))
 
         elif slug == "list":
             user_list_kc = self.get_keycloak_user_list()
@@ -266,12 +257,12 @@ class UserHandler(BaseHandler):
                         "role": profile_obj["role"],
                         "follows": profile_obj["follows"],
                         "followers": profile_manager.get_followers(user["username"]),
-                        "profile_pic": str(profile_obj["profile_pic"]),
+                        "profile_pic": profile_obj["profile_pic"],
                     }
                     user_list_response[user["username"]] = user_info
 
             self.set_status(200)
-            self.write(user_list_response)
+            self.write(self.json_serialize_response(user_list_response))
 
         else:
             self.set_status(404)

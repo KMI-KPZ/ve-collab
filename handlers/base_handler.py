@@ -1,6 +1,7 @@
 import functools
 import json
 from typing import Awaitable, Callable, Dict, List, Optional
+from bson import ObjectId
 
 from keycloak.exceptions import KeycloakError
 from tornado.options import options
@@ -37,7 +38,6 @@ def auth_needed(
 
 
 class BaseHandler(tornado.web.RequestHandler):
-
     async def prepare(self):
         # set user for test environments to bypass authentication in the handlers
         # warning: mindlessly changing those values will most certainly break the tests
@@ -68,7 +68,7 @@ class BaseHandler(tornado.web.RequestHandler):
         token = json.loads(token)
 
         # check if the token is still valid
-        # TODO this is quite costly, since its another API call round trip
+        # this is quite costly, since its another API call round trip
         # in case we need more performance, we can instead do offline validation
         # by decoding the jwt and checking if it is not expired
         # (tradeoff: we dont know if it was manually invalidated)
@@ -105,28 +105,43 @@ class BaseHandler(tornado.web.RequestHandler):
             )
             self._access_token = new_token
 
-    def json_serialize_posts(self, query_result: dict) -> List[dict]:
+    def json_serialize_response(self, dictionary: dict) -> dict:
         """
-        parse creation dates and _id's into string representations to achieve
-        json-serializability
+        recursively traverse the (variably) nested dict to find any fields that
+        require a transformation from its object representation into a str.
+        Fields that are transformed are those whose type is an instances of `ObjectId`
+        and `datetime.datetime`.
+        Parse those values using the `str()` function (for ObjectId's), 
+        or the `.isoformat()` function (for datetimes).
         """
 
-        for post in query_result:
-            # post creation date and _id
-            post["_id"] = str(post["_id"])
-            post["creation_date"] = post["creation_date"].isoformat()
-            if "originalCreationDate" in post:
-                post["originalCreationDate"] = post["originalCreationDate"].isoformat()
+        for key in dictionary:
+            # check for keys whose values need to be transformed
+            if isinstance(dictionary[key], ObjectId):
+                dictionary[key] = str(dictionary[key])
+            elif key == "creation_date" or key == "originalCreationDate":
+                dictionary[key] = dictionary[key].isoformat()
 
-            # creation date and _id of each comment
-            if "comments" in post and post["comments"] is not None:
-                for comment in post["comments"]:
-                    comment["creation_date"] = comment["creation_date"].isoformat()
-                    comment["_id"] = str(comment["_id"])
+            # if it is a nested dict, recursively run on subdict
+            # and reassemble it
+            elif isinstance(dictionary[key], dict):
+                dictionary[key] = self.json_serialize_response(dictionary[key])
 
-            if "files" in post:
-                post["files"] = [str(file_id) for file_id in post["files"]]
-        return query_result
+            # if it is a list, there are two options:
+            # either the entries in the list are ObjectIds themselves, in that
+            # case transform them as str's and reassemble the list,
+            # or the list contains dicts again, in which case we run recursively
+            # on each of those subdicts again.
+            # This can be seen as an exclusive-or, meaning mixed-lists may cause
+            # strange or undesired behaviour.
+            elif isinstance(dictionary[key], list):
+                for elem in dictionary[key]:
+                    if isinstance(elem, ObjectId):
+                        dictionary[key][dictionary[key].index(elem)] = str(elem)
+                    elif isinstance(elem, dict):
+                        elem = self.json_serialize_response(elem)
+
+        return dictionary
 
     def get_current_user_role(self):
         if not self.current_user:

@@ -26,11 +26,13 @@ class RoleHandler(BaseHandler):
                     role_result = db_manager.get_role(self.current_user.username)
                     self.set_status(200)
                     self.write(
-                        {
-                            "success": True,
-                            "username": self.current_user.username,
-                            "role": role_result,
-                        }
+                        self.json_serialize_response(
+                            {
+                                "success": True,
+                                "username": self.current_user.username,
+                                "role": role_result,
+                            }
+                        )
                     )
                     return
                 except ProfileDoesntExistException:
@@ -56,7 +58,9 @@ class RoleHandler(BaseHandler):
                     ret_list = db_manager.get_all_roles(user_list_kc)
 
                 self.set_status(200)
-                self.write({"success": True, "users": ret_list})
+                self.write(
+                    self.json_serialize_response({"success": True, "users": ret_list})
+                )
             else:
                 self.set_status(403)
                 self.write(
@@ -68,7 +72,11 @@ class RoleHandler(BaseHandler):
                 with Profiles() as db_manager:
                     roles = db_manager.get_distinct_roles()
                 self.set_status(200)
-                self.write({"success": True, "existing_roles": roles})
+                self.write(
+                    self.json_serialize_response(
+                        {"success": True, "existing_roles": roles}
+                    )
+                )
 
             else:
                 self.set_status(403)
@@ -244,7 +252,11 @@ class GlobalACLHandler(BaseHandler):
                     acl_entry = self.resolve_inconsistency(current_user_role)
 
                 self.set_status(200)
-                self.write({"status": 200, "success": True, "acl_entry": acl_entry})
+                self.write(
+                    self.json_serialize_response(
+                        {"status": 200, "success": True, "acl_entry": acl_entry}
+                    )
+                )
             else:
                 self.set_status(409)
                 self.write(
@@ -267,7 +279,11 @@ class GlobalACLHandler(BaseHandler):
                     entries = acl.global_acl.get_all()
 
                 self.set_status(200)
-                self.write({"status": 200, "success": True, "acl_entries": entries})
+                self.write(
+                    self.json_serialize_response(
+                        {"status": 200, "success": True, "acl_entries": entries}
+                    )
+                )
             else:
                 self.set_status(403)
                 self.write(
@@ -378,7 +394,8 @@ class GlobalACLHandler(BaseHandler):
 class SpaceACLHandler(BaseHandler):
     def resolve_inconsistency(self, role: str, space: str) -> dict:
         """
-        resolve inconsistency problem when the role exists, but no acl entry for it: insert the default rule and return it
+        resolve inconsistency problem when the role exists,
+        but no acl entry for it: insert the default rule and return it
         """
 
         logger.warning(
@@ -504,12 +521,17 @@ class SpaceACLHandler(BaseHandler):
             with ACL() as acl:
                 acl_entry = acl.space_acl.get(role_to_query, space_name)
 
-            # inconsistency problem: the role exists, but no acl entry. construct an acl entry that has all permissions set to false
+            # inconsistency problem: the role exists, but no acl entry.
+            # construct an acl entry that has all permissions set to false
             if not acl_entry:
                 acl_entry = self.resolve_inconsistency(role_to_query, space_name)
 
             self.set_status(200)
-            self.write({"status": 200, "success": True, "acl_entry": acl_entry})
+            self.write(
+                self.json_serialize_response(
+                    {"status": 200, "success": True, "acl_entry": acl_entry}
+                )
+            )
 
         elif slug == "get_all":
             # check if the user is either global admin or space admin, if not return
@@ -546,7 +568,11 @@ class SpaceACLHandler(BaseHandler):
                 entries = acl.space_acl.get_all(space_name)
 
             self.set_status(200)
-            self.write({"status": 200, "success": True, "acl_entries": entries})
+            self.write(
+                self.json_serialize_response(
+                    {"status": 200, "success": True, "acl_entries": entries}
+                )
+            )
 
         else:
             self.set_status(404)

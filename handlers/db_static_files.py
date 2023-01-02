@@ -1,9 +1,8 @@
 import datetime
-from typing import Awaitable, Generator, Optional
+from typing import Generator, Optional
+from bson.errors import InvalidId
 from bson.objectid import ObjectId
 import gridfs
-import json
-import os
 import pymongo
 import tornado.web
 import tornado.ioloop
@@ -125,7 +124,10 @@ class GridFSStaticFileHandler(tornado.web.StaticFileHandler, BaseHandler):
         ):
             pass
         else:
-            absolute_path = ObjectId(absolute_path)
+            try:
+                absolute_path = ObjectId(absolute_path)
+            except InvalidId:
+                raise tornado.web.HTTPError(404)
 
         with pymongo.MongoClient(
             global_vars.mongodb_host,
@@ -138,7 +140,6 @@ class GridFSStaticFileHandler(tornado.web.StaticFileHandler, BaseHandler):
 
             try:
                 self.file = fs.get(absolute_path)
-                print(self.file.metadata)
                 return absolute_path
             except gridfs.NoFile:
                 raise tornado.web.HTTPError(404)

@@ -1,17 +1,14 @@
-import os
 from typing import Optional
 from bson import ObjectId
 
 import tornado.web
 
-import global_vars
 from handlers.base_handler import BaseHandler, auth_needed
 from logger_factory import get_logger, log_access
 from resources.acl import ACL
 from resources.profile import Profiles
 from resources.space import (
     AlreadyAdminError,
-    FilenameCollisionError,
     OnlyAdminError,
     PostFileNotDeleteableError,
     Spaces,
@@ -29,15 +26,6 @@ class SpaceHandler(BaseHandler):
     """
     handle existing and creation of new spaces
     """
-
-    def _serialize_object_ids(self, payload: dict) -> dict:
-        """
-        turn any ObjectId's into their str-representation
-        """
-
-        if "files" in payload:
-            for file in payload["files"]:
-                file["file_id"] = str(file["file_id"])
 
     @log_access
     @auth_needed
@@ -948,13 +936,8 @@ class SpaceHandler(BaseHandler):
         with Spaces() as space_manager:
             spaces = space_manager.get_all_spaces()
 
-        # make _ids json-serializable
-        for space in spaces:
-            if "_id" in space:
-                space["_id"] = str(space["_id"])
-
         self.set_status(200)
-        self.write({"success": True, "spaces": spaces})
+        self.write(self.json_serialize_response({"success": True, "spaces": spaces}))
         return
 
     def list_spaces_except_invisible(self) -> None:
@@ -971,18 +954,8 @@ class SpaceHandler(BaseHandler):
                 self.current_user.username
             )
 
-        # make _ids json-serializable
-        for space in spaces:
-            if "_id" in space:
-                space["_id"] = str(space["_id"])
-            if "files" in space:
-                for file in space["files"]:
-                    file["file_id"] = str(file["file_id"])
-            if "space_pic" in space:
-                space["space_pic"] = str(space["space_pic"])
-
         self.set_status(200)
-        self.write({"success": True, "spaces": spaces})
+        self.write(self.json_serialize_response({"success": True, "spaces": spaces}))
         return
 
     def get_space_info(self, space_name: str) -> None:
@@ -1008,15 +981,8 @@ class SpaceHandler(BaseHandler):
                 self.write({"success": False, "reason": "insufficient_permission"})
                 return
 
-        space["_id"] = str(space["_id"])
-        if "files" in space:
-            for file in space["files"]:
-                file["file_id"] = str(file["file_id"])
-        if "space_pic" in space:
-                space["space_pic"] = str(space["space_pic"])
-
         self.set_status(200)
-        self.write({"success": True, "space": space})
+        self.write(self.json_serialize_response({"success": True, "space": space}))
         return
 
     def get_invites_for_current_user(self) -> None:
@@ -1030,7 +996,11 @@ class SpaceHandler(BaseHandler):
             )
 
         self.set_status(200)
-        self.write({"success": True, "pending_invites": pending_invites})
+        self.write(
+            self.json_serialize_response(
+                {"success": True, "pending_invites": pending_invites}
+            )
+        )
 
     def get_invites_for_space(self, space_name: str) -> None:
         """
@@ -1058,7 +1028,9 @@ class SpaceHandler(BaseHandler):
             return
 
         self.set_status(200)
-        self.write({"success": True, "invites": space["invites"]})
+        self.write(
+            self.json_serialize_response({"success": True, "invites": space["invites"]})
+        )
 
     def get_join_requests_for_space(self, space_name: str) -> None:
         """
@@ -1087,7 +1059,11 @@ class SpaceHandler(BaseHandler):
             return
 
         self.set_status(200)
-        self.write({"success": True, "join_requests": space["requests"]})
+        self.write(
+            self.json_serialize_response(
+                {"success": True, "join_requests": space["requests"]}
+            )
+        )
 
     def get_files(self, space_name: str) -> None:
         """
@@ -1120,11 +1096,9 @@ class SpaceHandler(BaseHandler):
                 return
 
             files = space_manager.get_files(space_name)
-            for file in files:
-                file["file_id"] = str(file["file_id"])
 
             self.set_status(200)
-            self.write({"success": True, "files": files})
+            self.write(self.json_serialize_response({"success": True, "files": files}))
 
     def create_space(
         self, space_name: str, is_invisible: bool, is_joinable: bool
@@ -1306,7 +1280,7 @@ class SpaceHandler(BaseHandler):
                     space_name,
                     space_pic_obj["filename"],
                     space_pic_obj["body"],
-                    space_pic_obj["content_type"]
+                    space_pic_obj["content_type"],
                 )
 
             # update the space description
@@ -1617,7 +1591,6 @@ class SpaceHandler(BaseHandler):
                 self.write({"success": False, "reason": "insufficient_permission"})
                 return
 
-
             space_manager.add_new_repo_file(
                 space_name,
                 file_name,
@@ -1652,7 +1625,8 @@ class SpaceHandler(BaseHandler):
     def user_kick(self, space_name: str, user_name: str) -> None:
         """
         kick a user from the space, requires space admin or global admin privileges
-        if the to-be-kicked user is a space admin himself, global admin privileges are required to prevent space admins from kicking each other
+        if the to-be-kicked user is a space admin himself,
+        global admin privileges are required to prevent space admins from kicking each other
         """
 
         with Spaces() as space_manager:
@@ -1703,7 +1677,8 @@ class SpaceHandler(BaseHandler):
 
     def remove_admin_from_space(self, space_name: str, username: str) -> None:
         """
-        remove user as space admin, requires global admin privileges to prevent space admins from degrading each other
+        remove user as space admin, requires global admin privileges
+        to prevent space admins from degrading each other
         """
 
         with Spaces() as space_manager:

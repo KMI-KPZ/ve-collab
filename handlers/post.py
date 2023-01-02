@@ -1,6 +1,4 @@
 import json
-import os
-from typing import Dict, Optional
 
 from bson.objectid import ObjectId
 from datetime import datetime
@@ -15,7 +13,7 @@ from resources.post import (
     Posts,
     PostNotExistingException,
 )
-from resources.space import FileAlreadyInRepoError, FilenameCollisionError, Spaces, SpaceDoesntExistError
+from resources.space import FileAlreadyInRepoError, Spaces, SpaceDoesntExistError
 
 logger = get_logger(__name__)
 
@@ -35,6 +33,7 @@ class PostHandler(BaseHandler):
         POST /posts
         IF id is in body, update post
         ELSE add new post
+
         http body (as form data, json here is only for readability):
             {
                 "_id": "optional, _id, if supplied, the post is updated instead of freshly inserted",
@@ -909,8 +908,7 @@ class RepostHandler(BaseHandler):
                 return
 
             with Posts() as db_manager:
-                post_ref = ObjectId(http_body["post_id"])
-                post = db_manager.get_post(post_ref)
+                post = db_manager.get_post(http_body["post_id"])
 
                 # reject if original post doesnt exist
                 if not post:
@@ -974,9 +972,8 @@ class RepostHandler(BaseHandler):
         # _id was specified in the request: update the existing repost
         else:
             with Posts() as db_manager:
-                _id = ObjectId(http_body["_id"])
                 repost = db_manager.get_post(
-                    _id,
+                    http_body["_id"],
                     projection={"isRepost": True, "repostAuthor": True, "space": True},
                 )
 
@@ -1024,8 +1021,9 @@ class RepostHandler(BaseHandler):
                             }
                         )
                         return
+
                 try:
-                    db_manager.update_repost_text(_id, http_body["text"])
+                    db_manager.update_repost_text(http_body["_id"], http_body["text"])
                 except PostNotExistingException:
                     self.set_status(409)
                     self.write(
