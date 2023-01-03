@@ -2,13 +2,10 @@ import datetime
 import io
 import json
 import logging
-import os
-import shutil
 from typing import List
 
 from bson import ObjectId
 import gridfs
-from keycloak import KeycloakAdmin, KeycloakOpenID
 import pymongo
 import pymongo.errors
 from requests_toolbelt import MultipartEncoder

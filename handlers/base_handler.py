@@ -3,6 +3,8 @@ import json
 from typing import Awaitable, Callable, Dict, List, Optional
 from bson import ObjectId
 
+from jose import jwt
+import jose.exceptions
 from keycloak.exceptions import KeycloakError
 from tornado.options import options
 import tornado.web
@@ -59,12 +61,54 @@ class BaseHandler(tornado.web.RequestHandler):
         # grab token from the cookie
         token = self.get_secure_cookie("access_token")
 
-        # if there is no token at all, obviously there will be no valid user session
+        # if there is no token in the cookie, try the Authorization Header for a JWT
         if not token:
+            if "Authorization" in self.request.headers:
+                # remove the Bearer prefix to only keep the token
+                bearer_token = self.request.headers["Authorization"].replace(
+                    "Bearer ", ""
+                )
+
+                # in order to verify the JWT we need the public key from keycloak
+                KEYCLOAK_PUBLIC_KEY = (
+                    "-----BEGIN PUBLIC KEY-----\n"
+                    + global_vars.keycloak.public_key()
+                    + "\n-----END PUBLIC KEY-----"
+                )
+
+                # decode the JWT, if any error is thrown, the token
+                # is definetly invalid and therefore no session is set
+                # otherwise, set the current user as per the content of the
+                # token
+                try:
+                    token_info = jwt.decode(
+                        bearer_token, KEYCLOAK_PUBLIC_KEY, audience="account"
+                    )
+                except jose.exceptions.JWTError as e:
+                    print(e)
+                    self.current_user = None
+                    self._access_token = None
+                    return
+
+                self.current_user = User(
+                    token_info["preferred_username"],
+                    token_info["sub"],
+                    token_info["email"],
+                )
+                self._access_token = bearer_token
+                return
+            
+            # Authorization Header was not in the request
+            # so we cannot authentication any user
             self.current_user = None
             self._access_token = None
             return
 
+        # we got the token from the cookie, since this also has a refresh_token
+        # and other info, we have to decode it as json
+        # TODO once frontend is built with React, we can get rid of this whole
+        # following section, because the backend will become Bearer-only (i.e.
+        # never authenticate users itself).
         token = json.loads(token)
 
         # check if the token is still valid
@@ -111,7 +155,7 @@ class BaseHandler(tornado.web.RequestHandler):
         require a transformation from its object representation into a str.
         Fields that are transformed are those whose type is an instances of `ObjectId`
         and `datetime.datetime`.
-        Parse those values using the `str()` function (for ObjectId's), 
+        Parse those values using the `str()` function (for ObjectId's),
         or the `.isoformat()` function (for datetimes).
         """
 
