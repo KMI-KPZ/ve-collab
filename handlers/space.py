@@ -1,10 +1,10 @@
+import logging
 from typing import Optional
-from bson import ObjectId
 
+from bson import ObjectId
 import tornado.web
 
 from handlers.base_handler import BaseHandler, auth_needed
-from logger_factory import get_logger, log_access
 from resources.acl import ACL
 from resources.profile import Profiles
 from resources.space import (
@@ -19,7 +19,7 @@ from resources.space import (
 )
 from resources.wordpress import Wordpress
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class SpaceHandler(BaseHandler):
@@ -27,7 +27,6 @@ class SpaceHandler(BaseHandler):
     handle existing and creation of new spaces
     """
 
-    @log_access
     @auth_needed
     def get(self, slug):
         """
@@ -248,7 +247,6 @@ class SpaceHandler(BaseHandler):
         else:
             self.set_status(404)
 
-    @log_access
     @auth_needed
     def post(self, slug):
         """
@@ -717,7 +715,6 @@ class SpaceHandler(BaseHandler):
         else:
             self.set_status(404)
 
-    @log_access
     @auth_needed
     def delete(self, slug):
         """

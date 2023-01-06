@@ -1,8 +1,9 @@
 import functools
 import json
+import logging
 from typing import Awaitable, Callable, Dict, List, Optional
-from bson import ObjectId
 
+from bson import ObjectId
 from jose import jwt
 import jose.exceptions
 from keycloak.exceptions import KeycloakError
@@ -10,11 +11,10 @@ from tornado.options import options
 import tornado.web
 
 import global_vars
-from logger_factory import get_logger
 from model import User
 from resources.profile import ProfileDoesntExistException, Profiles
 
-logger = get_logger(__name__)
+logger = logging.getLogger()
 
 
 def auth_needed(
@@ -85,7 +85,7 @@ class BaseHandler(tornado.web.RequestHandler):
                         bearer_token, KEYCLOAK_PUBLIC_KEY, audience="account"
                     )
                 except jose.exceptions.JWTError as e:
-                    print(e)
+                    logger.info("Caught Exception: {} ".format(e))
                     self.current_user = None
                     self._access_token = None
                     return
@@ -222,7 +222,7 @@ class BaseHandler(tornado.web.RequestHandler):
             user_id = global_vars.keycloak_admin.get_user_id(username)
             return global_vars.keycloak_admin.get_user(user_id)
         except KeycloakError as e:
-            logger.info(
+            logger.warn(
                 "Keycloak Error occured while trying to request user data: {}".format(e)
             )
             raise
@@ -285,7 +285,7 @@ class BaseHandler(tornado.web.RequestHandler):
                 global_vars.keycloak_admin.refresh_token()
                 return global_vars.keycloak_admin.get_users()
             except KeycloakError as e:
-                logger.info(
+                logger.warn(
                     "Keycloak Error occured while trying to request user data: {}".format(
                         e
                     )

@@ -1,19 +1,19 @@
 import json
+import logging
 
 import tornado.web
 
 from handlers.base_handler import BaseHandler, auth_needed
-from logger_factory import get_logger, log_access
 from resources.acl import ACL
 from resources.profile import Profiles, ProfileDoesntExistException
 from resources.space import Spaces, SpaceDoesntExistError
 
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class RoleHandler(BaseHandler):
-    @log_access
+
     @auth_needed
     async def get(self, slug):
         """
@@ -87,7 +87,6 @@ class RoleHandler(BaseHandler):
         else:
             self.set_status(404)
 
-    @log_access
     @auth_needed
     async def post(self, slug):
         """
@@ -199,7 +198,6 @@ class GlobalACLHandler(BaseHandler):
             else:
                 return acl.global_acl.insert_default(role)
 
-    @log_access
     @auth_needed
     async def get(self, slug):
         """
@@ -293,7 +291,6 @@ class GlobalACLHandler(BaseHandler):
         else:
             self.set_status(404)
 
-    @log_access
     @auth_needed
     async def post(self, slug):
         """
@@ -412,7 +409,6 @@ class SpaceACLHandler(BaseHandler):
             else:
                 return acl.space_acl.insert_default(role, space)
 
-    @log_access
     @auth_needed
     async def get(self, slug):
         """
@@ -577,7 +573,6 @@ class SpaceACLHandler(BaseHandler):
         else:
             self.set_status(404)
 
-    @log_access
     @auth_needed
     async def post(self, slug):
         """

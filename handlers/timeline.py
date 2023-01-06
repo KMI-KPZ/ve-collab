@@ -1,14 +1,16 @@
+from datetime import datetime, timedelta
+import logging
 from typing import Dict, List, Tuple
 
-from datetime import datetime, timedelta
 import dateutil.parser
 
 from handlers.base_handler import BaseHandler, auth_needed
-from logger_factory import log_access
 from resources.acl import ACL
-from resources.profile import Profiles
 from resources.post import Posts
+from resources.profile import Profiles
 from resources.space import SpaceDoesntExistError, Spaces
+
+logger = logging.getLogger(__name__)
 
 
 class BaseTimelineHandler(BaseHandler):
@@ -107,7 +109,6 @@ class TimelineHandler(BaseTimelineHandler):
     no use case in production, maybe use case for moderators?
     """
 
-    @log_access
     @auth_needed
     async def get(self):
         """
@@ -147,7 +148,6 @@ class SpaceTimelineHandler(BaseTimelineHandler):
     Timeline of a certain space
     """
 
-    @log_access
     @auth_needed
     def get(self, space_name):
         """
@@ -216,7 +216,6 @@ class UserTimelineHandler(BaseTimelineHandler):
     Timeline of a user (e.g. for his profile)
     """
 
-    @log_access
     @auth_needed
     def get(self, author):
         """
@@ -251,7 +250,6 @@ class PersonalTimelineHandler(BaseTimelineHandler):
     i.e. your posts, posts of users you follow, posts in spaces you are in
     """
 
-    @log_access
     @auth_needed
     def get(self):
         """
@@ -286,7 +284,6 @@ class NewPostsSinceTimestampHandler(BaseHandler):
     check for new posts
     """
 
-    @log_access
     @auth_needed
     def get(self):
         """

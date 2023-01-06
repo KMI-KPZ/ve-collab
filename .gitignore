@@ -1,12 +1,7 @@
-signing_key.key
-verify_key.key
-
+logs/
+log_info.md
 .idea
 
-schema.txt
-uploads
-uploads/
-uploads/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

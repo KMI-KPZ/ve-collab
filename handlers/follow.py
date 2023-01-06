@@ -1,12 +1,11 @@
 import tornado.web
 
 from handlers.base_handler import BaseHandler, auth_needed
-from logger_factory import log_access
 from resources.profile import AlreadyFollowedException, NotFollowedException, Profiles
 
 
 class FollowHandler(BaseHandler):
-    @log_access
+
     @auth_needed
     def get(self):
         """
@@ -43,7 +42,6 @@ class FollowHandler(BaseHandler):
             )
         )
 
-    @log_access
     @auth_needed
     def post(self):
         """
@@ -86,7 +84,6 @@ class FollowHandler(BaseHandler):
         self.set_status(200)
         self.write({"status": 200, "success": True})
 
-    @log_access
     @auth_needed
     def delete(self):
         """

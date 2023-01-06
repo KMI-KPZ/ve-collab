@@ -1,11 +1,11 @@
+from datetime import datetime
 import json
+import logging
 
 from bson.objectid import ObjectId
-from datetime import datetime
 import tornado.web
 
 from handlers.base_handler import BaseHandler, auth_needed
-from logger_factory import get_logger, log_access
 from resources.acl import ACL
 from resources.post import (
     AlreadyLikerException,
@@ -15,7 +15,7 @@ from resources.post import (
 )
 from resources.space import FileAlreadyInRepoError, Spaces, SpaceDoesntExistError
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class PostHandler(BaseHandler):
@@ -26,7 +26,6 @@ class PostHandler(BaseHandler):
     def get(self):
         pass
 
-    @log_access
     @auth_needed
     def post(self):
         """
@@ -231,7 +230,6 @@ class PostHandler(BaseHandler):
             self.set_status(200)
             self.write({"status": 200, "success": True})
 
-    @log_access
     @auth_needed
     async def delete(self):
         """
@@ -372,7 +370,6 @@ class CommentHandler(BaseHandler):
     def get(self):
         pass
 
-    @log_access
     @auth_needed
     def post(self):
         """
@@ -478,7 +475,6 @@ class CommentHandler(BaseHandler):
         self.set_status(200)
         self.write({"status": 200, "success": True})
 
-    @log_access
     @auth_needed
     async def delete(self):
         """
@@ -630,7 +626,7 @@ class CommentHandler(BaseHandler):
 
 
 class LikePostHandler(BaseHandler):
-    @log_access
+
     @auth_needed
     def post(self):
         """
@@ -704,7 +700,6 @@ class LikePostHandler(BaseHandler):
         self.set_status(200)
         self.write({"status": 200, "success": True})
 
-    @log_access
     @auth_needed
     def delete(self):
         """
@@ -782,7 +777,7 @@ class LikePostHandler(BaseHandler):
 
 
 class RepostHandler(BaseHandler):
-    @log_access
+
     @auth_needed
     def post(self):
         """
@@ -1060,7 +1055,6 @@ class PinHandler(BaseHandler):
             except SpaceDoesntExistError:
                 raise  # just re-raise the exception to the caller (handler)
 
-    @log_access
     @auth_needed
     async def post(self):
         """
@@ -1315,7 +1309,6 @@ class PinHandler(BaseHandler):
             )
             return
 
-    @log_access
     @auth_needed
     async def delete(self):
         """

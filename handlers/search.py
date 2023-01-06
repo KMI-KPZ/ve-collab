@@ -1,15 +1,15 @@
 from typing import Dict, List
+
 import tornado.web
 
 from handlers.base_handler import BaseHandler, auth_needed
-from logger_factory import log_access
 from resources.post import Posts
 from resources.profile import Profiles
 from resources.space import Spaces
 
 
 class SearchHandler(BaseHandler):
-    @log_access
+
     @auth_needed
     def get(self):
         """

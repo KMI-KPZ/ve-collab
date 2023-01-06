@@ -1,15 +1,14 @@
 from __future__ import annotations
-
-from tornado.ioloop import PeriodicCallback
-from tornado.options import options
+import logging
 from typing import Optional, Dict, List
 
 from pymongo import MongoClient
+from tornado.ioloop import PeriodicCallback
+from tornado.options import options
 
 import global_vars
-from logger_factory import get_logger
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class ACL:

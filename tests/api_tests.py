@@ -21,6 +21,7 @@ from model import User
 for logger_name in logging.root.manager.loggerDict:
     logger = logging.getLogger(logger_name)
     logger.setLevel(logging.ERROR)
+logging.getLogger().setLevel(logging.ERROR)
 
 
 MISSING_KEY_ERROR_SLUG = "missing_key:"

@@ -1,13 +1,12 @@
 import tornado.web
 
 from handlers.base_handler import BaseHandler, auth_needed
-from logger_factory import log_access
 from resources.profile import Profiles
 from resources.space import Spaces
 
 
 class ProfileInformationHandler(BaseHandler):
-    @log_access
+
     @auth_needed
     async def get(self):
         """
@@ -84,7 +83,6 @@ class ProfileInformationHandler(BaseHandler):
         self.set_status(200)
         self.write(self.json_serialize_response(user_information_response))
 
-    @log_access
     @auth_needed
     def post(self):
         """
@@ -170,7 +168,6 @@ class UserHandler(BaseHandler):
     User management
     """
 
-    @log_access
     @auth_needed
     async def get(self, slug):
         """

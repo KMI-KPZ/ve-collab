@@ -1,5 +1,7 @@
 import asyncio
 import json
+import logging
+import logging.handlers
 import os
 import sys
 
@@ -14,6 +16,7 @@ import pymongo.errors
 import tornado.httpserver
 import tornado.ioloop
 import tornado.locks
+import tornado.log
 from tornado.options import define, options, parse_command_line
 import tornado.web
 
@@ -33,13 +36,12 @@ from handlers.space import SpaceHandler
 from handlers.timeline import *
 from handlers.user import *
 from handlers.wordpress import WordpressCollectionHandler, WordpressPostHandler
-from logger_factory import get_logger
 from resources.acl import ACL
 from resources.profile import ProfileDoesntExistException, Profiles
 from resources.space import Spaces
 
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 define(
     "config",
@@ -265,6 +267,7 @@ def create_initial_admin(username: str) -> None:
             "inserted admin user '{}' and corresponding ACL rules".format(username)
         )
 
+
 def set_global_vars(conf: dict) -> None:
     """
     setup global_vars from config properties
@@ -367,6 +370,36 @@ def init_default_pictures():
                 logger.info("logo created")
 
 
+def create_log_directory():
+    """
+    setup a directory "logs" in the current working directory
+    """
+
+    if not os.path.isdir("logs"):
+        os.mkdir("logs")
+
+
+def hook_tornado_access_log():
+    """
+    Create a FileHandler onto Tornado's access logger
+    to capture them additionally in a separate file
+    for external statistics, benchmarking, etc.
+    """
+
+    # create a log directory to hold all access logs
+    create_log_directory()
+
+    tornado_access_logger = logging.getLogger("tornado.access")
+    handler = logging.handlers.RotatingFileHandler(
+        filename=os.path.join("logs", "access_log.log"),
+        maxBytes=10 * 1000 * 1000,  # 10MB per file
+        backupCount=100,  # max 100 files --> max. 1 GB of access logs
+        encoding="utf-8",
+    )
+    handler.setFormatter(tornado.log.LogFormatter(color=False))
+    tornado_access_logger.addHandler(handler)
+
+
 async def main():
     parse_command_line()
 
@@ -383,6 +416,9 @@ async def main():
 
     # setup default group and profile pictures
     init_default_pictures()
+
+    # write tornado access log to separate logfile
+    hook_tornado_access_log()
 
     # build and start server
     cookie_secret = conf["cookie_secret"]

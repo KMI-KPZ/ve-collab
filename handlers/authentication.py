@@ -5,7 +5,6 @@ import tornado.web
 
 import global_vars
 from handlers.base_handler import BaseHandler
-from logger_factory import log_access
 from resources.profile import Profiles
 
 
@@ -14,7 +13,6 @@ class LoginHandler(tornado.web.RequestHandler, metaclass=ABCMeta):
     Authenticate a user towards the Platform
     """
 
-    @log_access
     def get(self):
         """
         redirect to keycloak
@@ -29,7 +27,7 @@ class LoginHandler(tornado.web.RequestHandler, metaclass=ABCMeta):
 
 
 class LoginCallbackHandler(BaseHandler, metaclass=ABCMeta):
-    @log_access
+
     async def get(self):
         # keycloak redirects you back here with this code
         code = self.get_argument("code", None)
@@ -68,7 +66,6 @@ class LogoutHandler(BaseHandler, metaclass=ABCMeta):
     Logout Endpoint
     """
 
-    @log_access
     def post(self):
         """
         POST request of /logout
