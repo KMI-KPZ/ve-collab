@@ -1,7 +1,7 @@
 import tornado.web
 
 from handlers.base_handler import BaseHandler, auth_needed
-from resources.profile import AlreadyFollowedException, NotFollowedException, Profiles
+from resources.network.profile import AlreadyFollowedException, NotFollowedException, Profiles
 
 
 class FollowHandler(BaseHandler):

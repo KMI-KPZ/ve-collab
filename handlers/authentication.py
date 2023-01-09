@@ -5,7 +5,7 @@ import tornado.web
 
 import global_vars
 from handlers.base_handler import BaseHandler
-from resources.profile import Profiles
+from resources.network.profile import Profiles
 
 
 class LoginHandler(tornado.web.RequestHandler, metaclass=ABCMeta):

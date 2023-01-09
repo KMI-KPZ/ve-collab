@@ -5,9 +5,9 @@ from bson import ObjectId
 import tornado.web
 
 from handlers.base_handler import BaseHandler, auth_needed
-from resources.acl import ACL
-from resources.profile import Profiles
-from resources.space import (
+from resources.network.acl import ACL
+from resources.network.profile import Profiles
+from resources.network.space import (
     AlreadyAdminError,
     OnlyAdminError,
     PostFileNotDeleteableError,
@@ -17,7 +17,7 @@ from resources.space import (
     UserNotAdminError,
     UserNotMemberError,
 )
-from resources.wordpress import Wordpress
+from resources.network.wordpress import Wordpress
 
 logger = logging.getLogger(__name__)
 

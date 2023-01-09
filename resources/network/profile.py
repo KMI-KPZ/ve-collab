@@ -142,7 +142,7 @@ class Profiles:
             profile = self.insert_default_profile(username, first_name, last_name)
 
             # check if the guest role exists, since we might do this for the very first time
-            from resources.acl import ACL
+            from resources.network.acl import ACL
 
             with ACL() as acl_manager:
                 acl_manager.ensure_acl_entries("guest")
@@ -289,7 +289,7 @@ class Profiles:
             # be skipped
             checked_guest_role_present = False
             if not checked_guest_role_present:
-                from resources.acl import ACL
+                from resources.network.acl import ACL
 
                 with ACL() as acl_manager:
                     acl_manager.ensure_acl_entries("guest")

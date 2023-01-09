@@ -6,7 +6,7 @@ import gridfs
 from pymongo import MongoClient
 
 import global_vars
-from resources.space import FileDoesntExistError, SpaceDoesntExistError, Spaces
+from resources.network.space import FileDoesntExistError, SpaceDoesntExistError, Spaces
 
 
 class Posts:

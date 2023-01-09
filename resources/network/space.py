@@ -212,8 +212,8 @@ class Spaces:
 
         self.db.spaces.delete_one({"name": space_name})
 
-        from resources.post import Posts
-        from resources.acl import ACL
+        from resources.network.post import Posts
+        from resources.network.acl import ACL
 
         with (Posts() as post_manager, ACL() as acl):
             post_manager.delete_post_by_space(space_name)

@@ -23,22 +23,22 @@ import tornado.web
 import global_vars
 from handlers.authentication import LoginHandler, LoginCallbackHandler, LogoutHandler
 from handlers.db_static_files import GridFSStaticFileHandler
-from handlers.follow import FollowHandler
-from handlers.permissions import (
+from handlers.network.follow import FollowHandler
+from handlers.network.permissions import (
     GlobalACLHandler,
     RoleHandler,
     SpaceACLHandler,
 )
-from handlers.post import *
-from handlers.render import *
-from handlers.search import SearchHandler
-from handlers.space import SpaceHandler
-from handlers.timeline import *
-from handlers.user import *
-from handlers.wordpress import WordpressCollectionHandler, WordpressPostHandler
-from resources.acl import ACL
-from resources.profile import ProfileDoesntExistException, Profiles
-from resources.space import Spaces
+from handlers.network.post import *
+from handlers.network.render import *
+from handlers.network.search import SearchHandler
+from handlers.network.space import SpaceHandler
+from handlers.network.timeline import *
+from handlers.network.user import *
+from handlers.network.wordpress import WordpressCollectionHandler, WordpressPostHandler
+from resources.network.acl import ACL
+from resources.network.profile import ProfileDoesntExistException, Profiles
+from resources.network.space import Spaces
 
 
 logger = logging.getLogger(__name__)

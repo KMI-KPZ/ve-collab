@@ -48,7 +48,7 @@ class ACL:
         i.e. the role is present in both global acl and the space acl of all spaces.
         if any one does not exist, create it
         """
-        from resources.space import Spaces
+        from resources.network.space import Spaces
 
         if not self.global_acl.get(role):
             self.global_acl.insert_default(role)

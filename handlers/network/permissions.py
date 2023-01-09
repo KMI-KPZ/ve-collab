@@ -4,9 +4,9 @@ import logging
 import tornado.web
 
 from handlers.base_handler import BaseHandler, auth_needed
-from resources.acl import ACL
-from resources.profile import Profiles, ProfileDoesntExistException
-from resources.space import Spaces, SpaceDoesntExistError
+from resources.network.acl import ACL
+from resources.network.profile import Profiles, ProfileDoesntExistException
+from resources.network.space import Spaces, SpaceDoesntExistError
 
 
 logger = logging.getLogger(__name__)

@@ -5,10 +5,10 @@ from typing import Dict, List, Tuple
 import dateutil.parser
 
 from handlers.base_handler import BaseHandler, auth_needed
-from resources.acl import ACL
-from resources.post import Posts
-from resources.profile import Profiles
-from resources.space import SpaceDoesntExistError, Spaces
+from resources.network.acl import ACL
+from resources.network.post import Posts
+from resources.network.profile import Profiles
+from resources.network.space import SpaceDoesntExistError, Spaces
 
 logger = logging.getLogger(__name__)
 

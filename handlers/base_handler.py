@@ -12,7 +12,7 @@ import tornado.web
 
 import global_vars
 from model import User
-from resources.profile import ProfileDoesntExistException, Profiles
+from resources.network.profile import ProfileDoesntExistException, Profiles
 
 logger = logging.getLogger()
 

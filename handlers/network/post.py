@@ -6,14 +6,14 @@ from bson.objectid import ObjectId
 import tornado.web
 
 from handlers.base_handler import BaseHandler, auth_needed
-from resources.acl import ACL
-from resources.post import (
+from resources.network.acl import ACL
+from resources.network.post import (
     AlreadyLikerException,
     NotLikerException,
     Posts,
     PostNotExistingException,
 )
-from resources.space import FileAlreadyInRepoError, Spaces, SpaceDoesntExistError
+from resources.network.space import FileAlreadyInRepoError, Spaces, SpaceDoesntExistError
 
 logger = logging.getLogger(__name__)
 

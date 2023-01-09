@@ -1,8 +1,8 @@
 import tornado.web
 
 from handlers.base_handler import BaseHandler, auth_needed
-from resources.profile import Profiles
-from resources.space import Spaces
+from resources.network.profile import Profiles
+from resources.network.space import Spaces
 
 
 class ProfileInformationHandler(BaseHandler):

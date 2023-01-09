@@ -1,5 +1,5 @@
 from handlers.base_handler import auth_needed, BaseHandler
-from resources.wordpress import Wordpress
+from resources.network.wordpress import Wordpress
 
 
 class WordpressCollectionHandler(BaseHandler):
