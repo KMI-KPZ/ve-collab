@@ -3,6 +3,19 @@ from typing import Dict, List, Optional
 from bson import ObjectId
 import gridfs
 from pymongo import MongoClient
+from exceptions import (
+    AlreadyAdminError,
+    AlreadyMemberError,
+    AlreadyRequestedJoinError,
+    FileAlreadyInRepoError,
+    FileDoesntExistError,
+    OnlyAdminError,
+    PostFileNotDeleteableError,
+    SpaceAlreadyExistsError,
+    SpaceDoesntExistError,
+    UserNotAdminError,
+    UserNotMemberError,
+)
 
 import global_vars
 
@@ -707,50 +720,3 @@ class Spaces:
         # if no document was modified, the file wasn't in the space files metadata
         if update_result.modified_count != 1:
             raise FileDoesntExistError()
-
-class SpaceDoesntExistError(Exception):
-    pass
-
-
-class SpaceAlreadyExistsError(Exception):
-    pass
-
-
-class AlreadyMemberError(Exception):
-    pass
-
-
-class AlreadyAdminError(Exception):
-    pass
-
-
-class AlreadyRequestedJoinError(Exception):
-    pass
-
-
-class UserNotMemberError(Exception):
-    pass
-
-
-class UserNotAdminError(Exception):
-    pass
-
-
-class OnlyAdminError(Exception):
-    pass
-
-
-class FileAlreadyInRepoError(Exception):
-    pass
-
-
-class FilenameCollisionError(Exception):
-    pass
-
-
-class FileDoesntExistError(Exception):
-    pass
-
-
-class PostFileNotDeleteableError(Exception):
-    pass

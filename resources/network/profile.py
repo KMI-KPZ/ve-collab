@@ -3,6 +3,11 @@ from typing import Dict, List, Optional
 import gridfs
 from pymongo import MongoClient
 
+from exceptions import (
+    AlreadyFollowedException,
+    NotFollowedException,
+    ProfileDoesntExistException,
+)
 import global_vars
 
 
@@ -92,13 +97,13 @@ class Profiles:
 
     def insert_default_admin_profile(self, username: str) -> Dict:
         """
-        insert a default admin profile into the db, 
-        initializing the role as 'admin' and the default profile picture and 
+        insert a default admin profile into the db,
+        initializing the role as 'admin' and the default profile picture and
         setting all other values to false.
         :param username: the username of the new user
         :return: the freshly created profile
         """
-        
+
         profile = {
             "username": username,
             "role": "admin",
@@ -117,6 +122,7 @@ class Profiles:
         }
         self.db.profiles.insert_one(profile)
         return profile
+
     def ensure_profile_exists(
         self,
         username: str,
@@ -384,15 +390,3 @@ class Profiles:
             },
             upsert=True,
         )
-
-
-class AlreadyFollowedException(Exception):
-    pass
-
-
-class NotFollowedException(Exception):
-    pass
-
-
-class ProfileDoesntExistException(Exception):
-    pass

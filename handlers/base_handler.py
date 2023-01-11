@@ -187,6 +187,9 @@ class BaseHandler(tornado.web.RequestHandler):
 
         return dictionary
 
+    def serialize_and_write(self, response: dict) -> None:
+        self.write(self.json_serialize_response(response))
+
     def get_current_user_role(self):
         if not self.current_user:
             return None  # TODO could also raise exception?

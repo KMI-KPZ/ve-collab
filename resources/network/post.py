@@ -5,6 +5,11 @@ from bson.objectid import ObjectId
 import gridfs
 from pymongo import MongoClient
 
+from exceptions import (
+    AlreadyLikerException,
+    NotLikerException,
+    PostNotExistingException,
+)
 import global_vars
 from resources.network.space import FileDoesntExistError, SpaceDoesntExistError, Spaces
 
@@ -722,19 +727,3 @@ class Posts:
             return False
         else:
             return True
-
-
-class PostNotExistingException(Exception):
-    pass
-
-
-class AlreadyLikerException(Exception):
-    pass
-
-
-class NotLikerException(Exception):
-    pass
-
-
-class FilenameCollisionError(Exception):
-    pass

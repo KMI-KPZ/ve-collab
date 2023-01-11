@@ -39,6 +39,7 @@ from handlers.network.wordpress import WordpressCollectionHandler, WordpressPost
 from resources.network.acl import ACL
 from resources.network.profile import ProfileDoesntExistException, Profiles
 from resources.network.space import Spaces
+from handlers.planner.ve_plan import VEPlanHandler
 
 
 logger = logging.getLogger(__name__)
@@ -111,6 +112,7 @@ def make_app(cookie_secret):
             (r"/template", TemplateHandler),
             (r"/wordpress/posts", WordpressCollectionHandler),
             (r"/wordpress/posts/([0-9]+)", WordpressPostHandler),
+            (r"/planner/(.+)", VEPlanHandler),
             (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
             (r"/assets/(.*)", tornado.web.StaticFileHandler, {"path": "./assets/"}),
             (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./html/"}),
