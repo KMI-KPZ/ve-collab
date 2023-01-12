@@ -1,4 +1,5 @@
 from bson import ObjectId
+from bson.errors import InvalidId
 from pymongo.database import Database
 from typing import List, Optional, Tuple
 
@@ -53,7 +54,13 @@ class VEPlanResource:
         Raises `PlanDoesntExistError` if no plan with the supplied `_id` is found.
         """
 
-        _id = util.parse_object_id(_id)
+        # if supplied _id is no valid ObjectId, we can also raise the PlanDoesntExistError,
+        # since there logically can't be any matching plan
+        try:
+            _id = util.parse_object_id(_id)
+        except InvalidId:
+            raise PlanDoesntExistError()
+
         result = self.db.plans.find_one({"_id": _id})
 
         if not result:

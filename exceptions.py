@@ -77,7 +77,7 @@ class PostFileNotDeleteableError(Exception):
 class StepKeyError(Exception):
     """Step initialization is missing a required key"""
 
-    def __init__(self, message, missing_value) -> None:
+    def __init__(self, message, missing_value = None) -> None:
         super().__init__(message)
         self.missing_value = missing_value
 

@@ -23,15 +23,17 @@ class Step:
     model class for one step of a VE-Plan
     """
 
-    EXPECTED_DICT_KEYS = [
-        "name",
-        "duration",
-        "workload",
-        "description",
-        "learning_goal",
-        "tasks",
-        "attachments",
-    ]
+    # when initializing a step from a dict using 'Step.from_dict()',
+    # this lookup allows to check for the correct types
+    EXPECTED_DICT_ENTRIES = {
+        "name": str,
+        "duration": int,
+        "workload": int,
+        "description": (str, type(None)),
+        "learning_goal": (str, type(None)),
+        "tasks": list,
+        "attachments": list,
+    }
 
     def __init__(
         self,
@@ -40,8 +42,8 @@ class Step:
         workload: int = 0,
         description: str = None,
         learning_goal: str = None,
-        tasks: List[str] = None,
-        attachments: List[ObjectId] = None,
+        tasks: List[str] = [],
+        attachments: List[ObjectId] = [],
     ) -> None:
         """
         Initialization of a `Step` instance.
@@ -96,7 +98,8 @@ class Step:
 
         Returns an instance of `Step`.
 
-        Raises `TypeError` if params is not a dictionary.
+        Raises `TypeError` if params is not a dictionary, or any of the values in the
+        dict have the wrong type.
 
         Raises `StepKeyError` if any of the required keys is missing in the `params`-dict.
 
@@ -115,15 +118,22 @@ class Step:
             )
 
         # ensure all necessary keys are in the dict
-        for expected_key in cls.EXPECTED_DICT_KEYS:
+        for expected_key in cls.EXPECTED_DICT_ENTRIES.keys():
             if expected_key not in params:
                 raise StepKeyError(
                     "Missing key {} in Step dictionary".format(expected_key)
                 )
 
-        # ensure the name has a value
-        if not params["name"]:
-            raise ValueError("Step name cannot be None")
+        # ensure types of attributes are correct
+        for key in params:
+            if not isinstance(params[key], cls.EXPECTED_DICT_ENTRIES[key]):
+                raise TypeError(
+                    "expected type '{}' for key '{}', got '{}'".format(
+                        cls.EXPECTED_DICT_ENTRIES[key],
+                        key,
+                        type(key),
+                    )
+                )
 
         # create and return object
         instance = cls(params["name"])
@@ -136,7 +146,12 @@ class VEPlan:
     Model class to represent a VE-Plan
     """
 
-    EXPECTED_DICT_KEYS = ["name", "topic_description", "learning_goal", "steps"]
+    EXPECTED_DICT_ENTRIES = {
+        "name": str,
+        "topic_description": (str, type(None)),
+        "learning_goal": (str, type(None)),
+        "steps": list,
+    }
 
     def __init__(
         self,
@@ -237,7 +252,8 @@ class VEPlan:
 
         Returns an instance of `VEPlan`.
 
-        Raises `TypeError` if params is not a dictionary.
+        Raises `TypeError` if params is not a dictionary or if any of the values in the
+        dictionary have to wrong type.
 
         Raises `PlanKeyError` if an expected key is missing in the dictionary.
 
@@ -258,12 +274,24 @@ class VEPlan:
             )
 
         # ensure all necessary keys are in the dict
-        for expected_key in cls.EXPECTED_DICT_KEYS:
+        for expected_key in cls.EXPECTED_DICT_ENTRIES.keys():
             if expected_key not in params:
                 raise PlanKeyError(
                     "Missing key {} in VEPlan dictionary".format(expected_key),
                     expected_key,
                 )
+
+        # ensure types of attributes are correct (only those that are passed from the dict)
+        for key in params:
+            if key in cls.EXPECTED_DICT_ENTRIES:
+                if not isinstance(params[key], cls.EXPECTED_DICT_ENTRIES[key]):
+                    raise TypeError(
+                        "expected type '{}' for key '{}', got '{}'".format(
+                            cls.EXPECTED_DICT_ENTRIES[key],
+                            key,
+                            type(key),
+                        )
+                    )
 
         # handle existence and correct type of object id's
         if "_id" in params:
