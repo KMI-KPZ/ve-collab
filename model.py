@@ -1,6 +1,5 @@
 from __future__ import annotations
-from pprint import pprint
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from bson import ObjectId
 
