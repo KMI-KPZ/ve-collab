@@ -4,7 +4,7 @@ from bson import ObjectId
 from bson.errors import InvalidId
 from exceptions import NonUniqueStepsError, PlanKeyError, StepKeyError
 
-from model import Step, VEPlan
+from model import Step, User, VEPlan
 
 
 def setUpModule():
@@ -13,6 +13,50 @@ def setUpModule():
 
 def tearDownModule():
     pass
+
+
+class UserModelTest(TestCase):
+    def setUp(self) -> None:
+        return super().setUp()
+
+    def tearDown(self) -> None:
+        return super().tearDown()
+
+    def test_init(self):
+        """
+        expect: successful creation of User object
+        """
+
+        name = "test"
+        user_id = "abc123"
+        mail = "test@mail.com"
+
+        user = User(name, user_id, mail)
+        self.assertEqual(user.username, name)
+        self.assertEqual(user.user_id, user_id)
+        self.assertEqual(user.email, mail)
+
+    def test_init_error_wrong_types(self):
+        """
+        expect: creation of User object raises TypeError because attributes
+        have the wrong type
+        """
+
+        name = "test"
+        user_id = "abc123"
+        mail = "test@mail.com"
+
+        name = 123
+        self.assertRaises(TypeError, User, name, user_id, mail)
+        name = "test"
+
+        user_id = 123
+        self.assertRaises(TypeError, User, name, user_id, mail)
+        user_id = "abc123"
+
+        mail = 123
+        self.assertRaises(TypeError, User, name, user_id, mail)
+        mail = "test@mail.com"
 
 
 class StepModelTest(TestCase):
@@ -114,7 +158,7 @@ class StepModelTest(TestCase):
 
     def test_from_dict_error_params_no_dict(self):
         """
-        expect: creation of Step object from dict raises TypeError because source is 
+        expect: creation of Step object from dict raises TypeError because source is
         not a dict
         """
 
@@ -314,7 +358,7 @@ class VEPlanModelTest(TestCase):
 
     def test_from_dict(self):
         """
-        expect: successful creation of a VEPlan object from a dict, both by 
+        expect: successful creation of a VEPlan object from a dict, both by
         supplying an _id and letting it create one itself
         """
 

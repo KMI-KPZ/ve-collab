@@ -9,7 +9,27 @@ import util
 
 
 class User:
-    def __init__(self, username, user_id, email):
+    def __init__(self, username: str, user_id: str, email: str):
+        # ensure types
+        if not isinstance(username, str):
+            raise TypeError(
+                "expected type '{}' for attribute 'username', got '{}'".format(
+                    str, type(username)
+                )
+            )
+        if not isinstance(user_id, str):
+            raise TypeError(
+                "expected type '{}' for attribute 'user_id', got '{}'".format(
+                    str, type(user_id)
+                )
+            )
+        if not isinstance(email, str):
+            raise TypeError(
+                "expected type '{}' for attribute 'email', got '{}'".format(
+                    str, type(email)
+                )
+            )
+
         self.username = username
         self.user_id = user_id
         self.email = email
