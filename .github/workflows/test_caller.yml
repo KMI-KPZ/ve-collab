@@ -38,7 +38,7 @@ jobs:
         mongodb-password: ${{ secrets.MONGODB_PASSWORD }}
     - name: Run tests
       run: |
-        python -m tornado.testing tests/api_tests.py
+        python run_tests.py
     - name: Clean up config
       # even though runners get destroyed after execution: better safe than sorry, delete config file
       if: always()

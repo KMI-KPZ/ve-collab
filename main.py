@@ -44,25 +44,6 @@ from handlers.planner.ve_plan import VEPlanHandler
 
 logger = logging.getLogger(__name__)
 
-define(
-    "config",
-    default="config.json",
-    type=str,
-    help="path to config file, defaults to config.json",
-)
-define(
-    "build_indexes",
-    default=False,
-    type=bool,
-    help="force the application to (re)build the indexes for full text search and query optimization. Warning: this might take a long time depending on your database size",
-)
-define(
-    "create_admin",
-    default="admin",
-    type=str,
-    help="Create an initial admin user with this username in the ACL",
-)
-
 # never start app in test mode, only needed for unit tests
 define(
     "test_admin",
@@ -76,7 +57,6 @@ define(
     type=bool,
     help="start application in test mode (bypass authentication) as a user. never run the app in this mode, it is purely for unit tests!",
 )
-
 
 def make_app(cookie_secret):
     return tornado.web.Application(
@@ -403,6 +383,25 @@ def hook_tornado_access_log():
 
 
 async def main():
+    define(
+        "config",
+        default="config.json",
+        type=str,
+        help="path to config file, defaults to config.json",
+    )
+    define(
+        "build_indexes",
+        default=False,
+        type=bool,
+        help="force the application to (re)build the indexes for full text search and query optimization. Warning: this might take a long time depending on your database size",
+    )
+    define(
+        "create_admin",
+        default="admin",
+        type=str,
+        help="Create an initial admin user with this username in the ACL",
+    )
+
     parse_command_line()
 
     # setup global vars from config
