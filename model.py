@@ -67,6 +67,12 @@ class Step:
     def __repr__(self) -> str:
         return str(self)
 
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, self.__class__):
+            return self.__dict__ == other.__dict__
+        else:
+            return False
+
     def to_dict(self) -> Dict:
         """
         serialize the object into a dictionary containing all attributes
@@ -147,7 +153,7 @@ class VEPlan:
     """
 
     EXPECTED_DICT_ENTRIES = {
-        "name": str,
+        "name": (str, type(None)),
         "topic_description": (str, type(None)),
         "learning_goal": (str, type(None)),
         "steps": list,
@@ -190,11 +196,14 @@ class VEPlan:
         # creating a fresh ID
         self._id = util.parse_object_id(_id) if _id != None else ObjectId()
 
+        # ensure that steps have unique names
+        if not self._check_unique_step_names(self.steps):
+            raise NonUniqueStepsError
+
         # set workload and duration as the sum of workload/duration of the steps
-        if self.steps:
-            for step in self.steps:
-                self.duration += step.duration
-                self.workload += step.workload
+        for step in self.steps:
+            self.duration += step.duration
+            self.workload += step.workload
 
     def to_dict(self) -> Dict:
         """
@@ -219,8 +228,14 @@ class VEPlan:
     def __repr__(self) -> str:
         return str(self)
 
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, self.__class__):
+            return self.__dict__ == other.__dict__
+        else:
+            return False
+
     @classmethod
-    def __check_unique_step_names(self, steps: List[Step]) -> bool:
+    def _check_unique_step_names(cls, steps: List[Step]) -> bool:
         """
         assert that the name-attributes of the steps in the given list are unique
         and return True if so, False otherwise.
@@ -289,7 +304,7 @@ class VEPlan:
                         "expected type '{}' for key '{}', got '{}'".format(
                             cls.EXPECTED_DICT_ENTRIES[key],
                             key,
-                            type(key),
+                            type(params[key]),
                         )
                     )
 
@@ -302,7 +317,7 @@ class VEPlan:
         # build step objects, asserting that the names of the steps are unique,
         # gotta do this manually, since __dict__.update doesn't initialize nested objects
         steps = [Step.from_dict(step) for step in params["steps"]]
-        if not cls.__check_unique_step_names(steps):
+        if not cls._check_unique_step_names(steps):
             raise NonUniqueStepsError
         del params["steps"]
 
@@ -313,31 +328,4 @@ class VEPlan:
 
 
 if __name__ == "__main__":
-
-    test_step = {
-        "name": "test_step",
-        "duration": 100,
-        "workload": 100,
-        "description": "test",
-        "learning_goal": "test",
-        "tasks": ["test", "test", "test"],
-        "attachments": [ObjectId(), ObjectId()],
-    }
-
-    step = Step.from_dict(test_step)
-    # pprint(step)
-    # pprint(step.to_dict())
-
-    _id = ObjectId()
-    test_ve_plan = {
-        "name": None,
-        "topic_description": "test",
-        "learning_goal": "test",
-        "steps": [test_step],
-        "_id": _id,
-    }
-
-    ve_plan = VEPlan.from_dict(test_ve_plan)
-    pprint(ve_plan._id)
-    pprint(_id)
-    pprint(ve_plan.to_dict())
+    pass
