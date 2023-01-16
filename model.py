@@ -268,7 +268,7 @@ class VEPlan:
         return True
 
     @classmethod
-    def from_dict(cls, params: Dict[str, Any]) -> Step:
+    def from_dict(cls, params: Dict[str, Any]) -> VEPlan:
         """
         initialize a VEPlan object from a dictionary containing the expected attributes.
         This dictionary has to atleast contain the following keys:

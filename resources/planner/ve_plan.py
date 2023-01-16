@@ -114,7 +114,13 @@ class VEPlanResource:
         `_id` is in the database. So this error may be not be treated as an actual 
         error but as a neat way to provide response feedback to an end user.
         """
-        _id = util.parse_object_id(_id)
+
+        # if supplied _id is no valid ObjectId, we can also raise the PlanDoesntExistError,
+        # since there logically can't be any matching plan
+        try:
+            _id = util.parse_object_id(_id)
+        except InvalidId:
+            raise PlanDoesntExistError()
 
         result = self.db.plans.delete_one({"_id": _id})
 
