@@ -6,7 +6,7 @@
  * to the post's discussion space in the social network of KAVAQ
  * 
  */
-function inject_discussion_button($atts = [], $content = null)
+function kavaq_inject_discussion_button($atts = [], $content = null)
 {
     $base_url = get_option('kavaq_base_url', 'http://you_forgot_to_set_base_url.com');
     $url = $base_url . "/spaceadministration/join_discussion?wp_post_id=" . get_the_ID();
@@ -14,6 +14,6 @@ function inject_discussion_button($atts = [], $content = null)
     return $html;
 }
 
-add_shortcode('kavaq_discussion_button', 'inject_discussion_button');
+add_shortcode('kavaq_discussion_button', 'kavaq_inject_discussion_button');
 
 ?>

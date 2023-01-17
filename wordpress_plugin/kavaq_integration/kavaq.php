@@ -16,6 +16,7 @@
 }
 
 include 'discussion_button_injector.php';
+include 'custom_metadata.php';
 include 'settings.php';
 
 ?>
