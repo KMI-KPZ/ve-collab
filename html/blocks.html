@@ -1436,6 +1436,29 @@ Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
 
                                       </div>
                                     </div>
+                                    <div x-show="activeTab===3" class="m-1 p-2 w-full h-full">
+                                      <div class="m-1 xl:w-96">
+                                        <select id="space_role_list" onchange="display_space_acl_permissions()"
+                                                class="form-select appearance-none block w-full px-3 py-1.5 text-base font-normal text-gray-700 bg-white bg-clip-padding bg-no-repeat border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none"
+                                                aria-label="Default select example">
+  
+                                        </select>
+                                      </div>
+                                      <div id="space_acl_container" class="p-2">
+                                        <!-- Space ACL Permission Table-->
+                                        <table class="table-auto w-full border border-gray-400 rounded">
+                                            <thead class="bg-gray-100 border-b border-gray-400">
+                                              <tr>
+                                                  <th class="w-3/5 p-2 text-left">Permission</th>
+                                                  <th class="w-2/5 p-2">Status</th>
+                                              </tr>
+                                            </thead>
+                                            <tbody id="space_acl_rules">
+  
+                                            </tbody>
+                                        </table>
+                                      </div>
+                                    </div>
                                   </div>
 
                                 </div> 

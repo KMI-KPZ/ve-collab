@@ -249,6 +249,29 @@
   </div>
 </script>
 
+  <script id="space_acl_entry_template" type="text/html">
+  {{!#acl_entries}}
+  <tr id="row_{{!permission}}">
+    <td class="p-2">{{!permission}}</td>
+    <td class="p-2 text-center">
+      <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+        <input type="checkbox" name="toggle" id="toggle_{{!permission}}"
+          class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
+          onclick="update_space_acl_permission('{{!permission}}')" {{!#value}}checked="checked" {{!/value}} />
+        <label for="toggle_{{!permission}}"
+          class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+      </div>
+    </td>
+  </tr>
+  {{!/acl_entries}}
+  </script>
+
+  <!-- Template for generic select item -->
+  <script id="select_item" type="text/html">
+  <option value="{{!item}}">{{!item}}</option>
+</script>
+  <!-- End of generic select item template-->
+
   <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
     integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
     crossorigin="anonymous"></script>
@@ -293,7 +316,8 @@
         tabs: [
           "User Management",
           "Anfragen",
-          "Einladungen"
+          "Einladungen",
+          "Space ACL"
         ]
       }
     }

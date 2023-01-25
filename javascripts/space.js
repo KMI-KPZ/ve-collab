@@ -79,6 +79,16 @@ function handleSpaceAdministrationTabChange(tab) {
       })
       update_invite_change_select()
       break;
+    case "Space ACL":
+      //alert("HALLO")
+      $('#space_role_list').empty()
+      get_distinct_roles().done(function (roles_response) {
+        $.each(roles_response.existing_roles, function (entry) {
+          $('#space_role_list').append(Mustache.render($('#select_item').html(), { item: roles_response.existing_roles[entry] }))
+        })
+      })
+      display_space_acl_permissions();
+      break;
     default:
       console.log("unrecognised Tab Name @TabChange: " + tab);
       break;
@@ -545,3 +555,149 @@ $('body').delegate('.link-class', 'click', function () {
     window.location.href = baseUrl + '/space/' + selected;
   }
 })
+
+function display_space_acl_permissions() {
+  $.ajax({
+    type: 'GET',
+    url: '/space_acl/get_all' + '?space=' + spacename.replace("%20", " "),
+    dataType: 'json',
+    success: function (acl_response) {
+      console.log(acl_response)
+      $("#space_acl_rules").empty()
+      var permissions = []
+      $.each(acl_response.acl_entries, function (entry) {
+        if (acl_response.acl_entries[entry].role == $('#space_role_list').val()) {
+          for (let [key, value] of Object.entries(acl_response.acl_entries[entry])) {
+            if (key != "space" && key != "role") {
+              permissions.push({ "permission": key, "value": value })
+            }
+          }
+        }
+      })
+      $("#space_acl_rules").empty().append(Mustache.render($("#space_acl_entry_template").html(), { acl_entries: permissions }));
+    },
+
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if (xhr.status === 403) {
+        window.createNotification({
+          theme: 'error',
+          showDuration: 5000
+        })({
+          title: 'Error!',
+          message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+          theme: 'error',
+          showDuration: 5000
+        })({
+          title: 'Server error!',
+          message: 'Request for Permissions failed.'
+        });
+      }
+    },
+  });
+}
+
+function update_space_acl_permission(permission_key) {
+  let val = $("#toggle_" + permission_key).is(":checked")
+  let space = spacename.replaceAll("%20", " ");
+  let role = $("#space_role_list").val()
+  let payload = { role: role, space: space }
+  payload[permission_key] = val
+  $.ajax({
+    type: "POST",
+    url: "/space_acl/update",
+    data: JSON.stringify(payload),
+    dataType: "json",
+    contentType: "application/json",
+    success: function (acl_response) {
+      console.log("Succesfully updated permission!")
+    },
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if (xhr.status === 403) {
+        window.createNotification({
+          theme: 'error',
+          showDuration: 5000
+        })({
+          title: 'Error!',
+          message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+          theme: 'error',
+          showDuration: 5000
+        })({
+          title: 'Server error!',
+          message: 'Request for Permissions failed.'
+        });
+      }
+    }
+  })
+}
+
+function handle_space_acl_selection() {
+  $("#space_acl_rules").empty()
+  $.ajax({
+    type: 'GET',
+    url: '/space_acl/get_all' + '?space=' + spacename.replace("%20", " "),
+    dataType: 'json',
+    success: function (acl_response) {
+      console.log(acl_response)
+      var permissions = []
+      $.each(acl_response.acl_entries, function (entry) {
+        if (acl_response.acl_entries[entry].role == $('#space_role_list').val()) {
+          for (let [key, value] of Object.entries(acl_response.acl_entries[entry])) {
+            if (key != "space" && key != "role") {
+              permissions.push({ "permission": key, "value": value })
+            }
+          }
+        }
+      })
+      $("#space_acl_rules").empty().append(Mustache.render($("#space_acl_entry_template").html(), { acl_entries: permissions }));
+    },
+
+    error: function (xhr, status, error) {
+      if (xhr.status == 401) {
+        window.location.href = routingTable.platform;
+      }
+      else if (xhr.status === 403) {
+        window.createNotification({
+          theme: 'error',
+          showDuration: 5000
+        })({
+          title: 'Error!',
+          message: 'Insufficient Permission'
+        });
+      }
+      else {
+        window.createNotification({
+          theme: 'error',
+          showDuration: 5000
+        })({
+          title: 'Server error!',
+          message: 'Request for Permissions failed.'
+        });
+      }
+    },
+  });
+}
+
+/**
+ * returns list of all distinct roles from Server
+ */
+function get_distinct_roles() {
+  return $.ajax({
+    type: "GET",
+    url: "/role/distinct",
+    dataType: "json",
+  });
+}

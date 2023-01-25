@@ -532,3 +532,35 @@ border-color: rgba(252, 163, 29, var(--tw-divide-opacity))
   --tw-divide-opacity: 1;
   border-color:rgba(173,204,178,var(--tw-bg-opacity))
 }
+
+
+.custom-combobox {
+  position: relative;
+  display: inline-block;
+}
+
+.custom-combobox-toggle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  margin-left: -1px;
+  padding: 0;
+}
+
+.custom-combobox-input {
+  margin: 0;
+  padding: 5px 10px;
+}
+
+
+
+.toggle-checkbox:checked {
+  @apply: right-0 border-green-400;
+  right: 0;
+  border-color: #68D391;
+}
+
+.toggle-checkbox:checked+.toggle-label {
+  @apply: bg-green-400;
+  background-color: #68D391;
+}
