@@ -74,10 +74,18 @@ class PostFileNotDeleteableError(Exception):
     pass
 
 
+class TaskKeyError(Exception):
+    """Task initialization is missing a required key"""
+
+    def __init__(self, message, missing_value=None) -> None:
+        super().__init__(message)
+        self.missing_value = missing_value
+
+
 class StepKeyError(Exception):
     """Step initialization is missing a required key"""
 
-    def __init__(self, message, missing_value = None) -> None:
+    def __init__(self, message, missing_value=None) -> None:
         super().__init__(message)
         self.missing_value = missing_value
 
@@ -90,10 +98,17 @@ class PlanKeyError(Exception):
         self.missing_value = missing_value
 
 
+class NonUniqueTasksError(Exception):
+    """Tasks in a Step of a VEPlan do not have unique names to each other"""
+
+    pass
+
+
 class NonUniqueStepsError(Exception):
     """Steps in a VEPlan do not have unique names to each other"""
 
     pass
+
 
 
 class PlanDoesntExistError(Exception):

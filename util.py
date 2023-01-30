@@ -1,6 +1,9 @@
 from contextlib import contextmanager
+from datetime import datetime
+from typing import Optional
 
 from bson import ObjectId
+import dateutil.parser
 from pymongo import MongoClient
 
 import global_vars
@@ -43,3 +46,10 @@ def parse_object_id(obj_id: str | ObjectId) -> ObjectId:
                 type(obj_id)
             )
         )
+
+def parse_datetime(timestamp: str | datetime) -> Optional[datetime]:
+    if timestamp is None or isinstance(timestamp, datetime):
+            return timestamp
+    else:
+        # dateutil parses guesses format, best bet is to use ISO8601 despite
+        return dateutil.parser.parse(timestamp)

@@ -1,10 +1,11 @@
+from datetime import datetime, timedelta
 from unittest import TestCase
 
 from bson import ObjectId
 from bson.errors import InvalidId
-from exceptions import NonUniqueStepsError, PlanKeyError, StepKeyError
+from exceptions import NonUniqueStepsError, PlanKeyError, StepKeyError, TaskKeyError
 
-from model import Step, User, VEPlan
+from model import Step, Task, User, VEPlan
 
 
 def setUpModule():
@@ -59,6 +60,144 @@ class UserModelTest(TestCase):
         mail = "test@mail.com"
 
 
+class TaskModelTest(TestCase):
+    def setUp(self) -> None:
+        return super().setUp()
+
+    def tearDown(self) -> None:
+        return super().tearDown()
+
+    def test_init_default(self):
+        """
+        expect: successful creation of a minimal Task object
+        """
+        task = Task()
+        self.assertEqual(task.title, None)
+        self.assertEqual(task.description, None)
+        self.assertEqual(task.learning_goal, None)
+        self.assertEqual(task.tools, [])
+        self.assertIsInstance(task._id, ObjectId)
+
+    def test_init(self):
+        """
+        expect: successful creation of a Task object, passing values
+        for each attribute
+        """
+
+        _id = ObjectId()
+        dummy_val = "test"
+        task = Task(
+            _id=_id,
+            title=dummy_val,
+            description=dummy_val,
+            learning_goal=dummy_val,
+            tools=[dummy_val],
+        )
+
+        self.assertEqual(task.title, dummy_val)
+        self.assertEqual(task.description, dummy_val)
+        self.assertEqual(task.learning_goal, dummy_val)
+        self.assertEqual(task.tools, [dummy_val])
+        self.assertEqual(task._id, _id)
+
+    def test_to_dict(self):
+        """
+        expect: successful serialization of a task object into a dict conveying
+        all attributes accordingly.
+        """
+
+        task = Task().to_dict()
+        self.assertIn("title", task)
+        self.assertIn("description", task)
+        self.assertIn("learning_goal", task)
+        self.assertIn("tools", task)
+        self.assertIn("_id", task)
+        self.assertEqual(task["title"], None)
+        self.assertEqual(task["description"], None)
+        self.assertEqual(task["learning_goal"], None)
+        self.assertEqual(task["tools"], [])
+        self.assertIsInstance(task["_id"], ObjectId)
+
+    def test_from_dict(self):
+        """
+        expect: successful creation of a Task object from a dict
+        """
+
+        _id = ObjectId()
+        task_dict = {
+            "_id": _id,
+            "title": "test",
+            "description": "test",
+            "learning_goal": "test",
+            "tools": ["test"],
+        }
+        task = Task.from_dict(task_dict)
+        self.assertEqual(task.title, "test")
+        self.assertEqual(task.description, "test")
+        self.assertEqual(task.learning_goal, "test")
+        self.assertEqual(task.tools, ["test"])
+        self.assertEqual(task._id, _id)
+
+    def test_from_dict_error_params_no_dict(self):
+        """
+        expect: TypeError is raised because the params to `from_dict` is not
+        a dictionary
+        """
+
+        self.assertRaises(TypeError, Task.from_dict, "no_dict")
+
+    def test_from_dict_error_missing_key(self):
+        """
+        expect: TaskKeyError is raised because the params dictionary is missing
+        a required key
+        """
+
+        # title is missing
+        _id = ObjectId()
+        task_dict = {
+            "_id": _id,
+            "description": "test",
+            "learning_goal": "test",
+            "tools": ["test"],
+        }
+        self.assertRaises(TaskKeyError, Task.from_dict, task_dict)
+
+    def test_from_dict_error_wrong_types(self):
+        """
+        expect: TypeError is raised because an attribute in the params dictionary
+        does not have the expected type
+        """
+
+        task_dict = {
+            "_id": ObjectId(),
+            "title": "test",
+            "description": "test",
+            "learning_goal": "test",
+            "tools": ["test"],
+        }
+
+        # try out each attribute with a wrong type and expect ValueErrors
+        task_dict["_id"] = 1
+        self.assertRaises(TypeError, Task.from_dict, task_dict)
+        task_dict["_id"] = ObjectId()
+
+        task_dict["title"] = 1
+        self.assertRaises(TypeError, Task.from_dict, task_dict)
+        task_dict["title"] = "test"
+
+        task_dict["description"] = 1
+        self.assertRaises(TypeError, Task.from_dict, task_dict)
+        task_dict["description"] = "test"
+
+        task_dict["learning_goal"] = 1
+        self.assertRaises(TypeError, Task.from_dict, task_dict)
+        task_dict["learning_goal"] = "test"
+
+        task_dict["tools"] = dict()
+        self.assertRaises(TypeError, Task.from_dict, task_dict)
+        task_dict["tools"] = ["test"]
+
+
 class StepModelTest(TestCase):
     def setUp(self) -> None:
         return super().setUp()
@@ -71,38 +210,61 @@ class StepModelTest(TestCase):
         expect: successful creation of a minimal Step object
         """
 
-        step = Step("test")
-        self.assertEqual(step.name, "test")
-        self.assertEqual(step.duration, 0)
+        step = Step()
+        self.assertEqual(step.name, None)
         self.assertEqual(step.workload, 0)
-        self.assertEqual(step.description, None)
-        self.assertEqual(step.learning_goal, None)
+        self.assertEqual(step.timestamp_from, None)
+        self.assertEqual(step.timestamp_to, None)
+        self.assertEqual(step.duration, None)
+        self.assertEqual(step.learning_env, None)
         self.assertEqual(step.tasks, [])
+        self.assertEqual(step.evaluation_tools, [])
         self.assertEqual(step.attachments, [])
+        self.assertEqual(step.custom_attributes, {})
+        self.assertIsInstance(step._id, ObjectId)
 
     def test_init(self):
         """
         expect: successful creation of a Step object, passing values for each attribute
         """
 
+        _id = ObjectId()
         attachment_id = ObjectId()
+        timestamp_from = datetime(2023, 1, 1)
+        timestamp_to = datetime(2023, 1, 8)
+        task = Task()
+        custom_attributes = {"test": "test"}
         step = Step(
+            _id=_id,
             name="test",
-            duration=10,
             workload=10,
-            description="test",
-            learning_goal="test",
-            tasks=["test", "test"],
+            timestamp_from=timestamp_from,
+            timestamp_to=timestamp_to,
+            learning_env="test",
+            tasks=[task],
+            evaluation_tools=["test", "test"],
             attachments=[attachment_id],
+            custom_attributes=custom_attributes,
         )
 
         self.assertEqual(step.name, "test")
-        self.assertEqual(step.duration, 10)
         self.assertEqual(step.workload, 10)
-        self.assertEqual(step.description, "test")
-        self.assertEqual(step.learning_goal, "test")
-        self.assertEqual(step.tasks, ["test", "test"])
+        self.assertEqual(step.timestamp_from, timestamp_from)
+        self.assertEqual(step.timestamp_to, timestamp_to)
+        self.assertEqual(step.duration, timedelta(days=7))
+        self.assertEqual(step.learning_env, "test")
+        self.assertEqual(step.tasks, [task])
+        self.assertEqual(step.evaluation_tools, ["test", "test"])
         self.assertEqual(step.attachments, [attachment_id])
+        self.assertEqual(step._id, _id)
+        self.assertEqual(step.custom_attributes, custom_attributes)
+
+        # test again, but this time let the timestamps be parsed from str's
+        # into datetime objects
+        step2 = Step(timestamp_from="2023-01-01", timestamp_to="2023-01-08")
+        self.assertEqual(step2.timestamp_from, timestamp_from)
+        self.assertEqual(step2.timestamp_to, timestamp_to)
+        self.assertEqual(step2.duration, timedelta(days=7))
 
     def test_to_dict(self):
         """
@@ -110,24 +272,32 @@ class StepModelTest(TestCase):
         its dictionary representation
         """
 
-        step = Step("test")
+        step = Step()
         step_dict = step.to_dict()
 
         self.assertIsInstance(step_dict, dict)
+        self.assertIn("_id", step_dict)
         self.assertIn("name", step_dict)
-        self.assertIn("duration", step_dict)
         self.assertIn("workload", step_dict)
-        self.assertIn("description", step_dict)
-        self.assertIn("learning_goal", step_dict)
+        self.assertIn("timestamp_from", step_dict)
+        self.assertIn("timestamp_to", step_dict)
+        self.assertIn("duration", step_dict)
+        self.assertIn("learning_env", step_dict)
         self.assertIn("tasks", step_dict)
+        self.assertIn("evaluation_tools", step_dict)
         self.assertIn("attachments", step_dict)
-        self.assertEqual(step_dict["name"], "test")
-        self.assertEqual(step_dict["duration"], 0)
+        self.assertIn("custom_attributes", step_dict)
+        self.assertIsInstance(step_dict["_id"], ObjectId)
+        self.assertEqual(step_dict["name"], None)
         self.assertEqual(step_dict["workload"], 0)
-        self.assertEqual(step_dict["description"], None)
-        self.assertEqual(step_dict["learning_goal"], None)
+        self.assertEqual(step_dict["timestamp_from"], None)
+        self.assertEqual(step_dict["timestamp_to"], None)
+        self.assertEqual(step_dict["duration"], None)
+        self.assertEqual(step_dict["learning_env"], None)
         self.assertEqual(step_dict["tasks"], [])
+        self.assertEqual(step_dict["evaluation_tools"], [])
         self.assertEqual(step_dict["attachments"], [])
+        self.assertEqual(step_dict["custom_attributes"], {})
 
     def test_from_dict(self):
         """
@@ -135,26 +305,36 @@ class StepModelTest(TestCase):
         """
 
         attachment_id = ObjectId()
+        _id = ObjectId()
         step_dict = {
+            "_id": _id,
             "name": "test",
-            "duration": 10,
             "workload": 10,
-            "description": "test",
-            "learning_goal": "test",
-            "tasks": ["test", "test"],
+            "timestamp_from": datetime(2023, 1, 1),
+            "timestamp_to": datetime(2023, 1, 8),
+            "learning_env": "test",
+            "tasks": [Task().to_dict()],
+            "evaluation_tools": ["test", "test"],
             "attachments": [attachment_id],
+            "custom_attributes": {"test": "test"},
         }
 
-        step = Step.from_dict(step_dict)
+        step = Step.from_dict(step_dict.copy())
 
         self.assertIsInstance(step, Step)
+        self.assertEqual(step._id, _id)
         self.assertEqual(step.name, step_dict["name"])
-        self.assertEqual(step.duration, step_dict["duration"])
         self.assertEqual(step.workload, step_dict["workload"])
-        self.assertEqual(step.description, step_dict["description"])
-        self.assertEqual(step.learning_goal, step_dict["learning_goal"])
-        self.assertEqual(step.tasks, step_dict["tasks"])
+        self.assertEqual(step.timestamp_from, step_dict["timestamp_from"])
+        self.assertEqual(step.timestamp_to, step_dict["timestamp_to"])
+        self.assertEqual(
+            step.duration, step_dict["timestamp_to"] - step_dict["timestamp_from"]
+        )
+        self.assertEqual(step.learning_env, step_dict["learning_env"])
+        self.assertEqual([task.to_dict() for task in step.tasks], step_dict["tasks"])
+        self.assertEqual(step.evaluation_tools, step_dict["evaluation_tools"])
         self.assertEqual(step.attachments, step_dict["attachments"])
+        self.assertEqual(step.custom_attributes, step_dict["custom_attributes"])
 
     def test_from_dict_error_params_no_dict(self):
         """
@@ -172,12 +352,15 @@ class StepModelTest(TestCase):
 
         # attachments is missing
         step_dict = {
+            "_id": ObjectId(),
             "name": "test",
-            "duration": 10,
             "workload": 10,
-            "description": "test",
-            "learning_goal": "test",
-            "tasks": ["test", "test"],
+            "timestamp_from": datetime(2023, 1, 1),
+            "timestamp_to": datetime(2023, 1, 8),
+            "learning_env": "test",
+            "tasks": [Task().to_dict()],
+            "evaluation_tools": ["test", "test"],
+            "custom_attributes": {"test": "test"},
         }
         self.assertRaises(StepKeyError, Step.from_dict, step_dict)
 
@@ -188,43 +371,58 @@ class StepModelTest(TestCase):
         """
 
         step_dict = {
+            "_id": ObjectId(),
             "name": "test",
-            "duration": 0,
             "workload": 0,
-            "description": None,
-            "learning_goal": None,
-            "tasks": ["test", "test"],
+            "timestamp_from": datetime(2023, 1, 1),
+            "timestamp_to": datetime(2023, 1, 8),
+            "learning_env": None,
+            "tasks": [Task().to_dict(), Task().to_dict()],
+            "evaluation_tools": ["test", "test"],
             "attachments": [],
+            "custom_attributes": {},
         }
 
         # try out each attribute with a wrong type and expect ValueErrors
+        step_dict["_id"] = 123
+        self.assertRaises(TypeError, Step.from_dict, step_dict)
+        step_dict["_id"] = ObjectId()
+
         step_dict["name"] = None
         self.assertRaises(TypeError, Step.from_dict, step_dict)
         step_dict["name"] = "test"
-
-        step_dict["duration"] = "0"
-        self.assertRaises(TypeError, Step.from_dict, step_dict)
-        step_dict["duration"] = 0
 
         step_dict["workload"] = "0"
         self.assertRaises(TypeError, Step.from_dict, step_dict)
         step_dict["workload"] = 0
 
-        step_dict["description"] = list()
+        step_dict["timestamp_from"] = 1
         self.assertRaises(TypeError, Step.from_dict, step_dict)
-        step_dict["description"] = "test"
+        step_dict["timestamp_from"] = datetime(2023, 1, 1)
 
-        step_dict["learning_goal"] = list()
+        step_dict["timestamp_to"] = 1
         self.assertRaises(TypeError, Step.from_dict, step_dict)
-        step_dict["learning_goal"] = "test"
+        step_dict["timestamp_to"] = datetime(2023, 1, 8)
+
+        step_dict["learning_env"] = list()
+        self.assertRaises(TypeError, Step.from_dict, step_dict)
+        step_dict["learning_env"] = "test"
 
         step_dict["tasks"] = dict()
         self.assertRaises(TypeError, Step.from_dict, step_dict)
         step_dict["tasks"] = ["test"]
 
+        step_dict["evaluation_tools"] = dict()
+        self.assertRaises(TypeError, Step.from_dict, step_dict)
+        step_dict["evaluation_tools"] = list()
+
         step_dict["attachments"] = "test"
         self.assertRaises(TypeError, Step.from_dict, step_dict)
         step_dict["attachments"] = []
+
+        step_dict["custom_attributes"] = "test"
+        self.assertRaises(TypeError, Step.from_dict, step_dict)
+        step_dict["custom_attributes"] = {}
 
 
 class VEPlanModelTest(TestCase):
@@ -240,13 +438,16 @@ class VEPlanModelTest(TestCase):
         """
 
         return Step(
+            _id=ObjectId(),
             name=name,
-            duration=10,
             workload=10,
-            description="test",
-            learning_goal="test",
-            tasks=["test", "test"],
+            timestamp_from=datetime(2023, 1, 1),
+            timestamp_to=datetime(2023, 1, 8),
+            learning_env="test",
+            tasks=[Task()],
+            evaluation_tools=["test", "test"],
             attachments=[ObjectId()],
+            custom_attributes={"test": "test"},
         )
 
     def test_init_default(self):
@@ -260,7 +461,7 @@ class VEPlanModelTest(TestCase):
         self.assertIsNone(plan.learning_goal)
         self.assertIsNotNone(plan._id)
         self.assertEqual(plan.steps, [])
-        self.assertEqual(plan.duration, 0)
+        self.assertEqual(plan.duration, timedelta(0))
         self.assertEqual(plan.workload, 0)
 
     def test_init(self):
@@ -286,7 +487,11 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.learning_goal, "test")
         self.assertEqual(plan.steps, steps)
         self.assertEqual(plan.workload, 20)
-        self.assertEqual(plan.duration, 20)
+        steps_duration = sum(
+            [step.timestamp_to - step.timestamp_from for step in steps],
+            start=timedelta(0),
+        )
+        self.assertEqual(plan.duration, steps_duration)
 
         # again, this time without passing an _id to init
         plan2 = VEPlan(
@@ -301,7 +506,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan2.learning_goal, "test")
         self.assertEqual(plan2.steps, steps)
         self.assertEqual(plan2.workload, 20)
-        self.assertEqual(plan2.duration, 20)
+        self.assertEqual(plan2.duration, steps_duration)
 
     def test_check_unique_steps(self):
         """
@@ -353,7 +558,7 @@ class VEPlanModelTest(TestCase):
         self.assertIsNone(plan_dict["topic_description"])
         self.assertIsNone(plan_dict["learning_goal"])
         self.assertEqual(plan_dict["workload"], 10)
-        self.assertEqual(plan_dict["duration"], 10)
+        self.assertEqual(plan_dict["duration"], step.duration)
         self.assertEqual(plan_dict["steps"], [step.to_dict()])
 
     def test_from_dict(self):
@@ -380,7 +585,7 @@ class VEPlanModelTest(TestCase):
         self.assertIsNone(plan.learning_goal)
         self.assertEqual(plan._id, _id)
         self.assertEqual(plan.steps, [step])
-        self.assertEqual(plan.duration, 10)
+        self.assertEqual(plan.duration, step.duration)
         self.assertEqual(plan.workload, 10)
 
         # again, but this time don't set an _id ourselves
@@ -399,7 +604,7 @@ class VEPlanModelTest(TestCase):
         self.assertIsInstance(plan._id, ObjectId)
         self.assertNotEqual(plan._id, _id)
         self.assertEqual(plan.steps, [step])
-        self.assertEqual(plan.duration, 10)
+        self.assertEqual(plan.duration, step.duration)
         self.assertEqual(plan.workload, 10)
 
     def test_from_dict_error_params_not_dict(self):
