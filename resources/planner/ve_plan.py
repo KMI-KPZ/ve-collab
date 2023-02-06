@@ -1,5 +1,6 @@
 from bson import ObjectId
 from bson.errors import InvalidId
+from datetime import timedelta
 from pymongo.database import Database
 from typing import List, Optional, Tuple
 
@@ -82,12 +83,13 @@ class VEPlanResource:
         `ObjectId`.
         """
 
+        # since timedelta is not encodeable by bson, we have to store it as seconds in the db
         result = self.db.plans.update_one(
             {"_id": plan._id},
             {
                 "$set": {
                     "name": plan.name,
-                    "duration": plan.duration,
+                    "duration": plan.duration.total_seconds(),
                     "workload": plan.workload,
                     "topic_description": plan.topic_description,
                     "learning_goal": plan.learning_goal,
@@ -109,9 +111,9 @@ class VEPlanResource:
         The _id can either be an instance of `bson.ObjectId` or a
         corresponding str-representation.
 
-        Raises `PlanDoesntExistError` if no plan with the supplied `_id` is found. 
+        Raises `PlanDoesntExistError` if no plan with the supplied `_id` is found.
         However it also results in success in the sense that no document with this
-        `_id` is in the database. So this error may be not be treated as an actual 
+        `_id` is in the database. So this error may be not be treated as an actual
         error but as a neat way to provide response feedback to an end user.
         """
 

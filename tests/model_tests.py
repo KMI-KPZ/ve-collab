@@ -558,7 +558,7 @@ class VEPlanModelTest(TestCase):
         self.assertIsNone(plan_dict["topic_description"])
         self.assertIsNone(plan_dict["learning_goal"])
         self.assertEqual(plan_dict["workload"], 10)
-        self.assertEqual(plan_dict["duration"], step.duration)
+        self.assertEqual(plan_dict["duration"], step.duration.total_seconds())
         self.assertEqual(plan_dict["steps"], [step.to_dict()])
 
     def test_from_dict(self):

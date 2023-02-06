@@ -273,7 +273,7 @@ class Step:
             "workload": self.workload,
             "timestamp_from": self.timestamp_from,
             "timestamp_to": self.timestamp_to,
-            "duration": self.duration,
+            "duration": self.duration.total_seconds() if self.duration else None,
             "learning_env": self.learning_env,
             "tasks": [task.to_dict() for task in self.tasks],
             "evaluation_tools": self.evaluation_tools,
@@ -446,7 +446,7 @@ class VEPlan:
 
         # set workload and duration as the sum of workload/duration of the steps
         for step in self.steps:
-            self.duration += step.duration
+            self.duration += step.duration if step.duration else timedelta()
             self.workload += step.workload
 
     def to_dict(self) -> Dict:
@@ -459,7 +459,7 @@ class VEPlan:
         return {
             "_id": self._id,
             "name": self.name,
-            "duration": self.duration,
+            "duration": self.duration.total_seconds(),
             "workload": self.workload,
             "topic_description": self.topic_description,
             "learning_goal": self.learning_goal,
@@ -564,6 +564,13 @@ class VEPlan:
         if not cls._check_unique_step_names(steps):
             raise NonUniqueStepsError
         del params["steps"]
+
+        # compute duration and workload as sum of duration/workload of steps
+        params["duration"] = timedelta()
+        params["workload"] = 0
+        for step in steps:
+            params["duration"] += step.duration if step.duration else timedelta()
+            params["workload"] += step.workload if step.workload else 0
 
         # build VEPlan and set remaining values
         instance = cls(steps=steps)

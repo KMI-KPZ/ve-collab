@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 from unittest import TestCase
 from bson import ObjectId
@@ -7,7 +8,7 @@ from tornado.options import options
 from exceptions import PlanDoesntExistError
 
 import global_vars
-from model import Step, VEPlan
+from model import Step, Task, VEPlan
 from resources.planner.ve_plan import VEPlanResource
 import util
 
@@ -67,6 +68,24 @@ class BaseResourceTestCase(TestCase):
         # close mongodb connection
         cls._client.close()
 
+    def create_step(self, name: str) -> Step:
+        """
+        convenience method to create a Step object with non-default values
+        """
+
+        return Step(
+            _id=ObjectId(),
+            name=name,
+            workload=10,
+            timestamp_from=datetime(2023, 1, 1),
+            timestamp_to=datetime(2023, 1, 8),
+            learning_env="test",
+            tasks=[Task()],
+            evaluation_tools=["test", "test"],
+            attachments=[ObjectId()],
+            custom_attributes={"test": "test"},
+        )
+
 
 class PlanResourceTest(BaseResourceTestCase):
     def setUp(self) -> None:
@@ -74,14 +93,12 @@ class PlanResourceTest(BaseResourceTestCase):
 
         # manually set up a VEPlan in the db
         self.plan_id = ObjectId()
-        self.step = Step("test", 10, 10, "test", "test", ["test"], [ObjectId()])
+        self.step = self.create_step("test")
         self.default_plan = {
             "_id": self.plan_id,
             "name": "test",
             "topic_description": "test",
             "learning_goal": "test",
-            "duration": self.step.duration,
-            "workload": self.step.workload,
             "steps": [self.step.to_dict()],
         }
         self.db.plans.insert_one(self.default_plan)
@@ -105,7 +122,13 @@ class PlanResourceTest(BaseResourceTestCase):
             with self.subTest(id_input=id_input):
                 plan = self.planner.get_plan(id_input)
                 self.assertIsInstance(plan, VEPlan)
-                self.assertEqual(plan.to_dict(), self.default_plan)
+                self.assertEqual(plan._id, self.default_plan["_id"])
+                self.assertEqual(plan.name, self.default_plan["name"])
+                self.assertEqual(plan.topic_description, self.default_plan["topic_description"])
+                self.assertEqual(plan.learning_goal, self.default_plan["learning_goal"])
+                self.assertEqual([step.to_dict() for step in plan.steps], self.default_plan["steps"])
+                self.assertEqual(plan.workload, self.step.workload)
+                self.assertEqual(plan.duration, self.step.duration)
 
     def test_get_plan_error_plan_doesnt_exist(self):
         """
@@ -137,7 +160,14 @@ class PlanResourceTest(BaseResourceTestCase):
         plans = self.planner.get_all()
         self.assertIsInstance(plans, list)
         self.assertEqual(len(plans), 1)
-        self.assertEqual(plans[0].to_dict(), self.default_plan)
+        self.assertIsInstance(plans[0], VEPlan)
+        self.assertEqual(plans[0]._id, self.default_plan["_id"])
+        self.assertEqual(plans[0].name, self.default_plan["name"])
+        self.assertEqual(plans[0].topic_description, self.default_plan["topic_description"])
+        self.assertEqual(plans[0].learning_goal, self.default_plan["learning_goal"])
+        self.assertEqual([step.to_dict() for step in plans[0].steps], self.default_plan["steps"])
+        self.assertEqual(plans[0].workload, self.step.workload)
+        self.assertEqual(plans[0].duration, self.step.duration)
 
     def test_insert_plan(self):
         """
@@ -150,8 +180,6 @@ class PlanResourceTest(BaseResourceTestCase):
             "name": "new plan",
             "topic_description": "test",
             "learning_goal": "test",
-            "duration": self.step.duration,
-            "workload": self.step.workload,
             "steps": [self.step.to_dict()],
         }
 
@@ -164,6 +192,10 @@ class PlanResourceTest(BaseResourceTestCase):
         # expect the plan to be in the db
         db_state = self.db.plans.find_one({"name": plan["name"]})
         self.assertIsNotNone(db_state)
+        self.assertIn("duration", db_state)
+        self.assertIn("workload", db_state)
+        self.assertEqual(db_state["duration"], self.step.duration.total_seconds())
+        self.assertEqual(db_state["workload"], self.step.workload)
 
         # this time supply a _id, but if I "know" that it is not already existing,
         # the result will despite that be an insert as expected
@@ -172,8 +204,6 @@ class PlanResourceTest(BaseResourceTestCase):
             "name": "new plan with _id",
             "topic_description": "test",
             "learning_goal": "test",
-            "duration": self.step.duration,
-            "workload": self.step.workload,
             "steps": [self.step.to_dict()],
         }
 
@@ -186,6 +216,12 @@ class PlanResourceTest(BaseResourceTestCase):
         # expect the plan to be in the db
         db_state_with_id = self.db.plans.find_one({"name": plan_with_id["name"]})
         self.assertIsNotNone(db_state_with_id)
+        self.assertIn("duration", db_state_with_id)
+        self.assertIn("workload", db_state_with_id)
+        self.assertEqual(
+            db_state_with_id["duration"], self.step.duration.total_seconds()
+        )
+        self.assertEqual(db_state_with_id["workload"], self.step.workload)
 
     def test_update_plan(self):
         """
