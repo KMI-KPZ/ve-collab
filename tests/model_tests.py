@@ -3,9 +3,15 @@ from unittest import TestCase
 
 from bson import ObjectId
 from bson.errors import InvalidId
-from exceptions import NonUniqueStepsError, PlanKeyError, StepKeyError, TaskKeyError
+from exceptions import (
+    NonUniqueStepsError,
+    PlanKeyError,
+    StepKeyError,
+    TargetGroupKeyError,
+    TaskKeyError,
+)
 
-from model import Step, Task, User, VEPlan
+from model import Step, TargetGroup, Task, User, VEPlan
 
 
 def setUpModule():
@@ -423,6 +429,191 @@ class StepModelTest(TestCase):
         step_dict["custom_attributes"] = "test"
         self.assertRaises(TypeError, Step.from_dict, step_dict)
         step_dict["custom_attributes"] = {}
+
+
+class TargetGroupModelTest(TestCase):
+    def setUp(self) -> None:
+        return super().setUp()
+
+    def tearDown(self) -> None:
+        return super().tearDown()
+
+    def test_init_default(self):
+        """
+        expect: successful creation of a minimal Step object
+        """
+
+        target_group = TargetGroup()
+        self.assertEqual(target_group.name, None)
+        self.assertEqual(target_group.age_min, 0)
+        self.assertEqual(target_group.age_max, 99)
+        self.assertEqual(target_group.experience, None)
+        self.assertEqual(target_group.academic_course, None)
+        self.assertEqual(target_group.mother_tongue, None)
+        self.assertEqual(target_group.foreign_languages, {})
+        self.assertIsInstance(target_group._id, ObjectId)
+
+    def test_init(self):
+        """
+        expect: successful creation of a Step object, passing values for each attribute
+        """
+
+        _id = ObjectId()
+        target_group = TargetGroup(
+            _id=_id,
+            name="test",
+            age_min=30,
+            age_max=40,
+            experience="test",
+            academic_course="test",
+            mother_tongue="test",
+            foreign_languages={"test": "l1"},
+        )
+
+        self.assertEqual(target_group.name, "test")
+        self.assertEqual(target_group.age_min, 30)
+        self.assertEqual(target_group.age_max, 40)
+        self.assertEqual(target_group.experience, "test")
+        self.assertEqual(target_group.academic_course, "test")
+        self.assertEqual(target_group.mother_tongue, "test")
+        self.assertEqual(target_group.foreign_languages, {"test": "l1"})
+        self.assertEqual(target_group._id, _id)
+
+    def test_to_dict(self):
+        """
+        expect: successful serialization of a minimal Step object into
+        its dictionary representation
+        """
+
+        target_group = TargetGroup()
+        target_group_dict = target_group.to_dict()
+
+        self.assertIsInstance(target_group_dict, dict)
+        self.assertIn("_id", target_group_dict)
+        self.assertIn("name", target_group_dict)
+        self.assertIn("age_min", target_group_dict)
+        self.assertIn("age_max", target_group_dict)
+        self.assertIn("experience", target_group_dict)
+        self.assertIn("academic_course", target_group_dict)
+        self.assertIn("mother_tongue", target_group_dict)
+        self.assertIn("foreign_languages", target_group_dict)
+        self.assertIsInstance(target_group_dict["_id"], ObjectId)
+        self.assertEqual(target_group_dict["name"], None)
+        self.assertEqual(target_group_dict["age_min"], 0)
+        self.assertEqual(target_group_dict["age_max"], 99)
+        self.assertEqual(target_group_dict["experience"], None)
+        self.assertEqual(target_group_dict["academic_course"], None)
+        self.assertEqual(target_group_dict["mother_tongue"], None)
+        self.assertEqual(target_group_dict["foreign_languages"], {})
+
+    def test_from_dict(self):
+        """
+        expect: successful creation of a Step object derived from a dictionary
+        """
+
+        _id = ObjectId()
+        target_group_dict = {
+            "_id": _id,
+            "name": "test",
+            "age_min": 10,
+            "age_max": 20,
+            "experience": "test",
+            "academic_course": "test",
+            "mother_tongue": "test",
+            "foreign_languages": {"test": "l1"},
+        }
+
+        target_group = TargetGroup.from_dict(target_group_dict.copy())
+
+        self.assertIsInstance(target_group, TargetGroup)
+        self.assertEqual(target_group._id, _id)
+        self.assertEqual(target_group.name, target_group_dict["name"])
+        self.assertEqual(target_group.age_min, target_group_dict["age_min"])
+        self.assertEqual(target_group.age_max, target_group_dict["age_max"])
+        self.assertEqual(target_group.experience, target_group_dict["experience"])
+        self.assertEqual(
+            target_group.academic_course, target_group_dict["academic_course"]
+        )
+        self.assertEqual(target_group.mother_tongue, target_group_dict["mother_tongue"])
+        self.assertEqual(
+            target_group.foreign_languages, target_group_dict["foreign_languages"]
+        )
+
+    def test_from_dict_error_params_no_dict(self):
+        """
+        expect: creation of Step object from dict raises TypeError because source is
+        not a dict
+        """
+
+        self.assertRaises(TypeError, TargetGroup.from_dict, "wrong_type")
+
+    def test_from_dict_error_missing_key(self):
+        """
+        expect: creation of Step object from dict raises StepKeyError because
+        the dict is missing required keys
+        """
+
+        # foreign_languages is missing
+        target_group_dict = {
+            "_id": ObjectId(),
+            "name": "test",
+            "age_min": 10,
+            "age_max": 20,
+            "experience": "test",
+            "academic_course": "test",
+            "mother_tongue": "test",
+        }
+        self.assertRaises(TargetGroupKeyError, TargetGroup.from_dict, target_group_dict)
+
+    def test_from_dict_error_wrong_types(self):
+        """
+        expect: creation of Step object from dict raises TypeError's because
+        arguments have the wrong types
+        """
+
+        target_group_dict = {
+            "_id": ObjectId(),
+            "name": "test",
+            "age_min": 10,
+            "age_max": 20,
+            "experience": "test",
+            "academic_course": "test",
+            "mother_tongue": "test",
+            "foreign_languages": {"test": "l1"},
+        }
+
+        # try out each attribute with a wrong type and expect ValueErrors
+        target_group_dict["_id"] = 123
+        self.assertRaises(TypeError, TargetGroup.from_dict, target_group_dict)
+        target_group_dict["_id"] = ObjectId()
+
+        target_group_dict["name"] = 123
+        self.assertRaises(TypeError, TargetGroup.from_dict, target_group_dict)
+        target_group_dict["name"] = "test"
+
+        target_group_dict["age_min"] = "0"
+        self.assertRaises(TypeError, TargetGroup.from_dict, target_group_dict)
+        target_group_dict["age_min"] = 0
+
+        target_group_dict["age_max"] = list()
+        self.assertRaises(TypeError, TargetGroup.from_dict, target_group_dict)
+        target_group_dict["age_max"] = 99
+
+        target_group_dict["experience"] = 1
+        self.assertRaises(TypeError, TargetGroup.from_dict, target_group_dict)
+        target_group_dict["experience"] = "test"
+
+        target_group_dict["academic_course"] = list()
+        self.assertRaises(TypeError, TargetGroup.from_dict, target_group_dict)
+        target_group_dict["academic_course"] = "test"
+
+        target_group_dict["mother_tongue"] = dict()
+        self.assertRaises(TypeError, TargetGroup.from_dict, target_group_dict)
+        target_group_dict["mother_tongue"] = "test"
+
+        target_group_dict["foreign_languages"] = list()
+        self.assertRaises(TypeError, TargetGroup.from_dict, target_group_dict)
+        target_group_dict["foreign_languages"] = dict()
 
 
 class VEPlanModelTest(TestCase):

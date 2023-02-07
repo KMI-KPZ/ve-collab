@@ -3,13 +3,13 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, List
 
 from bson import ObjectId
-import dateutil.parser
 
 from exceptions import (
     NonUniqueStepsError,
     NonUniqueTasksError,
     PlanKeyError,
     StepKeyError,
+    TargetGroupKeyError,
     TaskKeyError,
 )
 import util
@@ -183,7 +183,7 @@ class Step:
         "tasks": list,
         "evaluation_tools": list,
         "attachments": list,
-        "custom_attributes": dict
+        "custom_attributes": dict,
     }
 
     def __init__(
@@ -197,7 +197,7 @@ class Step:
         tasks: List[Task] = [],
         evaluation_tools: List[str] = [],
         attachments: List[ObjectId] = [],
-        custom_attributes: Dict = {}
+        custom_attributes: Dict = {},
     ) -> None:
         """
         Initialization of a `Step` instance.
@@ -278,7 +278,7 @@ class Step:
             "tasks": [task.to_dict() for task in self.tasks],
             "evaluation_tools": self.evaluation_tools,
             "attachments": self.attachments,
-            "custom_attributes": self.custom_attributes
+            "custom_attributes": self.custom_attributes,
         }
 
     @classmethod
@@ -386,6 +386,118 @@ class Step:
 
         # create and return object
         instance = cls(tasks=tasks)
+        instance.__dict__.update(params)
+        return instance
+
+
+class TargetGroup:
+    """
+    model class to represent a target group (typically of a VEPlan)
+    """
+
+    # when initializing a step from a dict using 'Step.from_dict()',
+    # this lookup allows to check for the correct types
+    EXPECTED_DICT_ENTRIES = {
+        "_id": (str, ObjectId, type(None)),
+        "name": (str, type(None)),
+        "age_min": int,
+        "age_max": int,
+        "experience": (str, type(None)),
+        "academic_course": (str, type(None)),
+        "mother_tongue": str,
+        "foreign_languages": dict,
+    }
+
+    def __init__(
+        self,
+        _id: str | ObjectId = None,
+        name: str = None,
+        age_min: int = 0,
+        age_max: int = 99,
+        experience: str = None,
+        academic_course: str = None,
+        mother_tongue: str = None,
+        foreign_languages: Dict[str, str] = {},
+    ) -> None:
+
+        # ensure _id becomes type ObjectId, either using the given value or
+        # creating a fresh ID
+        self._id = util.parse_object_id(_id) if _id != None else ObjectId()
+
+        self.name = name
+        self.age_min = age_min
+        self.age_max = age_max
+        self.experience = experience
+        self.academic_course = academic_course
+        self.mother_tongue = mother_tongue
+        self.foreign_languages = foreign_languages
+
+    def __str__(self) -> str:
+        return str(self.__dict__)
+
+    def __repr__(self) -> str:
+        return str(self)
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, self.__class__):
+            return self.__dict__ == other.__dict__
+        else:
+            return False
+
+    def to_dict(self) -> Dict:
+        return {
+            "_id": self._id,
+            "name": self.name,
+            "age_min": self.age_min,
+            "age_max": self.age_max,
+            "experience": self.experience,
+            "academic_course": self.academic_course,
+            "mother_tongue": self.mother_tongue,
+            "foreign_languages": self.foreign_languages
+        }
+
+    @classmethod
+    def from_dict(cls, params: Dict[str, Any]) -> TargetGroup:
+        if not isinstance(params, dict):
+            raise TypeError(
+                "expected type 'dict' for argument 'params', got {}".format(
+                    type(params)
+                )
+            )
+
+        # ensure all necessary keys are in the dict
+        for expected_key in cls.EXPECTED_DICT_ENTRIES.keys():
+            if expected_key not in params:
+                raise TargetGroupKeyError(
+                    "Missing key {} in Task dictionary".format(expected_key)
+                )
+
+        # delete any keys from params that are not expected to avoid having
+        # any other additional attributes that might cause trouble
+        # (e.g. on serialization)
+        for key in list(params.keys()):
+            if key not in cls.EXPECTED_DICT_ENTRIES.keys():
+                del params[key]
+
+        # ensure types of attributes are correct
+        for key in params:
+            if not isinstance(params[key], cls.EXPECTED_DICT_ENTRIES[key]):
+                raise TypeError(
+                    "expected type '{}' for key '{}', got '{}'".format(
+                        cls.EXPECTED_DICT_ENTRIES[key],
+                        key,
+                        type(key),
+                    )
+                )
+
+        # handle existence and correct type of object id's
+        if "_id" in params:
+            params["_id"] = util.parse_object_id(params["_id"])
+        else:
+            params["_id"] = ObjectId()
+
+        # create and return object
+        instance = cls()
         instance.__dict__.update(params)
         return instance
 

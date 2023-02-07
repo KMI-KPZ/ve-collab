@@ -82,6 +82,14 @@ class TaskKeyError(Exception):
         self.missing_value = missing_value
 
 
+class TargetGroupKeyError(Exception):
+    """Task initialization is missing a required key"""
+
+    def __init__(self, message, missing_value=None) -> None:
+        super().__init__(message)
+        self.missing_value = missing_value
+
+
 class StepKeyError(Exception):
     """Step initialization is missing a required key"""
 
