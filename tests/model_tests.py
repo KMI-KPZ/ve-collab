@@ -106,6 +106,19 @@ class TaskModelTest(TestCase):
         self.assertEqual(task.tools, [dummy_val])
         self.assertEqual(task._id, _id)
 
+        # test again, without supplying and _id
+        task = Task(
+            title=dummy_val,
+            description=dummy_val,
+            learning_goal=dummy_val,
+            tools=[dummy_val],
+        )
+        self.assertEqual(task.title, dummy_val)
+        self.assertEqual(task.description, dummy_val)
+        self.assertEqual(task.learning_goal, dummy_val)
+        self.assertEqual(task.tools, [dummy_val])
+        self.assertIsInstance(task._id, ObjectId)
+
     def test_to_dict(self):
         """
         expect: successful serialization of a task object into a dict conveying
@@ -143,6 +156,20 @@ class TaskModelTest(TestCase):
         self.assertEqual(task.learning_goal, "test")
         self.assertEqual(task.tools, ["test"])
         self.assertEqual(task._id, _id)
+
+        # test again, without supplying an _id
+        task_dict = {
+            "title": "test",
+            "description": "test",
+            "learning_goal": "test",
+            "tools": ["test"],
+        }
+        task = Task.from_dict(task_dict)
+        self.assertEqual(task.title, "test")
+        self.assertEqual(task.description, "test")
+        self.assertEqual(task.learning_goal, "test")
+        self.assertEqual(task.tools, ["test"])
+        self.assertIsInstance(task._id, ObjectId)
 
     def test_from_dict_error_params_no_dict(self):
         """
@@ -266,11 +293,12 @@ class StepModelTest(TestCase):
         self.assertEqual(step.custom_attributes, custom_attributes)
 
         # test again, but this time let the timestamps be parsed from str's
-        # into datetime objects
+        # into datetime objects and let _id be system-derived
         step2 = Step(timestamp_from="2023-01-01", timestamp_to="2023-01-08")
         self.assertEqual(step2.timestamp_from, timestamp_from)
         self.assertEqual(step2.timestamp_to, timestamp_to)
         self.assertEqual(step2.duration, timedelta(days=7))
+        self.assertIsInstance(step2._id, ObjectId)
 
     def test_to_dict(self):
         """
@@ -341,6 +369,40 @@ class StepModelTest(TestCase):
         self.assertEqual(step.evaluation_tools, step_dict["evaluation_tools"])
         self.assertEqual(step.attachments, step_dict["attachments"])
         self.assertEqual(step.custom_attributes, step_dict["custom_attributes"])
+
+        # test again without supplying _ids for step and task
+        task_dict = Task().to_dict()
+        del task_dict["_id"]
+        step_dict = {
+            "name": "test",
+            "workload": 10,
+            "timestamp_from": datetime(2023, 1, 1),
+            "timestamp_to": datetime(2023, 1, 8),
+            "learning_env": "test",
+            "tasks": [task_dict],
+            "evaluation_tools": ["test", "test"],
+            "attachments": [attachment_id],
+            "custom_attributes": {"test": "test"},
+        }
+        step = Step.from_dict(step_dict.copy())
+
+        self.assertIsInstance(step, Step)
+        self.assertIsInstance(step._id, ObjectId)
+        self.assertEqual(step.name, step_dict["name"])
+        self.assertEqual(step.workload, step_dict["workload"])
+        self.assertEqual(step.timestamp_from, step_dict["timestamp_from"])
+        self.assertEqual(step.timestamp_to, step_dict["timestamp_to"])
+        self.assertEqual(
+            step.duration, step_dict["timestamp_to"] - step_dict["timestamp_from"]
+        )
+        self.assertEqual(step.learning_env, step_dict["learning_env"])
+        self.assertEqual(step.evaluation_tools, step_dict["evaluation_tools"])
+        self.assertEqual(step.attachments, step_dict["attachments"])
+        self.assertEqual(step.custom_attributes, step_dict["custom_attributes"])
+        self.assertIsInstance(step.tasks, list)
+        self.assertEqual(len(step.tasks), 1)
+        self.assertIsInstance(step.tasks[0], Task)
+        self.assertIsInstance(step.tasks[0]._id, ObjectId)
 
     def test_from_dict_error_params_no_dict(self):
         """
@@ -430,6 +492,18 @@ class StepModelTest(TestCase):
         self.assertRaises(TypeError, Step.from_dict, step_dict)
         step_dict["custom_attributes"] = {}
 
+    def test_check_unique_tasks(self):
+        """
+        expect: the check for unique task titles work, i.e. returns False if a step
+        has duplicate task titles
+        """
+        self.assertTrue(
+            Step._check_unique_task_titles([Task(title="test1"), Task(title="test2")])
+        )
+        self.assertFalse(
+            Step._check_unique_task_titles([Task(title="test"), Task(title="test")])
+        )
+
 
 class TargetGroupModelTest(TestCase):
     def setUp(self) -> None:
@@ -479,6 +553,26 @@ class TargetGroupModelTest(TestCase):
         self.assertEqual(target_group.foreign_languages, {"test": "l1"})
         self.assertEqual(target_group._id, _id)
 
+        # test again without supplying a _id
+
+        target_group = TargetGroup(
+            name="test",
+            age_min=30,
+            age_max=40,
+            experience="test",
+            academic_course="test",
+            mother_tongue="test",
+            foreign_languages={"test": "l1"},
+        )
+        self.assertEqual(target_group.name, "test")
+        self.assertEqual(target_group.age_min, 30)
+        self.assertEqual(target_group.age_max, 40)
+        self.assertEqual(target_group.experience, "test")
+        self.assertEqual(target_group.academic_course, "test")
+        self.assertEqual(target_group.mother_tongue, "test")
+        self.assertEqual(target_group.foreign_languages, {"test": "l1"})
+        self.assertIsInstance(target_group._id, ObjectId)
+
     def test_to_dict(self):
         """
         expect: successful serialization of a minimal Step object into
@@ -527,6 +621,33 @@ class TargetGroupModelTest(TestCase):
 
         self.assertIsInstance(target_group, TargetGroup)
         self.assertEqual(target_group._id, _id)
+        self.assertEqual(target_group.name, target_group_dict["name"])
+        self.assertEqual(target_group.age_min, target_group_dict["age_min"])
+        self.assertEqual(target_group.age_max, target_group_dict["age_max"])
+        self.assertEqual(target_group.experience, target_group_dict["experience"])
+        self.assertEqual(
+            target_group.academic_course, target_group_dict["academic_course"]
+        )
+        self.assertEqual(target_group.mother_tongue, target_group_dict["mother_tongue"])
+        self.assertEqual(
+            target_group.foreign_languages, target_group_dict["foreign_languages"]
+        )
+
+        # test again without supplying a _id
+        target_group_dict = {
+            "name": "test",
+            "age_min": 10,
+            "age_max": 20,
+            "experience": "test",
+            "academic_course": "test",
+            "mother_tongue": "test",
+            "foreign_languages": {"test": "l1"},
+        }
+
+        target_group = TargetGroup.from_dict(target_group_dict.copy())
+
+        self.assertIsInstance(target_group, TargetGroup)
+        self.assertIsInstance(target_group._id, ObjectId)
         self.assertEqual(target_group.name, target_group_dict["name"])
         self.assertEqual(target_group.age_min, target_group_dict["age_min"])
         self.assertEqual(target_group.age_max, target_group_dict["age_max"])
@@ -623,22 +744,40 @@ class VEPlanModelTest(TestCase):
     def tearDown(self) -> None:
         return super().tearDown()
 
-    def create_step(self, name: str) -> Step:
+    def create_step(
+        self,
+        name: str,
+        timestamp_from: datetime = datetime(2023, 1, 1),
+        timestamp_to: datetime = datetime(2023, 1, 8),
+    ) -> Step:
         """
         convenience method to create a Step object with non-default values
         """
 
         return Step(
-            _id=ObjectId(),
             name=name,
             workload=10,
-            timestamp_from=datetime(2023, 1, 1),
-            timestamp_to=datetime(2023, 1, 8),
+            timestamp_from=timestamp_from,
+            timestamp_to=timestamp_to,
             learning_env="test",
             tasks=[Task()],
             evaluation_tools=["test", "test"],
             attachments=[ObjectId()],
             custom_attributes={"test": "test"},
+        )
+
+    def create_target_group(self, name: str) -> TargetGroup:
+        """
+        convenience method to create a TargetGroup object with non-default values
+        """
+        return TargetGroup(
+            name=name,
+            age_min=30,
+            age_max=40,
+            experience="test",
+            academic_course="test",
+            mother_tongue="test",
+            foreign_languages={"test": "l1"},
         )
 
     def test_init_default(self):
@@ -647,13 +786,26 @@ class VEPlanModelTest(TestCase):
         """
 
         plan = VEPlan()
+        self.assertIsInstance(plan._id, ObjectId)
         self.assertIsNone(plan.name)
-        self.assertIsNone(plan.topic_description)
-        self.assertIsNone(plan.learning_goal)
-        self.assertIsNotNone(plan._id)
+        self.assertIsNone(plan.department)
+        self.assertIsNone(plan.topic)
+        self.assertIsNone(plan.academic_course)
+        self.assertIsNone(plan.lecture)
+        self.assertIsNone(plan.lecture_format)
+        self.assertEqual(plan.audience, [])
+        self.assertEqual(plan.participants_amount, 0)
+        self.assertEqual(plan.languages, [])
+        self.assertEqual(plan.goals, {})
+        self.assertEqual(plan.involved_parties, [])
+        self.assertIsNone(plan.realization)
+        self.assertIsNone(plan.learning_env)
+        self.assertEqual(plan.tools, [])
         self.assertEqual(plan.steps, [])
-        self.assertEqual(plan.duration, timedelta(0))
+        self.assertEqual(plan.duration, None)
         self.assertEqual(plan.workload, 0)
+        self.assertIsNone(plan.timestamp_from)
+        self.assertIsNone(plan.timestamp_to)
 
     def test_init(self):
         """
@@ -663,41 +815,107 @@ class VEPlanModelTest(TestCase):
 
         # pass an _id to init
         _id = ObjectId()
-        steps = [self.create_step("test1"), self.create_step("test2")]
+        steps = [
+            self.create_step(
+                "test1",
+                timestamp_from=datetime(2023, 1, 1),
+                timestamp_to=datetime(2023, 1, 8),
+            ),
+            self.create_step(
+                "test2",
+                timestamp_from=datetime(2023, 1, 9),
+                timestamp_to=datetime(2023, 1, 16),
+            ),
+        ]
+        target_groups = [
+            self.create_target_group("test1"),
+            self.create_target_group("test2"),
+        ]
         plan = VEPlan(
             _id=_id,
             name="test",
-            topic_description="test",
-            learning_goal="test",
+            department="test",
+            topic="test",
+            academic_course="test",
+            lecture="test",
+            lecture_format="test",
+            audience=target_groups,
+            participants_amount=0,
+            languages=["test", "test"],
+            goals={"test1": "test", "test2": "test"},
+            involved_parties=["test", "test"],
+            realization="test",
+            learning_env="test",
+            tools=["test", "test"],
             steps=steps,
         )
 
         self.assertEqual(plan._id, _id)
         self.assertEqual(plan.name, "test")
-        self.assertEqual(plan.topic_description, "test")
-        self.assertEqual(plan.learning_goal, "test")
+        self.assertEqual(plan.department, "test")
+        self.assertEqual(plan.topic, "test")
+        self.assertEqual(plan.academic_course, "test")
+        self.assertEqual(plan.lecture, "test")
+        self.assertEqual(plan.lecture_format, "test")
+        self.assertEqual(plan.audience, target_groups)
+        self.assertEqual(plan.participants_amount, 0)
+        self.assertEqual(plan.languages, ["test", "test"])
+        self.assertEqual(plan.goals, {"test1": "test", "test2": "test"})
+        self.assertEqual(plan.involved_parties, ["test", "test"])
+        self.assertEqual(plan.realization, "test")
+        self.assertEqual(plan.learning_env, "test")
+        self.assertEqual(plan.tools, ["test", "test"])
         self.assertEqual(plan.steps, steps)
         self.assertEqual(plan.workload, 20)
-        steps_duration = sum(
-            [step.timestamp_to - step.timestamp_from for step in steps],
-            start=timedelta(0),
-        )
-        self.assertEqual(plan.duration, steps_duration)
+        self.assertEqual(plan.timestamp_from, datetime(2023, 1, 1))
+        self.assertEqual(plan.timestamp_to, datetime(2023, 1, 16))
+        self.assertEqual(plan.duration, datetime(2023, 1, 16) - datetime(2023, 1, 1))
 
-        # again, this time without passing an _id to init
-        plan2 = VEPlan(
+        # again, this time without passing _ids and
+        # without a "to" timestamp, expecting duration to become None
+        steps = [
+            self.create_step(
+                "test1", timestamp_from=datetime(2023, 1, 1), timestamp_to=None
+            )
+        ]
+        plan = VEPlan(
             name="test",
-            topic_description="test",
-            learning_goal="test",
+            department="test",
+            topic="test",
+            academic_course="test",
+            lecture="test",
+            lecture_format="test",
+            audience=target_groups,
+            participants_amount=0,
+            languages=["test", "test"],
+            goals={"test1": "test", "test2": "test"},
+            involved_parties=["test", "test"],
+            realization="test",
+            learning_env="test",
+            tools=["test", "test"],
             steps=steps,
         )
-        self.assertNotEqual(plan2._id, _id)
-        self.assertEqual(plan2.name, "test")
-        self.assertEqual(plan2.topic_description, "test")
-        self.assertEqual(plan2.learning_goal, "test")
-        self.assertEqual(plan2.steps, steps)
-        self.assertEqual(plan2.workload, 20)
-        self.assertEqual(plan2.duration, steps_duration)
+        self.assertIsInstance(plan._id, ObjectId)
+        self.assertEqual(plan.name, "test")
+        self.assertEqual(plan.department, "test")
+        self.assertEqual(plan.topic, "test")
+        self.assertEqual(plan.academic_course, "test")
+        self.assertEqual(plan.lecture, "test")
+        self.assertEqual(plan.lecture_format, "test")
+        self.assertEqual(plan.audience, target_groups)
+        self.assertEqual(plan.participants_amount, 0)
+        self.assertEqual(plan.languages, ["test", "test"])
+        self.assertEqual(plan.goals, {"test1": "test", "test2": "test"})
+        self.assertEqual(plan.involved_parties, ["test", "test"])
+        self.assertEqual(plan.realization, "test")
+        self.assertEqual(plan.learning_env, "test")
+        self.assertEqual(plan.tools, ["test", "test"])
+        self.assertEqual(plan.steps, steps)
+        self.assertIsInstance(plan.steps[0]._id, ObjectId)
+        self.assertEqual(plan.workload, 10)
+        self.assertEqual(plan.timestamp_from, datetime(2023, 1, 1))
+        self.assertEqual(plan.timestamp_to, None)
+        self.assertEqual(plan.duration, None)
 
     def test_check_unique_steps(self):
         """
@@ -734,22 +952,50 @@ class VEPlanModelTest(TestCase):
         representation
         """
 
-        step = self.create_step("test")
+        step = self.create_step(
+            "test",
+            timestamp_from=None,
+            timestamp_to=None,
+        )
         plan_dict = VEPlan(steps=[step]).to_dict()
 
         self.assertIn("_id", plan_dict)
         self.assertIn("name", plan_dict)
+        self.assertIn("department", plan_dict)
+        self.assertIn("topic", plan_dict)
+        self.assertIn("academic_course", plan_dict)
+        self.assertIn("lecture", plan_dict)
+        self.assertIn("lecture_format", plan_dict)
+        self.assertIn("audience", plan_dict)
+        self.assertIn("participants_amount", plan_dict)
+        self.assertIn("languages", plan_dict)
+        self.assertIn("timestamp_from", plan_dict)
+        self.assertIn("timestamp_to", plan_dict)
+        self.assertIn("goals", plan_dict)
+        self.assertIn("involved_parties", plan_dict)
+        self.assertIn("realization", plan_dict)
+        self.assertIn("learning_env", plan_dict)
+        self.assertIn("tools", plan_dict)
         self.assertIn("duration", plan_dict)
         self.assertIn("workload", plan_dict)
-        self.assertIn("topic_description", plan_dict)
-        self.assertIn("learning_goal", plan_dict)
         self.assertIn("steps", plan_dict)
         self.assertIsInstance(plan_dict["_id"], ObjectId)
         self.assertIsNone(plan_dict["name"])
-        self.assertIsNone(plan_dict["topic_description"])
-        self.assertIsNone(plan_dict["learning_goal"])
+        self.assertIsNone(plan_dict["department"])
+        self.assertIsNone(plan_dict["topic"])
+        self.assertIsNone(plan_dict["academic_course"])
+        self.assertIsNone(plan_dict["lecture"])
+        self.assertIsNone(plan_dict["lecture_format"])
+        self.assertEqual(plan_dict["audience"], [])
+        self.assertEqual(plan_dict["participants_amount"], 0)
+        self.assertEqual(plan_dict["languages"], [])
+        self.assertEqual(plan_dict["goals"], {})
+        self.assertEqual(plan_dict["involved_parties"], [])
+        self.assertIsNone(plan_dict["realization"])
+        self.assertIsNone(plan_dict["learning_env"])
+        self.assertEqual(plan_dict["tools"], [])
         self.assertEqual(plan_dict["workload"], 10)
-        self.assertEqual(plan_dict["duration"], step.duration.total_seconds())
+        self.assertEqual(plan_dict["duration"], None)
         self.assertEqual(plan_dict["steps"], [step.to_dict()])
 
     def test_from_dict(self):
@@ -761,42 +1007,136 @@ class VEPlanModelTest(TestCase):
         # first, try a manually set _id
         _id = ObjectId()
         step = self.create_step("test")
+        target_group = self.create_target_group("test")
         plan_dict = {
             "_id": _id,
             "name": None,
-            "topic_description": None,
-            "learning_goal": None,
-            "steps": [step.to_dict()],
+            "department": None,
+            "topic": None,
+            "academic_course": None,
+            "lecture": None,
+            "lecture_format": None,
+            "audience": [
+                {
+                    "_id": target_group._id,
+                    "name": target_group.name,
+                    "age_min": target_group.age_min,
+                    "age_max": target_group.age_max,
+                    "experience": target_group.experience,
+                    "academic_course": target_group.academic_course,
+                    "mother_tongue": target_group.mother_tongue,
+                    "foreign_languages": target_group.foreign_languages,
+                }
+            ],
+            "participants_amount": 0,
+            "languages": [],
+            "goals": {},
+            "involved_parties": [],
+            "realization": None,
+            "learning_env": None,
+            "tools": [],
+            "steps": [
+                {
+                    "_id": step._id,
+                    "name": step.name,
+                    "workload": step.workload,
+                    "timestamp_from": step.timestamp_from,
+                    "timestamp_to": step.timestamp_to,
+                    "learning_env": step.learning_env,
+                    "tasks": [task.to_dict() for task in step.tasks],
+                    "evaluation_tools": step.evaluation_tools,
+                    "attachments": step.attachments,
+                    "custom_attributes": step.custom_attributes,
+                }
+            ],
         }
 
         plan = VEPlan.from_dict(plan_dict)
 
         self.assertIsNone(plan.name)
-        self.assertIsNone(plan.topic_description)
-        self.assertIsNone(plan.learning_goal)
+        self.assertIsNone(plan.department)
+        self.assertIsNone(plan.topic)
+        self.assertIsNone(plan.academic_course)
+        self.assertIsNone(plan.lecture)
+        self.assertIsNone(plan.lecture_format)
+        self.assertEqual(plan.audience, [target_group])
+        self.assertEqual(plan.participants_amount, 0)
+        self.assertEqual(plan.languages, [])
+        self.assertEqual(plan.goals, {})
+        self.assertEqual(plan.involved_parties, [])
+        self.assertIsNone(plan.realization)
+        self.assertIsNone(plan.learning_env)
+        self.assertEqual(plan.tools, [])
         self.assertEqual(plan._id, _id)
         self.assertEqual(plan.steps, [step])
         self.assertEqual(plan.duration, step.duration)
+        self.assertEqual(plan.timestamp_from, step.timestamp_from)
+        self.assertEqual(plan.timestamp_to, step.timestamp_to)
         self.assertEqual(plan.workload, 10)
 
         # again, but this time don't set an _id ourselves
         plan_dict = {
             "name": None,
-            "topic_description": None,
-            "learning_goal": None,
-            "steps": [step.to_dict()],
+            "department": None,
+            "topic": None,
+            "academic_course": None,
+            "lecture": None,
+            "lecture_format": None,
+            "audience": [
+                {
+                    "name": target_group.name,
+                    "age_min": target_group.age_min,
+                    "age_max": target_group.age_max,
+                    "experience": target_group.experience,
+                    "academic_course": target_group.academic_course,
+                    "mother_tongue": target_group.mother_tongue,
+                    "foreign_languages": target_group.foreign_languages,
+                }
+            ],
+            "participants_amount": 0,
+            "languages": [],
+            "goals": {},
+            "involved_parties": [],
+            "realization": None,
+            "learning_env": None,
+            "tools": [],
+            "steps": [
+                {
+                    "name": step.name,
+                    "workload": step.workload,
+                    "timestamp_from": step.timestamp_from,
+                    "timestamp_to": step.timestamp_to,
+                    "learning_env": step.learning_env,
+                    "tasks": [task.to_dict() for task in step.tasks],
+                    "evaluation_tools": step.evaluation_tools,
+                    "attachments": step.attachments,
+                    "custom_attributes": step.custom_attributes,
+                }
+            ],
         }
 
         plan = VEPlan.from_dict(plan_dict)
 
         self.assertIsNone(plan.name)
-        self.assertIsNone(plan.topic_description)
-        self.assertIsNone(plan.learning_goal)
-        self.assertIsInstance(plan._id, ObjectId)
-        self.assertNotEqual(plan._id, _id)
-        self.assertEqual(plan.steps, [step])
+        self.assertIsNone(plan.department)
+        self.assertIsNone(plan.topic)
+        self.assertIsNone(plan.academic_course)
+        self.assertIsNone(plan.lecture)
+        self.assertIsNone(plan.lecture_format)
+        self.assertEqual(plan.participants_amount, 0)
+        self.assertEqual(plan.languages, [])
+        self.assertEqual(plan.goals, {})
+        self.assertEqual(plan.involved_parties, [])
+        self.assertIsNone(plan.realization)
+        self.assertIsNone(plan.learning_env)
+        self.assertEqual(plan.tools, [])
         self.assertEqual(plan.duration, step.duration)
+        self.assertEqual(plan.timestamp_from, step.timestamp_from)
+        self.assertEqual(plan.timestamp_to, step.timestamp_to)
         self.assertEqual(plan.workload, 10)
+        self.assertIsInstance(plan._id, ObjectId)
+        self.assertIsInstance(plan.steps[0]._id, ObjectId)
+        self.assertIsInstance(plan.audience[0]._id, ObjectId)
 
     def test_from_dict_error_params_not_dict(self):
         """
@@ -814,9 +1154,21 @@ class VEPlanModelTest(TestCase):
 
         # steps is missing
         plan_dict = {
+            "_id": ObjectId(),
             "name": None,
-            "topic_description": None,
-            "learning_goal": None,
+            "department": None,
+            "topic": None,
+            "academic_course": None,
+            "lecture": None,
+            "lecture_format": None,
+            "audience": [],
+            "participants_amount": 0,
+            "languages": [],
+            "goals": {},
+            "involved_parties": [],
+            "realization": None,
+            "learning_env": None,
+            "tools": [],
         }
         self.assertRaises(PlanKeyError, VEPlan.from_dict, plan_dict)
 
@@ -829,9 +1181,20 @@ class VEPlanModelTest(TestCase):
         plan_dict = {
             "_id": ObjectId(),
             "name": None,
-            "topic_description": None,
-            "learning_goal": None,
-            "steps": [self.create_step("test").to_dict()],
+            "department": None,
+            "topic": None,
+            "academic_course": None,
+            "lecture": None,
+            "lecture_format": None,
+            "audience": [],
+            "participants_amount": 0,
+            "languages": [],
+            "goals": {},
+            "involved_parties": [],
+            "realization": None,
+            "learning_env": None,
+            "tools": [],
+            "steps": [],
         }
 
         # try wrong types for all fields
@@ -843,13 +1206,61 @@ class VEPlanModelTest(TestCase):
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
         plan_dict["name"] = None
 
-        plan_dict["topic_description"] = list()
+        plan_dict["department"] = 123
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
-        plan_dict["topic_description"] = None
+        plan_dict["department"] = None
 
-        plan_dict["learning_goal"] = 1
+        plan_dict["topic"] = list()
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
-        plan_dict["learning_goal"] = None
+        plan_dict["topic"] = None
+
+        plan_dict["academic_course"] = list()
+        self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
+        plan_dict["academic_course"] = None
+
+        plan_dict["lecture"] = 123
+        self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
+        plan_dict["lecture"] = None
+
+        plan_dict["lecture_format"] = 123
+        self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
+        plan_dict["lecture_format"] = None
+
+        plan_dict["audience"] = dict()
+        self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
+        plan_dict["audience"] = list()
+
+        plan_dict["participants_amount"] = "test"
+        self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
+        plan_dict["participants_amount"] = 0
+
+        plan_dict["languages"] = "test"
+        self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
+        plan_dict["languages"] = list()
+
+        plan_dict["goals"] = list()
+        self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
+        plan_dict["goals"] = dict()
+
+        plan_dict["involved_parties"] = 123
+        self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
+        plan_dict["involved_parties"] = list()
+
+        plan_dict["realization"] = 123
+        self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
+        plan_dict["realization"] = None
+
+        plan_dict["learning_env"] = list()
+        self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
+        plan_dict["learning_env"] = None
+
+        plan_dict["tools"] = "test"
+        self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
+        plan_dict["tools"] = list()
+
+        plan_dict["steps"] = 123
+        self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
+        plan_dict["steps"] = list()
 
     def test_from_dict_error_non_unique_steps(self):
         """
@@ -858,11 +1269,21 @@ class VEPlanModelTest(TestCase):
         """
 
         plan_dict = {
+            "_id": ObjectId(),
             "name": None,
-            "duration": 10,
-            "workload": 10,
-            "topic_description": None,
-            "learning_goal": None,
+            "department": None,
+            "topic": None,
+            "academic_course": None,
+            "lecture": None,
+            "lecture_format": None,
+            "audience": [],
+            "participants_amount": 0,
+            "languages": [],
+            "goals": {},
+            "involved_parties": [],
+            "realization": None,
+            "learning_env": None,
+            "tools": [],
             "steps": [
                 self.create_step("test").to_dict(),
                 self.create_step("test").to_dict(),

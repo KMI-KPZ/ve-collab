@@ -1,3 +1,4 @@
+import datetime
 import functools
 import json
 import logging
@@ -163,7 +164,7 @@ class BaseHandler(tornado.web.RequestHandler):
             # check for keys whose values need to be transformed
             if isinstance(dictionary[key], ObjectId):
                 dictionary[key] = str(dictionary[key])
-            elif key == "creation_date" or key == "originalCreationDate":
+            elif isinstance(dictionary[key], datetime.datetime):
                 dictionary[key] = dictionary[key].isoformat()
 
             # if it is a nested dict, recursively run on subdict

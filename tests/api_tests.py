@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime, timedelta
 import io
 import json
 import logging
@@ -15,7 +15,7 @@ from tornado.testing import AsyncHTTPTestCase
 from resources.network.acl import ACL
 import global_vars
 from main import make_app
-from model import User
+from model import Step, TargetGroup, Task, User, VEPlan
 
 # hack all loggers to not produce too much irrelevant (info) output here
 for logger_name in logging.root.manager.loggerDict:
@@ -25,8 +25,10 @@ logging.getLogger().setLevel(logging.ERROR)
 
 
 MISSING_KEY_ERROR_SLUG = "missing_key:"
+INVALID_KEY_ERROR_SLUG = "invalid_query_parameter:"
 MISSING_KEY_HTTP_BODY_ERROR_SLUG = "missing_key_in_http_body:"
 MISSING_FILE_ERROR_SLUG = "missing_file:"
+JSON_PARSING_ERROR = "json_parsing_error"
 USER_NOT_ADMIN_ERROR = "user_not_admin"
 INSUFFICIENT_PERMISSION_ERROR = "insufficient_permission"
 UNRECOGNIZABLE_KEY_ERROR = "unrecognizable_key_in_http_body"
@@ -39,6 +41,11 @@ USER_ALREADY_MEMBER_ERROR = "user_already_member"
 USER_NOT_INVITED_ERROR = "user_is_not_invited_into_space"
 USER_DIDNT_REQUEST_TO_JOIN_ERROR = "user_didnt_request_to_join"
 USER_NOT_MEMBER_ERROR = "user_not_member_of_space"
+
+PLAN_DOESNT_EXIST_ERROR = "plan_doesnt_exist"
+PLAN_ALREADY_EXISTS_ERROR = "plan_already_exists"
+NON_UNIQUE_STEPS_ERROR = "non_unique_step_names"
+NON_UNIQUE_TASKS_ERROR = "non_unique_task_titles"
 
 # don't change, these values match with the ones in BaseHandler
 CURRENT_ADMIN = User(
@@ -98,7 +105,7 @@ def tearDownModule():
         db.drop_collection("space_acl")
         db.drop_collection("fs.files")
         db.drop_collection("fs.chunks")
-
+        db.drop_collection("plans")
 
 
 class RenderHandlerTest(AsyncHTTPTestCase):
@@ -1436,7 +1443,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.datetime.now(),
+                "creation_date": datetime.now(),
                 "text": "initial_post_text",
                 "space": None,
                 "pinned": False,
@@ -1481,7 +1488,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.datetime.now(),
+                "creation_date": datetime.now(),
                 "text": "initial_post_text",
                 "space": self.test_space,
                 "pinned": False,
@@ -1531,7 +1538,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.datetime.now(),
+                "creation_date": datetime.now(),
                 "text": "initial_post_text",
                 "space": self.test_space,
                 "pinned": False,
@@ -1573,7 +1580,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.datetime.now(),
+                "creation_date": datetime.now(),
                 "text": "initial_post_text",
                 "space": None,
                 "pinned": False,
@@ -1615,7 +1622,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.datetime.now(),
+                "creation_date": datetime.now(),
                 "text": "initial_post_text",
                 "space": None,
                 "pinned": False,
@@ -1663,7 +1670,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.datetime.now(),
+                "creation_date": datetime.now(),
                 "text": "initial_post_text",
                 "space": None,
                 "pinned": False,
@@ -1689,7 +1696,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.datetime.now(),
+                "creation_date": datetime.now(),
                 "text": "initial_post_text",
                 "space": None,
                 "pinned": False,
@@ -1720,7 +1727,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.datetime.now(),
+                "creation_date": datetime.now(),
                 "text": "initial_post_text",
                 "space": self.test_space,
                 "pinned": False,
@@ -1746,7 +1753,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.datetime.now(),
+                "creation_date": datetime.now(),
                 "text": "initial_post_text",
                 "space": self.test_space,
                 "pinned": False,
@@ -1783,7 +1790,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.datetime.now(),
+                "creation_date": datetime.now(),
                 "text": "initial_post_text",
                 "space": self.test_space,
                 "pinned": False,
@@ -1822,7 +1829,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.datetime.now(),
+                "creation_date": datetime.now(),
                 "text": "initial_post_text",
                 "space": self.test_space,
                 "pinned": False,
@@ -1884,7 +1891,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.datetime.now(),
+                "creation_date": datetime.now(),
                 "text": "initial_post_text",
                 "space": None,
                 "pinned": False,
@@ -1916,7 +1923,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.datetime.now(),
+                "creation_date": datetime.now(),
                 "text": "initial_post_text",
                 "space": self.test_space,
                 "pinned": False,
@@ -1943,7 +1950,7 @@ class CommentHandlerTest(BaseApiTestCase):
             {
                 "_id": self.post_oid,
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.datetime.now(),
+                "creation_date": datetime.now(),
                 "text": "initial_post_text",
                 "space": self.test_space,
                 "pinned": False,
@@ -2036,7 +2043,7 @@ class CommentHandlerTest(BaseApiTestCase):
                     "comments": {
                         "_id": comment_id,
                         "author": CURRENT_USER.username,
-                        "creation_date": datetime.datetime.now(),
+                        "creation_date": datetime.now(),
                         "text": "test_comment",
                         "pinned": False,
                     }
@@ -2067,7 +2074,7 @@ class CommentHandlerTest(BaseApiTestCase):
                     "comments": {
                         "_id": comment_id,
                         "author": CURRENT_USER.username,
-                        "creation_date": datetime.datetime.now(),
+                        "creation_date": datetime.now(),
                         "text": "test_comment",
                         "pinned": False,
                     }
@@ -2102,7 +2109,7 @@ class CommentHandlerTest(BaseApiTestCase):
                     "comments": {
                         "_id": comment_id,
                         "author": CURRENT_USER.username,
-                        "creation_date": datetime.datetime.now(),
+                        "creation_date": datetime.now(),
                         "text": "test_comment",
                         "pinned": False,
                     }
@@ -2132,7 +2139,7 @@ class CommentHandlerTest(BaseApiTestCase):
                     "comments": {
                         "_id": comment_id,
                         "author": CURRENT_USER.username,
-                        "creation_date": datetime.datetime.now(),
+                        "creation_date": datetime.now(),
                         "text": "test_comment",
                         "pinned": False,
                     }
@@ -2172,7 +2179,7 @@ class CommentHandlerTest(BaseApiTestCase):
                     "comments": {
                         "_id": comment_id,
                         "author": CURRENT_ADMIN.username,
-                        "creation_date": datetime.datetime.now(),
+                        "creation_date": datetime.now(),
                         "text": "test_comment",
                         "pinned": False,
                     }
@@ -2208,7 +2215,7 @@ class CommentHandlerTest(BaseApiTestCase):
                     "comments": {
                         "_id": comment_id,
                         "author": CURRENT_ADMIN.username,
-                        "creation_date": datetime.datetime.now(),
+                        "creation_date": datetime.now(),
                         "text": "test_comment",
                         "pinned": False,
                     }
@@ -2243,7 +2250,7 @@ class CommentHandlerTest(BaseApiTestCase):
                     "comments": {
                         "_id": comment_id,
                         "author": CURRENT_ADMIN.username,
-                        "creation_date": datetime.datetime.now(),
+                        "creation_date": datetime.now(),
                         "text": "test_comment",
                         "pinned": False,
                     }
@@ -2270,7 +2277,7 @@ class LikePostHandlerTest(BaseApiTestCase):
             {
                 "_id": self.post_oid,
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.datetime.now(),
+                "creation_date": datetime.now(),
                 "text": "initial_post_text",
                 "space": self.test_space,
                 "pinned": False,
@@ -2408,7 +2415,7 @@ class RepostHandlerTest(BaseApiTestCase):
         self.post_json = {
             "_id": self.post_oid,
             "author": CURRENT_ADMIN.username,
-            "creation_date": datetime.datetime.now(),
+            "creation_date": datetime.now(),
             "text": "initial_post_text",
             "space": self.test_space,
             "pinned": False,
@@ -2558,7 +2565,7 @@ class RepostHandlerTest(BaseApiTestCase):
         post["repostAuthor"] = CURRENT_ADMIN.username
         post["repostText"] = "test_repost"
         post["originalCreationDate"] = post["creation_date"]
-        post["creation_date"] = datetime.datetime.now()
+        post["creation_date"] = datetime.now()
         self.db.posts.insert_one(post)
 
         request = {"_id": str(post["_id"]), "text": "updated_repost_text"}
@@ -2582,7 +2589,7 @@ class RepostHandlerTest(BaseApiTestCase):
         post["repostAuthor"] = CURRENT_ADMIN.username
         post["repostText"] = "test_repost"
         post["originalCreationDate"] = post["creation_date"]
-        post["creation_date"] = datetime.datetime.now()
+        post["creation_date"] = datetime.now()
         self.db.posts.insert_one(post)
 
         # use other random oid in the request that doesnt exist
@@ -2605,7 +2612,7 @@ class RepostHandlerTest(BaseApiTestCase):
         post["repostAuthor"] = CURRENT_ADMIN.username
         post["repostText"] = "test_repost"
         post["originalCreationDate"] = post["creation_date"]
-        post["creation_date"] = datetime.datetime.now()
+        post["creation_date"] = datetime.now()
         self.db.posts.insert_one(post)
 
         # use oid of original post instead of repost
@@ -2627,7 +2634,7 @@ class RepostHandlerTest(BaseApiTestCase):
         post["repostAuthor"] = CURRENT_USER.username
         post["repostText"] = "test_repost"
         post["originalCreationDate"] = post["creation_date"]
-        post["creation_date"] = datetime.datetime.now()
+        post["creation_date"] = datetime.now()
         self.db.posts.insert_one(post)
 
         request = {"_id": str(post["_id"]), "text": "updated_repost_text"}
@@ -2648,7 +2655,7 @@ class RepostHandlerTest(BaseApiTestCase):
         post["repostAuthor"] = CURRENT_ADMIN.username
         post["repostText"] = "test_repost"
         post["originalCreationDate"] = post["creation_date"]
-        post["creation_date"] = datetime.datetime.now()
+        post["creation_date"] = datetime.now()
         self.db.posts.insert_one(post)
 
         request = {"_id": str(post["_id"]), "text": "updated_repost_text"}
@@ -2677,7 +2684,7 @@ class RepostHandlerTest(BaseApiTestCase):
         post["repostAuthor"] = CURRENT_USER.username
         post["repostText"] = "test_repost"
         post["originalCreationDate"] = post["creation_date"]
-        post["creation_date"] = datetime.datetime.now()
+        post["creation_date"] = datetime.now()
         self.db.posts.insert_one(post)
 
         request = {"_id": str(post["_id"]), "text": "updated_repost_text"}
@@ -2698,7 +2705,7 @@ class PinHandlerTest(BaseApiTestCase):
         self.post_json = {
             "_id": self.post_oid,
             "author": CURRENT_ADMIN.username,
-            "creation_date": datetime.datetime.now(),
+            "creation_date": datetime.now(),
             "text": "initial_post_text",
             "space": self.test_space,
             "pinned": False,
@@ -2709,7 +2716,7 @@ class PinHandlerTest(BaseApiTestCase):
                 {
                     "_id": self.comment_oid,
                     "author": CURRENT_USER.username,
-                    "creation_date": datetime.datetime.now(),
+                    "creation_date": datetime.now(),
                     "text": "test_comment",
                     "pinned": False,
                 }
@@ -3376,7 +3383,7 @@ class SearchHandlerTest(BaseApiTestCase):
         self.post_json = {
             "_id": self.post_oid,
             "author": CURRENT_ADMIN.username,
-            "creation_date": datetime.datetime.now(),
+            "creation_date": datetime.now(),
             "text": "test",
             "space": self.test_space,
             "pinned": False,
@@ -3387,7 +3394,7 @@ class SearchHandlerTest(BaseApiTestCase):
                 {
                     "_id": self.comment_oid,
                     "author": CURRENT_USER.username,
-                    "creation_date": datetime.datetime.now(),
+                    "creation_date": datetime.now(),
                     "text": "test_comment",
                     "pinned": False,
                 }
@@ -3565,7 +3572,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         self.post_json = {
             "_id": self.post_oid,
             "author": CURRENT_ADMIN.username,
-            "creation_date": datetime.datetime.now(),
+            "creation_date": datetime.now(),
             "text": "test",
             "space": self.test_space,
             "pinned": False,
@@ -3576,7 +3583,7 @@ class SpaceHandlerTest(BaseApiTestCase):
                 {
                     "_id": self.comment_oid,
                     "author": CURRENT_USER.username,
-                    "creation_date": datetime.datetime.now(),
+                    "creation_date": datetime.now(),
                     "text": "test_comment",
                     "pinned": False,
                 }
@@ -6221,7 +6228,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             {
                 "_id": self.post_oids[0],
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.datetime.utcnow(),
+                "creation_date": datetime.utcnow(),
                 "text": "space_post_admin",
                 "space": self.test_space,
                 "pinned": False,
@@ -6232,7 +6239,7 @@ class TimelineHandlerTest(BaseApiTestCase):
                     {
                         "_id": ObjectId(),
                         "author": CURRENT_USER.username,
-                        "creation_date": datetime.datetime.utcnow(),
+                        "creation_date": datetime.utcnow(),
                         "text": "test_comment",
                         "pinned": False,
                     }
@@ -6242,7 +6249,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             {
                 "_id": self.post_oids[1],
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.datetime.utcnow(),
+                "creation_date": datetime.utcnow(),
                 "text": "normal_post_admin",
                 "space": None,
                 "pinned": False,
@@ -6255,7 +6262,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             {
                 "_id": self.post_oids[2],
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.datetime.utcnow(),
+                "creation_date": datetime.utcnow(),
                 "text": "space_post_user",
                 "space": self.test_space,
                 "pinned": False,
@@ -6268,7 +6275,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             {
                 "_id": self.post_oids[3],
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.datetime.utcnow(),
+                "creation_date": datetime.utcnow(),
                 "text": "normal_post_user",
                 "space": None,
                 "pinned": False,
@@ -6327,8 +6334,8 @@ class TimelineHandlerTest(BaseApiTestCase):
         response = self.base_checks(
             "GET",
             "/timeline?from={}&to={}".format(
-                (datetime.datetime.utcnow() - datetime.timedelta(hours=2)).isoformat(),
-                (datetime.datetime.utcnow() - datetime.timedelta(hours=1)).isoformat(),
+                (datetime.utcnow() - timedelta(hours=2)).isoformat(),
+                (datetime.utcnow() - timedelta(hours=1)).isoformat(),
             ),
             True,
             200,
@@ -6534,9 +6541,7 @@ class TimelineHandlerTest(BaseApiTestCase):
 
         # query for new posts in the last 30 minutes
         # plenty of time, since setup happens right before the test
-        timestamp = (
-            datetime.datetime.utcnow() - datetime.timedelta(minutes=30)
-        ).isoformat()
+        timestamp = (datetime.utcnow() - timedelta(minutes=30)).isoformat()
 
         response = self.base_checks(
             "GET", "/updates?from={}".format(timestamp), True, 200
@@ -6558,7 +6563,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             {
                 "$set": {
                     "creation_date": (
-                        datetime.datetime.utcnow() - datetime.timedelta(days=10)
+                        datetime.utcnow() - timedelta(days=10)
                     ).isoformat()
                 }
             },
@@ -6569,3 +6574,383 @@ class TimelineHandlerTest(BaseApiTestCase):
 
         # match expected response code
         self.assertEqual(response.code, 304)
+
+
+class VEPlanHandlerTest(BaseApiTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+
+        self.base_permission_environment_setUp()
+        self.default_plan_setup()
+
+    def tearDown(self) -> None:
+        super().tearDown()
+
+        self.base_permission_environments_tearDown()
+        self.db.plans.delete_many({})
+
+    def create_step(
+        self,
+        name: str,
+        timestamp_from: datetime = datetime(2023, 1, 1),
+        timestamp_to: datetime = datetime(2023, 1, 8),
+    ) -> Step:
+        """
+        convenience method to create a Step object with non-default values
+        """
+
+        return Step(
+            name=name,
+            workload=10,
+            timestamp_from=timestamp_from,
+            timestamp_to=timestamp_to,
+            learning_env="test",
+            tasks=[Task()],
+            evaluation_tools=["test", "test"],
+            attachments=[ObjectId()],
+            custom_attributes={"test": "test"},
+        )
+
+    def create_target_group(self, name: str) -> TargetGroup:
+        """
+        convenience method to create a TargetGroup object with non-default values
+        """
+        return TargetGroup(
+            name=name,
+            age_min=30,
+            age_max=40,
+            experience="test",
+            academic_course="test",
+            mother_tongue="test",
+            foreign_languages={"test": "l1"},
+        )
+
+    def default_plan_setup(self):
+        # manually set up a VEPlan in the db
+        self.plan_id = ObjectId()
+        self.step = self.create_step("test")
+        self.target_group = self.create_target_group("test")
+        self.default_plan = {
+            "_id": self.plan_id,
+            "name": "test",
+            "department": "test",
+            "topic": "test",
+            "academic_course": "test",
+            "lecture": "test",
+            "lecture_format": "test",
+            "audience": [self.target_group.to_dict()],
+            "participants_amount": 0,
+            "languages": ["test", "test"],
+            "timestamp_from": self.step.timestamp_from,
+            "timestamp_to": self.step.timestamp_to,
+            "goals": {"test": "test"},
+            "involved_parties": ["test", "test"],
+            "realization": "test",
+            "learning_env": "test",
+            "tools": ["test", "test"],
+            "duration": self.step.duration.total_seconds(),
+            "workload": self.step.workload,
+            "steps": [self.step.to_dict()],
+        }
+        self.db.plans.insert_one(self.default_plan)
+
+    def json_serialize(self, dictionary: dict) -> dict:
+        """
+        borrowed from base handler, transforms object ids and datetimes into strings
+        from any dict
+        """
+        for key in dictionary:
+            # check for keys whose values need to be transformed
+            if isinstance(dictionary[key], ObjectId):
+                dictionary[key] = str(dictionary[key])
+            elif isinstance(dictionary[key], datetime):
+                dictionary[key] = dictionary[key].isoformat()
+
+            # if it is a nested dict, recursively run on subdict
+            # and reassemble it
+            elif isinstance(dictionary[key], dict):
+                dictionary[key] = self.json_serialize(dictionary[key])
+
+            # if it is a list, there are two options:
+            # either the entries in the list are ObjectIds themselves, in that
+            # case transform them as str's and reassemble the list,
+            # or the list contains dicts again, in which case we run recursively
+            # on each of those subdicts again.
+            # This can be seen as an exclusive-or, meaning mixed-lists may cause
+            # strange or undesired behaviour.
+            elif isinstance(dictionary[key], list):
+                for elem in dictionary[key]:
+                    if isinstance(elem, ObjectId):
+                        dictionary[key][dictionary[key].index(elem)] = str(elem)
+                    elif isinstance(elem, dict):
+                        elem = self.json_serialize(elem)
+
+        return dictionary
+
+    def test_get_plan(self):
+        """
+        expect: successfully request plan by _id
+        """
+
+        response = self.base_checks(
+            "GET", "/planner/get?_id={}".format(self.plan_id), True, 200
+        )
+        self.assertIn("plan", response)
+        self.assertIsInstance(response["plan"], dict)
+
+        response_plan = VEPlan.from_dict(response["plan"])
+        self.assertEqual(response_plan, VEPlan.from_dict(self.default_plan))
+
+    def test_get_plan_error_missing_key(self):
+        """
+        expect: fail message because request is missing _id query param
+        """
+
+        response = self.base_checks("GET", "/planner/get", False, 400)
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "_id")
+
+    def test_get_plan_error_plan_doesnt_exist(self):
+        """
+        expect: fail message because plan doesnt exist
+        """
+
+        response = self.base_checks(
+            "GET", "/planner/get?_id={}".format(str(ObjectId())), False, 409
+        )
+        self.assertEqual(response["reason"], PLAN_DOESNT_EXIST_ERROR)
+
+    def test_get_all_plans(self):
+        """
+        expect: successfully request all plans (should be only the default plan)
+        """
+
+        response = self.base_checks("GET", "/planner/get_all", True, 200)
+        self.assertIn("plans", response)
+        self.assertIsInstance(response["plans"], list)
+        self.assertEqual(len(response["plans"]), 1)
+
+        response_plan = VEPlan.from_dict(response["plans"][0])
+        self.assertEqual(response_plan, VEPlan.from_dict(self.default_plan))
+
+    def test_get_all_plans_error_insufficient_permissions(self):
+        """
+        expect: fail message because user is not an admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        response = self.base_checks("GET", "/planner/get_all", False, 403)
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_post_error_no_json(self):
+        """
+        expect: fail message because payload is not in json
+        """
+
+        response = self.base_checks(
+            "POST", "/planner/insert", False, 400, body="no_json"
+        )
+        self.assertEqual(response["reason"], JSON_PARSING_ERROR)
+
+    def test_post_error_invalid_object_id(self):
+        """
+        expect: fail message because object id has the wrong format
+        """
+        plan = VEPlan().to_dict()
+        plan["_id"] = "test123"
+
+        response = self.base_checks(
+            "POST", "/planner/update", False, 400, body=self.json_serialize(plan)
+        )
+        self.assertEqual(response["reason"], "invalid_object_id")
+
+    def test_post_error_missing_key(self):
+        """
+        expect: fail message because plan misses a required key
+        """
+
+        plan = VEPlan().to_dict()
+        del plan["_id"]
+        del plan["realization"]
+
+        response = self.base_checks("POST", "/planner/insert", False, 400, body=plan)
+        self.assertEqual(
+            response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "realization"
+        )
+
+    def test_post_error_non_unique_steps(self):
+        """
+        expect: fail message because steps of the plan dont have unique names
+        """
+
+        # gotta build malformed steps attribute manually, because otherwise VEPlan.from_dict()
+        # would immediately raise the error
+        steps = [self.create_step("test").to_dict(), self.create_step("test").to_dict()]
+        del steps[0]["_id"]
+        del steps[1]["_id"]
+        plan = VEPlan().to_dict()
+        del plan["_id"]
+        plan["steps"] = steps
+
+        response = self.base_checks(
+            "POST", "/planner/insert", False, 409, body=self.json_serialize(plan)
+        )
+        self.assertEqual(response["reason"], NON_UNIQUE_STEPS_ERROR)
+
+    def test_post_error_non_unique_tasks(self):
+        """
+        expect: fail message because a step of the plan contains duplicate task
+        titles
+        """
+        step = self.create_step("test")
+        step.tasks = [Task(title="test"), Task(title="test")]
+        plan = VEPlan().to_dict()
+        plan["steps"] = [step.to_dict()]
+
+        response = self.base_checks(
+            "POST", "/planner/insert", False, 409, body=self.json_serialize(plan)
+        )
+        self.assertEqual(response["reason"], NON_UNIQUE_TASKS_ERROR)
+
+    def test_post_insert_plan(self):
+        """
+        expect: successfully insert new plan
+        """
+
+        # send valid dict without id to let system create one
+        plan = VEPlan(name="new").to_dict()
+        del plan["_id"]
+
+        response = self.base_checks("POST", "/planner/insert", True, 200, body=plan)
+        self.assertIn("inserted_id", response)
+        # use inserted id to compare plans in the db
+        plan["_id"] = ObjectId(response["inserted_id"])
+
+        # expect plan to be in the db
+        db_state = self.db.plans.find_one({"_id": ObjectId(response["inserted_id"])})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state, plan)
+
+    def test_post_insert_plan_error_plan_already_exists(self):
+        """
+        expect: fail message because a plan with the same _id already exists
+        """
+
+        plan = VEPlan(_id=self.plan_id).to_dict()
+        response = self.base_checks(
+            "POST", "/planner/insert", False, 409, body=self.json_serialize(plan)
+        )
+        self.assertEqual(response["reason"], PLAN_ALREADY_EXISTS_ERROR)
+
+    def test_post_update_plan(self):
+        """
+        expect: successfully overwrite a plan
+        """
+
+        plan = VEPlan(_id=self.plan_id, name="updated_plan")
+
+        response = self.base_checks(
+            "POST",
+            "/planner/update_full",
+            True,
+            200,
+            body=self.json_serialize(plan.to_dict()),
+        )
+        # expect updated_id in response
+        self.assertIn("updated_id", response)
+        self.assertEqual(ObjectId(response["updated_id"]), plan._id)
+
+        # expect plan is completely overwritten (name="updated_plan", other values = defaults)
+        db_state = self.db.plans.find_one({"_id": ObjectId(response["updated_id"])})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["name"], "updated_plan")
+        self.assertEqual(db_state["department"], None)
+
+    def test_post_upsert_plan(self):
+        """
+        expect: successfully upsert new plan
+        """
+
+        plan = VEPlan(name="upsert_this").to_dict()
+        del plan["_id"]
+
+        response = self.base_checks(
+            "POST",
+            "/planner/update_full?upsert=true",
+            True,
+            200,
+            body=self.json_serialize(plan),
+        )
+
+        self.assertIn("updated_id", response)
+
+        # expect plan to be upserted
+        db_state = self.db.plans.find_one({"_id": ObjectId(response["updated_id"])})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["name"], plan["name"])
+
+        # but also expect the other dummy plan to still be there
+        default_plan = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(default_plan)
+
+    def test_post_update_plan_error_invalid_query_param(self):
+        """
+        expect: fail message because the "upsert" parameter is
+        neither "true" nor "false"
+        """
+
+        response = self.base_checks(
+            "POST",
+            "/planner/update_full?upsert=test",
+            False,
+            400,
+            body=self.json_serialize(VEPlan().to_dict()),
+        )
+        self.assertEqual(response["reason"], INVALID_KEY_ERROR_SLUG + "upsert")
+
+    def test_post_update_plan_error_plan_doesnt_exist(self):
+        """
+        expect: fail message because no plan with a matching _id is found
+        and upsert is false (default)
+        """
+
+        response = self.base_checks(
+            "POST",
+            "/planner/update_full",
+            False,
+            409,
+            body=self.json_serialize(VEPlan().to_dict()),
+        )
+        self.assertEqual(response["reason"], PLAN_DOESNT_EXIST_ERROR)
+
+    def test_delete_plan(self):
+        """
+        expect: successfully delete plan
+        """
+
+        self.base_checks(
+            "DELETE", "/planner/delete?_id={}".format(str(self.plan_id)), True, 200
+        )
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNone(db_state)
+
+    def test_delete_plan_error_missing_key(self):
+        """
+        expect: fail message because request is missing _id query parameter
+        """
+
+        response = self.base_checks("DELETE", "/planner/delete", False, 400)
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "_id")
+
+    def test_delete_plan_error_plan_doesnt_exist(self):
+        """
+        expect: fail message because no plan was found matching the _id
+        """
+
+        response = self.base_checks(
+            "DELETE", "/planner/delete?_id={}".format(str(ObjectId())), False, 409
+        )
+        self.assertEqual(response["reason"], PLAN_DOESNT_EXIST_ERROR)

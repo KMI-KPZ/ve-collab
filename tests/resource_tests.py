@@ -5,10 +5,10 @@ from bson import ObjectId
 
 import pymongo
 from tornado.options import options
-from exceptions import PlanDoesntExistError
+from exceptions import PlanAlreadyExistsError, PlanDoesntExistError
 
 import global_vars
-from model import Step, Task, VEPlan
+from model import Step, TargetGroup, Task, VEPlan
 from resources.planner.ve_plan import VEPlanResource
 import util
 
@@ -68,22 +68,40 @@ class BaseResourceTestCase(TestCase):
         # close mongodb connection
         cls._client.close()
 
-    def create_step(self, name: str) -> Step:
+    def create_step(
+        self,
+        name: str,
+        timestamp_from: datetime = datetime(2023, 1, 1),
+        timestamp_to: datetime = datetime(2023, 1, 8),
+    ) -> Step:
         """
         convenience method to create a Step object with non-default values
         """
 
         return Step(
-            _id=ObjectId(),
             name=name,
             workload=10,
-            timestamp_from=datetime(2023, 1, 1),
-            timestamp_to=datetime(2023, 1, 8),
+            timestamp_from=timestamp_from,
+            timestamp_to=timestamp_to,
             learning_env="test",
             tasks=[Task()],
             evaluation_tools=["test", "test"],
             attachments=[ObjectId()],
             custom_attributes={"test": "test"},
+        )
+
+    def create_target_group(self, name: str) -> TargetGroup:
+        """
+        convenience method to create a TargetGroup object with non-default values
+        """
+        return TargetGroup(
+            name=name,
+            age_min=30,
+            age_max=40,
+            experience="test",
+            academic_course="test",
+            mother_tongue="test",
+            foreign_languages={"test": "l1"},
         )
 
 
@@ -94,11 +112,27 @@ class PlanResourceTest(BaseResourceTestCase):
         # manually set up a VEPlan in the db
         self.plan_id = ObjectId()
         self.step = self.create_step("test")
+        self.target_group = self.create_target_group("test")
         self.default_plan = {
             "_id": self.plan_id,
             "name": "test",
-            "topic_description": "test",
-            "learning_goal": "test",
+            "department": "test",
+            "topic": "test",
+            "academic_course": "test",
+            "lecture": "test",
+            "lecture_format": "test",
+            "audience": [self.target_group.to_dict()],
+            "participants_amount": 0,
+            "languages": ["test", "test"],
+            "timestamp_from": self.step.timestamp_from,
+            "timestamp_to": self.step.timestamp_to,
+            "goals": {"test": "test"},
+            "involved_parties": ["test", "test"],
+            "realization": "test",
+            "learning_env": "test",
+            "tools": ["test", "test"],
+            "duration": self.step.duration.total_seconds(),
+            "workload": self.step.workload,
             "steps": [self.step.to_dict()],
         }
         self.db.plans.insert_one(self.default_plan)
@@ -124,9 +158,35 @@ class PlanResourceTest(BaseResourceTestCase):
                 self.assertIsInstance(plan, VEPlan)
                 self.assertEqual(plan._id, self.default_plan["_id"])
                 self.assertEqual(plan.name, self.default_plan["name"])
-                self.assertEqual(plan.topic_description, self.default_plan["topic_description"])
-                self.assertEqual(plan.learning_goal, self.default_plan["learning_goal"])
-                self.assertEqual([step.to_dict() for step in plan.steps], self.default_plan["steps"])
+                self.assertEqual(plan.department, self.default_plan["department"])
+                self.assertEqual(plan.topic, self.default_plan["topic"])
+                self.assertEqual(
+                    plan.academic_course, self.default_plan["academic_course"]
+                )
+                self.assertEqual(plan.lecture, self.default_plan["lecture"])
+                self.assertEqual(
+                    plan.lecture_format, self.default_plan["lecture_format"]
+                )
+                self.assertEqual(
+                    [target_group.to_dict() for target_group in plan.audience],
+                    self.default_plan["audience"],
+                )
+                self.assertEqual(
+                    plan.participants_amount, self.default_plan["participants_amount"]
+                )
+                self.assertEqual(plan.languages, self.default_plan["languages"])
+                self.assertEqual(plan.goals, self.default_plan["goals"])
+                self.assertEqual(
+                    plan.involved_parties, self.default_plan["involved_parties"]
+                )
+                self.assertEqual(plan.realization, self.default_plan["realization"])
+                self.assertEqual(plan.learning_env, self.default_plan["learning_env"])
+                self.assertEqual(plan.tools, self.default_plan["tools"])
+                self.assertEqual(
+                    [step.to_dict() for step in plan.steps], self.default_plan["steps"]
+                )
+                self.assertEqual(plan.timestamp_from, self.step.timestamp_from)
+                self.assertEqual(plan.timestamp_to, self.step.timestamp_to)
                 self.assertEqual(plan.workload, self.step.workload)
                 self.assertEqual(plan.duration, self.step.duration)
 
@@ -160,37 +220,70 @@ class PlanResourceTest(BaseResourceTestCase):
         plans = self.planner.get_all()
         self.assertIsInstance(plans, list)
         self.assertEqual(len(plans), 1)
-        self.assertIsInstance(plans[0], VEPlan)
-        self.assertEqual(plans[0]._id, self.default_plan["_id"])
-        self.assertEqual(plans[0].name, self.default_plan["name"])
-        self.assertEqual(plans[0].topic_description, self.default_plan["topic_description"])
-        self.assertEqual(plans[0].learning_goal, self.default_plan["learning_goal"])
-        self.assertEqual([step.to_dict() for step in plans[0].steps], self.default_plan["steps"])
-        self.assertEqual(plans[0].workload, self.step.workload)
-        self.assertEqual(plans[0].duration, self.step.duration)
+        plan = plans[0]
+        self.assertIsInstance(plan, VEPlan)
+        self.assertEqual(plan._id, self.default_plan["_id"])
+        self.assertEqual(plan.name, self.default_plan["name"])
+        self.assertEqual(plan.department, self.default_plan["department"])
+        self.assertEqual(plan.topic, self.default_plan["topic"])
+        self.assertEqual(plan.academic_course, self.default_plan["academic_course"])
+        self.assertEqual(plan.lecture, self.default_plan["lecture"])
+        self.assertEqual(plan.lecture_format, self.default_plan["lecture_format"])
+        self.assertEqual(
+            [target_group.to_dict() for target_group in plan.audience],
+            self.default_plan["audience"],
+        )
+        self.assertEqual(
+            plan.participants_amount, self.default_plan["participants_amount"]
+        )
+        self.assertEqual(plan.languages, self.default_plan["languages"])
+        self.assertEqual(plan.goals, self.default_plan["goals"])
+        self.assertEqual(plan.involved_parties, self.default_plan["involved_parties"])
+        self.assertEqual(plan.realization, self.default_plan["realization"])
+        self.assertEqual(plan.learning_env, self.default_plan["learning_env"])
+        self.assertEqual(plan.tools, self.default_plan["tools"])
+        self.assertEqual(
+            [step.to_dict() for step in plan.steps], self.default_plan["steps"]
+        )
+        self.assertEqual(plan.timestamp_from, self.step.timestamp_from)
+        self.assertEqual(plan.timestamp_to, self.step.timestamp_to)
+        self.assertEqual(plan.workload, self.step.workload)
+        self.assertEqual(plan.duration, self.step.duration)
 
     def test_insert_plan(self):
         """
         expect: successfully insert a new plan into the db
-        (i.e. _id did not exist previously)
         """
 
         # don't supply a _id, letting the system create a fresh one
         plan = {
             "name": "new plan",
-            "topic_description": "test",
-            "learning_goal": "test",
+            "department": "test",
+            "topic": "test",
+            "academic_course": "test",
+            "lecture": "test",
+            "lecture_format": "test",
+            "audience": [self.target_group.to_dict()],
+            "participants_amount": 0,
+            "languages": ["test", "test"],
+            "timestamp_from": self.step.timestamp_from,
+            "timestamp_to": self.step.timestamp_to,
+            "goals": {"test": "test"},
+            "involved_parties": ["test", "test"],
+            "realization": "test",
+            "learning_env": "test",
+            "tools": ["test", "test"],
+            "duration": self.step.duration.total_seconds(),
+            "workload": self.step.workload,
             "steps": [self.step.to_dict()],
         }
 
-        # expect an "inserted" response
-        result = self.planner.insert_or_update(VEPlan.from_dict(plan))
-        self.assertIsInstance(result, tuple)
-        self.assertEqual(result[0], "inserted")
-        self.assertIsInstance(result[1], ObjectId)
+        # expect the _id of the freshly inserted plan as a response
+        inserted_id = self.planner.insert_plan(VEPlan.from_dict(plan))
+        self.assertIsInstance(inserted_id, ObjectId)
 
         # expect the plan to be in the db
-        db_state = self.db.plans.find_one({"name": plan["name"]})
+        db_state = self.db.plans.find_one({"_id": inserted_id})
         self.assertIsNotNone(db_state)
         self.assertIn("duration", db_state)
         self.assertIn("workload", db_state)
@@ -201,20 +294,33 @@ class PlanResourceTest(BaseResourceTestCase):
         # the result will despite that be an insert as expected
         plan_with_id = {
             "_id": ObjectId(),
-            "name": "new plan with _id",
-            "topic_description": "test",
-            "learning_goal": "test",
+            "name": "new plan",
+            "department": "test",
+            "topic": "test",
+            "academic_course": "test",
+            "lecture": "test",
+            "lecture_format": "test",
+            "audience": [self.target_group.to_dict()],
+            "participants_amount": 0,
+            "languages": ["test", "test"],
+            "timestamp_from": self.step.timestamp_from,
+            "timestamp_to": self.step.timestamp_to,
+            "goals": {"test": "test"},
+            "involved_parties": ["test", "test"],
+            "realization": "test",
+            "learning_env": "test",
+            "tools": ["test", "test"],
+            "duration": self.step.duration.total_seconds(),
+            "workload": self.step.workload,
             "steps": [self.step.to_dict()],
         }
 
         # expect an "inserted" response
-        result_with_id = self.planner.insert_or_update(VEPlan.from_dict(plan_with_id))
-        self.assertIsInstance(result_with_id, tuple)
-        self.assertEqual(result_with_id[0], "inserted")
-        self.assertIsInstance(result_with_id[1], ObjectId)
+        result_with_id = self.planner.insert_plan(VEPlan.from_dict(plan_with_id))
+        self.assertIsInstance(result_with_id, ObjectId)
 
         # expect the plan to be in the db
-        db_state_with_id = self.db.plans.find_one({"name": plan_with_id["name"]})
+        db_state_with_id = self.db.plans.find_one({"_id": result_with_id})
         self.assertIsNotNone(db_state_with_id)
         self.assertIn("duration", db_state_with_id)
         self.assertIn("workload", db_state_with_id)
@@ -222,6 +328,15 @@ class PlanResourceTest(BaseResourceTestCase):
             db_state_with_id["duration"], self.step.duration.total_seconds()
         )
         self.assertEqual(db_state_with_id["workload"], self.step.workload)
+
+    def test_insert_plan_error_plan_already_exists(self):
+        """
+        expect: PlanAlreadyExistsError is raised because a plan with the specified _id
+        already exists in the db
+        """
+
+        plan = VEPlan(_id=self.plan_id)
+        self.assertRaises(PlanAlreadyExistsError, self.planner.insert_plan, plan)
 
     def test_update_plan(self):
         """
@@ -231,18 +346,42 @@ class PlanResourceTest(BaseResourceTestCase):
         # use the default plan, but change its name
         existing_plan = VEPlan.from_dict(self.default_plan)
         existing_plan.name = "updated_name"
+        existing_plan.lecture = "new_lecture"
 
         # expect an "updated" response
-        result = self.planner.insert_or_update(existing_plan)
-        self.assertIsInstance(result, tuple)
-        self.assertEqual(result[0], "updated")
-        self.assertIsInstance(result[1], ObjectId)
-        self.assertEqual(result[1], existing_plan._id)
+        result = self.planner.update_full_plan(existing_plan)
+        self.assertIsInstance(result, ObjectId)
+        self.assertEqual(result, existing_plan._id)
 
-        # expect that the name was updated in the db
+        # expect that the name and lecture was updated in the db
         db_state = self.db.plans.find_one({"_id": existing_plan._id})
         self.assertIsNotNone(db_state)
         self.assertEqual(db_state["name"], existing_plan.name)
+        self.assertEqual(db_state["lecture"], existing_plan.lecture)
+
+    def test_update_plan_upsert(self):
+        """
+        expect: even though the update function is called, a new plan is inserted
+        because the upsert flag was set to True
+        """
+
+        plan = VEPlan(name="upsert_test")
+        
+        result = self.planner.update_full_plan(plan, upsert=True)
+        self.assertIsInstance(result, ObjectId)
+        self.assertEqual(result, plan._id)
+
+        # expect the plan to be in the db
+        db_state = self.db.plans.find_one({"_id": plan._id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["name"], plan.name)
+
+    def test_update_plan_error_plan_doesnt_exist(self):
+        """
+        expect: PlanDoesntExistError is raised because no plan with the specified
+        _id is present in the db and the upsert flag is set to False
+        """
+        self.assertRaises(PlanDoesntExistError, self.planner.update_full_plan, VEPlan())
 
     def test_delete_plan_str(self):
         """

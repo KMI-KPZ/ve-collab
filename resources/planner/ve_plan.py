@@ -2,9 +2,10 @@ from bson import ObjectId
 from bson.errors import InvalidId
 from datetime import timedelta
 from pymongo.database import Database
+from pymongo.errors import DuplicateKeyError
 from typing import List, Optional, Tuple
 
-from exceptions import PlanDoesntExistError
+from exceptions import PlanAlreadyExistsError, PlanDoesntExistError
 from model import VEPlan
 import util
 
@@ -69,40 +70,51 @@ class VEPlanResource:
 
         return VEPlan.from_dict(result)
 
-    def insert_or_update(self, plan: VEPlan) -> Tuple[str, ObjectId]:
+    def insert_plan(self, plan: VEPlan) -> ObjectId:
         """
-        Insert a new `VEPlan` into the database or update an existing one.
+        Insert the given plan into the database, returning the ObjectId of the
+        freshly generated document.
+        
+        If a plan with the same _id as the specified one already exists in the database,
+        a PlanAlreadyExistsError is raised and the plan will not be inserted. In that case,
+        either delete it and insert it again, or update it instead.
 
-        Existence is determined by the `_id` attribute, i.e. if a plan with
-        the given `_id` already exists in the database, the plan is updated (overwritten)
-        by this given plan. Contrary, if no matching plan is found, this plan is inserted
-        as a new one.
-
-        Returns a tuple containing two values: the first is either "inserted" or "updated"
-        and the second is the inserted/updated `_id` of the plan as an instance of
-        `ObjectId`.
+        :param plan: the VEPlan instance to insert into the db
+        :returns: the _id of the freshly inserted plan
         """
 
-        # since timedelta is not encodeable by bson, we have to store it as seconds in the db
-        result = self.db.plans.update_one(
-            {"_id": plan._id},
-            {
-                "$set": {
-                    "name": plan.name,
-                    "duration": plan.duration.total_seconds(),
-                    "workload": plan.workload,
-                    "topic_description": plan.topic_description,
-                    "learning_goal": plan.learning_goal,
-                    "steps": [step.to_dict() for step in plan.steps],
-                }
-            },
-            upsert=True,
+        try:
+            result = self.db.plans.insert_one(plan.to_dict())
+        except DuplicateKeyError:
+            raise PlanAlreadyExistsError()
+
+        return result.inserted_id
+
+    def update_full_plan(self, plan: VEPlan, upsert: bool = False) -> ObjectId:
+        """
+        Update an already existing plan in the db by completely overwriting it 
+        with the specified one, i.e. the plan in the db will have all the attributes that
+        this supplied plan has. If no match was found, a PlanDoesntExistError is raised.
+
+        Optionally, the `upsert` parameter may be set to True to insert the plan freshly instead
+        if no matching plan was found, resulting in an "insert".
+
+        Returns the updated, or (in case of an upsert) inserted _id, which is be
+        identical to the _id of the supplied plan.
+        """
+
+        update_result = self.db.plans.update_one(
+            {"_id": plan._id}, {"$set": plan.to_dict()},
+            upsert=upsert
         )
 
-        if result.matched_count == 1:
-            return "updated", plan._id
-        else:
-            return "inserted", result.upserted_id
+        # if no match was found, and no upsert was requested by the caller,
+        # raise PlanDoesntExistError
+        if update_result.matched_count != 1:
+            if update_result.upserted_id is None:
+                raise PlanDoesntExistError()
+
+        return plan._id
 
     def delete_plan(self, _id: str | ObjectId) -> None:
         """

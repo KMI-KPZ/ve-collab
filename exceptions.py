@@ -118,8 +118,13 @@ class NonUniqueStepsError(Exception):
     pass
 
 
-
 class PlanDoesntExistError(Exception):
     """The requested VEPlan doesn't exist"""
+
+    pass
+
+
+class PlanAlreadyExistsError(Exception):
+    """a VEPlan with this _id already exists"""
 
     pass
