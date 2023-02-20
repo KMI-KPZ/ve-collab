@@ -251,6 +251,7 @@ class StepModelTest(TestCase):
         self.assertEqual(step.duration, None)
         self.assertEqual(step.learning_env, None)
         self.assertIsNone(step.social_form)
+        self.assertIsNone(step.ve_approach)
         self.assertEqual(step.tasks, [])
         self.assertEqual(step.evaluation_tools, [])
         self.assertEqual(step.attachments, [])
@@ -276,6 +277,7 @@ class StepModelTest(TestCase):
             timestamp_to=timestamp_to,
             social_form="test",
             learning_env="test",
+            ve_approach="test",
             tasks=[task],
             evaluation_tools=["test", "test"],
             attachments=[attachment_id],
@@ -289,6 +291,7 @@ class StepModelTest(TestCase):
         self.assertEqual(step.duration, timedelta(days=7))
         self.assertEqual(step.social_form, "test")
         self.assertEqual(step.learning_env, "test")
+        self.assertEqual(step.ve_approach, "test")
         self.assertEqual(step.tasks, [task])
         self.assertEqual(step.evaluation_tools, ["test", "test"])
         self.assertEqual(step.attachments, [attachment_id])
@@ -321,6 +324,7 @@ class StepModelTest(TestCase):
         self.assertIn("duration", step_dict)
         self.assertIn("social_form", step_dict)
         self.assertIn("learning_env", step_dict)
+        self.assertIn("ve_approach", step_dict)
         self.assertIn("tasks", step_dict)
         self.assertIn("evaluation_tools", step_dict)
         self.assertIn("attachments", step_dict)
@@ -333,6 +337,7 @@ class StepModelTest(TestCase):
         self.assertEqual(step_dict["duration"], None)
         self.assertEqual(step_dict["social_form"], None)
         self.assertEqual(step_dict["learning_env"], None)
+        self.assertEqual(step_dict["ve_approach"], None)
         self.assertEqual(step_dict["tasks"], [])
         self.assertEqual(step_dict["evaluation_tools"], [])
         self.assertEqual(step_dict["attachments"], [])
@@ -353,6 +358,7 @@ class StepModelTest(TestCase):
             "timestamp_to": datetime(2023, 1, 8),
             "social_form": "test",
             "learning_env": "test",
+            "ve_approach": "test",
             "tasks": [Task().to_dict()],
             "evaluation_tools": ["test", "test"],
             "attachments": [attachment_id],
@@ -372,6 +378,7 @@ class StepModelTest(TestCase):
         )
         self.assertEqual(step.social_form, step_dict["social_form"])
         self.assertEqual(step.learning_env, step_dict["learning_env"])
+        self.assertEqual(step.ve_approach, step_dict["ve_approach"])
         self.assertEqual([task.to_dict() for task in step.tasks], step_dict["tasks"])
         self.assertEqual(step.evaluation_tools, step_dict["evaluation_tools"])
         self.assertEqual(step.attachments, step_dict["attachments"])
@@ -387,6 +394,7 @@ class StepModelTest(TestCase):
             "timestamp_to": datetime(2023, 1, 8),
             "social_form": "test",
             "learning_env": "test",
+            "ve_approach": "test",
             "tasks": [task_dict],
             "evaluation_tools": ["test", "test"],
             "attachments": [attachment_id],
@@ -405,6 +413,7 @@ class StepModelTest(TestCase):
         )
         self.assertEqual(step.social_form, step_dict["social_form"])
         self.assertEqual(step.learning_env, step_dict["learning_env"])
+        self.assertEqual(step.ve_approach, step_dict["ve_approach"])
         self.assertEqual(step.evaluation_tools, step_dict["evaluation_tools"])
         self.assertEqual(step.attachments, step_dict["attachments"])
         self.assertEqual(step.custom_attributes, step_dict["custom_attributes"])
@@ -436,6 +445,7 @@ class StepModelTest(TestCase):
             "timestamp_to": datetime(2023, 1, 8),
             "social_form": "test",
             "learning_env": "test",
+            "ve_approach": "test",
             "tasks": [Task().to_dict()],
             "evaluation_tools": ["test", "test"],
             "custom_attributes": {"test": "test"},
@@ -456,6 +466,7 @@ class StepModelTest(TestCase):
             "timestamp_to": datetime(2023, 1, 8),
             "social_form": "test",
             "learning_env": None,
+            "ve_approach": "test",
             "tasks": [Task().to_dict(), Task().to_dict()],
             "evaluation_tools": ["test", "test"],
             "attachments": [],
@@ -490,6 +501,10 @@ class StepModelTest(TestCase):
         step_dict["learning_env"] = list()
         self.assertRaises(TypeError, Step.from_dict, step_dict)
         step_dict["learning_env"] = "test"
+
+        step_dict["ve_approach"] = 123
+        self.assertRaises(TypeError, Step.from_dict, step_dict)
+        step_dict["ve_approach"] = None
 
         step_dict["tasks"] = dict()
         self.assertRaises(TypeError, Step.from_dict, step_dict)
@@ -776,6 +791,7 @@ class VEPlanModelTest(TestCase):
             timestamp_to=timestamp_to,
             social_form="test",
             learning_env="test",
+            ve_approach="test",
             tasks=[Task()],
             evaluation_tools=["test", "test"],
             attachments=[ObjectId()],
@@ -1068,6 +1084,7 @@ class VEPlanModelTest(TestCase):
                     "timestamp_to": step.timestamp_to,
                     "social_form": step.social_form,
                     "learning_env": step.learning_env,
+                    "ve_approach": step.ve_approach,
                     "tasks": [task.to_dict() for task in step.tasks],
                     "evaluation_tools": step.evaluation_tools,
                     "attachments": step.attachments,
@@ -1135,6 +1152,7 @@ class VEPlanModelTest(TestCase):
                     "timestamp_to": step.timestamp_to,
                     "social_form": step.social_form,
                     "learning_env": step.learning_env,
+                    "ve_approach": step.ve_approach,
                     "tasks": [task.to_dict() for task in step.tasks],
                     "evaluation_tools": step.evaluation_tools,
                     "attachments": step.attachments,

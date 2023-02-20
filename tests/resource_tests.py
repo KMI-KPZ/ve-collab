@@ -85,6 +85,7 @@ class BaseResourceTestCase(TestCase):
             timestamp_to=timestamp_to,
             social_form="test",
             learning_env="test",
+            ve_approach="test",
             tasks=[Task()],
             evaluation_tools=["test", "test"],
             attachments=[ObjectId()],

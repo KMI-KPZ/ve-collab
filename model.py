@@ -207,6 +207,7 @@ class Step:
         "timestamp_to": (str, datetime, type(None)),
         "social_form": (str, type(None)),
         "learning_env": (str, type(None)),
+        "ve_approach": (str, type(None)),
         "tasks": list,
         "evaluation_tools": list,
         "attachments": list,
@@ -222,6 +223,7 @@ class Step:
         timestamp_to: str | datetime = None,
         social_form: str = None,
         learning_env: str = None,
+        ve_approach: str = None,
         tasks: List[Task] = [],
         evaluation_tools: List[str] = [],
         attachments: List[ObjectId] = [],
@@ -274,6 +276,7 @@ class Step:
 
         self.social_form = social_form
         self.learning_env = learning_env
+        self.ve_approach = ve_approach
         self.tasks = tasks
         self.evaluation_tools = evaluation_tools
         self.attachments = [
@@ -307,6 +310,7 @@ class Step:
             "duration": self.duration.total_seconds() if self.duration else None,
             "social_form": self.social_form,
             "learning_env": self.learning_env,
+            "ve_approach": self.ve_approach,
             "tasks": [task.to_dict() for task in self.tasks],
             "evaluation_tools": self.evaluation_tools,
             "attachments": self.attachments,
@@ -843,8 +847,9 @@ class VEPlan:
                         "workload": 0,
                         "timestamp_from": None,
                         "timestamp_to": None,
-                        "learning_env": None,
                         "social_form": None,
+                        "learning_env": None,
+                        "ve_approach": None,
                         "tasks": [
                             {
                                 "_id": "object_id_str",

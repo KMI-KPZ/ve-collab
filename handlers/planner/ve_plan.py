@@ -148,6 +148,7 @@ class VEPlanHandler(BaseHandler):
                                 "timestamp_to": "2000-01-08",
                                 "social_form": "test",
                                 "learning_env": "test",
+                                "ve_approach": "test",
                                 "tasks": [
                                     {
                                         "title": "test",
@@ -269,6 +270,7 @@ class VEPlanHandler(BaseHandler):
                                 "timestamp_to": "2000-01-08",
                                 "social_form": "test",
                                 "learning_env": "test",
+                                "ve_approach": "test",
                                 "tasks": [
                                     {
                                         "title": "test",
