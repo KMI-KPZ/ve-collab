@@ -205,6 +205,7 @@ class Step:
         "workload": int,
         "timestamp_from": (str, datetime, type(None)),
         "timestamp_to": (str, datetime, type(None)),
+        "social_form": (str, type(None)),
         "learning_env": (str, type(None)),
         "tasks": list,
         "evaluation_tools": list,
@@ -219,6 +220,7 @@ class Step:
         workload: int = 0,
         timestamp_from: str | datetime = None,
         timestamp_to: str | datetime = None,
+        social_form: str = None,
         learning_env: str = None,
         tasks: List[Task] = [],
         evaluation_tools: List[str] = [],
@@ -270,6 +272,7 @@ class Step:
         else:
             self.duration = self.timestamp_to - self.timestamp_from
 
+        self.social_form = social_form
         self.learning_env = learning_env
         self.tasks = tasks
         self.evaluation_tools = evaluation_tools
@@ -302,6 +305,7 @@ class Step:
             "timestamp_from": self.timestamp_from,
             "timestamp_to": self.timestamp_to,
             "duration": self.duration.total_seconds() if self.duration else None,
+            "social_form": self.social_form,
             "learning_env": self.learning_env,
             "tasks": [task.to_dict() for task in self.tasks],
             "evaluation_tools": self.evaluation_tools,
@@ -840,6 +844,7 @@ class VEPlan:
                         "timestamp_from": None,
                         "timestamp_to": None,
                         "learning_env": None,
+                        "social_form": None,
                         "tasks": [
                             {
                                 "_id": "object_id_str",
