@@ -139,6 +139,7 @@ class VEPlanHandler(BaseHandler):
                         "realization": "test",
                         "learning_env": "test",
                         "tools": ["test"],
+                        "new_content": False,
                         "steps": [
                             {
                                 "name": "test",
@@ -258,6 +259,7 @@ class VEPlanHandler(BaseHandler):
                         "realization": "test",
                         "learning_env": "test",
                         "tools": ["test"],
+                        "new_content": False,
                         "steps": [
                             {
                                 "name": "test",

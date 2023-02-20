@@ -131,6 +131,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "realization": "test",
             "learning_env": "test",
             "tools": ["test", "test"],
+            "new_content": False,
             "duration": self.step.duration.total_seconds(),
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
@@ -182,6 +183,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 self.assertEqual(plan.realization, self.default_plan["realization"])
                 self.assertEqual(plan.learning_env, self.default_plan["learning_env"])
                 self.assertEqual(plan.tools, self.default_plan["tools"])
+                self.assertEqual(plan.new_content, self.default_plan["new_content"])
                 self.assertEqual(
                     [step.to_dict() for step in plan.steps], self.default_plan["steps"]
                 )
@@ -242,6 +244,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(plan.realization, self.default_plan["realization"])
         self.assertEqual(plan.learning_env, self.default_plan["learning_env"])
         self.assertEqual(plan.tools, self.default_plan["tools"])
+        self.assertEqual(plan.new_content, self.default_plan["new_content"])
         self.assertEqual(
             [step.to_dict() for step in plan.steps], self.default_plan["steps"]
         )
@@ -273,6 +276,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "realization": "test",
             "learning_env": "test",
             "tools": ["test", "test"],
+            "new_content": False,
             "duration": self.step.duration.total_seconds(),
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
@@ -310,6 +314,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "realization": "test",
             "learning_env": "test",
             "tools": ["test", "test"],
+            "new_content": False,
             "duration": self.step.duration.total_seconds(),
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],

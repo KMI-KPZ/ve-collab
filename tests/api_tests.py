@@ -6648,6 +6648,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "realization": "test",
             "learning_env": "test",
             "tools": ["test", "test"],
+            "new_content": False,
             "duration": self.step.duration.total_seconds(),
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],

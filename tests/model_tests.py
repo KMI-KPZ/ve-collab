@@ -801,6 +801,7 @@ class VEPlanModelTest(TestCase):
         self.assertIsNone(plan.realization)
         self.assertIsNone(plan.learning_env)
         self.assertEqual(plan.tools, [])
+        self.assertEqual(plan.new_content, None)
         self.assertEqual(plan.steps, [])
         self.assertEqual(plan.duration, None)
         self.assertEqual(plan.workload, 0)
@@ -847,6 +848,7 @@ class VEPlanModelTest(TestCase):
             realization="test",
             learning_env="test",
             tools=["test", "test"],
+            new_content=True,
             steps=steps,
         )
 
@@ -865,6 +867,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.realization, "test")
         self.assertEqual(plan.learning_env, "test")
         self.assertEqual(plan.tools, ["test", "test"])
+        self.assertEqual(plan.new_content, True)
         self.assertEqual(plan.steps, steps)
         self.assertEqual(plan.workload, 20)
         self.assertEqual(plan.timestamp_from, datetime(2023, 1, 1))
@@ -893,6 +896,7 @@ class VEPlanModelTest(TestCase):
             realization="test",
             learning_env="test",
             tools=["test", "test"],
+            new_content=True,
             steps=steps,
         )
         self.assertIsInstance(plan._id, ObjectId)
@@ -910,6 +914,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.realization, "test")
         self.assertEqual(plan.learning_env, "test")
         self.assertEqual(plan.tools, ["test", "test"])
+        self.assertEqual(plan.new_content, True)
         self.assertEqual(plan.steps, steps)
         self.assertIsInstance(plan.steps[0]._id, ObjectId)
         self.assertEqual(plan.workload, 10)
@@ -976,6 +981,7 @@ class VEPlanModelTest(TestCase):
         self.assertIn("realization", plan_dict)
         self.assertIn("learning_env", plan_dict)
         self.assertIn("tools", plan_dict)
+        self.assertIn("new_content", plan_dict)
         self.assertIn("duration", plan_dict)
         self.assertIn("workload", plan_dict)
         self.assertIn("steps", plan_dict)
@@ -994,6 +1000,7 @@ class VEPlanModelTest(TestCase):
         self.assertIsNone(plan_dict["realization"])
         self.assertIsNone(plan_dict["learning_env"])
         self.assertEqual(plan_dict["tools"], [])
+        self.assertIsNone(plan_dict["new_content"])
         self.assertEqual(plan_dict["workload"], 10)
         self.assertEqual(plan_dict["duration"], None)
         self.assertEqual(plan_dict["steps"], [step.to_dict()])
@@ -1035,6 +1042,7 @@ class VEPlanModelTest(TestCase):
             "realization": None,
             "learning_env": None,
             "tools": [],
+            "new_content": False,
             "steps": [
                 {
                     "_id": step._id,
@@ -1067,6 +1075,7 @@ class VEPlanModelTest(TestCase):
         self.assertIsNone(plan.realization)
         self.assertIsNone(plan.learning_env)
         self.assertEqual(plan.tools, [])
+        self.assertEqual(plan.new_content, False)
         self.assertEqual(plan._id, _id)
         self.assertEqual(plan.steps, [step])
         self.assertEqual(plan.duration, step.duration)
@@ -1100,6 +1109,7 @@ class VEPlanModelTest(TestCase):
             "realization": None,
             "learning_env": None,
             "tools": [],
+            "new_content": False,
             "steps": [
                 {
                     "name": step.name,
@@ -1130,6 +1140,7 @@ class VEPlanModelTest(TestCase):
         self.assertIsNone(plan.realization)
         self.assertIsNone(plan.learning_env)
         self.assertEqual(plan.tools, [])
+        self.assertEqual(plan.new_content, False)
         self.assertEqual(plan.duration, step.duration)
         self.assertEqual(plan.timestamp_from, step.timestamp_from)
         self.assertEqual(plan.timestamp_to, step.timestamp_to)
@@ -1169,6 +1180,7 @@ class VEPlanModelTest(TestCase):
             "realization": None,
             "learning_env": None,
             "tools": [],
+            "new_content": None,
         }
         self.assertRaises(PlanKeyError, VEPlan.from_dict, plan_dict)
 
@@ -1194,6 +1206,7 @@ class VEPlanModelTest(TestCase):
             "realization": None,
             "learning_env": None,
             "tools": [],
+            "new_content": False,
             "steps": [],
         }
 
@@ -1258,6 +1271,10 @@ class VEPlanModelTest(TestCase):
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
         plan_dict["tools"] = list()
 
+        plan_dict["new_content"] = list()
+        self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
+        plan_dict["new_content"] = True
+
         plan_dict["steps"] = 123
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
         plan_dict["steps"] = list()
@@ -1284,6 +1301,7 @@ class VEPlanModelTest(TestCase):
             "realization": None,
             "learning_env": None,
             "tools": [],
+            "new_content": None,
             "steps": [
                 self.create_step("test").to_dict(),
                 self.create_step("test").to_dict(),

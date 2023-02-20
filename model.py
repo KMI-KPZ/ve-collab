@@ -614,6 +614,7 @@ class VEPlan:
         "realization": (str, type(None)),
         "learning_env": (str, type(None)),
         "tools": list,
+        "new_content": (bool, type(None)),
         "steps": list,
     }
 
@@ -634,6 +635,7 @@ class VEPlan:
         realization: str = None,
         learning_env: str = None,
         tools: List[str] = [],
+        new_content: bool = None,
         steps: List[Step] = [],
     ) -> None:
         """
@@ -675,6 +677,7 @@ class VEPlan:
         self.realization = realization
         self.learning_env = learning_env
         self.tools = tools
+        self.new_content = new_content
         self.steps = steps
 
         # ensure that steps have unique names
@@ -729,6 +732,7 @@ class VEPlan:
             "realization": self.realization,
             "learning_env": self.learning_env,
             "tools": self.tools,
+            "new_content": self.new_content,
             "duration": self.duration.total_seconds() if self.duration else None,
             "workload": self.workload,
             "steps": [step.to_dict() for step in self.steps],
@@ -827,6 +831,7 @@ class VEPlan:
                 "realization": None,
                 "learning_env": None,
                 "tools": [],
+                "new_content": None,
                 "steps": [
                     {
                         "_id": "object_id_str",
