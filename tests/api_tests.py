@@ -6633,7 +6633,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.default_plan = {
             "_id": self.plan_id,
             "name": "test",
-            "department": "test",
+            "departments": {"test": "test"},
             "topic": "test",
             "academic_course": "test",
             "lecture": "test",
@@ -6867,7 +6867,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         db_state = self.db.plans.find_one({"_id": ObjectId(response["updated_id"])})
         self.assertIsNotNone(db_state)
         self.assertEqual(db_state["name"], "updated_plan")
-        self.assertEqual(db_state["department"], None)
+        self.assertEqual(db_state["departments"], {})
 
     def test_post_upsert_plan(self):
         """

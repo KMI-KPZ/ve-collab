@@ -788,7 +788,7 @@ class VEPlanModelTest(TestCase):
         plan = VEPlan()
         self.assertIsInstance(plan._id, ObjectId)
         self.assertIsNone(plan.name)
-        self.assertIsNone(plan.department)
+        self.assertEqual(plan.departments, {})
         self.assertIsNone(plan.topic)
         self.assertIsNone(plan.academic_course)
         self.assertIsNone(plan.lecture)
@@ -835,7 +835,7 @@ class VEPlanModelTest(TestCase):
         plan = VEPlan(
             _id=_id,
             name="test",
-            department="test",
+            departments={"test":"test"},
             topic="test",
             academic_course="test",
             lecture="test",
@@ -854,7 +854,7 @@ class VEPlanModelTest(TestCase):
 
         self.assertEqual(plan._id, _id)
         self.assertEqual(plan.name, "test")
-        self.assertEqual(plan.department, "test")
+        self.assertEqual(plan.departments, {"test":"test"})
         self.assertEqual(plan.topic, "test")
         self.assertEqual(plan.academic_course, "test")
         self.assertEqual(plan.lecture, "test")
@@ -883,7 +883,7 @@ class VEPlanModelTest(TestCase):
         ]
         plan = VEPlan(
             name="test",
-            department="test",
+            departments={"test":"test"},
             topic="test",
             academic_course="test",
             lecture="test",
@@ -901,7 +901,7 @@ class VEPlanModelTest(TestCase):
         )
         self.assertIsInstance(plan._id, ObjectId)
         self.assertEqual(plan.name, "test")
-        self.assertEqual(plan.department, "test")
+        self.assertEqual(plan.departments, {"test":"test"})
         self.assertEqual(plan.topic, "test")
         self.assertEqual(plan.academic_course, "test")
         self.assertEqual(plan.lecture, "test")
@@ -966,7 +966,7 @@ class VEPlanModelTest(TestCase):
 
         self.assertIn("_id", plan_dict)
         self.assertIn("name", plan_dict)
-        self.assertIn("department", plan_dict)
+        self.assertIn("departments", plan_dict)
         self.assertIn("topic", plan_dict)
         self.assertIn("academic_course", plan_dict)
         self.assertIn("lecture", plan_dict)
@@ -987,7 +987,7 @@ class VEPlanModelTest(TestCase):
         self.assertIn("steps", plan_dict)
         self.assertIsInstance(plan_dict["_id"], ObjectId)
         self.assertIsNone(plan_dict["name"])
-        self.assertIsNone(plan_dict["department"])
+        self.assertEqual(plan_dict["departments"], {})
         self.assertIsNone(plan_dict["topic"])
         self.assertIsNone(plan_dict["academic_course"])
         self.assertIsNone(plan_dict["lecture"])
@@ -1018,7 +1018,7 @@ class VEPlanModelTest(TestCase):
         plan_dict = {
             "_id": _id,
             "name": None,
-            "department": None,
+            "departments": {},
             "topic": None,
             "academic_course": None,
             "lecture": None,
@@ -1062,7 +1062,7 @@ class VEPlanModelTest(TestCase):
         plan = VEPlan.from_dict(plan_dict)
 
         self.assertIsNone(plan.name)
-        self.assertIsNone(plan.department)
+        self.assertEqual(plan.departments, {})
         self.assertIsNone(plan.topic)
         self.assertIsNone(plan.academic_course)
         self.assertIsNone(plan.lecture)
@@ -1086,7 +1086,7 @@ class VEPlanModelTest(TestCase):
         # again, but this time don't set an _id ourselves
         plan_dict = {
             "name": None,
-            "department": None,
+            "departments": {},
             "topic": None,
             "academic_course": None,
             "lecture": None,
@@ -1128,7 +1128,7 @@ class VEPlanModelTest(TestCase):
         plan = VEPlan.from_dict(plan_dict)
 
         self.assertIsNone(plan.name)
-        self.assertIsNone(plan.department)
+        self.assertEqual(plan.departments, {})
         self.assertIsNone(plan.topic)
         self.assertIsNone(plan.academic_course)
         self.assertIsNone(plan.lecture)
@@ -1167,7 +1167,7 @@ class VEPlanModelTest(TestCase):
         plan_dict = {
             "_id": ObjectId(),
             "name": None,
-            "department": None,
+            "departments": {},
             "topic": None,
             "academic_course": None,
             "lecture": None,
@@ -1193,7 +1193,7 @@ class VEPlanModelTest(TestCase):
         plan_dict = {
             "_id": ObjectId(),
             "name": None,
-            "department": None,
+            "departments": {},
             "topic": None,
             "academic_course": None,
             "lecture": None,
@@ -1219,9 +1219,9 @@ class VEPlanModelTest(TestCase):
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
         plan_dict["name"] = None
 
-        plan_dict["department"] = 123
+        plan_dict["departments"] = 123
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
-        plan_dict["department"] = None
+        plan_dict["departments"] = dict()
 
         plan_dict["topic"] = list()
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
@@ -1288,7 +1288,7 @@ class VEPlanModelTest(TestCase):
         plan_dict = {
             "_id": ObjectId(),
             "name": None,
-            "department": None,
+            "departments": {},
             "topic": None,
             "academic_course": None,
             "lecture": None,

@@ -116,7 +116,7 @@ class VEPlanHandler(BaseHandler):
                 Example:
                     {
                         "name": "test",
-                        "department": "test",
+                        "departments": {"test":"test"},
                         "topic": "test",
                         "academic_course": "test",
                         "lecture": "test",
@@ -236,7 +236,7 @@ class VEPlanHandler(BaseHandler):
                     {
                         "_id": "<object_id_str>",
                         "name": "test",
-                        "department": "test",
+                        "departments": {"test":"test"},
                         "topic": "test",
                         "academic_course": "test",
                         "lecture": "test",

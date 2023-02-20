@@ -116,7 +116,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.default_plan = {
             "_id": self.plan_id,
             "name": "test",
-            "department": "test",
+            "departments": {"test":"test"},
             "topic": "test",
             "academic_course": "test",
             "lecture": "test",
@@ -159,7 +159,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 self.assertIsInstance(plan, VEPlan)
                 self.assertEqual(plan._id, self.default_plan["_id"])
                 self.assertEqual(plan.name, self.default_plan["name"])
-                self.assertEqual(plan.department, self.default_plan["department"])
+                self.assertEqual(plan.departments, self.default_plan["departments"])
                 self.assertEqual(plan.topic, self.default_plan["topic"])
                 self.assertEqual(
                     plan.academic_course, self.default_plan["academic_course"]
@@ -226,7 +226,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertIsInstance(plan, VEPlan)
         self.assertEqual(plan._id, self.default_plan["_id"])
         self.assertEqual(plan.name, self.default_plan["name"])
-        self.assertEqual(plan.department, self.default_plan["department"])
+        self.assertEqual(plan.departments, self.default_plan["departments"])
         self.assertEqual(plan.topic, self.default_plan["topic"])
         self.assertEqual(plan.academic_course, self.default_plan["academic_course"])
         self.assertEqual(plan.lecture, self.default_plan["lecture"])
@@ -261,7 +261,7 @@ class PlanResourceTest(BaseResourceTestCase):
         # don't supply a _id, letting the system create a fresh one
         plan = {
             "name": "new plan",
-            "department": "test",
+            "departments": {"test":"test"},
             "topic": "test",
             "academic_course": "test",
             "lecture": "test",
@@ -299,7 +299,7 @@ class PlanResourceTest(BaseResourceTestCase):
         plan_with_id = {
             "_id": ObjectId(),
             "name": "new plan",
-            "department": "test",
+            "departments": {"test":"test"},
             "topic": "test",
             "academic_course": "test",
             "lecture": "test",

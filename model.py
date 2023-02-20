@@ -601,7 +601,7 @@ class VEPlan:
 
     EXPECTED_DICT_ENTRIES = {
         "name": (str, type(None)),
-        "department": (str, type(None)),
+        "departments": dict,
         "topic": (str, type(None)),
         "academic_course": (str, type(None)),
         "lecture": (str, type(None)),
@@ -622,7 +622,7 @@ class VEPlan:
         self,
         _id: str | ObjectId = None,
         name: str = None,
-        department: str = None,
+        departments: dict = {},
         topic: str = None,
         academic_course: str = None,
         lecture: str = None,
@@ -664,7 +664,7 @@ class VEPlan:
         self._id = util.parse_object_id(_id) if _id != None else ObjectId()
 
         self.name = name
-        self.department = department
+        self.departments = departments
         self.topic = topic
         self.academic_course = academic_course
         self.lecture = lecture
@@ -717,7 +717,7 @@ class VEPlan:
         return {
             "_id": self._id,
             "name": self.name,
-            "department": self.department,
+            "departments": self.departments,
             "topic": self.topic,
             "academic_course": self.academic_course,
             "lecture": self.lecture,
@@ -807,7 +807,7 @@ class VEPlan:
             params = {
                 "_id": "object_id_str",
                 "name": None,
-                "department": None,
+                "departments": {},
                 "topic": None,
                 "academic_course": None,
                 "lecture": None,
