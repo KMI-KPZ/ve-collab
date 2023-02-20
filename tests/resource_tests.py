@@ -118,7 +118,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "name": "test",
             "departments": {"test":"test"},
             "topic": "test",
-            "academic_course": "test",
+            "academic_courses": {"test":"test"},
             "lecture": "test",
             "lecture_format": "test",
             "audience": [self.target_group.to_dict()],
@@ -162,7 +162,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 self.assertEqual(plan.departments, self.default_plan["departments"])
                 self.assertEqual(plan.topic, self.default_plan["topic"])
                 self.assertEqual(
-                    plan.academic_course, self.default_plan["academic_course"]
+                    plan.academic_courses, self.default_plan["academic_courses"]
                 )
                 self.assertEqual(plan.lecture, self.default_plan["lecture"])
                 self.assertEqual(
@@ -228,7 +228,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(plan.name, self.default_plan["name"])
         self.assertEqual(plan.departments, self.default_plan["departments"])
         self.assertEqual(plan.topic, self.default_plan["topic"])
-        self.assertEqual(plan.academic_course, self.default_plan["academic_course"])
+        self.assertEqual(plan.academic_courses, self.default_plan["academic_courses"])
         self.assertEqual(plan.lecture, self.default_plan["lecture"])
         self.assertEqual(plan.lecture_format, self.default_plan["lecture_format"])
         self.assertEqual(
@@ -263,7 +263,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "name": "new plan",
             "departments": {"test":"test"},
             "topic": "test",
-            "academic_course": "test",
+            "academic_courses": {"test":"test"},
             "lecture": "test",
             "lecture_format": "test",
             "audience": [self.target_group.to_dict()],
@@ -301,7 +301,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "name": "new plan",
             "departments": {"test":"test"},
             "topic": "test",
-            "academic_course": "test",
+            "academic_courses": {"test":"test"},
             "lecture": "test",
             "lecture_format": "test",
             "audience": [self.target_group.to_dict()],

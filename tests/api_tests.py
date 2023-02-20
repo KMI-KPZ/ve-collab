@@ -6635,7 +6635,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "name": "test",
             "departments": {"test": "test"},
             "topic": "test",
-            "academic_course": "test",
+            "academic_courses": {"test":"test"},
             "lecture": "test",
             "lecture_format": "test",
             "audience": [self.target_group.to_dict()],

@@ -603,7 +603,7 @@ class VEPlan:
         "name": (str, type(None)),
         "departments": dict,
         "topic": (str, type(None)),
-        "academic_course": (str, type(None)),
+        "academic_courses": dict,
         "lecture": (str, type(None)),
         "lecture_format": (str, type(None)),
         "audience": list,
@@ -624,7 +624,7 @@ class VEPlan:
         name: str = None,
         departments: dict = {},
         topic: str = None,
-        academic_course: str = None,
+        academic_courses: dict = {},
         lecture: str = None,
         lecture_format: str = None,
         audience: List[TargetGroup] = [],
@@ -666,7 +666,7 @@ class VEPlan:
         self.name = name
         self.departments = departments
         self.topic = topic
-        self.academic_course = academic_course
+        self.academic_courses = academic_courses
         self.lecture = lecture
         self.lecture_format = lecture_format
         self.audience = audience
@@ -719,7 +719,7 @@ class VEPlan:
             "name": self.name,
             "departments": self.departments,
             "topic": self.topic,
-            "academic_course": self.academic_course,
+            "academic_courses": self.academic_courses,
             "lecture": self.lecture,
             "lecture_format": self.lecture_format,
             "audience": [target_group.to_dict() for target_group in self.audience],
@@ -809,7 +809,7 @@ class VEPlan:
                 "name": None,
                 "departments": {},
                 "topic": None,
-                "academic_course": None,
+                "academic_courses": {},
                 "lecture": None,
                 "lecture_format": None,
                 "audience": [
