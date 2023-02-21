@@ -140,9 +140,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "_id": self.plan_id,
             "name": "test",
             "institutions": [self.institution.to_dict()],
-            "departments": {"test": "test"},
             "topic": "test",
-            "academic_courses": {"test": "test"},
             "lecture": "test",
             "lecture_format": "test",
             "audience": [self.target_group.to_dict()],
@@ -187,11 +185,7 @@ class PlanResourceTest(BaseResourceTestCase):
                     [institution.to_dict() for institution in plan.institutions],
                     self.default_plan["institutions"],
                 )
-                self.assertEqual(plan.departments, self.default_plan["departments"])
                 self.assertEqual(plan.topic, self.default_plan["topic"])
-                self.assertEqual(
-                    plan.academic_courses, self.default_plan["academic_courses"]
-                )
                 self.assertEqual(plan.lecture, self.default_plan["lecture"])
                 self.assertEqual(
                     plan.lecture_format, self.default_plan["lecture_format"]
@@ -258,9 +252,7 @@ class PlanResourceTest(BaseResourceTestCase):
             [institution.to_dict() for institution in plan.institutions],
             self.default_plan["institutions"],
         )
-        self.assertEqual(plan.departments, self.default_plan["departments"])
         self.assertEqual(plan.topic, self.default_plan["topic"])
-        self.assertEqual(plan.academic_courses, self.default_plan["academic_courses"])
         self.assertEqual(plan.lecture, self.default_plan["lecture"])
         self.assertEqual(plan.lecture_format, self.default_plan["lecture_format"])
         self.assertEqual(
@@ -294,9 +286,7 @@ class PlanResourceTest(BaseResourceTestCase):
         plan = {
             "name": "new plan",
             "institutions": [self.institution.to_dict()],
-            "departments": {"test": "test"},
             "topic": "test",
-            "academic_courses": {"test": "test"},
             "lecture": "test",
             "lecture_format": "test",
             "audience": [self.target_group.to_dict()],
@@ -333,9 +323,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "_id": ObjectId(),
             "name": "new plan",
             "institutions": [self.institution.to_dict()],
-            "departments": {"test": "test"},
             "topic": "test",
-            "academic_courses": {"test": "test"},
             "lecture": "test",
             "lecture_format": "test",
             "audience": [self.target_group.to_dict()],

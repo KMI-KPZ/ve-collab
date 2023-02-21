@@ -1019,9 +1019,7 @@ class VEPlan:
     EXPECTED_DICT_ENTRIES = {
         "name": (str, type(None)),
         "institutions": list,
-        "departments": dict,
         "topic": (str, type(None)),
-        "academic_courses": dict,
         "lecture": (str, type(None)),
         "lecture_format": (str, type(None)),
         "audience": list,
@@ -1041,9 +1039,7 @@ class VEPlan:
         _id: str | ObjectId = None,
         name: str = None,
         institutions: List[Institution] = [],
-        departments: dict = {},
         topic: str = None,
-        academic_courses: dict = {},
         lecture: str = None,
         lecture_format: str = None,
         audience: List[TargetGroup] = [],
@@ -1084,9 +1080,7 @@ class VEPlan:
 
         self.name = name
         self.institutions = institutions
-        self.departments = departments
         self.topic = topic
-        self.academic_courses = academic_courses
         self.lecture = lecture
         self.lecture_format = lecture_format
         self.audience = audience
@@ -1140,9 +1134,7 @@ class VEPlan:
             "institutions": [
                 institution.to_dict() for institution in self.institutions
             ],
-            "departments": self.departments,
             "topic": self.topic,
-            "academic_courses": self.academic_courses,
             "lecture": self.lecture,
             "lecture_format": self.lecture_format,
             "audience": [target_group.to_dict() for target_group in self.audience],
@@ -1250,9 +1242,7 @@ class VEPlan:
                         ],
                     }
                 ],
-                "departments": {},
                 "topic": None,
-                "academic_courses": {},
                 "lecture": None,
                 "lecture_format": None,
                 "audience": [

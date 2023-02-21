@@ -136,9 +136,7 @@ class VEPlanHandler(BaseHandler):
                                 ],
                             }
                         ],
-                        "departments": {"test":"test"},
                         "topic": "test",
-                        "academic_courses": {"test":"test"},
                         "lecture": "test",
                         "lecture_format": "test",
                         "audience": [
@@ -278,9 +276,7 @@ class VEPlanHandler(BaseHandler):
                                 ],
                             }
                         ],
-                        "departments": {"test":"test"},
                         "topic": "test",
-                        "academic_courses": {"test":"test"},
                         "lecture": "test",
                         "lecture_format": "test",
                         "audience": [
