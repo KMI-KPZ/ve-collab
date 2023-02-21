@@ -116,6 +116,26 @@ class VEPlanHandler(BaseHandler):
                 Example:
                     {
                         "name": "test",
+                        "institutions": [
+                            {
+                                "_id": "<object_id_str>",
+                                "name": "test",
+                                "school_type": "test",
+                                "country": "test",
+                                "departments": [
+                                    {
+                                        "_id": "<object_id_str>",
+                                        "name": "test",
+                                        "academic_courses": [
+                                            {
+                                                "_id": "<object_id_str>",
+                                                "name": "test",
+                                            }
+                                        ],
+                                    }
+                                ],
+                            }
+                        ],
                         "departments": {"test":"test"},
                         "topic": "test",
                         "academic_courses": {"test":"test"},
@@ -238,6 +258,26 @@ class VEPlanHandler(BaseHandler):
                     {
                         "_id": "<object_id_str>",
                         "name": "test",
+                        "institutions": [
+                            {
+                                "_id": "<object_id_str>",
+                                "name": "test",
+                                "school_type": "test",
+                                "country": "test",
+                                "departments": [
+                                    {
+                                        "_id": "<object_id_str>",
+                                        "name": "test",
+                                        "academic_courses": [
+                                            {
+                                                "_id": "<object_id_str>",
+                                                "name": "test",
+                                            }
+                                        ],
+                                    }
+                                ],
+                            }
+                        ],
                         "departments": {"test":"test"},
                         "topic": "test",
                         "academic_courses": {"test":"test"},

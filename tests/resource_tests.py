@@ -8,7 +8,15 @@ from tornado.options import options
 from exceptions import PlanAlreadyExistsError, PlanDoesntExistError
 
 import global_vars
-from model import Step, TargetGroup, Task, VEPlan
+from model import (
+    AcademicCourse,
+    Department,
+    Institution,
+    Step,
+    TargetGroup,
+    Task,
+    VEPlan,
+)
 from resources.planner.ve_plan import VEPlanResource
 import util
 
@@ -106,6 +114,18 @@ class BaseResourceTestCase(TestCase):
             foreign_languages={"test": "l1"},
         )
 
+    def create_institution(self, name: str = "test") -> Institution:
+        """
+        convenience method to create an institution with non-default values
+        """
+
+        return Institution(
+            name=name,
+            school_type="test",
+            country="test",
+            departments=[Department(name="test", academic_courses=[AcademicCourse()])],
+        )
+
 
 class PlanResourceTest(BaseResourceTestCase):
     def setUp(self) -> None:
@@ -115,12 +135,14 @@ class PlanResourceTest(BaseResourceTestCase):
         self.plan_id = ObjectId()
         self.step = self.create_step("test")
         self.target_group = self.create_target_group("test")
+        self.institution = self.create_institution("test")
         self.default_plan = {
             "_id": self.plan_id,
             "name": "test",
-            "departments": {"test":"test"},
+            "institutions": [self.institution.to_dict()],
+            "departments": {"test": "test"},
             "topic": "test",
-            "academic_courses": {"test":"test"},
+            "academic_courses": {"test": "test"},
             "lecture": "test",
             "lecture_format": "test",
             "audience": [self.target_group.to_dict()],
@@ -161,6 +183,10 @@ class PlanResourceTest(BaseResourceTestCase):
                 self.assertIsInstance(plan, VEPlan)
                 self.assertEqual(plan._id, self.default_plan["_id"])
                 self.assertEqual(plan.name, self.default_plan["name"])
+                self.assertEqual(
+                    [institution.to_dict() for institution in plan.institutions],
+                    self.default_plan["institutions"],
+                )
                 self.assertEqual(plan.departments, self.default_plan["departments"])
                 self.assertEqual(plan.topic, self.default_plan["topic"])
                 self.assertEqual(
@@ -228,6 +254,10 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertIsInstance(plan, VEPlan)
         self.assertEqual(plan._id, self.default_plan["_id"])
         self.assertEqual(plan.name, self.default_plan["name"])
+        self.assertEqual(
+            [institution.to_dict() for institution in plan.institutions],
+            self.default_plan["institutions"],
+        )
         self.assertEqual(plan.departments, self.default_plan["departments"])
         self.assertEqual(plan.topic, self.default_plan["topic"])
         self.assertEqual(plan.academic_courses, self.default_plan["academic_courses"])
@@ -263,9 +293,10 @@ class PlanResourceTest(BaseResourceTestCase):
         # don't supply a _id, letting the system create a fresh one
         plan = {
             "name": "new plan",
-            "departments": {"test":"test"},
+            "institutions": [self.institution.to_dict()],
+            "departments": {"test": "test"},
             "topic": "test",
-            "academic_courses": {"test":"test"},
+            "academic_courses": {"test": "test"},
             "lecture": "test",
             "lecture_format": "test",
             "audience": [self.target_group.to_dict()],
@@ -301,9 +332,10 @@ class PlanResourceTest(BaseResourceTestCase):
         plan_with_id = {
             "_id": ObjectId(),
             "name": "new plan",
-            "departments": {"test":"test"},
+            "institutions": [self.institution.to_dict()],
+            "departments": {"test": "test"},
             "topic": "test",
-            "academic_courses": {"test":"test"},
+            "academic_courses": {"test": "test"},
             "lecture": "test",
             "lecture_format": "test",
             "audience": [self.target_group.to_dict()],
@@ -373,7 +405,7 @@ class PlanResourceTest(BaseResourceTestCase):
         """
 
         plan = VEPlan(name="upsert_test")
-        
+
         result = self.planner.update_full_plan(plan, upsert=True)
         self.assertIsInstance(result, ObjectId)
         self.assertEqual(result, plan._id)

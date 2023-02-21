@@ -15,7 +15,7 @@ from tornado.testing import AsyncHTTPTestCase
 from resources.network.acl import ACL
 import global_vars
 from main import make_app
-from model import Step, TargetGroup, Task, User, VEPlan
+from model import AcademicCourse, Department, Institution, Step, TargetGroup, Task, User, VEPlan
 
 # hack all loggers to not produce too much irrelevant (info) output here
 for logger_name in logging.root.manager.loggerDict:
@@ -6626,15 +6626,29 @@ class VEPlanHandlerTest(BaseApiTestCase):
             mother_tongue="test",
             foreign_languages={"test": "l1"},
         )
+    
+    def create_institution(self, name: str = "test") -> Institution:
+        """
+        convenience method to create an institution with non-default values
+        """
+
+        return Institution(
+            name=name,
+            school_type="test",
+            country="test",
+            departments=[Department(name="test", academic_courses=[AcademicCourse()])],
+        )
 
     def default_plan_setup(self):
         # manually set up a VEPlan in the db
         self.plan_id = ObjectId()
         self.step = self.create_step("test")
         self.target_group = self.create_target_group("test")
+        self.institution = self.create_institution("test")
         self.default_plan = {
             "_id": self.plan_id,
             "name": "test",
+            "institutions": [self.institution.to_dict()],
             "departments": {"test": "test"},
             "topic": "test",
             "academic_courses": {"test":"test"},

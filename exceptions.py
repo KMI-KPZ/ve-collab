@@ -90,6 +90,29 @@ class TargetGroupKeyError(Exception):
         self.missing_value = missing_value
 
 
+class AcademicCourseKeyError(Exception):
+    """AcademicCourse initialization is missing a required key"""
+
+    def __init__(self, message, missing_value) -> None:
+        super().__init__(message)
+        self.missing_value = missing_value
+
+class DepartmentKeyError(Exception):
+    """AcademicCourse initialization is missing a required key"""
+
+    def __init__(self, message, missing_value) -> None:
+        super().__init__(message)
+        self.missing_value = missing_value
+
+
+class InstitutionKeyError(Exception):
+    """AcademicCourse initialization is missing a required key"""
+
+    def __init__(self, message, missing_value) -> None:
+        super().__init__(message)
+        self.missing_value = missing_value
+
+
 class StepKeyError(Exception):
     """Step initialization is missing a required key"""
 
