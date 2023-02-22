@@ -15,7 +15,7 @@ from tornado.testing import AsyncHTTPTestCase
 from resources.network.acl import ACL
 import global_vars
 from main import make_app
-from model import AcademicCourse, Department, Institution, Step, TargetGroup, Task, User, VEPlan
+from model import AcademicCourse, Department, Institution, Lecture, Step, TargetGroup, Task, User, VEPlan
 
 # hack all loggers to not produce too much irrelevant (info) output here
 for logger_name in logging.root.manager.loggerDict:
@@ -6638,6 +6638,18 @@ class VEPlanHandlerTest(BaseApiTestCase):
             country="test",
             departments=[Department(name="test", academic_courses=[AcademicCourse()])],
         )
+    
+    def create_lecture(self, name: str = "test") -> Lecture:
+        """
+        convenience method to create a lecture with non-default values
+        """
+
+        return Lecture(
+            name=name,
+            lecture_format="test",
+            lecture_type="test",
+            participants_amount=10,
+        )
 
     def default_plan_setup(self):
         # manually set up a VEPlan in the db
@@ -6645,15 +6657,14 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.step = self.create_step("test")
         self.target_group = self.create_target_group("test")
         self.institution = self.create_institution("test")
+        self.lecture = self.create_lecture("test")
         self.default_plan = {
             "_id": self.plan_id,
             "name": "test",
             "institutions": [self.institution.to_dict()],
             "topic": "test",
-            "lecture": "test",
-            "lecture_format": "test",
+            "lectures": [self.lecture.to_dict()],
             "audience": [self.target_group.to_dict()],
-            "participants_amount": 0,
             "languages": ["test", "test"],
             "timestamp_from": self.step.timestamp_from,
             "timestamp_to": self.step.timestamp_to,

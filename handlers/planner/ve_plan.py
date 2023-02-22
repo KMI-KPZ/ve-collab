@@ -137,8 +137,15 @@ class VEPlanHandler(BaseHandler):
                             }
                         ],
                         "topic": "test",
-                        "lecture": "test",
-                        "lecture_format": "test",
+                        "lectures": [
+                            {
+                                "_id": "object_id_str",
+                                "name": None,
+                                "lecture_format": None,
+                                "lecture_type": None,
+                                "participants_amount": 0,
+                            }
+                        ],
                         "audience": [
                             {
                                 "name": "test",
@@ -150,7 +157,6 @@ class VEPlanHandler(BaseHandler):
                                 "foreign_languages": {}
                             }
                         ],
-                        "participants_amount": 0,
                         "languages": ["test"],
                         "goals": {"test":"test"},
                         "involved_parties": ["test"],
@@ -277,8 +283,15 @@ class VEPlanHandler(BaseHandler):
                             }
                         ],
                         "topic": "test",
-                        "lecture": "test",
-                        "lecture_format": "test",
+                        "lectures": [
+                            {
+                                "_id": "object_id_str",
+                                "name": None,
+                                "lecture_format": None,
+                                "lecture_type": None,
+                                "participants_amount": 0,
+                            }
+                        ],
                         "audience": [
                             {
                                 "name": "test",
@@ -290,7 +303,6 @@ class VEPlanHandler(BaseHandler):
                                 "foreign_languages": {}
                             }
                         ],
-                        "participants_amount": 0,
                         "languages": ["test"],
                         "goals": {"test":"test"},
                         "involved_parties": ["test"],

@@ -8,6 +8,7 @@ from exceptions import (
     AcademicCourseKeyError,
     DepartmentKeyError,
     InstitutionKeyError,
+    LectureKeyError,
     NonUniqueStepsError,
     NonUniqueTasksError,
     PlanKeyError,
@@ -162,7 +163,8 @@ class Task:
         for expected_key in cls.EXPECTED_DICT_ENTRIES.keys():
             if expected_key not in params:
                 raise TaskKeyError(
-                    "Missing key {} in Task dictionary".format(expected_key)
+                    "Missing key {} in Task dictionary".format(expected_key),
+                    expected_key,
                 )
 
         # delete any keys from params that are not expected to avoid having
@@ -377,7 +379,8 @@ class Step:
         for expected_key in cls.EXPECTED_DICT_ENTRIES.keys():
             if expected_key not in params:
                 raise StepKeyError(
-                    "Missing key {} in Step dictionary".format(expected_key)
+                    "Missing key {} in Step dictionary".format(expected_key),
+                    expected_key,
                 )
 
         # delete any keys from params that are not expected to avoid having
@@ -570,7 +573,8 @@ class TargetGroup:
         for expected_key in cls.EXPECTED_DICT_ENTRIES.keys():
             if expected_key not in params:
                 raise TargetGroupKeyError(
-                    "Missing key {} in Task dictionary".format(expected_key)
+                    "Missing key {} in TargetGroup dictionary".format(expected_key),
+                    expected_key,
                 )
 
         # delete any keys from params that are not expected to avoid having
@@ -748,7 +752,7 @@ class Department:
 
         Sets all of the function parameters as equivalent instance attributes.
 
-        Usually a `Department` is of no standalone use, but rather a part 
+        Usually a `Department` is of no standalone use, but rather a part
         of an `Institution`-object.
 
         If `_id` is given, the indication is conveyed that this instance represents
@@ -800,7 +804,7 @@ class Department:
         However no values are required, any attributes may be
         initialized with None (name) or [] (academic_courses).
 
-        If Academic Courses are supplied, they have to be in a list of 
+        If Academic Courses are supplied, they have to be in a list of
         dictionary-representations that are parseable by `AcademicCourse.from_dict()`.
 
         Returns an instance of `Department`.
@@ -891,7 +895,7 @@ class Institution:
 
         Sets all of the function parameters as equivalent instance attributes.
 
-        Usually an `Institution` is of no standalone use, but rather a part 
+        Usually an `Institution` is of no standalone use, but rather a part
         of a `VEPlan`-object.
 
         If `_id` is given, the indication is conveyed that this instance represents
@@ -903,7 +907,7 @@ class Institution:
         in the database since it is simply a model; to get Institutions with the
         actual data in them, use the `VEPlanResource` class.
         """
-        
+
         # ensure _id becomes type ObjectId, either using the given value or
         # creating a fresh ID
         self._id = util.parse_object_id(_id) if _id != None else ObjectId()
@@ -947,7 +951,7 @@ class Institution:
         However no values are required, any attributes may be
         initialized with None (name/school_type/country) or [] (departments).
 
-        If Departments are supplied, they have to be in a list of 
+        If Departments are supplied, they have to be in a list of
         dictionary-representations that are parseable by `Department.from_dict()`.
 
         Returns an instance of `Institution`.
@@ -1011,6 +1015,136 @@ class Institution:
         return instance
 
 
+class Lecture:
+
+    EXPECTED_DICT_ENTRIES = {
+        "name": (str, type(None)),
+        "lecture_type": (str, type(None)),
+        "lecture_format": (str, type(None)),
+        "participants_amount": int,
+    }
+
+    def __init__(
+        self,
+        _id: str | ObjectId = None,
+        name: str = None,
+        lecture_type: str = None,
+        lecture_format: str = None,
+        participants_amount: int = 0,
+    ) -> None:
+
+        # ensure _id becomes type ObjectId, either using the given value or
+        # creating a fresh ID
+        self._id = util.parse_object_id(_id) if _id != None else ObjectId()
+
+        self.name = name
+        self.lecture_type = lecture_type
+        self.lecture_format = lecture_format
+        self.participants_amount = participants_amount
+
+    def __str__(self) -> str:
+        return str(self.__dict__)
+
+    def __repr__(self) -> str:
+        return str(self)
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, self.__class__):
+            return self.__dict__ == other.__dict__
+        else:
+            return False
+
+    def to_dict(self) -> Dict:
+        """
+        serialize all attributes of this instance into a dictionary
+        """
+
+        return {
+            "_id": self._id,
+            "name": self.name,
+            "lecture_type": self.lecture_type,
+            "lecture_format": self.lecture_format,
+            "participants_amount": self.participants_amount,
+        }
+
+    @classmethod
+    def from_dict(cls, params: Dict[str, Any]) -> Lecture:
+        """
+        initialize a `Lecture`-object from a dictionary (`params`).
+        All of the followings keys have to be present in the dict:
+        `"name"`, `"lecture_type"`, `"lecture_format"`, `"participants_amount"`.
+        However values are not required, any attributes may be
+        initialized with None (name/lecture_type/lecture_format)
+        or 0 (participants_amount).
+
+        Optionally, a `"_id"` may be supplied, conveying the semantics that this Lecture
+        already exists. However, true existence is handled by the database itself and
+        not by this model.
+        If no "_id" is supplied, a fresh one will be generated by the system.
+
+        Any other entries in `params` that do not represent an attribute
+        of a Lecture will be ignored and deleted from the dictionary
+        (keep in mind for further use of the `params`-dict).
+
+        Returns an instance of `Lecture`.
+
+        Raises `TypeError` if params is not a dictionary, or any of the values in the
+        dict have the wrong type.
+
+        Raises `LectureKeyError` if any of the required keys is missing
+        in the `params`-dict.
+
+        Usage example::
+
+            lecture = Lecture.from_dict(params)
+        """
+
+        if not isinstance(params, dict):
+            raise TypeError(
+                "expected type 'dict' for argument 'params', got {}".format(
+                    type(params)
+                )
+            )
+
+        # ensure all necessary keys are in the dict
+        for expected_key in cls.EXPECTED_DICT_ENTRIES.keys():
+            if expected_key not in params:
+                raise LectureKeyError(
+                    "Missing key {} in Lecture dictionary".format(expected_key),
+                    expected_key,
+                )
+
+        # delete any keys from params that are not expected to avoid having
+        # any other additional attributes that might cause trouble
+        # (e.g. on serialization)
+        for key in list(params.keys()):
+            if key not in [*cls.EXPECTED_DICT_ENTRIES.keys(), *["_id"]]:
+                del params[key]
+
+        # ensure types of attributes are correct
+        for key in params:
+            if key in cls.EXPECTED_DICT_ENTRIES:
+                if not isinstance(params[key], cls.EXPECTED_DICT_ENTRIES[key]):
+                    raise TypeError(
+                        "expected type '{}' for key '{}', got '{}'".format(
+                            cls.EXPECTED_DICT_ENTRIES[key],
+                            key,
+                            type(key),
+                        )
+                    )
+
+        # handle existence and correct type of object id's
+        if "_id" in params:
+            params["_id"] = util.parse_object_id(params["_id"])
+        else:
+            params["_id"] = ObjectId()
+
+        # create and return object
+        instance = cls()
+        instance.__dict__.update(params)
+        return instance
+
+
 class VEPlan:
     """
     Model class to represent a VE-Plan
@@ -1020,10 +1154,8 @@ class VEPlan:
         "name": (str, type(None)),
         "institutions": list,
         "topic": (str, type(None)),
-        "lecture": (str, type(None)),
-        "lecture_format": (str, type(None)),
+        "lectures": list,
         "audience": list,
-        "participants_amount": int,
         "languages": list,
         "goals": dict,
         "involved_parties": list,
@@ -1040,10 +1172,8 @@ class VEPlan:
         name: str = None,
         institutions: List[Institution] = [],
         topic: str = None,
-        lecture: str = None,
-        lecture_format: str = None,
+        lectures: List[Lecture] = [],
         audience: List[TargetGroup] = [],
-        participants_amount: int = 0,
         languages: List[str] = [],
         goals: Dict[str, str] = {},
         involved_parties: List[str] = [],
@@ -1081,10 +1211,8 @@ class VEPlan:
         self.name = name
         self.institutions = institutions
         self.topic = topic
-        self.lecture = lecture
-        self.lecture_format = lecture_format
+        self.lectures = lectures
         self.audience = audience
-        self.participants_amount = participants_amount
         self.languages = languages
         self.goals = goals
         self.involved_parties = involved_parties
@@ -1135,10 +1263,8 @@ class VEPlan:
                 institution.to_dict() for institution in self.institutions
             ],
             "topic": self.topic,
-            "lecture": self.lecture,
-            "lecture_format": self.lecture_format,
+            "lectures": [lecture.to_dict() for lecture in self.lectures],
             "audience": [target_group.to_dict() for target_group in self.audience],
-            "participants_amount": self.participants_amount,
             "languages": self.languages,
             "timestamp_from": self.timestamp_from,
             "timestamp_to": self.timestamp_to,
@@ -1243,8 +1369,15 @@ class VEPlan:
                     }
                 ],
                 "topic": None,
-                "lecture": None,
-                "lecture_format": None,
+                "lectures": [
+                    {
+                        "_id": "object_id_str",
+                        "name": None,
+                        "lecture_format": None,
+                        "lecture_type": None,
+                        "participants_amount": 0,
+                    }
+                ],
                 "audience": [
                     {
                         "_id": "object_id_str",
@@ -1257,7 +1390,6 @@ class VEPlan:
                         "foreign_languages": {},
                     }
                 ],
-                "participants_amount": 0,
                 "languages": [],
                 "goals": {},
                 "involved_parties": [],
@@ -1345,11 +1477,15 @@ class VEPlan:
         ]
         del params["audience"]
 
-        # last but not least, build the institutions
+        # also build the institutions
         institutions = [
             Institution.from_dict(institution) for institution in params["institutions"]
         ]
         del params["institutions"]
+
+        # last but not least, build lectures
+        lectures = [Lecture.from_dict(lecture) for lecture in params["lectures"]]
+        del params["lectures"]
 
         # compute duration and workload as sum of duration/workload of steps
         # and set timestamp_from and timestamp_to as min/max timestamps of steps
@@ -1384,7 +1520,9 @@ class VEPlan:
                 )
 
         # build VEPlan and set remaining values
-        instance = cls(steps=steps, audience=audience, institutions=institutions)
+        instance = cls(
+            steps=steps, audience=audience, institutions=institutions, lectures=lectures
+        )
         instance.__dict__.update(params)
         return instance
 

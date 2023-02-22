@@ -12,6 +12,7 @@ from model import (
     AcademicCourse,
     Department,
     Institution,
+    Lecture,
     Step,
     TargetGroup,
     Task,
@@ -126,6 +127,18 @@ class BaseResourceTestCase(TestCase):
             departments=[Department(name="test", academic_courses=[AcademicCourse()])],
         )
 
+    def create_lecture(self, name: str = "test") -> Lecture:
+        """
+        convenience method to create a lecture with non-default values
+        """
+
+        return Lecture(
+            name=name,
+            lecture_format="test",
+            lecture_type="test",
+            participants_amount=10,
+        )
+
 
 class PlanResourceTest(BaseResourceTestCase):
     def setUp(self) -> None:
@@ -136,15 +149,14 @@ class PlanResourceTest(BaseResourceTestCase):
         self.step = self.create_step("test")
         self.target_group = self.create_target_group("test")
         self.institution = self.create_institution("test")
+        self.lecture = self.create_lecture("test")
         self.default_plan = {
             "_id": self.plan_id,
             "name": "test",
             "institutions": [self.institution.to_dict()],
             "topic": "test",
-            "lecture": "test",
-            "lecture_format": "test",
+            "lectures": [self.lecture.to_dict()],
             "audience": [self.target_group.to_dict()],
-            "participants_amount": 0,
             "languages": ["test", "test"],
             "timestamp_from": self.step.timestamp_from,
             "timestamp_to": self.step.timestamp_to,
@@ -186,16 +198,13 @@ class PlanResourceTest(BaseResourceTestCase):
                     self.default_plan["institutions"],
                 )
                 self.assertEqual(plan.topic, self.default_plan["topic"])
-                self.assertEqual(plan.lecture, self.default_plan["lecture"])
                 self.assertEqual(
-                    plan.lecture_format, self.default_plan["lecture_format"]
+                    [lecture.to_dict() for lecture in plan.lectures],
+                    self.default_plan["lectures"],
                 )
                 self.assertEqual(
                     [target_group.to_dict() for target_group in plan.audience],
                     self.default_plan["audience"],
-                )
-                self.assertEqual(
-                    plan.participants_amount, self.default_plan["participants_amount"]
                 )
                 self.assertEqual(plan.languages, self.default_plan["languages"])
                 self.assertEqual(plan.goals, self.default_plan["goals"])
@@ -253,14 +262,13 @@ class PlanResourceTest(BaseResourceTestCase):
             self.default_plan["institutions"],
         )
         self.assertEqual(plan.topic, self.default_plan["topic"])
-        self.assertEqual(plan.lecture, self.default_plan["lecture"])
-        self.assertEqual(plan.lecture_format, self.default_plan["lecture_format"])
+        self.assertEqual(
+            [lecture.to_dict() for lecture in plan.lectures],
+            self.default_plan["lectures"],
+        )
         self.assertEqual(
             [target_group.to_dict() for target_group in plan.audience],
             self.default_plan["audience"],
-        )
-        self.assertEqual(
-            plan.participants_amount, self.default_plan["participants_amount"]
         )
         self.assertEqual(plan.languages, self.default_plan["languages"])
         self.assertEqual(plan.goals, self.default_plan["goals"])
@@ -287,10 +295,8 @@ class PlanResourceTest(BaseResourceTestCase):
             "name": "new plan",
             "institutions": [self.institution.to_dict()],
             "topic": "test",
-            "lecture": "test",
-            "lecture_format": "test",
+            "lectures": [self.lecture.to_dict()],
             "audience": [self.target_group.to_dict()],
-            "participants_amount": 0,
             "languages": ["test", "test"],
             "timestamp_from": self.step.timestamp_from,
             "timestamp_to": self.step.timestamp_to,
@@ -324,10 +330,8 @@ class PlanResourceTest(BaseResourceTestCase):
             "name": "new plan",
             "institutions": [self.institution.to_dict()],
             "topic": "test",
-            "lecture": "test",
-            "lecture_format": "test",
+            "lectures": [self.lecture.to_dict()],
             "audience": [self.target_group.to_dict()],
-            "participants_amount": 0,
             "languages": ["test", "test"],
             "timestamp_from": self.step.timestamp_from,
             "timestamp_to": self.step.timestamp_to,
@@ -370,21 +374,23 @@ class PlanResourceTest(BaseResourceTestCase):
         expect: successfully update a plan by supplying one with a _id that already exists
         """
 
-        # use the default plan, but change its name
+        # use the default plan, but change its name and topic
         existing_plan = VEPlan.from_dict(self.default_plan)
         existing_plan.name = "updated_name"
-        existing_plan.lecture = "new_lecture"
+        existing_plan.topic = "new_topic"
 
         # expect an "updated" response
         result = self.planner.update_full_plan(existing_plan)
         self.assertIsInstance(result, ObjectId)
         self.assertEqual(result, existing_plan._id)
 
-        # expect that the name and lecture was updated in the db
+        # expect that the name and topic was updated in the db, but other values
+        # remain the same
         db_state = self.db.plans.find_one({"_id": existing_plan._id})
         self.assertIsNotNone(db_state)
         self.assertEqual(db_state["name"], existing_plan.name)
-        self.assertEqual(db_state["lecture"], existing_plan.lecture)
+        self.assertEqual(db_state["topic"], existing_plan.topic)
+        self.assertEqual(db_state["realization"], self.default_plan["realization"])
 
     def test_update_plan_upsert(self):
         """

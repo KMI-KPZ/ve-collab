@@ -7,6 +7,7 @@ from exceptions import (
     AcademicCourseKeyError,
     DepartmentKeyError,
     InstitutionKeyError,
+    LectureKeyError,
     NonUniqueStepsError,
     PlanKeyError,
     StepKeyError,
@@ -18,6 +19,7 @@ from model import (
     AcademicCourse,
     Department,
     Institution,
+    Lecture,
     Step,
     TargetGroup,
     Task,
@@ -1201,6 +1203,161 @@ class InstitutionModelTest(TestCase):
         params["departments"] = []
 
 
+class LectureModelTest(TestCase):
+    def setUp(self) -> None:
+        return super().setUp()
+
+    def tearDown(self) -> None:
+        return super().tearDown()
+
+    def test_init_default(self):
+        """
+        expect: successful creation of a minimal Lecture object
+        """
+
+        lecture = Lecture()
+
+        self.assertIsInstance(lecture._id, ObjectId)
+        self.assertIsNone(lecture.lecture_type)
+        self.assertIsNone(lecture.lecture_format)
+        self.assertEqual(lecture.participants_amount, 0)
+
+    def test_init(self):
+        """
+        expect: successful creation of a Lecture object, passing values for each attribute
+        """
+
+        _id = ObjectId()
+        lecture = Lecture(
+            _id=_id,
+            name="test",
+            lecture_type="test",
+            lecture_format="test",
+            participants_amount=10,
+        )
+
+        self.assertEqual(lecture._id, _id)
+        self.assertEqual(lecture.lecture_type, "test")
+        self.assertEqual(lecture.lecture_format, "test")
+        self.assertEqual(lecture.participants_amount, 10)
+
+    def test_to_dict(self):
+        """
+        expect: successful serialization of a minimal Lecture object into
+        its dictionary representation
+        """
+
+        _id = ObjectId()
+        lecture = Lecture(
+            _id=_id,
+            name="test",
+            lecture_type="test",
+            lecture_format="test",
+            participants_amount=10,
+        ).to_dict()
+
+        self.assertIn("_id", lecture)
+        self.assertIn("name", lecture)
+        self.assertIn("lecture_type", lecture)
+        self.assertIn("lecture_format", lecture)
+        self.assertIn("participants_amount", lecture)
+        self.assertEqual(lecture["_id"], _id)
+        self.assertEqual(lecture["name"], "test")
+        self.assertEqual(lecture["lecture_type"], "test")
+        self.assertEqual(lecture["lecture_format"], "test")
+        self.assertEqual(lecture["participants_amount"], 10)
+
+    def test_from_dict(self):
+        """
+        expect: successful creation of a Lecture object derived from a dictionary
+        """
+
+        # with _id
+        params = {
+            "_id": ObjectId(),
+            "name": "test",
+            "lecture_type": "test",
+            "lecture_format": "test",
+            "participants_amount": 10,
+        }
+
+        lecture = Lecture.from_dict(params)
+
+        self.assertEqual(lecture._id, params["_id"])
+        self.assertEqual(lecture.name, params["name"])
+        self.assertEqual(lecture.lecture_type, params["lecture_type"])
+        self.assertEqual(lecture.lecture_format, params["lecture_format"])
+        self.assertEqual(lecture.participants_amount, params["participants_amount"])
+
+        # without _id
+        params = {
+            "name": "test",
+            "lecture_type": "test",
+            "lecture_format": "test",
+            "participants_amount": 10,
+        }
+
+        lecture = Lecture.from_dict(params)
+
+        self.assertIsInstance(lecture._id, ObjectId)
+        self.assertEqual(lecture.name, params["name"])
+        self.assertEqual(lecture.lecture_type, params["lecture_type"])
+        self.assertEqual(lecture.lecture_format, params["lecture_format"])
+        self.assertEqual(lecture.participants_amount, params["participants_amount"])
+
+    def test_from_dict_error_params_not_dict(self):
+        """
+        expect: creation of Lecture object from dict raises TypeError because source is
+        not a dict
+        """
+
+        self.assertRaises(TypeError, Lecture.from_dict, "wrong_type")
+
+    def test_from_dict_error_missing_key(self):
+        """
+        expect: creation of Lecture object from dict raises LectureKeyError because
+        the dict is missing required keys
+        """
+
+        # participants_amount is missing
+        params = {
+            "name": "test",
+            "lecture_type": "test",
+            "lecture_format": "test",
+        }
+
+        self.assertRaises(LectureKeyError, Lecture.from_dict, params)
+
+    def test_from_dict_error_wrong_types(self):
+        """
+        expect: creation of Lecture object from dict raises TypeError's because
+        arguments have the wrong types
+        """
+
+        params = {
+            "name": "test",
+            "lecture_type": "test",
+            "lecture_format": "test",
+            "participants_amount": 10,
+        }
+
+        params["name"] = list()
+        self.assertRaises(TypeError, Lecture.from_dict, params)
+        params["name"] = None
+
+        params["lecture_type"] = 123
+        self.assertRaises(TypeError, Lecture.from_dict, params)
+        params["lecture_type"] = None
+
+        params["lecture_format"] = list()
+        self.assertRaises(TypeError, Lecture.from_dict, params)
+        params["lecture_format"] = None
+
+        params["participants_amount"] = "123"
+        self.assertRaises(TypeError, Lecture.from_dict, params)
+        params["participants_amount"] = 10
+
+
 class VEPlanModelTest(TestCase):
     def setUp(self) -> None:
         return super().setUp()
@@ -1258,6 +1415,18 @@ class VEPlanModelTest(TestCase):
             departments=[Department(name="test", academic_courses=[AcademicCourse()])],
         )
 
+    def create_lecture(self, name: str = "test") -> Lecture:
+        """
+        convenience method to create a lecture with non-default values
+        """
+
+        return Lecture(
+            name=name,
+            lecture_format="test",
+            lecture_type="test",
+            participants_amount=10,
+        )
+
     def test_init_default(self):
         """
         expect: successful creation of a minimal VEPlan object (default values)
@@ -1268,10 +1437,8 @@ class VEPlanModelTest(TestCase):
         self.assertIsNone(plan.name)
         self.assertEqual(plan.institutions, [])
         self.assertIsNone(plan.topic)
-        self.assertIsNone(plan.lecture)
-        self.assertIsNone(plan.lecture_format)
+        self.assertEqual(plan.lectures, [])
         self.assertEqual(plan.audience, [])
-        self.assertEqual(plan.participants_amount, 0)
         self.assertEqual(plan.languages, [])
         self.assertEqual(plan.goals, {})
         self.assertEqual(plan.involved_parties, [])
@@ -1313,15 +1480,15 @@ class VEPlanModelTest(TestCase):
             self.create_institution("test1"),
             self.create_institution("test2"),
         ]
+        lectures = [self.create_lecture("test1"), self.create_lecture("test2")]
+
         plan = VEPlan(
             _id=_id,
             name="test",
             institutions=institutions,
             topic="test",
-            lecture="test",
-            lecture_format="test",
+            lectures=lectures,
             audience=target_groups,
-            participants_amount=0,
             languages=["test", "test"],
             goals={"test1": "test", "test2": "test"},
             involved_parties=["test", "test"],
@@ -1336,10 +1503,8 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.name, "test")
         self.assertEqual(plan.institutions, institutions)
         self.assertEqual(plan.topic, "test")
-        self.assertEqual(plan.lecture, "test")
-        self.assertEqual(plan.lecture_format, "test")
+        self.assertEqual(plan.lectures, lectures)
         self.assertEqual(plan.audience, target_groups)
-        self.assertEqual(plan.participants_amount, 0)
         self.assertEqual(plan.languages, ["test", "test"])
         self.assertEqual(plan.goals, {"test1": "test", "test2": "test"})
         self.assertEqual(plan.involved_parties, ["test", "test"])
@@ -1364,10 +1529,8 @@ class VEPlanModelTest(TestCase):
             name="test",
             institutions=institutions,
             topic="test",
-            lecture="test",
-            lecture_format="test",
+            lectures=lectures,
             audience=target_groups,
-            participants_amount=0,
             languages=["test", "test"],
             goals={"test1": "test", "test2": "test"},
             involved_parties=["test", "test"],
@@ -1381,10 +1544,8 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.name, "test")
         self.assertEqual(plan.institutions, institutions)
         self.assertEqual(plan.topic, "test")
-        self.assertEqual(plan.lecture, "test")
-        self.assertEqual(plan.lecture_format, "test")
+        self.assertEqual(plan.lectures, lectures)
         self.assertEqual(plan.audience, target_groups)
-        self.assertEqual(plan.participants_amount, 0)
         self.assertEqual(plan.languages, ["test", "test"])
         self.assertEqual(plan.goals, {"test1": "test", "test2": "test"})
         self.assertEqual(plan.involved_parties, ["test", "test"])
@@ -1440,16 +1601,15 @@ class VEPlanModelTest(TestCase):
             timestamp_to=None,
         )
         institution = self.create_institution()
-        plan_dict = VEPlan(steps=[step], institutions=[institution]).to_dict()
+        lecture = self.create_lecture()
+        plan_dict = VEPlan(steps=[step], institutions=[institution], lectures=[lecture]).to_dict()
 
         self.assertIn("_id", plan_dict)
         self.assertIn("name", plan_dict)
         self.assertIn("institutions", plan_dict)
         self.assertIn("topic", plan_dict)
-        self.assertIn("lecture", plan_dict)
-        self.assertIn("lecture_format", plan_dict)
+        self.assertIn("lectures", plan_dict)
         self.assertIn("audience", plan_dict)
-        self.assertIn("participants_amount", plan_dict)
         self.assertIn("languages", plan_dict)
         self.assertIn("timestamp_from", plan_dict)
         self.assertIn("timestamp_to", plan_dict)
@@ -1466,10 +1626,8 @@ class VEPlanModelTest(TestCase):
         self.assertIsNone(plan_dict["name"])
         self.assertEqual(plan_dict["institutions"], [institution.to_dict()])
         self.assertIsNone(plan_dict["topic"])
-        self.assertIsNone(plan_dict["lecture"])
-        self.assertIsNone(plan_dict["lecture_format"])
+        self.assertEqual(plan_dict["lectures"], [lecture.to_dict()])
         self.assertEqual(plan_dict["audience"], [])
-        self.assertEqual(plan_dict["participants_amount"], 0)
         self.assertEqual(plan_dict["languages"], [])
         self.assertEqual(plan_dict["goals"], {})
         self.assertEqual(plan_dict["involved_parties"], [])
@@ -1492,6 +1650,7 @@ class VEPlanModelTest(TestCase):
         step = self.create_step("test")
         target_group = self.create_target_group("test")
         institution = self.create_institution("test")
+        lecture = self.create_lecture("test")
         plan_dict = {
             "_id": _id,
             "name": None,
@@ -1520,8 +1679,15 @@ class VEPlanModelTest(TestCase):
                 }
             ],
             "topic": None,
-            "lecture": None,
-            "lecture_format": None,
+            "lectures": [
+                {
+                    "_id": lecture._id,
+                    "name": lecture.name,
+                    "lecture_format": lecture.lecture_format,
+                    "lecture_type": lecture.lecture_type,
+                    "participants_amount": lecture.participants_amount,
+                }
+            ],
             "audience": [
                 {
                     "_id": target_group._id,
@@ -1534,7 +1700,6 @@ class VEPlanModelTest(TestCase):
                     "foreign_languages": target_group.foreign_languages,
                 }
             ],
-            "participants_amount": 0,
             "languages": [],
             "goals": {},
             "involved_parties": [],
@@ -1565,10 +1730,8 @@ class VEPlanModelTest(TestCase):
         self.assertIsNone(plan.name)
         self.assertEqual(plan.institutions, [institution])
         self.assertIsNone(plan.topic)
-        self.assertIsNone(plan.lecture)
-        self.assertIsNone(plan.lecture_format)
+        self.assertEqual(plan.lectures, [lecture])
         self.assertEqual(plan.audience, [target_group])
-        self.assertEqual(plan.participants_amount, 0)
         self.assertEqual(plan.languages, [])
         self.assertEqual(plan.goals, {})
         self.assertEqual(plan.involved_parties, [])
@@ -1606,8 +1769,14 @@ class VEPlanModelTest(TestCase):
                 }
             ],
             "topic": None,
-            "lecture": None,
-            "lecture_format": None,
+            "lectures": [
+                {
+                    "name": lecture.name,
+                    "lecture_format": lecture.lecture_format,
+                    "lecture_type": lecture.lecture_type,
+                    "participants_amount": lecture.participants_amount,
+                }
+            ],
             "audience": [
                 {
                     "name": target_group.name,
@@ -1619,7 +1788,6 @@ class VEPlanModelTest(TestCase):
                     "foreign_languages": target_group.foreign_languages,
                 }
             ],
-            "participants_amount": 0,
             "languages": [],
             "goals": {},
             "involved_parties": [],
@@ -1650,9 +1818,8 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(len(plan.institutions), 1)
         self.assertIsInstance(plan.institutions[0], Institution)
         self.assertIsNone(plan.topic)
-        self.assertIsNone(plan.lecture)
-        self.assertIsNone(plan.lecture_format)
-        self.assertEqual(plan.participants_amount, 0)
+        self.assertEqual(len(plan.lectures), 1)
+        self.assertIsInstance(plan.lectures[0], Lecture)
         self.assertEqual(plan.languages, [])
         self.assertEqual(plan.goals, {})
         self.assertEqual(plan.involved_parties, [])
@@ -1667,6 +1834,7 @@ class VEPlanModelTest(TestCase):
         self.assertIsInstance(plan._id, ObjectId)
         self.assertIsInstance(plan.steps[0]._id, ObjectId)
         self.assertIsInstance(plan.audience[0]._id, ObjectId)
+        self.assertIsInstance(plan.lectures[0]._id, ObjectId)
         self.assertIsInstance(plan.institutions[0]._id, ObjectId)
         self.assertIsInstance(plan.institutions[0].departments[0]._id, ObjectId)
         self.assertIsInstance(
@@ -1693,10 +1861,8 @@ class VEPlanModelTest(TestCase):
             "name": None,
             "institutions": [],
             "topic": None,
-            "lecture": None,
-            "lecture_format": None,
+            "lectures": [],
             "audience": [],
-            "participants_amount": 0,
             "languages": [],
             "goals": {},
             "involved_parties": [],
@@ -1718,10 +1884,8 @@ class VEPlanModelTest(TestCase):
             "name": None,
             "institutions": [],
             "topic": None,
-            "lecture": None,
-            "lecture_format": None,
+            "lectures": [],
             "audience": [],
-            "participants_amount": 0,
             "languages": [],
             "goals": {},
             "involved_parties": [],
@@ -1749,21 +1913,13 @@ class VEPlanModelTest(TestCase):
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
         plan_dict["topic"] = None
 
-        plan_dict["lecture"] = 123
+        plan_dict["lectures"] = 123
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
-        plan_dict["lecture"] = None
-
-        plan_dict["lecture_format"] = 123
-        self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
-        plan_dict["lecture_format"] = None
+        plan_dict["lectures"] = list()
 
         plan_dict["audience"] = dict()
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
         plan_dict["audience"] = list()
-
-        plan_dict["participants_amount"] = "test"
-        self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
-        plan_dict["participants_amount"] = 0
 
         plan_dict["languages"] = "test"
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
@@ -1808,10 +1964,8 @@ class VEPlanModelTest(TestCase):
             "name": None,
             "institutions": [],
             "topic": None,
-            "lecture": None,
-            "lecture_format": None,
+            "lectures": [],
             "audience": [],
-            "participants_amount": 0,
             "languages": [],
             "goals": {},
             "involved_parties": [],
