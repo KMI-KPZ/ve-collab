@@ -4,15 +4,8 @@ from unittest import TestCase
 from bson import ObjectId
 from bson.errors import InvalidId
 from exceptions import (
-    AcademicCourseKeyError,
-    DepartmentKeyError,
-    InstitutionKeyError,
-    LectureKeyError,
+    MissingKeyError,
     NonUniqueStepsError,
-    PlanKeyError,
-    StepKeyError,
-    TargetGroupKeyError,
-    TaskKeyError,
 )
 
 from model import (
@@ -195,7 +188,7 @@ class TaskModelTest(TestCase):
 
     def test_from_dict_error_missing_key(self):
         """
-        expect: TaskKeyError is raised because the params dictionary is missing
+        expect: MissingKeyError is raised because the params dictionary is missing
         a required key
         """
 
@@ -207,7 +200,7 @@ class TaskModelTest(TestCase):
             "learning_goal": "test",
             "tools": ["test"],
         }
-        self.assertRaises(TaskKeyError, Task.from_dict, task_dict)
+        self.assertRaises(MissingKeyError, Task.from_dict, task_dict)
 
     def test_from_dict_error_wrong_types(self):
         """
@@ -446,7 +439,7 @@ class StepModelTest(TestCase):
 
     def test_from_dict_error_missing_key(self):
         """
-        expect: creation of Step object from dict raises StepKeyError because
+        expect: creation of Step object from dict raises MissingKeyError because
         the dict is missing required keys
         """
 
@@ -464,7 +457,7 @@ class StepModelTest(TestCase):
             "evaluation_tools": ["test", "test"],
             "custom_attributes": {"test": "test"},
         }
-        self.assertRaises(StepKeyError, Step.from_dict, step_dict)
+        self.assertRaises(MissingKeyError, Step.from_dict, step_dict)
 
     def test_from_dict_error_wrong_types(self):
         """
@@ -714,7 +707,7 @@ class TargetGroupModelTest(TestCase):
 
     def test_from_dict_error_missing_key(self):
         """
-        expect: creation of TargetGroup object from dict raises TargetGroupKeyError because
+        expect: creation of TargetGroup object from dict raises MissingKeyError because
         the dict is missing required keys
         """
 
@@ -728,7 +721,7 @@ class TargetGroupModelTest(TestCase):
             "academic_course": "test",
             "mother_tongue": "test",
         }
-        self.assertRaises(TargetGroupKeyError, TargetGroup.from_dict, target_group_dict)
+        self.assertRaises(MissingKeyError, TargetGroup.from_dict, target_group_dict)
 
     def test_from_dict_error_wrong_types(self):
         """
@@ -851,7 +844,7 @@ class AcademicCourseModelTest(TestCase):
 
     def test_from_dict_error_missing_key(self):
         """
-        expect: creation of AcademicCourse object from dict raises AcademicCourseKeyError because
+        expect: creation of AcademicCourse object from dict raises MissingKeyError because
         the dict is missing required keys
         """
 
@@ -860,7 +853,7 @@ class AcademicCourseModelTest(TestCase):
         params = {
             "_id": _id,
         }
-        self.assertRaises(AcademicCourseKeyError, AcademicCourse.from_dict, params)
+        self.assertRaises(MissingKeyError, AcademicCourse.from_dict, params)
 
     def test_from_dict_error_wrong_types(self):
         """
@@ -963,7 +956,7 @@ class DepartmentModelTest(TestCase):
 
     def test_from_dict_error_missing_key(self):
         """
-        expect: creation of Department object from dict raises DepartmentKeyError because
+        expect: creation of Department object from dict raises MissingKeyError because
         the dict is missing required keys
         """
 
@@ -973,7 +966,7 @@ class DepartmentModelTest(TestCase):
             "_id": _id,
             "name": "test",
         }
-        self.assertRaises(DepartmentKeyError, Department.from_dict, params)
+        self.assertRaises(MissingKeyError, Department.from_dict, params)
 
     def test_from_dict_error_wrong_types(self):
         """
@@ -1150,7 +1143,7 @@ class InstitutionModelTest(TestCase):
 
     def test_from_dict_error_missing_key(self):
         """
-        expect: creation of Institution object from dict raises InstitutionKeyError because
+        expect: creation of Institution object from dict raises MissingKeyError because
         the dict is missing required keys
         """
 
@@ -1166,7 +1159,7 @@ class InstitutionModelTest(TestCase):
             ],
         }
 
-        self.assertRaises(InstitutionKeyError, Institution.from_dict, params)
+        self.assertRaises(MissingKeyError, Institution.from_dict, params)
 
     def test_from_dict_error_wrong_types(self):
         """
@@ -1315,7 +1308,7 @@ class LectureModelTest(TestCase):
 
     def test_from_dict_error_missing_key(self):
         """
-        expect: creation of Lecture object from dict raises LectureKeyError because
+        expect: creation of Lecture object from dict raises MissingKeyError because
         the dict is missing required keys
         """
 
@@ -1326,7 +1319,7 @@ class LectureModelTest(TestCase):
             "lecture_format": "test",
         }
 
-        self.assertRaises(LectureKeyError, Lecture.from_dict, params)
+        self.assertRaises(MissingKeyError, Lecture.from_dict, params)
 
     def test_from_dict_error_wrong_types(self):
         """
@@ -1851,7 +1844,7 @@ class VEPlanModelTest(TestCase):
 
     def test_from_dict_error_missing_key(self):
         """
-        expect: creation of a VEPlan from a dict raises PlanKeyError because the
+        expect: creation of a VEPlan from a dict raises MissingKeyError because the
         dict is missing a required key
         """
 
@@ -1871,7 +1864,7 @@ class VEPlanModelTest(TestCase):
             "tools": [],
             "new_content": None,
         }
-        self.assertRaises(PlanKeyError, VEPlan.from_dict, plan_dict)
+        self.assertRaises(MissingKeyError, VEPlan.from_dict, plan_dict)
 
     def test_from_dict_error_wrong_types(self):
         """

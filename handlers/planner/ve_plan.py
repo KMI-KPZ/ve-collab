@@ -12,11 +12,11 @@ from error_reasons import (
     PLAN_DOESNT_EXIST,
 )
 from exceptions import (
+    MissingKeyError,
     NonUniqueStepsError,
     NonUniqueTasksError,
     PlanAlreadyExistsError,
     PlanDoesntExistError,
-    PlanKeyError,
 )
 from handlers.base_handler import auth_needed, BaseHandler
 from model import VEPlan
@@ -399,7 +399,7 @@ class VEPlanHandler(BaseHandler):
             self.set_status(400)
             self.write({"success": False, "reason": "invalid_object_id"})
             return
-        except PlanKeyError as e:
+        except MissingKeyError as e:
             self.set_status(400)
             self.write(
                 {

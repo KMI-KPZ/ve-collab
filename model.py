@@ -5,16 +5,9 @@ from typing import Any, Dict, List
 from bson import ObjectId
 
 from exceptions import (
-    AcademicCourseKeyError,
-    DepartmentKeyError,
-    InstitutionKeyError,
-    LectureKeyError,
+    MissingKeyError,
     NonUniqueStepsError,
     NonUniqueTasksError,
-    PlanKeyError,
-    StepKeyError,
-    TargetGroupKeyError,
-    TaskKeyError,
 )
 import util
 
@@ -146,7 +139,7 @@ class Task:
         Raises `TypeError` if params is not a dictionary, or any of the values in the
         dict have the wrong type.
 
-        Raises `TaskKeyError` if any of the required keys is missing in the `params`-dict.
+        Raises `MissingKeyError` if any of the required keys is missing in the `params`-dict.
 
         Usage example::
 
@@ -162,9 +155,9 @@ class Task:
         # ensure all necessary keys are in the dict
         for expected_key in cls.EXPECTED_DICT_ENTRIES.keys():
             if expected_key not in params:
-                raise TaskKeyError(
-                    "Missing key {} in Task dictionary".format(expected_key),
-                    expected_key,
+                raise MissingKeyError(
+                    "Missing key {} in {} dictionary".format(expected_key, cls.__name__),
+                    expected_key, cls.__name__
                 )
 
         # delete any keys from params that are not expected to avoid having
@@ -359,7 +352,7 @@ class Step:
         Raises `TypeError` if params is not a dictionary, or any of the values in the
         dict have the wrong type.
 
-        Raises `StepKeyError` if any of the required keys is missing in the `params`-dict.
+        Raises `MissingKeyError` if any of the required keys is missing in the `params`-dict.
 
         Raises `NonUniqueTasksError` if the titles of tasks are not unique to each other.
 
@@ -378,9 +371,9 @@ class Step:
         # ensure all necessary keys are in the dict
         for expected_key in cls.EXPECTED_DICT_ENTRIES.keys():
             if expected_key not in params:
-                raise StepKeyError(
-                    "Missing key {} in Step dictionary".format(expected_key),
-                    expected_key,
+                raise MissingKeyError(
+                    "Missing key {} in {} dictionary".format(expected_key, cls.__name__),
+                    expected_key, cls.__name__
                 )
 
         # delete any keys from params that are not expected to avoid having
@@ -554,7 +547,7 @@ class TargetGroup:
         Raises `TypeError` if params is not a dictionary, or any of the values in the
         dict have the wrong type.
 
-        Raises `TargetGroupKeyError` if any of the required keys is missing
+        Raises `MissingKeyError` if any of the required keys is missing
         in the `params`-dict.
 
         Usage example::
@@ -572,9 +565,9 @@ class TargetGroup:
         # ensure all necessary keys are in the dict
         for expected_key in cls.EXPECTED_DICT_ENTRIES.keys():
             if expected_key not in params:
-                raise TargetGroupKeyError(
-                    "Missing key {} in TargetGroup dictionary".format(expected_key),
-                    expected_key,
+                raise MissingKeyError(
+                    "Missing key {} in {} dictionary".format(expected_key, cls.__name__),
+                    expected_key, cls.__name__
                 )
 
         # delete any keys from params that are not expected to avoid having
@@ -681,7 +674,7 @@ class AcademicCourse:
         Raises `TypeError` if params is not a dictionary, or any of the values in the
         dict have the wrong type.
 
-        Raises `AcademicCourseKeyError` if any of the required keys is missing
+        Raises `MissingKeyError` if any of the required keys is missing
         in the `params`-dict.
 
         Usage example::
@@ -697,9 +690,9 @@ class AcademicCourse:
         # ensure all necessary keys are in the dict
         for expected_key in cls.EXPECTED_DICT_ENTRIES.keys():
             if expected_key not in params:
-                raise AcademicCourseKeyError(  # TODO one "MissingKeyError" for all classes, supply cls as param to distinguish
-                    "Missing key {} in AcademicCourse dictionary".format(expected_key),
-                    expected_key,
+                raise MissingKeyError(
+                    "Missing key {} in {} dictionary".format(expected_key, cls.__name__),
+                    expected_key, cls.__name__
                 )
 
         # delete any keys from params that are not expected to avoid having
@@ -812,7 +805,7 @@ class Department:
         Raises `TypeError` if params is not a dictionary, or any of the values in the
         dict have the wrong type.
 
-        Raises `DepartmentKeyError` if any of the required keys is missing in the `params`-dict.
+        Raises `MissingKeyError` if any of the required keys is missing in the `params`-dict.
 
         Usage example::
 
@@ -827,9 +820,9 @@ class Department:
         # ensure all necessary keys are in the dict
         for expected_key in cls.EXPECTED_DICT_ENTRIES.keys():
             if expected_key not in params:
-                raise DepartmentKeyError(  # TODO one "MissingKeyError" for all classes, supply cls as param to distinguish
-                    "Missing key {} in Department dictionary".format(expected_key),
-                    expected_key,
+                raise MissingKeyError(
+                    "Missing key {} in {} dictionary".format(expected_key, cls.__name__),
+                    expected_key, cls.__name__
                 )
 
         # delete any keys from params that are not expected to avoid having
@@ -959,7 +952,7 @@ class Institution:
         Raises `TypeError` if params is not a dictionary, or any of the values in the
         dict have the wrong type.
 
-        Raises `InstitutionKeyError` if any of the required keys is missing in the `params`-dict.
+        Raises `MissingKeyError` if any of the required keys is missing in the `params`-dict.
 
         Usage example::
 
@@ -974,9 +967,9 @@ class Institution:
         # ensure all necessary keys are in the dict
         for expected_key in cls.EXPECTED_DICT_ENTRIES.keys():
             if expected_key not in params:
-                raise InstitutionKeyError(  # TODO one "MissingKeyError" for all classes, supply cls as param to distinguish
-                    "Missing key {} in Institution dictionary".format(expected_key),
-                    expected_key,
+                raise MissingKeyError(
+                    "Missing key {} in {} dictionary".format(expected_key, cls.__name__),
+                    expected_key, cls.__name__
                 )
 
         # delete any keys from params that are not expected to avoid having
@@ -1091,7 +1084,7 @@ class Lecture:
         Raises `TypeError` if params is not a dictionary, or any of the values in the
         dict have the wrong type.
 
-        Raises `LectureKeyError` if any of the required keys is missing
+        Raises `MissingKeyError` if any of the required keys is missing
         in the `params`-dict.
 
         Usage example::
@@ -1109,9 +1102,9 @@ class Lecture:
         # ensure all necessary keys are in the dict
         for expected_key in cls.EXPECTED_DICT_ENTRIES.keys():
             if expected_key not in params:
-                raise LectureKeyError(
-                    "Missing key {} in Lecture dictionary".format(expected_key),
-                    expected_key,
+                raise MissingKeyError(
+                    "Missing key {} in {} dictionary".format(expected_key, cls.__name__),
+                    expected_key, cls.__name__
                 )
 
         # delete any keys from params that are not expected to avoid having
@@ -1328,7 +1321,7 @@ class VEPlan:
         Raises `TypeError` if params is not a dictionary or if any of the values in the
         dictionary have to wrong type.
 
-        Raises `PlanKeyError` if an expected key is missing in the dictionary.
+        Raises `MissingKeyError` if an expected key is missing in the dictionary.
 
         Raises `InvalidId` if the optionally supplied _id is no matching the expected format
         for `bson.ObjectId`.
@@ -1432,9 +1425,9 @@ class VEPlan:
         # ensure all necessary keys are in the dict
         for expected_key in cls.EXPECTED_DICT_ENTRIES.keys():
             if expected_key not in params:
-                raise PlanKeyError(
-                    "Missing key {} in VEPlan dictionary".format(expected_key),
-                    expected_key,
+                raise MissingKeyError(
+                    "Missing key {} in {} dictionary".format(expected_key, cls.__name__),
+                    expected_key, cls.__name__
                 )
 
         # delete any keys from params that are not expected to avoid having

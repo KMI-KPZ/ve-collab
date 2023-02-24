@@ -74,67 +74,13 @@ class PostFileNotDeleteableError(Exception):
     pass
 
 
-class TaskKeyError(Exception):
-    """Task initialization is missing a required key"""
+class MissingKeyError(Exception):
+    """Model Object initialization is missing a required key"""
 
-    def __init__(self, message, missing_value=None) -> None:
+    def __init__(self, message, missing_value=None, obj=None) -> None:
         super().__init__(message)
         self.missing_value = missing_value
-
-
-class TargetGroupKeyError(Exception):
-    """Task initialization is missing a required key"""
-
-    def __init__(self, message, missing_value=None) -> None:
-        super().__init__(message)
-        self.missing_value = missing_value
-
-
-class AcademicCourseKeyError(Exception):
-    """AcademicCourse initialization is missing a required key"""
-
-    def __init__(self, message, missing_value) -> None:
-        super().__init__(message)
-        self.missing_value = missing_value
-
-class DepartmentKeyError(Exception):
-    """AcademicCourse initialization is missing a required key"""
-
-    def __init__(self, message, missing_value) -> None:
-        super().__init__(message)
-        self.missing_value = missing_value
-
-
-class InstitutionKeyError(Exception):
-    """AcademicCourse initialization is missing a required key"""
-
-    def __init__(self, message, missing_value) -> None:
-        super().__init__(message)
-        self.missing_value = missing_value
-
-
-class LectureKeyError(Exception):
-    """Lecture initialization is missing a required key"""
-
-    def __init__(self, message, missing_value) -> None:
-        super().__init__(message)
-        self.missing_value = missing_value
-
-
-class StepKeyError(Exception):
-    """Step initialization is missing a required key"""
-
-    def __init__(self, message, missing_value=None) -> None:
-        super().__init__(message)
-        self.missing_value = missing_value
-
-
-class PlanKeyError(Exception):
-    """VEPlan initialization is missing a required key"""
-
-    def __init__(self, message, missing_value) -> None:
-        super().__init__(message)
-        self.missing_value = missing_value
+        self.obj = obj
 
 
 class NonUniqueTasksError(Exception):

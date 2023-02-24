@@ -1,9 +1,8 @@
 from bson import ObjectId
 from bson.errors import InvalidId
-from datetime import timedelta
 from pymongo.database import Database
 from pymongo.errors import DuplicateKeyError
-from typing import List, Optional, Tuple
+from typing import List
 
 from exceptions import PlanAlreadyExistsError, PlanDoesntExistError
 from model import VEPlan
