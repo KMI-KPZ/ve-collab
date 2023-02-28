@@ -684,7 +684,7 @@ class AcademicCourse:
 
         if not isinstance(params, dict):
             raise TypeError(
-                "Expecting type 'dict' of params, got {}".format(type(dict))
+                "Expecting type 'dict' of params, got {}".format(type(params))
             )
 
         # ensure all necessary keys are in the dict
@@ -814,7 +814,7 @@ class Department:
 
         if not isinstance(params, dict):
             raise TypeError(
-                "Expecting type 'dict' of params, got {}".format(type(dict))
+                "Expecting type 'dict' of params, got {}".format(type(params))
             )
 
         # ensure all necessary keys are in the dict
@@ -961,7 +961,7 @@ class Institution:
 
         if not isinstance(params, dict):
             raise TypeError(
-                "Expecting type 'dict' of params, got {}".format(type(dict))
+                "Expecting type 'dict' of params, got {}".format(type(params))
             )
 
         # ensure all necessary keys are in the dict
@@ -1419,7 +1419,7 @@ class VEPlan:
 
         if not isinstance(params, dict):
             raise TypeError(
-                "Expecting type 'dict' of params, got {}".format(type(dict))
+                "Expecting type 'dict' of params, got {}".format(type(params))
             )
 
         # ensure all necessary keys are in the dict

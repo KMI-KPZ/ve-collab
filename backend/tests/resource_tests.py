@@ -5,7 +5,7 @@ from bson import ObjectId
 
 import pymongo
 from tornado.options import options
-from exceptions import PlanAlreadyExistsError, PlanDoesntExistError
+from exceptions import MissingKeyError, NonUniqueTasksError, PlanAlreadyExistsError, PlanDoesntExistError
 
 import global_vars
 from model import (
@@ -415,6 +415,238 @@ class PlanResourceTest(BaseResourceTestCase):
         _id is present in the db and the upsert flag is set to False
         """
         self.assertRaises(PlanDoesntExistError, self.planner.update_full_plan, VEPlan())
+
+    def test_update_field(self):
+        """
+        expect: successfully update a single field of a VEPlan
+        """
+
+        self.planner.update_field(self.plan_id, "topic", "updated_topic")
+        self.planner.update_field(self.plan_id, "goals", {"updated": "updated"})
+        self.planner.update_field(
+            self.plan_id, "involved_parties", ["update1", "update2"]
+        )
+        self.planner.update_field(self.plan_id, "realization", "updated_realization")
+        self.planner.update_field(self.plan_id, "learning_env", "updated_learning_env")
+        self.planner.update_field(self.plan_id, "tools", ["update1", "update2"])
+        self.planner.update_field(self.plan_id, "new_content", True)
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["topic"], "updated_topic")
+        self.assertEqual(db_state["goals"], {"updated": "updated"})
+        self.assertEqual(db_state["involved_parties"], ["update1", "update2"])
+        self.assertEqual(db_state["realization"], "updated_realization")
+        self.assertEqual(db_state["learning_env"], "updated_learning_env")
+        self.assertEqual(db_state["tools"], ["update1", "update2"])
+        self.assertEqual(db_state["new_content"], True)
+
+    def test_update_field_object(self):
+        """
+        expect: successfully update a single field of a VEPlan that
+        is not a primitive type
+        """
+
+        tg = TargetGroup(
+            name="updated_name",
+            age_min=10,
+            age_max=20,
+            experience="updated_experience",
+            academic_course="updated_academic_course",
+            mother_tongue="de",
+            foreign_languages={"en": "c1"},
+        )
+
+        self.planner.update_field(self.plan_id, "audience", [tg.to_dict()])
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state)
+        self.assertIsInstance(db_state["audience"][0]["_id"], ObjectId)
+        self.assertEqual(db_state["audience"][0]["name"], tg.name)
+        self.assertEqual(db_state["audience"][0]["age_min"], tg.age_min)
+        self.assertEqual(db_state["audience"][0]["experience"], tg.experience)
+        self.assertEqual(db_state["audience"][0]["academic_course"], tg.academic_course)
+        self.assertEqual(db_state["audience"][0]["mother_tongue"], tg.mother_tongue)
+        self.assertEqual(
+            db_state["audience"][0]["foreign_languages"], tg.foreign_languages
+        )
+
+        # same, but this time manually specify a _id
+        tg2 = TargetGroup(
+            _id=ObjectId(),
+            name="updated_name2",
+            age_min=10,
+            age_max=20,
+            experience="updated_experience2",
+            academic_course="updated_academic_course2",
+            mother_tongue="de2",
+            foreign_languages={"en": "c1"},
+        )
+
+        self.planner.update_field(self.plan_id, "audience", [tg2.to_dict()])
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["audience"][0]["_id"], tg2._id)
+        self.assertEqual(db_state["audience"][0]["name"], tg2.name)
+        self.assertEqual(db_state["audience"][0]["age_min"], tg2.age_min)
+        self.assertEqual(db_state["audience"][0]["experience"], tg2.experience)
+        self.assertEqual(
+            db_state["audience"][0]["academic_course"], tg2.academic_course
+        )
+        self.assertEqual(db_state["audience"][0]["mother_tongue"], tg2.mother_tongue)
+        self.assertEqual(
+            db_state["audience"][0]["foreign_languages"], tg2.foreign_languages
+        )
+
+    def test_update_field_upsert(self):
+        """
+        expect: successfully upsert field, i.e. create new plan with only this field set
+        to non-default
+        """
+
+        _id = ObjectId()
+
+        # first try a primitve attribute
+        self.planner.update_field(
+            _id, "realization", "updated_realization", upsert=True
+        )
+        db_state = self.db.plans.find_one({"_id": _id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["realization"], "updated_realization")
+        self.assertIsNone(db_state["name"])
+        self.assertEqual(db_state["tools"], [])
+
+        # now same test, but with a complex attribute
+        self.db.plans.delete_one({"_id": _id})
+
+        institution = Institution(
+            name="updated_institution_name",
+            departments=[
+                Department(
+                    name="updated_department_name",
+                    academic_courses=[
+                        AcademicCourse(name="updated_academic_course_name")
+                    ],
+                )
+            ],
+        )
+        institution_dict = institution.to_dict()
+        # also check _id creation in one pass
+        del institution_dict["_id"]
+        del institution_dict["departments"][0]["_id"]
+        del institution_dict["departments"][0]["academic_courses"][0]["_id"]
+
+        self.planner.update_field(_id, "institutions", [institution_dict], upsert=True)
+        db_state = self.db.plans.find_one({"_id": _id})
+        self.assertIsNotNone(db_state)
+        self.assertIsNone(db_state["realization"])
+        self.assertIsInstance(db_state["institutions"][0]["_id"], ObjectId)
+        self.assertEqual(
+            db_state["institutions"][0]["name"], "updated_institution_name"
+        )
+        self.assertIsInstance(
+            db_state["institutions"][0]["departments"][0]["_id"], ObjectId
+        )
+        self.assertEqual(
+            db_state["institutions"][0]["departments"][0]["name"],
+            "updated_department_name",
+        )
+        self.assertIsInstance(
+            db_state["institutions"][0]["departments"][0]["academic_courses"][0]["_id"],
+            ObjectId,
+        )
+        self.assertEqual(
+            db_state["institutions"][0]["departments"][0]["academic_courses"][0][
+                "name"
+            ],
+            "updated_academic_course_name",
+        )
+
+    def test_update_field_error_wrong_type(self):
+        """
+        expect: TypeError is raised because either primitive or complex attribute
+        has a wrong type
+        """
+
+        # primitive attribute
+        self.assertRaises(
+            TypeError, self.planner.update_field, self.plan_id, "tools", "123"
+        )
+
+        # object_like_attribute
+        lecture = Lecture().to_dict()
+        # not enclosed by list
+        self.assertRaises(
+            TypeError, self.planner.update_field, self.plan_id, "lectures", lecture
+        )
+        # wrong attribute type
+        lecture["name"] = 123
+        self.assertRaises(
+            TypeError, self.planner.update_field, self.plan_id, "lectures", [lecture]
+        )
+        # attribute not in dict representation
+        self.assertRaises(
+            TypeError,
+            self.planner.update_field,
+            self.plan_id,
+            "lectures",
+            ["wrong_type"],
+        )
+
+    def test_update_field_object_error_model_error(self):
+        """
+        expect: semantic error from underlying models is thrown (e.g. non unique task names)
+        """
+
+        step = Step(name="test").to_dict()
+        step["tasks"] = [Task(title="test").to_dict(), Task(title="test").to_dict()]
+
+        self.assertRaises(
+            NonUniqueTasksError,
+            self.planner.update_field,
+            self.plan_id,
+            "steps",
+            [step],
+        )
+
+        del step["ve_approach"]
+        
+        self.assertRaises(
+            MissingKeyError,
+            self.planner.update_field,
+            self.plan_id,
+            "steps",
+            [step],
+        )
+
+    def test_update_field_error_invalid_attribute(self):
+        """
+        expect: ValueError is thrown because attribute is not valid
+        (i.e. not recognized by model)
+        """
+
+        self.assertRaises(
+            ValueError,
+            self.planner.update_field,
+            self.plan_id,
+            "not_existing_attr",
+            "value",
+        )
+
+    def test_update_field_error_plan_doesnt_exist(self):
+        """
+        expect: PlanDoesntExistError is thrown because no match was found and
+        upsert is False
+        """
+
+        self.assertRaises(
+            PlanDoesntExistError,
+            self.planner.update_field,
+            ObjectId(),
+            "realization",
+            "updated",
+        )
 
     def test_delete_plan_str(self):
         """
