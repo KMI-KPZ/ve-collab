@@ -156,8 +156,11 @@ class Task:
         for expected_key in cls.EXPECTED_DICT_ENTRIES.keys():
             if expected_key not in params:
                 raise MissingKeyError(
-                    "Missing key {} in {} dictionary".format(expected_key, cls.__name__),
-                    expected_key, cls.__name__
+                    "Missing key {} in {} dictionary".format(
+                        expected_key, cls.__name__
+                    ),
+                    expected_key,
+                    cls.__name__,
                 )
 
         # delete any keys from params that are not expected to avoid having
@@ -175,7 +178,7 @@ class Task:
                         "expected type '{}' for key '{}', got '{}'".format(
                             cls.EXPECTED_DICT_ENTRIES[key],
                             key,
-                            type(key),
+                            type(params[key]),
                         )
                     )
 
@@ -275,7 +278,13 @@ class Step:
         self.social_form = social_form
         self.learning_env = learning_env
         self.ve_approach = ve_approach
+
         self.tasks = tasks
+
+        # ensure that tasks have unique titles
+        if not self._check_unique_task_titles(self.tasks):
+            raise NonUniqueTasksError
+
         self.evaluation_tools = evaluation_tools
         self.attachments = [
             util.parse_object_id(attachment) for attachment in attachments
@@ -372,8 +381,11 @@ class Step:
         for expected_key in cls.EXPECTED_DICT_ENTRIES.keys():
             if expected_key not in params:
                 raise MissingKeyError(
-                    "Missing key {} in {} dictionary".format(expected_key, cls.__name__),
-                    expected_key, cls.__name__
+                    "Missing key {} in {} dictionary".format(
+                        expected_key, cls.__name__
+                    ),
+                    expected_key,
+                    cls.__name__,
                 )
 
         # delete any keys from params that are not expected to avoid having
@@ -391,7 +403,7 @@ class Step:
                         "expected type '{}' for key '{}', got '{}'".format(
                             cls.EXPECTED_DICT_ENTRIES[key],
                             key,
-                            type(key),
+                            type(params[key]),
                         )
                     )
 
@@ -566,8 +578,11 @@ class TargetGroup:
         for expected_key in cls.EXPECTED_DICT_ENTRIES.keys():
             if expected_key not in params:
                 raise MissingKeyError(
-                    "Missing key {} in {} dictionary".format(expected_key, cls.__name__),
-                    expected_key, cls.__name__
+                    "Missing key {} in {} dictionary".format(
+                        expected_key, cls.__name__
+                    ),
+                    expected_key,
+                    cls.__name__,
                 )
 
         # delete any keys from params that are not expected to avoid having
@@ -585,7 +600,7 @@ class TargetGroup:
                         "expected type '{}' for key '{}', got '{}'".format(
                             cls.EXPECTED_DICT_ENTRIES[key],
                             key,
-                            type(key),
+                            type(params[key]),
                         )
                     )
 
@@ -691,8 +706,11 @@ class AcademicCourse:
         for expected_key in cls.EXPECTED_DICT_ENTRIES.keys():
             if expected_key not in params:
                 raise MissingKeyError(
-                    "Missing key {} in {} dictionary".format(expected_key, cls.__name__),
-                    expected_key, cls.__name__
+                    "Missing key {} in {} dictionary".format(
+                        expected_key, cls.__name__
+                    ),
+                    expected_key,
+                    cls.__name__,
                 )
 
         # delete any keys from params that are not expected to avoid having
@@ -821,8 +839,11 @@ class Department:
         for expected_key in cls.EXPECTED_DICT_ENTRIES.keys():
             if expected_key not in params:
                 raise MissingKeyError(
-                    "Missing key {} in {} dictionary".format(expected_key, cls.__name__),
-                    expected_key, cls.__name__
+                    "Missing key {} in {} dictionary".format(
+                        expected_key, cls.__name__
+                    ),
+                    expected_key,
+                    cls.__name__,
                 )
 
         # delete any keys from params that are not expected to avoid having
@@ -968,8 +989,11 @@ class Institution:
         for expected_key in cls.EXPECTED_DICT_ENTRIES.keys():
             if expected_key not in params:
                 raise MissingKeyError(
-                    "Missing key {} in {} dictionary".format(expected_key, cls.__name__),
-                    expected_key, cls.__name__
+                    "Missing key {} in {} dictionary".format(
+                        expected_key, cls.__name__
+                    ),
+                    expected_key,
+                    cls.__name__,
                 )
 
         # delete any keys from params that are not expected to avoid having
@@ -1103,8 +1127,11 @@ class Lecture:
         for expected_key in cls.EXPECTED_DICT_ENTRIES.keys():
             if expected_key not in params:
                 raise MissingKeyError(
-                    "Missing key {} in {} dictionary".format(expected_key, cls.__name__),
-                    expected_key, cls.__name__
+                    "Missing key {} in {} dictionary".format(
+                        expected_key, cls.__name__
+                    ),
+                    expected_key,
+                    cls.__name__,
                 )
 
         # delete any keys from params that are not expected to avoid having
@@ -1122,7 +1149,7 @@ class Lecture:
                         "expected type '{}' for key '{}', got '{}'".format(
                             cls.EXPECTED_DICT_ENTRIES[key],
                             key,
-                            type(key),
+                            type(params[key]),
                         )
                     )
 
@@ -1426,8 +1453,11 @@ class VEPlan:
         for expected_key in cls.EXPECTED_DICT_ENTRIES.keys():
             if expected_key not in params:
                 raise MissingKeyError(
-                    "Missing key {} in {} dictionary".format(expected_key, cls.__name__),
-                    expected_key, cls.__name__
+                    "Missing key {} in {} dictionary".format(
+                        expected_key, cls.__name__
+                    ),
+                    expected_key,
+                    cls.__name__,
                 )
 
         # delete any keys from params that are not expected to avoid having

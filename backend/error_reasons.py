@@ -1,4 +1,7 @@
 INSUFFICIENT_PERMISSIONS = "insufficient_permission"
 MISSING_KEY_SLUG = "missing_key:"
+MISSING_KEY_IN_HTTP_BODY_SLUG = "missing_key_in_http_body:"
 PLAN_DOESNT_EXIST = "plan_doesnt_exist"
 PLAN_ALREADY_EXISTS = "plan_already_exists"
+NON_UNIQUE_STEP_NAMES = "non_unique_step_names"
+NON_UNIQUE_TASK_TITLES = "non_unique_task_titles"

@@ -4,7 +4,12 @@ from pymongo.database import Database
 from pymongo.errors import DuplicateKeyError
 from typing import Any, List
 
-from exceptions import MissingKeyError, PlanAlreadyExistsError, PlanDoesntExistError
+from exceptions import (
+    MissingKeyError,
+    NonUniqueStepsError,
+    PlanAlreadyExistsError,
+    PlanDoesntExistError,
+)
 from model import Institution, Lecture, Step, TargetGroup, VEPlan
 import util
 
@@ -182,6 +187,15 @@ class VEPlanResource:
                     )
                 except Exception:
                     raise
+            
+            # the integrity for unique step names has to be checked manually, because it is not
+            # part of the Step model logic, but of the VEPlan, which we don't build an instance
+            # of here
+            if field_name == "steps":
+                if not VEPlan._check_unique_step_names(
+                    [Step.from_dict(val) for val in value_copy]
+                ):
+                    raise NonUniqueStepsError()
 
         # if the to-update attribute is not object-like, but a regular "primitive"
         # type, we typecheck via the expected values defined by the model

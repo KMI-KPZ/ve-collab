@@ -15,7 +15,17 @@ from tornado.testing import AsyncHTTPTestCase
 from resources.network.acl import ACL
 import global_vars
 from main import make_app
-from model import AcademicCourse, Department, Institution, Lecture, Step, TargetGroup, Task, User, VEPlan
+from model import (
+    AcademicCourse,
+    Department,
+    Institution,
+    Lecture,
+    Step,
+    TargetGroup,
+    Task,
+    User,
+    VEPlan,
+)
 
 # hack all loggers to not produce too much irrelevant (info) output here
 for logger_name in logging.root.manager.loggerDict:
@@ -29,6 +39,7 @@ INVALID_KEY_ERROR_SLUG = "invalid_query_parameter:"
 MISSING_KEY_HTTP_BODY_ERROR_SLUG = "missing_key_in_http_body:"
 MISSING_FILE_ERROR_SLUG = "missing_file:"
 JSON_PARSING_ERROR = "json_parsing_error"
+INVALID_OBJECT_ID = "invalid_object_id"
 USER_NOT_ADMIN_ERROR = "user_not_admin"
 INSUFFICIENT_PERMISSION_ERROR = "insufficient_permission"
 UNRECOGNIZABLE_KEY_ERROR = "unrecognizable_key_in_http_body"
@@ -6626,7 +6637,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             mother_tongue="test",
             foreign_languages={"test": "l1"},
         )
-    
+
     def create_institution(self, name: str = "test") -> Institution:
         """
         convenience method to create an institution with non-default values
@@ -6638,7 +6649,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             country="test",
             departments=[Department(name="test", academic_courses=[AcademicCourse()])],
         )
-    
+
     def create_lecture(self, name: str = "test") -> Lecture:
         """
         convenience method to create a lecture with non-default values
@@ -6788,7 +6799,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         plan["_id"] = "test123"
 
         response = self.base_checks(
-            "POST", "/planner/update", False, 400, body=self.json_serialize(plan)
+            "POST", "/planner/update_full", False, 400, body=self.json_serialize(plan)
         )
         self.assertEqual(response["reason"], "invalid_object_id")
 
@@ -6950,6 +6961,421 @@ class VEPlanHandlerTest(BaseApiTestCase):
             body=self.json_serialize(VEPlan().to_dict()),
         )
         self.assertEqual(response["reason"], PLAN_DOESNT_EXIST_ERROR)
+
+    def test_post_update_field_primitive_attribute(self):
+        """
+        expect: successfully update the value of an attribute that has a primitive type
+        """
+
+        payload = {
+            "plan_id": self.plan_id,
+            "field_name": "realization",
+            "value": "updated_realization",
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/update_field",
+            True,
+            200,
+            body=self.json_serialize(payload),
+        )
+
+        self.assertEqual(response["updated_id"], str(self.plan_id))
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["realization"], "updated_realization")
+
+        # again, but this time upsert
+        payload = {
+            "plan_id": ObjectId(),
+            "field_name": "topic",
+            "value": "updated_topic",
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/update_field?upsert=true",
+            True,
+            200,
+            body=self.json_serialize(payload),
+        )
+        self.assertEqual(response["updated_id"], str(payload["plan_id"]))
+
+        db_state = self.db.plans.find_one({"_id": ObjectId(payload["plan_id"])})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["topic"], "updated_topic")
+        self.assertEqual(db_state["realization"], None)
+        self.assertEqual(db_state["steps"], [])
+
+    def test_post_update_field_compound_attribute(self):
+        """
+        expect: successfully update the value of an attribute that has an object-like type
+        """
+
+        payload = {
+            "plan_id": self.plan_id,
+            "field_name": "audience",
+            "value": [
+                {
+                    "name": "updated_name",
+                    "age_min": 10,
+                    "age_max": 20,
+                    "experience": "updated_experience",
+                    "academic_course": "updated_academic_course",
+                    "mother_tongue": "de",
+                    "foreign_languages": {"en": "c1"},
+                }
+            ],
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/update_field",
+            True,
+            200,
+            body=self.json_serialize(payload),
+        )
+
+        self.assertEqual(response["updated_id"], str(self.plan_id))
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(len(db_state["audience"]), 1)
+        self.assertIsInstance(db_state["audience"][0]["_id"], ObjectId)
+        self.assertEqual(db_state["audience"][0]["name"], "updated_name")
+        self.assertEqual(db_state["audience"][0]["age_min"], 10)
+        self.assertEqual(db_state["audience"][0]["age_max"], 20)
+        self.assertEqual(db_state["audience"][0]["experience"], "updated_experience")
+        self.assertEqual(
+            db_state["audience"][0]["academic_course"], "updated_academic_course"
+        )
+        self.assertEqual(db_state["audience"][0]["mother_tongue"], "de")
+        self.assertEqual(db_state["audience"][0]["foreign_languages"], {"en": "c1"})
+
+        # again, but this time upsert
+        payload = {
+            "plan_id": ObjectId(),
+            "field_name": "audience",
+            "value": [
+                {
+                    "name": "updated_name",
+                    "age_min": 10,
+                    "age_max": 20,
+                    "experience": "updated_experience",
+                    "academic_course": "updated_academic_course",
+                    "mother_tongue": "de",
+                    "foreign_languages": {"en": "c1"},
+                }
+            ],
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/update_field?upsert=true",
+            True,
+            200,
+            body=self.json_serialize(payload),
+        )
+        self.assertEqual(response["updated_id"], str(payload["plan_id"]))
+
+        db_state = self.db.plans.find_one({"_id": ObjectId(payload["plan_id"])})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(len(db_state["audience"]), 1)
+        self.assertIsInstance(db_state["audience"][0]["_id"], ObjectId)
+        self.assertEqual(db_state["audience"][0]["name"], "updated_name")
+        self.assertEqual(db_state["audience"][0]["age_min"], 10)
+        self.assertEqual(db_state["audience"][0]["age_max"], 20)
+        self.assertEqual(db_state["audience"][0]["experience"], "updated_experience")
+        self.assertEqual(
+            db_state["audience"][0]["academic_course"], "updated_academic_course"
+        )
+        self.assertEqual(db_state["audience"][0]["mother_tongue"], "de")
+        self.assertEqual(db_state["audience"][0]["foreign_languages"], {"en": "c1"})
+        self.assertEqual(db_state["topic"], None)
+        self.assertEqual(db_state["steps"], [])
+
+    def test_post_update_field_error_missing_key(self):
+        """
+        expect: fail message because plan_id, field_name or value is missing
+        """
+
+        # plan_id is missing
+        payload = {"field_name": "realization", "value": "updated"}
+
+        response = self.base_checks(
+            "POST",
+            "/planner/update_field",
+            False,
+            400,
+            body=self.json_serialize(payload),
+        )
+        self.assertEqual(
+            response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "plan_id"
+        )
+
+        # field_name is missing
+        payload = {"plan_id": self.plan_id, "value": "updated"}
+
+        response = self.base_checks(
+            "POST",
+            "/planner/update_field",
+            False,
+            400,
+            body=self.json_serialize(payload),
+        )
+        self.assertEqual(
+            response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "field_name"
+        )
+
+        # value is missing
+        payload = {
+            "plan_id": self.plan_id,
+            "field_name": "realization",
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/update_field",
+            False,
+            400,
+            body=self.json_serialize(payload),
+        )
+        self.assertEqual(response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "value")
+
+    def test_post_update_field_error_invalid_id(self):
+        """
+        expect: fail message because the supplied _id is not a valid ObjectId
+        """
+
+        payload = {"plan_id": "123", "field_name": "realization", "value": "updated"}
+
+        response = self.base_checks(
+            "POST",
+            "/planner/update_field",
+            False,
+            400,
+            body=self.json_serialize(payload),
+        )
+        self.assertEqual(response["reason"], INVALID_OBJECT_ID)
+
+        # also test an invalid object id within a compound object
+        payload = {
+            "plan_id": self.plan_id,
+            "field_name": "audience",
+            "value": [
+                {
+                    "_id": "123",
+                    "name": "updated_name",
+                    "age_min": 10,
+                    "age_max": 20,
+                    "experience": "updated_experience",
+                    "academic_course": "updated_academic_course",
+                    "mother_tongue": "de",
+                    "foreign_languages": {"en": "c1"},
+                }
+            ],
+        }
+        response = self.base_checks(
+            "POST",
+            "/planner/update_field",
+            False,
+            400,
+            body=self.json_serialize(payload),
+        )
+        self.assertEqual(response["reason"], INVALID_OBJECT_ID)
+
+    def test_post_update_field_error_unexpected_attribute(self):
+        """
+        expect: fail message because the supplied field name that should be updated
+        does not correspond to an attribute of a VEPlan
+        """
+
+        payload = {
+            "plan_id": self.plan_id,
+            "field_name": "not_existing_attr",
+            "value": "test",
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/update_field",
+            False,
+            400,
+            body=self.json_serialize(payload),
+        )
+        self.assertEqual(response["reason"], "unexpected_attribute")
+
+    def test_post_update_field_error_wrong_type(self):
+        """
+        expect: fail message because the value is of wrong type
+        """
+
+        payload = {
+            "plan_id": self.plan_id,
+            "field_name": "realization",
+            "value": 123,
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/update_field",
+            False,
+            400,
+            body=self.json_serialize(payload),
+        )
+        self.assertTrue(response["reason"].startswith("TypeError"))
+
+        # also check for object-like attribute case
+        # experience is mistakenly a list
+        payload = {
+            "plan_id": self.plan_id,
+            "field_name": "audience",
+            "value": [
+                {
+                    "_id": ObjectId(),
+                    "name": "updated_name",
+                    "age_min": 10,
+                    "age_max": 20,
+                    "experience": ["updated_experience"],
+                    "academic_course": "updated_academic_course",
+                    "mother_tongue": "de",
+                    "foreign_languages": {"en": "c1"},
+                }
+            ],
+        }
+        response = self.base_checks(
+            "POST",
+            "/planner/update_field",
+            False,
+            400,
+            body=self.json_serialize(payload),
+        )
+        self.assertTrue(response["reason"].startswith("TypeError"))
+
+    def test_post_update_field_error_missing_key_model(self):
+        """
+        expect: fail message because update of compound attribute misses a required key
+        """
+
+        # age_min is missing
+        payload = {
+            "plan_id": self.plan_id,
+            "field_name": "audience",
+            "value": [
+                {
+                    "name": "updated_name",
+                    "age_max": 20,
+                    "experience": "updated_experience",
+                    "academic_course": "updated_academic_course",
+                    "mother_tongue": "de",
+                    "foreign_languages": {"en": "c1"},
+                }
+            ],
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/update_field",
+            False,
+            400,
+            body=self.json_serialize(payload),
+        )
+        self.assertEqual(
+            response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "age_min"
+        )
+
+    def test_post_update_field_error_non_unique_steps(self):
+        """
+        expect: fail message because the semantic error if multiple steps have the same name
+        appears
+        """
+
+        payload = {
+            "plan_id": self.plan_id,
+            "field_name": "steps",
+            "value": [
+                {
+                    "_id": ObjectId(),
+                    "name": "test",
+                    "workload": 0,
+                    "timestamp_from": None,
+                    "timestamp_to": None,
+                    "duration": None,
+                    "social_form": None,
+                    "learning_env": None,
+                    "ve_approach": None,
+                    "tasks": [],
+                    "evaluation_tools": [],
+                    "attachments": [],
+                    "custom_attributes": {},
+                },
+                {
+                    "_id": ObjectId(),
+                    "name": "test",
+                    "workload": 0,
+                    "timestamp_from": None,
+                    "timestamp_to": None,
+                    "duration": None,
+                    "social_form": None,
+                    "learning_env": None,
+                    "ve_approach": None,
+                    "tasks": [],
+                    "evaluation_tools": [],
+                    "attachments": [],
+                    "custom_attributes": {},
+                },
+            ],
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/update_field",
+            False,
+            409,
+            body=self.json_serialize(payload),
+        )
+        self.assertEqual(response["reason"], NON_UNIQUE_STEPS_ERROR)
+
+    def test_post_update_field_error_non_unique_tasks(self):
+        """
+        expect: fail message because tasks in the step don't have unique titles
+        """
+
+        payload = {
+            "plan_id": self.plan_id,
+            "field_name": "steps",
+            "value": [
+                {
+                    "_id": ObjectId(),
+                    "name": "test",
+                    "workload": 0,
+                    "timestamp_from": None,
+                    "timestamp_to": None,
+                    "duration": None,
+                    "social_form": None,
+                    "learning_env": None,
+                    "ve_approach": None,
+                    "tasks": [
+                        Task(title="test").to_dict(),
+                        Task(title="test").to_dict(),
+                    ],
+                    "evaluation_tools": [],
+                    "attachments": [],
+                    "custom_attributes": {},
+                },
+            ],
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/update_field",
+            False,
+            409,
+            body=self.json_serialize(payload),
+        )
+        self.assertEqual(response["reason"], NON_UNIQUE_TASKS_ERROR)
 
     def test_delete_plan(self):
         """
