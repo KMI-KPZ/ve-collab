@@ -2,8 +2,8 @@ import React from 'react';
 
 export default function FooterSection() {
     return (
-        <div>
-            <h1 className="text-4xl font-bold underline">Hello Footer</h1>
-        </div>
+        <footer className="max-w-screen-2xl">
+            <div className="relative h-64 w-screen bg-footer-pattern">Footer</div>
+        </footer>
     );
 }
