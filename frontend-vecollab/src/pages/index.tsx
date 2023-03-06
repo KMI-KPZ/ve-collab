@@ -1,9 +1,10 @@
 import React from 'react';
-
 export default function Home() {
     return (
         <>
-            <h1 className="text-3xl font-bold underline">Hello world! Hallo</h1>
+            <div className="flex justify-center">
+                <h1 className="text-4xl font-bold underline">Hauptseite</h1>
+            </div>
         </>
     );
 }

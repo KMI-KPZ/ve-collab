@@ -4,5 +4,8 @@
         "next/core-web-vitals",
         "plugin:react/recommended",
         "prettier"
-    ]
+    ],
+    "globals": {
+        "JSX": true
+    }
 }

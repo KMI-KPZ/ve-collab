@@ -9,7 +9,15 @@ module.exports = {
         './src/**/*.{js,ts,jsx,tsx}',
     ],
     theme: {
-        extend: {},
+        extend: {
+            colors: {
+                orange: '#c4560b',
+                blue: '#00748f',
+            },
+            backgroundImage: {
+                'footer-pattern': "url('/images/footer/KAVAQ_Footer.png')",
+            },
+        },
     },
     plugins: [],
 };
