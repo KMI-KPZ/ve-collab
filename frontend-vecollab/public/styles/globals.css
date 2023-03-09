@@ -1,0 +1,102 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    @font-face {
+        font-family: Konnect;
+        font-weight: 900;
+        font-style: normal;
+        src: url(./fonts/KonnectBlack.otf) format("opentype");
+    }
+    @font-face {
+        font-family: Konnect;
+        font-weight: 900;
+        font-style: Italic;
+        src: url(./fonts/KonnectBlackItalic.otf) format("opentype");
+    }
+    @font-face {
+        font-family: Konnect;
+        font-weight: 700;
+        font-style: normal;
+        src: url(./fonts/KonnectBold.otf) format("opentype");
+    }
+    @font-face {
+        font-family: Konnect;
+        font-weight: 700;
+        font-style: italic;
+        src: url(./fonts/KonnectBoldItalic.otf) format("opentype");
+    }
+    @font-face {
+        font-family: Konnect;
+        font-weight: 100;
+        font-style: normal;
+        src: url(./fonts/KonnectHairline.otf) format("opentype");
+    }
+    @font-face {
+        font-family: Konnect;
+        font-weight: 100;
+        font-style: Italic;
+        src: url(./fonts/KonnectHairlineItalic.otf) format("opentype");
+    }
+    @font-face {
+        font-family: Konnect;
+        font-weight: 400;
+        font-style: Italic;
+        src: url(./fonts/KonnectItalic.otf) format("opentype");
+    }
+    @font-face {
+        font-family: Konnect;
+        font-weight: 300;
+        font-style: normal;
+        src: url(./fonts/KonnectLight.otf) format("opentype");
+    }
+    @font-face {
+        font-family: Konnect;
+        font-weight: 300;
+        font-style: italic;
+        src: url(./fonts/KonnectLightItalic.otf) format("opentype");
+    }
+    @font-face {
+        font-family: Konnect;
+        font-weight: 500;
+        font-style: normal;
+        src: url(./fonts/KonnectMedium.otf) format("opentype");
+    }
+    @font-face {
+        font-family: Konnect;
+        font-weight: 500;
+        font-style: italic;
+        src: url(./fonts/KonnectMediumItalic.otf) format("opentype");
+    }
+    @font-face {
+        font-family: Konnect;
+        font-weight: 400;
+        font-style: normal;
+        src: url(./fonts/KonnectRegular.otf) format("opentype");
+    }
+    @font-face {
+        font-family: Konnect;
+        font-weight: 600;
+        font-style: normal;
+        src: url(./fonts/KonnectSemiBold.otf) format("opentype");
+    }
+    @font-face {
+        font-family: Konnect;
+        font-weight: 600;
+        font-style: italic;
+        src: url(./fonts/KonnectSemiBoldItalic.otf) format("opentype");
+    }
+    @font-face {
+        font-family: Konnect;
+        font-weight: 200;
+        font-style: normal;
+        src: url(./fonts/KonnectThin.otf) format("opentype");
+    }
+    @font-face {
+        font-family: Konnect;
+        font-weight: 200;
+        font-style: italic;
+        src: url(./fonts/KonnectThinItalic.otf) format("opentype");
+    }
+}
