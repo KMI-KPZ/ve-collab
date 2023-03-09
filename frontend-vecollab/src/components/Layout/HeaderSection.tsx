@@ -5,8 +5,8 @@ import Link from 'next/link';
 
 export default function HeaderSection() {
     return (
-        <nav className="bg-white px-4 lg:px-6 py-2.5">
-            <div className="flex flex-wrap justify-between items-center mx-auto max-w-screen-2xl">
+        <header className="bg-white px-4 lg:px-6 py-2.5 drop-shadow-lg">
+            <nav className="flex flex-wrap justify-between items-center mx-auto max-w-screen-2xl">
                 <Link href="/">
                     <Image src={veCollabLogo} alt="Ve Collab Logo" width={250} height={250}></Image>
                 </Link>
@@ -32,7 +32,7 @@ export default function HeaderSection() {
                         <Link href="/projects">Registrieren</Link>
                     </li>
                 </ul>
-            </div>
-        </nav>
+            </nav>
+        </header>
     );
 }
