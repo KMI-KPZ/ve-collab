@@ -15,17 +15,17 @@ export default function HeaderSection() {
                         <Link href="/">Start</Link>
                     </li>
                     <li>
-                        <Link href="/projects">Projekte</Link>
+                        <Link href="/content">Materialien</Link>
                     </li>
                     <li>
-                        <Link href="#">Gruppen</Link>
+                        <Link href="/projects">Projekte</Link>
                     </li>
                     <li>
                         <Link href="#">Mitteilungen</Link>
                     </li>
                 </ul>
                 <ul className="flex items-center font-semibold space-x-8">
-                    <li className="bg-kavaqOrange text-white py-4 pr-6 pl-5 rounded-lg">
+                    <li className="bg-ve-collab-orange text-white py-4 pr-6 pl-5 rounded-lg">
                         <Link href="#">Login</Link>
                     </li>
                     <li>

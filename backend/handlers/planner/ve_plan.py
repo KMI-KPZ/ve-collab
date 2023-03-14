@@ -1,4 +1,5 @@
 import json
+from typing import Any, Optional
 
 from bson import ObjectId
 from bson.errors import InvalidId
@@ -7,7 +8,10 @@ import tornado.web
 
 from error_reasons import (
     INSUFFICIENT_PERMISSIONS,
+    MISSING_KEY_IN_HTTP_BODY_SLUG,
     MISSING_KEY_SLUG,
+    NON_UNIQUE_STEP_NAMES,
+    NON_UNIQUE_TASK_TITLES,
     PLAN_ALREADY_EXISTS,
     PLAN_DOESNT_EXIST,
 )
@@ -242,7 +246,7 @@ class VEPlanHandler(BaseHandler):
 
 
         POST /planner/update_full
-            update an existing plan by overwriting all attributes, i.e. the HTTP has to
+            update an existing plan by overwriting all attributes, i.e. the HTTP body has to
             contain all required attributes and the plan will be fully overwritten by those.
             Adding to that, your payload has to include the _id of the plan you want to update.
             _ids of other attributes (steps, tasks, audience) may be supplied, but can be omitted
@@ -353,8 +357,7 @@ class VEPlanHandler(BaseHandler):
                 (indicates if an insert or update has taken place and also includes
                 the inserted or updated _id)
                 {"success": True,
-                 "write_mode": <"inserted"|"updated">,
-                 "inserted_or_update_id": str}
+                 "updated_id": str}
 
                 400 Bad Request
                 (the http does not contain valid json)
@@ -386,63 +389,173 @@ class VEPlanHandler(BaseHandler):
                 (The names of the steps in the http body are not unique)
                 {"success": False,
                  "reason": "non_unique_step_names"}
+
+
+        POST /planner/update_field
+            update a single field of a VEPlan by supplying expected data via the HTTP Body.
+            The values are type-checked and also semantic checks like unique step names or task
+            titles are enforced with respective error messages.
+
+            If you want to update one of the object-like attributes of a VEPlan (e.g. audience,
+            lectures, steps, ...), pay attention to supply all of those objects in a list (as
+            there are naturally multiple possible as per model), because they will be overwritten
+            (i.e. if you want to append a new step, send all other already existing steps as well).
+            If you want to simple append or remove new objects to/from those list, 
+            use the append/remove-endpoints (TODO) instead.
+
+            query params:
+                "upsert" : <boolean>, Indicator to insert a new plan instead of updating an existing one,
+                                      if no match was found. If set to false and no matching plan was found,
+                                      nothing will happen.
+                                      default: false
+
+            http body:
+                the body has to contain the following entries as JSON:
+
+                {
+                    "plan_id": "object_id_str",
+                    "field_name": "str_identifier_of_attribute",
+                    "value": "<Any corresponding value>"
+                }
+
+                e.g.
+                {
+                    "plan_id": "object_id_str",
+                    "field_name": "realization",
+                    "value": "new value"
+                }
+                will update the attribute "realization" to "new value".
+
+
+            returns:
+                200 OK,
+                (indicates if an insert or update has taken place and also includes
+                the inserted or updated _id)
+                {"success": True,
+                 "updated_id": str}
+
+                400 Bad Request
+                (the http does not contain valid json)
+                {"success": False,
+                 "reason": "json_parsing_error"}
+
+                400 Bad Request
+                (if supplied, the value of "_id" is not a valid ObjectId,
+                should be a 24 bit hex str)
+                {"success": False,
+                 "reason": "invalid_object_id"}
+
+                400 Bad Request
+                (the http misses a required key)
+                {"success": False,
+                 "reason": "missing_key_in_http_body:<missing_key>"}
+
+                400 Bad Request
+                (some of the transmitted data is malformed)
+                {"success": False,
+                 "reason": "TypeError:<human readable description>"}
+
+                400 Bad Request
+                (the supplied field_name does not belong to an attribute
+                of VEPlan)
+                {"success": False,
+                 "reason": "unexpected_attribute"}
+
+                401 Unauthorized
+                (access token is not valid)
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
+                409 Conflict
+                (The names of the steps in the http body are not unique)
+                {"success": False,
+                 "reason": "non_unique_step_names"}
+
+                409 Conflict
+                (The titles of the tasks in a step in the http are not
+                unique)
+                {"success": False,
+                 "reason": "non_unique_task_titles"}
         """
 
         try:
             http_body = json.loads(self.request.body)
-            plan = VEPlan.from_dict(http_body)
         except json.JSONDecodeError:
             self.set_status(400)
             self.write({"success": False, "reason": "json_parsing_error"})
             return
-        except InvalidId:
-            self.set_status(400)
-            self.write({"success": False, "reason": "invalid_object_id"})
-            return
-        except MissingKeyError as e:
+
+        # check that upsert query param is either "true" or "false"
+        upsert = self.get_argument("upsert", "false")
+        if not (upsert == "true" or upsert == "false"):
             self.set_status(400)
             self.write(
                 {
                     "success": False,
-                    "reason": "missing_key_in_http_body:{}".format(e.missing_value),
+                    "reason": "invalid_query_parameter:{}".format("upsert"),
                 }
             )
             return
-        except NonUniqueStepsError:
-            self.set_status(409)
-            self.write({"success": False, "reason": "non_unique_step_names"})
-            return
-        except NonUniqueTasksError:
-            self.set_status(409)
-            self.write({"success": False, "reason": "non_unique_task_titles"})
-            return
+        # transform to bool type, only the "true"-str will be interpreted
+        # as True
+        if upsert == "true":
+            upsert = True
+        else:
+            upsert = False
 
         with util.get_mongodb() as db:
             if slug == "insert":
+                plan = self.load_plan_from_http_body_or_write_error(http_body)
+                if not plan:
+                    return
+
                 self.insert_plan(db, plan)
                 return
 
             elif slug == "update_full":
-                # check that upsert query param is either "true" or "false"
-                upsert = self.get_argument("upsert", "false")
-                if not (upsert == "true" or upsert == "false"):
+                plan = self.load_plan_from_http_body_or_write_error(http_body)
+                if not plan:
+                    return
+                self.update_full_plan(db, plan, upsert=upsert)
+                return
+
+            elif slug == "update_field":
+                # ensure necessary keys are present
+                if "plan_id" not in http_body:
                     self.set_status(400)
                     self.write(
                         {
                             "success": False,
-                            "reason": "invalid_query_parameter:{}".format("upsert"),
+                            "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "plan_id",
+                        }
+                    )
+                    return
+                if "field_name" not in http_body:
+                    self.set_status(400)
+                    self.write(
+                        {
+                            "success": False,
+                            "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "field_name",
+                        }
+                    )
+                    return
+                if "value" not in http_body:
+                    self.set_status(400)
+                    self.write(
+                        {
+                            "success": False,
+                            "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "value",
                         }
                     )
                     return
 
-                # transform to bool type, only the "true"-str will be interpreted
-                # as True
-                if upsert == "true":
-                    upsert = True
-                else:
-                    upsert = False
-
-                self.update_plan(db, plan, upsert=upsert)
+                self.update_field_in_plan(
+                    db,
+                    http_body["plan_id"],
+                    http_body["field_name"],
+                    http_body["value"],
+                    upsert=upsert
+                )
                 return
 
             else:
@@ -497,6 +610,37 @@ class VEPlanHandler(BaseHandler):
     ##############################################################################
     #                             helper functions                               #
     ##############################################################################
+
+    def load_plan_from_http_body_or_write_error(self, http_body: dict) -> Optional[VEPlan]:
+        """
+        helper function to parse a VEPlan from the dict (should be http body of the request)
+        and enforce type and model checks. 
+        """
+        try:
+            plan = VEPlan.from_dict(http_body)
+        except InvalidId:
+            self.set_status(400)
+            self.write({"success": False, "reason": "invalid_object_id"})
+            return None
+        except MissingKeyError as e:
+            self.set_status(400)
+            self.write(
+                {
+                    "success": False,
+                    "reason": "missing_key_in_http_body:{}".format(e.missing_value),
+                }
+            )
+            return None
+        except NonUniqueStepsError:
+            self.set_status(409)
+            self.write({"success": False, "reason": "non_unique_step_names"})
+            return None
+        except NonUniqueTasksError:
+            self.set_status(409)
+            self.write({"success": False, "reason": "non_unique_task_titles"})
+            return None
+
+        return plan
 
     def get_plan_by_id(self, db: Database, _id: str | ObjectId) -> None:
         """
@@ -570,7 +714,9 @@ class VEPlanHandler(BaseHandler):
 
         self.serialize_and_write({"success": True, "inserted_id": _id})
 
-    def update_plan(self, db: Database, plan: VEPlan, upsert: bool = False) -> None:
+    def update_full_plan(
+        self, db: Database, plan: VEPlan, upsert: bool = False
+    ) -> None:
         """
         This function is invoked by the handler when the correspoding endpoint
         is requested. It just de-crowds the handler function and should therefore
@@ -598,6 +744,73 @@ class VEPlanHandler(BaseHandler):
             return
 
         self.serialize_and_write({"success": True, "updated_id": _id})
+
+    def update_field_in_plan(
+        self,
+        db: Database,
+        plan_id: str | ObjectId,
+        field_name: str,
+        field_value: Any,
+        upsert: bool = False,
+    ) -> None:
+        """
+        This function is invoked by the handler when the correspoding endpoint
+        is requested. It just de-crowds the handler function and should therefore
+        not be called manually anywhere else.
+
+        Update a single field (i.e. attribute) of a VEPlan by specifying the _id of
+        the plan that should be updated (`plan_id`), the identifier which field should
+        be updated (`field_name`) and the corresponding `value` that should be set.
+        If you plan to update one of the attribute that are object-like, e.g. audience,
+        lectures, etc. be sure to supply a list of all the dictionaries, as they are
+        overwritten and not appended. Though, you may use the separate append-endpoints 
+        (TODO) instead.
+
+        Optionally, by setting the "upsert"-parameter to True, the plan will be inserted
+        if no matching plan was found. By default, this is set to False, resulting in
+        no action if no matching plan was found.
+
+        Responses:
+            200 OK          --> successfully updated the field of the plan
+            400 Bad Request --> invalid object id format
+                            --> TypeError, something wrong with format of the supplied
+                                data
+                            --> supplied field_name is not an attribute of a VEPlan
+                            --> missing key in http body
+            409 Conflict    --> Steps don't have unique names
+                            --> Tasks don't have unique titles
+        """
+
+        planner = VEPlanResource(db)
+        error_reason = None
+        _id = None
+
+        try:
+            plan_id = util.parse_object_id(plan_id)
+            _id = planner.update_field(plan_id, field_name, field_value, upsert=upsert)
+        except InvalidId:
+            error_reason = "invalid_object_id"
+            self.set_status(400)
+        except TypeError as e:
+            error_reason = "TypeError: " + str(e)
+            self.set_status(400)
+        except ValueError:
+            error_reason = "unexpected_attribute"
+            self.set_status(400)
+        except MissingKeyError as e:
+            error_reason = MISSING_KEY_IN_HTTP_BODY_SLUG + e.missing_value
+            self.set_status(400)
+        except NonUniqueStepsError:
+            error_reason = NON_UNIQUE_STEP_NAMES
+            self.set_status(409)
+        except NonUniqueTasksError:
+            error_reason = NON_UNIQUE_TASK_TITLES
+            self.set_status(409)
+
+        if error_reason:
+            self.write({"success": False, "reason": error_reason})
+        else:
+            self.serialize_and_write({"success": True, "updated_id": _id})
 
     def delete_plan(self, db: Database, _id: str | ObjectId) -> None:
         """
