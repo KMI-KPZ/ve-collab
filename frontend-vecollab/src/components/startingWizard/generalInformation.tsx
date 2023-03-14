@@ -38,7 +38,7 @@ export default function GeneralInformation() {
                 <div>
                     <button
                         type="button"
-                        className="items-end bg-orange text-white py-4 pr-6 pl-5 m-7 rounded-lg"
+                        className="items-end bg-ve-collab-orange text-white py-4 pr-6 pl-5 m-7 rounded-lg"
                     >
                         Weiter
                     </button>
@@ -46,7 +46,7 @@ export default function GeneralInformation() {
                 <div>
                     <button
                         type="submit"
-                        className="items-end bg-orange text-white py-4 pr-6 pl-5 m-7 rounded-lg"
+                        className="items-end bg-ve-collab-orange text-white py-4 pr-6 pl-5 m-7 rounded-lg"
                     >
                         Weiter
                     </button>

@@ -33,7 +33,7 @@ def auth_needed(
         if not self.current_user:
             self.set_status(401)
             self.write({"status": 401, "reason": "no_logged_in_user"})
-            self.redirect("/login")
+            #self.redirect("/login")
             return
         return method(self, *args, **kwargs)
 
