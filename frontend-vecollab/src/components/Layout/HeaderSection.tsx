@@ -2,8 +2,11 @@ import React from 'react';
 import Image from 'next/image';
 import veCollabLogo from '@/images/veCollabLogo.png';
 import Link from 'next/link';
+import { useSession, signIn, signOut } from "next-auth/react";
 
 export default function HeaderSection() {
+    const { data: session } = useSession()
+
     return (
         <header className="bg-white px-4 lg:px-6 py-2.5 drop-shadow-lg">
             <nav className="flex flex-wrap justify-between items-center mx-auto max-w-screen-2xl">
@@ -25,12 +28,26 @@ export default function HeaderSection() {
                     </li>
                 </ul>
                 <ul className="flex items-center font-semibold space-x-8">
-                    <li className="bg-ve-collab-orange text-white py-4 pr-6 pl-5 rounded-lg">
-                        <Link href="#">Login</Link>
-                    </li>
-                    <li>
-                        <Link href="/projects">Registrieren</Link>
-                    </li>
+                    {!session && (
+                        <>
+                            <li onClick={() => signIn("keycloak")} className="bg-ve-collab-orange text-white py-4 pr-6 pl-5 rounded-lg">
+                                <button onClick={() => signIn("keycloak")}>Login</button>
+                            </li>
+                            <li onClick={() => signIn("keycloak")}>
+                                <button onClick={() => signIn("keycloak")}>Registrieren</button>
+                            </li>
+                        </>
+                    )}
+                    {session && (
+                        <>
+                            <li>
+                                <span>Eingeloggt als: {session.user?.name}</span>
+                            </li>
+                            <li onClick={() => signOut()} className="bg-ve-collab-orange text-white py-4 pr-6 pl-5 rounded-lg">
+                                <button onClick={() => signOut()}>Ausloggen</button>
+                            </li>
+                        </>
+                    )}
                 </ul>
             </nav>
         </header>
