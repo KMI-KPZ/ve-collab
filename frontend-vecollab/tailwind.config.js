@@ -11,8 +11,15 @@ module.exports = {
     theme: {
         extend: {
             colors: {
-                orange: '#c4560b',
-                blue: '#00748f',
+                've-collab-orange': '#c4560b',
+                've-collab-orange-light': '#f7a670',
+                've-collab-blue': '#00748f',
+            },
+            fontSize: {
+                '5xl': '2.5rem',
+                '6xl': '2.75rem',
+                '7xl': '4.5rem',
+                '8xl': '6.25rem',
             },
             backgroundImage: {
                 'footer-pattern': "url('/images/footer/KAVAQ_Footer.png')",
