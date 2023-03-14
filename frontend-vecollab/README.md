@@ -1,16 +1,20 @@
-This is a [Next.js](https://nextjs.org/) project
+# Frontend Application of VE-Collab research project.
 
 ## Getting Started
 
-```bash
-# check Node Version -> should be 18.14 (or above)
-node -v
+- Setup Wordpress and install [this](https://www.wpgraphql.com/) plugin, activate it afterwards. Add some Posts and categorize them.
 
-npm install # to install all dependencies
-npm run dev  # to start the local server
-```
+- Copy `.env.local.example` into `.env.local` and set the correct value for your Wordpress GraphQL-endpoint
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+-   ```bash
+    # check Node Version -> should be 18.14 (or above)
+    node -v
+
+    npm install # to install all dependencies
+    npm run dev  # to start the local server
+    ```
+
+- Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 ## Learn More
 
