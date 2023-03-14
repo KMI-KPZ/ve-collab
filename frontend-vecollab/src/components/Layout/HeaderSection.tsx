@@ -25,7 +25,7 @@ export default function HeaderSection() {
                     </li>
                 </ul>
                 <ul className="flex items-center font-semibold space-x-8">
-                    <li className="bg-orange text-white py-4 pr-6 pl-5 rounded-lg">
+                    <li className="bg-kavaqOrange text-white py-4 pr-6 pl-5 rounded-lg">
                         <Link href="#">Login</Link>
                     </li>
                     <li>

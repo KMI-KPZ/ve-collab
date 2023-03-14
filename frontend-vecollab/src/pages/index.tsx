@@ -5,7 +5,7 @@ export default function Home() {
     return (
         <main>
             <div className="bg-slate-100">
-                <div className="flex flex-col m-auto p-12 max-w-screen-[1500] items-center bg-pattern-left-blue bg-no-repeat">
+                <div className="flex flex-col m-auto p-12 max-w-screen-[1920px] items-center bg-pattern-left-blue bg-no-repeat">
                     <h1 className="text-4xl font-bold m-7">Willkommen</h1>
                     <p className="w-1/2 font-konnect">
                         orem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo
@@ -19,11 +19,11 @@ export default function Home() {
                         consequat vitae, eleifend ac, enim. Aliquam lorem ante, dapibus in, viverra
                         quis, feugiat a, tellus. Phasellus viverra nulla ut metus varius laoreet.
                         Quisque rutrum. Aenean imperdiet. Etiam ultricies nisi vel augue. Curabitur
-                        ullamcorper ultricies nisi. Nam eget dui. Etiam{' '}
+                        ullamcorper ultricies nisi. Nam eget dui. Etiam
                     </p>
                     <Link
-                        href="/startingWizard"
-                        className="py-4 pr-6 pl-5 m-10 bg-orange rounded-lg text-white"
+                        href="/startingWizard/generalInformation/essentialInformation"
+                        className="py-4 pr-6 pl-5 m-10 bg-kavaqOrange rounded-lg text-white"
                     >
                         Starte dein Projekt
                     </Link>

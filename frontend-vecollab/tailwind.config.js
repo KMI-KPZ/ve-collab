@@ -11,8 +11,8 @@ module.exports = {
     theme: {
         extend: {
             colors: {
-                orange: '#c4560b',
-                blue: '#00748f',
+                kavaqOrange: '#c4560b',
+                kavaqBlue: '#00748f',
             },
             backgroundImage: {
                 'footer-pattern': "url('/images/footer/KAVAQ_Footer.png')",
