@@ -36,7 +36,11 @@ export default function Profile(props: Props) {
                 <Container>
                     <div className={"mx-20 flex"}>
                         <div className={"w-3/4  mr-4"}>
-                            <div className={"h-96 p-4 my-4 bg-white rounded-3xl shadow-2xl"}> VE relevante Profilinfos?</div>
+                            <div className={"h-[30rem] p-4 my-4 bg-white rounded-3xl shadow-2xl"}>
+                                <div> VE relevante Profilinfos?</div>
+                                <div>z.b. VE-Interessen, abgeschlossene Projekte</div>
+                                <div>ggf. zur besseren Füllung Bio von rechts mit rüber ziehen als erstes</div>
+                            </div>
                             <div className={"h-96 p-4 my-8 bg-white rounded-3xl shadow-2xl"}>
                                 Timeline?
                             </div>
@@ -60,7 +64,7 @@ export default function Profile(props: Props) {
                                         <div className={"text-sm text-gray-600 my-1"}>Geburtstag</div>
                                         <div className={"font-bold text-slate-900"}>01.01.1990</div>
                                     </div>
-                                    <div className={"py-4"}>
+                                    <div className={"pt-4"}>
                                         <div className={"text-sm text-gray-600 my-1"}>Sprachen</div>
                                         <div className={"font-bold text-slate-900 flex flex-wrap"}>
                                             <div className={"mr-2 mb-2 px-1 rounded-lg bg-gray-300 shadow-lg"}>Deutsch</div>
