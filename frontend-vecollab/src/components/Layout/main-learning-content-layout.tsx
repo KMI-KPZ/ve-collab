@@ -10,11 +10,11 @@ export default function MainLearningContentLayout({ previewChildren, contentChil
                 <div className={"mx-4 mt-10 mb-4 text-5xl font-bold"}>
                     <h1>Inhalte</h1>
                 </div>
-                <ul className={"h-screen overflow-y-auto no-scrollbar"}>
+                <ul className={"h-screen overflow-y-auto content-scrollbar"}>
                     {previewChildren}
                 </ul>
             </div>
-            <div className={"w-3/4 h-screen border-r overflow-y-scroll no-scrollbar"}>
+            <div className={"w-3/4 h-screen border-r overflow-y-auto content-scrollbar"}>
                 <div className={"mt-10"}>
                     {contentChildren}
                 </div>
