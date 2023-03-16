@@ -21,7 +21,7 @@ export default function Profile(props: Props) {
                             </div>
                             <div className={"mr-auto"}>
                                 <button className={"border border-white bg-black/75 text-white rounded-lg px-3 py-1 mt-2"}><span>Profil bearbeiten</span></button>
-                                <div className={"mt-11 font-bold text-4xl"}>Max Mustermann</div>
+                                <div className={"mt-11 font-bold text-4xl text-slate-900"}>Max Mustermann</div>
                                 <div className={"text-gray-500"}>Universität Leipzig</div>
 
                             </div>
@@ -34,15 +34,44 @@ export default function Profile(props: Props) {
                     </div>
                 </Container>
                 <Container>
-                    <div className={"h-96 mx-20 flex"}>
+                    <div className={"mx-20 flex"}>
                         <div className={"w-3/4  mr-4"}>
-                            <div className={"h-96 p-4 my-8 bg-white rounded-3xl shadow-2xl"}> VE relevante Profilinfos?</div>
+                            <div className={"h-96 p-4 my-4 bg-white rounded-3xl shadow-2xl"}> VE relevante Profilinfos?</div>
                             <div className={"h-96 p-4 my-8 bg-white rounded-3xl shadow-2xl"}>
                                 Timeline?
                             </div>
                         </div>
                         <div className={"w-1/4  ml-4"}>
-                            <div className={"h-80 p-4 my-8 bg-white rounded-3xl shadow-2xl"}>Stammdaten</div>
+                            <div className={"p-4 my-4 bg-white rounded-3xl shadow-2xl"}>
+                                <div className={"mx-2 divide-y"}>
+                                    <div className={"pb-4"}>
+                                        <div className={"font-bold text-slate-900 text-xl my-1"}>Bio</div>
+                                        <div className={"text-sm"}>Lorem ipsum dolor si ameterto de la consectetur adipiscing elit. Lets make this text slightly longer so the box looks more filled.</div>
+                                    </div>
+                                    <div className={"py-4"}>
+                                        <div className={"text-sm text-gray-600 my-1"}>Name</div>
+                                        <div className={"font-bold text-slate-900"}>Max Mustermann</div>
+                                    </div>
+                                    <div className={"py-4"}>
+                                        <div className={"text-sm text-gray-600 my-1"}>Fachgebiet</div>
+                                        <div className={"font-bold text-slate-900"}>Informatik</div>
+                                    </div>
+                                    <div className={"py-4"}>
+                                        <div className={"text-sm text-gray-600 my-1"}>Geburtstag</div>
+                                        <div className={"font-bold text-slate-900"}>01.01.1990</div>
+                                    </div>
+                                    <div className={"py-4"}>
+                                        <div className={"text-sm text-gray-600 my-1"}>Sprachen</div>
+                                        <div className={"font-bold text-slate-900 flex flex-wrap"}>
+                                            <div className={"mr-2 mb-2 px-1 rounded-lg bg-gray-300 shadow-lg"}>Deutsch</div>
+                                            <div className={"mr-2 mb-2 px-1 rounded-lg bg-gray-300 shadow-lg"}>Englisch</div>
+                                            <div className={"mr-2 mb-2 px-1 rounded-lg bg-gray-300 shadow-lg"}>Spanisch</div>
+                                            <div className={"mr-2 mb-2 px-1 rounded-lg bg-gray-300 shadow-lg"}>Franzözisch</div>
+                                            <div className={"mr-2 mb-2 px-1 rounded-lg bg-gray-300 shadow-lg"}>Italienisch</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             <div className={"h-80 p-4 my-8 bg-white rounded-3xl shadow-2xl"}>Follower</div>
                         </div>
                     </div>
