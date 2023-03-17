@@ -17,7 +17,7 @@ interface Props {
 
 export default function PageBanner({ categories }: Props) {
     const title = "Materialien zu VE";
-    const text = "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua";
+    const text = "Hello and welcome to our ve-collab qualification offer! This section is centrally filled with lerning opportunities and can be extended by our community. The learning resources you will find here are sorted across the disciplines as well as discipline-specific. Here you can get an overview of VEs and learn more about the individual topics. ";
 
     return (
         <>

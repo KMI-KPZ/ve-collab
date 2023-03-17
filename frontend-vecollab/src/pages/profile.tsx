@@ -1,82 +1,89 @@
 import Container from "@/components/Layout/container"
+import PersonalInformation from "@/components/profile/personal-information"
 import ProfileBanner from "@/components/profile/profile-banner"
+import ProfileHeader from "@/components/profile/profile-header"
 import Image from "next/image"
 import { GetServerSideProps } from "next/types"
 import { RxDotsVertical } from "react-icons/rx"
+import Tabs from "@/components/profile/Tabs"
 
 interface Props {
-
+    name: string,
+    institution: string,
+    profilePictureUrl: string,
+    bio: string,
+    department: string,
+    birthday: string,
+    languages: string[]
 }
+
+// have to declare "tabname" as a valid attribute for div tags, otherwise typescript is bothered
+declare module 'react' {
+    interface HTMLAttributes<T> extends AriaAttributes, DOMAttributes<T> {
+      // extends React's HTMLAttributes
+      tabname?: string;
+    }
+  }
 
 export default function Profile(props: Props) {
     return (
         <>
             <Container>
-                <ProfileBanner />
-                <Container>
-                    <div className={"h-40 mx-20 relative -mt-16 z-10"}>
-                        <div className={"flex"}>
-                            <div className={"mr-8 rounded-full overflow-hidden border-4 border-white shadow-2xl"}>
-                                <Image height={180} width={180} src={"/images/random_user.jpg"} alt={""} />
-                            </div>
-                            <div className={"mr-auto"}>
-                                <button className={"border border-white bg-black/75 text-white rounded-lg px-3 py-1 mt-2"}><span>Profil bearbeiten</span></button>
-                                <div className={"mt-11 font-bold text-4xl text-slate-900"}>Max Mustermann</div>
-                                <div className={"text-gray-500"}>Universität Leipzig</div>
-
-                            </div>
-                            <div className={"flex items-end mb-12"}>
-                                <button className={"w-32 h-12 bg-transparent border border-gray-500 py-3 px-6 mr-2 rounded-lg shadow-lg"}> <span>Folgen</span></button>
-                                <button className={"w-32 h-12 bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl"}> <span>Nachricht</span></button>
-                                <button className={"h-12 ml-2"}><span><RxDotsVertical size={30} color={""} /></span></button>
-                            </div>
-                        </div>
+                <ProfileBanner followsNum={2500} followersNum={3500} />
+                <div className="container mx-auto mb-2 px-5">
+                    <div className={"mx-20 relative -mt-16 z-10"}>
+                        <ProfileHeader name={props.name} institution={props.institution} profilePictureUrl={props.profilePictureUrl}></ProfileHeader>
                     </div>
-                </Container>
+                </div>
                 <Container>
                     <div className={"mx-20 flex"}>
                         <div className={"w-3/4  mr-4"}>
-                            <div className={"h-[30rem] p-4 my-4 bg-white rounded-3xl shadow-2xl"}>
-                                <div> VE relevante Profilinfos?</div>
-                                <div>z.b. VE-Interessen, abgeschlossene Projekte</div>
-                                <div>ggf. zur besseren Füllung Bio von rechts mit rüber ziehen als erstes</div>
+                            <div className={"h-[30rem] flex p-4 my-8 bg-white rounded-3xl shadow-2xl"}> {/* remove height once content is implemented to avoid unexpected overflow */}
+                                <Tabs>
+                                    <div tabname="CV">
+                                        See ya later, <em>Alligator</em>!
+                                    </div>
+                                    <div tabname="VE-Interessen">
+                                        After 'while, <em>Crocodile</em>!
+                                    </div>
+                                    <div tabname="Erfahrungen">
+                                        Nothing to see here, this tab is <em>extinct</em>!
+                                    </div>
+                                </Tabs>
                             </div>
-                            <div className={"h-96 p-4 my-8 bg-white rounded-3xl shadow-2xl"}>
+                            <div className={"h-96 p-4 my-8 bg-white rounded-3xl shadow-2xl"}> {/* remove height once content is implemented to avoid unexpected overflow */}
                                 Timeline?
                             </div>
                         </div>
                         <div className={"w-1/4  ml-4"}>
-                            <div className={"p-4 my-4 bg-white rounded-3xl shadow-2xl"}>
+                            <PersonalInformation name={props.name} bio={props.bio} department={props.department} birthday={props.birthday} languages={props.languages}></PersonalInformation>
+                            <div className={"p-4 my-8 bg-white rounded-3xl shadow-2xl"}>
+                                <div className={"mx-2 my-1 font-bold text-slate-900 text-xl"}>
+                                    meine Highlight VEs
+                                </div>
                                 <div className={"mx-2 divide-y"}>
-                                    <div className={"pb-4"}>
-                                        <div className={"font-bold text-slate-900 text-xl my-1"}>Bio</div>
-                                        <div className={"text-sm"}>Lorem ipsum dolor si ameterto de la consectetur adipiscing elit. Lets make this text slightly longer so the box looks more filled.</div>
+                                    <div className={"py-4"}>
+                                        <div className={"font-bold text-lg"}>Menschenrechte in der Welt</div>
+                                        <div className={"text-sm text-gray-600 my-1"}>Lorem ipsum dolor si ameterto de la consectetur adipiscing elit. Lets make this text slightly longer so the box looks more filled.</div>
+                                        <div>01.01.2023</div>
                                     </div>
                                     <div className={"py-4"}>
-                                        <div className={"text-sm text-gray-600 my-1"}>Name</div>
-                                        <div className={"font-bold text-slate-900"}>Max Mustermann</div>
+                                        <div className={"font-bold text-lg"}>Gleichberechtigung</div>
+                                        <div className={"text-sm text-gray-600 my-1"}>Lorem ipsum dolor si ameterto de la consectetur adipiscing elit. Lets make this text slightly longer so the box looks more filled.</div>
+                                        <div>01.01.2023</div>
                                     </div>
                                     <div className={"py-4"}>
-                                        <div className={"text-sm text-gray-600 my-1"}>Fachgebiet</div>
-                                        <div className={"font-bold text-slate-900"}>Informatik</div>
+                                        <div className={"font-bold text-lg"}>Demokratieverständnis</div>
+                                        <div className={"text-sm text-gray-600 my-1"}>Lorem ipsum dolor si ameterto de la consectetur adipiscing elit. Lets make this text slightly longer so the box looks more filled.</div>
+                                        <div>01.01.2023</div>
                                     </div>
                                     <div className={"py-4"}>
-                                        <div className={"text-sm text-gray-600 my-1"}>Geburtstag</div>
-                                        <div className={"font-bold text-slate-900"}>01.01.1990</div>
-                                    </div>
-                                    <div className={"pt-4"}>
-                                        <div className={"text-sm text-gray-600 my-1"}>Sprachen</div>
-                                        <div className={"font-bold text-slate-900 flex flex-wrap"}>
-                                            <div className={"mr-2 mb-2 px-1 rounded-lg bg-gray-300 shadow-lg"}>Deutsch</div>
-                                            <div className={"mr-2 mb-2 px-1 rounded-lg bg-gray-300 shadow-lg"}>Englisch</div>
-                                            <div className={"mr-2 mb-2 px-1 rounded-lg bg-gray-300 shadow-lg"}>Spanisch</div>
-                                            <div className={"mr-2 mb-2 px-1 rounded-lg bg-gray-300 shadow-lg"}>Franzözisch</div>
-                                            <div className={"mr-2 mb-2 px-1 rounded-lg bg-gray-300 shadow-lg"}>Italienisch</div>
-                                        </div>
+                                        <div className={"font-bold text-lg"}>noch ein langer Titel der über 2 Zeilen geht</div>
+                                        <div className={"text-sm text-gray-600 my-1"}>Lorem ipsum dolor si ameterto de la consectetur adipiscing elit. Lets make this text slightly longer so the box looks more filled.</div>
+                                        <div>01.01.2023</div>
                                     </div>
                                 </div>
                             </div>
-                            <div className={"h-80 p-4 my-8 bg-white rounded-3xl shadow-2xl"}>Follower</div>
                         </div>
                     </div>
                 </Container>
@@ -88,9 +95,13 @@ export default function Profile(props: Props) {
 export const getServerSideProps: GetServerSideProps = async () => {
     return {
         props: {
-
+            name: "Max Mustermann",
+            institution: "Universität Leipzig",
+            profilePictureUrl: "/images/random_user.jpg",
+            bio: "Lorem ipsum dolor si ameterto de la consectetur adipiscing elit. Lets make this text slightly longer so the box looks more filled.",
+            department: "Informatik",
+            birthday: "01.01.1990",
+            languages: ["Deutsch", "Englisch", "Spanisch", "Französisch", "Italienisch"]
         }
     }
 }
-
-
