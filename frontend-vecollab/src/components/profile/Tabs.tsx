@@ -1,13 +1,12 @@
-import React, { Component } from "react";
-import PropTypes from "prop-types";
+import { Component } from "react";
 import Tab from "./Tab";
 
-class Tabs extends Component {
-  static propTypes = {
-    children: PropTypes.instanceOf(Array).isRequired,
-  };
+interface TabsProps {
+  children: JSX.Element[],
+}
 
-  constructor(props) {
+class Tabs extends Component<TabsProps, { activeTab: string }> {
+  constructor(props: TabsProps) {
     super(props);
 
     this.state = {
@@ -15,7 +14,7 @@ class Tabs extends Component {
     };
   }
 
-  onClickTabItem = (tab) => {
+  onClickTabItem = (tab: string) => {
     this.setState({ activeTab: tab });
   };
 
