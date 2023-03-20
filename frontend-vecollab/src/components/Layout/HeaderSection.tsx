@@ -8,7 +8,7 @@ export default function HeaderSection() {
         <header className="bg-white px-4 lg:px-6 py-2.5 drop-shadow-lg">
             <nav className="flex flex-wrap justify-between items-center mx-auto max-w-screen-2xl">
                 <Link href="/">
-                    <Image src={veCollabLogo} alt="Ve Collab Logo" width={250} height={250}></Image>
+                    <Image src={veCollabLogo} alt="Ve Collab Logo" width={100} height={100}></Image>
                 </Link>
                 <ul className="flex items-center font-semibold space-x-14">
                     <li>
@@ -25,7 +25,7 @@ export default function HeaderSection() {
                     </li>
                 </ul>
                 <ul className="flex items-center font-semibold space-x-8">
-                    <li className="bg-ve-collab-orange text-white py-4 pr-6 pl-5 rounded-lg">
+                    <li className="bg-ve-collab-orange text-white py-2 pr-5 pl-5 rounded-lg">
                         <Link href="#">Login</Link>
                     </li>
                     <li>
