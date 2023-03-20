@@ -9,6 +9,8 @@
         "JSX": true
     },
     "rules": {
-        "react/react-in-jsx-scope": "off"
+        "react/react-in-jsx-scope": "off",
+        "no-unused-vars": "off",
+        "react/no-unknown-property": "off"
     }
 }
