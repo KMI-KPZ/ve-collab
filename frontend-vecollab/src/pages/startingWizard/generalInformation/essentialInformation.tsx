@@ -11,7 +11,7 @@ export default function EssentialInformation() {
                     name="generalInformation"
                     method="POST"
                     /*onSubmit={handleSubmit}*/
-                    className="gap-y-6 m-auto p-12 max-w-screen-2xl items-center flex flex-col justify-between min-h-[50vh]"
+                    className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
                 >
                     <div>
                         <div className="m-7">
@@ -41,11 +41,11 @@ export default function EssentialInformation() {
                             />
                         </div>
                     </div>
-                    <div className="flex gap-x-60">
+                    <div className="flex justify-around w-full">
                         <div>
                             <button
                                 type="button"
-                                className="items-end bg-ve-collab-orange text-white py-4 pr-6 pl-5 m-7 rounded-lg"
+                                className="items-end bg-ve-collab-orange text-white py-4 pr-6 pl-5 m-7 rounded-lg invisible"
                             >
                                 Zurück
                             </button>
