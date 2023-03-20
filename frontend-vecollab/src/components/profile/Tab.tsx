@@ -8,7 +8,7 @@ interface TabProps {
 }
 
 class Tab extends Component<TabProps, {}> {
-  
+
   onClick = () => {
     const { tabname, onClick } = this.props;
     onClick(tabname);
@@ -20,17 +20,18 @@ class Tab extends Component<TabProps, {}> {
       props: { activeTab, tabname },
     } = this;
 
-    let className = "tab-list-item";
-
-    if (activeTab === tabname) {
-      className += " tab-list-active";
-    }
-
-    return (
-      <li className={className} onClick={onClick}>
-        {tabname}
-      </li>
-    );
+    return activeTab == tabname ?
+      (
+        <button className={"-mb-[1px] px-3 py-2 bg-white border-l border-t border-r border-b-0"} onClick={onClick}>
+          {tabname}
+        </button>
+      )
+      :
+      (
+        <button className={"-mb-[1px] px-3 py-2"} onClick={onClick}>
+          {tabname}
+        </button>
+      );
   }
 }
 

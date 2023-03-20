@@ -26,22 +26,20 @@ class Tabs extends Component<TabsProps, { activeTab: string }> {
     } = this;
 
     return (
-      <div className={"tabs w-full"}>
-        <ol className={"tab-list flex justify-center"}>
+      <div className={"w-full"}>
+        <ol className={"border-b border-solid flex justify-center"}>
           {children.map((child) => {
-            const { tabname } = child.props;
-
             return (
               <Tab
                 activeTab={activeTab}
-                key={tabname}
-                tabname={tabname}
+                key={child.props.tabname}
+                tabname={child.props.tabname}
                 onClick={onClickTabItem}
               />
             );
           })}
         </ol>
-        <div className="tab-content">
+        <div className={""}> {/* tab content wrapper*/}
           {children.map((child) => {
             if (child.props.tabname !== activeTab) return undefined;
             return child.props.children;
