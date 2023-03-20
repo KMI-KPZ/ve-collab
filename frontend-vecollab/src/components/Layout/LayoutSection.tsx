@@ -9,7 +9,7 @@ export default function LayoutSection({ children }: Props): JSX.Element {
     return (
         <>
             <HeaderSection />
-            <main>{children}</main>
+            <main>{children} </main>
             <FooterSection />
         </>
     );
