@@ -65,6 +65,10 @@
   @apply grid grid-cols-2 gap-4;
 }
 
+iframe {
+  @apply w-full h-auto mt-2 aspect-video;
+}
+
 @layer base {
     @font-face {
         font-family: Konnect;
