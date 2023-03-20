@@ -14,12 +14,12 @@ export const sideMenuSteps: SideMenuStep[] = [
         state: ProgressState.completed,
     },
     {
-        text: 'Kursinformationen',
+        text: 'Grobplanung',
         link: '/startingWizard/generalInformation/courseInformation',
         state: ProgressState.completed,
     },
     {
-        text: 'Ziele',
+        text: 'Feinplanung',
         link: '/startingWizard/generalInformation/goals',
         state: ProgressState.completed,
     },
