@@ -1,0 +1,1688 @@
+<!--
+Create new route/handler for this html
+then use $.get("...html") to get the templates in this file
+Maybe converting to .htm and dont use <html>, <body> and <head> tags-->
+
+<!-- New Post panel on main newsfeed -->
+<script id="newPostTemplate" type="text/html">
+    <div class="flex">
+        <div class="w-full grid grid-cols-8 gap-4">
+          <div class="col-start-2 col-span-6 mt-2">
+
+            <div class="panel panel-white bg-white border-blue-lionet post rounded-md" id="newPostPanel">
+
+                <div class="post-heading">
+                    <div class="float-left image">
+                        <img src="{{!profile_pic_URL}}" class="img-circle avatar rounded-full" alt="user profile image">
+                    </div>
+                    <div class="float-left meta">
+                        <h2>
+                            <b>Hallo {{!username}}</b>
+                        </h2>
+                        <p class="text-sm text-gray-500 hover:text-gray-600 leading-6">Schreibe einen Post!<p>
+                    </div>
+                </div>
+
+                <div class="post-description">
+                    <textarea class="form-textarea mt-1 p-3 block w-full border rounded-md text-sm" id="postFeed" rows="2"
+                              placeholder="Poste etwas in deine Timeline"></textarea>
+                    <div class="post-description" style="padding-top: 5px;">
+                        <div id="postAlert"></div>
+                        <div class="grid grid-cols-2 gap-4">
+
+                        </div>
+                    </div>
+
+                    <div class="post-description" style="padding-top: 5px;">
+                      <select id="wordpressPostSelect">
+                        <option value="">Add a Wordpress Post</option>
+                        {{!#wordpressPosts}}
+                        <option value="{{!post_id}}">{{!post_title}}</option>
+                        {{!/wordpressPosts}}
+                      </select>
+                    </div>
+
+                    <div id="postdiv" class="mar-top clearfix p-2">
+                        <button class="m-0 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-black bg-blue-lionet border-blue-lionet hover:bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 m-0 float-right" id="post"><i class="fa fa-pencil fa-fw mt-1"></i>
+                            Posten
+                        </button>
+
+                        <div class="rounded">
+                            <button type="button"
+                                    class="inline-flex items-center py-2 px-4 border border-2 rounded-full shadow-sm text-black bg-blue-lionet border-blue-lionet hover:bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 btn">
+                                    <label class="items-center">
+                                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                      </svg>
+                                      <span class="mt-2 text-base leading-normal"></span>
+                                      <input type="file" name="files" id="files" multiple>
+                                  </label>
+                            </button>
+                            <p>
+                                <audio id=recordedAudio></audio>
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+<!-- End of new post panel -->
+
+<!-- Basic post layout - change apperance of posts here -->
+<script id="postTemplate" type="text/html">
+  <div class="w-full bg-white border border-blue-lionet rounded-md shadow-sm block focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 mb-2 post panel" id={{!_id}} name={{!creation_date}}>
+      <!-- Post heading - includes author, space, time of writing and buttons for functionalities like pin, edit, etc. -->
+      {{!#inSpace}}
+      {{!#pinned}}
+      <div class="pl-2 border-b rounded-t-md bg-gray-200">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="inline-block w-4 h-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+        </svg>              
+        <p class="inline-block text-gray-500 text-xs">Gepinnter Post</p>
+      </div>
+      {{!/pinned}}
+      {{!/inSpace}}
+      <div class="post-heading border-b {{!#inSpace}}{{!^pinned}}rounded-t-md{{!/pinned}}{{!/inSpace}}{{!^inSpace}}rounded-t-md{{!/inSpace}} bg-gray-200">
+          <!-- Main information -->         
+          <div class="float-left image">
+              <img src="{{!authorPicURL}}" class="shadow rounded-full max-w-full h-auto align-middle border-none avatar" alt="user profile image">
+          </div>
+          <div class="float-left meta">
+              <div class="title text-sm h5">
+                  <a href="profile/{{!author.username}}"><b>{{!author.username}}</b></a>
+                  {{!#hasSpace}}
+                  <b>></b>
+                  <a href="space/{{!space}}" class="label label-pill label-primary">{{!space}}</a>
+                  {{!/hasSpace}}
+                  <p class="mr-4 text-sm text-muted time inline-block" id="agoPost">({{!ago}})</p>
+              </div>
+          </div>         
+          <!-- Pin, Like and edit functionality for posts -->
+          <div class="float-right">
+              {{!#isAdmin}}
+              <button type="button" onclick="pinDepinPost(this,'{{!_id}}');"
+                      class="bg-transparent hover:bg-blue-300 bg-blue-lionet h-7 text-black font-semibold text-xs hover:text-black py-1 px-2 border border-blue-lionet hover:border-transparent rounded" data-toggle="tooltip" data-placement="right" data-html="true">
+
+
+                {{!#pinned}}
+                <svg id="pinIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 solidPin" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M8 4a3 3 0 00-3 3v4a5 5 0 0010 0V7a1 1 0 112 0v4a7 7 0 11-14 0V7a5 5 0 0110 0v4a3 3 0 11-6 0V7a1 1 0 012 0v4a1 1 0 102 0V7a3 3 0 00-3-3z" clip-rule="evenodd" />
+                </svg>
+                {{!/pinned}}
+                {{!^pinned}}
+                <svg id="pinIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 outlinePin" fill="none" viewBox="0 0 28 28" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                </svg>
+                {{!/pinned}}
+              </button>
+              {{!/isAdmin}}
+
+              <!-- Repost -->
+              <div class="inline-block align-top">
+
+                <button type="button" onclick="likeDislike(this,'{{!_id}}');" id="likers"
+                        class="bg-transparent hover:bg-blue-300 bg-blue-lionet h-7 text-black font-semibold text-xs hover:text-black py-1 px-2 border border-blue-lionet hover:border-transparent rounded" data-toggle="tooltip" data-placement="right" data-html="true"
+                        data-original-title="{{!#likers}}<li>{{!.}}</li>{{!/likers}}">
+                    <i id="likeIcon" class="fa fa-thumbs-up text-black text-sm"></i> <span id="likeCounter">{{!likes}}</span>
+                </button>
+
+                <div x-data="{'showModal': false}" @keydown.escape="showModal:false" class="inline-block">
+                  <button id="shareBtn" class="bg-transparent bg-blue-lionet hover:bg-blue-300 bg-white h-7 text-xs text-black font-semibold hover:text-black py-1 px-2 border border-blue-lionet hover:border-transparent rounded" type="button" @click="showModal = true">
+                    <i id="shareIcon" class="fa fa-share text-black text-sm"></i>
+                  </button>
+
+                  <!-- Repost Post Modal -->
+                  <div class="fixed inset-0 z-30 flex items-center justify-center overflow-auto bg-black bg-opacity-50" x-show="showModal">
+                    <div
+                        class="w-2/3 px-6 py-4 mx-auto text-left bg-white rounded shadow-lg"
+                        @click.away="showModal = false"
+                        x-transition:enter="motion-safe:ease-out duration-300"
+                        x-transition:enter-start="opacity-0 scale-90"
+                        x-transition:enter-end="opacity-100 scale-100"
+                    >
+                      <!-- Repost Post Title / Close-->
+                      <div class="flex itemes-center justify-between m-2">
+                        <div>
+                          <b>Teilen</b>
+                          <i>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 16" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 inline-block">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                            </svg>                            
+                          </i>
+                        </div>
+                        <button type="button" class="z-50 cursor-pointer" @click="showModal = false">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                      </div>
+
+                      <!-- Repost Post Content -->
+                      <div class="mt-4">
+                        <select id="selectRepostSpace{{!_id}}" class="text-s truncate w-full normal-case font-normal -mt-1 text-gray-500 border rounded p-2">
+                            <option value=null>In deine Timeline teilen</option>
+
+                        </select>
+                        <br>
+                        <textarea class="w-full mt-2 p-2 border rounded" id="shareText{{!_id}}" rows="2"
+                                  placeholder="Worüber möchtest du berichten?"></textarea>
+
+                        
+                        <div class="panel panel-default border border-blue-lionet rounded mt-2">
+                          <div class="post-heading border-b bg-gray-200 border-b rounded-t-md">
+                            <div class="title h5 inline-block">
+                              <a><b>{{!author.username}}</b></a>
+                              schrieb einen Post.
+                              {{!#hasSpace}}
+                              <b>></b>
+                              <span class="label label-pill label-primary">{{!space}}</span>
+                              {{!/hasSpace}}
+                            </div>
+                            <p class="mr-4 text-sm text-muted time inline-block" id="agoPost">({{!ago}})</p>
+                          </div>
+                          <div class="post-description">
+                            <div class="p-4 mb-4 rounded grid grid-cols-8 gap-2">
+                              <p id="post_content" class="col-span-8">{{!text}}</p>
+                            </div>
+
+                            {{!#hasMedia}}
+                            <div id="{{!_id}}" class="carousel slide">
+                                {{!#multipleMedia}}
+                                <ol class="carousel-indicators">
+                                    <li data-slide-to="0" class="active"></li>
+                                    {{!#fileMediaCountTail}}
+                                    <li data-slide-to="{{!.}}"></li>
+                                    {{!/fileMediaCountTail}}
+                                </ol>
+                                {{!/multipleMedia}}
+                                <div class="carousel-inner">
+                                    <div class="carousel-item active">
+                                        {{!#firstMediaIsImage}}
+                                        <img class="d-block w-100" src="{{!firstMediaURL}}"
+                                              alt="post image">
+                                        {{!/firstMediaIsImage}}
+                                        {{!^firstMediaIsImage}}
+                                        <video width="100%" height="100%" autostart="false" controls>
+                                            <source src="{{!firstMediaURL}}">
+                                            Your browser does not support the video tag.
+                                        </video>
+                                        {{!/firstMediaIsImage}}
+                                    </div>
+                                    {{!#tailVideosURL}}
+                                    <div class="carousel-item">
+                                        <video width="100%" height="100%" autostart="false" controls>
+                                            <source src="{{!.}}">
+                                            Your browser does not support the video tag.
+                                        </video>
+                                    </div>
+                                    {{!/tailVideosURL}}
+
+                                    {{!#tailImagesURL}}
+                                    <div class="carousel-item">
+                                        <img class="d-block w-100" src="{{!.}}" alt="post image">
+                                    </div>
+                                    {{!/tailImagesURL}}
+
+                                </div>
+                                {{!#multipleMedia}}
+                                <a class="carousel-control-prev"
+                                    href="javascript:previousSlide('{{!_id}}');" type="button">
+                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                </a>
+                                <a class="carousel-control-next" href="javascript:nextSlide('{{!_id}}');"
+                                    type="button">
+                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                </a>
+                                {{!/multipleMedia}}
+                            </div>
+                            {{!/hasMedia}}
+                            {{!#audiosURL}}
+                            <p>
+                                <audio id=voiceInput src={{!.}} controls=true autostart="false"></audio>
+                            </p>
+                            {{!/audiosURL}}
+                            {{!#otherfiles}}
+                            <i class="fa fa-download"></i> <a href="{{!path}}" download>{{!name}}</a>
+                            {{!/otherfiles}}
+                          </div>
+                        </div>
+
+                        <div>
+                          <button type="button" id="repost" onclick="javascript:repost('{{!_id}}');" @click="showModal = false"
+                                  class="bg-blue-lionet hover:bg-blue-500 text-black font-semibold hover:text-black py-2 px-4 border border-blue-500 hover:border-transparent rounded"  data-dismiss="modal">Repost
+                          </button>
+                        </div>
+
+                      </div>
+                    </div>
+
+                  </div>
+                  <!-- End of repost post modal -->
+                </div>
+              </div>
+              <!-- End of repost -->
+
+              {{!#isAuthor}}
+              <!-- Edit post in more options menu-->
+              <div class="inline-block" x-data="{isOpen: false}">
+                <button
+                        @click="isOpen = !isOpen"
+                        @keydown.escape="isOpen = false"
+                        class="flex items-center"
+                ><div  id="moreOptionMenu" aria-haspopup="true" aria-expanded="false">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
+                  </svg>
+                  </div>
+                </button>
+                <div x-show="isOpen"
+                    @click.away="isOpen = false"
+                    class="origin-top-right absolute ml-10 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none"
+                    >
+                    <div class="block w-full p-2 hover:bg-blue-100">
+                      <div x-data="{'deleteConfirmationModal': false}" @keydown.escape="deleteConfirmationModal:false" class="inline-block block w-full hover:bg-blue-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="inline-block w-5 h-5">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg> 
+                        <button id="deletePostBtn" class="text-left" type="button" @click="deleteConfirmationModal = true">
+                          <p class="" href="">Löschen</p>
+                        </button>
+                        <div class="fixed inset-0 z-30 flex items-center justify-center overflow-auto bg-black bg-opacity-50" x-show="deleteConfirmationModal">
+                          <div
+                              class="max-w-3xl w-1/2 px-6 py-4 mx-auto text-left bg-white rounded shadow-lg"
+                              @click.away="deleteConfirmationModal = false"
+                              x-transition:enter="motion-safe:ease-out duration-300"
+                              x-transition:enter-start="opacity-0 scale-90"
+                              x-transition:enter-end="opacity-100 scale-100"
+                          >
+                            <div class="flex itemes-center justify-between m-2">
+                              <div>                               
+                                <b>Willst du den Post wirklich löschen?</b></i>
+                              </div>
+                              <button type="button" class="z-50 cursor-pointer" @click="deleteConfirmationModal = false">
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                              </button>
+                            </div>                     
+                            <div>
+                              <div class="m-2">
+                                <p class="text-sm text-gray-500">Alle Inhalte gehen durch das löschen verloren!</p>
+                              </div>
+                              <div class="mt-2">
+                                <button type="button" class="z-50 cursor-pointer font-semibold py-2 px-4 border border-gray-300 hover:bg-gray-200 rounded" @click="deleteConfirmationModal = false" data-dismiss="modal">
+                                  Abbrechen
+                                </button>
+                                <button type="button" id="update" @click="deleteConfirmationModal = false" onclick="javascript:deletePost('{{!_id}}');" class="bg-red-600 text-black font-semibold hover:text-black hover:bg-red-700 py-2 px-4 border border-red-500 hover:border-transparent rounded"  data-dismiss="modal">
+                                  Löschen
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div x-data="{'showModal': false}" @keydown.escape="showModal:false" class="inline-block block w-full p-2 hover:bg-blue-100">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="inline-block w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                      </svg>                      
+                      <button id="updatePostBtn" class="text-left" type="button" @click="showModal = true">
+                        <p class="" href="">Bearbeiten</p>
+                      </button>
+
+                      <div class="fixed inset-0 z-30 flex items-center justify-center overflow-auto bg-black bg-opacity-50" x-show="showModal">
+                        <div
+                            class="max-w-3xl w-1/2 px-6 py-4 mx-auto text-left bg-white rounded shadow-lg"
+                            @click.away="showModal = false"
+                            x-transition:enter="motion-safe:ease-out duration-300"
+                            x-transition:enter-start="opacity-0 scale-90"
+                            x-transition:enter-end="opacity-100 scale-100"
+                        >
+                        <div class="flex itemes-center justify-between m-2">
+                          <div>
+                            <b>Bearbeite deinen Post</b><i class="fa fa-envelope p-2"></i>
+                          </div>
+                          <button type="button" class="z-50 cursor-pointer" @click="showModal = false">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                          </button>
+                        </div>
+                        <div id="post-description" class="my-2">
+                          <textarea class="form-textarea mt-1 p-3 block w-full border rounded-md" id="updatePostTextArea" rows="2" placeholder="Poste etwas in deine Timeline">{{!text}}</textarea>
+                        </div>
+                        <div>
+                          <button type="button" id="update" @click="showModal = false" onclick="javascript:updatePost('{{!_id}}');"
+                                  class="bg-blue-lionet hover:bg-blue-500 text-black font-semibold hover:text-black py-2 px-4 border border-blue-500 hover:border-transparent rounded"  data-dismiss="modal">Speichern
+                          </button>
+                        </div>
+                        </div>
+
+                      </div>
+                    </div>
+                </div>
+              </div>
+              <!-- end of edit post-->
+              {{!/isAuthor}}
+          </div>
+      </div>
+      <!-- End of post heading -->
+
+      <!-- Post body -->
+      <div class="post-description text-sm">
+          <div class="p-4 mb-4 rounded grid grid-cols-8 gap-2">
+              <p id="post_content" class="col-span-8">{{!text}}</p>
+          </div>
+
+          {{!#hasMedia}}
+          <div id="{{!_id}}" class="carousel slide">
+              {{!#multipleMedia}}
+              <ol class="carousel-indicators">
+                  <li data-slide-to="0" class="active"></li>
+                  {{!#fileMediaCountTail}}
+                  <li data-slide-to="{{!.}}"></li>
+                  {{!/fileMediaCountTail}}
+              </ol>
+              {{!/multipleMedia}}
+              <div class="carousel-inner">
+                  <div class="carousel-item active">
+                      {{!#firstMediaIsImage}}
+                      <img class="d-block w-100 ml-auto mr-auto" src="{{!firstMediaURL}}" alt="post image" width="600px" height="auto">
+                      {{!/firstMediaIsImage}}
+                      {{!^firstMediaIsImage}}
+                      <video width="100%" height="100%" autostart="false" controls>
+                          <source src="{{!firstMediaURL}}">
+                          Your browser does not support the video tag.
+                      </video>
+                      {{!/firstMediaIsImage}}
+                  </div>
+                  {{!#tailVideosURL}}
+                  <div class="carousel-item">
+                      <video width="100%" height="100%" autostart="false" controls>
+                          <source src="{{!.}}">
+                          Your browser does not support the video tag.
+                      </video>
+                  </div>
+                  {{!/tailVideosURL}}
+
+                  {{!#tailImagesURL}}
+                  <div class="carousel-item">
+                      <img class="d-block w-100" src="{{!.}}" alt="post image">
+                  </div>
+                  {{!/tailImagesURL}}
+
+              </div>
+              {{!#multipleMedia}}
+              <a class="carousel-control-prev" href="javascript:previousSlide('{{!_id}}');" type="button">
+                  <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+              </a>
+              <a class="carousel-control-next" href="javascript:nextSlide('{{!_id}}');" type="button">
+                  <span class="carousel-control-next-icon" aria-hidden="true"></span>
+              </a>
+              {{!/multipleMedia}}
+          </div>
+          {{!/hasMedia}}
+          {{!#audiosURL}}
+          <p>
+              <audio id=voiceInput src={{!.}} controls=true autostart="false"></audio>
+          </p>
+          {{!/audiosURL}}
+          {{!#otherfiles}}
+          <i class="fa fa-download"></i> <a href="{{!path}}" download>{{!name}}</a>
+          {{!/otherfiles}}
+
+          <div class="stats">
+
+          </div>
+
+          <div class="wordpress_post">
+            {{!#wordpressPost}}
+                <div class="flex justify-between">
+                    <h2><b>Post from Wordpress:</b></h2>
+                    <button type="button" onclick="joinDiscussionSpace('{{{!id}}}');"
+                            class="bg-transparent hover:bg-blue-300 bg-blue-lionet h-7 text-black font-semibold text-xs hover:text-black py-1 px-2 border border-blue-lionet hover:border-transparent rounded" data-toggle="tooltip" data-placement="right" data-html="true">
+                      <span>Discuss about this Post</span>
+                    </button>
+                </div>
+              <div class="wordpress_post_content">{{{!content}}}</div>
+            {{!/wordpressPost}}
+          </div>
+      </div>
+      <!-- End of post body -->
+
+      <!-- Comments -->
+      <!-- Write Comment Box -->
+      <div class="write-comment-box w-full">
+        <div class="input-group flex" id="commentBox">
+            <input class="form-control mt-1 block w-ful flex-1 m-2 p-2" id="commentInput" placeholder="Schreibe einen Kommentar" type="text">
+            <button id="postComment" class="m-2 p-2">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 15l6-6m0 0l-6-6m6 6H9a6 6 0 000 12h3" />
+              </svg>                
+            </button>
+        </div>
+      </div>
+      <!-- End of Write Comment Box -->
+      <!-- Comment List -->
+      <div class="post-footer w-full bg-gray-50 rounded-b-md">
+          <ul class="comments-list border-2-2 border-blue-lionet border-l-2">
+            
+          </ul>
+      </div>
+      <!-- End of Comment List -->
+    </div>
+    <div class="divide-y-2 divide-blue-lionet"><div></div><div></div></div>
+</script>
+<!-- End of Post layout -->
+
+<!-- Repost layout - change apperance of reposts here -->
+<script id="repostTemplate" type="text/html">
+    <div class="w-full bg-white border border-blue-lionet rounded-md shadow-sm block focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 mb-2 post panel" id={{!_id}} name={{!creation_date}}>
+        <!-- Post heading - includes author, space, time of writing and buttons for functionalities like pin, edit, etc. -->
+        <div class="post-heading border-b  rounded-t-md bg-gray-200">
+            <div class="float-left image">
+                <img src="{{!authorPicURL}}" class="shadow rounded-full max-w-full h-auto align-middle border-none avatar" alt="user profile image">
+            </div>
+            <div class="float-left meta">
+                <div class="title text-sm h5">
+                    <a href="profile/{{!repostAuthor}}"><b>{{!repostAuthor}}</b></a>
+                    teilte einen Post.
+                    {{!#hasSpace}}
+                    <b>></b>
+                    <a href="space/{{!space}}" class="label label-pill label-primary">{{!space}}</a>
+                    {{!/hasSpace}}
+                    <p class="mr-4 text-xs text-muted time inline-block" id="agoPost">({{!ago}})</p>
+                </div>
+
+            </div>
+            <div class="float-right">
+
+                <div class="inline-block align-top">
+                  <div>
+                    <button type="button" onclick="likeDislike(this,'{{!_id}}');" id="likers"
+                            class="bg-transparent hover:bg-blue-300 bg-blue-lionet h-7 text-black font-semibold text-xs hover:text-black py-1 px-2 border border-blue-lionet hover:border-transparent rounded" data-toggle="tooltip" data-placement="right" data-html="true"
+                            data-original-title="{{!#likers}}<li>{{!.}}</li>{{!/likers}}">
+                        <i id="likeIcon" class="fa fa-thumbs-up text-black text-sm"></i> <span id="likeCounter">{{!likes}}</span>
+                    </button>
+
+                    <div x-data="{'showModal': false}" @keydown.escape="showModal:false" class="inline-block">
+                      <button id="shareBtn" class="bg-transparent bg-blue-lionet hover:bg-blue-300 bg-white h-7 text-xs text-black font-semibold hover:text-black py-1 px-2 border border-blue-lionet hover:border-transparent rounded" type="button" @click="showModal = true">
+                        <i id="shareIcon" class="fa fa-share text-black text-sm"></i>
+                      </button>
+
+                      <!-- Modal -->
+                      <div class="fixed inset-0 z-30 flex items-center justify-center overflow-auto bg-black bg-opacity-50" x-show="showModal">
+                        <div
+                            class="max-w-3xl px-6 py-4 mx-auto text-left bg-white rounded shadow-lg"
+                            @click.away="showModal = false"
+                            x-transition:enter="motion-safe:ease-out duration-300"
+                            x-transition:enter-start="opacity-0 scale-90"
+                            x-transition:enter-end="opacity-100 scale-100"
+                        >
+                          <!-- Title / Close-->
+                          <div class="flex itemes-center justify-between m-2">
+                            <div>
+                              <b>Teilen</b><i class="fa fa-envelope p-2"></i>
+                            </div>
+                            <button type="button" class="z-50 cursor-pointer" @click="showModal = false">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                          </div>
+
+                          <!-- Content -->
+                          <div>
+                            <select id="selectRepostSpace{{!_id}}" class="text-s truncate w-full normal-case font-normal -mt-1 text-gray-500 border rounded p-2">
+                                <option value=null>In deine Timeline teilen</option>
+
+                            </select>
+                            <br>
+                            <textarea class="w-full mt-2 p-2 border rounded" id="shareText{{!_id}}" rows="2"
+                                      placeholder="Worüber möchtest du berichten?"></textarea>
+
+                            <div class="panel panel-default border rounded mt-2">
+                                <div class="post-heading">
+
+                                    <div class="title h5">
+                                        <a><b>{{!author.username}}</b></a>
+                                        schrieb einen Post.
+                                        {{!#hasSpace}}
+                                        <b>></b>
+                                        <span class="label label-pill label-primary">{{!space}}</span>
+                                        {{!/hasSpace}}
+                                    </div>
+                                    <h6 class="text-muted time" id="agoPost">{{!ago}}</h6>
+
+                                </div>
+
+                                <div class="post-description">
+                                    <p>{{!text}}</p>
+
+                                    {{!#hasMedia}}
+                                    <div id="{{!_id}}" class="carousel slide">
+                                        {{!#multipleMedia}}
+                                        <ol class="carousel-indicators">
+                                            <li data-slide-to="0" class="active"></li>
+                                            {{!#fileMediaCountTail}}
+                                            <li data-slide-to="{{!.}}"></li>
+                                            {{!/fileMediaCountTail}}
+                                        </ol>
+                                        {{!/multipleMedia}}
+                                        <div class="carousel-inner">
+                                            <div class="carousel-item active">
+                                                {{!#firstMediaIsImage}}
+                                                <img class="d-block w-100" src="{{!firstMediaURL}}"
+                                                     alt="post image">
+                                                {{!/firstMediaIsImage}}
+                                                {{!^firstMediaIsImage}}
+                                                <video width="100%" height="100%" autostart="false" controls>
+                                                    <source src="{{!firstMediaURL}}">
+                                                    Your browser does not support the video tag.
+                                                </video>
+                                                {{!/firstMediaIsImage}}
+                                            </div>
+                                            {{!#tailVideosURL}}
+                                            <div class="carousel-item">
+                                                <video width="100%" height="100%" autostart="false" controls>
+                                                    <source src="{{!.}}">
+                                                    Your browser does not support the video tag.
+                                                </video>
+                                            </div>
+                                            {{!/tailVideosURL}}
+
+                                            {{!#tailImagesURL}}
+                                            <div class="carousel-item">
+                                                <img class="d-block w-100" src="{{!.}}" alt="post image">
+                                            </div>
+                                            {{!/tailImagesURL}}
+
+                                        </div>
+                                        {{!#multipleMedia}}
+                                        <a class="carousel-control-prev"
+                                           href="javascript:previousSlide('{{!_id}}');" type="button">
+                                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                        </a>
+                                        <a class="carousel-control-next" href="javascript:nextSlide('{{!_id}}');"
+                                           type="button">
+                                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                        </a>
+                                        {{!/multipleMedia}}
+                                    </div>
+                                    {{!/hasMedia}}
+                                    {{!#audiosURL}}
+                                    <p>
+                                        <audio id=voiceInput src={{!.}} controls=true autostart="false"></audio>
+                                    </p>
+                                    {{!/audiosURL}}
+                                    {{!#otherfiles}}
+                                    <i class="fa fa-download"></i> <a href="{{!path}}" download>{{!name}}</a>
+                                    {{!/otherfiles}}
+                                </div>
+                            </div>
+
+                            <div>
+                              <button type="button" id="repost" onclick="javascript:repost('{{!_id}}');" @click="showModal = false"
+                                      class="bg-blue-lionet hover:bg-blue-500 text-black font-semibold hover:text-black py-2 px-4 border border-blue-lionet hover:border-transparent rounded"  data-dismiss="modal">Repost
+                              </button>
+                            </div>
+
+                          </div>
+                        </div>
+
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {{!#isRepostAuthor}}
+                <div class="inline-block" x-data="{isOpen: false}">
+                  <button
+                          @click="isOpen = !isOpen"
+                          @keydown.escape="isOpen = false"
+                          class="flex items-center"
+                  ><div  id="moreOptionMenu" aria-haspopup="true" aria-expanded="false">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
+                      </svg>
+                    </div>
+                  </button>
+                  <div x-show="isOpen"
+                      @click.away="isOpen = false"
+                      class="origin-top-right absolute ml-8 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none"
+                      >
+                      <div class="block w-full p-2 hover:bg-blue-100">
+                        <div x-data="{'deleteConfirmationModal': false}" @keydown.escape="deleteConfirmationModal:false" class="inline-block block w-full hover:bg-blue-100">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="inline-block w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg> 
+                          <button id="deletePostBtn" class="text-left" type="button" @click="deleteConfirmationModal = true">
+                            <p class="" href="">Löschen</p>
+                          </button>
+                          <div class="fixed inset-0 z-30 flex items-center justify-center overflow-auto bg-black bg-opacity-50" x-show="deleteConfirmationModal">
+                            <div
+                                class="max-w-3xl w-1/2 px-6 py-4 mx-auto text-left bg-white rounded shadow-lg"
+                                @click.away="deleteConfirmationModal = false"
+                                x-transition:enter="motion-safe:ease-out duration-300"
+                                x-transition:enter-start="opacity-0 scale-90"
+                                x-transition:enter-end="opacity-100 scale-100"
+                            >
+                              <div class="flex itemes-center justify-between m-2">
+                                <div>
+                                  <b>Willst du den Post wirklich löschen?</b></i>
+                                </div>
+                                <button type="button" class="z-50 cursor-pointer" @click="deleteConfirmationModal = false">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                              </div>                     
+                              <div>
+                                <div class="m-2">
+                                  <p class="text-sm text-gray-500">Alle Inhalte gehen durch das löschen verloren!</p>
+                                </div>
+                                <div class="mt-2">
+                                  <button type="button" class="z-50 cursor-pointer font-semibold py-2 px-4 border border-gray-300 hover:bg-gray-200 rounded" @click="deleteConfirmationModal = false" data-dismiss="modal">
+                                    Abbrechen
+                                  </button>
+                                  <button type="button" id="update" @click="deleteConfirmationModal = false" onclick="javascript:deletePost('{{!_id}}');" class="bg-red-600 text-black font-semibold hover:text-black hover:bg-red-700 py-2 px-4 border border-red-500 hover:border-transparent rounded"  data-dismiss="modal">
+                                    Löschen
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div x-data="{'showModal': false}" @keydown.escape="showModal:false" class="inline-block block w-full p-2 hover:bg-blue-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="inline-block w-5 h-5">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                        </svg>    
+                        <button id="updatePostBtn" class="text-left" type="button" @click="showModal = true">
+                          <p class="" href="">Bearbeiten</p>
+                        </button>
+
+                        <div class="fixed inset-0 z-30 flex items-center justify-center overflow-auto bg-black bg-opacity-50" x-show="showModal">
+                          <div
+                              class="max-w-3xl w-1/2 px-6 py-4 mx-auto text-left bg-white rounded shadow-lg"
+                              @click.away="showModal = false"
+                              x-transition:enter="motion-safe:ease-out duration-300"
+                              x-transition:enter-start="opacity-0 scale-90"
+                              x-transition:enter-end="opacity-100 scale-100"
+                          >
+                          <div class="flex itemes-center justify-between m-2">
+                            <div>
+                              <b>Bearbeite deinen Post</b><i class="fa fa-envelope p-2"></i>
+                            </div>
+                            <button type="button" class="z-50 cursor-pointer" @click="showModal = false">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                          </div>
+                          <div id="post-description" class="mt-2">
+                            <textarea id="update_repost_content" class="form-textarea mt-1 p-3 block w-full border rounded-md" id="updatePostTextArea" rows="2" placeholder="Poste etwas in deine Timeline">{{!repostText}}</textarea>
+                          </div>
+                          <div>
+                            <button type="button" id="update" @click="showModal = false" onclick="javascript:updateRepost('{{!_id}}');"
+                                    class="bg-blue-lionet hover:bg-blue-500 text-black font-semibold hover:text-black py-2 px-4 border border-blue-lionet hover:border-transparent rounded"  data-dismiss="modal">Speichern
+                            </button>
+                          </div>
+                          </div>
+
+                        </div>
+                      </div>
+                    </div>
+                </div>
+                {{!/isRepostAuthor}}
+            </div>
+        </div>
+        <!-- End of post heading -->
+
+        <!-- Post body -->
+        <div class="post-description text-sm">
+          <div class="p-4 mb-4 rounded grid grid-cols-8 gap-2">
+              <div class="col-span-8">
+                <p id="repost_content">{{!repostText}}</p>
+              </div>
+
+            </div>
+
+
+            <div class="border w-full border rounded-md shadow-sm block focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md p-2">
+                <div class="post-heading border-b bg-gray-200">
+                    <div class="float-left image">
+                        <img src="{{!authorPicURL}}" class="shadow rounded-full max-w-full h-auto align-middle border-none avatar" alt="user profile image">
+                    </div>
+                    <div class="float-left meta">
+                        <div class="title text-sm h5">
+                            <a href="profile/{{!author.username}}"><b>{{!author.username}}</b></a>
+                            sch
+                            {{!^isRepost}}
+                            {{!#hasSpace}}
+                            <b>></b>
+                            <span class="label label-pill label-primary">{{!space}}</span>
+                            {{!/hasSpace}}
+                            {{!/isRepost}}
+                            <p class="mr-4 text-xs text-muted time inline-block" id="originalAgo">{{!originalAgo}}</p>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="post-description">
+                    <p>{{!text}}</p>
+
+                    {{!#hasMedia}}
+                    <div id="{{!_id}}" class="carousel slide">
+                        {{!#multipleMedia}}
+                        <ol class="carousel-indicators">
+                            <li data-slide-to="0" class="active"></li>
+                            {{!#fileMediaCountTail}}
+                            <li data-slide-to="{{!.}}"></li>
+                            {{!/fileMediaCountTail}}
+                        </ol>
+                        {{!/multipleMedia}}
+                        <div class="carousel-inner">
+                            <div class="carousel-item active">
+                                {{!#firstMediaIsImage}}
+                                <img class="d-block w-100" src="{{!firstMediaURL}}" alt="post image">
+                                {{!/firstMediaIsImage}}
+                                {{!^firstMediaIsImage}}
+                                <video width="100%" height="100%" autostart="false" controls>
+                                    <source src="{{!firstMediaURL}}">
+                                    Your browser does not support the video tag.
+                                </video>
+                                {{!/firstMediaIsImage}}
+                            </div>
+                            {{!#tailVideosURL}}
+                            <div class="carousel-item">
+                                <video width="100%" height="100%" autostart="false" controls>
+                                    <source src="{{!.}}">
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+                            {{!/tailVideosURL}}
+
+                            {{!#tailImagesURL}}
+                            <div class="carousel-item">
+                                <img class="d-block w-100" src="{{!.}}" alt="post image">
+                            </div>
+                            {{!/tailImagesURL}}
+
+                        </div>
+                        {{!#multipleMedia}}
+                        <a class="carousel-control-prev" href="javascript:previousSlide('{{!_id}}');" type="button">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        </a>
+                        <a class="carousel-control-next" href="javascript:nextSlide('{{!_id}}');" type="button">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        </a>
+                        {{!/multipleMedia}}
+                    </div>
+                    {{!/hasMedia}}
+                    {{!#audiosURL}}
+                    <p>
+                        <audio id=voiceInput src={{!.}} controls=true autostart="false"></audio>
+                    </p>
+                    {{!/audiosURL}}
+                    {{!#otherfiles}}
+                    <i class="fa fa-download"></i> <a href="{{!path}}" download>{{!name}}</a>
+                    {{!/otherfiles}}
+                </div>
+            </div>
+        </div>
+        <!-- End of post body -->
+
+        <!-- Comments -->
+        <!-- Write Comment Box -->
+        <div class="write-comment-box w-full">
+          <div class="input-group flex" id="commentBox">
+              <input class="form-control mt-1 block w-ful flex-1 m-2 p-2" id="commentInput" placeholder="Schreibe einen Kommentar" type="text">
+              <button id="postComment" class="m-2 p-2">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 15l6-6m0 0l-6-6m6 6H9a6 6 0 000 12h3" />
+                </svg>                
+              </button>
+          </div>
+        </div>
+        <!-- End of Write Comment Box -->
+        <!-- Comment List -->
+        <div class="post-footer w-full bg-gray-50 rounded-b-md">
+            <ul class="comments-list border-2-2 border-blue-lionet border-l-2">
+            </ul>
+        </div>
+        <!-- End of Comment List -->
+    </div>
+    <div class="divide-y-2 divide-blue-lionet"><div></div><div></div></div>
+</script>
+<!-- End of Repost Layout-->
+
+<!-- Comment layout -->
+<script id="commentTemplate" type="text/html">
+    <li class="comment w-full block w-full border-2-2 border-l-2 border-kmi-green sm:text-sm p-2" id={{!_id}}>
+        <a class="float-left" href="javascript:void(0);">
+            <img class="shadow rounded-full max-w-full h-auto align-middle border-none avatar" src="{{!authorPicURL}}" alt="avatar">
+        </a>
+        <div class="float-right pt-2">
+            {{!#isCommentAuthor}}
+            <div class="dropdown inline-block">
+                <div class="relative" x-data="{isOpen: false}">
+                  <button
+                          @click="isOpen = !isOpen"
+                          @keydown.escape="isOpen = false"
+                          class="flex items-center"
+                  >
+                    <div class="" id="moreOptionMenuComment"  aria-haspopup="true" aria-expanded="false">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM12.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM18.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+                      </svg>                      
+                    </div>                      
+                  </button>
+                  <div x-show="isOpen"
+                      @click.away="isOpen = false"
+                      class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none"
+                      >
+                      <div class="block w-full p-2 hover:bg-blue-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="inline-block w-5 h-5">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>       
+                        <a href="javascript:deleteComment('{{!_id}}')">Löschen</a>
+                      </div>
+                  </div>
+                </div>
+            </div>
+            {{!/isCommentAuthor}}
+
+            {{!#isPostAuthor}}
+            <button type="button" onclick="pinDepinComment(this,'{{!_id}}');"
+                    class="float-right bg-transparent h-7 text-gray-300 font-semibold text-xs py-1 px-2 rounded" data-toggle="tooltip" data-placement="right" data-html="true">
+              {{!#pinned}}
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 solidPin">
+                <path fill-rule="evenodd" d="M6.32 2.577a49.255 49.255 0 0111.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 01-1.085.67L12 18.089l-7.165 3.583A.75.75 0 013.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93z" clip-rule="evenodd" />
+              </svg>
+              {{!/pinned}}
+              {{!^pinned}}
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 outlinePin">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+              </svg>
+              {{!/pinned}}
+            </button>
+            {{!/isPostAuthor}}
+        </div>
+        <div class="comment-body bg-white border border-gray-300 rounded-md pt-1 pl-2 pr-2 pb-2">
+            <div class="comment-heading">
+                {{!#pinned}}
+                <div>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="inline-block w-4 h-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+                  </svg>              
+                  <p class="inline-block text-gray-500 text-xs">Gepinnter Kommentar</p>
+                </div>
+                {{!/pinned}}
+                <a href="profile/{{!author.username}}"><h4 class="user">{{!author.username}}</h4></a>
+                <h5 class="time" id="agoComment">{{!ago}}</h5>
+            </div>
+            <p class="pt-1">{{!text}}</p>
+        </div>
+    </li>
+</script>
+<!-- End of comment layout -->
+
+<!-- Tag Template -->
+<script id="tagTemplate" type="text/html">
+  <!--  <span class="inline-block border border-blue rounded py-1 px-3 bg-blue text-black">{{!text}}</span>-->
+</script>
+<!-- End of tag template -->
+
+<!-- Item for space dropdown -->
+<script id=spaceTemplate type="text/html">
+  <a class="dropdown-item block w-full hover:bg-gray-200" id={{!_id}} href="../space/{{!name}}">{{!name}} {{!^inSpace}}{{!/inSpace}}</a>
+</script>
+<!-- End of space dropdown item template -->
+
+<!-- Item for space select -->
+<script id="spaceTemplateSelect" type="text/html">
+    <option value={{!name}}>{{!name}}</option>
+</script>
+<!-- End of space select item template -->
+
+<!-- Profile template - displayed on every profile page-->
+<script id="profileTemplate" type="text/html">
+  <div class="container mx-auto my-5 p-5">
+    <div class="md:flex no-wrap md:-mx-2 bg-white border rounded-md border-blue-lionet p-2">
+        <div class="float-left w-full md:w-2/6 md:mx-2 h-auto">
+          <div class="bg-white p-2 mb-8">
+            <div class="image overflow-hidden float-left ml-2">
+              <img class="mx-auto mt-6"
+                    src= {{!profile_pic_URL}}
+                    alt="profile pic"
+                    width = 200
+                    height = auto>
+              <h1 class="w-full text-gray-900 font-bold text-xl leading-8 my-1">{{!username}}</h1>
+            </div>
+          </div>
+          <br>
+          <!--Friends section-->
+          <div class="bg-white p-3 mt-56">
+            <div class="flex items-center space-x-3 font-semibold text-gray-900 text-xl leading-8">
+                <span class="text-green-500">
+                    <svg class="h-5 fill-current" xmlns="http://www.w3.org/2000/svg" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                </span>               
+                <span>Folgt</span>
+                {{!^profile_owner}}
+                
+                  {{!#isFollowed}}
+                  <span class="text-sm items-center p-2 bg-red-500 border rounded-md" onclick="javascript:deleteFollow('{{!username}}')">Entfolgen</span>             
+                  {{!/isFollowed}}
+                  {{!^isFollowed}}
+                  <span class="text-sm items-center p-2 bg-green-500 border rounded-md" onclick="javascript:postFollow('{{!username}}')">Folgen</span>
+                  {{!/isFollowed}}
+                
+                {{!/profile_owner}}
+            </div>
+            <div class="grid grid-cols-2">
+                {{!#follows_list}}
+                <div class="text-center my-2">
+                  <a href="../profile/{{!user_name}}">
+                    <img class="h-16 w-16 rounded-full mx-auto"
+                            src="{{!user_picture}}"
+                            alt="">
+                    <p  class="text-main-color">{{!user_name}}</p>
+                  </a>
+                </div>
+                {{!/follows_list}}
+            </div>
+
+            <div class="flex items-center space-x-3 font-semibold text-gray-900 text-xl leading-8">
+                <span class="text-green-500">
+                    <svg class="h-5 fill-current" xmlns="http://www.w3.org/2000/svg" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                </span>               
+                <span>Gefolgt von</span>
+            </div>
+            <div class="grid grid-cols-2">
+                {{!#follower_list}}
+                <div class="text-center my-2">
+                  <a href="../profile/{{!user_name}}">
+                    <img class="h-16 w-16 rounded-full mx-auto"
+                            src="{{!user_picture}}"
+                            alt="">
+                    <p  class="text-main-color">{{!user_name}}</p>
+                  </a>
+                </div>
+                {{!/follower_list}}
+            </div>
+          </div>
+        </div>
+
+        <div class="w-full md:w-4/6 mx-2" id="profileRightSideContainer">
+            <!-- About Section -->
+          <div class="bg-white p-5 rounded-sm">
+            <div class="text-gray-700">
+                <div class="grid text-base">
+                    <div class="grid grid-cols-2">
+                        <div class="px-4 py-2 font-semibold">Vorname</div>
+                        <div class="px-4 py-2">{{!profile.first_name}}</div>
+                    </div>
+                    <div class="grid grid-cols-2">
+                        <div class="px-4 py-2 font-semibold">Nachname</div>
+                        <div class="px-4 py-2">{{!profile.last_name}}</div>
+                    </div>
+                    <div class="grid grid-cols-2">
+                        <div class="px-4 py-2 font-semibold">Institution</div>
+                        <div class="px-4 py-2">{{!profile.institution}}</div>
+                    </div>
+                    <div class="grid grid-cols-2">
+                        <div class="px-4 py-2 font-semibold">Email</div>
+                        <div class="px-4 py-2">
+                            <a class="text-blue-800" href="mailto:">{{!email}}</a>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2">
+                        <div class="px-4 py-2 font-semibold">Geburtstag</div>
+                        <div class="px-4 py-2">{{!profile.birthday}}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="container ml-5 mt-4">
+              <div class="md:flex no-wrap md:-mx-2 bg-white border">
+                  <!-- Experience-->
+                  <div class="bg-white w-full">
+                      <div class="bg-gray-100">
+                          <div class="flex items-center space-x-2 font-semibold text-gray-900 leading-8 mb-3 p-1">
+                              <span clas="text-green-500">
+                                  <svg class="h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                          stroke="currentColor">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                  </svg>
+                              </span>
+                              <span class="tracking-wide">Erfahrungen</span>
+                          </div>
+                          <ul class="p-2">
+                              {{!#profile.experience}}
+                              <li class="border rounded-sm px-1 py-1 bg-white">
+                                  <div>
+                                    {{!.}}
+                                  </div>
+                              </li>
+                              {{!/profile.experience}}
+                          </ul>
+                      </div>
+                  </div>
+                  <!-- End of Experience-->
+                </div>
+              </div>
+              <div class="container ml-5">
+                <div class="no-wrap md:-mx-2 bg-white border">
+                    <!-- Education -->
+                    <div class="bg-white w-full">
+                      <div class="bg-gray-100">
+                        <div class="flex items-center space-x-2 font-semibold text-gray-900 leading-8 mb-3 p-1">
+                            <span clas="text-green-500">
+                                <svg class="h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor">
+                                    <path fill="#fff" d="M12 14l9-5-9-5-9 5 9 5z"/>
+                                    <path fill="#fff"
+                                            d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"/>
+                                </svg>
+                            </span>
+                            <span class="tracking-wide">Ausbildung</span>
+                        </div>
+                        <ul class="p-2">
+                            {{!#profile.education}}
+                            <li class="border list-none rounded-sm px-1 py-1 bg-white">
+                                <div>
+                                {{!.}}
+                                </div>
+                            </li>
+                            {{!/profile.education}}
+                        </ul>
+                      </div>
+                    </div>
+                    <!-- End of Education-->
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          <!-- End of about section-->
+          <div x-data="{'showModal': false}" @keydown.escape="showModal:false">
+            <button id="updateProfileButton" type="button" @click="showModal = true" onclick="javascript:populateProfileInformationModal()"
+               class="bg-blue-lionet hover:bg-blue-500 text-black m-3 py-1 px-2 rounded-md text-base">
+               <i class="fa fa-pencil fa-fw mt-1"></i>
+            </button>
+
+            <!-- Modal -->
+            <div class="fixed inset-0 z-30 items-center justify-center overflow-auto bg-black bg-opacity-50"  x-show="showModal">
+              <div class="max-w-3xl px-6 py-4 mx-auto text-left bg-white rounded shadow-lg" @click.away="showModal = false" x-transition:enter="motion-safe:ease-out duration-300" x-transition:enter-start="opacity-0 scale-90" x-transition:enter-end="opacity-100 scale-100">
+
+                <!-- Title / Close -->
+                <div class="flex items-center justify-between">
+                    <b class="font-bold text-gray-800">Aktualisiere dein Profil</b>
+
+                    <button type="button" class="z-50 cursor-pointer m-2" @click="showModal = false">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Content -->
+                <div class="mt-10 sm:mt-0">
+                  <div class="md:grid md:grid-cols-3 md:gap-6">
+                    <div class="md:col-span-1">
+                      <div class="px-4 sm:px-0">
+                        <h3 class="text-lg font-medium leading-6 text-gray-900">Profilinformationen</h3>
+                        <p class="mt-1 text-sm text-gray-600">
+                          Hier kannst du deine Informationen aktualisieren, die in deinem Profil angezeigt werden.
+                        </p>
+                      </div>
+                    </div>
+                    <div class="mt-5 md:mt-0 md:col-span-2">
+                      <form action="#" method="POST">
+                        <div class="shadow overflow-hidden sm:rounded-md">
+                          <div class="px-4 py-5 bg-white sm:p-6">
+                            <div class="grid grid-cols-6 gap-6">
+                              <div class="col-span-6 sm:col-span-3">
+                                <label for="first_name" class="block text-sm font-medium text-gray-700">Vorname</label>
+                                <input type="text" name="first_name" id="first_name" class="mt-1 p-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                              </div>
+
+                              <div class="col-span-6 sm:col-span-3">
+                                <label for="last_name" class="block text-sm font-medium text-gray-700">Nachname</label>
+                                <input type="text" name="last_name" id="last_name" class="mt-1 p-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                              </div>
+
+                              <div class="col-span-6 sm:col-span-6">
+                                  <label for="date_of_birth" class="block text-sm font-medium text-gray-700">Geburtstag</label>
+                                  <input type="date" name="date_of_birth" id="date_of_birth" class="mt-1 p-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                              </div>
+
+                              <div class="col-span-6 sm:col-span-6">
+                                <label for="institution" class="block text-sm font-medium text-gray-700">Institution</label>
+                                <input type="text" name="institution" id="institution" class="mt-1 p-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                              </div>
+
+                              <div class="col-span-6 sm:col-span-6">
+                                <label for="experience" class="block text-sm font-medium text-gray-700 inline-block">Erfahrungen</label>
+                                <button type="button" class="z-50 cursor-pointer m-2  inline-block" onclick="javascript:addListItem('experience')">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                    </svg>
+                                </button>
+                                <div class="bg-white shadow-xl rounded-lg">
+                                 <ul id="experience_list" class="divide-y divide-gray-300">
+
+                                  </ul>
+                                </div>
+                              </div>
+                              <div class="col-span-6 sm:col-span-6">
+                                <label for="education" class="block text-sm font-medium text-gray-700 inline-block">Ausbildung</label>
+                                <button type="button" class="z-50 cursor-pointer m-2 inline-block" onclick="javascript:addListItem('education')">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                    </svg>
+                                </button>
+                                <div class="bg-white shadow-xl rounded-lg">
+                                 <ul id="education_list" class="divide-y divide-gray-300">
+
+                                  </ul>
+                                </div>
+                              </div>
+
+                              <div class="col-span-6 sm:col-span-6 justify-center mt-2">
+                                <label for="education" class="block text-sm font-medium text-gray-700 inline-block">Profilbild (Zugelassene Formate: jpg,png,svg,jpeg)</label>
+                                <div class="rounded-lg shadow-xl bg-gray-50">
+                                    <div class="m-2">
+                                        <div class="flex items-center justify-center w-full">
+                                            <label class="flex flex-col w-full h-32 m-4 border-4 border-dashed hover:bg-gray-100 hover:border-gray-300">
+                                                <div class="flex flex-col items-center justify-center pt-7">
+                                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                                        class="w-12 h-12 text-gray-400 group-hover:text-gray-600" viewBox="0 0 20 20"
+                                                        fill="currentColor">
+                                                        <path fill-rule="evenodd"
+                                                            d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
+                                                            clip-rule="evenodd" />
+                                                    </svg>
+                                                    <p class="pt-1 text-sm tracking-wider text-gray-400 group-hover:text-gray-600">
+                                                        Wähle ein Bild für dein Profil!</p>
+                                                </div>
+                                                <input id="photoFile" type="file" class="opacity-0" />
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                              </div>
+
+                            </div>
+                          </div>
+                          <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
+                            <button type="button" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-black bg-blue-lionet hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" onclick="javascript:saveProfileInformation()">
+                              Speichern
+                            </button>
+                          </div>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+</script>
+<!-- End of profile template -->
+
+<!-- To be deleted -->
+<script id="friendsTemplate" type="text/html">
+
+</script>
+
+<!-- Space header template - displayed on every space site at the top of the page -->
+<script id="spaceHeaderTemplate" type="text/html">
+    <div x-data="setup()">
+      <div class="flex">
+        <div class="flex-none w-1/5 border rounded-md border-blue-lionet bg-white p-2 ml-6 mr-2" style="height: 0%">
+          <!-- Main space header panel - contains information like space pic and name -->
+          <div id="spaceProfilePanel">
+            <div class="flex flex-col flex-1 bg-white" >
+                <div class="flex-1 flex flex-col">
+                    <div class="flex-shrink-0 flex ">
+                      <div class="w-4/6">
+                        <a href="../space/{{!spacename}}" class="flex-shrink-0 w-full group block">
+                            <div class="flex items-center">
+                                <div>
+                                    <img class="inline-block h-10 w-10 rounded-full"
+                                        src="../uploads/{{!space_pic}}"
+                                        alt="SpaceFoto">
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-m font-bold text-gray-700 group-hover:text-gray-900">
+                                        {{!spacename}}
+                                    </p>
+                                </div>
+                            </div>
+                        </a>
+                      </div>
+                      <div class="w-2/6">
+                        {{!#isAdmin}}
+                        <div x-data="{'showModal': false}" @keydown.escape="showModal:false" class="inline-block">
+                          <button id="updateProfileButton" type="button" @click="showModal = true" onclick="javascript:populateSpaceInformationModal()"
+                            class="bg-blue-lionet hover:bg-blue-500 text-black font-bold py-1 px-2 rounded-full text-base mt-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                          </button>
+
+                          <!-- Edit space modal -->
+                          <div class="fixed inset-0 z-30 items-center justify-center overflow-auto bg-black bg-opacity-50"  x-show="showModal">
+                            <div class="max-w-3xl px-6 py-4 mx-auto text-left bg-white rounded shadow-lg" @click.away="showModal = false" x-transition:enter="motion-safe:ease-out duration-300" x-transition:enter-start="opacity-0 scale-90" x-transition:enter-end="opacity-100 scale-100">
+                              <div class="flex items-center justify-between">
+                                  <b class="font-bold text-gray-800">Aktualisiere diesen Space</b>
+
+                                  <button type="button" class="z-50 cursor-pointer m-2" @click="showModal = false">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                      </svg>
+                                  </button>
+                              </div>
+                              <div class="mt-10 sm:mt-0">
+                                <form action="#" method="POST">
+                                  <div class="col-span-6 sm:col-span-6 justify-center mt-2 mb-6">
+                                    <label for="education" class="block text-sm font-medium text-gray-700 inline-block">Space-Beschreibung</label>
+                                    <div class="rounded-lg shadow-xl bg-gray-50">
+                                      <textarea class="form-textarea mr-4 p-2 block w-full border rounded-md" id="space_description" rows="4"
+                                                placeholder="Beschreibe diesen Space!"></textarea>
+                                    </div>
+                                  </div>
+                                  <div class="col-span-6 sm:col-span-6 justify-center mt-2">
+                                    <label for="space_pic" class="block text-sm font-medium text-gray-700 inline-block">Profilbild (Zugelassene Formate: jpg,png,svg,jpeg)</label>
+                                    <div class="rounded-lg shadow-xl bg-gray-50">
+                                        <div class="m-2">
+                                            <div x-data="showImage()" class="flex items-center justify-center w-full">
+                                                <label
+                                                  class="flex flex-col w-full h-32 border-4 border-dashed hover:bg-gray-100 hover:border-gray-300">
+                                                  <div class="relative flex flex-col items-center justify-center pt-7">
+                                                      <img id="preview" class="absolute inset-0 w-full h-32">
+                                                      <svg xmlns="http://www.w3.org/2000/svg"
+                                                          class="w-12 h-12 text-gray-400 group-hover:text-gray-600" viewBox="0 0 20 20"
+                                                          fill="currentColor">
+                                                          <path fill-rule="evenodd"
+                                                              d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
+                                                              clip-rule="evenodd" />
+                                                      </svg>
+                                                      <p class="pt-1 text-sm tracking-wider text-gray-400 group-hover:text-gray-600">
+                                                          Wähle ein Bild für diesen Space!</p>
+                                                  </div>
+                                                  <input type="file" id="photoFile" class="opacity-0" accept="image/*" @change="showPreview(event)" />
+                                              </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                  </div>
+                                  <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
+                                    <button type="button" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-black bg-blue-lionet hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" onclick="javascript:updateSpaceInformation('{{!spacename}}')">
+                                      Speichern
+                                    </button>
+                                  </div>
+                                </form>
+                              </div>
+                            </div>
+                          </div>
+                          <!-- End of edit space modal -->
+                        </div>
+                        {{!/isAdmin}}
+                        {{!#isAdmin}}
+                        <div x-data="{'showModal': false}" @keydown.escape="showModal:false" class="inline-block">
+                          <button id="updateProfileButton" type="button" @click="showModal = true" onclick="javascript:renderUserManagementModal()"
+                            class="bg-blue-lionet hover:bg-blue-500 text-black font-bold py-1 px-2 rounded-full text-base mt-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                            </svg>
+                          </button>
+
+                          <div class="fixed inset-0 z-30 items-center justify-center overflow-auto bg-black bg-opacity-50"  x-show="showModal">
+                            <div class="max-w-7xl px-6 py-4 mx-auto my-4 text-left bg-white rounded shadow-lg" @click.away="showModal = false" x-transition:enter="motion-safe:ease-out duration-300" x-transition:enter-start="opacity-0 scale-90" x-transition:enter-end="opacity-100 scale-100">
+                              <div class="flex items-center justify-between">
+                                <b class="font-bold text-gray-800">Space Administration</b>
+
+                                <button type="button" class="z-50 cursor-pointer m-2" @click="showModal = false">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                              </div>
+                              <div>
+                                <div x-data="setupSpaceAdministrationTabs()">
+                                  <nav class="flex flex-wrap text-sm font-medium text-center text-gray-500 border-b border-gray-200 dark:border-gray-700 dark:text-gray-400">
+                                      <ul class="flex">
+                                          <template x-for="(tab, index) in tabs" :key="index">
+                                              <li class="cursor-pointer py-3 px-4 transition"
+                                                  :class="activeTab===index ? 'bg-white text-blue-700' : ' text-black'" @click="activeTab = index; handleSpaceAdministrationTabChange(tab);"
+                                                  x-text="tab"></li>
+                                          </template>
+                                      </ul>
+                                  </nav>
+                      
+                                  <!-- tab system -->
+                                  <div id="tabs" class="w-full bg-white p-8">
+                                    <div x-show="activeTab===0" class="m-1 p-2 w-full h-full">
+                                      <div id="tab_1" class="p-2">
+
+                                        <div class="flex flex-col">
+                                          <div class="overflow-x-auto sm:-mx-6 lg:-mx-8">
+                                            <div class="py-2 inline-block min-w-full sm:px-6 lg:px-8">
+                                              <div class="overflow-hidden">
+                                                <table class="min-w-full">
+                                                  <thead class="border-b">
+                                                    <tr>
+                                                      <th scope="col" class="text-sm font-medium text-gray-900 px-6 py-4 text-left">
+                                                        User
+                                                      </th>
+                                                      <th scope="col" class="text-sm font-medium text-gray-900 px-6 py-4 text-left">
+                                                        Rolle 
+                                                      </th>
+                                                    </tr>
+                                                  </thead>
+                                                  <tbody id="user_management_table">
+                                                    
+                                                  </tbody>
+                                                </table>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+
+                                      </div>
+                                    </div>
+                                    <div x-show="activeTab===1" class="m-1 p-2 w-full h-full">
+                                      <div id="tab_2" class="p-2">                                   	
+                                
+                                        <div id="join_request_list">
+                                          
+                                        </div>
+
+                                      </div>
+                                    </div>
+                                    <div x-show="activeTab===2" class="m-1 p-2 w-full h-full">
+                                      <div id="tab_3" class="p-2">
+
+                                        <div class="flex m-2">
+                                          <input id="invite_search" class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500" id="invite_input" type="text" placeholder="Suche nach einem Nutzer!">
+                                          <!--button type="button" onclick="" class="inline-block px-6 py-2.5 bg-green-600 text-black font-medium text-xs leading-tight uppercase rounded shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out">Einladen</button-->
+                                        </div>
+
+                                        <div class="grid grid-cols-3 gap-6" id="invite_list">
+                                          
+                                        </div>
+
+                                      </div>
+                                    </div>
+                                    <div x-show="activeTab===3" class="m-1 p-2 w-full h-full">
+                                      <div class="m-1 xl:w-96">
+                                        <select id="space_role_list" onchange="display_space_acl_permissions()"
+                                                class="form-select appearance-none block w-full px-3 py-1.5 text-base font-normal text-gray-700 bg-white bg-clip-padding bg-no-repeat border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none"
+                                                aria-label="Default select example">
+  
+                                        </select>
+                                      </div>
+                                      <div id="space_acl_container" class="p-2">
+                                        <!-- Space ACL Permission Table-->
+                                        <table class="table-auto w-full border border-gray-400 rounded">
+                                            <thead class="bg-gray-100 border-b border-gray-400">
+                                              <tr>
+                                                  <th class="w-3/5 p-2 text-left">Permission</th>
+                                                  <th class="w-2/5 p-2">Status</th>
+                                              </tr>
+                                            </thead>
+                                            <tbody id="space_acl_rules">
+  
+                                            </tbody>
+                                        </table>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                </div> 
+                              </div>  
+                            </div>
+                          </div>
+                        </div>
+                        {{!/isAdmin}}
+                      </div>
+
+                    </div>
+                    <!-- Tab navigation bar to switch between tabs in main panel - tab names are initiated in setup()-->
+                    <nav class="mt-5 flex-1 px-2 bg-white space-y-1" >
+                        <template x-for="(tab, index) in tabs" :key="index">
+                          <div class="grid grid-rows-1 grid-flow-col" @click="triggerDisplay(index)">
+                            <span x-show="index===0" class="cursor-pointer py-3 px-4 rounded-l-lg transition"
+                              :class="activeTab===0 ? 'bg-blue-lionet text-black' : ' text-gray-500'" @click="activeTab = index; "
+                              >
+                              <svg class="group-hover:text-gray-500 mr-3 flex-shrink-0 h-6 w-6"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"
+                                  :class="activeTab===0 ? 'bg-blue-lionet text-black' : ' text-gray-500'">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                              </svg>
+                            </span>
+                            <span x-show="index===1" class="cursor-pointer py-3 px-4 rounded-l-lg transition"
+                              :class="activeTab===1 ? 'bg-blue-lionet text-black' : ' text-gray-500'" @click="activeTab = index; "
+                              >
+                              <svg class="group-hover:text-gray-500 mr-3 flex-shrink-0 h-6 w-6"
+                                  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                  stroke="currentColor" aria-hidden="true"
+                                  :class="activeTab===1 ? 'bg-blue-lionet text-black' : ' text-gray-500'">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                              </svg>
+                            </span>
+                            <span x-show="index===2" class="cursor-pointer py-3 px-4 rounded-l-lg transition"
+                              :class="activeTab===2 ? 'bg-blue-lionet text-black' : ' text-gray-500'" @click="activeTab = index; "
+                              >
+                              <svg class="group-hover:text-gray-500 mr-3 flex-shrink-0 h-6 w-6"
+                                  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                  stroke="currentColor" aria-hidden="true"
+                                  :class="activeTab===2 ? 'bg-blue-lionet text-black' : ' text-gray-500'">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                              </svg>
+                            </span>
+                            <span x-show="index===3" class="cursor-pointer py-3 px-4 rounded-l-lg transition"
+                              :class="activeTab===3 ? 'bg-blue-lionet text-black' : ' text-gray-500'" @click="activeTab = index; "
+                              >
+                              <svg class="group-hover:text-gray-500 mr-3 flex-shrink-0 h-6 w-6"
+                                  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                  stroke="currentColor" aria-hidden="true"
+                                  :class="activeTab===3 ? 'bg-blue-lionet text-black' : ' text-gray-500'">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                              </svg>
+                            </span>
+
+                            <div class="cursor-pointer py-3 rounded-r-lg transition"
+                              :class="activeTab===index ? 'bg-blue-lionet text-black' : ' text-gray-500'" @click="activeTab = index; "
+                              x-text="tab"
+                              >
+                            </div>
+                          </div>
+                        </template>
+
+
+                    </nav>
+                    <!-- End of tab navigation bar -->
+                </div>
+            </div>
+          </div>
+          <!-- End of main space header panel -->
+        </div>
+        <div class="flex-none w-3/5 border rounded-md border-blue-lionet bg-white p-2 ml-7 mr-2" id="wpPostPlaceholder"></div>
+        <div class="flex-none w-1/5 p-2 ml-6 mr-2">
+          <!-- Still empty, can be used for additional items that should be displayed in space header -->
+          <button type="button" id="leaveSpace" name="{{!space_name}}" class="bg-red-500 hover:bg-red-700 text-black font-bold py-2 px-4 rounded-full">Diesen Space verlassen </button>
+        </div>
+      </div>
+
+    <div class="flex">
+      <div class="flex-none w-1/5 p-2 ml-6 mr-2" style="height: 0%"></div>
+      <div class="flex-none w-3/5 border rounded-md border-blue-lionet bg-white p-2 ml-7 mt-2">
+        <!-- Space header content container - contains contents for each tab initiated in setup() -->
+        <div id="content_container" class="p-2">
+          <div class="" >
+            <div x-show="activeTab===0"  id="newPostPanel" >
+              <div class="post-heading">
+                  <div class="float-left image">
+                      <img src="{{!user.profile_pic_URL}}" class="inline-block h-10 w-10 mr-2 mb-1 rounded-full" alt="user profile image">
+                  </div>
+                  <div class="float-left meta">
+                      <h2>
+                          <b>Hallo {{!user.username}}</b>
+                      </h2>
+                      <p class="text-sm text-gray-500 hover:text-gray-600 leading-6">Schreibe einen Post in diesen Space!<p>
+                  </div>
+              </div>
+              <div class="post-description">
+                  <textarea class="form-textarea mr-4 p-2 block w-full border rounded-md" id="postFeed" rows="4"
+                            placeholder="Poste etwas in deine Timeline?"></textarea>
+                  <div class="post-description" style="padding-top: 5px;">
+                      <div id="postAlert"></div>
+                      <div class="grid grid-cols-2 gap-4">
+
+                      </div>
+                  </div>
+
+                  <div id="postdiv" class="mar-top clearfix p-2">
+                      <button class="m-0 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-black bg-blue-lionet border-blue-lionet hover:bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 m-0 float-right" id="post">
+                        <i class="fa fa-pencil fa-fw mt-1 mr-1"></i>
+                          Posten
+                      </button>
+                      <div class="rounded">
+                          <button type="button"
+                                  class="inline-flex items-center py-2 px-4 border border-2 rounded-full shadow-sm text-black bg-blue-lionet border-blue-lionet hover:bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 btn">
+                                  <label class="items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    <span class="mt-2 text-base leading-normal"></span>
+                                    <input type="file" name="files" id="files" multiple>
+                                </label>
+                          </button>
+                          <p>
+                              <audio id=recordedAudio></audio>
+                          </p>
+                      </div>
+                  </div>
+              </div>
+
+
+            </div>
+            <div x-show="activeTab===1">
+              <div id="space_members" class="grid grid-cols-4 gap-4 p-2">
+
+              </div>
+            </div>
+            <div x-show="activeTab===2" id="wiki_link"
+              class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md"
+              style="overflow: hidden;">
+              <!--Wiki-->
+              <!--<div id="wiki_container"></div>-->
+                <!-- TODO for now always loads personalthemen as default, change to <space_name>:start later-->
+                <iframe class="w-full" src="/wiki_page?page=personalthemen" title="description"
+                      style="height: 1000px; width: 1000px;"></iframe>
+
+            </div>
+            <div x-show="activeTab===3">
+              <label>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mb-2 inline-block" viewBox="0 -2 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>Dokumente in diesem Space
+              </label>
+              <div class="w-full rounded-lg shadow">
+                <ul class="divide-y-2 divide-gray-100">
+                    {{!#documents}}
+                      <li class="flex p-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-4" fill="none" viewBox="0 1 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <a href="{{!name}}" download>{{!name}}</a>
+                        {{!#tags}}
+                          <span class="m-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">{{!.}}</span>
+                        {{!/tags}}
+                      </li>
+                    {{!/documents}}
+                </ul>
+              </div>
+
+            </div>
+            <!--<div id="feedContainer"></div>-->
+          </div>
+        </div>
+        <!-- End of space header content container -->
+      </div>
+      <div class="flex-none w-1/5 p-2 mr-2"></div>
+    </div>
+  </div>
+</script>
+<!-- End of space header template -->
+
+<script id="discussionWordpressPostTemplate" type="text/html">
+    <div id="wp_post_container" class="p-2 w-full">
+      <div class="wordpress_post">
+          <h2><b>Wordpress Post:</b></h2>
+          <h1><b>{{{!title}}}</b></h1>
+          <div class="wordpress_post_content">{{{!post_content}}}</div>
+      </div>
+    </div>
+</script>
+
+
+<!-- -->
+<script id="profileInformation_listItem" type="text/html">
+  <li class="p-4 hover:bg-gray-50 cursor-pointer">
+    <input type="text" id="{{!item_type}}" class="mt-1 p-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" value="{{!value}}">
+    <button type="" class="z-50 cursor-pointer m-2 inline-block" onclick="$(this).closest('li').remove();" x-on:click.stop>
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 12H6" />
+      </svg>
+    </button>
+
+  </li>
+</script>
+<!-- -->
+
+
+
+<!-- ACL button template -->
+<script id="acl_button" type="text/html">
+  <div>
+      <a href="../acl" class="no-underline text-black px-6 text-base">ACL</a>
+  </div>
+</script>
+<!-- End of ACL button template -->
+
+<!-- Wordpress button template -->
+<script id="wordpress_button" type="text/html">
+  <div>
+    <a href="http://localhost/wp-admin/?loginaction=oauthclientlogin" target="_blank" class="no-underline text-white px-6 text-base">Wordpress</a>
+  </div>
+</script>
+<!-- end of wordpress button template -->

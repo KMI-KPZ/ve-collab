@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Lionet</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://code.jquery.com/jquery-1.12.4.min.js"
+    integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ" crossorigin="anonymous">
+    </script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="../css/newsfeed.css">
+  <link rel="stylesheet" type="text/css" href="../css/modal.css">
+  <link rel="stylesheet" type="text/css" href="../css/notifications.css">
+  <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+  <!--Fonts-->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300&family=Titillium+Web:wght@300&display=swap"
+    rel="stylesheet">
+</head>
+
+<body class="font-sans bg-yellow-50">
+
+  <!-- Navbar -->
+  <nav class="mb-4">
+    <div class="bg-blue-lionet mx-4 px-8" style="font-family: 'Titillium Web', sans-serif;">
+      <div class="flex items-center py-2 px-10">
+        <div class="w-full mx-auto flex items-center">
+          <div class="ml-24">
+            <img src="/uploads/logo.png" width="50" height="50" />
+          </div>
+          <div class="ml-4">
+            <li class="mt-1 block w-80 border border-gray-300 bg-white focus:outline-none rounded-md shadow-sm text-sm">
+              <input type="text" name="search" id="search" placeholder="Suchen"
+                class="px-2 py-3 block w-full shadow-sm text-sm border-gray-300 focus:outline-none rounded-md" />
+              <ul class="bg-white" id="result"></ul>
+            </li>
+          </div>
+          <div class="ml-4">
+            <div id="navbar_items" class="text-sm flex items-center">
+              <div>
+                <a href="/main" class="no-underline text-black px-6 text-base">Startseite</a>
+              </div>
+              <div>
+                <a href="/myprofile" class="no-underline text-black px-6 text-base">Profil</a>
+              </div>
+              <div>
+                <a href="/spaces" class="no-underline text-black px-6 text-base">Gruppen</a>
+              </div>
+            </div>
+          </div>
+          <div class="ml-4 w-full flex justify-end">
+            <div class="ml-4">
+              <button
+                class="m-0 inline-flex justify-center py-2 px-4 border border-transparent 
+              shadow-sm text-base font-medium rounded-md text-black bg-blue-lionet border-blue-lionet 
+              hover:bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 m-0 float-right"
+                id="logoutBtn" onclick="logout();">Logout</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+  </nav>
+  <!-- End of navbar -->
+
+  <div class="flex">
+    <div class="container mx-auto mt-2 text-base" id="profileContainer"
+      style="font-family: 'Titillium Web', sans-serif; max-width: 50%;"></div>
+  </div>
+
+  <div class="flex">
+    <div class="container mx-auto mt-2 text-base" id="newPostContainer"
+      style="font-family: 'Titillium Web', sans-serif;max-width: 65%;"></div>
+  </div>
+
+  <div class="flex">
+    <div class="container mx-auto w-3/5 px-4 mt-2 text-base" id="feedContainer"
+      style="font-family: 'Titillium Web', sans-serif;max-width: 50%;"></div>
+  </div>
+
+  <!-- Footer -->
+  <div class="mt-8" style="font-family: 'Titillium Web', sans-serif;">
+    <div class="container mx-auto px-8">
+      <div class="px-10">
+        <div class="flex items-center justify-between border-t py-8">
+          <div class="justify-start justify-between w-4/5 flex">
+            <div class="mr-4 w-24 text-sm">
+              &copy; 2021 lionet.
+            </div>
+            <div class="mr-4 text-sm">
+              <a href="#" class="no-underline">Nutzungsbedingungen</a>
+            </div>
+            <div class="mr-4 text-sm">
+              <a href="#" class="no-underline">Datenschutz</a>
+            </div>
+            <div class="mr-4 text-sm">
+              <a href="#" class="no-underline">Sicherheit</a>
+            </div>
+            <div class="mr-4 text-sm">
+              <a href="#" class="no-underline">Hilfe</a>
+            </div>
+            <div class="justify-end justify-between text-sm w-2/5 flex text-right">
+              <div class="ml-4">
+                <a href="#" class="no-underline">Über lionet</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- End of footer -->
+
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+    crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+    integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+    crossorigin="anonymous"></script>
+
+  <script src="../javascripts/mustache.js"></script>
+
+  <script src="../javascripts/general_utility.js"></script>
+  <script src="../javascripts/user_utility.js"></script>
+  <script src="../javascripts/newsfeed.js"></script>
+  <script src="../javascripts/myprofile.js"></script>
+
+  <script src="../javascripts/notifications.js"></script>
+
+</body>
+
+</html>
