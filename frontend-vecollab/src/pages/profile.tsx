@@ -4,7 +4,7 @@ import ProfileBanner from "@/components/profile/profile-banner"
 import ProfileHeader from "@/components/profile/profile-header"
 import Image from "next/image"
 import { GetServerSideProps } from "next/types"
-import { RxDotsVertical } from "react-icons/rx"
+import { RxDotFilled } from "react-icons/rx"
 import Tabs from "@/components/profile/Tabs"
 
 interface Props {
@@ -20,10 +20,10 @@ interface Props {
 // have to declare "tabname" as a valid attribute for div tags, otherwise typescript is bothered
 declare module 'react' {
     interface HTMLAttributes<T> extends AriaAttributes, DOMAttributes<T> {
-      // extends React's HTMLAttributes
-      tabname?: string;
+        // extends React's HTMLAttributes
+        tabname?: string;
     }
-  }
+}
 
 export default function Profile(props: Props) {
     return (
@@ -38,10 +38,85 @@ export default function Profile(props: Props) {
                 <Container>
                     <div className={"mx-20 flex"}>
                         <div className={"w-3/4  mr-4"}>
-                            <div className={"h-[30rem] flex p-4 my-8 bg-white rounded-3xl shadow-2xl"}> {/* remove height once content is implemented to avoid unexpected overflow */}
+                            <div className={"flex p-4 my-8 bg-white rounded-3xl shadow-2xl"}>
                                 <Tabs>
                                     <div tabname="CV">
-                                        See ya later, <em>Alligator</em>!
+                                        <div className={"h-[24rem] mx-2 my-1 flex"}> {/* fixed height to enable scrolling instead of letting to box grow very large */}
+                                            <div className={"w-1/2 mb-1 pt-2 overflow-y-auto content-scrollbar"}>
+                                                <div className={"font-bold text-slate-900 text-xl text-center"}>Ausbildung</div>
+                                                <div className={"divide-y mr-4"}>
+                                                    <div className={"py-3"}>
+                                                        <div className={"font-bold"}>Universität Leipzig</div>
+                                                        <div className={"flex items-center"}>
+                                                            <div>Master of Science</div>
+                                                            <RxDotFilled />
+                                                            <div>Informatik</div>
+                                                        </div>
+                                                        <div className={"text-sm text-gray-600"}>2020-2022</div>
+                                                        <div className={"mt-1"}>Zusatzinfos...</div>
+                                                    </div>
+                                                    <div className={"py-3"}>
+                                                        <div className={"font-bold"}>Universität Leipzig</div>
+                                                        <div className={"flex items-center"}>
+                                                            <div>Bachelor of Science</div>
+                                                            <RxDotFilled />
+                                                            <div>Informatik</div>
+                                                        </div>
+                                                        <div className={"text-sm text-gray-600"}>2016-2020</div>
+                                                        <div className={"mt-1"}>Zusatzinfos...</div>
+                                                    </div>
+                                                    <div className={"py-3"}>
+                                                        <div className={"font-bold"}>Gymnasium</div>
+                                                        <div className={"flex items-center"}>
+                                                            <div>Abitur</div>
+                                                        </div>
+                                                        <div className={"text-sm text-gray-600"}>2009-2016</div>
+                                                        <div className={"mt-1"}>Zusatzinfos...</div>
+                                                    </div>
+                                                    <div className={"py-3"}>
+                                                        <div className={"font-bold"}>Grundschule</div>
+                                                        <div className={"flex items-center"}>
+                                                            <div>gymnasiale Bildungsempfehlung</div>
+                                                        </div>
+                                                        <div className={"text-sm text-gray-600"}>2005-2009</div>
+                                                        <div className={"mt-1"}>Zusatzinfos...</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className={"w-1/2 mb-1 pt-2 overflow-y-auto content-scrollbar"}>
+                                                <div className={"font-bold text-slate-900 text-xl text-center"}>Berufserfahrung</div>
+                                                <div className={"divide-y ml-4"}>
+                                                    <div className={"py-3"}>
+                                                        <div className={"font-bold"}>wissenschaftlicher Mitarbeiter</div>
+                                                        <div className={"flex items-center"}>
+                                                            <div>Institut für angewandte Informatik (InfAI) e.V.</div>
+                                                        </div>
+                                                        <div className={"flex items-center text-sm text-gray-600"}>
+                                                            <div>10/2022 - heute</div>
+                                                            <RxDotFilled />
+                                                            <div>6 Monate</div>
+                                                        </div>
+                                                        <div className={"text-sm text-gray-600"}>Leipzig</div>
+                                                        <div className={"mt-1"}>Projekt VE-Collab</div>
+                                                    </div>
+                                                    <div className={"py-3"}>
+                                                        <div className={"font-bold"}>wissenschaftliche Hilfskraft</div>
+                                                        <div className={"flex items-center"}>
+                                                            <div>Universität Leipzig</div>
+                                                            <RxDotFilled />
+                                                            <div>Rechenzentrum (URZ)</div>
+                                                        </div>
+                                                        <div className={"flex items-center text-sm text-gray-600"}>
+                                                            <div>05/2018 - 10/2022</div>
+                                                            <RxDotFilled />
+                                                            <div>4 Jahre, 6 Monate</div>
+                                                        </div>
+                                                        <div className={"text-sm text-gray-600"}>Leipzig</div>
+                                                        <div className={"mt-1"}>Entwicklertätigkeiten in diversen Projekten, z.B. SB:Digital, SO-SERVE</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div tabname="VE-Interessen">
                                         After 'while, <em>Crocodile</em>!
