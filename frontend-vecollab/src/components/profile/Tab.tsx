@@ -22,13 +22,13 @@ class Tab extends Component<TabProps, {}> {
 
     return activeTab == tabname ?
       (
-        <button className={"-mb-[1px] px-3 py-2 bg-white border-l border-t border-r border-b-0"} onClick={onClick}>
+        <button className={"px-3 mx-1 py-2 rounded-xl border border-white hover:border-ve-collab-orange font-bold bg-ve-collab-orange-light"} onClick={onClick}>
           {tabname}
         </button>
       )
       :
       (
-        <button className={"-mb-[1px] px-3 py-2"} onClick={onClick}>
+        <button className={"px-3 mx-1 py-2 rounded-xl border border-white hover:border-ve-collab-orange font-bold"} onClick={onClick}>
           {tabname}
         </button>
       );
