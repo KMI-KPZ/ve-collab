@@ -36,6 +36,9 @@ module.exports = {
             fontFamily: {
                 konnect: ['Konnect'],
             },
+            boxShadow: {
+                roundBox: '0px 6px 18px 12px rgba(0, 0, 0, 0.3)',
+            },
         },
     },
     plugins: [],
