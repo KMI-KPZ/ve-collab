@@ -41,6 +41,71 @@ export default function Profile(props: Props) {
                         <div className={"w-3/4  mr-4"}>
                             <div className={"flex p-4 pb-6 my-8 bg-white rounded-3xl shadow-2xl"}>
                                 <Tabs>
+                                <div tabname="VE-Infos">
+                                        <div className={"h-[30rem] mx-2 my-1 overflow-y-auto content-scrollbar"}>
+                                            <div className={"my-1 font-bold text-slate-900 text-2xl"}>VE-Themeninteressen</div>
+                                            <ul className={"py-2 mr-2 list-disc list-inside"}>
+                                                <li>aktuelle IT-Trends weltweit</li>
+                                                <li>Verbindung Biologie - Informatik</li>
+                                            </ul>
+                                            <div className={"mt-6 font-bold text-slate-900 text-2xl"}>VE-Zielsetzungen</div>
+                                            <ul className={"py-2 mr-2 list-disc list-inside"}>
+                                                <li>interdiszplinärer Austausch</li>
+                                                <li>neue Erkenntnisse durch unterschiedliche Sichtweisen</li>
+                                                <li>mehr fällt mir spontan nicht ein sorry</li>
+                                            </ul>
+                                            <div className={"mt-6 font-bold text-slate-900 text-2xl"}>Erfahrungen</div>
+                                            <ul className={"py-2 mr-2 list-disc list-inside"}>
+                                                <li>2x VE mit anderen deutschen Unis</li>
+                                                <li>1x VE mit englischer Uni in asnychroner Veranstaltung</li>
+                                            </ul>
+                                            <div className={"mt-6 font-bold text-slate-900 text-2xl"}>präferierte Formate</div>
+                                            <div className={"mb-4 py-2 font-bold text-slate-900 flex flex-wrap"}>
+                                                <div className={"mr-2 mb-2 px-2 rounded-lg bg-gray-300 shadow-lg"}>hybrid</div>
+                                                <div className={"mr-2 mb-2 px-2 rounded-lg bg-gray-300 shadow-lg"}>synchron</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div tabname="Lehre & Forschung">
+                                        <div className={"h-[30rem] mx-2 my-1 overflow-y-auto content-scrollbar"}>
+                                            <div className={"my-1 font-bold text-slate-900 text-2xl"}>Forschungsschwerpunkte</div>
+                                            <div className={"mb-4 py-2 font-bold text-slate-900 flex flex-wrap"}>
+                                                <div className={"mr-2 mb-2 px-2 rounded-lg bg-gray-300 shadow-lg"}>DNA-Sequenzanalyse</div>
+                                                <div className={"mr-2 mb-2 px-2 rounded-lg bg-gray-300 shadow-lg"}>High Performance Computing</div>
+                                                <div className={"mr-2 mb-2 px-2 rounded-lg bg-gray-300 shadow-lg"}>Parallel Computing</div>
+                                                <div className={"mr-2 mb-2 px-2 rounded-lg bg-gray-300 shadow-lg"}>bioinspirierte Verfahren</div>
+                                                <div className={"mr-2 mb-2 px-2 rounded-lg bg-gray-300 shadow-lg"}>Machine Learning</div>
+                                            </div>
+                                            <div className={"mt-8 font-bold text-slate-900 text-2xl"}>Lehrveranstaltungen</div>
+                                            <div className={"divide-y"}>
+                                                <div className={"py-2 mr-2"}>
+                                                    <div className={"font-semibold"}>Aktuelle Trends der Informatik</div>
+                                                    <div>Master Informatik, Master Data Science</div>
+                                                    <div className={"text-gray-600"}>WiSe 22/23</div>
+                                                </div>
+                                                <div className={"py-2 mr-2"}>
+                                                    <div className={"font-semibold"}>Eingebettete Systeme</div>
+                                                    <div>Master Informatik, Master Data Science</div>
+                                                    <div className={"text-gray-600"}>WiSe 22/23</div>
+                                                </div>
+                                                <div className={"py-2 mr-2"}>
+                                                    <div className={"font-semibold"}>Modellierung biologischer und molekularer Systeme</div>
+                                                    <div>Master Informatik, Master Data Science</div>
+                                                    <div className={"text-gray-600"}>WiSe 22/23</div>
+                                                </div>
+                                                <div className={"py-2 mr-2"}>
+                                                    <div className={"font-semibold"}>noch ein sehr sehr langer Titel für eine Lehrveranstaltung, der im ungünstigesten Falls sogar mehr als eine Zeile einnimmt</div>
+                                                    <div>Master Informatik, Master Data Science</div>
+                                                    <div className={"text-gray-600"}>WiSe 22/23</div>
+                                                </div>
+                                                <div className={"py-2 mr-2"}>
+                                                    <div className={"font-semibold"}>Modellierung biologischer und molekularer Systeme</div>
+                                                    <div>Master Informatik, Master Data Science, Master Bioinformatik, und noch viele weitere Studiengänge, die man hier auch gar nicht all aufzählen kann</div>
+                                                    <div className={"text-gray-600"}>WiSe 22/23</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div tabname="CV">
                                         <div className={"h-[30rem] mx-2 my-1 flex"}> {/* fixed height to enable scrolling instead of letting to box grow very large */}
                                             <div className={"w-1/2 overflow-y-auto content-scrollbar"}>
@@ -116,71 +181,6 @@ export default function Profile(props: Props) {
                                                         <div className={"mt-1"}>Entwicklertätigkeiten in diversen Projekten, z.B. SB:Digital, SO-SERVE</div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div tabname="Lehre & Forschung">
-                                        <div className={"h-[30rem] mx-2 my-1 overflow-y-auto content-scrollbar"}>
-                                            <div className={"my-1 font-bold text-slate-900 text-2xl"}>Forschungsschwerpunkte</div>
-                                            <div className={"mb-4 py-2 font-bold text-slate-900 flex flex-wrap"}>
-                                                <div className={"mr-2 mb-2 px-2 rounded-lg bg-gray-300 shadow-lg"}>DNA-Sequenzanalyse</div>
-                                                <div className={"mr-2 mb-2 px-2 rounded-lg bg-gray-300 shadow-lg"}>High Performance Computing</div>
-                                                <div className={"mr-2 mb-2 px-2 rounded-lg bg-gray-300 shadow-lg"}>Parallel Computing</div>
-                                                <div className={"mr-2 mb-2 px-2 rounded-lg bg-gray-300 shadow-lg"}>bioinspirierte Verfahren</div>
-                                                <div className={"mr-2 mb-2 px-2 rounded-lg bg-gray-300 shadow-lg"}>Machine Learning</div>
-                                            </div>
-                                            <div className={"mt-8 font-bold text-slate-900 text-2xl"}>Lehrveranstaltungen</div>
-                                            <div className={"divide-y"}>
-                                                <div className={"py-2 mr-2"}>
-                                                    <div className={"font-semibold"}>Aktuelle Trends der Informatik</div>
-                                                    <div>Master Informatik, Master Data Science</div>
-                                                    <div className={"text-gray-600"}>WiSe 22/23</div>
-                                                </div>
-                                                <div className={"py-2 mr-2"}>
-                                                    <div className={"font-semibold"}>Eingebettete Systeme</div>
-                                                    <div>Master Informatik, Master Data Science</div>
-                                                    <div className={"text-gray-600"}>WiSe 22/23</div>
-                                                </div>
-                                                <div className={"py-2 mr-2"}>
-                                                    <div className={"font-semibold"}>Modellierung biologischer und molekularer Systeme</div>
-                                                    <div>Master Informatik, Master Data Science</div>
-                                                    <div className={"text-gray-600"}>WiSe 22/23</div>
-                                                </div>
-                                                <div className={"py-2 mr-2"}>
-                                                    <div className={"font-semibold"}>noch ein sehr sehr langer Titel für eine Lehrveranstaltung, der im ungünstigesten Falls sogar mehr als eine Zeile einnimmt</div>
-                                                    <div>Master Informatik, Master Data Science</div>
-                                                    <div className={"text-gray-600"}>WiSe 22/23</div>
-                                                </div>
-                                                <div className={"py-2 mr-2"}>
-                                                    <div className={"font-semibold"}>Modellierung biologischer und molekularer Systeme</div>
-                                                    <div>Master Informatik, Master Data Science, Master Bioinformatik, und noch viele weitere Studiengänge, die man hier auch gar nicht all aufzählen kann</div>
-                                                    <div className={"text-gray-600"}>WiSe 22/23</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div tabname="VE-Infos">
-                                        <div className={"h-[30rem] mx-2 my-1 overflow-y-auto content-scrollbar"}>
-                                            <div className={"my-1 font-bold text-slate-900 text-2xl"}>VE-Themeninteressen</div>
-                                            <ul className={"py-2 mr-2 list-disc list-inside"}>
-                                                <li>aktuelle IT-Trends weltweit</li>
-                                                <li>Verbindung Biologie - Informatik</li>
-                                            </ul>
-                                            <div className={"mt-6 font-bold text-slate-900 text-2xl"}>VE-Zielsetzungen</div>
-                                            <ul className={"py-2 mr-2 list-disc list-inside"}>
-                                                <li>interdiszplinärer Austausch</li>
-                                                <li>neue Erkenntnisse durch unterschiedliche Sichtweisen</li>
-                                                <li>mehr fällt mir spontan nicht ein sorry</li>
-                                            </ul>
-                                            <div className={"mt-6 font-bold text-slate-900 text-2xl"}>Erfahrungen</div>
-                                            <ul className={"py-2 mr-2 list-disc list-inside"}>
-                                                <li>2x VE mit anderen deutschen Unis</li>
-                                                <li>1x VE mit englischer Uni in asnychroner Veranstaltung</li>
-                                            </ul>
-                                            <div className={"mt-6 font-bold text-slate-900 text-2xl"}>präferierte Formate</div>
-                                            <div className={"mb-4 py-2 font-bold text-slate-900 flex flex-wrap"}>
-                                                <div className={"mr-2 mb-2 px-2 rounded-lg bg-gray-300 shadow-lg"}>hybrid</div>
-                                                <div className={"mr-2 mb-2 px-2 rounded-lg bg-gray-300 shadow-lg"}>synchron</div>
                                             </div>
                                         </div>
                                     </div>
