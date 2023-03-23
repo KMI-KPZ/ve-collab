@@ -1,4 +1,5 @@
 import Image from "next/image"
+import Link from "next/link"
 import { RxDotsVertical } from "react-icons/rx"
 
 interface Props {
@@ -14,7 +15,9 @@ export default function ProfileHeader({ name, institution, profilePictureUrl }: 
                 <Image height={180} width={180} src={profilePictureUrl} alt={""} />
             </div>
             <div className={"mr-auto"}>
-                <button className={"border border-white bg-black/75 text-white rounded-lg px-3 py-1 mt-2"}><span>Profil bearbeiten</span></button>
+                <Link href={"/editProfile"}>
+                    <button className={"border border-white bg-black/75 text-white rounded-lg px-3 py-1 mt-2"}><span>Profil bearbeiten</span></button>
+                </Link>
                 <div className={"mt-11 font-bold text-4xl text-slate-900"}>{name}</div>
                 <div className={"text-gray-500"}>{institution}</div>
 
