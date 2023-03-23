@@ -25,7 +25,7 @@ export default function PersonalInformation({ bio, name, department, birthday, l
                     <div className={"text-sm text-gray-600 my-1"}>Sprachen</div>
                     <div className={"font-bold text-slate-900 flex flex-wrap"}>
                         {languages.map((language) => (
-                            <TagBox text={language} />
+                            <TagBox key={language} text={language} />
                         ))}
                     </div>
                 </li>

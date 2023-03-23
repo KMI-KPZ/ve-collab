@@ -11,7 +11,7 @@ export default function TeachingAndResearchInformation() {
             <BoxContentHeadline className={"my-1"} text={"Forschungsschwerpunkte"} />
             <div className={"mb-4 py-2 font-bold text-slate-900 flex flex-wrap"}>
                 {researchInterests.map(text => (
-                    <TagBox text={text} />
+                    <TagBox key={text} text={text} />
                 ))}
             </div>
             <BoxContentHeadline className={"mt-6"} text={"Lehrveranstaltungen"} />
