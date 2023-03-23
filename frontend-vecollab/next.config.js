@@ -17,6 +17,7 @@ if (!process.env.KEYCLOAK_SECRET) {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     reactStrictMode: true,
+    output: "standalone"
 };
 
 module.exports = nextConfig;

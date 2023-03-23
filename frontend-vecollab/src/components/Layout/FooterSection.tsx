@@ -1,13 +1,13 @@
 import React from 'react';
-import veCollabLogo from '@/images/oldKavaqLogo.png';
+import veCollabLogo from '@/images/veCollabLogo.png';
 import Image from 'next/image';
 
 export default function FooterSection() {
     return (
-        <footer className="bg-footer-pattern shadow-inner">
+        <footer className="pb-4 bg-footer-pattern shadow-inner">
             <div className="h-64 px-5 pt-9 w-screen grid grid-cols-5 gap-4 text-white max-w-screen-2xl m-auto">
                 <div className="col-span-2 ">
-                    <Image src={veCollabLogo} alt="Ve Collab Logo" width={250} height={250}></Image>
+                    <Image src={veCollabLogo} alt="Ve Collab Logo" width={300} height={300}></Image>
                 </div>
                 <div className="space-y-2">
                     <div>Navigation</div>
@@ -24,7 +24,7 @@ export default function FooterSection() {
                     <div>Email</div>
                 </div>
             </div>
-            <hr className="w-96 h-0.5 mx-auto mb-10 bg-gray-400 border-0 rounded" />
+            <hr className="w-8/12 mx-auto mb-4 border-gray-400 border-0.5" />
             <p className="text-white flex justify-center">
                 © 2023 Kavaq. All rights reserved. | Terms and Conditions
             </p>

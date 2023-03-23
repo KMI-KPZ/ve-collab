@@ -11,7 +11,7 @@ export default function HeaderSection() {
         <header className="bg-white px-4 lg:px-6 py-2.5 drop-shadow-lg">
             <nav className="flex flex-wrap justify-between items-center mx-auto max-w-screen-2xl">
                 <Link href="/">
-                    <Image src={veCollabLogo} alt="Ve Collab Logo" width={250} height={250}></Image>
+                    <Image src={veCollabLogo} alt="Ve Collab Logo" width={100} height={100}></Image>
                 </Link>
                 <ul className="flex items-center font-semibold space-x-14">
                     <li>
