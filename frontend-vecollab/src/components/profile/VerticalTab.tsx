@@ -22,13 +22,13 @@ class Tab extends Component<TabProps, {}> {
 
     return activeTab == tabname ?
       (
-        <div className={"px-3 mx-1 py-2 rounded-xl border border-white hover:border-ve-collab-orange font-bold text-slate-900 bg-ve-collab-orange-light"} onClick={onClick}>
+        <div className={"px-3 mx-1 py-2 rounded-xl border border-white hover:border-ve-collab-orange font-bold text-slate-900 cursor-pointer bg-ve-collab-orange-light"} onClick={onClick}>
           {tabname}
         </div>
       )
       :
       (
-        <div className={"px-3 mx-1 py-2 rounded-xl border border-white hover:border-ve-collab-orange font-bold text-slate-900"} onClick={onClick}>
+        <div className={"px-3 mx-1 py-2 rounded-xl border border-white hover:border-ve-collab-orange font-bold text-slate-900 cursor-pointer"} onClick={onClick}>
           {tabname}
         </div>
       );

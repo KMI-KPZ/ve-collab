@@ -28,7 +28,7 @@ class Tabs extends Component<TabsProps, { activeTab: string }> {
 
         return (
             <div className={"flex"}>
-                <div className={"w-1/3"}>
+                <div className={"w-1/4"}>
                     <ol className={"pb-2"}>
                         {children.map((child) => {
                             return (
@@ -42,7 +42,7 @@ class Tabs extends Component<TabsProps, { activeTab: string }> {
                         })}
                     </ol>
                 </div>
-                <div className={"w-2/3 bg-red-500"}> {/* tab content wrapper*/}
+                <div className={"w-3/4 mx-14"}> {/* tab content wrapper*/}
                     {children.map((child) => {
                         if (child.props.tabname !== activeTab) return undefined;
                         return child.props.children;
