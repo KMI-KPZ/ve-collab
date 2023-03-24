@@ -35,11 +35,12 @@ export default function HeaderSection() {
                         <>
                             <li
                                 onClick={() => signIn('keycloak')}
-                                className="bg-ve-collab-orange text-white py-4 pr-6 pl-5 rounded-lg"
+                                className="bg-ve-collab-orange text-white py-3 px-5 rounded-lg cursor-pointer"
                             >
                                 <button onClick={() => signIn('keycloak')}>Login</button>
                             </li>
-                            <li onClick={() => signIn('keycloak')}>
+                            <li onClick={() => signIn('keycloak')}
+                                className="py-3 px-5 cursor-pointer">
                                 <button onClick={() => signIn('keycloak')}>Registrieren</button>
                             </li>
                         </>
@@ -51,7 +52,7 @@ export default function HeaderSection() {
                             </li>
                             <li
                                 onClick={() => signOut()}
-                                className="bg-ve-collab-orange text-white py-4 pr-6 pl-5 rounded-lg"
+                                className="bg-ve-collab-orange text-white py-3 px-5 rounded-lg cursor-pointer"
                             >
                                 <button onClick={() => signOut()}>Ausloggen</button>
                             </li>
