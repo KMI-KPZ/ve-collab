@@ -150,6 +150,17 @@ class BaseHandler(tornado.web.RequestHandler):
             )
             self._access_token = new_token
 
+    def set_default_headers(self):
+        print("setting headers!!!")
+        self.set_header("Access-Control-Allow-Origin", "*")
+        self.set_header("Access-Control-Allow-Headers", "x-requested-with, Authorization")
+        self.set_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+
+    def options(self):
+        # no body
+        self.set_status(200)
+        self.finish()
+
     def json_serialize_response(self, dictionary: dict) -> dict:
         """
         recursively traverse the (variably) nested dict to find any fields that

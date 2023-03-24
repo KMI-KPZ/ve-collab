@@ -1,3 +1,5 @@
+import json
+
 import tornado.web
 
 from handlers.base_handler import BaseHandler, auth_needed
@@ -119,17 +121,20 @@ class ProfileInformationHandler(BaseHandler):
                  "reason": "no_logged_in_user"}
         """
 
-        bio = self.get_body_argument("bio", None)
-        institution = self.get_body_argument("institution", None)
-        projects = self.get_body_argument("projects", None).split(",")
-        first_name = self.get_body_argument("first_name", None)
-        last_name = self.get_body_argument("last_name", None)
-        gender = self.get_body_argument("gender", None)
-        address = self.get_body_argument("address", None)
-        birthday = self.get_body_argument("birthday", None)
-        experience = self.get_body_argument("experience", None).split(",")
-        education = self.get_body_argument("education", None).split(",")
+        #bio = self.get_body_argument("bio", None)
+        #institution = self.get_body_argument("institution", None)
+        #projects = self.get_body_argument("projects", None).split(",")
+        #first_name = self.get_body_argument("first_name", None)
+        #last_name = self.get_body_argument("last_name", None)
+        #gender = self.get_body_argument("gender", None)
+        #address = self.get_body_argument("address", None)
+        #birthday = self.get_body_argument("birthday", None)
+        #experience = self.get_body_argument("experience", None).split(",")
+        #education = self.get_body_argument("education", None).split(",")
 
+        updated_attribute_dict = json.loads(self.request.body)
+
+        """
         updated_attribute_dict = {
             "bio": bio,
             "institution": institution,
@@ -142,6 +147,7 @@ class ProfileInformationHandler(BaseHandler):
             "experience": experience,
             "education": education,
         }
+        """
 
         with Profiles() as profile_manager:
             # handle profile pic

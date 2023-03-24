@@ -2,11 +2,13 @@ import Container from "@/components/Layout/container"
 import PersonalInformation from "@/components/profile/personal-information"
 import ProfileBanner from "@/components/profile/profile-banner"
 import ProfileHeader from "@/components/profile/profile-header"
-import { GetServerSideProps } from "next/types"
+import { GetServerSideProps, GetServerSidePropsContext } from "next/types"
 import WhiteBox from "@/components/Layout/WhiteBox"
 import VEVitrine from "@/components/profile/VEVitrine"
 import ExtendedPersonalInformation from "@/components/profile/ExtendedPersonalInformation"
 import BoxHeadline from "@/components/profile/BoxHeadline"
+import { BACKEND_URL } from "@/constants"
+import { getToken } from "next-auth/jwt"
 
 interface Props {
     name: string,
@@ -53,7 +55,51 @@ export default function Profile(props: Props) {
     )
 }
 
-export const getServerSideProps: GetServerSideProps = async () => {
+export const getServerSideProps: GetServerSideProps = async (context: GetServerSidePropsContext) => {
+
+    const token = await getToken({ req: context.req })
+    if (token) {
+        const headers = {
+            "Authorization": "Bearer " + token.accessToken
+        }
+
+        let backendResponse = null;
+        let data = null;
+        try {
+            backendResponse = await fetch(BACKEND_URL + "/profileinformation", {
+                headers: headers
+            })
+            data = await backendResponse.json()
+            if (backendResponse.status === 200) {
+                return {
+                    props: {
+                        name: data.profile.first_name + " " + data.profile.last_name,
+                        institution: data.profile.institution,
+                        profilePictureUrl: "/images/random_user.jpg",
+                        bio: data.profile.bio,
+                        department: data.profile.expertise,
+                        birthday: data.profile.birthday,
+                        languages: data.profile.languages
+                    }
+                }
+            }
+        }
+        catch (e) {
+            console.log("network error, probably backend down")
+            return {
+                props: {
+                    name: "Max Mustermann",
+                    institution: "Universität Leipzig",
+                    profilePictureUrl: "/images/random_user.jpg",
+                    bio: "Lorem ipsum dolor si ameterto de la consectetur adipiscing elit. Lets make this text slightly longer so the box looks more filled.",
+                    department: "Informatik",
+                    birthday: "01.01.1990",
+                    languages: ["Deutsch", "Englisch", "Spanisch", "Französisch", "Italienisch"]
+                }
+            }
+        }
+    }
+
     return {
         props: {
             name: "Max Mustermann",

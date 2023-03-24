@@ -1,25 +1,37 @@
 import WhiteBox from "@/components/Layout/WhiteBox";
 import VerticalTabs from "@/components/profile/VerticalTabs";
+import { BACKEND_URL } from "@/constants";
+import { GetServerSideProps, GetServerSidePropsContext } from "next";
+import { getToken } from "next-auth/jwt";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { WithContext as ReactTags } from 'react-tag-input';
 
-export default function EditProfile() {
+interface Props {
+    firstName: string,
+    lastName: string,
+    institution: string,
+    profilePictureUrl: string,
+    bio: string,
+    department: string,
+    birthday: string,
+    expertise: string,
+    languages: string[],
+    accessToken: string,
+}
 
-    const [firstName, setFirstName] = useState("")
-    const [lastName, setLastName] = useState("")
-    const [bio, setBio] = useState("")
-    const [expertise, setExpertise] = useState("")
-    const [birthday, setBirthday] = useState("")
+export default function EditProfile(props: Props) {
 
-    // hardcoded examples for now
-    const [tags, setTags] = useState([
-        { id: 'Deutsch', text: 'Deutsch' },
-        { id: 'Englisch', text: 'Englisch' },
-        { id: 'Spanisch', text: 'Spanisch' },
-        { id: 'Französisch', text: 'Französisch' },
-        { id: 'italienisch', text: 'italienisch' }
-    ]);
+    const [firstName, setFirstName] = useState(props.firstName)
+    const [lastName, setLastName] = useState(props.lastName)
+    const [bio, setBio] = useState(props.bio)
+    const [expertise, setExpertise] = useState(props.department)
+    const [birthday, setBirthday] = useState(props.birthday)
+
+    const [tags, setTags] = useState(
+        props.languages.map(language => ({ id: language, text: language }))
+    );
 
     const handleDelete = (i: number) => {
         setTags(tags.filter((tag, index) => index !== i));
@@ -50,10 +62,30 @@ export default function EditProfile() {
 
     const delimiters = [KeyCodes.comma, KeyCodes.enter];
 
-    const updateProfileData = (evt: FormEvent) => {
+    const updateProfileData = async (evt: FormEvent) => {
         evt.preventDefault()
         console.log("backend updaten")
         console.log({ firstName: firstName, lastName: lastName, bio: bio, expertise: expertise, birthday: birthday, languages: tags.map(elem => elem.text) })
+        
+        const headers = {
+            "Authorization": "Bearer " + props.accessToken,
+        }
+        
+        try {
+
+            const backendUpdate = await fetch(BACKEND_URL + "/profileinformation", {
+                method: "POST",
+                headers: headers,
+                body: JSON.stringify({first_name: firstName, last_name: lastName, bio: bio, expertise: expertise, birthday:birthday, languages: tags.map(elem => elem.text) })
+            })
+            
+            const response = await backendUpdate.json()
+            console.log(response)
+        }
+        catch(e){
+            console.log("Fetch Error")
+            console.log(e)
+        }
     }
 
     return (
@@ -126,4 +158,68 @@ export default function EditProfile() {
             </WhiteBox>
         </div >
     )
+}
+
+export const getServerSideProps: GetServerSideProps = async (context: GetServerSidePropsContext) => {
+
+    const token = await getToken({ req: context.req })
+    if (token) {
+        const headers = {
+            "Authorization": "Bearer " + token.accessToken
+        }
+
+        let backendResponse = null;
+        let data = null;
+        try {
+            backendResponse = await fetch(BACKEND_URL + "/profileinformation", {
+                headers: headers
+            })
+            data = await backendResponse.json()
+            if (backendResponse.status === 200) {
+                return {
+                    props: {
+                        firstName: data.profile.first_name,
+                        lastName: data.profile.last_name,
+                        institution: data.profile.institution,
+                        profilePictureUrl: "/images/random_user.jpg",
+                        bio: data.profile.bio,
+                        department: data.profile.expertise,
+                        birthday: data.profile.birthday,
+                        languages: data.profile.languages,
+                        accessToken: token.accessToken,
+                    }
+                }
+            }
+        }
+        catch (e) {
+            console.log("network error, probably backend down")
+            return {
+                props: {
+                    firstName: "Max",
+                    lastName: "Mustermann",
+                    institution: "Universität Leipzig",
+                    profilePictureUrl: "/images/random_user.jpg",
+                    bio: "Lorem ipsum dolor si ameterto de la consectetur adipiscing elit. Lets make this text slightly longer so the box looks more filled.",
+                    department: "Informatik",
+                    birthday: "01.01.1990",
+                    languages: ["Deutsch", "Englisch", "Spanisch", "Französisch", "Italienisch"],
+                    accessToken: "",
+                }
+            }
+        }
+    }
+
+    return {
+        props: {
+            firstName: "Max",
+            lastName: "Mustermann",
+            institution: "Universität Leipzig",
+            profilePictureUrl: "/images/random_user.jpg",
+            bio: "Lorem ipsum dolor si ameterto de la consectetur adipiscing elit. Lets make this text slightly longer so the box looks more filled.",
+            department: "Informatik",
+            birthday: "01.01.1990",
+            languages: ["Deutsch", "Englisch", "Spanisch", "Französisch", "Italienisch"],
+            accessToken: "",
+        }
+    }
 }

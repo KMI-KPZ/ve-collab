@@ -41,6 +41,8 @@ class Profiles:
             "birthday": str,
             "experience": list,
             "education": list,
+            "expertise": str,
+            "languages": list,
         }
 
     def __enter__(self):
@@ -91,6 +93,8 @@ class Profiles:
             "birthday": None,
             "experience": [],
             "education": [],
+            "expertise": None,
+            "languages": [],
         }
         self.db.profiles.insert_one(profile)
         return profile
@@ -119,6 +123,8 @@ class Profiles:
             "birthday": None,
             "experience": [],
             "education": [],
+            "expertise": None,
+            "languages": [],
         }
         self.db.profiles.insert_one(profile)
         return profile
@@ -347,8 +353,8 @@ class Profiles:
         """
 
         # verify space has all the necessary attributes
-        if not all(attr in updated_profile for attr in self.profile_attributes.keys()):
-            raise ValueError("Profile misses required attribute")
+        #if not all(attr in updated_profile for attr in self.profile_attributes.keys()):
+        #    raise ValueError("Profile misses required attribute")
 
         # verify types of attributes
         for attr_key in updated_profile:
