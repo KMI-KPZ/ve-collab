@@ -1,23 +1,44 @@
 import HeadProgressBarSection from "@/components/StartingWizard/HeadProgressBarSection";
 import SideProgressBarSection from "@/components/StartingWizard/SideProgressBarSection";
 import Link from "next/link";
-import { FormEvent } from "react";
-import { RxPlus } from "react-icons/rx";
+import { FormEvent, useState } from "react";
+import { RxMinus, RxPlus } from "react-icons/rx";
 
-export default function One() {
+export default function Partners() {
+
+    const [partners, setPartners] = useState(["test", ""])
+
+    const modifyPartner = (index: number, value: string) => {
+        console.log(value)
+        console.log(index)
+        let newPartners = [...partners]
+        newPartners[index] = value
+        setPartners(newPartners)
+    }
+
+    const addInputField = (e: FormEvent) => {
+        e.preventDefault()
+        setPartners([...partners, ""])
+    }
+
+    const removeInputField = (e: FormEvent) => {
+        e.preventDefault()
+        let copy = [...partners] // have to create a deep copy that changes reference, because re-render is triggered by reference, not by values in the array
+        copy.pop()
+        setPartners(copy)
+    }
 
     const handleSubmit = (e: FormEvent) => {
-        e.preventDefault();
+        console.log(partners)
     }
+
+    console.log(partners)
 
     return (
         <>
             <HeadProgressBarSection />
             <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
                 <form
-                    name="generalInformation"
-                    method="POST"
-                    onSubmit={handleSubmit}
                     className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
                 >
                     <div>
@@ -25,16 +46,20 @@ export default function One() {
                             Füge deine Partner hinzu
                         </div>
                         <div className={"text-center mb-20"}>optional</div>
-                        <div className="mx-7 mt-7 flex justify-center">
-                            <input
-                                type="text"
-                                /*onChange={handleChange}*/
-                                placeholder="Name eingeben"
-                                className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
-                            />
-                        </div>
-                        <div className={"w-3/4 mx-7 mt-1 flex justify-end"}>
-                            <button><RxPlus /></button> {/* todo state + useeffect to create more input fields*/}
+                        {partners.map((partner, index) => (
+                            <div key={index} className="mx-7 mt-7 flex justify-center">
+                                <input
+                                    type="text"
+                                    value={partner}
+                                    onChange={e => modifyPartner(index, e.target.value)}
+                                    placeholder="Name eingeben"
+                                    className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
+                                />
+                            </div>
+                        ))}
+                        <div className={"w-3/4 mx-7 mt-3 flex justify-end"}>
+                            <button onClick={removeInputField}><RxMinus size={20} /></button>
+                            <button onClick={addInputField}><RxPlus size={20} /></button>
                         </div>
                     </div>
                     <div className="flex justify-around w-full">
@@ -53,6 +78,7 @@ export default function One() {
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    onClick={handleSubmit}
                                 >
                                     Weiter
                                 </button>

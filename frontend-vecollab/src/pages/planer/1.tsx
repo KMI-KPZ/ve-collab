@@ -1,12 +1,14 @@
 import HeadProgressBarSection from "@/components/StartingWizard/HeadProgressBarSection";
 import SideProgressBarSection from "@/components/StartingWizard/SideProgressBarSection";
 import Link from "next/link";
-import { FormEvent } from "react";
+import { FormEvent, useState } from "react";
 
-export default function One() {
+export default function Name() {
+
+    const [name, setName] = useState("")
 
     const handleSubmit = (e: FormEvent) => {
-        e.preventDefault();
+        console.log(name)
     }
 
     return (
@@ -14,9 +16,6 @@ export default function One() {
             <HeadProgressBarSection />
             <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
                 <form
-                    name="generalInformation"
-                    method="POST"
-                    onSubmit={handleSubmit}
                     className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
                 >
                     <div>
@@ -26,9 +25,9 @@ export default function One() {
                         <div className="m-7 flex justify-center">
                             <input
                                 type="text"
-                                name="projectName"
-                                /*onChange={handleChange}*/
-                                id="projectName"
+                                value={name}
+                                onChange={e => setName(e.target.value)}
+                                placeholder="Name eingeben"
                                 required={true}
                                 className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
                             />
@@ -48,6 +47,7 @@ export default function One() {
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    onClick={handleSubmit}
                                 >
                                     Weiter
                                 </button>

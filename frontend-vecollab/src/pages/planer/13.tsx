@@ -22,47 +22,24 @@ export default function One() {
                 >
                     <div>
                         <div className={"text-center font-bold text-4xl mb-2"}>
-                            Welche Ziele sollen die einzelnen Zielgruppen erreichen?
+                            Mit welchen Tools können die Studierenden arbeiten?
                         </div>
                         <div className={"text-center mb-20"}>optional</div>
                         <div className="mx-7 mt-7 flex justify-center">
-                            <label htmlFor="name" className="px-10 py-2">
-                                alle Zielgruppen haben die gleichen Ziele
-                            </label>
                             <input
-                                type={"checkbox"}
+                                type="text"
                                 /*onChange={handleChange}*/
-                                placeholder="Name eingeben"
-                                className="border border-gray-500 rounded-lg p-2"
+                                placeholder="Tool eingeben"
+                                className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
                             />
                         </div>
-                        <div className="mx-7 mt-7 flex justify-center">
-                            <label htmlFor="name" className="px-10 py-2">
-                                für Zielgruppe ...
-                            </label>
-                            <textarea
-                                rows={5}
-                                /*onChange={handleChange}*/
-                                placeholder="Name eingeben"
-                                className="border border-gray-500 rounded-lg w-3/4 p-2"
-                            />
+                        <div className={"w-3/4 mx-7 mt-1 flex justify-end"}>
+                            <button><RxPlus size={30}/></button> {/* todo state + useeffect to create more input fields*/}
                         </div>
-                        <div className="mx-7 mt-7 flex justify-center">
-                            <label htmlFor="name" className="px-10 py-2">
-                                für Zielgruppe ...
-                            </label>
-                            <textarea
-                                rows={5}
-                                /*onChange={handleChange}*/
-                                placeholder="Name eingeben"
-                                className="border border-gray-500 rounded-lg w-3/4 p-2"
-                            />
-                        </div>
-                        
                     </div>
                     <div className="flex justify-around w-full">
                         <div>
-                            <Link href={"/planer/8"}>
+                            <Link href={"/planer/12"}>
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
@@ -72,7 +49,7 @@ export default function One() {
                             </Link>
                         </div>
                         <div>
-                            <Link href={"/planer/10"}>
+                            <Link href={"/planer/14"}>
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"

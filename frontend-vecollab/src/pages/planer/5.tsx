@@ -1,13 +1,15 @@
 import HeadProgressBarSection from "@/components/StartingWizard/HeadProgressBarSection";
 import SideProgressBarSection from "@/components/StartingWizard/SideProgressBarSection";
 import Link from "next/link";
-import { FormEvent } from "react";
+import { FormEvent, useState } from "react";
 import { RxPlus } from "react-icons/rx";
 
 export default function One() {
 
+    const [topic, setTopic] = useState("")
+
     const handleSubmit = (e: FormEvent) => {
-        e.preventDefault();
+        console.log(topic)
     }
 
     return (
@@ -15,9 +17,6 @@ export default function One() {
             <HeadProgressBarSection />
             <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
                 <form
-                    name="generalInformation"
-                    method="POST"
-                    onSubmit={handleSubmit}
                     className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
                 >
                     <div>
@@ -25,10 +24,11 @@ export default function One() {
                             zu welchem Thema soll der VE statfinden?
                         </div>
                         <div className={"text-center mb-20"}>optional</div>
-                        <div className="mx-7 mt-7 flex justify-center">
+                        <div className="m-7 flex justify-center">
                             <input
                                 type="text"
-                                /*onChange={handleChange}*/
+                                value={topic}
+                                onChange={e => setTopic(e.target.value)}
                                 placeholder="Thema eingeben"
                                 className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
                             />
@@ -50,6 +50,7 @@ export default function One() {
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    onClick={handleSubmit}
                                 >
                                     Weiter
                                 </button>

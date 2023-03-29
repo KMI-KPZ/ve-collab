@@ -1,23 +1,73 @@
+import WhiteBox from "@/components/Layout/WhiteBox";
 import HeadProgressBarSection from "@/components/StartingWizard/HeadProgressBarSection";
 import SideProgressBarSection from "@/components/StartingWizard/SideProgressBarSection";
 import Link from "next/link";
-import { FormEvent } from "react";
-import { RxPlus } from "react-icons/rx";
+import { FormEvent, useState } from "react";
+import { RxMinus, RxPlus } from "react-icons/rx";
 
-export default function One() {
+
+interface Institution {
+    name: string,
+    school_type: string,
+    country: string,
+    department: string,
+    academic_courses: string,
+
+}
+
+export default function Institutions() {
+
+    const [institutions, setInstitutions] = useState<Institution[]>([{ name: "", school_type: "", country: "", department: "", academic_courses: "" }, { name: "", school_type: "", country: "", department: "", academic_courses: "" }])
 
     const handleSubmit = (e: FormEvent) => {
-        e.preventDefault();
+        console.log(institutions)
     }
+
+    const modifyName = (index: number, value: string) => {
+        let newInstitutions = [...institutions]
+        newInstitutions[index].name = value
+        setInstitutions(newInstitutions)
+    }
+    const modifySchoolType = (index: number, value: string) => {
+        let newInstitutions = [...institutions]
+        newInstitutions[index].school_type = value
+        setInstitutions(newInstitutions)
+    }
+    const modifyCountry = (index: number, value: string) => {
+        let newInstitutions = [...institutions]
+        newInstitutions[index].country = value
+        setInstitutions(newInstitutions)
+    }
+    const modifyDepartment = (index: number, value: string) => {
+        let newInstitutions = [...institutions]
+        newInstitutions[index].department = value
+        setInstitutions(newInstitutions)
+    }
+    const modifyAcademicCourses = (index: number, value: string) => {
+        let newInstitutions = [...institutions]
+        newInstitutions[index].academic_courses = value
+        setInstitutions(newInstitutions)
+    }
+
+    const addInstitutionBox = (e: FormEvent) => {
+        e.preventDefault()
+        setInstitutions([...institutions, { name: "", school_type: "", country: "", department: "", academic_courses: "" }])
+    }
+
+    const removeInstitutionBox = (e: FormEvent) => {
+        e.preventDefault()
+        let copy = [...institutions] // have to create a deep copy that changes reference, because re-render is triggered by reference, not by values in the array
+        copy.pop()
+        setInstitutions(copy)
+    }
+
+    console.log(institutions)
 
     return (
         <>
             <HeadProgressBarSection />
             <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
                 <form
-                    name="generalInformation"
-                    method="POST"
-                    onSubmit={handleSubmit}
                     className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
                 >
                     <div>
@@ -25,68 +75,102 @@ export default function One() {
                             Beschreibe die teilnehmenden Institutionen
                         </div>
                         <div className={"text-center mb-20"}>optional</div>
-                        <div className="mx-7 mt-7 flex justify-center">
-                            <label htmlFor="name" className="px-10 py-2">
-                                Name
-                            </label>
-                            <input
-                                type="text"
-                                name="name"
-                                /*onChange={handleChange}*/
-                                placeholder="Name eingeben"
-                                className="border border-gray-500 rounded-lg w-1/2 h-12 p-2"
-                            />
+                        <div className={"flex flex-wrap justify-center"}>
+                            {institutions.map((institution, index) => (
+                                <div key={index} className={"mx-2"}>
+                                    <WhiteBox>
+                                        <div className="mt-4 flex">
+                                            <div className="w-1/4 flex items-center">
+                                                <label htmlFor="name" className="px-2 py-2">
+                                                    Name
+                                                </label>
+                                            </div>
+                                            <div className="w-3/4">
+                                                <input
+                                                    type="text"
+                                                    name="name"
+                                                    value={institution.name}
+                                                    onChange={e => modifyName(index, e.target.value)}
+                                                    placeholder="Name eingeben"
+                                                    className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="mt-4 flex">
+                                            <div className="w-1/4 flex items-center">
+                                                <label htmlFor="schoolType" className="px-2 py-2">
+                                                    Schulform
+                                                </label>
+                                            </div>
+                                            <div className="w-3/4">
+                                                <input
+                                                    type="text"
+                                                    name="schoolType"
+                                                    value={institution.school_type}
+                                                    onChange={e => modifySchoolType(index, e.target.value)}
+                                                    placeholder="Schulform eingeben"
+                                                    className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="mt-4 flex">
+                                            <div className="w-1/4 flex items-center">
+                                                <label htmlFor="country" className="px-2 py-2">
+                                                    Land
+                                                </label>
+                                            </div>
+                                            <div className="w-3/4">
+                                                <input
+                                                    type="text"
+                                                    name="country"
+                                                    value={institution.country}
+                                                    onChange={e => modifyCountry(index, e.target.value)}
+                                                    placeholder="Land eingeben"
+                                                    className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="mt-4 flex">
+                                            <div className="w-1/3 flex items-center">
+                                                <label htmlFor="department" className="px-2 py-2">
+                                                    Abteilungsname
+                                                </label>
+                                            </div>
+                                            <div className="w-2/3">
+                                                <input
+                                                    type="text"
+                                                    name="deaprtment"
+                                                    value={institution.department}
+                                                    onChange={e => modifyDepartment(index, e.target.value)}
+                                                    placeholder="Abteilungsname eingeben"
+                                                    className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="mt-4 flex">
+                                            <div className="w-1/3 flex items-center">
+                                                <label htmlFor="academicCourses" className="px-2 py-2">
+                                                    beteiligte Studiengänge
+                                                </label>
+                                            </div>
+                                            <div className="w-2/3">
+                                                <input
+                                                    type="text"
+                                                    name="academicCourses"
+                                                    value={institution.academic_courses}
+                                                    onChange={e => modifyAcademicCourses(index, e.target.value)}
+                                                    placeholder="mehrere durch Komma trennen"
+                                                    className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                                />
+                                            </div>
+                                        </div>
+                                    </WhiteBox>
+                                </div>
+                            ))}
                         </div>
-                        <div className="mx-7 mt-7 flex justify-center">
-                            <label htmlFor="name" className="px-10 py-2">
-                                Schulform
-                            </label>
-                            <input
-                                type="text"
-                                name="name"
-                                /*onChange={handleChange}*/
-                                placeholder="Name eingeben"
-                                className="border border-gray-500 rounded-lg w-1/2 h-12 p-2"
-                            />
-                        </div>
-                        <div className="mx-7 mt-7 flex justify-center">
-                            <label htmlFor="name" className="px-10 py-2">
-                                Land
-                            </label>
-                            <input
-                                type="text"
-                                name="name"
-                                /*onChange={handleChange}*/
-                                placeholder="Name eingeben"
-                                className="border border-gray-500 rounded-lg w-1/2 h-12 p-2"
-                            />
-                        </div>
-                        <div className="mx-7 mt-7 flex justify-center">
-                            <label htmlFor="name" className="px-10 py-2">
-                                Abteilungsname
-                            </label>
-                            <input
-                                type="text"
-                                name="name"
-                                /*onChange={handleChange}*/
-                                placeholder="Name eingeben"
-                                className="border border-gray-500 rounded-lg w-1/2 h-12 p-2"
-                            />
-                        </div>
-                        <div className="mx-7 mt-7 flex justify-center">
-                            <label htmlFor="name" className="px-10 py-2">
-                                beteiligte Studiengänge
-                            </label>
-                            <input
-                                type="text"
-                                name="name"
-                                /*onChange={handleChange}*/
-                                placeholder="Name eingeben"
-                                className="border border-gray-500 rounded-lg w-1/2 h-12 p-2"
-                            />
-                        </div>
-                        <div className={"w-3/4 mx-7 mt-4 flex justify-end"}>
-                            <button><RxPlus size={50}/></button> {/* todo state + useeffect to create more input fields*/}
+                        <div className={"mx-2 flex justify-end"}>
+                            <button onClick={removeInstitutionBox}><RxMinus size={20} /></button> {/* todo state + useeffect to create more input fields*/}
+                            <button onClick={addInstitutionBox}><RxPlus size={20} /></button> {/* todo state + useeffect to create more input fields*/}
                         </div>
                     </div>
                     <div className="flex justify-around w-full">
@@ -105,6 +189,7 @@ export default function One() {
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    onClick={handleSubmit}
                                 >
                                     Weiter
                                 </button>
