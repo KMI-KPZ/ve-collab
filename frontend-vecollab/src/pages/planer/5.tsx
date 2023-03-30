@@ -2,9 +2,8 @@ import HeadProgressBarSection from "@/components/StartingWizard/HeadProgressBarS
 import SideProgressBarSection from "@/components/StartingWizard/SideProgressBarSection";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
-import { RxPlus } from "react-icons/rx";
 
-export default function One() {
+export default function Topic() {
 
     const [topic, setTopic] = useState("")
 

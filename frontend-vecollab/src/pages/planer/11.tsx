@@ -1,23 +1,23 @@
 import HeadProgressBarSection from "@/components/StartingWizard/HeadProgressBarSection";
 import SideProgressBarSection from "@/components/StartingWizard/SideProgressBarSection";
 import Link from "next/link";
-import { FormEvent } from "react";
-import { RxPlus } from "react-icons/rx";
+import { FormEvent, useState } from "react";
 
-export default function One() {
+export default function Realization() {
+
+    const [realization, setRealization] = useState("")
 
     const handleSubmit = (e: FormEvent) => {
-        e.preventDefault();
+        console.log(realization)
     }
+
+    console.log(realization)
 
     return (
         <>
             <HeadProgressBarSection />
             <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
                 <form
-                    name="generalInformation"
-                    method="POST"
-                    onSubmit={handleSubmit}
                     className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
                 >
                     <div>
@@ -26,12 +26,13 @@ export default function One() {
                         </div>
                         <div className={"text-center mb-20"}>optional</div>
                         <div className="mx-7 mt-7 flex justify-center">
-                            <select
-                                
-                                /*onChange={handleChange}*/
+                            <select 
+                                value={realization}
+                                onChange={e => setRealization(e.target.value)}
                                 placeholder="Name eingeben"
                                 className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
                             >
+                                <option value="">keine Auswahl</option>
                                 <option value="asynchron">asynchron</option>
                                 <option value="synchron">synchron</option>
                                 <option value="gemischt">gemischt</option>
@@ -54,6 +55,7 @@ export default function One() {
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    onClick={handleSubmit}
                                 >
                                     Weiter
                                 </button>

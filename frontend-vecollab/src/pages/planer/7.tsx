@@ -1,23 +1,42 @@
 import HeadProgressBarSection from "@/components/StartingWizard/HeadProgressBarSection";
 import SideProgressBarSection from "@/components/StartingWizard/SideProgressBarSection";
 import Link from "next/link";
-import { FormEvent } from "react";
-import { RxPlus } from "react-icons/rx";
+import { FormEvent, useState } from "react";
+import { RxMinus, RxPlus } from "react-icons/rx";
 
-export default function One() {
+export default function Languages() {
+
+    const [languages, setLanguages] = useState(["", ""])
+
+    const modifyLanguage = (index: number, value: string) => {
+        let newLanguages = [...languages]
+        newLanguages[index] = value
+        setLanguages(newLanguages)
+    }
+
+    const addInputField = (e: FormEvent) => {
+        e.preventDefault()
+        setLanguages([...languages, ""])
+    }
+
+    const removeInputField = (e: FormEvent) => {
+        e.preventDefault()
+        let copy = [...languages] // have to create a deep copy that changes reference, because re-render is triggered by reference, not by values in the array
+        copy.pop()
+        setLanguages(copy)
+    }
 
     const handleSubmit = (e: FormEvent) => {
-        e.preventDefault();
+        console.log(languages)
     }
+
+    console.log(languages)
 
     return (
         <>
             <HeadProgressBarSection />
             <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
                 <form
-                    name="generalInformation"
-                    method="POST"
-                    onSubmit={handleSubmit}
                     className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
                 >
                     <div>
@@ -25,16 +44,20 @@ export default function One() {
                             In welchen Sprachen findet der VE statt?
                         </div>
                         <div className={"text-center mb-20"}>optional</div>
-                        <div className="mx-7 mt-7 flex justify-center">
-                            <input
-                                type="text"
-                                /*onChange={handleChange}*/
-                                placeholder="Name eingeben"
-                                className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
-                            />
-                        </div>
-                        <div className={"w-3/4 mx-7 mt-1 flex justify-end"}>
-                            <button><RxPlus /></button> {/* todo state + useeffect to create more input fields*/}
+                        {languages.map((language, index) => (
+                            <div key={index} className="mx-7 mt-7 flex justify-center">
+                                <input
+                                    type="text"
+                                    value={language}
+                                    onChange={e => modifyLanguage(index, e.target.value)}
+                                    placeholder="Sprache eingeben"
+                                    className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
+                                />
+                            </div>
+                        ))}
+                        <div className={"w-3/4 mx-7 mt-3 flex justify-end"}>
+                            <button onClick={removeInputField}><RxMinus size={20} /></button>
+                            <button onClick={addInputField}><RxPlus size={20} /></button>
                         </div>
                     </div>
                     <div className="flex justify-around w-full">
@@ -53,6 +76,7 @@ export default function One() {
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    onClick={handleSubmit}
                                 >
                                     Weiter
                                 </button>
