@@ -1,8 +1,11 @@
 import HeadProgressBarSection from "@/components/StartingWizard/HeadProgressBarSection";
 import SideProgressBarSection from "@/components/StartingWizard/SideProgressBarSection";
+import { fetchGET, fetchPOST } from "@/lib/backend";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useContext, useEffect, useState } from "react";
 import { RxMinus, RxPlus } from "react-icons/rx";
+import { PlanIdContext } from "../_app";
 
 interface Goal {
     target_group: string,
@@ -15,27 +18,81 @@ export default function Goals() {
 
     const [allSameGoal, setAllSameGoal] = useState(false)
 
-    const modifytargetGroup = (index: number, value: string) => {
-        let newGoals = [...goals]
-        newGoals[index].target_group = value
-        setGoals(newGoals)
+    const { planId, setPlanId } = useContext(PlanIdContext)
+    const { data: session } = useSession()
+
+    //console.log(planId)
+
+    const goalsAlreadyHaveTargetGroup = (goals: Goal[], tgName: string) => {
+        for (const obj of goals){
+            if(obj.target_group === tgName){
+                return true
+            }
+        }
+        return false
     }
+
+    useEffect(() => {
+        fetchGET(`/planner/get?_id=${planId}`, session?.accessToken)
+            .then((data) => {
+                console.log(data)
+
+                if (data.plan) {
+                    if (Object.keys(data.plan.goals).length > 0) {
+                        let list: Goal[] = []
+                        for (const [key, value] of Object.entries(data.plan.goals)) {
+                            let value_copy = String(value)
+                            list.push({ target_group: key, goal: value_copy })
+                        }
+                        data.plan.audience.forEach((tg: any) => {
+                            if(!goalsAlreadyHaveTargetGroup(list, tg.name)){
+                                list.push({ target_group: tg.name, goal: "" })
+                            }
+                        });
+                        setGoals(list)
+                    }
+                    else if (data.plan.audience.length > 0) {
+                        console.log("lol")
+                        let list: Goal[] = []
+                        data.plan.audience.forEach((tg: any) => {
+                            list.push({ target_group: tg.name, goal: "" })
+                        });
+                        setGoals(list)
+                    }
+                    else {
+                        setGoals([{ target_group: "", goal: "" }])
+                    }
+                }
+                else {
+                    setGoals([{ target_group: "", goal: "" }])
+                }
+            })
+    }, [planId, session?.accessToken])
+
+    const handleSubmit = async (e: FormEvent) => {
+        let payload: Record<string, string> = {}
+        goals.forEach(goal => {
+            payload[goal.target_group] = goal.goal
+        });
+        const response = await fetchPOST("/planner/update_field", { plan_id: planId, field_name: "goals", value: payload }, session?.accessToken)
+        console.log(response)
+        console.log(goals)
+    }
+
     const modifyGoal = (index: number, value: string) => {
         let newGoals = [...goals]
-        newGoals[index].goal = value
+        if (allSameGoal) {
+            newGoals.forEach(element => {
+                element.goal = value
+            });
+        }
+        else {
+            newGoals[index].goal = value
+        }
         setGoals(newGoals)
     }
     const modifyAllSameGoal = (sameGoal: boolean) => {
-        // if it gets set to true, set state to only contain one entry 
-        // other posibility is, dont modify goals state here, but change onChange of this case to modify all goals of all target groups
-        if (sameGoal === true) {
-            setGoals([{target_group: "all", goal: ""}])
-        }
-        else {
-            setGoals([{ target_group: "", goal: "" }, { target_group: "", goal: "" }])
-        }
         setAllSameGoal(sameGoal)
-
     }
 
     const addInputField = (e: FormEvent) => {
@@ -48,11 +105,6 @@ export default function Goals() {
         let copy = [...goals] // have to create a deep copy that changes reference, because re-render is triggered by reference, not by values in the array
         copy.pop()
         setGoals(copy)
-    }
-
-    const handleSubmit = (e: FormEvent) => {
-        console.log(goals)
-        console.log(allSameGoal)
     }
 
     console.log(goals)
@@ -102,13 +154,9 @@ export default function Goals() {
                                 {goals.map((goalEntry, index) => (
                                     <div key={index} className="mt-4 flex justify-center">
                                         <div className="w-3/4">
-                                            <input
-                                                type="text"
-                                                value={goalEntry.target_group}
-                                                onChange={e => modifytargetGroup(index, e.target.value)}
-                                                placeholder="Name der Zielgruppe eingeben (gleicher Name wie bei Beschreibung)"
-                                                className="border border-gray-500 rounded-lg w-full h-12 p-2 mb-2"
-                                            />
+                                            <div className="px-2 py-2">
+                                                für Zielgruppe: {goalEntry.target_group}
+                                            </div>
                                             <textarea
                                                 rows={5}
                                                 value={goalEntry.goal}
@@ -120,7 +168,7 @@ export default function Goals() {
                                     </div>
                                 ))}
                                 <div className={"mx-2 flex justify-end mr-36 mt-4"}>
-                                    <button onClick={removeInputField}><RxMinus size={20} /></button> 
+                                    <button onClick={removeInputField}><RxMinus size={20} /></button>
                                     <button onClick={addInputField}><RxPlus size={20} /></button>
                                 </div>
                             </>

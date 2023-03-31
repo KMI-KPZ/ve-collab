@@ -29,7 +29,13 @@ import util
 
 
 class VEPlanHandler(BaseHandler):
-    @auth_needed
+
+    def options(self, slug):
+        # no body
+        self.set_status(200)
+        self.finish()
+
+    #@auth_needed
     def get(self, slug):
         """
         GET /planner/get
@@ -106,7 +112,7 @@ class VEPlanHandler(BaseHandler):
             else:
                 self.set_status(404)
 
-    @auth_needed
+    #@auth_needed
     def post(self, slug):
         """
         POST /planner/insert
@@ -511,6 +517,15 @@ class VEPlanHandler(BaseHandler):
 
                 self.insert_plan(db, plan)
                 return
+            
+            if slug == "insert_empty":
+                if "name" in http_body:
+                    optional_name = http_body["name"]
+                else:
+                    optional_name = None
+                plan = VEPlan(name=optional_name)
+                self.insert_plan(db, plan)
+                return
 
             elif slug == "update_full":
                 plan = self.load_plan_from_http_body_or_write_error(http_body)
@@ -561,7 +576,7 @@ class VEPlanHandler(BaseHandler):
             else:
                 self.set_status(404)
 
-    @auth_needed
+    #@auth_needed
     def delete(self, slug):
         """
         DELETE /planner/delete

@@ -1,9 +1,12 @@
 import WhiteBox from "@/components/Layout/WhiteBox";
 import HeadProgressBarSection from "@/components/StartingWizard/HeadProgressBarSection";
 import SideProgressBarSection from "@/components/StartingWizard/SideProgressBarSection";
+import { fetchGET, fetchPOST } from "@/lib/backend";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useContext, useEffect, useState } from "react";
 import { RxMinus, RxPlus } from "react-icons/rx";
+import { PlanIdContext } from "../_app";
 
 
 interface Institution {
@@ -16,10 +19,55 @@ interface Institution {
 }
 
 export default function Institutions() {
+    const [institutions, setInstitutions] = useState<Institution[]>([])
+    const { planId, setPlanId } = useContext(PlanIdContext)
+    const { data: session } = useSession()
 
-    const [institutions, setInstitutions] = useState<Institution[]>([{ name: "", school_type: "", country: "", department: "", academic_courses: "" }, { name: "", school_type: "", country: "", department: "", academic_courses: "" }])
+    //console.log(planId)
 
-    const handleSubmit = (e: FormEvent) => {
+    useEffect(() => {
+        fetchGET(`/planner/get?_id=${planId}`, session?.accessToken)
+            .then((data) => {
+                console.log(data)
+
+                if (data.plan) {
+                    if (data.plan.institutions.length > 0) {
+
+                        let list = data.plan.institutions.map((institution: any) => ({ name: institution.name, school_type: institution.school_type, country: institution.country, department: institution.departments[0].name, academic_courses: institution.departments[0].academic_courses[0].name }))
+                        setInstitutions(list)
+                    }
+                    else {
+                        setInstitutions([{ name: "", school_type: "", country: "", department: "", academic_courses: "" }])
+                    }
+                }
+                else {
+                    setInstitutions([{ name: "", school_type: "", country: "", department: "", academic_courses: "" }])
+                }
+            })
+    }, [planId, session?.accessToken])
+
+    const handleSubmit = async (e: FormEvent) => {
+        let institutionsList: any[] = []
+        institutions.forEach(institution => {
+            let payload = {
+                name: institution.name,
+                school_type: institution.school_type,
+                country: institution.country,
+                departments: [
+                    {
+                        name: institution.department,
+                        academic_courses: [
+                            {
+                                name: institution.academic_courses,
+                            }
+                        ],
+                    }
+                ],
+            }
+            institutionsList.push(payload)
+        });
+        const response = await fetchPOST("/planner/update_field", { plan_id: planId, field_name: "institutions", value: institutionsList }, session?.accessToken)
+        console.log(response)
         console.log(institutions)
     }
 

@@ -1,14 +1,24 @@
 import HeadProgressBarSection from "@/components/StartingWizard/HeadProgressBarSection";
 import SideProgressBarSection from "@/components/StartingWizard/SideProgressBarSection";
+import { fetchPOST } from "@/lib/backend";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useContext, useState } from "react";
+import { PlanIdContext } from "../_app";
 
 export default function Name() {
 
+    const {data: session} = useSession()
+
     const [name, setName] = useState("")
 
-    const handleSubmit = (e: FormEvent) => {
+    const {planId, setPlanId} = useContext(PlanIdContext)
+
+    async function handleSubmit(e: FormEvent) {
+        const response = await fetchPOST("/planner/insert_empty", {"name": name}, session?.accessToken)
         console.log(name)
+        setPlanId(response.inserted_id)
+        console.log(response.inserted_id)
     }
 
     return (

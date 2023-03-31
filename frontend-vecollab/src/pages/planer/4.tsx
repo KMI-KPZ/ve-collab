@@ -1,9 +1,12 @@
 import WhiteBox from "@/components/Layout/WhiteBox";
 import HeadProgressBarSection from "@/components/StartingWizard/HeadProgressBarSection";
 import SideProgressBarSection from "@/components/StartingWizard/SideProgressBarSection";
+import { fetchGET, fetchPOST } from "@/lib/backend";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useContext, useEffect, useState } from "react";
 import { RxMinus, RxPlus } from "react-icons/rx";
+import { PlanIdContext } from "../_app";
 
 interface Lecture {
     name: string,
@@ -16,7 +19,34 @@ export default function Lectures() {
 
     const [lectures, setLectures] = useState<Lecture[]>([{ name: "", lecture_type: "", lecture_format: "", participants_amount: undefined }, { name: "", lecture_type: "", lecture_format: "", participants_amount: undefined }])
 
-    const handleSubmit = (e: FormEvent) => {
+    const { planId, setPlanId } = useContext(PlanIdContext)
+    const { data: session } = useSession()
+
+    //console.log(planId)
+
+    useEffect(() => {
+        fetchGET(`/planner/get?_id=${planId}`, session?.accessToken)
+            .then((data) => {
+                console.log(data)
+
+                if (data.plan) {
+                    if(data.plan.lectures.length > 0){
+                        setLectures(data.plan.lectures)
+                    }
+                    else {
+                        setLectures([{ name: "", lecture_type: "", lecture_format: "", participants_amount: undefined }])
+                    }
+                }
+                else {
+                    setLectures([{ name: "", lecture_type: "", lecture_format: "", participants_amount: undefined }])
+                }
+            })
+    }, [planId, session?.accessToken])
+
+
+    const handleSubmit = async (e: FormEvent) => {
+        const response = await fetchPOST("/planner/update_field", { plan_id: planId, field_name: "lectures", value: lectures }, session?.accessToken)
+        console.log(response)
         console.log(lectures)
     }
 

@@ -1,13 +1,50 @@
 import HeadProgressBarSection from "@/components/StartingWizard/HeadProgressBarSection";
 import SideProgressBarSection from "@/components/StartingWizard/SideProgressBarSection";
+import { fetchGET, fetchPOST } from "@/lib/backend";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useContext, useEffect, useState } from "react";
+import { PlanIdContext } from "../_app";
 
 export default function NewContent() {
 
-    const [newContent, setNewContent] = useState("true")
+    const [newContent, setNewContent] = useState("")
 
-    const handleSubmit = (e: FormEvent) => {
+    const { planId, setPlanId } = useContext(PlanIdContext)
+    const { data: session } = useSession()
+
+    //console.log(planId)
+
+    useEffect(() => {
+        fetchGET(`/planner/get?_id=${planId}`, session?.accessToken)
+            .then((data) => {
+                console.log(data)
+                if (data.plan.new_content != null) {
+                    let strVal = ""
+                    if(data.plan.new_content === true){
+                        strVal = "true"
+                    }
+                    else if(data.plan.new_content === false){
+                        strVal = "false"
+                    }
+                    setNewContent(strVal)
+                }
+                else {
+                    setNewContent("")
+                }
+            })
+    }, [planId, session?.accessToken])
+
+    const handleSubmit = async (e: FormEvent) => {
+        let boolVal = null
+        if (newContent === "true"){
+            boolVal = true
+        }
+        else if (newContent === "false"){
+            boolVal = false
+        }
+        const response = await fetchPOST("/planner/update_field", { plan_id: planId, field_name: "new_content", value: boolVal }, session?.accessToken)
+        console.log(response)
         console.log(newContent)
     }
 
@@ -77,7 +114,7 @@ export default function NewContent() {
                             </Link>
                         </div>
                         <div>
-                            <Link href={"/planer/15"}>
+                            <Link href={"/planer/13"}> {/* for now just go on page back even on success to not lose the planId context*/}
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"

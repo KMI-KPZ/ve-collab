@@ -1,13 +1,36 @@
 import HeadProgressBarSection from "@/components/StartingWizard/HeadProgressBarSection";
 import SideProgressBarSection from "@/components/StartingWizard/SideProgressBarSection";
+import { fetchGET, fetchPOST } from "@/lib/backend";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useContext, useEffect, useState } from "react";
+import { PlanIdContext } from "../_app";
 
 export default function Realization() {
 
     const [realization, setRealization] = useState("")
 
-    const handleSubmit = (e: FormEvent) => {
+    const { planId, setPlanId } = useContext(PlanIdContext)
+    const { data: session } = useSession()
+
+    //console.log(planId)
+
+    useEffect(() => {
+        fetchGET(`/planner/get?_id=${planId}`, session?.accessToken)
+            .then((data) => {
+                console.log(data)
+                if (data.plan.realization) {
+                    setRealization(data.plan.realization)
+                }
+                else {
+                    setRealization("")
+                }
+            })
+    }, [planId, session?.accessToken])
+
+    const handleSubmit = async (e: FormEvent) => {
+        const response = await fetchPOST("/planner/update_field", { plan_id: planId, field_name: "realization", value: realization }, session?.accessToken)
+        console.log(response)
         console.log(realization)
     }
 

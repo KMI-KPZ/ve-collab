@@ -1,5 +1,5 @@
-import NextAuth, { Account } from "next-auth"
-import {JWT} from "next-auth/jwt"
+import NextAuth, { Account, DefaultSession, Session, User } from "next-auth"
+import { JWT } from "next-auth/jwt"
 import KeycloakProvider, { KeycloakProfile } from "next-auth/providers/keycloak"
 import { type OAuthConfig } from "next-auth/providers";
 
@@ -19,9 +19,30 @@ interface TokenInfo extends JWT {
     accessToken?: string;
 }
 
+interface SessionInfo extends Session {
+    accessToken?: string
+}
+
 interface JWTProps {
     token: TokenInfo,
     account?: Account | null | undefined,
+}
+
+interface SessionProps {
+    session: SessionInfo,
+    token: TokenInfo,
+    user: User
+}
+
+
+declare module "next-auth" {
+    /**
+     * Returned by `useSession`, `getSession` and received as a prop on the `SessionProvider` React Context
+     */
+    interface Session {
+        accessToken?: string
+        & DefaultSession["user"]
+    }
 }
 
 export const authOptions = {
@@ -44,11 +65,11 @@ export const authOptions = {
         },
         // only needed if we want to have the token available in useSession() client-side, right now token is accessed via getToken() on server side and given to component if needed client-side
         // it is more secure to not give tokens to clients, rather proxy backend api calls   
-        // async session({ session, token, user }) {
-        //     // Send properties to the client, like an access_token from a provider.
-        //     session.accessToken = token.accessToken
-        //     return session
-        // }
+        async session({ session, token, user }: SessionProps): Promise<SessionInfo> {
+            // Send properties to the client, like an access_token from a provider.
+            session.accessToken = token.accessToken
+            return session
+        }
     },
     events: {
         // perform Single Logout on Keycloak IdP when user triggers a logout on our site, i.e. logout on every site that the user uses this account on

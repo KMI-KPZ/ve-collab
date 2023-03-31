@@ -1,12 +1,45 @@
 import HeadProgressBarSection from "@/components/StartingWizard/HeadProgressBarSection";
 import SideProgressBarSection from "@/components/StartingWizard/SideProgressBarSection";
+import { fetchGET, fetchPOST } from "@/lib/backend";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useContext, useEffect, useState } from "react";
 import { RxMinus, RxPlus } from "react-icons/rx";
+import { PlanIdContext } from "../_app";
 
 export default function Languages() {
 
-    const [languages, setLanguages] = useState(["", ""])
+    const [languages, setLanguages] = useState([""])
+
+    const { planId, setPlanId } = useContext(PlanIdContext)
+    const { data: session } = useSession()
+
+    //console.log(planId)
+
+    useEffect(() => {
+        fetchGET(`/planner/get?_id=${planId}`, session?.accessToken)
+            .then((data) => {
+                console.log(data)
+
+                if (data.plan) {
+                    if (data.plan.languages.length > 0) {
+                        setLanguages(data.plan.languages)
+                    }
+                    else {
+                        setLanguages([""])
+                    }
+                }
+                else {
+                    setLanguages([""])
+                }
+            })
+    }, [planId, session?.accessToken])
+
+    const handleSubmit = async (e: FormEvent) => {
+        const response = await fetchPOST("/planner/update_field", { plan_id: planId, field_name: "languages", value: languages }, session?.accessToken)
+        console.log(response)
+        console.log(languages)
+    }
 
     const modifyLanguage = (index: number, value: string) => {
         let newLanguages = [...languages]
@@ -24,10 +57,6 @@ export default function Languages() {
         let copy = [...languages] // have to create a deep copy that changes reference, because re-render is triggered by reference, not by values in the array
         copy.pop()
         setLanguages(copy)
-    }
-
-    const handleSubmit = (e: FormEvent) => {
-        console.log(languages)
     }
 
     console.log(languages)

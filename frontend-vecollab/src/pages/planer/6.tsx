@@ -1,9 +1,12 @@
 import WhiteBox from "@/components/Layout/WhiteBox";
 import HeadProgressBarSection from "@/components/StartingWizard/HeadProgressBarSection";
 import SideProgressBarSection from "@/components/StartingWizard/SideProgressBarSection";
+import { fetchGET, fetchPOST } from "@/lib/backend";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useContext, useEffect, useState } from "react";
 import { RxMinus, RxPlus } from "react-icons/rx";
+import { PlanIdContext } from "../_app";
 
 interface TargetGroup {
     name: string,
@@ -19,9 +22,43 @@ export default function TargetGroups() {
 
     const [targetGroups, setTargetGroups] = useState<TargetGroup[]>([{ name: "", age_min: undefined, age_max: undefined, experience: "", academic_course: "", mother_tongue: "", foreign_languages: "" }, { name: "", age_min: undefined, age_max: undefined, experience: "", academic_course: "", mother_tongue: "", foreign_languages: "" }])
 
-    const handleSubmit = (e: FormEvent) => {
+    const { planId, setPlanId } = useContext(PlanIdContext)
+    const { data: session } = useSession()
+
+    //console.log(planId)
+
+    useEffect(() => {
+        fetchGET(`/planner/get?_id=${planId}`, session?.accessToken)
+            .then((data) => {
+                console.log(data)
+
+                if (data.plan) {
+                    if (data.plan.audience.length > 0) {
+                        let list = data.plan.audience.map((targetGroup: any) => ({ name: targetGroup.name, age_min: targetGroup.age_min, age_max: targetGroup.age_max, experience: targetGroup.experience, academic_course: targetGroup.academic_course, mother_tongue: targetGroup.mother_tongue, foreign_languages: targetGroup.foreign_languages.language }))
+                        setTargetGroups(list)
+                    }
+                    else {
+                        setTargetGroups([{ name: "", age_min: undefined, age_max: undefined, experience: "", academic_course: "", mother_tongue: "", foreign_languages: "" }])
+                    }
+                }
+                else {
+                    setTargetGroups([{ name: "", age_min: undefined, age_max: undefined, experience: "", academic_course: "", mother_tongue: "", foreign_languages: "" }])
+                }
+            })
+    }, [planId, session?.accessToken])
+
+
+    const handleSubmit = async (e: FormEvent) => {
+        let tgList: any[] = []
+        targetGroups.forEach(tg => {
+            let payload = { name: tg.name, age_min: tg.age_min, age_max: tg.age_max, experience: tg.experience, academic_course: tg.academic_course, mother_tongue: tg.mother_tongue, foreign_languages: { language: tg.foreign_languages } }
+            tgList.push(payload)
+        });
+        const response = await fetchPOST("/planner/update_field", { plan_id: planId, field_name: "audience", value: tgList }, session?.accessToken)
+        console.log(response)
         console.log(targetGroups)
     }
+
 
     const modifyName = (index: number, value: string) => {
         let newTargetGroups = [...targetGroups]

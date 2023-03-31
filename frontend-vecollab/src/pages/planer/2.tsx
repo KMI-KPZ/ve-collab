@@ -1,12 +1,37 @@
 import HeadProgressBarSection from "@/components/StartingWizard/HeadProgressBarSection";
 import SideProgressBarSection from "@/components/StartingWizard/SideProgressBarSection";
+import { fetchGET, fetchPOST } from "@/lib/backend";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useContext, useEffect, useState } from "react";
 import { RxMinus, RxPlus } from "react-icons/rx";
+import { PlanIdContext } from "../_app";
 
 export default function Partners() {
 
-    const [partners, setPartners] = useState(["test", ""])
+    const { planId, setPlanId } = useContext(PlanIdContext)
+    const { data: session } = useSession()
+
+    const [partners, setPartners] = useState([""])
+    //console.log(planId)
+
+    useEffect(() => {
+        fetchGET(`/planner/get?_id=${planId}`, session?.accessToken)
+            .then((data) => {
+                console.log(data)
+                if (data.plan) {
+                    if (data.plan.involved_parties.length > 0) {
+                        setPartners(data.plan.involved_parties)
+                    }
+                    else {
+                        setPartners([""])
+                    }
+                }
+                else {
+                    setPartners([""])
+                }
+            })
+    }, [planId, session?.accessToken])
 
     const modifyPartner = (index: number, value: string) => {
         console.log(value)
@@ -28,11 +53,13 @@ export default function Partners() {
         setPartners(copy)
     }
 
-    const handleSubmit = (e: FormEvent) => {
+    const handleSubmit = async (e: FormEvent) => {
+        const response = await fetchPOST("/planner/update_field", { plan_id: planId, field_name: "involved_parties", value: partners }, session?.accessToken)
+        console.log(response)
         console.log(partners)
     }
 
-    console.log(partners)
+    //console.log(partners)
 
     return (
         <>
