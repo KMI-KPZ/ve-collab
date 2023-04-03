@@ -19,8 +19,10 @@ export default function LearningEnvironment() {
         fetchGET(`/planner/get?_id=${planId}`, session?.accessToken)
             .then((data) => {
                 console.log(data)
-                if (data.plan.learning_env) {
-                    setEnvironment(data.plan.learning_env)
+                if(data.plan){
+                    if (data.plan.learning_env) {
+                        setEnvironment(data.plan.learning_env)
+                    }
                 }
                 else {
                     setEnvironment("")

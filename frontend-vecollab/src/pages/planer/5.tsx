@@ -20,9 +20,11 @@ export default function Topic() {
             .then((data) => {
                 console.log(data)
 
-                if (data.plan.topic) {
-                    setTopic(data.plan.topic)
+                if (data.plan) {
+                    if (data.plan.topic) {
+                        setTopic(data.plan.topic)
 
+                    }
                 }
                 else {
                     setTopic("")

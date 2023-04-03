@@ -19,8 +19,10 @@ export default function Realization() {
         fetchGET(`/planner/get?_id=${planId}`, session?.accessToken)
             .then((data) => {
                 console.log(data)
-                if (data.plan.realization) {
-                    setRealization(data.plan.realization)
+                if (data.plan) {
+                    if (data.plan.realization) {
+                        setRealization(data.plan.realization)
+                    }
                 }
                 else {
                     setRealization("")
@@ -49,7 +51,7 @@ export default function Realization() {
                         </div>
                         <div className={"text-center mb-20"}>optional</div>
                         <div className="mx-7 mt-7 flex justify-center">
-                            <select 
+                            <select
                                 value={realization}
                                 onChange={e => setRealization(e.target.value)}
                                 placeholder="Name eingeben"

@@ -19,15 +19,17 @@ export default function NewContent() {
         fetchGET(`/planner/get?_id=${planId}`, session?.accessToken)
             .then((data) => {
                 console.log(data)
-                if (data.plan.new_content != null) {
-                    let strVal = ""
-                    if(data.plan.new_content === true){
-                        strVal = "true"
+                if(data.plan){
+                    if (data.plan.new_content != null) {
+                        let strVal = ""
+                        if(data.plan.new_content === true){
+                            strVal = "true"
+                        }
+                        else if(data.plan.new_content === false){
+                            strVal = "false"
+                        }
+                        setNewContent(strVal)
                     }
-                    else if(data.plan.new_content === false){
-                        strVal = "false"
-                    }
-                    setNewContent(strVal)
                 }
                 else {
                     setNewContent("")
