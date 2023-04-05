@@ -116,7 +116,7 @@ export default function NewContent() {
                             </Link>
                         </div>
                         <div>
-                            <Link href={"/planer/13"}> {/* for now just go on page back even on success to not lose the planId context*/}
+                            <Link href={"/planer/15"}> {/* for now just go on page back even on success to not lose the planId context*/}
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"

@@ -243,6 +243,32 @@ class VEPlanResource:
             if update_result.upserted_id is not None
             else plan_id
         )
+    
+    def append_step(self, plan_id: str | ObjectId, step: Step) -> ObjectId:
+        plan_id = util.parse_object_id(plan_id)
+
+        steps_of_plan = self.db.plans.find_one({"_id": plan_id}, projection={"steps": True})
+        if not steps_of_plan:
+            raise PlanDoesntExistError()
+        
+        step_names = []
+        for elem in steps_of_plan["steps"]:
+            if elem:
+                step_names.append(elem["name"])
+
+        if step.name in step_names:
+            raise NonUniqueStepsError()
+
+
+        update_result = self.db.plans.update_one(
+            {"_id": plan_id},
+            {
+                "$push": {"steps": step.to_dict()}
+            }
+        )
+
+        return plan_id
+
 
     def delete_plan(self, _id: str | ObjectId) -> None:
         """
