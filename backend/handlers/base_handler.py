@@ -151,7 +151,6 @@ class BaseHandler(tornado.web.RequestHandler):
             self._access_token = new_token
 
     def set_default_headers(self):
-        print("setting headers!!!")
         self.set_header("Access-Control-Allow-Origin", "*")
         self.set_header("Access-Control-Allow-Headers", "x-requested-with, Authorization")
         self.set_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
