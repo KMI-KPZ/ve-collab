@@ -7,6 +7,7 @@ import Link from "next/link";
 import { FormEvent, useContext, useEffect, useState } from "react";
 import { RxMinus, RxPlus } from "react-icons/rx";
 import { PlanIdContext } from "../_app";
+import { useRouter } from "next/router";
 
 interface Task {
     title: string,
@@ -16,8 +17,9 @@ interface Task {
 }
 
 interface Step {
-    from: string,
-    to: string,
+    _id?: string
+    timestamp_from: string,
+    timestamp_to: string,
     name: string,
     workload: number,
     social_form: string,
@@ -29,35 +31,40 @@ interface Step {
 
 export default function BroadStages() {
 
-    const [steps, setSteps] = useState<Step[]>([{ from: "", to: "", name: "", workload: 0, social_form: "", learning_env: "", ve_approach: "", evaluation_tools: ["", ""], tasks: [{ title: "", description: "", learning_goal: "", tools: ["", ""] }] }])
+    const [steps, setSteps] = useState<Step[]>([{ timestamp_from: "", timestamp_to: "", name: "", workload: 0, social_form: "", learning_env: "", ve_approach: "", evaluation_tools: ["", ""], tasks: [{ title: "", description: "", learning_goal: "", tools: ["", ""] }] }])
 
     const { planId, setPlanId } = useContext(PlanIdContext)
     const { data: session } = useSession()
 
     //console.log(planId)
 
+    const router = useRouter()
     useEffect(() => {
+        if (!planId) {
+            router.push("/planer/overview")
+        }
         fetchGET(`/planner/get?_id=${planId}`, session?.accessToken)
             .then((data) => {
                 console.log(data)
 
                 if (data.plan) {
                     if (data.plan.steps.length > 0) {
-                        let list = data.plan.steps.map((step: any) => ({ ...step, from: step.timestamp_from.split("T")[0], to: step.timestamp_to.split("T")[0], tasks: step.tasks.length === 0 ? [{ title: "", description: "", learning_goal: "", tools: ["", ""] }] : step.tasks }))
+                        let list = data.plan.steps.map((step: any) => ({ ...step, timestamp_from: step.timestamp_from.split("T")[0], timestamp_to: step.timestamp_to.split("T")[0], tasks: step.tasks.length === 0 ? [{ title: "", description: "", learning_goal: "", tools: ["", ""] }] : step.tasks }))
                         setSteps(list)
                     }
                     else {
-                        setSteps([{ from: "", to: "", name: "", workload: 0, social_form: "", learning_env: "", ve_approach: "", evaluation_tools: ["", ""], tasks: [{ title: "", description: "", learning_goal: "", tools: ["", ""] }] }])
+                        setSteps([{ timestamp_from: "", timestamp_to: "", name: "", workload: 0, social_form: "", learning_env: "", ve_approach: "", evaluation_tools: ["", ""], tasks: [{ title: "", description: "", learning_goal: "", tools: ["", ""] }] }])
                     }
                 }
                 else {
-                    setSteps([{ from: "", to: "", name: "", workload: 0, social_form: "", learning_env: "", ve_approach: "", evaluation_tools: ["", ""], tasks: [{ title: "", description: "", learning_goal: "", tools: ["", ""] }] }])
+                    setSteps([{ timestamp_from: "", timestamp_to: "", name: "", workload: 0, social_form: "", learning_env: "", ve_approach: "", evaluation_tools: ["", ""], tasks: [{ title: "", description: "", learning_goal: "", tools: ["", ""] }] }])
                 }
             })
-    }, [planId, session?.accessToken])
+    }, [planId, session?.accessToken, router])
 
     const handleSubmit = async (e: FormEvent) => {
-
+        const response = await fetchPOST("/planner/update_field", { plan_id: planId, field_name: "steps", value: steps }, session?.accessToken)
+        console.log(response)
         console.log(steps)
     }
 
@@ -90,23 +97,48 @@ export default function BroadStages() {
         setSteps(copy)
     }
 
-    const modifyName = (index: number, value: string) => {
+    const modifyWorkload = (index: number, value: number) => {
         let newSteps = [...steps]
-        newSteps[index].name = value
+        newSteps[index].workload = value
         setSteps(newSteps)
     }
-    const modifyFrom = (index: number, value: string) => {
+    const modifySocialFrom = (index: number, value: string) => {
         let newSteps = [...steps]
-        newSteps[index].from = value
+        newSteps[index].social_form = value
         setSteps(newSteps)
     }
-    const modifyTo = (index: number, value: string) => {
+    const modifyLearningEnv = (index: number, value: string) => {
         let newSteps = [...steps]
-        newSteps[index].to = value
+        newSteps[index].learning_env = value
+        setSteps(newSteps)
+    }
+    const modifyVeApproach = (index: number, value: string) => {
+        let newSteps = [...steps]
+        newSteps[index].ve_approach = value
+        setSteps(newSteps)
+    }
+    const modifyTaskTitle = (stepIndex: number, taskIndex: number, value: string) => {
+        let newSteps = [...steps]
+        newSteps[stepIndex].tasks[taskIndex].title = value
+        setSteps(newSteps)
+    }
+    const modifyTaskDescription = (stepIndex: number, taskIndex: number, value: string) => {
+        let newSteps = [...steps]
+        newSteps[stepIndex].tasks[taskIndex].description = value
+        setSteps(newSteps)
+    }
+    const modifyTaskLearningGoal = (stepIndex: number, taskIndex: number, value: string) => {
+        let newSteps = [...steps]
+        newSteps[stepIndex].tasks[taskIndex].learning_goal = value
+        setSteps(newSteps)
+    }
+    const modifyTaskTool = (stepIndex: number, taskIndex: number, toolIndex: number, value: string) => {
+        let newSteps = [...steps]
+        newSteps[stepIndex].tasks[taskIndex].tools[toolIndex] = value
         setSteps(newSteps)
     }
 
-    console.log(steps)
+    //console.log(steps)
 
     return (
         <>
@@ -127,20 +159,22 @@ export default function BroadStages() {
                                         <div className="mx-2">
                                             Etappe: {step.name}
                                         </div>
-                                        <div>
-                                            {step.from} - {step.to}
+                                        <div className="mx-2">
+                                            {step.timestamp_from} - {step.timestamp_to}
                                         </div>
                                     </div>
                                     <div className="mt-4 flex">
                                         <div className="w-1/6 flex items-center">
                                             <label htmlFor="workload" className="px-2 py-2">
-                                                Workload
+                                                Workload (in Stunden)
                                             </label>
                                         </div>
                                         <div className="w-5/6">
                                             <input
                                                 type="number"
                                                 name="workload"
+                                                value={step.workload}
+                                                onChange={e => modifyWorkload(index, Number(e.target.value))}
                                                 placeholder="in Stunden"
                                                 className="border border-gray-500 rounded-lg w-full h-12 p-2"
                                             />
@@ -156,6 +190,8 @@ export default function BroadStages() {
                                             <input
                                                 type="text"
                                                 name="social_form"
+                                                value={step.social_form}
+                                                onChange={e => modifySocialFrom(index, e.target.value)}
                                                 placeholder="wie arbeiten die Studierenden zusammen, z.B. Partner-/Gruppenarbeit, individuell"
                                                 className="border border-gray-500 rounded-lg w-full h-12 p-2"
                                             />
@@ -171,6 +207,8 @@ export default function BroadStages() {
                                             <textarea
                                                 rows={5}
                                                 name="learning_env"
+                                                value={step.learning_env}
+                                                onChange={e => modifyLearningEnv(index, e.target.value)}
                                                 placeholder="Struktur und Inhalte der ausgewählten Umgebung (LMS, social Media, kooperatives Dokument usw.)"
                                                 className="border border-gray-500 rounded-lg w-full p-2"
                                             />
@@ -186,6 +224,8 @@ export default function BroadStages() {
                                             <input
                                                 type="text"
                                                 name="ve_approach"
+                                                value={step.ve_approach}
+                                                onChange={e => modifyVeApproach(index, e.target.value)}
                                                 placeholder="Welche Ansätze werden verfolgt? (z. B. aufgabenorientierter Ansatz, kulturbezogenes Lernen)"
                                                 className="border border-gray-500 rounded-lg w-full h-12 p-2"
                                             />
@@ -210,6 +250,8 @@ export default function BroadStages() {
                                                             <input
                                                                 type="text"
                                                                 name="title"
+                                                                value={task.title}
+                                                                onChange={e => modifyTaskTitle(index, taskIndex, e.target.value)}
                                                                 placeholder="Aufgabentitel"
                                                                 className="border border-gray-500 rounded-lg w-full h-12 p-2"
                                                             />
@@ -225,6 +267,8 @@ export default function BroadStages() {
                                                             <textarea
                                                                 rows={5}
                                                                 name="description"
+                                                                value={task.description}
+                                                                onChange={e => modifyTaskDescription(index, taskIndex, e.target.value)}
                                                                 placeholder="Beschreibe die Aufgabe detailierter"
                                                                 className="border border-gray-500 rounded-lg w-full p-2"
                                                             />
@@ -240,6 +284,8 @@ export default function BroadStages() {
                                                             <textarea
                                                                 rows={5}
                                                                 name="learning_goal"
+                                                                value={task.learning_goal}
+                                                                onChange={e => modifyTaskLearningGoal(index, taskIndex, e.target.value)}
                                                                 placeholder="Welche Lernziele werden mit der Aufgabe verfolgt?"
                                                                 className="border border-gray-500 rounded-lg w-full p-2"
                                                             />
@@ -258,6 +304,8 @@ export default function BroadStages() {
                                                                         key={toolIndex}
                                                                         type="text"
                                                                         name="tools"
+                                                                        value={tool}
+                                                                        onChange={e => modifyTaskTool(index, taskIndex, toolIndex, e.target.value)}
                                                                         placeholder="Welche Tools können verwendet werden?"
                                                                         className="border border-gray-500 rounded-lg w-full h-12 p-2 my-1"
                                                                     />
@@ -293,7 +341,7 @@ export default function BroadStages() {
                             </Link>
                         </div>
                         <div>
-                            <Link href={"/planer/15"}>
+                            <Link href={"/planer/finish"}>
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"

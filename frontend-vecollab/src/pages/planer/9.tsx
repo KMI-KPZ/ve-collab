@@ -6,6 +6,7 @@ import Link from "next/link";
 import { FormEvent, useContext, useEffect, useState } from "react";
 import { RxMinus, RxPlus } from "react-icons/rx";
 import { PlanIdContext } from "../_app";
+import { useRouter } from "next/router";
 
 interface Goal {
     target_group: string,
@@ -14,7 +15,7 @@ interface Goal {
 
 export default function Goals() {
 
-    const [goals, setGoals] = useState<Goal[]>([{ target_group: "", goal: "" }, { target_group: "", goal: "" }])
+    const [goals, setGoals] = useState<Goal[]>([{ target_group: "", goal: "" }])
 
     const [allSameGoal, setAllSameGoal] = useState(false)
 
@@ -32,7 +33,11 @@ export default function Goals() {
         return false
     }
 
+    const router = useRouter()
     useEffect(() => {
+        if (!planId) {
+            router.push("/planer/overview")
+        }
         fetchGET(`/planner/get?_id=${planId}`, session?.accessToken)
             .then((data) => {
                 console.log(data)
@@ -67,7 +72,7 @@ export default function Goals() {
                     setGoals([{ target_group: "", goal: "" }])
                 }
             })
-    }, [planId, session?.accessToken])
+    }, [planId, session?.accessToken, router])
 
     const handleSubmit = async (e: FormEvent) => {
         let payload: Record<string, string> = {}

@@ -7,6 +7,7 @@ import Link from "next/link";
 import { FormEvent, useContext, useEffect, useState } from "react";
 import { RxMinus, RxPlus } from "react-icons/rx";
 import { PlanIdContext } from "../_app";
+import { useRouter } from "next/router";
 
 interface BroadStep {
     from: string,
@@ -23,7 +24,11 @@ export default function BroadStages() {
 
     //console.log(planId)
 
+    const router = useRouter()
     useEffect(() => {
+        if (!planId) {
+            router.push("/planer/overview")
+        }
         fetchGET(`/planner/get?_id=${planId}`, session?.accessToken)
             .then((data) => {
                 console.log(data)
@@ -41,7 +46,7 @@ export default function BroadStages() {
                     setSteps([{ from: "", to: "", name: "" }])
                 }
             })
-    }, [planId, session?.accessToken])
+    }, [planId, session?.accessToken, router])
 
     const handleSubmit = async (e: FormEvent) => {
         steps.forEach(async step => {

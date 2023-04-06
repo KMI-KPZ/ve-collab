@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { FormEvent, useContext, useEffect, useState } from "react";
 import { PlanIdContext } from "../_app";
+import { useRouter } from "next/router";
 
 export default function NewContent() {
 
@@ -15,7 +16,11 @@ export default function NewContent() {
 
     //console.log(planId)
 
+    const router = useRouter()
     useEffect(() => {
+        if (!planId) {
+            router.push("/planer/overview")
+        }
         fetchGET(`/planner/get?_id=${planId}`, session?.accessToken)
             .then((data) => {
                 console.log(data)
@@ -35,7 +40,7 @@ export default function NewContent() {
                     setNewContent("")
                 }
             })
-    }, [planId, session?.accessToken])
+    }, [planId, session?.accessToken, router])
 
     const handleSubmit = async (e: FormEvent) => {
         let boolVal = null

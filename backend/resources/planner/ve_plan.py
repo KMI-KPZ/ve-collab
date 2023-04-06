@@ -1,3 +1,5 @@
+import copy
+
 from bson import ObjectId
 from bson.errors import InvalidId
 from pymongo.database import Database
@@ -150,7 +152,7 @@ class VEPlanResource:
 
         plan_id = util.parse_object_id(plan_id)
 
-        value_copy = value
+        value_copy = copy.deepcopy(value)
 
         # any of these attributes is of type List[Object], therefore
         # we typecheck by parsing each list element into its object form
@@ -182,18 +184,19 @@ class VEPlanResource:
                     )
 
                 try:
-                    value_copy.append(
-                        key_object_mapper[field_name].from_dict(obj_like_attr).to_dict()
-                    )
-                except Exception:
+                    obj_correct_format = key_object_mapper[field_name].from_dict(obj_like_attr).to_dict()
+                    value_copy.append(obj_correct_format)
+                except Exception as e:
+                    print(e)
                     raise
             
             # the integrity for unique step names has to be checked manually, because it is not
             # part of the Step model logic, but of the VEPlan, which we don't build an instance
             # of here
+            step_copy = copy.deepcopy(value_copy)
             if field_name == "steps":
                 if not VEPlan._check_unique_step_names(
-                    [Step.from_dict(val) for val in value_copy]
+                    [Step.from_dict(val) for val in step_copy]
                 ):
                     raise NonUniqueStepsError()
 

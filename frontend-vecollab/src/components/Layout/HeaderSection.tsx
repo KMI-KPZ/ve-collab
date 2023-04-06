@@ -24,7 +24,7 @@ export default function HeaderSection() {
                         <Link href="/profile">Profil</Link>
                     </li>
                     <li>
-                        <Link href="/projects">Projekte</Link>
+                        <Link href="/planer/overview">meine Pläne</Link>
                     </li>
                     <li>
                         <Link href="#">Mitteilungen</Link>

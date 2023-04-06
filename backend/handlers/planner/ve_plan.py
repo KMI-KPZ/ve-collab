@@ -718,11 +718,12 @@ class VEPlanHandler(BaseHandler):
             403 Forbidden --> user is not an admin
         """
 
+        # HACK QUICKLY BECAUSE SESSION MANAGEMENT IS NOT YET COMPLETED IN FRONTEND
         # reject if user is not admin
-        if not self.is_current_user_lionet_admin():
-            self.set_status(403)
-            self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
-            return
+        #if not self.is_current_user_lionet_admin():
+        #    self.set_status(403)
+        #    self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
+        #    return
 
         planner = VEPlanResource(db)
         plans = [plan.to_dict() for plan in planner.get_all()]
