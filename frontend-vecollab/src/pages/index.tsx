@@ -21,7 +21,7 @@ export default function Home() {
                     Etiam
                 </p>
                 <Link
-                    href="/startingWizard/generalInformation/essentialInformation"
+                    href="/startingWizard/generalInformation/1projectName"
                     className="py-4 pr-6 pl-5 m-10 bg-ve-collab-orange rounded-lg text-white"
                 >
                     Starte dein Projekt

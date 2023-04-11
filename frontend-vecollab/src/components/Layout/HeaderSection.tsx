@@ -24,7 +24,7 @@ export default function HeaderSection() {
                         <Link href="/profile">Profil</Link>
                     </li>
                     <li>
-                        <Link href="/planer/overview">meine Pläne</Link>
+                        <Link href="/overviewProjects">meine Pläne</Link>
                     </li>
                     <li>
                         <Link href="#">Mitteilungen</Link>
@@ -39,8 +39,10 @@ export default function HeaderSection() {
                             >
                                 <button onClick={() => signIn('keycloak')}>Login</button>
                             </li>
-                            <li onClick={() => signIn('keycloak')}
-                                className="py-3 px-5 cursor-pointer">
+                            <li
+                                onClick={() => signIn('keycloak')}
+                                className="py-3 px-5 cursor-pointer"
+                            >
                                 <button onClick={() => signIn('keycloak')}>Registrieren</button>
                             </li>
                         </>

@@ -1,72 +1,35 @@
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
 import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
-import { fetchGET, fetchPOST } from '@/lib/backend';
-import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { FormEvent, useContext, useEffect, useState } from 'react';
+import { FormEvent, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
-import { PlanIdContext } from '../_app';
-import { useRouter } from 'next/router';
 
-export default function Partners() {
-    const { planId, setPlanId } = useContext(PlanIdContext);
+export default function ExternalPersons() {
+    const [externals, setExternals] = useState(['']);
 
-    const { data: session } = useSession();
+    const handleSubmit = (e: FormEvent) => {
+        console.log(externals);
+    };
 
-    const [partners, setPartners] = useState(['']);
-    //console.log(planId)
-
-    const router = useRouter();
-    useEffect(() => {
-        if (!planId) {
-            router.push('/planer/overview');
-        }
-
-        fetchGET(`/planner/get?_id=${planId}`, session?.accessToken).then((data) => {
-            console.log(data);
-            if (data.plan) {
-                if (data.plan.involved_parties.length > 0) {
-                    setPartners(data.plan.involved_parties);
-                } else {
-                    setPartners(['']);
-                }
-            } else {
-                setPartners(['']);
-            }
-        });
-    }, [planId, session?.accessToken, router]);
-
-    const modifyPartner = (index: number, value: string) => {
-        console.log(value);
-        console.log(index);
-        let newPartners = [...partners];
-        newPartners[index] = value;
-        setPartners(newPartners);
+    const modifyExternals = (index: number, value: string) => {
+        let newExternals = [...externals];
+        newExternals[index] = value;
+        setExternals(newExternals);
     };
 
     const addInputField = (e: FormEvent) => {
         e.preventDefault();
-        setPartners([...partners, '']);
+        setExternals([...externals, '']);
     };
 
     const removeInputField = (e: FormEvent) => {
         e.preventDefault();
-        let copy = [...partners]; // have to create a deep copy that changes reference, because re-render is triggered by reference, not by values in the array
+        let copy = [...externals]; // have to create a deep copy that changes reference, because re-render is triggered by reference, not by values in the array
         copy.pop();
-        setPartners(copy);
+        setExternals(copy);
     };
 
-    const handleSubmit = async (e: FormEvent) => {
-        const response = await fetchPOST(
-            '/planner/update_field',
-            { plan_id: planId, field_name: 'involved_parties', value: partners },
-            session?.accessToken
-        );
-        console.log(response);
-        console.log(partners);
-    };
-
-    //console.log(partners)
+    console.log(externals);
 
     return (
         <>
@@ -75,32 +38,36 @@ export default function Partners() {
                 <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                     <div>
                         <div className={'text-center font-bold text-4xl mb-2'}>
-                            Füge deine Partner hinzu
+                            Gibt es externe Beteiligte?
                         </div>
-                        <div className={'text-center mb-20'}>optional</div>
-                        {partners.map((partner, index) => (
-                            <div key={index} className="mx-7 mt-7 flex justify-center">
+                        <div className={'text-center mb-20'}>
+                            optional, falls ja, benenne diese, ansonsten einfach weiter
+                        </div>
+                        {externals.map((externalPerson, index) => (
+                            <div key={index} className="mt-4 flex justify-center">
                                 <input
                                     type="text"
-                                    value={partner}
-                                    onChange={(e) => modifyPartner(index, e.target.value)}
+                                    value={externalPerson}
+                                    onChange={(e) => modifyExternals(index, e.target.value)}
                                     placeholder="Name eingeben"
                                     className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
                                 />
                             </div>
                         ))}
-                        <div className={'w-3/4 mx-7 mt-3 flex justify-end'}>
+                        <div className={'mx-2 flex justify-end mr-14 mt-2'}>
                             <button onClick={removeInputField}>
                                 <RxMinus size={20} />
-                            </button>
+                            </button>{' '}
+                            {/* todo state + useeffect to create more input fields*/}
                             <button onClick={addInputField}>
                                 <RxPlus size={20} />
-                            </button>
+                            </button>{' '}
+                            {/* todo state + useeffect to create more input fields*/}
                         </div>
                     </div>
                     <div className="flex justify-around w-full">
                         <div>
-                            <Link href={'/planer/1'}>
+                            <Link href={'/startingWizard/generalInformation/9goals'}>
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
@@ -110,7 +77,7 @@ export default function Partners() {
                             </Link>
                         </div>
                         <div>
-                            <Link href={'/planer/3'}>
+                            <Link href={'/startingWizard/generalInformation/11courseFormat'}>
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"

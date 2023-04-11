@@ -4,8 +4,8 @@ import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { FormEvent, useContext, useEffect, useState } from 'react';
-import { PlanIdContext } from '../_app';
 import { useRouter } from 'next/router';
+import { PlanIdContext } from '@/pages/_app';
 
 export default function Realization() {
     const [realization, setRealization] = useState('');
@@ -70,7 +70,7 @@ export default function Realization() {
                     </div>
                     <div className="flex justify-around w-full">
                         <div>
-                            <Link href={'/planer/10'}>
+                            <Link href={'/startingWizard/generalInformation/10externalParties'}>
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
@@ -80,7 +80,7 @@ export default function Realization() {
                             </Link>
                         </div>
                         <div>
-                            <Link href={'/planer/12'}>
+                            <Link href={'/startingWizard/generalInformation/12learningPlatform'}>
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"

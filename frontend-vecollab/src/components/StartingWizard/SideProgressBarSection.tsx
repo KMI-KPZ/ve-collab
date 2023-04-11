@@ -9,29 +9,74 @@ import { ProgressState, SideMenuStep } from '@/interfaces/startingWizard/sidePro
 
 export const sideMenuSteps: SideMenuStep[] = [
     {
-        text: 'Essentielle Informationen',
-        link: '/startingWizard/generalInformation/essentialInformation',
+        text: 'Projektname',
+        link: '/startingWizard/generalInformation/1projectName',
         state: ProgressState.completed,
     },
     {
-        text: 'Grobplanung',
-        link: '/startingWizard/generalInformation/courseInformation',
+        text: 'Partner',
+        link: '/startingWizard/generalInformation/2partners',
         state: ProgressState.completed,
     },
     {
-        text: 'Feinplanung',
-        link: '/startingWizard/generalInformation/goals',
+        text: 'Institution',
+        link: '/startingWizard/generalInformation/3institutions',
+        state: ProgressState.completed,
+    },
+    {
+        text: 'Lehrveranstaltungen',
+        link: '/startingWizard/generalInformation/4participatingCourses',
+        state: ProgressState.uncompleted,
+    },
+    {
+        text: 'Thema',
+        link: '/startingWizard/generalInformation/5veTopic',
+        state: ProgressState.notStarted,
+    },
+    {
+        text: 'Zielgruppen',
+        link: '/startingWizard/generalInformation/6targetGroups',
+        state: ProgressState.completed,
+    },
+    {
+        text: 'Sprachen',
+        link: '/startingWizard/generalInformation/7languages',
+        state: ProgressState.completed,
+    },
+    {
+        text: 'Rahmenbedingungen',
+        link: '/startingWizard/generalInformation/8formalConditions',
+        state: ProgressState.completed,
+    },
+    {
+        text: 'Zielgruppen Ziele',
+        link: '/startingWizard/generalInformation/9goals',
+        state: ProgressState.uncompleted,
+    },
+    {
+        text: 'Externe Beteiligte',
+        link: '/startingWizard/generalInformation/10externalParties',
+        state: ProgressState.notStarted,
+    },
+    {
+        text: 'Kursformat',
+        link: '/startingWizard/generalInformation/11courseFormat',
+        state: ProgressState.completed,
+    },
+    {
+        text: 'Lernumgebung',
+        link: '/startingWizard/generalInformation/12learningPlatform',
         state: ProgressState.completed,
     },
     {
         text: 'Tools',
-        link: '/startingWizard/generalInformation/tools',
-        state: ProgressState.uncompleted,
+        link: '/startingWizard/generalInformation/13tools',
+        state: ProgressState.completed,
     },
     {
-        text: 'Formale Rahmenbedingungen',
-        link: '/startingWizard/generalInformation/formalGeneralConditions',
-        state: ProgressState.notStarted,
+        text: 'Frage Neuer Inhalt',
+        link: '/startingWizard/generalInformation/14questionNewContent',
+        state: ProgressState.uncompleted,
     },
 ];
 
@@ -61,7 +106,9 @@ export default function SideProgressBarSection() {
                     <Image src={renderIcon(sideMenuStep.state)} alt="Ve Collab Logo"></Image>
                     <p
                         className={`ml-3 font-konnect ${
-                            router.pathname == sideMenuStep.link ? 'text-ve-collab-blue' : ''
+                            router.pathname == sideMenuStep.link
+                                ? 'text-ve-collab-blue font-bold'
+                                : ''
                         }`}
                     >
                         {sideMenuStep.text}

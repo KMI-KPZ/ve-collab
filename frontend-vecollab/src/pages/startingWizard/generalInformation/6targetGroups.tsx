@@ -6,8 +6,8 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { FormEvent, useContext, useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
-import { PlanIdContext } from '../_app';
 import { useRouter } from 'next/router';
+import { PlanIdContext } from '@/pages/_app';
 
 interface TargetGroup {
     name: string;
@@ -343,7 +343,7 @@ export default function TargetGroups() {
                     </div>
                     <div className="flex justify-around w-full">
                         <div>
-                            <Link href={'/planer/5'}>
+                            <Link href={'/startingWizard/generalInformation/4participatingCourses'}>
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
@@ -353,7 +353,7 @@ export default function TargetGroups() {
                             </Link>
                         </div>
                         <div>
-                            <Link href={'/planer/7'}>
+                            <Link href={'/startingWizard/generalInformation/7languages'}>
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"

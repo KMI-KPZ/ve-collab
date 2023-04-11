@@ -6,8 +6,8 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { FormEvent, useContext, useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
-import { PlanIdContext } from '../_app';
 import { useRouter } from 'next/router';
+import { PlanIdContext } from '@/pages/_app';
 
 interface BroadStep {
     from: string;
@@ -15,7 +15,7 @@ interface BroadStep {
     name: string;
 }
 
-export default function BroadStages() {
+export default function BroadPlanner() {
     const [steps, setSteps] = useState<BroadStep[]>([
         { from: '', to: '', name: '' },
         { from: '', to: '', name: '' },
@@ -108,8 +108,8 @@ export default function BroadStages() {
 
     return (
         <>
-            <HeadProgressBarSection stage={0} />
-            <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
+            <HeadProgressBarSection stage={1} />
+            <div className="flex justify-center bg-pattern-left-blue-small bg-no-repeat">
                 <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                     <div>
                         <div className={'text-center font-bold text-4xl mb-2'}>
@@ -163,7 +163,7 @@ export default function BroadStages() {
                     </div>
                     <div className="flex justify-around w-full">
                         <div>
-                            <Link href={'/planer/14'}>
+                            <Link href={'/startingWizard/generalInformation/14questionNewContent'}>
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
@@ -173,7 +173,7 @@ export default function BroadStages() {
                             </Link>
                         </div>
                         <div>
-                            <Link href={'/planer/16'}>
+                            <Link href={'/startingWizard/finePlanner'}>
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
@@ -185,7 +185,6 @@ export default function BroadStages() {
                         </div>
                     </div>
                 </form>
-                <SideProgressBarSection />
             </div>
         </>
     );

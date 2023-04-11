@@ -4,9 +4,9 @@ import { fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { FormEvent, useContext, useState } from 'react';
-import { PlanIdContext } from '../_app';
+import { PlanIdContext } from '@/pages/_app';
 
-export default function Name() {
+export default function EssentialInformation() {
     const { data: session } = useSession();
 
     const [name, setName] = useState('');
@@ -19,9 +19,7 @@ export default function Name() {
             { name: name },
             session?.accessToken
         );
-        console.log(name);
         setPlanId(response.inserted_id);
-        console.log(response.inserted_id);
     }
 
     return (
@@ -54,7 +52,7 @@ export default function Name() {
                             </button>
                         </div>
                         <div>
-                            <Link href={'/planer/2'}>
+                            <Link href={'/startingWizard/generalInformation/2partners'}>
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"

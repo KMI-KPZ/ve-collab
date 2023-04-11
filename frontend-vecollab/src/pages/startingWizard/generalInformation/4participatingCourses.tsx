@@ -6,19 +6,22 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { FormEvent, useContext, useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
-import { PlanIdContext } from '../_app';
 import { useRouter } from 'next/router';
+import { PlanIdContext } from '@/pages/_app';
 
-interface Institution {
+interface Lecture {
     name: string;
-    school_type: string;
-    country: string;
-    department: string;
-    academic_courses: string;
+    lecture_type: string;
+    lecture_format: string;
+    participants_amount?: number;
 }
 
-export default function Institutions() {
-    const [institutions, setInstitutions] = useState<Institution[]>([]);
+export default function Lectures() {
+    const [lectures, setLectures] = useState<Lecture[]>([
+        { name: '', lecture_type: '', lecture_format: '', participants_amount: undefined },
+        { name: '', lecture_type: '', lecture_format: '', participants_amount: undefined },
+    ]);
+
     const { planId, setPlanId } = useContext(PlanIdContext);
     const { data: session } = useSession();
 
@@ -33,34 +36,25 @@ export default function Institutions() {
             console.log(data);
 
             if (data.plan) {
-                if (data.plan.institutions.length > 0) {
-                    let list = data.plan.institutions.map((institution: any) => ({
-                        name: institution.name,
-                        school_type: institution.school_type,
-                        country: institution.country,
-                        department: institution.departments[0].name,
-                        academic_courses: institution.departments[0].academic_courses[0].name,
-                    }));
-                    setInstitutions(list);
+                if (data.plan.lectures.length > 0) {
+                    setLectures(data.plan.lectures);
                 } else {
-                    setInstitutions([
+                    setLectures([
                         {
                             name: '',
-                            school_type: '',
-                            country: '',
-                            department: '',
-                            academic_courses: '',
+                            lecture_type: '',
+                            lecture_format: '',
+                            participants_amount: undefined,
                         },
                     ]);
                 }
             } else {
-                setInstitutions([
+                setLectures([
                     {
                         name: '',
-                        school_type: '',
-                        country: '',
-                        department: '',
-                        academic_courses: '',
+                        lecture_type: '',
+                        lecture_format: '',
+                        participants_amount: undefined,
                     },
                 ]);
             }
@@ -68,76 +62,52 @@ export default function Institutions() {
     }, [planId, session?.accessToken, router]);
 
     const handleSubmit = async (e: FormEvent) => {
-        let institutionsList: any[] = [];
-        institutions.forEach((institution) => {
-            let payload = {
-                name: institution.name,
-                school_type: institution.school_type,
-                country: institution.country,
-                departments: [
-                    {
-                        name: institution.department,
-                        academic_courses: [
-                            {
-                                name: institution.academic_courses,
-                            },
-                        ],
-                    },
-                ],
-            };
-            institutionsList.push(payload);
-        });
         const response = await fetchPOST(
             '/planner/update_field',
-            { plan_id: planId, field_name: 'institutions', value: institutionsList },
+            { plan_id: planId, field_name: 'lectures', value: lectures },
             session?.accessToken
         );
         console.log(response);
-        console.log(institutions);
+        console.log(lectures);
     };
 
     const modifyName = (index: number, value: string) => {
-        let newInstitutions = [...institutions];
-        newInstitutions[index].name = value;
-        setInstitutions(newInstitutions);
+        let newLectures = [...lectures];
+        newLectures[index].name = value;
+        setLectures(newLectures);
     };
-    const modifySchoolType = (index: number, value: string) => {
-        let newInstitutions = [...institutions];
-        newInstitutions[index].school_type = value;
-        setInstitutions(newInstitutions);
+    const modifyLectureType = (index: number, value: string) => {
+        let newLectures = [...lectures];
+        newLectures[index].lecture_type = value;
+        setLectures(newLectures);
     };
-    const modifyCountry = (index: number, value: string) => {
-        let newInstitutions = [...institutions];
-        newInstitutions[index].country = value;
-        setInstitutions(newInstitutions);
+    const modifyLectureFormat = (index: number, value: string) => {
+        let newLectures = [...lectures];
+        newLectures[index].lecture_format = value;
+        setLectures(newLectures);
     };
-    const modifyDepartment = (index: number, value: string) => {
-        let newInstitutions = [...institutions];
-        newInstitutions[index].department = value;
-        setInstitutions(newInstitutions);
-    };
-    const modifyAcademicCourses = (index: number, value: string) => {
-        let newInstitutions = [...institutions];
-        newInstitutions[index].academic_courses = value;
-        setInstitutions(newInstitutions);
+    const modifyParticipantsAmount = (index: number, value: number) => {
+        let newLectures = [...lectures];
+        newLectures[index].participants_amount = value;
+        setLectures(newLectures);
     };
 
     const addInstitutionBox = (e: FormEvent) => {
         e.preventDefault();
-        setInstitutions([
-            ...institutions,
-            { name: '', school_type: '', country: '', department: '', academic_courses: '' },
+        setLectures([
+            ...lectures,
+            { name: '', lecture_type: '', lecture_format: '', participants_amount: undefined },
         ]);
     };
 
     const removeInstitutionBox = (e: FormEvent) => {
         e.preventDefault();
-        let copy = [...institutions]; // have to create a deep copy that changes reference, because re-render is triggered by reference, not by values in the array
+        let copy = [...lectures]; // have to create a deep copy that changes reference, because re-render is triggered by reference, not by values in the array
         copy.pop();
-        setInstitutions(copy);
+        setLectures(copy);
     };
 
-    console.log(institutions);
+    console.log(lectures);
 
     return (
         <>
@@ -146,11 +116,11 @@ export default function Institutions() {
                 <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                     <div>
                         <div className={'text-center font-bold text-4xl mb-2'}>
-                            Beschreibe die teilnehmenden Institutionen
+                            Beschreibe die teilnehmenden Lehrveranstaltungen
                         </div>
                         <div className={'text-center mb-20'}>optional</div>
-                        <div className={'flex flex-wrap justify-center'}>
-                            {institutions.map((institution, index) => (
+                        <div className="flex flex-wrap justify-center">
+                            {lectures.map((lecture, index) => (
                                 <div key={index} className={'mx-2'}>
                                     <WhiteBox>
                                         <div className="mt-4 flex">
@@ -163,7 +133,7 @@ export default function Institutions() {
                                                 <input
                                                     type="text"
                                                     name="name"
-                                                    value={institution.name}
+                                                    value={lecture.name}
                                                     onChange={(e) =>
                                                         modifyName(index, e.target.value)
                                                     }
@@ -174,79 +144,60 @@ export default function Institutions() {
                                         </div>
                                         <div className="mt-4 flex">
                                             <div className="w-1/4 flex items-center">
-                                                <label htmlFor="schoolType" className="px-2 py-2">
-                                                    Schulform
+                                                <label htmlFor="type" className="px-2 py-2">
+                                                    Typ
                                                 </label>
                                             </div>
                                             <div className="w-3/4">
                                                 <input
                                                     type="text"
-                                                    name="schoolType"
-                                                    value={institution.school_type}
+                                                    name="type"
+                                                    value={lecture.lecture_type}
                                                     onChange={(e) =>
-                                                        modifySchoolType(index, e.target.value)
+                                                        modifyLectureType(index, e.target.value)
                                                     }
-                                                    placeholder="Schulform eingeben"
+                                                    placeholder="z.B. Wahl, Wahlpflicht, Pflicht"
                                                     className="border border-gray-500 rounded-lg w-full h-12 p-2"
                                                 />
                                             </div>
                                         </div>
                                         <div className="mt-4 flex">
                                             <div className="w-1/4 flex items-center">
-                                                <label htmlFor="country" className="px-2 py-2">
-                                                    Land
+                                                <label htmlFor="format" className="px-2 py-2">
+                                                    Format
                                                 </label>
                                             </div>
                                             <div className="w-3/4">
                                                 <input
                                                     type="text"
-                                                    name="country"
-                                                    value={institution.country}
+                                                    name="format"
+                                                    value={lecture.lecture_format}
                                                     onChange={(e) =>
-                                                        modifyCountry(index, e.target.value)
+                                                        modifyLectureFormat(index, e.target.value)
                                                     }
-                                                    placeholder="Land eingeben"
+                                                    placeholder="z.B. online, hybrid, präsenz"
                                                     className="border border-gray-500 rounded-lg w-full h-12 p-2"
                                                 />
                                             </div>
                                         </div>
                                         <div className="mt-4 flex">
-                                            <div className="w-1/3 flex items-center">
-                                                <label htmlFor="department" className="px-2 py-2">
-                                                    Abteilungsname
+                                            <div className="w-1/2 flex items-center">
+                                                <label htmlFor="participants" className="px-2 py-2">
+                                                    Teilnehmendenanzahl
                                                 </label>
                                             </div>
-                                            <div className="w-2/3">
+                                            <div className="w-1/2">
                                                 <input
-                                                    type="text"
-                                                    name="deaprtment"
-                                                    value={institution.department}
+                                                    type="number"
+                                                    name="participants"
+                                                    value={lecture.participants_amount}
                                                     onChange={(e) =>
-                                                        modifyDepartment(index, e.target.value)
+                                                        modifyParticipantsAmount(
+                                                            index,
+                                                            Number(e.target.value)
+                                                        )
                                                     }
-                                                    placeholder="Abteilungsname eingeben"
-                                                    className="border border-gray-500 rounded-lg w-full h-12 p-2"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="mt-4 flex">
-                                            <div className="w-1/3 flex items-center">
-                                                <label
-                                                    htmlFor="academicCourses"
-                                                    className="px-2 py-2"
-                                                >
-                                                    beteiligte Studiengänge
-                                                </label>
-                                            </div>
-                                            <div className="w-2/3">
-                                                <input
-                                                    type="text"
-                                                    name="academicCourses"
-                                                    value={institution.academic_courses}
-                                                    onChange={(e) =>
-                                                        modifyAcademicCourses(index, e.target.value)
-                                                    }
-                                                    placeholder="mehrere durch Komma trennen"
+                                                    placeholder="Anzahl eingeben"
                                                     className="border border-gray-500 rounded-lg w-full h-12 p-2"
                                                 />
                                             </div>
@@ -268,7 +219,7 @@ export default function Institutions() {
                     </div>
                     <div className="flex justify-around w-full">
                         <div>
-                            <Link href={'/planer/2'}>
+                            <Link href={'/startingWizard/generalInformation/3institutions'}>
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
@@ -278,7 +229,7 @@ export default function Institutions() {
                             </Link>
                         </div>
                         <div>
-                            <Link href={'/planer/4'}>
+                            <Link href={'/startingWizard/generalInformation/5veTopic'}>
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"

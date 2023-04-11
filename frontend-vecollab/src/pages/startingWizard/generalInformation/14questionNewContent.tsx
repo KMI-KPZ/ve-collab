@@ -4,8 +4,8 @@ import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { FormEvent, useContext, useEffect, useState } from 'react';
-import { PlanIdContext } from '../_app';
 import { useRouter } from 'next/router';
+import { PlanIdContext } from '@/pages/_app';
 
 export default function NewContent() {
     const [newContent, setNewContent] = useState('');
@@ -109,7 +109,7 @@ export default function NewContent() {
                     </div>
                     <div className="flex justify-around w-full">
                         <div>
-                            <Link href={'/planer/13'}>
+                            <Link href={'/startingWizard/generalInformation/13tools'}>
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
@@ -119,7 +119,7 @@ export default function NewContent() {
                             </Link>
                         </div>
                         <div>
-                            <Link href={'/planer/15'}>
+                            <Link href={'/startingWizard/broadPlanner'}>
                                 {' '}
                                 {/* for now just go on page back even on success to not lose the planId context*/}
                                 <button

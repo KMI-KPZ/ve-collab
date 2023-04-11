@@ -71,7 +71,7 @@ export default function Parameters() {
                     </div>
                     <div className="flex justify-around w-full">
                         <div>
-                            <Link href={'/planer/7'}>
+                            <Link href={'/startingWizard/generalInformation/7languages'}>
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
@@ -81,7 +81,7 @@ export default function Parameters() {
                             </Link>
                         </div>
                         <div>
-                            <Link href={'/planer/9'}>
+                            <Link href={'/startingWizard/generalInformation/9goals'}>
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"

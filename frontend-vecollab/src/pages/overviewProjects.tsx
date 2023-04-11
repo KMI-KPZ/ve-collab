@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { FormEvent, useContext, useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
-import { PlanIdContext } from '../_app';
+import { PlanIdContext } from '@/pages/_app';
 
 interface PlanPreview {
     _id: string;
@@ -32,13 +32,10 @@ export default function Overview() {
         setPlanId(plans[index]._id);
     };
 
-    //console.log(steps)
-
     return (
         <>
-            <HeadProgressBarSection stage={0} />
-            <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
-                <div className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
+            <div className="flex justify-center bg-pattern-left-blue-small bg-no-repeat">
+                <div className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-content">
                     <div>
                         <div className={'text-center font-bold text-4xl mb-2'}>Übersicht</div>
                         <div className={'text-center mb-20'}>
@@ -56,7 +53,7 @@ export default function Overview() {
                                         <p className="text-sm text-gray-500">Max Mustermann</p>
                                         <p className="text-gray-700 mt-3 text-sm">28.04.2023</p>
                                     </div>
-                                    <Link href={'/planer/2'}>
+                                    <Link href={'/startingWizard/generalInformation/2partners'}>
                                         <button
                                             className="absolute bottom-0 right-0 bg-ve-collab-orange rounded-lg p-2 flex justify-center items-center"
                                             onClick={(e) => setPlanIdContext(index)}
@@ -81,7 +78,7 @@ export default function Overview() {
                     </div>
                     <div className="flex justify-around w-full">
                         <div>
-                            <Link href={'/planer/1'}>
+                            <Link href={'/startingWizard/generalInformation/1projectName'}>
                                 <button className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg">
                                     neuen Plan starten
                                 </button>
@@ -89,7 +86,6 @@ export default function Overview() {
                         </div>
                     </div>
                 </div>
-                <SideProgressBarSection />
             </div>
         </>
     );
