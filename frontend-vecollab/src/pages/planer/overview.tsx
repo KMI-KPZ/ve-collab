@@ -16,7 +16,7 @@ interface PlanPreview {
 
 export default function Overview() {
 
-    const [plans, setPlans] = useState<PlanPreview[]>([{ _id: "", name: "" }])
+    const [plans, setPlans] = useState<PlanPreview[]>([])
 
     const { planId, setPlanId } = useContext(PlanIdContext)
     const { data: session } = useSession()
@@ -26,7 +26,9 @@ export default function Overview() {
         fetchGET(`/planner/get_all`, session?.accessToken)
             .then((data) => {
                 console.log(data)
-                setPlans(data.plans)
+                if(data.plans){
+                    setPlans(data.plans)
+                }
             })
     }, [session?.accessToken])
 
