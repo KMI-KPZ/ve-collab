@@ -31,25 +31,29 @@ export default function AuthComponentTest(props: Props) {
                 fetch(BACKEND_URL + "/profileinformation", {
                     headers: headers
                 })
-                    .then(res => res.json())
-                    .then(data => {
-                        console.log(data)
-                        if (data.status) {
-                            if (data.status !== 200) {
-                                //error case
-                                console.log(data)
-                            }
+                .then(res => res.json())
+                .then(data => {
+                    console.log(data)
+                    if (data.status) {
+                        if (data.status !== 200) {
+                            //error case
+                            console.log(data)
                         }
-                        else {
-                            setProfileData(data)
-                        }
-                    })
+                    }
+                    else {
+                        setProfileData(data)
+                    }
+                })
+                .catch(rejected => {
+                    console.log(rejected)
+                    console.log("probably backend down")
+                })
             }
             catch (e) {
                 console.log("network error, probably backend down")
             }
         }
-        else{
+        else {
             console.log("No session")
         }
     }, [session])
