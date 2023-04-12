@@ -34,7 +34,7 @@ export default function Finished() {
                             </Link>
                         </div>
                         <div>
-                            <Link href={'/planer/overview'}>
+                            <Link href={'/overviewProjects'}>
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
