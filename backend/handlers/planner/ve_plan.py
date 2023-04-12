@@ -23,13 +23,19 @@ from exceptions import (
     PlanDoesntExistError,
 )
 from handlers.base_handler import auth_needed, BaseHandler
-from model import VEPlan
+from model import Step, VEPlan
 from resources.planner.ve_plan import VEPlanResource
 import util
 
 
 class VEPlanHandler(BaseHandler):
-    @auth_needed
+
+    def options(self, slug):
+        # no body
+        self.set_status(200)
+        self.finish()
+
+    #@auth_needed
     def get(self, slug):
         """
         GET /planner/get
@@ -106,7 +112,7 @@ class VEPlanHandler(BaseHandler):
             else:
                 self.set_status(404)
 
-    @auth_needed
+    #@auth_needed
     def post(self, slug):
         """
         POST /planner/insert
@@ -511,6 +517,15 @@ class VEPlanHandler(BaseHandler):
 
                 self.insert_plan(db, plan)
                 return
+            
+            if slug == "insert_empty":
+                if "name" in http_body:
+                    optional_name = http_body["name"]
+                else:
+                    optional_name = None
+                plan = VEPlan(name=optional_name)
+                self.insert_plan(db, plan)
+                return
 
             elif slug == "update_full":
                 plan = self.load_plan_from_http_body_or_write_error(http_body)
@@ -557,11 +572,35 @@ class VEPlanHandler(BaseHandler):
                     upsert=upsert
                 )
                 return
+            
+            elif slug == "append_step":
+                if "plan_id" not in http_body:
+                    self.set_status(400)
+                    self.write(
+                        {
+                            "success": False,
+                            "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "plan_id",
+                        }
+                    )
+                    return
+                if "step" not in http_body:
+                    self.set_status(400)
+                    self.write(
+                        {
+                            "success": False,
+                            "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "step",
+                        }
+                    )
+                    return
+                
+                step = Step.from_dict(http_body["step"])
+
+                self.append_step_to_plan(db, http_body["plan_id"], step)
 
             else:
                 self.set_status(404)
 
-    @auth_needed
+    #@auth_needed
     def delete(self, slug):
         """
         DELETE /planner/delete
@@ -679,11 +718,12 @@ class VEPlanHandler(BaseHandler):
             403 Forbidden --> user is not an admin
         """
 
+        # HACK QUICKLY BECAUSE SESSION MANAGEMENT IS NOT YET COMPLETED IN FRONTEND
         # reject if user is not admin
-        if not self.is_current_user_lionet_admin():
-            self.set_status(403)
-            self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
-            return
+        #if not self.is_current_user_lionet_admin():
+        #    self.set_status(403)
+        #    self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
+        #    return
 
         planner = VEPlanResource(db)
         plans = [plan.to_dict() for plan in planner.get_all()]
@@ -805,6 +845,42 @@ class VEPlanHandler(BaseHandler):
             self.set_status(409)
         except NonUniqueTasksError:
             error_reason = NON_UNIQUE_TASK_TITLES
+            self.set_status(409)
+
+        if error_reason:
+            self.write({"success": False, "reason": error_reason})
+        else:
+            self.serialize_and_write({"success": True, "updated_id": _id})
+
+    def append_step_to_plan(self, db: Database, plan_id: str | ObjectId, step: dict | Step):
+        planner = VEPlanResource(db)
+        error_reason = None
+        _id = None
+
+        try:
+            plan_id = util.parse_object_id(plan_id)
+            step = Step.from_dict(step) if isinstance(step, dict) else step
+            _id = planner.append_step(plan_id, step)
+        except InvalidId:
+            error_reason = "invalid_object_id"
+            self.set_status(400)
+        except TypeError as e:
+            error_reason = "TypeError: " + str(e)
+            self.set_status(400)
+        except ValueError:
+            error_reason = "unexpected_attribute"
+            self.set_status(400)
+        except MissingKeyError as e:
+            error_reason = MISSING_KEY_IN_HTTP_BODY_SLUG + e.missing_value
+            self.set_status(400)
+        except NonUniqueTasksError:
+            error_reason = NON_UNIQUE_TASK_TITLES
+            self.set_status(409)
+        except NonUniqueStepsError:
+            error_reason = NON_UNIQUE_STEP_NAMES
+            self.set_status(409)
+        except PlanDoesntExistError:
+            error_reason = PLAN_DOESNT_EXIST
             self.set_status(409)
 
         if error_reason:

@@ -13,18 +13,22 @@ export interface HeadMenuProgressStep {
     image: string;
 }
 
-export default function HeadProgressBarSection() {
+interface HeadProgressBar {
+    stage: number;
+}
+
+export default function HeadProgressBarSection({ stage }: HeadProgressBar) {
     const router = useRouter();
 
     const headMenuProgressSteps: HeadMenuProgressStep[] = [
         {
             description: 'Allgemeine Informationen',
-            link: '/startingWizard/generalInformation/essentialInformation',
+            link: '/startingWizard/generalInformation/1projectName',
             image: imageGeneralInformation,
         },
         {
             description: 'Etappenplaner',
-            link: '/startingWizard/stagePlanner',
+            link: '/startingWizard/broadPlanner',
             image: imageStagePlanner,
         },
         {
@@ -43,15 +47,8 @@ export default function HeadProgressBarSection() {
     const [stateActiveProgressStage, setStateActiveProgressStage] = useState<number>(0);
 
     useEffect(() => {
-        function calculateStepFromPathname(): number {
-            let stepNumber: number = 0;
-            stateMenuProgressData.forEach((item, index) => {
-                if (item.link.includes(router.pathname)) stepNumber = index;
-            });
-            return stepNumber;
-        }
-        setStateActiveProgressStage(calculateStepFromPathname());
-    }, [router.pathname, stateMenuProgressData]);
+        setStateActiveProgressStage(stage);
+    }, [router.pathname, stateMenuProgressData, stage]);
 
     function renderHeadProgressBar(headMenuSteps: HeadMenuProgressStep[]): JSX.Element[] {
         return headMenuSteps.map((step, index) => (
