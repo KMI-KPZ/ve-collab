@@ -19,7 +19,7 @@ export default function Languages() {
     const router = useRouter();
     useEffect(() => {
         if (!planId) {
-            router.push('/planer/overview');
+            router.push('/overviewProjects');
         }
         fetchGET(`/planner/get?_id=${planId}`, session?.accessToken).then((data) => {
             console.log(data);
