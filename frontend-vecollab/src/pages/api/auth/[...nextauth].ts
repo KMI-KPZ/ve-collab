@@ -1,4 +1,4 @@
-import NextAuth, { Account, TokenSet, User } from "next-auth"
+import NextAuth, { Account, Session, TokenSet, User } from "next-auth"
 import { JWT } from "next-auth/jwt"
 import KeycloakProvider, { KeycloakProfile } from "next-auth/providers/keycloak"
 import { type OAuthConfig } from "next-auth/providers";
@@ -19,6 +19,11 @@ interface JWTProps {
     token: JWT,
     user?: User | AdapterUser | undefined
     account?: Account | null | undefined
+}
+
+interface SessionProps {
+    token: JWT,
+    session: Session
 }
 
 declare module 'next-auth' {
@@ -47,6 +52,23 @@ declare module 'next-auth' {
         session_state: string;
         scope: string;
     }
+
+    interface Session {
+        user: {
+            sub: string;
+            email_verified: boolean;
+            name: string;
+            preferred_username: string;
+            given_name: string;
+            family_name: string;
+            email: string;
+            id: string;
+            org_name?: string;
+            telephone?: string;
+        };
+        error: string;
+        accessToken: string;
+    }
 }
 
 declare module 'next-auth/jwt' {
@@ -66,7 +88,6 @@ declare module 'next-auth/jwt' {
 }
 
 const refreshAccessToken = async (token: JWT): Promise<JWT> => {
-    console.log("in refresh")
     try {
         if (!token.refreshTokenExpired) throw Error;
         if (Date.now() > token.refreshTokenExpired) throw Error;
@@ -93,7 +114,7 @@ const refreshAccessToken = async (token: JWT): Promise<JWT> => {
         });
         const refreshedTokens = await response.json();
         if (!response.ok) throw refreshedTokens;
-        console.log("refreshed token!")
+
         return {
             ...token,
             accessToken: refreshedTokens.access_token,
@@ -122,8 +143,6 @@ export const authOptions = {
     ],
     callbacks: {
         async jwt({ token, user, account }: JWTProps): Promise<JWT> {
-
-
             if (account && user) {
                 // Add access_token, refresh_token and expirations to the token right after signin
                 token.accessToken = account.access_token;
@@ -139,35 +158,21 @@ export const authOptions = {
                 return token;
             }
 
-
             // Return previous token if the access token has not expired yet
-            if (Date.now() < token.accessTokenExpired){
+            if (Date.now() < token.accessTokenExpired) {
                 console.log("token still valid")
                 return token;
-            } 
-                
+            }
 
             // Access token has expired, try to update it
             return refreshAccessToken(token);
 
-
-
-
-            // Persist the OAuth access_token to the token right after signin
-            // becomes available in e.g. getToken()
-            //if (account) {
-            //   token.accessToken = account.access_token
-            //  token.id_token = account.id_token
-            //}
-            //return token
         },
-        // only needed if we want to have the token available in useSession() client-side, right now token is accessed via getToken() on server side and given to component if needed client-side
-        // it is more secure to not give tokens to clients, rather proxy backend api calls   
-        // async session({ session, token, user }) {
-        //     // Send properties to the client, like an access_token from a provider.
-        //     session.accessToken = token.accessToken
-        //     return session
-        // }
+        async session({ session, token }: SessionProps): Promise<Session> {
+            session.error = token.error
+            session.accessToken = token.accessToken
+            return session
+        },
     },
     events: {
         // perform Single Logout on Keycloak IdP when user triggers a logout on our site, i.e. logout on every site that the user uses this account on
