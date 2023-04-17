@@ -44,16 +44,12 @@ export default function TargetGroups() {
     const { planId, setPlanId } = useContext(PlanIdContext);
     const { data: session } = useSession();
 
-    //console.log(planId)
-
     const router = useRouter();
     useEffect(() => {
         if (!planId) {
             router.push('/overviewProjects');
         }
         fetchGET(`/planner/get?_id=${planId}`, session?.accessToken).then((data) => {
-            console.log(data);
-
             if (data.plan) {
                 if (data.plan.audience.length > 0) {
                     let list = data.plan.audience.map((targetGroup: any) => ({
@@ -114,8 +110,6 @@ export default function TargetGroups() {
             { plan_id: planId, field_name: 'audience', value: tgList },
             session?.accessToken
         );
-        console.log(response);
-        console.log(targetGroups);
     };
 
     const modifyName = (index: number, value: string) => {
@@ -176,8 +170,6 @@ export default function TargetGroups() {
         copy.pop();
         setTargetGroups(copy);
     };
-
-    console.log(targetGroups);
 
     return (
         <>
@@ -343,7 +335,7 @@ export default function TargetGroups() {
                     </div>
                     <div className="flex justify-around w-full">
                         <div>
-                            <Link href={'/startingWizard/generalInformation/4participatingCourses'}>
+                            <Link href={'/startingWizard/generalInformation/5veTopic'}>
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"

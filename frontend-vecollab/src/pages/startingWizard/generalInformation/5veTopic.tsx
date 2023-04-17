@@ -6,10 +6,13 @@ import Link from 'next/link';
 import { useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { PlanIdContext } from '@/pages/_app';
+import { useForm, SubmitHandler } from 'react-hook-form';
+
+interface FormData {
+    topic: string;
+}
 
 export default function Topic() {
-    const [topic, setTopic] = useState('');
-
     const { planId } = useContext(PlanIdContext);
     const { data: session } = useSession();
 
@@ -18,15 +21,27 @@ export default function Topic() {
         if (!planId) {
             router.push('/overviewProjects');
         }
-        fetchGET(`/planner/get?_id=${planId}`, session?.accessToken).then((data) => {
-            setTopic(data.plan.topic || '');
-        });
     }, [planId, session?.accessToken, router]);
 
-    const handleSubmit = async () => {
+    // TODO Error handlen in API response
+    // TODO Valdierungskiterien anlegen
+    // TODO Error Message Anzeigen
+    const fetchLastInputs = async (): Promise<FormData> => {
+        return await fetchGET(`/planner/get?_id=${planId}`, session?.accessToken).then((data) => {
+            return data.plan.topic != null ? { topic: data.plan.topic } : { topic: '' };
+        });
+    };
+
+    const {
+        getValues,
+        register,
+        handleSubmit,
+        formState: { errors, isValid },
+    } = useForm<FormData>({ mode: 'onChange', defaultValues: async () => fetchLastInputs() });
+    const onSubmit: SubmitHandler<FormData> = async () => {
         await fetchPOST(
             '/planner/update_field',
-            { plan_id: planId, field_name: 'topic', value: topic },
+            { plan_id: planId, field_name: 'topic', value: getValues('topic') },
             session?.accessToken
         );
     };
@@ -35,7 +50,10 @@ export default function Topic() {
         <>
             <HeadProgressBarSection stage={0} />
             <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
-                <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
+                <form
+                    onSubmit={handleSubmit(onSubmit)}
+                    className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
+                >
                     <div>
                         <div className={'text-center font-bold text-4xl mb-2'}>
                             zu welchem Thema soll der VE statfinden?
@@ -44,10 +62,9 @@ export default function Topic() {
                         <div className="m-7 flex justify-center">
                             <input
                                 type="text"
-                                value={topic}
-                                onChange={(e) => setTopic(e.target.value)}
                                 placeholder="Thema eingeben"
                                 className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
+                                {...register('topic', { required: true })}
                             />
                         </div>
                     </div>
@@ -63,15 +80,23 @@ export default function Topic() {
                             </Link>
                         </div>
                         <div>
-                            <Link href={'/startingWizard/generalInformation/6targetGroups'}>
+                            {isValid ? (
+                                <Link href={'/startingWizard/generalInformation/6targetGroups'}>
+                                    <button
+                                        type="submit"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    >
+                                        Weiter
+                                    </button>
+                                </Link>
+                            ) : (
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={handleSubmit}
                                 >
                                     Weiter
                                 </button>
-                            </Link>
+                            )}
                         </div>
                     </div>
                 </form>

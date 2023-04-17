@@ -25,16 +25,12 @@ export default function Lectures() {
     const { planId, setPlanId } = useContext(PlanIdContext);
     const { data: session } = useSession();
 
-    //console.log(planId)
-
     const router = useRouter();
     useEffect(() => {
         if (!planId) {
             router.push('/overviewProjects');
         }
         fetchGET(`/planner/get?_id=${planId}`, session?.accessToken).then((data) => {
-            console.log(data);
-
             if (data.plan) {
                 if (data.plan.lectures.length > 0) {
                     setLectures(data.plan.lectures);
@@ -67,8 +63,6 @@ export default function Lectures() {
             { plan_id: planId, field_name: 'lectures', value: lectures },
             session?.accessToken
         );
-        console.log(response);
-        console.log(lectures);
     };
 
     const modifyName = (index: number, value: string) => {
@@ -106,8 +100,6 @@ export default function Lectures() {
         copy.pop();
         setLectures(copy);
     };
-
-    console.log(lectures);
 
     return (
         <>
