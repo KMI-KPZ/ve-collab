@@ -10,7 +10,7 @@ import { PlanIdContext } from '@/pages/_app';
 export default function Topic() {
     const [topic, setTopic] = useState('');
 
-    const { planId, setPlanId } = useContext(PlanIdContext);
+    const { planId } = useContext(PlanIdContext);
     const { data: session } = useSession();
 
     const router = useRouter();
@@ -23,8 +23,8 @@ export default function Topic() {
         });
     }, [planId, session?.accessToken, router]);
 
-    const handleSubmit = async (e: FormEvent) => {
-        const response = await fetchPOST(
+    const handleSubmit = async () => {
+        await fetchPOST(
             '/planner/update_field',
             { plan_id: planId, field_name: 'topic', value: topic },
             session?.accessToken
