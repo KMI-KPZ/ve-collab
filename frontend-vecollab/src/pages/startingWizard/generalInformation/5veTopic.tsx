@@ -13,23 +13,13 @@ export default function Topic() {
     const { planId, setPlanId } = useContext(PlanIdContext);
     const { data: session } = useSession();
 
-    //console.log(planId)
-
     const router = useRouter();
     useEffect(() => {
         if (!planId) {
             router.push('/overviewProjects');
         }
         fetchGET(`/planner/get?_id=${planId}`, session?.accessToken).then((data) => {
-            console.log(data);
-
-            if (data.plan) {
-                if (data.plan.topic) {
-                    setTopic(data.plan.topic);
-                }
-            } else {
-                setTopic('');
-            }
+            setTopic(data.plan.topic || '');
         });
     }, [planId, session?.accessToken, router]);
 
@@ -39,8 +29,6 @@ export default function Topic() {
             { plan_id: planId, field_name: 'topic', value: topic },
             session?.accessToken
         );
-        console.log(response);
-        console.log(topic);
     };
 
     return (
