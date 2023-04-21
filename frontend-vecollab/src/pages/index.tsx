@@ -14,7 +14,7 @@ export default function Home() {
                     </div>
                 </div>
                 <p className="w-1/2 my-10 font-konnect">
-                    VE-Collab unterstützt Lehrenden beim eigenen Kompetenzaufbau sowie bei der Planung internationaler und nationaler virtueller Austausche (eng. virtual exchanges). Bei uns finden Sie Qualifizierungsangebote, Hilfestellungen bei der Initialisierung, Planung und dem Design von VE.  Wir möchten die Internationalisierung der Lehre stärken und eine Community of Practice im VE-Bereich für den aktiven Austausch aufbauen.
+                    VE-Collab unterstützt Lehrenden beim eigenen Kompetenzaufbau sowie bei der Planung internationaler und nationaler virtueller Austausche (eng. virtual exchanges). Bei uns finden Sie Qualifizierungsangebote, Hilfestellungen bei der Initialisierung, Planung und dem Design von VE. Wir möchten die Internationalisierung der Lehre stärken und eine Community of Practice im VE-Bereich für den aktiven Austausch aufbauen.
                 </p>
                 <Link
                     href="/startingWizard/generalInformation/1projectName"
