@@ -2,8 +2,11 @@ import React from 'react';
 import Link from 'next/link';
 import Image from "next/image"
 import blueBackground from "@/images/footer/KAVAQ_Footer_rounded.png"
+import { signIn, useSession } from 'next-auth/react';
 
 export default function Home() {
+    const { data: session } = useSession();
+
     return (
         <div className="bg-slate-100">
             <div className="flex flex-col m-auto p-12 max-w-screen-[1500] items-center bg-pattern-left-blue bg-no-repeat">
@@ -16,12 +19,23 @@ export default function Home() {
                 <p className="w-1/2 my-10 font-konnect">
                     VE-Collab unterstützt Lehrenden beim eigenen Kompetenzaufbau sowie bei der Planung internationaler und nationaler virtueller Austausche (eng. virtual exchanges). Bei uns finden Sie Qualifizierungsangebote, Hilfestellungen bei der Initialisierung, Planung und dem Design von VE. Wir möchten die Internationalisierung der Lehre stärken und eine Community of Practice im VE-Bereich für den aktiven Austausch aufbauen.
                 </p>
-                <Link
-                    href="/startingWizard/generalInformation/1projectName"
-                    className="py-4 pr-6 pl-5 m-10 bg-ve-collab-orange rounded-lg text-white"
+
+                {session && (
+                    <Link
+                        href="/startingWizard/generalInformation/1projectName"
+                        className="py-4 pr-6 pl-5 m-10 bg-ve-collab-orange rounded-lg text-white"
+                    >
+                        neuen VA planen
+                    </Link>
+                )}
+                {!session && (
+                    <div
+                    onClick={() => signIn('keycloak')}
+                    className="py-4 pr-6 pl-5 m-10 bg-ve-collab-orange rounded-lg text-white cursor-pointer"
                 >
-                    neuen VA planen
-                </Link>
+                    Logge dich ein, um einen neuen VA zu planen
+                </div>
+                )}
             </div>
         </div>
     );
