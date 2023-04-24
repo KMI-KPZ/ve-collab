@@ -1,11 +1,9 @@
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
 import Link from 'next/link';
-import { FormEvent } from 'react';
 import { useRouter } from 'next/router';
 
 export default function Finished() {
     const router = useRouter();
-    const handleSubmit = async (e: FormEvent) => {};
 
     return (
         <>
@@ -39,7 +37,6 @@ export default function Finished() {
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={handleSubmit}
                                 >
                                     Weiter zur Übersicht
                                 </button>

@@ -4,9 +4,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 export default function Parameters() {
-    const handleSubmit = () => {
-        console.log('checked');
-    };
     const router = useRouter();
     return (
         <>
@@ -94,7 +91,6 @@ export default function Parameters() {
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={handleSubmit}
                                 >
                                     Weiter
                                 </button>

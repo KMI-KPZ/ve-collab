@@ -10,7 +10,7 @@ export default function ExternalPersons() {
 
     const router = useRouter();
 
-    const handleSubmit = (e: FormEvent) => {
+    const handleSubmit = () => {
         console.log(externals);
     };
 

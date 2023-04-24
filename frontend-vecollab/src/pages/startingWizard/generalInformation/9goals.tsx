@@ -3,7 +3,7 @@ import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarS
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { FormEvent, useContext, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 
@@ -65,7 +65,7 @@ export default function Goals() {
         );
     }, [session?.accessToken, router]);
 
-    const handleSubmit = async (e: FormEvent) => {
+    const handleSubmit = async () => {
         let payload: Record<string, string> = {};
         goals.forEach((goal) => {
             payload[goal.target_group] = goal.goal;
@@ -123,7 +123,7 @@ export default function Goals() {
                             <input
                                 type={'checkbox'}
                                 checked={allSameGoal}
-                                onChange={(e) => modifyAllSameGoal(!allSameGoal)}
+                                onChange={() => modifyAllSameGoal(!allSameGoal)}
                                 placeholder="Name eingeben"
                                 className="border border-gray-500 rounded-lg p-2"
                             />

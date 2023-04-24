@@ -38,7 +38,7 @@ export default function Topic() {
     } = useForm<FormData>({ mode: 'onChange', defaultValues: async () => fetchLastInputs() });
 
     const onSubmit: SubmitHandler<FormData> = async () => {
-        const newPlanner = await fetchPOST(
+        await fetchPOST(
             '/planner/update_field',
             { plan_id: router.query.plannerId, field_name: 'topic', value: watch('topic') },
             session?.accessToken

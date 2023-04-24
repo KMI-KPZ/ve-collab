@@ -3,7 +3,7 @@ import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarS
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { FormEvent, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 
 export default function LearningEnvironment() {
@@ -30,8 +30,8 @@ export default function LearningEnvironment() {
         );
     }, [session?.accessToken, router]);
 
-    const handleSubmit = async (e: FormEvent) => {
-        const response = await fetchPOST(
+    const handleSubmit = async () => {
+        await fetchPOST(
             '/planner/update_field',
             { plan_id: router.query.plannerId, field_name: 'learning_env', value: environment },
             session?.accessToken

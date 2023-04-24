@@ -1,6 +1,5 @@
 import WhiteBox from '@/components/Layout/WhiteBox';
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
-import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
@@ -114,8 +113,8 @@ export default function FinePlanner() {
         );
     }, [session?.accessToken, router]);
 
-    const handleSubmit = async (e: FormEvent) => {
-        const response = await fetchPOST(
+    const handleSubmit = async () => {
+        await fetchPOST(
             '/planner/update_field',
             { plan_id: router.query.plannerId, field_name: 'steps', value: steps },
             session?.accessToken

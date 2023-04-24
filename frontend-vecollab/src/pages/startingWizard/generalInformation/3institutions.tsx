@@ -4,7 +4,7 @@ import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarS
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { FormEvent, useContext, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 

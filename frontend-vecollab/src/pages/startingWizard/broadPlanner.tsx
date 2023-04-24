@@ -1,10 +1,9 @@
 import WhiteBox from '@/components/Layout/WhiteBox';
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
-import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { FormEvent, useContext, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 
@@ -47,7 +46,7 @@ export default function BroadPlanner() {
         );
     }, [session?.accessToken, router]);
 
-    const handleSubmit = async (e: FormEvent) => {
+    const handleSubmit = async () => {
         steps.forEach(async (step) => {
             let payload = {
                 name: step.name,
@@ -62,7 +61,7 @@ export default function BroadPlanner() {
                 attachments: [],
                 custom_attributes: {},
             };
-            const response = await fetchPOST(
+            await fetchPOST(
                 '/planner/append_step',
                 { plan_id: router.query.plannerId, step: payload },
                 session?.accessToken

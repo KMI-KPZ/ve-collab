@@ -3,7 +3,7 @@ import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarS
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { FormEvent, useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 
 export default function Realization() {
@@ -30,8 +30,8 @@ export default function Realization() {
         );
     }, [session?.accessToken, router]);
 
-    const handleSubmit = async (e: FormEvent) => {
-        const response = await fetchPOST(
+    const handleSubmit = async () => {
+        await fetchPOST(
             '/planner/update_field',
             { plan_id: router.query.plannerId, field_name: 'realization', value: realization },
             session?.accessToken
