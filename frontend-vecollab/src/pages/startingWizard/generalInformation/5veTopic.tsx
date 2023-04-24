@@ -3,9 +3,8 @@ import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarS
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { useContext, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { PlanIdContext } from '@/pages/_app';
 import { useForm, SubmitHandler } from 'react-hook-form';
 
 interface FormData {
@@ -13,22 +12,20 @@ interface FormData {
 }
 
 export default function Topic() {
-    const { planId } = useContext(PlanIdContext);
     const { data: session } = useSession();
     const router = useRouter();
 
     useEffect(() => {
-        if (!planId) {
+        if (!router.query.plannerId) {
             router.push('/overviewProjects');
         }
-    }, [planId, session?.accessToken, router]);
+    }, [session?.accessToken, router]);
 
-    // TODO Error handlen in API response
-    // TODO Error Message Anzeigen
-    // TODO Error inputs werden nicht gesavt
-    // TODO Inputs nur gesavt wenn auf weiter
     const fetchLastInputs = async (): Promise<FormData> => {
-        return await fetchGET(`/planner/get?_id=${planId}`, session?.accessToken).then((data) => {
+        return await fetchGET(
+            `/planner/get?_id=${router.query.plannerId}`,
+            session?.accessToken
+        ).then((data) => {
             return data.plan.topic != null ? { topic: data.plan.topic } : { topic: '' };
         });
     };
@@ -41,12 +38,16 @@ export default function Topic() {
     } = useForm<FormData>({ mode: 'onChange', defaultValues: async () => fetchLastInputs() });
 
     const onSubmit: SubmitHandler<FormData> = async () => {
-        await fetchPOST(
+        const newPlanner = await fetchPOST(
             '/planner/update_field',
-            { plan_id: planId, field_name: 'topic', value: watch('topic') },
+            { plan_id: router.query.plannerId, field_name: 'topic', value: watch('topic') },
             session?.accessToken
         );
-        await router.push('/startingWizard/generalInformation/6targetGroups');
+
+        await router.push({
+            pathname: '/startingWizard/generalInformation/6targetGroups',
+            query: { plannerId: router.query.plannerId },
+        });
     };
 
     return (
@@ -87,7 +88,13 @@ export default function Topic() {
                     </div>
                     <div className="flex justify-around w-full">
                         <div>
-                            <Link href={'/startingWizard/generalInformation/4participatingCourses'}>
+                            <Link
+                                href={{
+                                    pathname:
+                                        '/startingWizard/generalInformation/4participatingCourses',
+                                    query: { plannerId: router.query.plannerId },
+                                }}
+                            >
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"

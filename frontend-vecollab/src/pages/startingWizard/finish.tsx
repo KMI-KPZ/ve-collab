@@ -1,14 +1,10 @@
-import WhiteBox from '@/components/Layout/WhiteBox';
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
-import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
-import { fetchGET, fetchPOST } from '@/lib/backend';
-import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { FormEvent, useContext, useEffect, useState } from 'react';
-import { RxMinus, RxPlus } from 'react-icons/rx';
-import { PlanIdContext } from '../_app';
+import { FormEvent } from 'react';
+import { useRouter } from 'next/router';
 
 export default function Finished() {
+    const router = useRouter();
     const handleSubmit = async (e: FormEvent) => {};
 
     return (
@@ -24,7 +20,12 @@ export default function Finished() {
                     </div>
                     <div className="flex justify-around w-full">
                         <div>
-                            <Link href={'/startingWizard/finePlanner'}>
+                            <Link
+                                href={{
+                                    pathname: '/startingWizard/finePlanner',
+                                    query: { plannerId: router.query.plannerId },
+                                }}
+                            >
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"

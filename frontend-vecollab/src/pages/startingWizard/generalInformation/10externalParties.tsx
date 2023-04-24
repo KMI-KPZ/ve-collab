@@ -3,9 +3,12 @@ import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarS
 import Link from 'next/link';
 import { FormEvent, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
+import { useRouter } from 'next/router';
 
 export default function ExternalPersons() {
     const [externals, setExternals] = useState(['']);
+
+    const router = useRouter();
 
     const handleSubmit = (e: FormEvent) => {
         console.log(externals);
@@ -28,8 +31,6 @@ export default function ExternalPersons() {
         copy.pop();
         setExternals(copy);
     };
-
-    console.log(externals);
 
     return (
         <>
@@ -67,7 +68,12 @@ export default function ExternalPersons() {
                     </div>
                     <div className="flex justify-around w-full">
                         <div>
-                            <Link href={'/startingWizard/generalInformation/9goals'}>
+                            <Link
+                                href={{
+                                    pathname: '/startingWizard/generalInformation/9goals',
+                                    query: { plannerId: router.query.plannerId },
+                                }}
+                            >
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
@@ -77,7 +83,12 @@ export default function ExternalPersons() {
                             </Link>
                         </div>
                         <div>
-                            <Link href={'/startingWizard/generalInformation/11courseFormat'}>
+                            <Link
+                                href={{
+                                    pathname: '/startingWizard/generalInformation/11courseFormat',
+                                    query: { plannerId: router.query.plannerId },
+                                }}
+                            >
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"

@@ -4,10 +4,9 @@ import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarS
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { FormEvent, useContext, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
-import { PlanIdContext } from '@/pages/_app';
 
 interface Task {
     title: string;
@@ -44,38 +43,56 @@ export default function FinePlanner() {
         },
     ]);
 
-    const { planId, setPlanId } = useContext(PlanIdContext);
     const { data: session } = useSession();
-
-    //console.log(planId)
 
     const router = useRouter();
     useEffect(() => {
-        if (!planId) {
+        if (!router.query.plannerId) {
             router.push('/overviewProjects');
         }
-        fetchGET(`/planner/get?_id=${planId}`, session?.accessToken).then((data) => {
-            console.log(data);
-
-            if (data.plan) {
-                if (data.plan.steps.length > 0) {
-                    let list = data.plan.steps.map((step: any) => ({
-                        ...step,
-                        timestamp_from: step.timestamp_from.split('T')[0],
-                        timestamp_to: step.timestamp_to.split('T')[0],
-                        tasks:
-                            step.tasks.length === 0
-                                ? [
-                                      {
-                                          title: '',
-                                          description: '',
-                                          learning_goal: '',
-                                          tools: ['', ''],
-                                      },
-                                  ]
-                                : step.tasks,
-                    }));
-                    setSteps(list);
+        fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
+            (data) => {
+                if (data.plan) {
+                    if (data.plan.steps.length > 0) {
+                        let list = data.plan.steps.map((step: any) => ({
+                            ...step,
+                            timestamp_from: step.timestamp_from.split('T')[0],
+                            timestamp_to: step.timestamp_to.split('T')[0],
+                            tasks:
+                                step.tasks.length === 0
+                                    ? [
+                                          {
+                                              title: '',
+                                              description: '',
+                                              learning_goal: '',
+                                              tools: ['', ''],
+                                          },
+                                      ]
+                                    : step.tasks,
+                        }));
+                        setSteps(list);
+                    } else {
+                        setSteps([
+                            {
+                                timestamp_from: '',
+                                timestamp_to: '',
+                                name: '',
+                                workload: 0,
+                                social_form: '',
+                                learning_env: '',
+                                ve_approach: '',
+                                evaluation_tools: ['', ''],
+                                tasks: [
+                                    {
+                                        title: '',
+                                        description: '',
+                                        learning_goal: '',
+                                        tools: ['', ''],
+                                    },
+                                ],
+                            },
+                        ]);
+                    }
                 } else {
                     setSteps([
                         {
@@ -93,32 +110,16 @@ export default function FinePlanner() {
                         },
                     ]);
                 }
-            } else {
-                setSteps([
-                    {
-                        timestamp_from: '',
-                        timestamp_to: '',
-                        name: '',
-                        workload: 0,
-                        social_form: '',
-                        learning_env: '',
-                        ve_approach: '',
-                        evaluation_tools: ['', ''],
-                        tasks: [{ title: '', description: '', learning_goal: '', tools: ['', ''] }],
-                    },
-                ]);
             }
-        });
-    }, [planId, session?.accessToken, router]);
+        );
+    }, [session?.accessToken, router]);
 
     const handleSubmit = async (e: FormEvent) => {
         const response = await fetchPOST(
             '/planner/update_field',
-            { plan_id: planId, field_name: 'steps', value: steps },
+            { plan_id: router.query.plannerId, field_name: 'steps', value: steps },
             session?.accessToken
         );
-        console.log(response);
-        console.log(steps);
     };
 
     const addTask = (e: FormEvent, stepIndex: number) => {
@@ -197,8 +198,6 @@ export default function FinePlanner() {
         newSteps[stepIndex].tasks[taskIndex].tools[toolIndex] = value;
         setSteps(newSteps);
     };
-
-    //console.log(steps)
 
     return (
         <>
@@ -463,7 +462,12 @@ export default function FinePlanner() {
                     </div>
                     <div className="flex justify-around w-full">
                         <div>
-                            <Link href={'/startingWizard/broadPlanner'}>
+                            <Link
+                                href={{
+                                    pathname: '/startingWizard/broadPlanner',
+                                    query: { plannerId: router.query.plannerId },
+                                }}
+                            >
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
@@ -473,7 +477,12 @@ export default function FinePlanner() {
                             </Link>
                         </div>
                         <div>
-                            <Link href={'/startingWizard/finish'}>
+                            <Link
+                                href={{
+                                    pathname: '/startingWizard/finish',
+                                    query: { plannerId: router.query.plannerId },
+                                }}
+                            >
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"

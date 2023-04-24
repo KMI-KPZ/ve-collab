@@ -3,46 +3,40 @@ import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarS
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { FormEvent, useContext, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { PlanIdContext } from '@/pages/_app';
 
 export default function LearningEnvironment() {
     const [environment, setEnvironment] = useState('');
 
-    const { planId, setPlanId } = useContext(PlanIdContext);
     const { data: session } = useSession();
-
-    //console.log(planId)
 
     const router = useRouter();
     useEffect(() => {
-        if (!planId) {
+        if (!router.query.plannerId) {
             router.push('/overviewProjects');
         }
-        fetchGET(`/planner/get?_id=${planId}`, session?.accessToken).then((data) => {
-            console.log(data);
-            if (data.plan) {
-                if (data.plan.learning_env) {
-                    setEnvironment(data.plan.learning_env);
+        fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
+            (data) => {
+                console.log(data);
+                if (data.plan) {
+                    if (data.plan.learning_env) {
+                        setEnvironment(data.plan.learning_env);
+                    }
+                } else {
+                    setEnvironment('');
                 }
-            } else {
-                setEnvironment('');
             }
-        });
-    }, [planId, session?.accessToken, router]);
+        );
+    }, [session?.accessToken, router]);
 
     const handleSubmit = async (e: FormEvent) => {
         const response = await fetchPOST(
             '/planner/update_field',
-            { plan_id: planId, field_name: 'learning_env', value: environment },
+            { plan_id: router.query.plannerId, field_name: 'learning_env', value: environment },
             session?.accessToken
         );
-        console.log(response);
-        console.log(environment);
     };
-
-    console.log(environment);
 
     return (
         <>
@@ -70,7 +64,12 @@ export default function LearningEnvironment() {
                     </div>
                     <div className="flex justify-around w-full">
                         <div>
-                            <Link href={'/startingWizard/generalInformation/11courseFormat'}>
+                            <Link
+                                href={{
+                                    pathname: '/startingWizard/generalInformation/11courseFormat',
+                                    query: { plannerId: router.query.plannerId },
+                                }}
+                            >
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
@@ -80,7 +79,12 @@ export default function LearningEnvironment() {
                             </Link>
                         </div>
                         <div>
-                            <Link href={'/startingWizard/generalInformation/13tools'}>
+                            <Link
+                                href={{
+                                    pathname: '/startingWizard/generalInformation/13tools',
+                                    query: { plannerId: router.query.plannerId },
+                                }}
+                            >
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"

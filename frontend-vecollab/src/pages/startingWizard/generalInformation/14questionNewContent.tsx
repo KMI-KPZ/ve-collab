@@ -5,38 +5,36 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { FormEvent, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { PlanIdContext } from '@/pages/_app';
 
 export default function NewContent() {
     const [newContent, setNewContent] = useState('');
 
-    const { planId, setPlanId } = useContext(PlanIdContext);
     const { data: session } = useSession();
-
-    //console.log(planId)
 
     const router = useRouter();
     useEffect(() => {
-        if (!planId) {
+        if (!router.query.plannerId) {
             router.push('/overviewProjects');
         }
-        fetchGET(`/planner/get?_id=${planId}`, session?.accessToken).then((data) => {
-            console.log(data);
-            if (data.plan) {
-                if (data.plan.new_content != null) {
-                    let strVal = '';
-                    if (data.plan.new_content === true) {
-                        strVal = 'true';
-                    } else if (data.plan.new_content === false) {
-                        strVal = 'false';
+        fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
+            (data) => {
+                console.log(data);
+                if (data.plan) {
+                    if (data.plan.new_content != null) {
+                        let strVal = '';
+                        if (data.plan.new_content === true) {
+                            strVal = 'true';
+                        } else if (data.plan.new_content === false) {
+                            strVal = 'false';
+                        }
+                        setNewContent(strVal);
                     }
-                    setNewContent(strVal);
+                } else {
+                    setNewContent('');
                 }
-            } else {
-                setNewContent('');
             }
-        });
-    }, [planId, session?.accessToken, router]);
+        );
+    }, [session?.accessToken, router]);
 
     const handleSubmit = async (e: FormEvent) => {
         let boolVal = null;
@@ -47,14 +45,10 @@ export default function NewContent() {
         }
         const response = await fetchPOST(
             '/planner/update_field',
-            { plan_id: planId, field_name: 'new_content', value: boolVal },
+            { plan_id: router.query.plannerId, field_name: 'new_content', value: boolVal },
             session?.accessToken
         );
-        console.log(response);
-        console.log(newContent);
     };
-
-    console.log(newContent);
 
     return (
         <>
@@ -109,7 +103,12 @@ export default function NewContent() {
                     </div>
                     <div className="flex justify-around w-full">
                         <div>
-                            <Link href={'/startingWizard/generalInformation/13tools'}>
+                            <Link
+                                href={{
+                                    pathname: '/startingWizard/generalInformation/13tools',
+                                    query: { plannerId: router.query.plannerId },
+                                }}
+                            >
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
@@ -119,9 +118,12 @@ export default function NewContent() {
                             </Link>
                         </div>
                         <div>
-                            <Link href={'/startingWizard/broadPlanner'}>
-                                {' '}
-                                {/* for now just go on page back even on success to not lose the planId context*/}
+                            <Link
+                                href={{
+                                    pathname: '/startingWizard/broadPlanner',
+                                    query: { plannerId: router.query.plannerId },
+                                }}
+                            >
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"

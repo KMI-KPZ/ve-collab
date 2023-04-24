@@ -2,22 +2,21 @@ import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarS
 import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import { useContext } from 'react';
-import { PlanIdContext } from '@/pages/_app';
 import { useRouter } from 'next/router';
 import { SubmitHandler, useForm } from 'react-hook-form';
 
 interface FormData {
-    projectName: string;
+    name: string;
 }
 
 export default function EssentialInformation() {
     const router = useRouter();
     const fetchLastInputs = async (): Promise<FormData> => {
-        return await fetchGET(`/planner/get?_id=${planId}`, session?.accessToken).then((data) => {
-            return data.plan.projectName != null
-                ? { projectName: data.plan.projectName }
-                : { projectName: '' };
+        return await fetchGET(
+            `/planner/get?_id=${router.query.plannerId}`,
+            session?.accessToken
+        ).then((data) => {
+            return data.plan.name != null ? { name: data.plan.name } : { name: '' };
         });
     };
 
@@ -29,17 +28,18 @@ export default function EssentialInformation() {
     } = useForm<FormData>({ mode: 'onChange', defaultValues: async () => fetchLastInputs() });
 
     const onSubmit: SubmitHandler<FormData> = async () => {
-        await fetchPOST(
+        const newPlanner = await fetchPOST(
             '/planner/insert_empty',
-            { name: watch('projectName') },
+            { name: watch('name') },
             session?.accessToken
         );
-        await router.push('/startingWizard/generalInformation/2partners');
+        await router.push({
+            pathname: '/startingWizard/generalInformation/2partners',
+            query: { plannerId: newPlanner.inserted_id },
+        });
     };
 
     const { data: session } = useSession();
-
-    const { planId } = useContext(PlanIdContext);
 
     return (
         <>
@@ -59,7 +59,7 @@ export default function EssentialInformation() {
                                     type="text"
                                     placeholder="Name eingeben"
                                     className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
-                                    {...register('projectName', {
+                                    {...register('name', {
                                         maxLength: {
                                             value: 50,
                                             message:
@@ -72,7 +72,7 @@ export default function EssentialInformation() {
                                         },
                                     })}
                                 />
-                                <p className="text-red-600 pt-2">{errors.projectName?.message}</p>
+                                <p className="text-red-600 pt-2">{errors.name?.message}</p>
                             </div>
                         </div>
                     </div>

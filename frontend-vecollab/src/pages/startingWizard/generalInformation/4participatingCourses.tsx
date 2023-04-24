@@ -4,10 +4,9 @@ import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarS
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { FormEvent, useContext, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
-import { PlanIdContext } from '@/pages/_app';
 
 interface Lecture {
     name: string;
@@ -22,18 +21,28 @@ export default function Lectures() {
         { name: '', lecture_type: '', lecture_format: '', participants_amount: undefined },
     ]);
 
-    const { planId, setPlanId } = useContext(PlanIdContext);
     const { data: session } = useSession();
 
     const router = useRouter();
     useEffect(() => {
-        if (!planId) {
+        if (!router.query.plannerId) {
             router.push('/overviewProjects');
         }
-        fetchGET(`/planner/get?_id=${planId}`, session?.accessToken).then((data) => {
-            if (data.plan) {
-                if (data.plan.lectures.length > 0) {
-                    setLectures(data.plan.lectures);
+        fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
+            (data) => {
+                if (data.plan) {
+                    if (data.plan.lectures.length > 0) {
+                        setLectures(data.plan.lectures);
+                    } else {
+                        setLectures([
+                            {
+                                name: '',
+                                lecture_type: '',
+                                lecture_format: '',
+                                participants_amount: undefined,
+                            },
+                        ]);
+                    }
                 } else {
                     setLectures([
                         {
@@ -44,23 +53,14 @@ export default function Lectures() {
                         },
                     ]);
                 }
-            } else {
-                setLectures([
-                    {
-                        name: '',
-                        lecture_type: '',
-                        lecture_format: '',
-                        participants_amount: undefined,
-                    },
-                ]);
             }
-        });
-    }, [planId, session?.accessToken, router]);
+        );
+    }, [session?.accessToken, router]);
 
-    const handleSubmit = async (e: FormEvent) => {
-        const response = await fetchPOST(
+    const handleSubmit = async () => {
+        await fetchPOST(
             '/planner/update_field',
-            { plan_id: planId, field_name: 'lectures', value: lectures },
+            { plan_id: router.query.plannerId, field_name: 'lectures', value: lectures },
             session?.accessToken
         );
     };
@@ -211,7 +211,12 @@ export default function Lectures() {
                     </div>
                     <div className="flex justify-around w-full">
                         <div>
-                            <Link href={'/startingWizard/generalInformation/3institutions'}>
+                            <Link
+                                href={{
+                                    pathname: '/startingWizard/generalInformation/3institutions',
+                                    query: { plannerId: router.query.plannerId },
+                                }}
+                            >
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
@@ -221,7 +226,12 @@ export default function Lectures() {
                             </Link>
                         </div>
                         <div>
-                            <Link href={'/startingWizard/generalInformation/5veTopic'}>
+                            <Link
+                                href={{
+                                    pathname: '/startingWizard/generalInformation/5veTopic',
+                                    query: { plannerId: router.query.plannerId },
+                                }}
+                            >
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"

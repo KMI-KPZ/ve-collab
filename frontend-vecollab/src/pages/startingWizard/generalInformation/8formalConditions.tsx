@@ -1,14 +1,13 @@
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
 import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
 import Link from 'next/link';
-import { FormEvent } from 'react';
+import { useRouter } from 'next/router';
 
 export default function Parameters() {
-    const handleSubmit = (e: FormEvent) => {
-        //e.preventDefault();
+    const handleSubmit = () => {
         console.log('checked');
     };
-
+    const router = useRouter();
     return (
         <>
             <HeadProgressBarSection stage={0} />
@@ -71,7 +70,12 @@ export default function Parameters() {
                     </div>
                     <div className="flex justify-around w-full">
                         <div>
-                            <Link href={'/startingWizard/generalInformation/7languages'}>
+                            <Link
+                                href={{
+                                    pathname: '/startingWizard/generalInformation/7languages',
+                                    query: { plannerId: router.query.plannerId },
+                                }}
+                            >
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
@@ -81,7 +85,12 @@ export default function Parameters() {
                             </Link>
                         </div>
                         <div>
-                            <Link href={'/startingWizard/generalInformation/9goals'}>
+                            <Link
+                                href={{
+                                    pathname: '/startingWizard/generalInformation/9goals',
+                                    query: { plannerId: router.query.plannerId },
+                                }}
+                            >
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"

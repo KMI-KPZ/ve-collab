@@ -4,10 +4,9 @@ import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarS
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { FormEvent, useContext, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
-import { PlanIdContext } from '@/pages/_app';
 
 interface TargetGroup {
     name: string;
@@ -41,27 +40,41 @@ export default function TargetGroups() {
         },
     ]);
 
-    const { planId, setPlanId } = useContext(PlanIdContext);
     const { data: session } = useSession();
 
     const router = useRouter();
     useEffect(() => {
-        if (!planId) {
+        if (!router.query.plannerId) {
+            console.log(router.query.plannerId);
             router.push('/overviewProjects');
         }
-        fetchGET(`/planner/get?_id=${planId}`, session?.accessToken).then((data) => {
-            if (data.plan) {
-                if (data.plan.audience.length > 0) {
-                    let list = data.plan.audience.map((targetGroup: any) => ({
-                        name: targetGroup.name,
-                        age_min: targetGroup.age_min,
-                        age_max: targetGroup.age_max,
-                        experience: targetGroup.experience,
-                        academic_course: targetGroup.academic_course,
-                        mother_tongue: targetGroup.mother_tongue,
-                        foreign_languages: targetGroup.foreign_languages.language,
-                    }));
-                    setTargetGroups(list);
+        fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
+            (data) => {
+                if (data.plan) {
+                    if (data.plan.audience.length > 0) {
+                        let list = data.plan.audience.map((targetGroup: any) => ({
+                            name: targetGroup.name,
+                            age_min: targetGroup.age_min,
+                            age_max: targetGroup.age_max,
+                            experience: targetGroup.experience,
+                            academic_course: targetGroup.academic_course,
+                            mother_tongue: targetGroup.mother_tongue,
+                            foreign_languages: targetGroup.foreign_languages.language,
+                        }));
+                        setTargetGroups(list);
+                    } else {
+                        setTargetGroups([
+                            {
+                                name: '',
+                                age_min: undefined,
+                                age_max: undefined,
+                                experience: '',
+                                academic_course: '',
+                                mother_tongue: '',
+                                foreign_languages: '',
+                            },
+                        ]);
+                    }
                 } else {
                     setTargetGroups([
                         {
@@ -75,23 +88,11 @@ export default function TargetGroups() {
                         },
                     ]);
                 }
-            } else {
-                setTargetGroups([
-                    {
-                        name: '',
-                        age_min: undefined,
-                        age_max: undefined,
-                        experience: '',
-                        academic_course: '',
-                        mother_tongue: '',
-                        foreign_languages: '',
-                    },
-                ]);
             }
-        });
-    }, [planId, session?.accessToken, router]);
+        );
+    }, [session?.accessToken, router]);
 
-    const handleSubmit = async (e: FormEvent) => {
+    const handleSubmit = async () => {
         let tgList: any[] = [];
         targetGroups.forEach((tg) => {
             let payload = {
@@ -105,9 +106,9 @@ export default function TargetGroups() {
             };
             tgList.push(payload);
         });
-        const response = await fetchPOST(
+        await fetchPOST(
             '/planner/update_field',
-            { plan_id: planId, field_name: 'audience', value: tgList },
+            { plan_id: router.query.plannerId, field_name: 'audience', value: tgList },
             session?.accessToken
         );
     };
@@ -335,7 +336,12 @@ export default function TargetGroups() {
                     </div>
                     <div className="flex justify-around w-full">
                         <div>
-                            <Link href={'/startingWizard/generalInformation/5veTopic'}>
+                            <Link
+                                href={{
+                                    pathname: '/startingWizard/generalInformation/5veTopic',
+                                    query: { plannerId: router.query.plannerId },
+                                }}
+                            >
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
@@ -345,7 +351,12 @@ export default function TargetGroups() {
                             </Link>
                         </div>
                         <div>
-                            <Link href={'/startingWizard/generalInformation/7languages'}>
+                            <Link
+                                href={{
+                                    pathname: '/startingWizard/generalInformation/7languages',
+                                    query: { plannerId: router.query.plannerId },
+                                }}
+                            >
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"

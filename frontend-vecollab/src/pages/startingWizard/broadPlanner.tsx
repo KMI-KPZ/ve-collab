@@ -7,7 +7,6 @@ import Link from 'next/link';
 import { FormEvent, useContext, useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
-import { PlanIdContext } from '@/pages/_app';
 
 interface BroadStep {
     from: string;
@@ -21,35 +20,32 @@ export default function BroadPlanner() {
         { from: '', to: '', name: '' },
     ]);
 
-    const { planId, setPlanId } = useContext(PlanIdContext);
     const { data: session } = useSession();
-
-    //console.log(planId)
 
     const router = useRouter();
     useEffect(() => {
-        if (!planId) {
+        if (!router.query.plannerId) {
             router.push('/overviewProjects');
         }
-        fetchGET(`/planner/get?_id=${planId}`, session?.accessToken).then((data) => {
-            console.log(data);
-
-            if (data.plan) {
-                if (data.plan.steps.length > 0) {
-                    let list = data.plan.steps.map((step: any) => ({
-                        name: step.name,
-                        from: step.timestamp_from.split('T')[0],
-                        to: step.timestamp_to.split('T')[0],
-                    }));
-                    setSteps(list);
+        fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
+            (data) => {
+                if (data.plan) {
+                    if (data.plan.steps.length > 0) {
+                        let list = data.plan.steps.map((step: any) => ({
+                            name: step.name,
+                            from: step.timestamp_from.split('T')[0],
+                            to: step.timestamp_to.split('T')[0],
+                        }));
+                        setSteps(list);
+                    } else {
+                        setSteps([{ from: '', to: '', name: '' }]);
+                    }
                 } else {
                     setSteps([{ from: '', to: '', name: '' }]);
                 }
-            } else {
-                setSteps([{ from: '', to: '', name: '' }]);
             }
-        });
-    }, [planId, session?.accessToken, router]);
+        );
+    }, [session?.accessToken, router]);
 
     const handleSubmit = async (e: FormEvent) => {
         steps.forEach(async (step) => {
@@ -68,12 +64,10 @@ export default function BroadPlanner() {
             };
             const response = await fetchPOST(
                 '/planner/append_step',
-                { plan_id: planId, step: payload },
+                { plan_id: router.query.plannerId, step: payload },
                 session?.accessToken
             );
-            console.log(response);
         });
-        console.log(steps);
     };
 
     const modifyName = (index: number, value: string) => {
@@ -103,8 +97,6 @@ export default function BroadPlanner() {
         copy.pop();
         setSteps(copy);
     };
-
-    console.log(steps);
 
     return (
         <>
@@ -163,7 +155,13 @@ export default function BroadPlanner() {
                     </div>
                     <div className="flex justify-around w-full">
                         <div>
-                            <Link href={'/startingWizard/generalInformation/14questionNewContent'}>
+                            <Link
+                                href={{
+                                    pathname:
+                                        '/startingWizard/generalInformation/14questionNewContent',
+                                    query: { plannerId: router.query.plannerId },
+                                }}
+                            >
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
@@ -173,7 +171,12 @@ export default function BroadPlanner() {
                             </Link>
                         </div>
                         <div>
-                            <Link href={'/startingWizard/finePlanner'}>
+                            <Link
+                                href={{
+                                    pathname: '/startingWizard/finePlanner',
+                                    query: { plannerId: router.query.plannerId },
+                                }}
+                            >
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"

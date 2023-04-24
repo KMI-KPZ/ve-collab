@@ -6,39 +6,37 @@ import Link from 'next/link';
 import { FormEvent, useContext, useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
-import { PlanIdContext } from '@/pages/_app';
 
 export default function Tools() {
     const [tools, setTools] = useState(['']);
 
-    const { planId, setPlanId } = useContext(PlanIdContext);
     const { data: session } = useSession();
-
-    //console.log(planId)
 
     const router = useRouter();
     useEffect(() => {
-        if (!planId) {
+        if (!router.query.plannerId) {
             router.push('/overviewProjects');
         }
-        fetchGET(`/planner/get?_id=${planId}`, session?.accessToken).then((data) => {
-            console.log(data);
-            if (data.plan) {
-                if (data.plan.tools.length > 0) {
-                    setTools(data.plan.tools);
+        fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
+            (data) => {
+                console.log(data);
+                if (data.plan) {
+                    if (data.plan.tools.length > 0) {
+                        setTools(data.plan.tools);
+                    } else {
+                        setTools(['']);
+                    }
                 } else {
                     setTools(['']);
                 }
-            } else {
-                setTools(['']);
             }
-        });
-    }, [planId, session?.accessToken, router]);
+        );
+    }, [session?.accessToken, router]);
 
     const handleSubmit = async (e: FormEvent) => {
         const response = await fetchPOST(
             '/planner/update_field',
-            { plan_id: planId, field_name: 'tools', value: tools },
+            { plan_id: router.query.plannerId, field_name: 'tools', value: tools },
             session?.accessToken
         );
         console.log(response);
@@ -62,8 +60,6 @@ export default function Tools() {
         copy.pop();
         setTools(copy);
     };
-
-    console.log(tools);
 
     return (
         <>
@@ -97,7 +93,13 @@ export default function Tools() {
                     </div>
                     <div className="flex justify-around w-full">
                         <div>
-                            <Link href={'/startingWizard/generalInformation/12learningPlatform'}>
+                            <Link
+                                href={{
+                                    pathname:
+                                        '/startingWizard/generalInformation/12learningPlatform',
+                                    query: { plannerId: router.query.plannerId },
+                                }}
+                            >
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
@@ -107,7 +109,13 @@ export default function Tools() {
                             </Link>
                         </div>
                         <div>
-                            <Link href={'/startingWizard/generalInformation/14questionNewContent'}>
+                            <Link
+                                href={{
+                                    pathname:
+                                        '/startingWizard/generalInformation/14questionNewContent',
+                                    query: { plannerId: router.query.plannerId },
+                                }}
+                            >
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"

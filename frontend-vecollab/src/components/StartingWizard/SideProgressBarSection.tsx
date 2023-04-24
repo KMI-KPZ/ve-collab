@@ -100,7 +100,10 @@ export default function SideProgressBarSection() {
         return sideMenuStepsData.map((sideMenuStep, index) => (
             <li key={index}>
                 <Link
-                    href={sideMenuStep.link}
+                    href={{
+                        pathname: sideMenuStep.link,
+                        query: { plannerId: router.query.plannerId },
+                    }}
                     className={`flex bg-white p-2 w-full rounded-lg drop-shadow-lg`}
                 >
                     <Image src={renderIcon(sideMenuStep.state)} alt="Ve Collab Logo"></Image>

@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { FormEvent, useContext, useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
-import { PlanIdContext } from '@/pages/_app';
 
 interface Goal {
     target_group: string;
@@ -18,10 +17,7 @@ export default function Goals() {
 
     const [allSameGoal, setAllSameGoal] = useState(false);
 
-    const { planId, setPlanId } = useContext(PlanIdContext);
     const { data: session } = useSession();
-
-    //console.log(planId)
 
     const goalsAlreadyHaveTargetGroup = (goals: Goal[], tgName: string) => {
         for (const obj of goals) {
@@ -34,40 +30,40 @@ export default function Goals() {
 
     const router = useRouter();
     useEffect(() => {
-        if (!planId) {
+        if (!router.query.plannerId) {
             router.push('/overviewProjects');
         }
-        fetchGET(`/planner/get?_id=${planId}`, session?.accessToken).then((data) => {
-            console.log(data);
-
-            if (data.plan) {
-                if (Object.keys(data.plan.goals).length > 0) {
-                    let list: Goal[] = [];
-                    for (const [key, value] of Object.entries(data.plan.goals)) {
-                        let value_copy = String(value);
-                        list.push({ target_group: key, goal: value_copy });
-                    }
-                    data.plan.audience.forEach((tg: any) => {
-                        if (!goalsAlreadyHaveTargetGroup(list, tg.name)) {
-                            list.push({ target_group: tg.name, goal: '' });
+        fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
+            (data) => {
+                if (data.plan) {
+                    if (Object.keys(data.plan.goals).length > 0) {
+                        let list: Goal[] = [];
+                        for (const [key, value] of Object.entries(data.plan.goals)) {
+                            let value_copy = String(value);
+                            list.push({ target_group: key, goal: value_copy });
                         }
-                    });
-                    setGoals(list);
-                } else if (data.plan.audience.length > 0) {
-                    console.log('lol');
-                    let list: Goal[] = [];
-                    data.plan.audience.forEach((tg: any) => {
-                        list.push({ target_group: tg.name, goal: '' });
-                    });
-                    setGoals(list);
+                        data.plan.audience.forEach((tg: any) => {
+                            if (!goalsAlreadyHaveTargetGroup(list, tg.name)) {
+                                list.push({ target_group: tg.name, goal: '' });
+                            }
+                        });
+                        setGoals(list);
+                    } else if (data.plan.audience.length > 0) {
+                        console.log('lol');
+                        let list: Goal[] = [];
+                        data.plan.audience.forEach((tg: any) => {
+                            list.push({ target_group: tg.name, goal: '' });
+                        });
+                        setGoals(list);
+                    } else {
+                        setGoals([{ target_group: '', goal: '' }]);
+                    }
                 } else {
                     setGoals([{ target_group: '', goal: '' }]);
                 }
-            } else {
-                setGoals([{ target_group: '', goal: '' }]);
             }
-        });
-    }, [planId, session?.accessToken, router]);
+        );
+    }, [session?.accessToken, router]);
 
     const handleSubmit = async (e: FormEvent) => {
         let payload: Record<string, string> = {};
@@ -76,7 +72,7 @@ export default function Goals() {
         });
         const response = await fetchPOST(
             '/planner/update_field',
-            { plan_id: planId, field_name: 'goals', value: payload },
+            { plan_id: router.query.plannerId, field_name: 'goals', value: payload },
             session?.accessToken
         );
         console.log(response);
@@ -109,9 +105,6 @@ export default function Goals() {
         copy.pop();
         setGoals(copy);
     };
-
-    console.log(goals);
-    console.log(allSameGoal);
 
     return (
         <>
@@ -179,7 +172,13 @@ export default function Goals() {
                     </div>
                     <div className="flex justify-around w-full">
                         <div>
-                            <Link href={'/startingWizard/generalInformation/8formalConditions'}>
+                            <Link
+                                href={{
+                                    pathname:
+                                        '/startingWizard/generalInformation/8formalConditions',
+                                    query: { plannerId: router.query.plannerId },
+                                }}
+                            >
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
@@ -189,7 +188,13 @@ export default function Goals() {
                             </Link>
                         </div>
                         <div>
-                            <Link href={'/startingWizard/generalInformation/10externalParties'}>
+                            <Link
+                                href={{
+                                    pathname:
+                                        '/startingWizard/generalInformation/10externalParties',
+                                    query: { plannerId: router.query.plannerId },
+                                }}
+                            >
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"

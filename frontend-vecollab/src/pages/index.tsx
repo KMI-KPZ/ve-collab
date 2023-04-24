@@ -1,7 +1,19 @@
 import React from 'react';
-import Link from 'next/link';
+import { fetchPOST } from '@/lib/backend';
+import { useRouter } from 'next/router';
+import { useSession } from 'next-auth/react';
 
 export default function Home() {
+    const router = useRouter();
+    const { data: session } = useSession();
+    const createAndForwardNewPlanner = async () => {
+        const newPlanner = await fetchPOST('/planner/insert_empty', {}, session?.accessToken);
+        await router.push({
+            pathname: '/startingWizard/generalInformation/1projectName',
+            query: { plannerId: newPlanner.inserted_id },
+        });
+    };
+
     return (
         <div className="bg-slate-100">
             <div className="flex flex-col m-auto p-12 max-w-screen-[1500] items-center bg-pattern-left-blue bg-no-repeat">
@@ -20,12 +32,12 @@ export default function Home() {
                     ultricies nisi vel augue. Curabitur ullamcorper ultricies nisi. Nam eget dui.
                     Etiam
                 </p>
-                <Link
-                    href="/startingWizard/generalInformation/1projectName"
+                <button
+                    onClick={createAndForwardNewPlanner}
                     className="py-4 pr-6 pl-5 m-10 bg-ve-collab-orange rounded-lg text-white"
                 >
                     Starte dein Projekt
-                </Link>
+                </button>
             </div>
         </div>
     );
