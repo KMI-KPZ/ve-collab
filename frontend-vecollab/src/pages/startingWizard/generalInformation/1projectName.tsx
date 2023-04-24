@@ -2,8 +2,7 @@ import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarS
 import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import Link from 'next/link';
-import { useContext, useEffect, useState } from 'react';
+import { useContext } from 'react';
 import { PlanIdContext } from '@/pages/_app';
 import { useRouter } from 'next/router';
 import { SubmitHandler, useForm } from 'react-hook-form';
@@ -40,7 +39,7 @@ export default function EssentialInformation() {
 
     const { data: session } = useSession();
 
-    const { planId, setPlanId } = useContext(PlanIdContext);
+    const { planId } = useContext(PlanIdContext);
 
     return (
         <>
