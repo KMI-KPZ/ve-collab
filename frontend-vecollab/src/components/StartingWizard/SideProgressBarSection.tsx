@@ -16,17 +16,17 @@ export const sideMenuSteps: SideMenuStep[] = [
     {
         text: 'Partner',
         link: '/startingWizard/generalInformation/2partners',
-        state: ProgressState.completed,
+        state: ProgressState.notStarted,
     },
     {
         text: 'Institution',
         link: '/startingWizard/generalInformation/3institutions',
-        state: ProgressState.completed,
+        state: ProgressState.notStarted,
     },
     {
         text: 'Lehrveranstaltungen',
         link: '/startingWizard/generalInformation/4participatingCourses',
-        state: ProgressState.uncompleted,
+        state: ProgressState.notStarted,
     },
     {
         text: 'Thema',
@@ -36,22 +36,22 @@ export const sideMenuSteps: SideMenuStep[] = [
     {
         text: 'Zielgruppen',
         link: '/startingWizard/generalInformation/6targetGroups',
-        state: ProgressState.completed,
+        state: ProgressState.notStarted,
     },
     {
         text: 'Sprachen',
         link: '/startingWizard/generalInformation/7languages',
-        state: ProgressState.completed,
+        state: ProgressState.notStarted,
     },
     {
         text: 'Rahmenbedingungen',
         link: '/startingWizard/generalInformation/8formalConditions',
-        state: ProgressState.completed,
+        state: ProgressState.notStarted,
     },
     {
         text: 'Zielgruppen Ziele',
         link: '/startingWizard/generalInformation/9goals',
-        state: ProgressState.uncompleted,
+        state: ProgressState.notStarted,
     },
     {
         text: 'Externe Beteiligte',
@@ -61,22 +61,22 @@ export const sideMenuSteps: SideMenuStep[] = [
     {
         text: 'Kursformat',
         link: '/startingWizard/generalInformation/11courseFormat',
-        state: ProgressState.completed,
+        state: ProgressState.notStarted,
     },
     {
         text: 'Lernumgebung',
         link: '/startingWizard/generalInformation/12learningPlatform',
-        state: ProgressState.completed,
+        state: ProgressState.notStarted,
     },
     {
         text: 'Tools',
         link: '/startingWizard/generalInformation/13tools',
-        state: ProgressState.completed,
+        state: ProgressState.notStarted,
     },
     {
         text: 'Frage Neuer Inhalt',
         link: '/startingWizard/generalInformation/14questionNewContent',
-        state: ProgressState.uncompleted,
+        state: ProgressState.notStarted,
     },
 ];
 
