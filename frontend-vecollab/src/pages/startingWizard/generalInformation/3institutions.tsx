@@ -268,7 +268,7 @@ export default function Institutions() {
                     </div>
                     <div className="flex justify-around w-full">
                         <div>
-                            <Link href={'/startingWizard/generalInformation/2partner'}>
+                            <Link href={'/startingWizard/generalInformation/2partners'}>
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
