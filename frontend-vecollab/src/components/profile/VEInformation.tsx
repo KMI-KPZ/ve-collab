@@ -7,7 +7,7 @@ export default function VEInformation(){
             <BoxContentHeadline className={"my-1"} text={"VE-Themeninteressen"} />
             <VEInformationContentList items={["aktuelle IT-Trends weltweit", "Verbindung Biologie - Informatik"]}/>
             <BoxContentHeadline className={"mt-6"} text={"VE-Zielsetzungen"} />
-            <VEInformationContentList items={["interdiszplinärer Austausch", "neue Erkenntnisse durch unterschiedliche Sichtweisen", "mehr fällt mir spontan nicht ein sorry"]}/>
+            <VEInformationContentList items={["interdiszplinärer Austausch", "neue Erkenntnisse durch unterschiedliche Sichtweisen"]}/>
             <BoxContentHeadline className={"mt-6"} text={"Erfahrungen"} />
             <VEInformationContentList items={["2x VE mit anderen deutschen Unis", "1x VE mit englischer Uni in asnychroner Veranstaltung", "Link zu einem geplanten VE, falls Best Practises auch ausgefüllt worden"]}/>
             <BoxContentHeadline className={"mt-6"} text={"präferierte Formate"} />

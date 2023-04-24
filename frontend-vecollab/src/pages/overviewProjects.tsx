@@ -80,14 +80,22 @@ export default function Overview() {
                         ))}
                     </div>
                     <div className="flex justify-around w-full">
-                        <div>
-                            <button
-                                onClick={createAndForwardNewPlanner}
-                                className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                            >
-                                neuen Plan starten
-                            </button>
+                        {session && (
+                            <div>
+                                    <button onClick={createAndForwardNewPlanner} className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg">
+                                        neuen Plan starten
+                                    </button>
+                            </div>
+                        )}
+                        {!session && (
+                            <div>
+                            <Link href={'/startingWizard/generalInformation/1projectName'}>
+                                <button disabled className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg">
+                                    Logge dich ein, um einen neuen Plan zu erstellen!
+                                </button>
+                            </Link>
                         </div>
+                        )}
                     </div>
                 </div>
             </div>
