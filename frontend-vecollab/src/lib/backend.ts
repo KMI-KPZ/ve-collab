@@ -40,3 +40,24 @@ export async function fetchPOST(relativeUrl: string, payload?: Record<string, an
         return {}
     }
 }
+
+export async function fetchDELETE(relativeUrl: string, payload?: Record<string, any>, accessToken?: string){
+    const headers: {Authorization?: string} = {}
+
+    if (accessToken) {
+        headers["Authorization"] = "Bearer " + accessToken
+    }
+
+    try {
+        let backendResponse = await fetch(BACKEND_URL + relativeUrl, {
+            method: "DELETE",
+            headers: headers,
+            body: JSON.stringify(payload)
+        })
+        return await backendResponse.json()
+    }
+    catch (e) {
+        console.log("network error, probably backend down")
+        return {}
+    }
+}

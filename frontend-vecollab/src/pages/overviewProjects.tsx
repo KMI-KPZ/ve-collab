@@ -1,8 +1,9 @@
-import { fetchGET, fetchPOST } from '@/lib/backend';
+import { fetchDELETE, fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
+import { HiOutlineTrash } from "react-icons/hi"
 
 interface PlanPreview {
     _id: string;
@@ -30,7 +31,16 @@ export default function Overview() {
                 setPlans(data.plans);
             }
         });
-    }, [session?.accessToken]);
+    }, [session]);
+
+    const deletePlan = async (planId: string, index: number) => {
+        const response = await fetchDELETE(`/planner/delete?_id=${planId}`, {}, session?.accessToken)
+        if (response.success === true) {
+            let copy = [...plans]; // have to create a deep copy that changes reference, because re-render is triggered by reference, not by values in the array
+            copy.splice(index, 1)
+            setPlans(copy);
+        }
+    }
 
     return (
         <>
@@ -53,6 +63,9 @@ export default function Overview() {
                                         <p className="text-sm text-gray-500">Max Mustermann</p>
                                         <p className="text-gray-700 mt-3 text-sm">28.04.2023</p>
                                     </div>
+                                    <button className="absolute top-0 right-0 bg-gray-300 rounded-lg p-2 flex justify-center items-center" onClick={e => deletePlan(plan._id, index)}>
+                                        <HiOutlineTrash />
+                                    </button>
                                     <Link
                                         href={{
                                             pathname:
