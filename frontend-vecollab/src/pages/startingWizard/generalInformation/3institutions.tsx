@@ -4,10 +4,9 @@ import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarS
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { FormEvent, useContext, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
-import { PlanIdContext } from '@/pages/_app';
 
 interface Institution {
     name: string;
@@ -19,29 +18,36 @@ interface Institution {
 
 export default function Institutions() {
     const [institutions, setInstitutions] = useState<Institution[]>([]);
-    const { planId, setPlanId } = useContext(PlanIdContext);
     const { data: session } = useSession();
-
-    //console.log(planId)
 
     const router = useRouter();
     useEffect(() => {
-        if (!planId) {
+        if (!router.query.plannerId) {
             router.push('/overviewProjects');
         }
-        fetchGET(`/planner/get?_id=${planId}`, session?.accessToken).then((data) => {
-            console.log(data);
-
-            if (data.plan) {
-                if (data.plan.institutions.length > 0) {
-                    let list = data.plan.institutions.map((institution: any) => ({
-                        name: institution.name,
-                        school_type: institution.school_type,
-                        country: institution.country,
-                        department: institution.departments[0].name,
-                        academic_courses: institution.departments[0].academic_courses[0].name,
-                    }));
-                    setInstitutions(list);
+        fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
+            (data) => {
+                if (data.plan) {
+                    if (data.plan.institutions.length > 0) {
+                        let list = data.plan.institutions.map((institution: any) => ({
+                            name: institution.name,
+                            school_type: institution.school_type,
+                            country: institution.country,
+                            department: institution.departments[0].name,
+                            academic_courses: institution.departments[0].academic_courses[0].name,
+                        }));
+                        setInstitutions(list);
+                    } else {
+                        setInstitutions([
+                            {
+                                name: '',
+                                school_type: '',
+                                country: '',
+                                department: '',
+                                academic_courses: '',
+                            },
+                        ]);
+                    }
                 } else {
                     setInstitutions([
                         {
@@ -53,21 +59,11 @@ export default function Institutions() {
                         },
                     ]);
                 }
-            } else {
-                setInstitutions([
-                    {
-                        name: '',
-                        school_type: '',
-                        country: '',
-                        department: '',
-                        academic_courses: '',
-                    },
-                ]);
             }
-        });
-    }, [planId, session?.accessToken, router]);
+        );
+    }, [session?.accessToken, router]);
 
-    const handleSubmit = async (e: FormEvent) => {
+    const handleSubmit = async () => {
         let institutionsList: any[] = [];
         institutions.forEach((institution) => {
             let payload = {
@@ -87,13 +83,15 @@ export default function Institutions() {
             };
             institutionsList.push(payload);
         });
-        const response = await fetchPOST(
+        await fetchPOST(
             '/planner/update_field',
-            { plan_id: planId, field_name: 'institutions', value: institutionsList },
+            {
+                plan_id: router.query.plannerId,
+                field_name: 'institutions',
+                value: institutionsList,
+            },
             session?.accessToken
         );
-        console.log(response);
-        console.log(institutions);
     };
 
     const modifyName = (index: number, value: string) => {
@@ -268,7 +266,12 @@ export default function Institutions() {
                     </div>
                     <div className="flex justify-around w-full">
                         <div>
-                            <Link href={'/startingWizard/generalInformation/2partner'}>
+                            <Link
+                                href={{
+                                    pathname: '/startingWizard/generalInformation/2partners',
+                                    query: { plannerId: router.query.plannerId },
+                                }}
+                            >
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
@@ -278,7 +281,13 @@ export default function Institutions() {
                             </Link>
                         </div>
                         <div>
-                            <Link href={'/startingWizard/generalInformation/4participatingCourses'}>
+                            <Link
+                                href={{
+                                    pathname:
+                                        '/startingWizard/generalInformation/4participatingCourses',
+                                    query: { plannerId: router.query.plannerId },
+                                }}
+                            >
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"

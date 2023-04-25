@@ -19,6 +19,7 @@
         "next-auth": "^4.20.1",
         "react": "18.2.0",
         "react-dom": "18.2.0",
+        "react-hook-form": "^7.43.9",
         "react-icons": "^4.8.0",
         "react-tag-input": "^6.8.1",
         "sharp": "^0.31.3",

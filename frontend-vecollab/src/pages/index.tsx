@@ -1,11 +1,20 @@
 import React from 'react';
-import Link from 'next/link';
+import { fetchPOST } from '@/lib/backend';
+import { useRouter } from 'next/router';
 import Image from "next/image"
 import blueBackground from "@/images/footer/KAVAQ_Footer_rounded.png"
 import { signIn, useSession } from 'next-auth/react';
 
 export default function Home() {
+    const router = useRouter();
     const { data: session } = useSession();
+    const createAndForwardNewPlanner = async () => {
+        const newPlanner = await fetchPOST('/planner/insert_empty', {}, session?.accessToken);
+        await router.push({
+            pathname: '/startingWizard/generalInformation/1projectName',
+            query: { plannerId: newPlanner.inserted_id },
+        });
+    };
 
     return (
         <div className="bg-slate-100">
@@ -21,12 +30,12 @@ export default function Home() {
                 </p>
 
                 {session && (
-                    <Link
-                        href="/startingWizard/generalInformation/1projectName"
+                    <button
+                        onClick={createAndForwardNewPlanner}
                         className="py-4 pr-6 pl-5 m-10 bg-ve-collab-orange rounded-lg text-white"
                     >
                         neuen VA planen
-                    </Link>
+                    </button>
                 )}
                 {!session && (
                     <div

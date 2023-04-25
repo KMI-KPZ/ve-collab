@@ -1,12 +1,8 @@
-import WhiteBox from '@/components/Layout/WhiteBox';
-import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
-import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { FormEvent, useContext, useEffect, useState } from 'react';
-import { RxMinus, RxPlus } from 'react-icons/rx';
-import { PlanIdContext } from '@/pages/_app';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
 
 interface PlanPreview {
     _id: string;
@@ -16,21 +12,25 @@ interface PlanPreview {
 export default function Overview() {
     const [plans, setPlans] = useState<PlanPreview[]>([]);
 
-    const { planId, setPlanId } = useContext(PlanIdContext);
     const { data: session } = useSession();
+
+    const router = useRouter();
+
+    const createAndForwardNewPlanner = async () => {
+        const newPlanner = await fetchPOST('/planner/insert_empty', {}, session?.accessToken);
+        await router.push({
+            pathname: '/startingWizard/generalInformation/1projectName',
+            query: { plannerId: newPlanner.inserted_id },
+        });
+    };
 
     useEffect(() => {
         fetchGET(`/planner/get_all`, session?.accessToken).then((data) => {
-            console.log(data);
             if (data.plans) {
                 setPlans(data.plans);
             }
         });
     }, [session?.accessToken]);
-
-    const setPlanIdContext = (index: number) => {
-        setPlanId(plans[index]._id);
-    };
 
     return (
         <>
@@ -53,11 +53,14 @@ export default function Overview() {
                                         <p className="text-sm text-gray-500">Max Mustermann</p>
                                         <p className="text-gray-700 mt-3 text-sm">28.04.2023</p>
                                     </div>
-                                    <Link href={'/startingWizard/generalInformation/2partners'}>
-                                        <button
-                                            className="absolute bottom-0 right-0 bg-ve-collab-orange rounded-lg p-2 flex justify-center items-center"
-                                            onClick={(e) => setPlanIdContext(index)}
-                                        >
+                                    <Link
+                                        href={{
+                                            pathname:
+                                                '/startingWizard/generalInformation/1projectName',
+                                            query: { plannerId: plan._id },
+                                        }}
+                                    >
+                                        <button className="absolute bottom-0 right-0 bg-ve-collab-orange rounded-lg p-2 flex justify-center items-center">
                                             <svg
                                                 xmlns="http://www.w3.org/2000/svg"
                                                 fill="none"
@@ -79,21 +82,23 @@ export default function Overview() {
                     <div className="flex justify-around w-full">
                         {session && (
                             <div>
-                                <Link href={'/startingWizard/generalInformation/1projectName'}>
-                                    <button className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg">
-                                        neuen Plan starten
-                                    </button>
-                                </Link>
+                                <button
+                                    onClick={createAndForwardNewPlanner}
+                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                >
+                                    neuen Plan starten
+                                </button>
                             </div>
                         )}
                         {!session && (
                             <div>
-                            <Link href={'/startingWizard/generalInformation/1projectName'}>
-                                <button disabled className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg">
+                                <button
+                                    disabled
+                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                >
                                     Logge dich ein, um einen neuen Plan zu erstellen!
                                 </button>
-                            </Link>
-                        </div>
+                            </div>
                         )}
                     </div>
                 </div>

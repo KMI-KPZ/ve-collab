@@ -3,37 +3,36 @@ import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarS
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { FormEvent, useContext, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
-import { PlanIdContext } from '@/pages/_app';
 
 export default function Partners() {
-    const { planId, setPlanId } = useContext(PlanIdContext);
+    const router = useRouter();
 
     const { data: session } = useSession();
 
     const [partners, setPartners] = useState(['']);
 
-    const router = useRouter();
     useEffect(() => {
-        if (!planId) {
+        if (!router.query.plannerId) {
             router.push('/overviewProjects');
         }
 
-        fetchGET(`/planner/get?_id=${planId}`, session?.accessToken).then((data) => {
-            console.log(data);
-            if (data.plan) {
-                if (data.plan.involved_parties.length > 0) {
-                    setPartners(data.plan.involved_parties);
+        fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
+            (data) => {
+                if (data.plan) {
+                    if (data.plan.involved_parties.length > 0) {
+                        setPartners(data.plan.involved_parties);
+                    } else {
+                        setPartners(['']);
+                    }
                 } else {
                     setPartners(['']);
                 }
-            } else {
-                setPartners(['']);
             }
-        });
-    }, [planId, session?.accessToken, router]);
+        );
+    }, [session?.accessToken, router]);
 
     const modifyPartner = (index: number, value: string) => {
         let newPartners = [...partners];
@@ -53,10 +52,10 @@ export default function Partners() {
         setPartners(copy);
     };
 
-    const handleSubmit = async (e: FormEvent) => {
-        const response = await fetchPOST(
+    const handleSubmit = async () => {
+        await fetchPOST(
             '/planner/update_field',
-            { plan_id: planId, field_name: 'involved_parties', value: partners },
+            { plan_id: router.query.plannerId, field_name: 'involved_parties', value: partners },
             session?.accessToken
         );
     };
@@ -93,7 +92,12 @@ export default function Partners() {
                     </div>
                     <div className="flex justify-around w-full">
                         <div>
-                            <Link href={'/startingWizard/generalInformation/1projectName'}>
+                            <Link
+                                href={{
+                                    pathname: '/startingWizard/generalInformation/1projectName',
+                                    query: { plannerId: router.query.plannerId },
+                                }}
+                            >
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
@@ -103,7 +107,12 @@ export default function Partners() {
                             </Link>
                         </div>
                         <div>
-                            <Link href={'/startingWizard/generalInformation/3institutions'}>
+                            <Link
+                                href={{
+                                    pathname: '/startingWizard/generalInformation/3institutions',
+                                    query: { plannerId: router.query.plannerId },
+                                }}
+                            >
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"

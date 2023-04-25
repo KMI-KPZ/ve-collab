@@ -52,7 +52,13 @@ export default function HeadProgressBarSection({ stage }: HeadProgressBar) {
 
     function renderHeadProgressBar(headMenuSteps: HeadMenuProgressStep[]): JSX.Element[] {
         return headMenuSteps.map((step, index) => (
-            <Link key={index} href={step.link}>
+            <Link
+                key={index}
+                href={{
+                    pathname: step.link,
+                    query: { plannerId: router.query.plannerId },
+                }}
+            >
                 <div title={step.description} className="flex align-middle items-center">
                     <div
                         className={` w-10 h-10 border-4 rounded-full text-lg flex items-center justify-center

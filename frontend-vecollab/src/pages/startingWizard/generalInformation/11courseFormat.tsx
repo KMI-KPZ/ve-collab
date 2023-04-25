@@ -3,46 +3,40 @@ import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarS
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { FormEvent, useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { PlanIdContext } from '@/pages/_app';
 
 export default function Realization() {
     const [realization, setRealization] = useState('');
 
-    const { planId, setPlanId } = useContext(PlanIdContext);
     const { data: session } = useSession();
-
-    //console.log(planId)
 
     const router = useRouter();
     useEffect(() => {
-        if (!planId) {
+        if (!router.query.plannerId) {
             router.push('/overviewProjects');
         }
-        fetchGET(`/planner/get?_id=${planId}`, session?.accessToken).then((data) => {
-            console.log(data);
-            if (data.plan) {
-                if (data.plan.realization) {
-                    setRealization(data.plan.realization);
+        fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
+            (data) => {
+                console.log(data);
+                if (data.plan) {
+                    if (data.plan.realization) {
+                        setRealization(data.plan.realization);
+                    }
+                } else {
+                    setRealization('');
                 }
-            } else {
-                setRealization('');
             }
-        });
-    }, [planId, session?.accessToken, router]);
+        );
+    }, [session?.accessToken, router]);
 
-    const handleSubmit = async (e: FormEvent) => {
-        const response = await fetchPOST(
+    const handleSubmit = async () => {
+        await fetchPOST(
             '/planner/update_field',
-            { plan_id: planId, field_name: 'realization', value: realization },
+            { plan_id: router.query.plannerId, field_name: 'realization', value: realization },
             session?.accessToken
         );
-        console.log(response);
-        console.log(realization);
     };
-
-    console.log(realization);
 
     return (
         <>
@@ -70,7 +64,13 @@ export default function Realization() {
                     </div>
                     <div className="flex justify-around w-full">
                         <div>
-                            <Link href={'/startingWizard/generalInformation/10externalParties'}>
+                            <Link
+                                href={{
+                                    pathname:
+                                        '/startingWizard/generalInformation/10externalParties',
+                                    query: { plannerId: router.query.plannerId },
+                                }}
+                            >
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
@@ -80,7 +80,13 @@ export default function Realization() {
                             </Link>
                         </div>
                         <div>
-                            <Link href={'/startingWizard/generalInformation/12learningPlatform'}>
+                            <Link
+                                href={{
+                                    pathname:
+                                        '/startingWizard/generalInformation/12learningPlatform',
+                                    query: { plannerId: router.query.plannerId },
+                                }}
+                            >
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
