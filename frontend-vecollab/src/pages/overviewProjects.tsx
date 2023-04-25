@@ -1,7 +1,7 @@
 import { fetchDELETE, fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { HiOutlineTrash } from "react-icons/hi"
 
@@ -13,7 +13,7 @@ interface PlanPreview {
 export default function Overview() {
     const [plans, setPlans] = useState<PlanPreview[]>([]);
 
-    const { data: session } = useSession();
+    const { data: session, status } = useSession();
 
     const router = useRouter();
 
@@ -25,20 +25,31 @@ export default function Overview() {
         });
     };
 
-    useEffect(() => {
-        fetchGET(`/planner/get_all`, session?.accessToken).then((data) => {
+    const getAllPlans = useCallback(async () => {
+        return fetchGET(`/planner/get_all`, session?.accessToken).then((data) => {
             if (data.plans) {
                 setPlans(data.plans);
             }
         });
-    }, [session]);
+    }, [session])
+
+    useEffect(() => {
+        // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
+        if (!router.isReady || status === "loading") {
+            return
+        }
+        // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
+        if (session) {
+            getAllPlans()
+        }
+    }, [session, status, router, getAllPlans]);
 
     const deletePlan = async (planId: string, index: number) => {
         const response = await fetchDELETE(`/planner/delete?_id=${planId}`, {}, session?.accessToken)
         if (response.success === true) {
             let copy = [...plans]; // have to create a deep copy that changes reference, because re-render is triggered by reference, not by values in the array
             copy.splice(index, 1)
-            setPlans(copy);
+            getAllPlans()
         }
     }
 
