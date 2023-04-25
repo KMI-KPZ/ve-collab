@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { FormEvent, useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
-import LoadingAnimation from '@/components/loading';
+import LoadingAnimation from '@/components/LoadingAnimation';
 
 interface Institution {
     name: string;
