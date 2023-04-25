@@ -1,11 +1,12 @@
 import WhiteBox from '@/components/Layout/WhiteBox';
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
 import { fetchGET, fetchPOST } from '@/lib/backend';
-import { useSession } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { FormEvent, useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
+import LoadingAnimation from '@/components/LoadingAnimation';
 
 interface Task {
     title: string;
@@ -42,34 +43,77 @@ export default function FinePlanner() {
         },
     ]);
 
-    const { data: session } = useSession();
-
+    const { data: session, status } = useSession();
+    const [loading, setLoading] = useState(false)
     const router = useRouter();
+
+    // check for session errors and trigger the login flow if necessary
     useEffect(() => {
+        if (status !== "loading") {
+            if (!session || session?.error === "RefreshAccessTokenError") {
+                console.log("forced new signIn")
+                signIn("keycloak");
+            }
+        }
+    }, [session, status]);
+
+    useEffect(() => {
+        // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
+        if (!router.isReady || status === "loading") {
+            setLoading(true)
+            return
+        }
+        // router is loaded, but still no plan ID in the query --> redirect to overview because we can't do anything without an ID
         if (!router.query.plannerId) {
             router.push('/overviewProjects');
+            return
         }
-        fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
-            (data) => {
-                if (data.plan) {
-                    if (data.plan.steps.length > 0) {
-                        let list = data.plan.steps.map((step: any) => ({
-                            ...step,
-                            timestamp_from: step.timestamp_from.split('T')[0],
-                            timestamp_to: step.timestamp_to.split('T')[0],
-                            tasks:
-                                step.tasks.length === 0
-                                    ? [
-                                          {
-                                              title: '',
-                                              description: '',
-                                              learning_goal: '',
-                                              tools: ['', ''],
-                                          },
-                                      ]
-                                    : step.tasks,
-                        }));
-                        setSteps(list);
+        // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
+        if (session) {
+            fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
+                (data) => {
+                    setLoading(false)
+                    if (data.plan) {
+                        if (data.plan.steps.length > 0) {
+                            let list = data.plan.steps.map((step: any) => ({
+                                ...step,
+                                timestamp_from: step.timestamp_from.split('T')[0],
+                                timestamp_to: step.timestamp_to.split('T')[0],
+                                tasks:
+                                    step.tasks.length === 0
+                                        ? [
+                                            {
+                                                title: '',
+                                                description: '',
+                                                learning_goal: '',
+                                                tools: ['', ''],
+                                            },
+                                        ]
+                                        : step.tasks,
+                            }));
+                            setSteps(list);
+                        } else {
+                            setSteps([
+                                {
+                                    timestamp_from: '',
+                                    timestamp_to: '',
+                                    name: '',
+                                    workload: 0,
+                                    social_form: '',
+                                    learning_env: '',
+                                    ve_approach: '',
+                                    evaluation_tools: ['', ''],
+                                    tasks: [
+                                        {
+                                            title: '',
+                                            description: '',
+                                            learning_goal: '',
+                                            tools: ['', ''],
+                                        },
+                                    ],
+                                },
+                            ]);
+                        }
                     } else {
                         setSteps([
                             {
@@ -82,36 +126,15 @@ export default function FinePlanner() {
                                 ve_approach: '',
                                 evaluation_tools: ['', ''],
                                 tasks: [
-                                    {
-                                        title: '',
-                                        description: '',
-                                        learning_goal: '',
-                                        tools: ['', ''],
-                                    },
+                                    { title: '', description: '', learning_goal: '', tools: ['', ''] },
                                 ],
                             },
                         ]);
                     }
-                } else {
-                    setSteps([
-                        {
-                            timestamp_from: '',
-                            timestamp_to: '',
-                            name: '',
-                            workload: 0,
-                            social_form: '',
-                            learning_env: '',
-                            ve_approach: '',
-                            evaluation_tools: ['', ''],
-                            tasks: [
-                                { title: '', description: '', learning_goal: '', tools: ['', ''] },
-                            ],
-                        },
-                    ]);
                 }
-            }
-        );
-    }, [session?.accessToken, router]);
+            );
+        }
+    }, [session, status, router]);
 
     const handleSubmit = async () => {
         await fetchPOST(
@@ -202,297 +225,301 @@ export default function FinePlanner() {
         <>
             <HeadProgressBarSection stage={2} />
             <div className="flex justify-center bg-pattern-left-blue-small bg-no-repeat">
-                <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
-                    <div>
-                        <div className={'text-center font-bold text-4xl mb-2'}>Feinplanung</div>
-                        <div className={'text-center mb-20'}>
-                            erweitere die Informationen zu jeder Etappe
-                        </div>
-                        {steps.map((step, index) => (
-                            <WhiteBox key={index}>
-                                <div className="w-[60rem]">
-                                    <div className="flex justify-center items-center">
-                                        <div className="mx-2">Etappe: {step.name}</div>
-                                        <div className="mx-2">
-                                            {step.timestamp_from} - {step.timestamp_to}
+                {loading ? (
+                    <LoadingAnimation />
+                ) : (
+                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
+                        <div>
+                            <div className={'text-center font-bold text-4xl mb-2'}>Feinplanung</div>
+                            <div className={'text-center mb-20'}>
+                                erweitere die Informationen zu jeder Etappe
+                            </div>
+                            {steps.map((step, index) => (
+                                <WhiteBox key={index}>
+                                    <div className="w-[60rem]">
+                                        <div className="flex justify-center items-center">
+                                            <div className="mx-2">Etappe: {step.name}</div>
+                                            <div className="mx-2">
+                                                {step.timestamp_from} - {step.timestamp_to}
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="mt-4 flex">
-                                        <div className="w-1/6 flex items-center">
-                                            <label htmlFor="workload" className="px-2 py-2">
-                                                Workload (in Stunden)
-                                            </label>
-                                        </div>
-                                        <div className="w-5/6">
-                                            <input
-                                                type="number"
-                                                name="workload"
-                                                value={step.workload}
-                                                onChange={(e) =>
-                                                    modifyWorkload(index, Number(e.target.value))
-                                                }
-                                                placeholder="in Stunden"
-                                                className="border border-gray-500 rounded-lg w-full h-12 p-2"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="mt-4 flex">
-                                        <div className="w-1/6 flex items-center">
-                                            <label htmlFor="social_form" className="px-2 py-2">
-                                                Sozialform
-                                            </label>
-                                        </div>
-                                        <div className="w-5/6">
-                                            <input
-                                                type="text"
-                                                name="social_form"
-                                                value={step.social_form}
-                                                onChange={(e) =>
-                                                    modifySocialFrom(index, e.target.value)
-                                                }
-                                                placeholder="wie arbeiten die Studierenden zusammen, z.B. Partner-/Gruppenarbeit, individuell"
-                                                className="border border-gray-500 rounded-lg w-full h-12 p-2"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="mt-4 flex">
-                                        <div className="w-1/6 flex items-center">
-                                            <label htmlFor="learning_env" className="px-2 py-2">
-                                                digitale Lernumgebung
-                                            </label>
-                                        </div>
-                                        <div className="w-5/6">
-                                            <textarea
-                                                rows={5}
-                                                name="learning_env"
-                                                value={step.learning_env}
-                                                onChange={(e) =>
-                                                    modifyLearningEnv(index, e.target.value)
-                                                }
-                                                placeholder="Struktur und Inhalte der ausgewählten Umgebung (LMS, social Media, kooperatives Dokument usw.)"
-                                                className="border border-gray-500 rounded-lg w-full p-2"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="mt-4 flex">
-                                        <div className="w-1/6 flex items-center">
-                                            <label htmlFor="ve_approach" className="px-2 py-2">
-                                                VE-Ansatz
-                                            </label>
-                                        </div>
-                                        <div className="w-5/6">
-                                            <input
-                                                type="text"
-                                                name="ve_approach"
-                                                value={step.ve_approach}
-                                                onChange={(e) =>
-                                                    modifyVeApproach(index, e.target.value)
-                                                }
-                                                placeholder="Welche Ansätze werden verfolgt? (z. B. aufgabenorientierter Ansatz, kulturbezogenes Lernen)"
-                                                className="border border-gray-500 rounded-lg w-full h-12 p-2"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="mt-4 flex">
-                                        <div className="w-1/6 flex items-center">
-                                            <label htmlFor="tasks" className="px-2 py-2">
-                                                Aufgabenstellungen
-                                            </label>
-                                        </div>
-                                        <div className="w-5/6">
-                                            {step.tasks.map((task, taskIndex) => (
-                                                <div
-                                                    key={taskIndex}
-                                                    className={
-                                                        'p-4 my-4 mx-2 bg-slate-200 rounded-3xl shadow-2xl'
+                                        <div className="mt-4 flex">
+                                            <div className="w-1/6 flex items-center">
+                                                <label htmlFor="workload" className="px-2 py-2">
+                                                    Workload (in Stunden)
+                                                </label>
+                                            </div>
+                                            <div className="w-5/6">
+                                                <input
+                                                    type="number"
+                                                    name="workload"
+                                                    value={step.workload}
+                                                    onChange={(e) =>
+                                                        modifyWorkload(index, Number(e.target.value))
                                                     }
-                                                >
-                                                    <div className="mt-2 flex">
-                                                        <div className="w-1/6 flex items-center">
-                                                            <label
-                                                                htmlFor="title"
-                                                                className="px-2 py-2"
-                                                            >
-                                                                Titel
-                                                            </label>
-                                                        </div>
-                                                        <div className="w-5/6">
-                                                            <input
-                                                                type="text"
-                                                                name="title"
-                                                                value={task.title}
-                                                                onChange={(e) =>
-                                                                    modifyTaskTitle(
-                                                                        index,
-                                                                        taskIndex,
-                                                                        e.target.value
-                                                                    )
-                                                                }
-                                                                placeholder="Aufgabentitel"
-                                                                className="border border-gray-500 rounded-lg w-full h-12 p-2"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                    <div className="mt-2 flex">
-                                                        <div className="w-1/6 flex items-center">
-                                                            <label
-                                                                htmlFor="description"
-                                                                className="px-2 py-2"
-                                                            >
-                                                                Beschreibung
-                                                            </label>
-                                                        </div>
-                                                        <div className="w-5/6">
-                                                            <textarea
-                                                                rows={5}
-                                                                name="description"
-                                                                value={task.description}
-                                                                onChange={(e) =>
-                                                                    modifyTaskDescription(
-                                                                        index,
-                                                                        taskIndex,
-                                                                        e.target.value
-                                                                    )
-                                                                }
-                                                                placeholder="Beschreibe die Aufgabe detailierter"
-                                                                className="border border-gray-500 rounded-lg w-full p-2"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                    <div className="mt-2 flex">
-                                                        <div className="w-1/6 flex items-center">
-                                                            <label
-                                                                htmlFor="learning_goal"
-                                                                className="px-2 py-2"
-                                                            >
-                                                                Lernziele
-                                                            </label>
-                                                        </div>
-                                                        <div className="w-5/6">
-                                                            <textarea
-                                                                rows={5}
-                                                                name="learning_goal"
-                                                                value={task.learning_goal}
-                                                                onChange={(e) =>
-                                                                    modifyTaskLearningGoal(
-                                                                        index,
-                                                                        taskIndex,
-                                                                        e.target.value
-                                                                    )
-                                                                }
-                                                                placeholder="Welche Lernziele werden mit der Aufgabe verfolgt?"
-                                                                className="border border-gray-500 rounded-lg w-full p-2"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                    <div className="mt-2">
-                                                        <div className="flex">
+                                                    placeholder="in Stunden"
+                                                    className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="mt-4 flex">
+                                            <div className="w-1/6 flex items-center">
+                                                <label htmlFor="social_form" className="px-2 py-2">
+                                                    Sozialform
+                                                </label>
+                                            </div>
+                                            <div className="w-5/6">
+                                                <input
+                                                    type="text"
+                                                    name="social_form"
+                                                    value={step.social_form}
+                                                    onChange={(e) =>
+                                                        modifySocialFrom(index, e.target.value)
+                                                    }
+                                                    placeholder="wie arbeiten die Studierenden zusammen, z.B. Partner-/Gruppenarbeit, individuell"
+                                                    className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="mt-4 flex">
+                                            <div className="w-1/6 flex items-center">
+                                                <label htmlFor="learning_env" className="px-2 py-2">
+                                                    digitale Lernumgebung
+                                                </label>
+                                            </div>
+                                            <div className="w-5/6">
+                                                <textarea
+                                                    rows={5}
+                                                    name="learning_env"
+                                                    value={step.learning_env}
+                                                    onChange={(e) =>
+                                                        modifyLearningEnv(index, e.target.value)
+                                                    }
+                                                    placeholder="Struktur und Inhalte der ausgewählten Umgebung (LMS, social Media, kooperatives Dokument usw.)"
+                                                    className="border border-gray-500 rounded-lg w-full p-2"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="mt-4 flex">
+                                            <div className="w-1/6 flex items-center">
+                                                <label htmlFor="ve_approach" className="px-2 py-2">
+                                                    VE-Ansatz
+                                                </label>
+                                            </div>
+                                            <div className="w-5/6">
+                                                <input
+                                                    type="text"
+                                                    name="ve_approach"
+                                                    value={step.ve_approach}
+                                                    onChange={(e) =>
+                                                        modifyVeApproach(index, e.target.value)
+                                                    }
+                                                    placeholder="Welche Ansätze werden verfolgt? (z. B. aufgabenorientierter Ansatz, kulturbezogenes Lernen)"
+                                                    className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="mt-4 flex">
+                                            <div className="w-1/6 flex items-center">
+                                                <label htmlFor="tasks" className="px-2 py-2">
+                                                    Aufgabenstellungen
+                                                </label>
+                                            </div>
+                                            <div className="w-5/6">
+                                                {step.tasks.map((task, taskIndex) => (
+                                                    <div
+                                                        key={taskIndex}
+                                                        className={
+                                                            'p-4 my-4 mx-2 bg-slate-200 rounded-3xl shadow-2xl'
+                                                        }
+                                                    >
+                                                        <div className="mt-2 flex">
                                                             <div className="w-1/6 flex items-center">
                                                                 <label
-                                                                    htmlFor="tools"
+                                                                    htmlFor="title"
                                                                     className="px-2 py-2"
                                                                 >
-                                                                    Tools & Medien
+                                                                    Titel
                                                                 </label>
                                                             </div>
                                                             <div className="w-5/6">
-                                                                {task.tools.map(
-                                                                    (tool, toolIndex) => (
-                                                                        <input
-                                                                            key={toolIndex}
-                                                                            type="text"
-                                                                            name="tools"
-                                                                            value={tool}
-                                                                            onChange={(e) =>
-                                                                                modifyTaskTool(
-                                                                                    index,
-                                                                                    taskIndex,
-                                                                                    toolIndex,
-                                                                                    e.target.value
-                                                                                )
-                                                                            }
-                                                                            placeholder="Welche Tools können verwendet werden?"
-                                                                            className="border border-gray-500 rounded-lg w-full h-12 p-2 my-1"
-                                                                        />
-                                                                    )
-                                                                )}
+                                                                <input
+                                                                    type="text"
+                                                                    name="title"
+                                                                    value={task.title}
+                                                                    onChange={(e) =>
+                                                                        modifyTaskTitle(
+                                                                            index,
+                                                                            taskIndex,
+                                                                            e.target.value
+                                                                        )
+                                                                    }
+                                                                    placeholder="Aufgabentitel"
+                                                                    className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                                                />
                                                             </div>
                                                         </div>
+                                                        <div className="mt-2 flex">
+                                                            <div className="w-1/6 flex items-center">
+                                                                <label
+                                                                    htmlFor="description"
+                                                                    className="px-2 py-2"
+                                                                >
+                                                                    Beschreibung
+                                                                </label>
+                                                            </div>
+                                                            <div className="w-5/6">
+                                                                <textarea
+                                                                    rows={5}
+                                                                    name="description"
+                                                                    value={task.description}
+                                                                    onChange={(e) =>
+                                                                        modifyTaskDescription(
+                                                                            index,
+                                                                            taskIndex,
+                                                                            e.target.value
+                                                                        )
+                                                                    }
+                                                                    placeholder="Beschreibe die Aufgabe detailierter"
+                                                                    className="border border-gray-500 rounded-lg w-full p-2"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div className="mt-2 flex">
+                                                            <div className="w-1/6 flex items-center">
+                                                                <label
+                                                                    htmlFor="learning_goal"
+                                                                    className="px-2 py-2"
+                                                                >
+                                                                    Lernziele
+                                                                </label>
+                                                            </div>
+                                                            <div className="w-5/6">
+                                                                <textarea
+                                                                    rows={5}
+                                                                    name="learning_goal"
+                                                                    value={task.learning_goal}
+                                                                    onChange={(e) =>
+                                                                        modifyTaskLearningGoal(
+                                                                            index,
+                                                                            taskIndex,
+                                                                            e.target.value
+                                                                        )
+                                                                    }
+                                                                    placeholder="Welche Lernziele werden mit der Aufgabe verfolgt?"
+                                                                    className="border border-gray-500 rounded-lg w-full p-2"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div className="mt-2">
+                                                            <div className="flex">
+                                                                <div className="w-1/6 flex items-center">
+                                                                    <label
+                                                                        htmlFor="tools"
+                                                                        className="px-2 py-2"
+                                                                    >
+                                                                        Tools & Medien
+                                                                    </label>
+                                                                </div>
+                                                                <div className="w-5/6">
+                                                                    {task.tools.map(
+                                                                        (tool, toolIndex) => (
+                                                                            <input
+                                                                                key={toolIndex}
+                                                                                type="text"
+                                                                                name="tools"
+                                                                                value={tool}
+                                                                                onChange={(e) =>
+                                                                                    modifyTaskTool(
+                                                                                        index,
+                                                                                        taskIndex,
+                                                                                        toolIndex,
+                                                                                        e.target.value
+                                                                                    )
+                                                                                }
+                                                                                placeholder="Welche Tools können verwendet werden?"
+                                                                                className="border border-gray-500 rounded-lg w-full h-12 p-2 my-1"
+                                                                            />
+                                                                        )
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className={'mx-7 flex justify-end'}>
+                                                            <button
+                                                                onClick={(e) =>
+                                                                    removeToolInputField(
+                                                                        e,
+                                                                        index,
+                                                                        taskIndex
+                                                                    )
+                                                                }
+                                                            >
+                                                                <RxMinus size={20} />
+                                                            </button>
+                                                            <button
+                                                                onClick={(e) =>
+                                                                    addToolInputField(
+                                                                        e,
+                                                                        index,
+                                                                        taskIndex
+                                                                    )
+                                                                }
+                                                            >
+                                                                <RxPlus size={20} />
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                    <div className={'mx-7 flex justify-end'}>
-                                                        <button
-                                                            onClick={(e) =>
-                                                                removeToolInputField(
-                                                                    e,
-                                                                    index,
-                                                                    taskIndex
-                                                                )
-                                                            }
-                                                        >
-                                                            <RxMinus size={20} />
-                                                        </button>
-                                                        <button
-                                                            onClick={(e) =>
-                                                                addToolInputField(
-                                                                    e,
-                                                                    index,
-                                                                    taskIndex
-                                                                )
-                                                            }
-                                                        >
-                                                            <RxPlus size={20} />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            ))}
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <div className={'mx-7 flex justify-end'}>
+                                            <button onClick={(e) => removeTask(e, index)}>
+                                                <RxMinus size={20} />
+                                            </button>
+                                            <button onClick={(e) => addTask(e, index)}>
+                                                <RxPlus size={20} />
+                                            </button>
                                         </div>
                                     </div>
-                                    <div className={'mx-7 flex justify-end'}>
-                                        <button onClick={(e) => removeTask(e, index)}>
-                                            <RxMinus size={20} />
-                                        </button>
-                                        <button onClick={(e) => addTask(e, index)}>
-                                            <RxPlus size={20} />
-                                        </button>
-                                    </div>
-                                </div>
-                            </WhiteBox>
-                        ))}
-                    </div>
-                    <div className="flex justify-around w-full">
-                        <div>
-                            <Link
-                                href={{
-                                    pathname: '/startingWizard/broadPlanner',
-                                    query: { plannerId: router.query.plannerId },
-                                }}
-                            >
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                >
-                                    Zurück
-                                </button>
-                            </Link>
+                                </WhiteBox>
+                            ))}
                         </div>
-                        <div>
-                            <Link
-                                href={{
-                                    pathname: '/startingWizard/finish',
-                                    query: { plannerId: router.query.plannerId },
-                                }}
-                            >
-                                <button
-                                    type="submit"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={handleSubmit}
+                        <div className="flex justify-around w-full">
+                            <div>
+                                <Link
+                                    href={{
+                                        pathname: '/startingWizard/broadPlanner',
+                                        query: { plannerId: router.query.plannerId },
+                                    }}
                                 >
-                                    Weiter
-                                </button>
-                            </Link>
+                                    <button
+                                        type="button"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    >
+                                        Zurück
+                                    </button>
+                                </Link>
+                            </div>
+                            <div>
+                                <Link
+                                    href={{
+                                        pathname: '/startingWizard/finish',
+                                        query: { plannerId: router.query.plannerId },
+                                    }}
+                                >
+                                    <button
+                                        type="submit"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                        onClick={handleSubmit}
+                                    >
+                                        Weiter
+                                    </button>
+                                </Link>
+                            </div>
                         </div>
-                    </div>
-                </form>
+                    </form>
+                )}
             </div>
         </>
     );

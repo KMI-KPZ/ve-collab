@@ -1,11 +1,12 @@
 import WhiteBox from '@/components/Layout/WhiteBox';
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
 import { fetchGET, fetchPOST } from '@/lib/backend';
-import { useSession } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { FormEvent, useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
+import LoadingAnimation from '@/components/LoadingAnimation';
 
 interface BroadStep {
     from: string;
@@ -19,32 +20,54 @@ export default function BroadPlanner() {
         { from: '', to: '', name: '' },
     ]);
 
-    const { data: session } = useSession();
-
+    const { data: session, status } = useSession();
+    const [loading, setLoading] = useState(false)
     const router = useRouter();
+
+    // check for session errors and trigger the login flow if necessary
     useEffect(() => {
+        if (status !== "loading") {
+            if (!session || session?.error === "RefreshAccessTokenError") {
+                console.log("forced new signIn")
+                signIn("keycloak");
+            }
+        }
+    }, [session, status]);
+
+    useEffect(() => {
+        // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
+        if (!router.isReady || status === "loading") {
+            setLoading(true)
+            return
+        }
+        // router is loaded, but still no plan ID in the query --> redirect to overview because we can't do anything without an ID
         if (!router.query.plannerId) {
             router.push('/overviewProjects');
+            return
         }
-        fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
-            (data) => {
-                if (data.plan) {
-                    if (data.plan.steps.length > 0) {
-                        let list = data.plan.steps.map((step: any) => ({
-                            name: step.name,
-                            from: step.timestamp_from.split('T')[0],
-                            to: step.timestamp_to.split('T')[0],
-                        }));
-                        setSteps(list);
+        // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
+        if (session) {
+            fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
+                (data) => {
+                    setLoading(false)
+                    if (data.plan) {
+                        if (data.plan.steps.length > 0) {
+                            let list = data.plan.steps.map((step: any) => ({
+                                name: step.name,
+                                from: step.timestamp_from.split('T')[0],
+                                to: step.timestamp_to.split('T')[0],
+                            }));
+                            setSteps(list);
+                        } else {
+                            setSteps([{ from: '', to: '', name: '' }]);
+                        }
                     } else {
                         setSteps([{ from: '', to: '', name: '' }]);
                     }
-                } else {
-                    setSteps([{ from: '', to: '', name: '' }]);
                 }
-            }
-        );
-    }, [session?.accessToken, router]);
+            );
+        }
+    }, [session, status, router]);
 
     const handleSubmit = async () => {
         steps.forEach(async (step) => {
@@ -101,92 +124,96 @@ export default function BroadPlanner() {
         <>
             <HeadProgressBarSection stage={1} />
             <div className="flex justify-center bg-pattern-left-blue-small bg-no-repeat">
-                <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
-                    <div>
-                        <div className={'text-center font-bold text-4xl mb-2'}>
-                            Plane den groben Ablauf
-                        </div>
-                        <div className={'text-center mb-20'}>
-                            erstelle beliebig viele Etappen, setze deren Daten und vergib für jede
-                            einen individuellen Namen
-                        </div>
-                        {steps.map((step, index) => (
-                            <WhiteBox key={index}>
-                                <div className="flex justify-center items-center">
-                                    <label htmlFor="from" className="">
-                                        von:
-                                    </label>
-                                    <input
-                                        type="date"
-                                        name="from"
-                                        value={step.from}
-                                        onChange={(e) => modifyFrom(index, e.target.value)}
-                                        className="border border-gray-500 rounded-lg h-12 p-2 mx-2"
-                                    />
-                                    <label htmlFor="to" className="">
-                                        bis:
-                                    </label>
-                                    <input
-                                        type="date"
-                                        name="to"
-                                        value={step.to}
-                                        onChange={(e) => modifyTo(index, e.target.value)}
-                                        className="border border-gray-500 rounded-lg h-12 p-2 mx-2"
-                                    />
-                                    <input
-                                        type="text"
-                                        value={step.name}
-                                        onChange={(e) => modifyName(index, e.target.value)}
-                                        placeholder="Name, z.B. Kennenlernphase"
-                                        className="border border-gray-500 rounded-lg h-12 p-2 mx-2"
-                                    />
-                                </div>
-                            </WhiteBox>
-                        ))}
-                        <div className={'w-3/4 mx-7 mt-3 flex justify-end'}>
-                            <button onClick={removeBox}>
-                                <RxMinus size={20} />
-                            </button>
-                            <button onClick={addBox}>
-                                <RxPlus size={20} />
-                            </button>
-                        </div>
-                    </div>
-                    <div className="flex justify-around w-full">
+                {loading ? (
+                    <LoadingAnimation />
+                ) : (
+                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                         <div>
-                            <Link
-                                href={{
-                                    pathname:
-                                        '/startingWizard/generalInformation/14questionNewContent',
-                                    query: { plannerId: router.query.plannerId },
-                                }}
-                            >
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                >
-                                    Zurück
+                            <div className={'text-center font-bold text-4xl mb-2'}>
+                                Plane den groben Ablauf
+                            </div>
+                            <div className={'text-center mb-20'}>
+                                erstelle beliebig viele Etappen, setze deren Daten und vergib für jede
+                                einen individuellen Namen
+                            </div>
+                            {steps.map((step, index) => (
+                                <WhiteBox key={index}>
+                                    <div className="flex justify-center items-center">
+                                        <label htmlFor="from" className="">
+                                            von:
+                                        </label>
+                                        <input
+                                            type="date"
+                                            name="from"
+                                            value={step.from}
+                                            onChange={(e) => modifyFrom(index, e.target.value)}
+                                            className="border border-gray-500 rounded-lg h-12 p-2 mx-2"
+                                        />
+                                        <label htmlFor="to" className="">
+                                            bis:
+                                        </label>
+                                        <input
+                                            type="date"
+                                            name="to"
+                                            value={step.to}
+                                            onChange={(e) => modifyTo(index, e.target.value)}
+                                            className="border border-gray-500 rounded-lg h-12 p-2 mx-2"
+                                        />
+                                        <input
+                                            type="text"
+                                            value={step.name}
+                                            onChange={(e) => modifyName(index, e.target.value)}
+                                            placeholder="Name, z.B. Kennenlernphase"
+                                            className="border border-gray-500 rounded-lg h-12 p-2 mx-2"
+                                        />
+                                    </div>
+                                </WhiteBox>
+                            ))}
+                            <div className={'w-3/4 mx-7 mt-3 flex justify-end'}>
+                                <button onClick={removeBox}>
+                                    <RxMinus size={20} />
                                 </button>
-                            </Link>
-                        </div>
-                        <div>
-                            <Link
-                                href={{
-                                    pathname: '/startingWizard/finePlanner',
-                                    query: { plannerId: router.query.plannerId },
-                                }}
-                            >
-                                <button
-                                    type="submit"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={handleSubmit}
-                                >
-                                    Weiter
+                                <button onClick={addBox}>
+                                    <RxPlus size={20} />
                                 </button>
-                            </Link>
+                            </div>
                         </div>
-                    </div>
-                </form>
+                        <div className="flex justify-around w-full">
+                            <div>
+                                <Link
+                                    href={{
+                                        pathname:
+                                            '/startingWizard/generalInformation/14questionNewContent',
+                                        query: { plannerId: router.query.plannerId },
+                                    }}
+                                >
+                                    <button
+                                        type="button"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    >
+                                        Zurück
+                                    </button>
+                                </Link>
+                            </div>
+                            <div>
+                                <Link
+                                    href={{
+                                        pathname: '/startingWizard/finePlanner',
+                                        query: { plannerId: router.query.plannerId },
+                                    }}
+                                >
+                                    <button
+                                        type="submit"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                        onClick={handleSubmit}
+                                    >
+                                        Weiter
+                                    </button>
+                                </Link>
+                            </div>
+                        </div>
+                    </form>
+                )}
             </div>
         </>
     );

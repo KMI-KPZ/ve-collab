@@ -1,3 +1,4 @@
+import LoadingAnimation from '@/components/LoadingAnimation';
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
 import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
 import { fetchGET, fetchPOST } from '@/lib/backend';
@@ -25,7 +26,7 @@ export default function EssentialInformation() {
         }
     }, [session, status]);
 
-    
+
     const {
         watch,
         register,
@@ -33,7 +34,7 @@ export default function EssentialInformation() {
         formState: { errors },
         setValue
     } = useForm<FormData>({ mode: 'onChange' });
-    
+
     useEffect(() => {
         // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
         if (!router.isReady || status === "loading") {
@@ -50,20 +51,25 @@ export default function EssentialInformation() {
             fetchGET(
                 `/planner/get?_id=${router.query.plannerId}`, session?.accessToken
             ).then((data) => {
+                setLoading(false)
                 setValue("name", data.plan.name)
             });
         }
     }, [session, status, router, setValue])
-    
+
     const onSubmit: SubmitHandler<FormData> = async () => {
-        const newPlanner = await fetchPOST(
-            '/planner/insert_empty',
-            { name: watch('name') },
+        await fetchPOST(
+            '/planner/update_field',
+            {
+                plan_id: router.query.plannerId,
+                field_name: 'name',
+                value: watch("name"),
+            },
             session?.accessToken
         );
         await router.push({
             pathname: '/startingWizard/generalInformation/2partners',
-            query: { plannerId: newPlanner.inserted_id },
+            query: { plannerId: router.query.plannerId },
         });
     };
 
@@ -72,56 +78,60 @@ export default function EssentialInformation() {
         <>
             <HeadProgressBarSection stage={0} />
             <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
-                <form
-                    onSubmit={handleSubmit(onSubmit)}
-                    className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
-                >
-                    <div>
-                        <div className={'text-center font-bold text-4xl mb-20'}>
-                            Gib deinem Projekt einen Namen
-                        </div>
-                        <div className="m-7 flex justify-center">
-                            <div>
-                                <input
-                                    type="text"
-                                    placeholder="Name eingeben"
-                                    className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
-                                    {...register('name', {
-                                        maxLength: {
-                                            value: 50,
-                                            message:
-                                                'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
-                                        },
-                                        pattern: {
-                                            value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
-                                            message:
-                                                'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?-',
-                                        },
-                                    })}
-                                />
-                                <p className="text-red-600 pt-2">{errors.name?.message}</p>
+                {loading ? (
+                    <LoadingAnimation />
+                ) : (
+                    <form
+                        onSubmit={handleSubmit(onSubmit)}
+                        className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
+                    >
+                        <div>
+                            <div className={'text-center font-bold text-4xl mb-20'}>
+                                Gib deinem Projekt einen Namen
+                            </div>
+                            <div className="m-7 flex justify-center">
+                                <div>
+                                    <input
+                                        type="text"
+                                        placeholder="Name eingeben"
+                                        className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
+                                        {...register('name', {
+                                            maxLength: {
+                                                value: 50,
+                                                message:
+                                                    'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                            },
+                                            pattern: {
+                                                value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
+                                                message:
+                                                    'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?-',
+                                            },
+                                        })}
+                                    />
+                                    <p className="text-red-600 pt-2">{errors.name?.message}</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div className="flex justify-around w-full">
-                        <div>
-                            <button
-                                type="button"
-                                className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg invisible"
-                            >
-                                Zurück
-                            </button>
+                        <div className="flex justify-around w-full">
+                            <div>
+                                <button
+                                    type="button"
+                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg invisible"
+                                >
+                                    Zurück
+                                </button>
+                            </div>
+                            <div>
+                                <button
+                                    type="submit"
+                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                >
+                                    Weiter
+                                </button>
+                            </div>
                         </div>
-                        <div>
-                            <button
-                                type="submit"
-                                className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                            >
-                                Weiter
-                            </button>
-                        </div>
-                    </div>
-                </form>
+                    </form>
+                )}
                 <SideProgressBarSection />
             </div>
         </>
