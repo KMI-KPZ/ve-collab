@@ -1,8 +1,9 @@
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
 import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
 import { fetchGET, fetchPOST } from '@/lib/backend';
-import { useSession } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
+import { useState, useEffect } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 
 interface FormData {
@@ -10,22 +11,48 @@ interface FormData {
 }
 
 export default function EssentialInformation() {
+    const { data: session, status } = useSession();
+    const [loading, setLoading] = useState(false)
     const router = useRouter();
-    const fetchLastInputs = async (): Promise<FormData> => {
-        return await fetchGET(
-            `/planner/get?_id=${router.query.plannerId}`,
-            session?.accessToken
-        ).then((data) => {
-            return data.plan.name != null ? { name: data.plan.name } : { name: '' };
-        });
-    };
+
+    // check for session errors and trigger the login flow if necessary
+    useEffect(() => {
+        if (status !== "loading") {
+            if (!session || session?.error === "RefreshAccessTokenError") {
+                console.log("forced new signIn")
+                signIn("keycloak");
+            }
+        }
+    }, [session, status]);
+
+    useEffect(() => {
+        // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
+        if (!router.isReady || status === "loading") {
+            setLoading(true)
+            return
+        }
+        // router is loaded, but still no plan ID in the query --> redirect to overview because we can't do anything without an ID
+        if (!router.query.plannerId) {
+            router.push('/overviewProjects');
+            return
+        }
+        // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
+        if (session) {
+            fetchGET(
+                `/planner/get?_id=${router.query.plannerId}`, session?.accessToken
+            ).then((data) => {
+                setValue("name", data.plan.name)
+            });
+        }
+    }, [session, status, router])
 
     const {
         watch,
         register,
         handleSubmit,
         formState: { errors },
-    } = useForm<FormData>({ mode: 'onChange', defaultValues: async () => fetchLastInputs() });
+        setValue
+    } = useForm<FormData>({ mode: 'onChange' });
 
     const onSubmit: SubmitHandler<FormData> = async () => {
         const newPlanner = await fetchPOST(
@@ -39,7 +66,6 @@ export default function EssentialInformation() {
         });
     };
 
-    const { data: session } = useSession();
 
     return (
         <>
