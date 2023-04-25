@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { FormEvent, useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
+import LoadingAnimation from '@/components/loading';
 
 interface Institution {
     name: string;
@@ -17,6 +18,7 @@ interface Institution {
 }
 
 export default function Institutions() {
+    const [loading, setLoading] = useState(false)
     const [institutions, setInstitutions] = useState<Institution[]>([]);
     const { data: session, status } = useSession();
     const router = useRouter();
@@ -34,7 +36,8 @@ export default function Institutions() {
     useEffect(() => {
         // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
         if (!router.isReady || status === "loading") {
-            return // TODO loading state UI instead of doing nothing (for slow internet cases)
+            setLoading(true)
+            return
         }
         // router is loaded, but still no plan ID in the query --> redirect to overview because we can't do anything without an ID
         if (!router.query.plannerId) {
@@ -46,6 +49,7 @@ export default function Institutions() {
         if (session) {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
+                    setLoading(false)
                     if (data.plan) {
                         if (data.plan.institutions.length > 0) {
                             let list = data.plan.institutions.map((institution: any) => ({
@@ -161,164 +165,168 @@ export default function Institutions() {
         <>
             <HeadProgressBarSection stage={0} />
             <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
-                <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
-                    <div>
-                        <div className={'text-center font-bold text-4xl mb-2'}>
-                            Beschreibe die teilnehmenden Institutionen
-                        </div>
-                        <div className={'text-center mb-20'}>optional</div>
-                        <div className={'flex flex-wrap justify-center'}>
-                            {institutions.map((institution, index) => (
-                                <div key={index} className={'mx-2'}>
-                                    <WhiteBox>
-                                        <div className="mt-4 flex">
-                                            <div className="w-1/4 flex items-center">
-                                                <label htmlFor="name" className="px-2 py-2">
-                                                    Name
-                                                </label>
-                                            </div>
-                                            <div className="w-3/4">
-                                                <input
-                                                    type="text"
-                                                    name="name"
-                                                    value={institution.name}
-                                                    onChange={(e) =>
-                                                        modifyName(index, e.target.value)
-                                                    }
-                                                    placeholder="Name eingeben"
-                                                    className="border border-gray-500 rounded-lg w-full h-12 p-2"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="mt-4 flex">
-                                            <div className="w-1/4 flex items-center">
-                                                <label htmlFor="schoolType" className="px-2 py-2">
-                                                    Schulform
-                                                </label>
-                                            </div>
-                                            <div className="w-3/4">
-                                                <input
-                                                    type="text"
-                                                    name="schoolType"
-                                                    value={institution.school_type}
-                                                    onChange={(e) =>
-                                                        modifySchoolType(index, e.target.value)
-                                                    }
-                                                    placeholder="Schulform eingeben"
-                                                    className="border border-gray-500 rounded-lg w-full h-12 p-2"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="mt-4 flex">
-                                            <div className="w-1/4 flex items-center">
-                                                <label htmlFor="country" className="px-2 py-2">
-                                                    Land
-                                                </label>
-                                            </div>
-                                            <div className="w-3/4">
-                                                <input
-                                                    type="text"
-                                                    name="country"
-                                                    value={institution.country}
-                                                    onChange={(e) =>
-                                                        modifyCountry(index, e.target.value)
-                                                    }
-                                                    placeholder="Land eingeben"
-                                                    className="border border-gray-500 rounded-lg w-full h-12 p-2"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="mt-4 flex">
-                                            <div className="w-1/3 flex items-center">
-                                                <label htmlFor="department" className="px-2 py-2">
-                                                    Abteilungsname
-                                                </label>
-                                            </div>
-                                            <div className="w-2/3">
-                                                <input
-                                                    type="text"
-                                                    name="deaprtment"
-                                                    value={institution.department}
-                                                    onChange={(e) =>
-                                                        modifyDepartment(index, e.target.value)
-                                                    }
-                                                    placeholder="Abteilungsname eingeben"
-                                                    className="border border-gray-500 rounded-lg w-full h-12 p-2"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="mt-4 flex">
-                                            <div className="w-1/3 flex items-center">
-                                                <label
-                                                    htmlFor="academicCourses"
-                                                    className="px-2 py-2"
-                                                >
-                                                    beteiligte Studiengänge
-                                                </label>
-                                            </div>
-                                            <div className="w-2/3">
-                                                <input
-                                                    type="text"
-                                                    name="academicCourses"
-                                                    value={institution.academic_courses}
-                                                    onChange={(e) =>
-                                                        modifyAcademicCourses(index, e.target.value)
-                                                    }
-                                                    placeholder="mehrere durch Komma trennen"
-                                                    className="border border-gray-500 rounded-lg w-full h-12 p-2"
-                                                />
-                                            </div>
-                                        </div>
-                                    </WhiteBox>
-                                </div>
-                            ))}
-                        </div>
-                        <div className={'mx-2 flex justify-end'}>
-                            <button onClick={removeInstitutionBox}>
-                                <RxMinus size={20} />
-                            </button>{' '}
-                            {/* todo state + useeffect to create more input fields*/}
-                            <button onClick={addInstitutionBox}>
-                                <RxPlus size={20} />
-                            </button>{' '}
-                            {/* todo state + useeffect to create more input fields*/}
-                        </div>
-                    </div>
-                    <div className="flex justify-around w-full">
+                {loading ? (
+                    <LoadingAnimation />
+                ) : (
+                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                         <div>
-                            <Link
-                                href={{
-                                    pathname: '/startingWizard/generalInformation/2partners',
-                                    query: { plannerId: router.query.plannerId },
-                                }}
-                            >
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                >
-                                    Zurück
-                                </button>
-                            </Link>
+                            <div className={'text-center font-bold text-4xl mb-2'}>
+                                Beschreibe die teilnehmenden Institutionen
+                            </div>
+                            <div className={'text-center mb-20'}>optional</div>
+                            <div className={'flex flex-wrap justify-center'}>
+                                {institutions.map((institution, index) => (
+                                    <div key={index} className={'mx-2'}>
+                                        <WhiteBox>
+                                            <div className="mt-4 flex">
+                                                <div className="w-1/4 flex items-center">
+                                                    <label htmlFor="name" className="px-2 py-2">
+                                                        Name
+                                                    </label>
+                                                </div>
+                                                <div className="w-3/4">
+                                                    <input
+                                                        type="text"
+                                                        name="name"
+                                                        value={institution.name}
+                                                        onChange={(e) =>
+                                                            modifyName(index, e.target.value)
+                                                        }
+                                                        placeholder="Name eingeben"
+                                                        className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="mt-4 flex">
+                                                <div className="w-1/4 flex items-center">
+                                                    <label htmlFor="schoolType" className="px-2 py-2">
+                                                        Schulform
+                                                    </label>
+                                                </div>
+                                                <div className="w-3/4">
+                                                    <input
+                                                        type="text"
+                                                        name="schoolType"
+                                                        value={institution.school_type}
+                                                        onChange={(e) =>
+                                                            modifySchoolType(index, e.target.value)
+                                                        }
+                                                        placeholder="Schulform eingeben"
+                                                        className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="mt-4 flex">
+                                                <div className="w-1/4 flex items-center">
+                                                    <label htmlFor="country" className="px-2 py-2">
+                                                        Land
+                                                    </label>
+                                                </div>
+                                                <div className="w-3/4">
+                                                    <input
+                                                        type="text"
+                                                        name="country"
+                                                        value={institution.country}
+                                                        onChange={(e) =>
+                                                            modifyCountry(index, e.target.value)
+                                                        }
+                                                        placeholder="Land eingeben"
+                                                        className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="mt-4 flex">
+                                                <div className="w-1/3 flex items-center">
+                                                    <label htmlFor="department" className="px-2 py-2">
+                                                        Abteilungsname
+                                                    </label>
+                                                </div>
+                                                <div className="w-2/3">
+                                                    <input
+                                                        type="text"
+                                                        name="deaprtment"
+                                                        value={institution.department}
+                                                        onChange={(e) =>
+                                                            modifyDepartment(index, e.target.value)
+                                                        }
+                                                        placeholder="Abteilungsname eingeben"
+                                                        className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="mt-4 flex">
+                                                <div className="w-1/3 flex items-center">
+                                                    <label
+                                                        htmlFor="academicCourses"
+                                                        className="px-2 py-2"
+                                                    >
+                                                        beteiligte Studiengänge
+                                                    </label>
+                                                </div>
+                                                <div className="w-2/3">
+                                                    <input
+                                                        type="text"
+                                                        name="academicCourses"
+                                                        value={institution.academic_courses}
+                                                        onChange={(e) =>
+                                                            modifyAcademicCourses(index, e.target.value)
+                                                        }
+                                                        placeholder="mehrere durch Komma trennen"
+                                                        className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </WhiteBox>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className={'mx-2 flex justify-end'}>
+                                <button onClick={removeInstitutionBox}>
+                                    <RxMinus size={20} />
+                                </button>{' '}
+                                {/* todo state + useeffect to create more input fields*/}
+                                <button onClick={addInstitutionBox}>
+                                    <RxPlus size={20} />
+                                </button>{' '}
+                                {/* todo state + useeffect to create more input fields*/}
+                            </div>
                         </div>
-                        <div>
-                            <Link
-                                href={{
-                                    pathname:
-                                        '/startingWizard/generalInformation/4participatingCourses',
-                                    query: { plannerId: router.query.plannerId },
-                                }}
-                            >
-                                <button
-                                    type="submit"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={handleSubmit}
+                        <div className="flex justify-around w-full">
+                            <div>
+                                <Link
+                                    href={{
+                                        pathname: '/startingWizard/generalInformation/2partners',
+                                        query: { plannerId: router.query.plannerId },
+                                    }}
                                 >
-                                    Weiter
-                                </button>
-                            </Link>
+                                    <button
+                                        type="button"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    >
+                                        Zurück
+                                    </button>
+                                </Link>
+                            </div>
+                            <div>
+                                <Link
+                                    href={{
+                                        pathname:
+                                            '/startingWizard/generalInformation/4participatingCourses',
+                                        query: { plannerId: router.query.plannerId },
+                                    }}
+                                >
+                                    <button
+                                        type="submit"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                        onClick={handleSubmit}
+                                    >
+                                        Weiter
+                                    </button>
+                                </Link>
+                            </div>
                         </div>
-                    </div>
-                </form>
+                    </form>
+                )}
                 <SideProgressBarSection />
             </div>
         </>
