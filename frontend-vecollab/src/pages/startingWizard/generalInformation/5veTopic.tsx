@@ -16,6 +16,14 @@ export default function Topic() {
     const [loading, setLoading] = useState(false)
     const router = useRouter();
 
+    const {
+        watch,
+        register,
+        handleSubmit,
+        formState: { errors },
+        setValue
+    } = useForm<FormData>({ mode: 'onChange' });
+
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
         if (status !== "loading") {
@@ -45,16 +53,7 @@ export default function Topic() {
                 setValue("topic", data.plan.topic)
             });
         }
-    }, [session?.accessToken, router]);
-
-
-    const {
-        watch,
-        register,
-        handleSubmit,
-        formState: { errors },
-        setValue
-    } = useForm<FormData>({ mode: 'onChange'});
+    }, [session, status, setValue, router]);
 
     const onSubmit: SubmitHandler<FormData> = async () => {
         await fetchPOST(

@@ -25,6 +25,15 @@ export default function EssentialInformation() {
         }
     }, [session, status]);
 
+    
+    const {
+        watch,
+        register,
+        handleSubmit,
+        formState: { errors },
+        setValue
+    } = useForm<FormData>({ mode: 'onChange' });
+    
     useEffect(() => {
         // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
         if (!router.isReady || status === "loading") {
@@ -44,16 +53,8 @@ export default function EssentialInformation() {
                 setValue("name", data.plan.name)
             });
         }
-    }, [session, status, router])
-
-    const {
-        watch,
-        register,
-        handleSubmit,
-        formState: { errors },
-        setValue
-    } = useForm<FormData>({ mode: 'onChange' });
-
+    }, [session, status, router, setValue])
+    
     const onSubmit: SubmitHandler<FormData> = async () => {
         const newPlanner = await fetchPOST(
             '/planner/insert_empty',

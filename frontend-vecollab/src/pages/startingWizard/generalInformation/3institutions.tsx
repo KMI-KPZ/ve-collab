@@ -18,9 +18,9 @@ interface Institution {
 }
 
 export default function Institutions() {
-    const [loading, setLoading] = useState(false)
     const [institutions, setInstitutions] = useState<Institution[]>([]);
     const { data: session, status } = useSession();
+    const [loading, setLoading] = useState(false)
     const router = useRouter();
 
     // check for session errors and trigger the login flow if necessary
@@ -44,7 +44,6 @@ export default function Institutions() {
             router.push('/overviewProjects');
             return
         }
-        console.log(session)
         // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
         if (session) {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(

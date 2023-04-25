@@ -2,7 +2,7 @@ import WhiteBox from '@/components/Layout/WhiteBox';
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
 import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
 import { fetchGET, fetchPOST } from '@/lib/backend';
-import { useSession } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { FormEvent, useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
@@ -40,28 +40,60 @@ export default function TargetGroups() {
         },
     ]);
 
-    const { data: session } = useSession();
-
+    const { data: session, status } = useSession();
+    const [loading, setLoading] = useState(false)
     const router = useRouter();
+
+    // check for session errors and trigger the login flow if necessary
     useEffect(() => {
-        if (!router.query.plannerId) {
-            console.log(router.query.plannerId);
-            router.push('/overviewProjects');
+        if (status !== "loading") {
+            if (!session || session?.error === "RefreshAccessTokenError") {
+                console.log("forced new signIn")
+                signIn("keycloak");
+            }
         }
-        fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
-            (data) => {
-                if (data.plan) {
-                    if (data.plan.audience.length > 0) {
-                        let list = data.plan.audience.map((targetGroup: any) => ({
-                            name: targetGroup.name,
-                            age_min: targetGroup.age_min,
-                            age_max: targetGroup.age_max,
-                            experience: targetGroup.experience,
-                            academic_course: targetGroup.academic_course,
-                            mother_tongue: targetGroup.mother_tongue,
-                            foreign_languages: targetGroup.foreign_languages.language,
-                        }));
-                        setTargetGroups(list);
+    }, [session, status]);
+
+    useEffect(() => {
+        // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
+        if (!router.isReady || status === "loading") {
+            setLoading(true)
+            return
+        }
+        // router is loaded, but still no plan ID in the query --> redirect to overview because we can't do anything without an ID
+        if (!router.query.plannerId) {
+            router.push('/overviewProjects');
+            return
+        }
+        // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
+        if (session) {
+            fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
+                (data) => {
+                    if (data.plan) {
+                        if (data.plan.audience.length > 0) {
+                            let list = data.plan.audience.map((targetGroup: any) => ({
+                                name: targetGroup.name,
+                                age_min: targetGroup.age_min,
+                                age_max: targetGroup.age_max,
+                                experience: targetGroup.experience,
+                                academic_course: targetGroup.academic_course,
+                                mother_tongue: targetGroup.mother_tongue,
+                                foreign_languages: targetGroup.foreign_languages.language,
+                            }));
+                            setTargetGroups(list);
+                        } else {
+                            setTargetGroups([
+                                {
+                                    name: '',
+                                    age_min: undefined,
+                                    age_max: undefined,
+                                    experience: '',
+                                    academic_course: '',
+                                    mother_tongue: '',
+                                    foreign_languages: '',
+                                },
+                            ]);
+                        }
                     } else {
                         setTargetGroups([
                             {
@@ -75,22 +107,10 @@ export default function TargetGroups() {
                             },
                         ]);
                     }
-                } else {
-                    setTargetGroups([
-                        {
-                            name: '',
-                            age_min: undefined,
-                            age_max: undefined,
-                            experience: '',
-                            academic_course: '',
-                            mother_tongue: '',
-                            foreign_languages: '',
-                        },
-                    ]);
                 }
-            }
-        );
-    }, [session?.accessToken, router]);
+            );
+        }
+    }, [session, status, router]);
 
     const handleSubmit = async () => {
         let tgList: any[] = [];
