@@ -11,7 +11,7 @@ export default function Home() {
     const createAndForwardNewPlanner = async () => {
         const newPlanner = await fetchPOST('/planner/insert_empty', {}, session?.accessToken);
         await router.push({
-            pathname: '/startingWizard/generalInformation/1projectName',
+            pathname: '/startingWizard/generalInformation/projectName',
             query: { plannerId: newPlanner.inserted_id },
         });
     };

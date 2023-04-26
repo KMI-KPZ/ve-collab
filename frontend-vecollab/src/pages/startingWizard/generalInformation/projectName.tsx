@@ -1,29 +1,20 @@
+import LoadingAnimation from '@/components/LoadingAnimation';
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
 import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { useForm, SubmitHandler } from 'react-hook-form';
-import LoadingAnimation from '@/components/LoadingAnimation';
+import { useState, useEffect } from 'react';
+import { SubmitHandler, useForm } from 'react-hook-form';
 
 interface FormData {
-    topic: string;
+    name: string;
 }
 
-export default function Topic() {
+export default function EssentialInformation() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false)
     const router = useRouter();
-
-    const {
-        watch,
-        register,
-        handleSubmit,
-        formState: { errors },
-        setValue
-    } = useForm<FormData>({ mode: 'onChange' });
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -34,6 +25,15 @@ export default function Topic() {
             }
         }
     }, [session, status]);
+
+
+    const {
+        watch,
+        register,
+        handleSubmit,
+        formState: { errors },
+        setValue
+    } = useForm<FormData>({ mode: 'onChange' });
 
     useEffect(() => {
         // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
@@ -52,23 +52,27 @@ export default function Topic() {
                 `/planner/get?_id=${router.query.plannerId}`, session?.accessToken
             ).then((data) => {
                 setLoading(false)
-                setValue("topic", data.plan.topic)
+                setValue("name", data.plan.name)
             });
         }
-    }, [session, status, setValue, router]);
+    }, [session, status, router, setValue])
 
     const onSubmit: SubmitHandler<FormData> = async () => {
         await fetchPOST(
             '/planner/update_field',
-            { plan_id: router.query.plannerId, field_name: 'topic', value: watch('topic') },
+            {
+                plan_id: router.query.plannerId,
+                field_name: 'name',
+                value: watch("name"),
+            },
             session?.accessToken
         );
-
         await router.push({
-            pathname: '/startingWizard/generalInformation/6targetGroups',
+            pathname: '/startingWizard/generalInformation/partners',
             query: { plannerId: router.query.plannerId },
         });
     };
+
 
     return (
         <>
@@ -82,17 +86,16 @@ export default function Topic() {
                         className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
                     >
                         <div>
-                            <div className={'text-center font-bold text-4xl mb-2'}>
-                                zu welchem Thema soll der VE stattfinden?
+                            <div className={'text-center font-bold text-4xl mb-20'}>
+                                Gib deinem Projekt einen Namen
                             </div>
-                            <div className={'text-center mb-20'}>optional</div>
                             <div className="m-7 flex justify-center">
                                 <div>
                                     <input
                                         type="text"
-                                        placeholder="Thema eingeben"
+                                        placeholder="Name eingeben"
                                         className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
-                                        {...register('topic', {
+                                        {...register('name', {
                                             maxLength: {
                                                 value: 50,
                                                 message:
@@ -105,26 +108,18 @@ export default function Topic() {
                                             },
                                         })}
                                     />
-                                    <p className="text-red-600 pt-2">{errors.topic?.message}</p>
+                                    <p className="text-red-600 pt-2">{errors.name?.message}</p>
                                 </div>
                             </div>
                         </div>
                         <div className="flex justify-around w-full">
                             <div>
-                                <Link
-                                    href={{
-                                        pathname:
-                                            '/startingWizard/generalInformation/4participatingCourses',
-                                        query: { plannerId: router.query.plannerId },
-                                    }}
+                                <button
+                                    type="button"
+                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg invisible"
                                 >
-                                    <button
-                                        type="button"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    >
-                                        Zurück
-                                    </button>
-                                </Link>
+                                    Zurück
+                                </button>
                             </div>
                             <div>
                                 <button

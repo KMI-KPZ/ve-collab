@@ -20,7 +20,7 @@ export default function Overview() {
     const createAndForwardNewPlanner = async () => {
         const newPlanner = await fetchPOST('/planner/insert_empty', {}, session?.accessToken);
         await router.push({
-            pathname: '/startingWizard/generalInformation/1projectName',
+            pathname: '/startingWizard/generalInformation/projectName',
             query: { plannerId: newPlanner.inserted_id },
         });
     };
@@ -90,7 +90,7 @@ export default function Overview() {
                                     <Link
                                         href={{
                                             pathname:
-                                                '/startingWizard/generalInformation/1projectName',
+                                                '/startingWizard/generalInformation/projectName',
                                             query: { plannerId: plan._id },
                                         }}
                                     >

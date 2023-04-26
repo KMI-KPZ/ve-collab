@@ -70,7 +70,7 @@ export default function ExternalPersons() {
                         <div>
                             <Link
                                 href={{
-                                    pathname: '/startingWizard/generalInformation/9goals',
+                                    pathname: '/startingWizard/generalInformation/partners',
                                     query: { plannerId: router.query.plannerId },
                                 }}
                             >
@@ -85,7 +85,7 @@ export default function ExternalPersons() {
                         <div>
                             <Link
                                 href={{
-                                    pathname: '/startingWizard/generalInformation/11courseFormat',
+                                    pathname: '/startingWizard/generalInformation/institutions',
                                     query: { plannerId: router.query.plannerId },
                                 }}
                             >

@@ -91,7 +91,7 @@ export default function LearningEnvironment() {
                             <div>
                                 <Link
                                     href={{
-                                        pathname: '/startingWizard/generalInformation/11courseFormat',
+                                        pathname: '/startingWizard/generalInformation/courseFormat',
                                         query: { plannerId: router.query.plannerId },
                                     }}
                                 >
@@ -106,7 +106,7 @@ export default function LearningEnvironment() {
                             <div>
                                 <Link
                                     href={{
-                                        pathname: '/startingWizard/generalInformation/13tools',
+                                        pathname: '/startingWizard/generalInformation/tools',
                                         query: { plannerId: router.query.plannerId },
                                     }}
                                 >

@@ -23,7 +23,7 @@ export default function HeadProgressBarSection({ stage }: HeadProgressBar) {
     const headMenuProgressSteps: HeadMenuProgressStep[] = [
         {
             description: 'Allgemeine Informationen',
-            link: '/startingWizard/generalInformation/1projectName',
+            link: '/startingWizard/generalInformation/projectName',
             image: imageGeneralInformation,
         },
         {

@@ -201,7 +201,7 @@ export default function Goals() {
                                 <Link
                                     href={{
                                         pathname:
-                                            '/startingWizard/generalInformation/8formalConditions',
+                                            '/startingWizard/generalInformation/questionNewContent',
                                         query: { plannerId: router.query.plannerId },
                                     }}
                                 >
@@ -217,7 +217,7 @@ export default function Goals() {
                                 <Link
                                     href={{
                                         pathname:
-                                            '/startingWizard/generalInformation/10externalParties',
+                                            '/startingWizard/generalInformation/courseFormat',
                                         query: { plannerId: router.query.plannerId },
                                     }}
                                 >

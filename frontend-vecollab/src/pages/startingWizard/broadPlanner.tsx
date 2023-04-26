@@ -7,6 +7,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
+import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
 
 interface BroadStep {
     from: string;
@@ -183,7 +184,7 @@ export default function BroadPlanner() {
                                 <Link
                                     href={{
                                         pathname:
-                                            '/startingWizard/generalInformation/14questionNewContent',
+                                            '/startingWizard/generalInformation/formalConditions',
                                         query: { plannerId: router.query.plannerId },
                                     }}
                                 >
@@ -214,6 +215,7 @@ export default function BroadPlanner() {
                         </div>
                     </form>
                 )}
+                <SideProgressBarSection />
             </div>
         </>
     );

@@ -239,7 +239,7 @@ export default function Lectures() {
                             <div>
                                 <Link
                                     href={{
-                                        pathname: '/startingWizard/generalInformation/3institutions',
+                                        pathname: '/startingWizard/generalInformation/institutions',
                                         query: { plannerId: router.query.plannerId },
                                     }}
                                 >
@@ -254,7 +254,7 @@ export default function Lectures() {
                             <div>
                                 <Link
                                     href={{
-                                        pathname: '/startingWizard/generalInformation/5veTopic',
+                                        pathname: '/startingWizard/generalInformation/targetGroups',
                                         query: { plannerId: router.query.plannerId },
                                     }}
                                 >

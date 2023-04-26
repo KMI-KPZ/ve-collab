@@ -3,13 +3,12 @@ import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarS
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { FormEvent, useEffect, useState } from 'react';
-import { RxMinus, RxPlus } from 'react-icons/rx';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
 
-export default function Languages() {
-    const [languages, setLanguages] = useState(['']);
+export default function Realization() {
+    const [realization, setRealization] = useState('');
 
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false)
@@ -42,13 +41,11 @@ export default function Languages() {
                 (data) => {
                     setLoading(false)
                     if (data.plan) {
-                        if (data.plan.languages.length > 0) {
-                            setLanguages(data.plan.languages);
-                        } else {
-                            setLanguages(['']);
+                        if (data.plan.realization) {
+                            setRealization(data.plan.realization);
                         }
                     } else {
-                        setLanguages(['']);
+                        setRealization('');
                     }
                 }
             );
@@ -56,31 +53,11 @@ export default function Languages() {
     }, [session, status, router]);
 
     const handleSubmit = async () => {
-        const response = await fetchPOST(
+        await fetchPOST(
             '/planner/update_field',
-            { plan_id: router.query.plannerId, field_name: 'languages', value: languages },
+            { plan_id: router.query.plannerId, field_name: 'realization', value: realization },
             session?.accessToken
         );
-        console.log(response);
-        console.log(languages);
-    };
-
-    const modifyLanguage = (index: number, value: string) => {
-        let newLanguages = [...languages];
-        newLanguages[index] = value;
-        setLanguages(newLanguages);
-    };
-
-    const addInputField = (e: FormEvent) => {
-        e.preventDefault();
-        setLanguages([...languages, '']);
-    };
-
-    const removeInputField = (e: FormEvent) => {
-        e.preventDefault();
-        let copy = [...languages]; // have to create a deep copy that changes reference, because re-render is triggered by reference, not by values in the array
-        copy.pop();
-        setLanguages(copy);
     };
 
     return (
@@ -93,34 +70,29 @@ export default function Languages() {
                     <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                         <div>
                             <div className={'text-center font-bold text-4xl mb-2'}>
-                                In welchen Sprachen findet der VE statt?
+                                Wie wird der VE umgesetzt?
                             </div>
                             <div className={'text-center mb-20'}>optional</div>
-                            {languages.map((language, index) => (
-                                <div key={index} className="mx-7 mt-7 flex justify-center">
-                                    <input
-                                        type="text"
-                                        value={language}
-                                        onChange={(e) => modifyLanguage(index, e.target.value)}
-                                        placeholder="Sprache eingeben"
-                                        className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
-                                    />
-                                </div>
-                            ))}
-                            <div className={'w-3/4 mx-7 mt-3 flex justify-end'}>
-                                <button onClick={removeInputField}>
-                                    <RxMinus size={20} />
-                                </button>
-                                <button onClick={addInputField}>
-                                    <RxPlus size={20} />
-                                </button>
+                            <div className="mx-7 mt-7 flex justify-center">
+                                <select
+                                    value={realization}
+                                    onChange={(e) => setRealization(e.target.value)}
+                                    placeholder="Name eingeben"
+                                    className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
+                                >
+                                    <option value="">keine Auswahl</option>
+                                    <option value="asynchron">asynchron</option>
+                                    <option value="synchron">synchron</option>
+                                    <option value="gemischt">gemischt</option>
+                                </select>
                             </div>
                         </div>
                         <div className="flex justify-around w-full">
                             <div>
                                 <Link
                                     href={{
-                                        pathname: '/startingWizard/generalInformation/6targetGroups',
+                                        pathname:
+                                            '/startingWizard/generalInformation/goals',
                                         query: { plannerId: router.query.plannerId },
                                     }}
                                 >
@@ -136,7 +108,7 @@ export default function Languages() {
                                 <Link
                                     href={{
                                         pathname:
-                                            '/startingWizard/generalInformation/8formalConditions',
+                                            '/startingWizard/generalInformation/learningPlatform',
                                         query: { plannerId: router.query.plannerId },
                                     }}
                                 >
