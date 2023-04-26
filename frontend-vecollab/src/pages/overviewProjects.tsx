@@ -1,5 +1,5 @@
 import { fetchDELETE, fetchGET, fetchPOST } from '@/lib/backend';
-import { useSession } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
@@ -32,6 +32,16 @@ export default function Overview() {
             }
         });
     }, [session])
+
+    // check for session errors and trigger the login flow if necessary
+    useEffect(() => {
+        if (status !== "loading") {
+            if (!session || session?.error === "RefreshAccessTokenError") {
+                console.log("forced new signIn")
+                signIn("keycloak");
+            }
+        }
+    }, [session, status]);
 
     useEffect(() => {
         // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
