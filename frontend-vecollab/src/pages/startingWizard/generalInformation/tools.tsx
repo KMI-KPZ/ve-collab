@@ -3,12 +3,13 @@ import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarS
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
+import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
 
-export default function NewContent() {
-    const [newContent, setNewContent] = useState('');
+export default function Tools() {
+    const [tools, setTools] = useState(['']);
 
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false)
@@ -41,17 +42,13 @@ export default function NewContent() {
                 (data) => {
                     setLoading(false)
                     if (data.plan) {
-                        if (data.plan.new_content != null) {
-                            let strVal = '';
-                            if (data.plan.new_content === true) {
-                                strVal = 'true';
-                            } else if (data.plan.new_content === false) {
-                                strVal = 'false';
-                            }
-                            setNewContent(strVal);
+                        if (data.plan.tools.length > 0) {
+                            setTools(data.plan.tools);
+                        } else {
+                            setTools(['']);
                         }
                     } else {
-                        setNewContent('');
+                        setTools(['']);
                     }
                 }
             );
@@ -59,17 +56,31 @@ export default function NewContent() {
     }, [session, status, router]);
 
     const handleSubmit = async () => {
-        let boolVal = null;
-        if (newContent === 'true') {
-            boolVal = true;
-        } else if (newContent === 'false') {
-            boolVal = false;
-        }
-        await fetchPOST(
+        const response = await fetchPOST(
             '/planner/update_field',
-            { plan_id: router.query.plannerId, field_name: 'new_content', value: boolVal },
+            { plan_id: router.query.plannerId, field_name: 'tools', value: tools },
             session?.accessToken
         );
+        console.log(response);
+        console.log(tools);
+    };
+
+    const modifyTools = (index: number, value: string) => {
+        let newTools = [...tools];
+        newTools[index] = value;
+        setTools(newTools);
+    };
+
+    const addInputField = (e: FormEvent) => {
+        e.preventDefault();
+        setTools([...tools, '']);
+    };
+
+    const removeInputField = (e: FormEvent) => {
+        e.preventDefault();
+        let copy = [...tools]; // have to create a deep copy that changes reference, because re-render is triggered by reference, not by values in the array
+        copy.pop();
+        setTools(copy);
     };
 
     return (
@@ -82,55 +93,35 @@ export default function NewContent() {
                     <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                         <div>
                             <div className={'text-center font-bold text-4xl mb-2'}>
-                                Werden Sie neue Inhalte für den VE erstellen und bestehende Teile der
-                                Lehrveranstaltungen anpassen?
+                                Mit welchen Tools können die Studierenden arbeiten?
                             </div>
-                            <div className={'mb-20'}></div>
-                            <div className="mt-4 flex justify-center">
-                                <div className="w-1/6">
-                                    <div className="flex my-1">
-                                        <div className="w-1/2">
-                                            <label htmlFor="radio" className="px-2 py-2">
-                                                Ja
-                                            </label>
-                                        </div>
-                                        <div className="w-1/2">
-                                            <input
-                                                type="radio"
-                                                name="radio"
-                                                value={'true'}
-                                                checked={newContent === 'true'}
-                                                onChange={(e) => setNewContent(e.target.value)}
-                                                className="border border-gray-500 rounded-lg p-2"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="flex my-1">
-                                        <div className="w-1/2">
-                                            <label htmlFor="radio" className="px-2 py-2">
-                                                Nein
-                                            </label>
-                                        </div>
-                                        <div className="w-1/2">
-                                            <input
-                                                type="radio"
-                                                name="radio"
-                                                value={'false'}
-                                                checked={newContent === 'false'}
-                                                onChange={(e) => setNewContent(e.target.value)}
-                                                placeholder="Name eingeben"
-                                                className="border border-gray-500 rounded-lg p-2"
-                                            />
-                                        </div>
-                                    </div>
+                            <div className={'text-center mb-20'}>optional</div>
+                            {tools.map((tool, index) => (
+                                <div key={index} className="mt-4 flex justify-center">
+                                    <input
+                                        type="text"
+                                        value={tool}
+                                        onChange={(e) => modifyTools(index, e.target.value)}
+                                        placeholder="Tool eingeben"
+                                        className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
+                                    />
                                 </div>
+                            ))}
+                            <div className={'w-3/4 mx-7 mt-3 flex justify-end'}>
+                                <button onClick={removeInputField}>
+                                    <RxMinus size={20} />
+                                </button>
+                                <button onClick={addInputField}>
+                                    <RxPlus size={20} />
+                                </button>
                             </div>
                         </div>
                         <div className="flex justify-around w-full">
                             <div>
                                 <Link
                                     href={{
-                                        pathname: '/startingWizard/generalInformation/13tools',
+                                        pathname:
+                                            '/startingWizard/generalInformation/learningPlatform',
                                         query: { plannerId: router.query.plannerId },
                                     }}
                                 >
@@ -145,7 +136,8 @@ export default function NewContent() {
                             <div>
                                 <Link
                                     href={{
-                                        pathname: '/startingWizard/broadPlanner',
+                                        pathname:
+                                            '/startingWizard/generalInformation/formalConditions',
                                         query: { plannerId: router.query.plannerId },
                                     }}
                                 >

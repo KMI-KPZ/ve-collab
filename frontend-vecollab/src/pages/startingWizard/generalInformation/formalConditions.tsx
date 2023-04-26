@@ -69,7 +69,7 @@ export default function Parameters() {
                         <div>
                             <Link
                                 href={{
-                                    pathname: '/startingWizard/generalInformation/7languages',
+                                    pathname: '/startingWizard/generalInformation/tools',
                                     query: { plannerId: router.query.plannerId },
                                 }}
                             >
@@ -84,7 +84,7 @@ export default function Parameters() {
                         <div>
                             <Link
                                 href={{
-                                    pathname: '/startingWizard/generalInformation/9goals',
+                                    pathname: '/startingWizard/broadPlanner',
                                     query: { plannerId: router.query.plannerId },
                                 }}
                             >

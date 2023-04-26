@@ -294,7 +294,7 @@ export default function Institutions() {
                             <div>
                                 <Link
                                     href={{
-                                        pathname: '/startingWizard/generalInformation/2partners',
+                                        pathname: '/startingWizard/generalInformation/externalParties',
                                         query: { plannerId: router.query.plannerId },
                                     }}
                                 >
@@ -310,7 +310,7 @@ export default function Institutions() {
                                 <Link
                                     href={{
                                         pathname:
-                                            '/startingWizard/generalInformation/4participatingCourses',
+                                            '/startingWizard/generalInformation/participatingCourses',
                                         query: { plannerId: router.query.plannerId },
                                     }}
                                 >

@@ -118,7 +118,7 @@ export default function Partners() {
                             <div>
                                 <Link
                                     href={{
-                                        pathname: '/startingWizard/generalInformation/1projectName',
+                                        pathname: '/startingWizard/generalInformation/projectName',
                                         query: { plannerId: router.query.plannerId },
                                     }}
                                 >
@@ -133,7 +133,7 @@ export default function Partners() {
                             <div>
                                 <Link
                                     href={{
-                                        pathname: '/startingWizard/generalInformation/3institutions',
+                                        pathname: '/startingWizard/generalInformation/externalParties',
                                         query: { plannerId: router.query.plannerId },
                                     }}
                                 >

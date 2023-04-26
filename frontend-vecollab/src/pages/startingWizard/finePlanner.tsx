@@ -7,6 +7,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
+import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
 
 interface Task {
     title: string;
@@ -520,6 +521,7 @@ export default function FinePlanner() {
                         </div>
                     </form>
                 )}
+                <SideProgressBarSection />
             </div>
         </>
     );

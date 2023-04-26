@@ -8,8 +8,8 @@ import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
 
-export default function Tools() {
-    const [tools, setTools] = useState(['']);
+export default function Languages() {
+    const [languages, setLanguages] = useState(['']);
 
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false)
@@ -42,13 +42,13 @@ export default function Tools() {
                 (data) => {
                     setLoading(false)
                     if (data.plan) {
-                        if (data.plan.tools.length > 0) {
-                            setTools(data.plan.tools);
+                        if (data.plan.languages.length > 0) {
+                            setLanguages(data.plan.languages);
                         } else {
-                            setTools(['']);
+                            setLanguages(['']);
                         }
                     } else {
-                        setTools(['']);
+                        setLanguages(['']);
                     }
                 }
             );
@@ -58,29 +58,29 @@ export default function Tools() {
     const handleSubmit = async () => {
         const response = await fetchPOST(
             '/planner/update_field',
-            { plan_id: router.query.plannerId, field_name: 'tools', value: tools },
+            { plan_id: router.query.plannerId, field_name: 'languages', value: languages },
             session?.accessToken
         );
         console.log(response);
-        console.log(tools);
+        console.log(languages);
     };
 
-    const modifyTools = (index: number, value: string) => {
-        let newTools = [...tools];
-        newTools[index] = value;
-        setTools(newTools);
+    const modifyLanguage = (index: number, value: string) => {
+        let newLanguages = [...languages];
+        newLanguages[index] = value;
+        setLanguages(newLanguages);
     };
 
     const addInputField = (e: FormEvent) => {
         e.preventDefault();
-        setTools([...tools, '']);
+        setLanguages([...languages, '']);
     };
 
     const removeInputField = (e: FormEvent) => {
         e.preventDefault();
-        let copy = [...tools]; // have to create a deep copy that changes reference, because re-render is triggered by reference, not by values in the array
+        let copy = [...languages]; // have to create a deep copy that changes reference, because re-render is triggered by reference, not by values in the array
         copy.pop();
-        setTools(copy);
+        setLanguages(copy);
     };
 
     return (
@@ -93,16 +93,16 @@ export default function Tools() {
                     <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                         <div>
                             <div className={'text-center font-bold text-4xl mb-2'}>
-                                Mit welchen Tools können die Studierenden arbeiten?
+                                In welchen Sprachen findet der VE statt?
                             </div>
                             <div className={'text-center mb-20'}>optional</div>
-                            {tools.map((tool, index) => (
-                                <div key={index} className="mt-4 flex justify-center">
+                            {languages.map((language, index) => (
+                                <div key={index} className="mx-7 mt-7 flex justify-center">
                                     <input
                                         type="text"
-                                        value={tool}
-                                        onChange={(e) => modifyTools(index, e.target.value)}
-                                        placeholder="Tool eingeben"
+                                        value={language}
+                                        onChange={(e) => modifyLanguage(index, e.target.value)}
+                                        placeholder="Sprache eingeben"
                                         className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
                                     />
                                 </div>
@@ -120,8 +120,7 @@ export default function Tools() {
                             <div>
                                 <Link
                                     href={{
-                                        pathname:
-                                            '/startingWizard/generalInformation/12learningPlatform',
+                                        pathname: '/startingWizard/generalInformation/veTopic',
                                         query: { plannerId: router.query.plannerId },
                                     }}
                                 >
@@ -137,7 +136,7 @@ export default function Tools() {
                                 <Link
                                     href={{
                                         pathname:
-                                            '/startingWizard/generalInformation/14questionNewContent',
+                                            '/startingWizard/generalInformation/questionNewContent',
                                         query: { plannerId: router.query.plannerId },
                                     }}
                                 >

@@ -10,72 +10,82 @@ import { ProgressState, SideMenuStep } from '@/interfaces/startingWizard/sidePro
 export const sideMenuSteps: SideMenuStep[] = [
     {
         text: 'Projektname',
-        link: '/startingWizard/generalInformation/1projectName',
+        link: '/startingWizard/generalInformation/projectName',
         state: ProgressState.completed,
     },
     {
         text: 'Partner',
-        link: '/startingWizard/generalInformation/2partners',
-        state: ProgressState.notStarted,
-    },
-    {
-        text: 'Institution',
-        link: '/startingWizard/generalInformation/3institutions',
-        state: ProgressState.notStarted,
-    },
-    {
-        text: 'Lehrveranstaltungen',
-        link: '/startingWizard/generalInformation/4participatingCourses',
-        state: ProgressState.notStarted,
-    },
-    {
-        text: 'Thema',
-        link: '/startingWizard/generalInformation/5veTopic',
-        state: ProgressState.notStarted,
-    },
-    {
-        text: 'Zielgruppen',
-        link: '/startingWizard/generalInformation/6targetGroups',
-        state: ProgressState.notStarted,
-    },
-    {
-        text: 'Sprachen',
-        link: '/startingWizard/generalInformation/7languages',
-        state: ProgressState.notStarted,
-    },
-    {
-        text: 'Rahmenbedingungen',
-        link: '/startingWizard/generalInformation/8formalConditions',
-        state: ProgressState.notStarted,
-    },
-    {
-        text: 'Zielgruppen Ziele',
-        link: '/startingWizard/generalInformation/9goals',
+        link: '/startingWizard/generalInformation/partners',
         state: ProgressState.notStarted,
     },
     {
         text: 'Externe Beteiligte',
-        link: '/startingWizard/generalInformation/10externalParties',
+        link: '/startingWizard/generalInformation/externalParties',
         state: ProgressState.notStarted,
     },
     {
-        text: 'Kursformat',
-        link: '/startingWizard/generalInformation/11courseFormat',
+        text: 'Institution',
+        link: '/startingWizard/generalInformation/institutions',
         state: ProgressState.notStarted,
     },
     {
-        text: 'Lernumgebung',
-        link: '/startingWizard/generalInformation/12learningPlatform',
+        text: 'Lehrveranstaltungen',
+        link: '/startingWizard/generalInformation/participatingCourses',
+        state: ProgressState.notStarted,
+    },
+    {
+        text: 'Zielgruppen',
+        link: '/startingWizard/generalInformation/targetGroups',
+        state: ProgressState.notStarted,
+    },
+    {
+        text: 'Thema',
+        link: '/startingWizard/generalInformation/veTopic',
+        state: ProgressState.notStarted,
+    },
+    {
+        text: 'Sprachen',
+        link: '/startingWizard/generalInformation/languages',
+        state: ProgressState.notStarted,
+    },
+    {
+        text: 'neue Inhalte',
+        link: '/startingWizard/generalInformation/questionNewContent',
+        state: ProgressState.notStarted,
+    },
+    {
+        text: 'Lernziele',
+        link: '/startingWizard/generalInformation/goals',
+        state: ProgressState.notStarted,
+    },
+    {
+        text: 'Digitale Umsetzung',
+        link: '/startingWizard/generalInformation/courseFormat',
+        state: ProgressState.notStarted,
+    },
+    {
+        text: 'Digitale Lernumgebung',
+        link: '/startingWizard/generalInformation/learningPlatform',
         state: ProgressState.notStarted,
     },
     {
         text: 'Tools',
-        link: '/startingWizard/generalInformation/13tools',
+        link: '/startingWizard/generalInformation/tools',
         state: ProgressState.notStarted,
     },
     {
-        text: 'Frage Neuer Inhalt',
-        link: '/startingWizard/generalInformation/14questionNewContent',
+        text: 'formale Rahmenbedingungen',
+        link: '/startingWizard/generalInformation/formalConditions',
+        state: ProgressState.notStarted,
+    },
+    {
+        text: 'Etappenplanung',
+        link: '/startingWizard/broadPlanner',
+        state: ProgressState.notStarted,
+    },
+    {
+        text: 'didaktische Feinplanung',
+        link: '/startingWizard/finePlanner',
         state: ProgressState.notStarted,
     },
 ];
