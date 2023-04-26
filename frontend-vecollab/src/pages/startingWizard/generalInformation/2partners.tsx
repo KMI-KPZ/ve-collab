@@ -3,44 +3,48 @@ import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarS
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { FormEvent, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
+import { SubmitHandler, useForm, useFieldArray } from 'react-hook-form';
+
+interface FormValues {
+    partner: {
+        name: string;
+    }[];
+}
 
 export default function Partners() {
-    const [partners, setPartners] = useState(['']);
-
     const { data: session, status } = useSession();
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(false);
     const router = useRouter();
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
-        if (status !== "loading") {
-            if (!session || session?.error === "RefreshAccessTokenError") {
-                console.log("forced new signIn")
-                signIn("keycloak");
+        if (status !== 'loading') {
+            if (!session || session?.error === 'RefreshAccessTokenError') {
+                signIn('keycloak');
             }
         }
     }, [session, status]);
 
     useEffect(() => {
         // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
-        if (!router.isReady || status === "loading") {
-            setLoading(true)
-            return
+        if (!router.isReady || status === 'loading') {
+            setLoading(true);
+            return;
         }
         // router is loaded, but still no plan ID in the query --> redirect to overview because we can't do anything without an ID
         if (!router.query.plannerId) {
             router.push('/overviewProjects');
-            return
+            return;
         }
         // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
-        if (session) {
+        /*        if (session) {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
-                    setLoading(false)
+                    setLoading(false);
                     if (data.plan) {
                         if (data.plan.involved_parties.length > 0) {
                             setPartners(data.plan.involved_parties);
@@ -52,33 +56,85 @@ export default function Partners() {
                     }
                 }
             );
-        }
+        }*/
     }, [session, status, router]);
 
-    const modifyPartner = (index: number, value: string) => {
-        let newPartners = [...partners];
-        newPartners[index] = value;
-        setPartners(newPartners);
-    };
+    const {
+        register,
+        formState: { errors },
+        handleSubmit,
+        control,
+        watch,
+    } = useForm<FormValues>({
+        mode: 'onChange',
+        defaultValues: {
+            partner: [{ name: '' }],
+        },
+    });
 
-    const addInputField = (e: FormEvent) => {
-        e.preventDefault();
-        setPartners([...partners, '']);
-    };
+    const { fields, append, prepend, remove } = useFieldArray({
+        name: 'partner',
+        control,
+        rules: {
+            required: 'Please append at least 1 item',
+        },
+    });
 
-    const removeInputField = (e: FormEvent) => {
-        e.preventDefault();
-        let copy = [...partners]; // have to create a deep copy that changes reference, because re-render is triggered by reference, not by values in the array
-        copy.pop();
-        setPartners(copy);
-    };
-
-    const handleSubmit = async () => {
-        await fetchPOST(
+    const onSubmit: SubmitHandler<FormValues> = async () => {
+        console.log(watch('partner'));
+        /*        await fetchPOST(
             '/planner/update_field',
-            { plan_id: router.query.plannerId, field_name: 'involved_parties', value: partners },
+            {
+                plan_id: router.query.plannerId,
+                field_name: 'involved_parties',
+                value: watch('partner'),
+            },
             session?.accessToken
-        );
+        );*/
+        await router.push({
+            pathname: '/startingWizard/generalInformation/3institutions',
+            query: { plannerId: router.query.plannerId },
+        });
+    };
+
+    const renderPartnersInputs = (): JSX.Element[] => {
+        return fields.map((partner, index) => (
+            <div key={partner.id} className="mx-7 mt-7 flex justify-center">
+                <div>
+                    <input
+                        type="text"
+                        placeholder="Name eingeben"
+                        className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
+                        {...register(`partner.${index}.name`, {
+                            maxLength: {
+                                value: 50,
+                                message: 'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                            },
+                            pattern: {
+                                value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
+                                message: 'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?-',
+                            },
+                        })}
+                    />
+                    <p className="text-red-600 pt-2">{errors?.partner?.[index]?.name?.message}</p>
+                </div>
+                <div className={'w-3/4 mx-7 mt-3 flex justify-end'}>
+                    <button type="button" onClick={() => remove(index)}>
+                        <RxMinus size={20} />
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            append({
+                                name: '',
+                            });
+                        }}
+                    >
+                        <RxPlus size={20} />
+                    </button>
+                </div>
+            </div>
+        ));
     };
 
     return (
@@ -88,31 +144,16 @@ export default function Partners() {
                 {loading ? (
                     <LoadingAnimation />
                 ) : (
-                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
+                    <form
+                        onSubmit={handleSubmit(onSubmit)}
+                        className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
+                    >
                         <div>
                             <div className={'text-center font-bold text-4xl mb-2'}>
                                 Füge deine Partner hinzu
                             </div>
                             <div className={'text-center mb-20'}>optional</div>
-                            {partners.map((partner, index) => (
-                                <div key={index} className="mx-7 mt-7 flex justify-center">
-                                    <input
-                                        type="text"
-                                        value={partner}
-                                        onChange={(e) => modifyPartner(index, e.target.value)}
-                                        placeholder="Name eingeben"
-                                        className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
-                                    />
-                                </div>
-                            ))}
-                            <div className={'w-3/4 mx-7 mt-3 flex justify-end'}>
-                                <button onClick={removeInputField}>
-                                    <RxMinus size={20} />
-                                </button>
-                                <button onClick={addInputField}>
-                                    <RxPlus size={20} />
-                                </button>
-                            </div>
+                            {renderPartnersInputs()}
                         </div>
                         <div className="flex justify-around w-full">
                             <div>
@@ -131,20 +172,12 @@ export default function Partners() {
                                 </Link>
                             </div>
                             <div>
-                                <Link
-                                    href={{
-                                        pathname: '/startingWizard/generalInformation/3institutions',
-                                        query: { plannerId: router.query.plannerId },
-                                    }}
+                                <button
+                                    type="submit"
+                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
                                 >
-                                    <button
-                                        type="submit"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                        onClick={handleSubmit}
-                                    >
-                                        Weiter
-                                    </button>
-                                </Link>
+                                    Weiter
+                                </button>
                             </div>
                         </div>
                     </form>
