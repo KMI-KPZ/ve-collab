@@ -24,7 +24,7 @@ export default function HeaderSection() {
                         <Link href="/profile">Profil</Link>
                     </li>
                     <li>
-                        <Link href="/overviewProjects">meine Pläne</Link>
+                        <Link href="/overviewProjects">VE Designer</Link>
                     </li>
                     {/* 
                     <li>
