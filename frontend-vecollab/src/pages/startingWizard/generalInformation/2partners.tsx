@@ -10,9 +10,11 @@ import LoadingAnimation from '@/components/LoadingAnimation';
 import { SubmitHandler, useForm, useFieldArray } from 'react-hook-form';
 
 interface FormValues {
-    partner: {
-        name: string;
-    }[];
+    partners: Partner[];
+}
+
+interface Partner {
+    name: string;
 }
 
 export default function Partners() {
@@ -29,6 +31,20 @@ export default function Partners() {
         }
     }, [session, status]);
 
+    const {
+        register,
+        formState: { errors },
+        handleSubmit,
+        control,
+        watch,
+        setValue,
+    } = useForm<FormValues>({
+        mode: 'onChange',
+        defaultValues: {
+            partners: [{ name: '' }],
+        },
+    });
+
     useEffect(() => {
         // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
         if (!router.isReady || status === 'loading') {
@@ -41,56 +57,31 @@ export default function Partners() {
             return;
         }
         // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
-        /*        if (session) {
+        if (session) {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
                     setLoading(false);
-                    if (data.plan) {
-                        if (data.plan.involved_parties.length > 0) {
-                            setPartners(data.plan.involved_parties);
-                        } else {
-                            setPartners(['']);
-                        }
-                    } else {
-                        setPartners(['']);
-                    }
+                    setValue('partners', data.plan.involved_parties);
                 }
             );
-        }*/
-    }, [session, status, router]);
+        }
+    }, [session, status, router, setValue]);
 
-    const {
-        register,
-        formState: { errors },
-        handleSubmit,
+    const { fields, append, remove } = useFieldArray({
+        name: 'partners',
         control,
-        watch,
-    } = useForm<FormValues>({
-        mode: 'onChange',
-        defaultValues: {
-            partner: [{ name: '' }],
-        },
-    });
-
-    const { fields, append, prepend, remove } = useFieldArray({
-        name: 'partner',
-        control,
-        rules: {
-            required: 'Please append at least 1 item',
-        },
     });
 
     const onSubmit: SubmitHandler<FormValues> = async () => {
-        console.log(watch('partner'));
-        /*        await fetchPOST(
+        await fetchPOST(
             '/planner/update_field',
             {
                 plan_id: router.query.plannerId,
                 field_name: 'involved_parties',
-                value: watch('partner'),
+                value: watch('partners'),
             },
             session?.accessToken
-        );*/
+        );
         await router.push({
             pathname: '/startingWizard/generalInformation/3institutions',
             query: { plannerId: router.query.plannerId },
@@ -105,7 +96,7 @@ export default function Partners() {
                         type="text"
                         placeholder="Name eingeben"
                         className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
-                        {...register(`partner.${index}.name`, {
+                        {...register(`partners.${index}.name`, {
                             maxLength: {
                                 value: 50,
                                 message: 'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
@@ -116,7 +107,7 @@ export default function Partners() {
                             },
                         })}
                     />
-                    <p className="text-red-600 pt-2">{errors?.partner?.[index]?.name?.message}</p>
+                    <p className="text-red-600 pt-2">{errors?.partners?.[index]?.name?.message}</p>
                 </div>
                 <div className={'w-3/4 mx-7 mt-3 flex justify-end'}>
                     <button type="button" onClick={() => remove(index)}>
