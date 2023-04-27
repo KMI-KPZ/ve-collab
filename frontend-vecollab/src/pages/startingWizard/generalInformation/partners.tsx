@@ -92,11 +92,10 @@ export default function Partners() {
         return fields.map((partner, index) => (
             <div key={partner.id}>
                 <div className="mx-7 mt-7 flex justify-center">
-                    <div>
                         <input
                             type="text"
                             placeholder="Name eingeben"
-                            className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
+                            className="border border-gray-500 rounded-lg w-full h-12 p-2"
                             {...register(`partners.${index}.name`, {
                                 maxLength: {
                                     value: 50,
@@ -113,23 +112,27 @@ export default function Partners() {
                         <p className="text-red-600 pt-2">
                             {errors?.partners?.[index]?.name?.message}
                         </p>
+                </div>
+                {index === (fields.length - 1) ? (
+                    <div className="mx-7 mt-2 flex justify-center">
+                        <div className={'w-full flex px-2 justify-end'}>
+                            <button type="button" onClick={() => remove(index)}>
+                                <RxMinus size={20} />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    append({
+                                        name: '',
+                                    });
+                                }}
+                            >
+                                <RxPlus size={20} />
+                            </button>
+
+                        </div>
                     </div>
-                </div>
-                <div className={'w-3/4 mx-7 mt-3 flex justify-end'}>
-                    <button type="button" onClick={() => remove(index)}>
-                        <RxMinus size={20} />
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => {
-                            append({
-                                name: '',
-                            });
-                        }}
-                    >
-                        <RxPlus size={20} />
-                    </button>
-                </div>
+                ) : (<></>)}
             </div>
         ));
     };
