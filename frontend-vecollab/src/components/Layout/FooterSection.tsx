@@ -1,6 +1,7 @@
 import React from 'react';
 import veCollabLogo from '@/images/veCollabLogo.png';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function FooterSection() {
     return (
@@ -20,6 +21,7 @@ export default function FooterSection() {
                     <div>Über uns</div>
                 </div>
                 <div className="space-y-2">
+                    <div><Link target="_blank" href="https://infai.org/das-institut/impressum/">Impressum</Link></div>
                     <div>Kontaktiere uns</div>
                     <div>Email</div>
                 </div>
