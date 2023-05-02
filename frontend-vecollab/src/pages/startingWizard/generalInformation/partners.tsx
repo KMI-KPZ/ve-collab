@@ -61,7 +61,9 @@ export default function Partners() {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
                     setLoading(false);
-                    setValue('partners', data.plan.involved_parties);
+                    if (data.plan.involved_parties.length !== 0) {
+                        setValue('partners', data.plan.involved_parties);
+                    }
                 }
             );
         }
@@ -92,47 +94,23 @@ export default function Partners() {
         return fields.map((partner, index) => (
             <div key={partner.id}>
                 <div className="mx-7 mt-7 flex justify-center">
-                        <input
-                            type="text"
-                            placeholder="Name eingeben"
-                            className="border border-gray-500 rounded-lg w-full h-12 p-2"
-                            {...register(`partners.${index}.name`, {
-                                maxLength: {
-                                    value: 50,
-                                    message:
-                                        'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
-                                },
-                                pattern: {
-                                    value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
-                                    message:
-                                        'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?-',
-                                },
-                            })}
-                        />
-                        <p className="text-red-600 pt-2">
-                            {errors?.partners?.[index]?.name?.message}
-                        </p>
+                    <input
+                        type="text"
+                        placeholder="Name eingeben"
+                        className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                        {...register(`partners.${index}.name`, {
+                            maxLength: {
+                                value: 50,
+                                message: 'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                            },
+                            pattern: {
+                                value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
+                                message: 'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?-',
+                            },
+                        })}
+                    />
+                    <p className="text-red-600 pt-2">{errors?.partners?.[index]?.name?.message}</p>
                 </div>
-                {index === (fields.length - 1) ? (
-                    <div className="mx-7 mt-2 flex justify-center">
-                        <div className={'w-full flex px-2 justify-end'}>
-                            <button type="button" onClick={() => remove(index)}>
-                                <RxMinus size={20} />
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    append({
-                                        name: '',
-                                    });
-                                }}
-                            >
-                                <RxPlus size={20} />
-                            </button>
-
-                        </div>
-                    </div>
-                ) : (<></>)}
             </div>
         ));
     };
@@ -154,6 +132,23 @@ export default function Partners() {
                             </div>
                             <div className={'text-center mb-20'}>optional</div>
                             {renderPartnersInputs()}
+                            <div className="mx-7 mt-2 flex justify-center">
+                                <div className={'w-full flex px-2 justify-end'}>
+                                    <button type="button" onClick={() => remove(fields.length)}>
+                                        <RxMinus size={20} />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            append({
+                                                name: '',
+                                            });
+                                        }}
+                                    >
+                                        <RxPlus size={20} />
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                         <div className="flex justify-around w-full">
                             <div>
