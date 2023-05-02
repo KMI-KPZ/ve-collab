@@ -1,6 +1,7 @@
 logs/
 log_info.md
 .idea
+.env/*
 
 
 # Byte-compiled / optimized / DLL files
