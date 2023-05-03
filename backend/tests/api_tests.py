@@ -6890,9 +6890,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
         db_state = self.db.plans.find_one({"_id": ObjectId(response["inserted_id"])})
         self.assertIsNotNone(db_state)
         self.assertEqual(db_state["author"], CURRENT_ADMIN.username)
+        self.assertIsNotNone(db_state["creation_timestamp"])
+        self.assertIsNotNone(db_state["last_modified"])
+        self.assertEqual(db_state["creation_timestamp"], db_state["last_modified"])
 
         # just update the field in the supplied plan for easier equality check below
         plan["author"] = CURRENT_ADMIN.username
+        plan["creation_timestamp"] = plan["last_modified"] = db_state[
+            "creation_timestamp"
+        ]
 
         self.assertEqual(db_state, plan)
 
