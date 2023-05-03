@@ -125,10 +125,17 @@ class VEPlanResource:
         identical to the _id of the supplied plan.
         """
 
-        plan.last_modified = datetime.datetime.now()
+        now_timestamp = datetime.datetime.now()
+        plan.last_modified = now_timestamp
+        plan_dict = plan.to_dict()
+        del plan_dict[
+            "creation_timestamp"
+        ]  # make sure creation timestamp doesn't get overridden
 
         update_result = self.db.plans.update_one(
-            {"_id": plan._id}, {"$set": plan.to_dict()}, upsert=upsert
+            {"_id": plan._id},
+            {"$set": plan_dict, "$setOnInsert": {"creation_timestamp": now_timestamp}},
+            upsert=upsert,
         )
 
         # if no match was found, and no upsert was requested by the caller,
@@ -239,11 +246,10 @@ class VEPlanResource:
 
         # typechecks were successfull, we can finally do the update
         # for the upsert case, we need to construct a plan dict that doesn't
-        # contain the field we tried to update and all fields we want to 
+        # contain the field we tried to update and all fields we want to
         # set in the query because of a write concern at mongodb
-        on_insert_plan_dict = VEPlan(
-            creation_timestamp=datetime.datetime.now()
-        ).to_dict()
+        now_timestamp = datetime.datetime.now()
+        on_insert_plan_dict = VEPlan(creation_timestamp=now_timestamp).to_dict()
         del on_insert_plan_dict["_id"]
         del on_insert_plan_dict["last_modified"]
         del on_insert_plan_dict[field_name]
@@ -252,7 +258,7 @@ class VEPlanResource:
             {
                 "$set": {
                     field_name: value_copy,
-                    "last_modified": datetime.datetime.now(),
+                    "last_modified": now_timestamp,
                 },
                 "$setOnInsert": on_insert_plan_dict,
             },
