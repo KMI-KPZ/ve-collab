@@ -1427,6 +1427,7 @@ class VEPlanModelTest(TestCase):
 
         plan = VEPlan()
         self.assertIsInstance(plan._id, ObjectId)
+        self.assertIsNone(plan.author)
         self.assertIsNone(plan.name)
         self.assertEqual(plan.institutions, [])
         self.assertIsNone(plan.topic)
@@ -1477,6 +1478,7 @@ class VEPlanModelTest(TestCase):
 
         plan = VEPlan(
             _id=_id,
+            author="test",
             name="test",
             institutions=institutions,
             topic="test",
@@ -1493,6 +1495,7 @@ class VEPlanModelTest(TestCase):
         )
 
         self.assertEqual(plan._id, _id)
+        self.assertEqual(plan.author, "test")
         self.assertEqual(plan.name, "test")
         self.assertEqual(plan.institutions, institutions)
         self.assertEqual(plan.topic, "test")
@@ -1598,6 +1601,7 @@ class VEPlanModelTest(TestCase):
         plan_dict = VEPlan(steps=[step], institutions=[institution], lectures=[lecture]).to_dict()
 
         self.assertIn("_id", plan_dict)
+        self.assertIn("author", plan_dict)
         self.assertIn("name", plan_dict)
         self.assertIn("institutions", plan_dict)
         self.assertIn("topic", plan_dict)
@@ -1616,6 +1620,7 @@ class VEPlanModelTest(TestCase):
         self.assertIn("workload", plan_dict)
         self.assertIn("steps", plan_dict)
         self.assertIsInstance(plan_dict["_id"], ObjectId)
+        self.assertIsNone(plan_dict["author"])
         self.assertIsNone(plan_dict["name"])
         self.assertEqual(plan_dict["institutions"], [institution.to_dict()])
         self.assertIsNone(plan_dict["topic"])
@@ -1721,6 +1726,7 @@ class VEPlanModelTest(TestCase):
         plan = VEPlan.from_dict(plan_dict)
 
         self.assertIsNone(plan.name)
+        self.assertIsNone(plan.author)
         self.assertEqual(plan.institutions, [institution])
         self.assertIsNone(plan.topic)
         self.assertEqual(plan.lectures, [lecture])
@@ -1741,6 +1747,7 @@ class VEPlanModelTest(TestCase):
 
         # again, but this time don't set an _id ourselves
         plan_dict = {
+            "author": "test",
             "name": None,
             "institutions": [
                 {
@@ -1807,6 +1814,7 @@ class VEPlanModelTest(TestCase):
 
         plan = VEPlan.from_dict(plan_dict)
 
+        self.assertEqual(plan.author, "test")
         self.assertIsNone(plan.name)
         self.assertEqual(len(plan.institutions), 1)
         self.assertIsInstance(plan.institutions[0], Institution)

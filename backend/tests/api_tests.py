@@ -6672,6 +6672,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.lecture = self.create_lecture("test")
         self.default_plan = {
             "_id": self.plan_id,
+            "author": "test_user",
             "name": "test",
             "institutions": [self.institution.to_dict()],
             "topic": "test",
@@ -6756,6 +6757,25 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "GET", "/planner/get?_id={}".format(str(ObjectId())), False, 409
         )
         self.assertEqual(response["reason"], PLAN_DOESNT_EXIST_ERROR)
+
+    def test_get_available_plans(self):
+        """
+        expect: successfully request all plans the user is allowed to view, i.e.
+        own and with read/write permissions
+        """
+
+        # switch to user mode
+        options.test_user = True
+        options.test_admin = False
+
+        # add one more plan to db that is should not be viewable
+        self.db.plans.insert_one(VEPlan(author="test_admin").to_dict())
+
+        response = self.base_checks("GET", "/planner/get_available", True, 200)
+        self.assertIn("plans", response)
+        self.assertIsInstance(response["plans"], list)
+        self.assertEqual(len(response["plans"]), 1)
+        self.assertEqual(response["plans"][0]["_id"], str(self.plan_id))
 
     def test_get_all_plans(self):
         """

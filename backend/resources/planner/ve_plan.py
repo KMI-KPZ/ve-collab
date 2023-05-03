@@ -75,6 +75,19 @@ class VEPlanResource:
             raise PlanDoesntExistError()
 
         return VEPlan.from_dict(result)
+    
+
+    def get_plans_for_user(self, username: str) -> List[VEPlan]:
+        """
+        Request all plans that are avaible to the user determined by their `username`, 
+        i.e. their own plans and those that he/she has read or write access to (r/w TODO)
+
+        Returns a list of `VEPlan` objects, or an empty list, if there are no plans
+        that match the criteria.
+        """
+
+        result = self.db.plans.find({"author": username})
+        return [VEPlan.from_dict(res) for res in result]
 
     def insert_plan(self, plan: VEPlan) -> ObjectId:
         """

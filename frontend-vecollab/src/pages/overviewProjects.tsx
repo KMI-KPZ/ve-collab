@@ -8,6 +8,7 @@ import { HiOutlineTrash } from "react-icons/hi"
 interface PlanPreview {
     _id: string;
     name: string;
+    author: string;
 }
 
 export default function Overview() {
@@ -26,8 +27,9 @@ export default function Overview() {
     };
 
     const getAllPlans = useCallback(async () => {
-        return fetchGET(`/planner/get_all`, session?.accessToken).then((data) => {
+        return fetchGET(`/planner/get_available`, session?.accessToken).then((data) => {
             if (data.plans) {
+                console.log(data.plans);
                 setPlans(data.plans);
             }
         });
@@ -81,7 +83,7 @@ export default function Overview() {
                                         <h2 className="text-xl font-bold leading-tight text-gray-800">
                                             {plan.name}
                                         </h2>
-                                        <p className="text-sm text-gray-500">Max Mustermann</p>
+                                        <p className="text-sm text-gray-500">{plan.author}</p>
                                         <p className="text-gray-700 mt-3 text-sm">28.04.2023</p>
                                     </div>
                                     <button className="absolute top-0 right-0 bg-gray-300 rounded-lg p-2 flex justify-center items-center" onClick={e => deletePlan(plan._id, index)}>

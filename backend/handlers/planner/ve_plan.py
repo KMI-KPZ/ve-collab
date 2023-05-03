@@ -29,7 +29,6 @@ import util
 
 
 class VEPlanHandler(BaseHandler):
-
     def options(self, slug):
         # no body
         self.set_status(200)
@@ -68,6 +67,27 @@ class VEPlanHandler(BaseHandler):
                 {"success": False,
                  "reason": "plan_doesnt_exist"}
 
+        GET /planner/get_available
+            request all plans that are available to the current user,
+            i.e. their own plans and those that he/she has read or write
+            access to (r/w TODO).
+
+            query params:
+
+            http body:
+
+            returns:
+                200 OK,
+                (the plans in a list of their dictionary representation
+                (= product of `to_dict()` of `VEPlan` instance))
+                {"success": True,
+                 "plans": [<VEPlan.to_dict()>, ...]}
+
+                401 Unauthorized
+                (access token is not valid)
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
         GET /planner/get_all
             request all plans, requires admin privileges
 
@@ -103,6 +123,10 @@ class VEPlanHandler(BaseHandler):
                     return
 
                 self.get_plan_by_id(db, _id)
+                return
+
+            elif slug == "get_available":
+                self.get_available_plans_for_user(db)
                 return
 
             elif slug == "get_all":
@@ -249,7 +273,7 @@ class VEPlanHandler(BaseHandler):
                 {"success": False,
                  "reason": "plan_already_exists"}
 
-        
+
         POST /planner/insert_empty
             Insert an fresh empty plan into the db and return its _id to work with further.
             This endpoint is usually used by the plan to initiate a new planning process by
@@ -438,7 +462,7 @@ class VEPlanHandler(BaseHandler):
             lectures, steps, ...), pay attention to supply all of those objects in a list (as
             there are naturally multiple possible as per model), because they will be overwritten
             (i.e. if you want to append a new step, send all other already existing steps as well).
-            If you want to simple append or remove new objects to/from those list, 
+            If you want to simple append or remove new objects to/from those list,
             use the append/remove-endpoints (TODO) instead.
 
             query params:
@@ -549,13 +573,15 @@ class VEPlanHandler(BaseHandler):
 
                 self.insert_plan(db, plan)
                 return
-            
+
             if slug == "insert_empty":
                 if "name" in http_body:
                     optional_name = http_body["name"]
                 else:
                     optional_name = None
                 plan = VEPlan(name=optional_name)
+                print(self.current_user.username)
+                plan.author = self.current_user.username
                 self.insert_plan(db, plan)
                 return
 
@@ -601,10 +627,10 @@ class VEPlanHandler(BaseHandler):
                     http_body["plan_id"],
                     http_body["field_name"],
                     http_body["value"],
-                    upsert=upsert
+                    upsert=upsert,
                 )
                 return
-            
+
             elif slug == "append_step":
                 if "plan_id" not in http_body:
                     self.set_status(400)
@@ -624,7 +650,7 @@ class VEPlanHandler(BaseHandler):
                         }
                     )
                     return
-                
+
                 step = Step.from_dict(http_body["step"])
 
                 self.append_step_to_plan(db, http_body["plan_id"], step)
@@ -682,10 +708,12 @@ class VEPlanHandler(BaseHandler):
     #                             helper functions                               #
     ##############################################################################
 
-    def load_plan_from_http_body_or_write_error(self, http_body: dict) -> Optional[VEPlan]:
+    def load_plan_from_http_body_or_write_error(
+        self, http_body: dict
+    ) -> Optional[VEPlan]:
         """
         helper function to parse a VEPlan from the dict (should be http body of the request)
-        and enforce type and model checks. 
+        and enforce type and model checks.
         """
         try:
             plan = VEPlan.from_dict(http_body)
@@ -736,6 +764,26 @@ class VEPlanHandler(BaseHandler):
             return
 
         self.serialize_and_write({"success": True, "plan": plan.to_dict()})
+
+    def get_available_plans_for_user(self, db: Database) -> None:
+        """
+        This function is invoked by the handler when the correspoding endpoint
+        is requested. It just de-crowds the handler function and should therefore
+        not be called manually anywhere else.
+
+        Request all available plans for the current user, i.e. their own plans and
+        those that he/she has read/write access to (r/w TODO).
+
+        Responses:
+            200 OK --> contains all available plans in a list of dictionaries
+        """
+
+        planner = VEPlanResource(db)
+        plans = [
+            plan.to_dict()
+            for plan in planner.get_plans_for_user(self.current_user.username)
+        ]
+        self.serialize_and_write({"success": True, "plans": plans})
 
     def get_all_plans(self, db: Database) -> None:
         """
@@ -834,7 +882,7 @@ class VEPlanHandler(BaseHandler):
         be updated (`field_name`) and the corresponding `value` that should be set.
         If you plan to update one of the attribute that are object-like, e.g. audience,
         lectures, etc. be sure to supply a list of all the dictionaries, as they are
-        overwritten and not appended. Though, you may use the separate append-endpoints 
+        overwritten and not appended. Though, you may use the separate append-endpoints
         (TODO) instead.
 
         Optionally, by setting the "upsert"-parameter to True, the plan will be inserted
@@ -883,7 +931,9 @@ class VEPlanHandler(BaseHandler):
         else:
             self.serialize_and_write({"success": True, "updated_id": _id})
 
-    def append_step_to_plan(self, db: Database, plan_id: str | ObjectId, step: dict | Step):
+    def append_step_to_plan(
+        self, db: Database, plan_id: str | ObjectId, step: dict | Step
+    ):
         planner = VEPlanResource(db)
         error_reason = None
         _id = None

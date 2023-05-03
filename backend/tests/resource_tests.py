@@ -5,7 +5,12 @@ from bson import ObjectId
 
 import pymongo
 from tornado.options import options
-from exceptions import MissingKeyError, NonUniqueTasksError, PlanAlreadyExistsError, PlanDoesntExistError
+from exceptions import (
+    MissingKeyError,
+    NonUniqueTasksError,
+    PlanAlreadyExistsError,
+    PlanDoesntExistError,
+)
 
 import global_vars
 from model import (
@@ -192,6 +197,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 plan = self.planner.get_plan(id_input)
                 self.assertIsInstance(plan, VEPlan)
                 self.assertEqual(plan._id, self.default_plan["_id"])
+                self.assertIsNone(plan.author)
                 self.assertEqual(plan.name, self.default_plan["name"])
                 self.assertEqual(
                     [institution.to_dict() for institution in plan.institutions],
@@ -256,7 +262,97 @@ class PlanResourceTest(BaseResourceTestCase):
         plan = plans[0]
         self.assertIsInstance(plan, VEPlan)
         self.assertEqual(plan._id, self.default_plan["_id"])
+        self.assertIsNone(plan.author)
         self.assertEqual(plan.name, self.default_plan["name"])
+        self.assertEqual(
+            [institution.to_dict() for institution in plan.institutions],
+            self.default_plan["institutions"],
+        )
+        self.assertEqual(plan.topic, self.default_plan["topic"])
+        self.assertEqual(
+            [lecture.to_dict() for lecture in plan.lectures],
+            self.default_plan["lectures"],
+        )
+        self.assertEqual(
+            [target_group.to_dict() for target_group in plan.audience],
+            self.default_plan["audience"],
+        )
+        self.assertEqual(plan.languages, self.default_plan["languages"])
+        self.assertEqual(plan.goals, self.default_plan["goals"])
+        self.assertEqual(plan.involved_parties, self.default_plan["involved_parties"])
+        self.assertEqual(plan.realization, self.default_plan["realization"])
+        self.assertEqual(plan.learning_env, self.default_plan["learning_env"])
+        self.assertEqual(plan.tools, self.default_plan["tools"])
+        self.assertEqual(plan.new_content, self.default_plan["new_content"])
+        self.assertEqual(
+            [step.to_dict() for step in plan.steps], self.default_plan["steps"]
+        )
+        self.assertEqual(plan.timestamp_from, self.step.timestamp_from)
+        self.assertEqual(plan.timestamp_to, self.step.timestamp_to)
+        self.assertEqual(plan.workload, self.step.workload)
+        self.assertEqual(plan.duration, self.step.duration)
+
+    def test_get_plans_for_user(self):
+        """
+        expect: only show plans that the user is allowed to see, i.e. their
+        own and those with read/write permissions (r/w TODO)
+        """
+
+        # insert 2 more plans with different authorships
+        additional_plans = [
+            {
+                "_id": ObjectId(),
+                "name": "admin",
+                "author": "test_admin",
+                "institutions": [self.institution.to_dict()],
+                "topic": "test",
+                "lectures": [self.lecture.to_dict()],
+                "audience": [self.target_group.to_dict()],
+                "languages": ["test", "test"],
+                "timestamp_from": self.step.timestamp_from,
+                "timestamp_to": self.step.timestamp_to,
+                "goals": {"test": "test"},
+                "involved_parties": ["test", "test"],
+                "realization": "test",
+                "learning_env": "test",
+                "tools": ["test", "test"],
+                "new_content": False,
+                "duration": self.step.duration.total_seconds(),
+                "workload": self.step.workload,
+                "steps": [self.step.to_dict()],
+            },
+            {
+                "_id": ObjectId(),
+                "name": "user",
+                "author": "test_user",
+                "institutions": [self.institution.to_dict()],
+                "topic": "test",
+                "lectures": [self.lecture.to_dict()],
+                "audience": [self.target_group.to_dict()],
+                "languages": ["test", "test"],
+                "timestamp_from": self.step.timestamp_from,
+                "timestamp_to": self.step.timestamp_to,
+                "goals": {"test": "test"},
+                "involved_parties": ["test", "test"],
+                "realization": "test",
+                "learning_env": "test",
+                "tools": ["test", "test"],
+                "new_content": False,
+                "duration": self.step.duration.total_seconds(),
+                "workload": self.step.workload,
+                "steps": [self.step.to_dict()],
+            },
+        ]
+        self.db.plans.insert_many(additional_plans)
+
+        plans = self.planner.get_plans_for_user("test_admin")
+        # since only one of the plans belong to the user, we expect
+        # the result to be filtered accordingly
+        self.assertEqual(len(plans), 1)
+        plan = plans[0]
+        self.assertEqual(plan._id, additional_plans[0]["_id"])
+        self.assertEqual(plan.author, "test_admin")
+        self.assertEqual(plan.name, "admin")
         self.assertEqual(
             [institution.to_dict() for institution in plan.institutions],
             self.default_plan["institutions"],
@@ -611,7 +707,7 @@ class PlanResourceTest(BaseResourceTestCase):
         )
 
         del step["ve_approach"]
-        
+
         self.assertRaises(
             MissingKeyError,
             self.planner.update_field,

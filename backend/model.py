@@ -1189,6 +1189,7 @@ class VEPlan:
     def __init__(
         self,
         _id: str | ObjectId = None,
+        author: str = None,
         name: str = None,
         institutions: List[Institution] = [],
         topic: str = None,
@@ -1227,6 +1228,8 @@ class VEPlan:
         # ensure _id becomes type ObjectId, either using the given value or
         # creating a fresh ID
         self._id = util.parse_object_id(_id) if _id != None else ObjectId()
+
+        self.author = author
 
         self.name = name
         self.institutions = institutions
@@ -1278,6 +1281,7 @@ class VEPlan:
 
         return {
             "_id": self._id,
+            "author": self.author,
             "name": self.name,
             "institutions": [
                 institution.to_dict() for institution in self.institutions
@@ -1462,10 +1466,10 @@ class VEPlan:
 
         # delete any keys from params that are not expected to avoid having
         # any other additional attributes that might cause trouble
-        # (e.g. on serialization)
-        # since _id is optional, we also allow it.
+        # (e.g. on serialization), but we also have to allow system derived attributes
+        # like _id or the author.
         for key in list(params.keys()):
-            if key not in [*cls.EXPECTED_DICT_ENTRIES.keys(), *["_id"]]:
+            if key not in [*cls.EXPECTED_DICT_ENTRIES.keys(), *["_id", "author"]]:
                 del params[key]
 
         # ensure types of attributes are correct (only those that are passed from the dict)
