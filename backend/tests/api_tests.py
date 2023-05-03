@@ -6889,6 +6889,11 @@ class VEPlanHandlerTest(BaseApiTestCase):
         # expect plan to be in the db
         db_state = self.db.plans.find_one({"_id": ObjectId(response["inserted_id"])})
         self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["author"], CURRENT_ADMIN.username)
+
+        # just update the field in the supplied plan for easier equality check below
+        plan["author"] = CURRENT_ADMIN.username
+
         self.assertEqual(db_state, plan)
 
     def test_post_insert_plan_error_plan_already_exists(self):

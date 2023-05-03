@@ -571,6 +571,8 @@ class VEPlanHandler(BaseHandler):
                 if not plan:
                     return
 
+                plan.author = self.current_user.username
+
                 self.insert_plan(db, plan)
                 return
 
@@ -579,9 +581,10 @@ class VEPlanHandler(BaseHandler):
                     optional_name = http_body["name"]
                 else:
                     optional_name = None
+
                 plan = VEPlan(name=optional_name)
-                print(self.current_user.username)
                 plan.author = self.current_user.username
+
                 self.insert_plan(db, plan)
                 return
 
