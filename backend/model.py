@@ -1190,6 +1190,8 @@ class VEPlan:
         self,
         _id: str | ObjectId = None,
         author: str = None,
+        creation_timestamp: str | datetime = None,
+        last_modified: str | datetime = None,
         name: str = None,
         institutions: List[Institution] = [],
         topic: str = None,
@@ -1230,6 +1232,8 @@ class VEPlan:
         self._id = util.parse_object_id(_id) if _id != None else ObjectId()
 
         self.author = author
+        self.creation_timestamp = util.parse_datetime(creation_timestamp)
+        self.last_modified = util.parse_datetime(last_modified)
 
         self.name = name
         self.institutions = institutions
@@ -1282,6 +1286,8 @@ class VEPlan:
         return {
             "_id": self._id,
             "author": self.author,
+            "creation_timestamp": self.creation_timestamp,
+            "last_modified": self.last_modified,
             "name": self.name,
             "institutions": [
                 institution.to_dict() for institution in self.institutions
@@ -1466,10 +1472,13 @@ class VEPlan:
 
         # delete any keys from params that are not expected to avoid having
         # any other additional attributes that might cause trouble
-        # (e.g. on serialization), but we also have to allow system derived attributes
-        # like _id or the author.
+        # (e.g. on serialization).
+        # but we also have to allow system derived attributes like _id or the author.
         for key in list(params.keys()):
-            if key not in [*cls.EXPECTED_DICT_ENTRIES.keys(), *["_id", "author"]]:
+            if key not in [
+                *cls.EXPECTED_DICT_ENTRIES.keys(),
+                *["_id", "author", "creation_timestamp", "last_modified"],
+            ]:
                 del params[key]
 
         # ensure types of attributes are correct (only those that are passed from the dict)
@@ -1535,17 +1544,17 @@ class VEPlan:
         # the start/end timestamp as min/max of step timestamps.
         # if they are not the same timedelta, there might have been some
         # semantic error at the step timestamps, e.g. end before start
-        
-        #if params["timestamp_to"] and params["timestamp_from"]:
-         #   if params["duration"] != (
-          #      params["timestamp_to"] - params["timestamp_from"]
-           # ):
-            #    raise ValueError(
-             #       """
-              #      duration and min/max timestamps do not match, 
-               #     maybe mixed up Step timestamps?
-                #    """
-                #)
+
+        # if params["timestamp_to"] and params["timestamp_from"]:
+        #   if params["duration"] != (
+        #      params["timestamp_to"] - params["timestamp_from"]
+        # ):
+        #    raise ValueError(
+        #       """
+        #      duration and min/max timestamps do not match,
+        #     maybe mixed up Step timestamps?
+        #    """
+        # )
 
         # build VEPlan and set remaining values
         instance = cls(

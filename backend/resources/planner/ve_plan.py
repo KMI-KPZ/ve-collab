@@ -1,4 +1,5 @@
 import copy
+import datetime
 
 from bson import ObjectId
 from bson.errors import InvalidId
@@ -75,11 +76,10 @@ class VEPlanResource:
             raise PlanDoesntExistError()
 
         return VEPlan.from_dict(result)
-    
 
     def get_plans_for_user(self, username: str) -> List[VEPlan]:
         """
-        Request all plans that are avaible to the user determined by their `username`, 
+        Request all plans that are avaible to the user determined by their `username`,
         i.e. their own plans and those that he/she has read or write access to (r/w TODO)
 
         Returns a list of `VEPlan` objects, or an empty list, if there are no plans
@@ -102,6 +102,9 @@ class VEPlanResource:
         :returns: the _id of the freshly inserted plan
         """
 
+        # set creation and last modified attributes
+        plan.creation_timestamp = plan.last_modified = datetime.datetime.now()
+
         try:
             result = self.db.plans.insert_one(plan.to_dict())
         except DuplicateKeyError:
@@ -121,6 +124,8 @@ class VEPlanResource:
         Returns the updated, or (in case of an upsert) inserted _id, which is be
         identical to the _id of the supplied plan.
         """
+
+        plan.last_modified = datetime.datetime.now()
 
         update_result = self.db.plans.update_one(
             {"_id": plan._id}, {"$set": plan.to_dict()}, upsert=upsert
@@ -197,11 +202,13 @@ class VEPlanResource:
                     )
 
                 try:
-                    obj_correct_format = key_object_mapper[field_name].from_dict(obj_like_attr).to_dict()
+                    obj_correct_format = (
+                        key_object_mapper[field_name].from_dict(obj_like_attr).to_dict()
+                    )
                     value_copy.append(obj_correct_format)
                 except Exception:
                     raise
-            
+
             # the integrity for unique step names has to be checked manually, because it is not
             # part of the Step model logic, but of the VEPlan, which we don't build an instance
             # of here
@@ -232,14 +239,21 @@ class VEPlanResource:
 
         # typechecks were successfull, we can finally do the update
         # for the upsert case, we need to construct a plan dict that doesn't
-        # contain the field we tried to update because of a write concern at mongodb
-        on_insert_plan_dict = VEPlan().to_dict()
+        # contain the field we tried to update and all fields we want to 
+        # set in the query because of a write concern at mongodb
+        on_insert_plan_dict = VEPlan(
+            creation_timestamp=datetime.datetime.now()
+        ).to_dict()
         del on_insert_plan_dict["_id"]
+        del on_insert_plan_dict["last_modified"]
         del on_insert_plan_dict[field_name]
         update_result = self.db.plans.update_one(
             {"_id": plan_id},
             {
-                "$set": {field_name: value_copy},
+                "$set": {
+                    field_name: value_copy,
+                    "last_modified": datetime.datetime.now(),
+                },
                 "$setOnInsert": on_insert_plan_dict,
             },
             upsert=upsert,
@@ -258,14 +272,25 @@ class VEPlanResource:
             if update_result.upserted_id is not None
             else plan_id
         )
-    
+
     def append_step(self, plan_id: str | ObjectId, step: Step) -> ObjectId:
+        """
+        Append a new step object to a given plan. The `name` of the step
+        must not have a name that already exists within the other steps
+        of this plan, otherwise a `NonUniqueStepsError` is thrown.
+
+        If no plan with the given `plan_id` is found, a `PlanDoesntExistError`
+        is thrown.
+        """
+
         plan_id = util.parse_object_id(plan_id)
 
-        steps_of_plan = self.db.plans.find_one({"_id": plan_id}, projection={"steps": True})
+        steps_of_plan = self.db.plans.find_one(
+            {"_id": plan_id}, projection={"steps": True}
+        )
         if not steps_of_plan:
             raise PlanDoesntExistError()
-        
+
         step_names = []
         for elem in steps_of_plan["steps"]:
             if elem:
@@ -274,16 +299,15 @@ class VEPlanResource:
         if step.name in step_names:
             raise NonUniqueStepsError()
 
-
         update_result = self.db.plans.update_one(
             {"_id": plan_id},
             {
-                "$push": {"steps": step.to_dict()}
-            }
+                "$push": {"steps": step.to_dict()},
+                "$set": {"last_modified": datetime.datetime.now()},
+            },
         )
 
         return plan_id
-
 
     def delete_plan(self, _id: str | ObjectId) -> None:
         """
