@@ -186,8 +186,7 @@ class VEPlanResource:
                 try:
                     obj_correct_format = key_object_mapper[field_name].from_dict(obj_like_attr).to_dict()
                     value_copy.append(obj_correct_format)
-                except Exception as e:
-                    print(e)
+                except Exception:
                     raise
             
             # the integrity for unique step names has to be checked manually, because it is not

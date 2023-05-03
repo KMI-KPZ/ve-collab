@@ -249,6 +249,38 @@ class VEPlanHandler(BaseHandler):
                 {"success": False,
                  "reason": "plan_already_exists"}
 
+        
+        POST /planner/insert_empty
+            Insert an fresh empty plan into the db and return its _id to work with further.
+            This endpoint is usually used by the plan to initiate a new planning process by
+            a user.
+
+            query params:
+                None
+
+            http body:
+                None required, however the fresh plan can already be given a name by supplying
+                the following JSON:
+                    {
+                        "name": "<name_of_the_plan>"
+                    }
+
+            returns:
+                200 OK,
+                (insert successful, contains the inserted _id)
+                {"success": True,
+                 "inserted_id": str}
+
+                400 Bad Request
+                (the http does not contain valid json)
+                {"success": False,
+                 "reason": "json_parsing_error"}
+
+                401 Unauthorized
+                (access token is not valid)
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
 
 
         POST /planner/update_full
