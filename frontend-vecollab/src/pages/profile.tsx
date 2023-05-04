@@ -30,6 +30,10 @@ export default function Profile() {
     const [expertise, setExpertise] = useState("")
     const [birthday, setBirthday] = useState("")
     const [languages, setLanguages] = useState([""])
+    const [veInterests, setVeInterests] = useState(["", ""])
+    const [veGoals, setVeGoals] = useState([""])
+    const [experience, setExperience] = useState([""])
+    const [preferredFormats, setPreferredFormats] = useState([""])
 
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false)
@@ -73,6 +77,10 @@ export default function Profile() {
                         setExpertise(data.profile.expertise)
                         setBirthday(data.profile.birthday)
                         setLanguages(data.profile.languages)
+                        setVeInterests(data.profile.ve_interests)
+                        setVeGoals(data.profile.ve_goals)
+                        setExperience(data.profile.experience)
+                        setPreferredFormats(data.profile.preferred_formats)
                     }
                 }
             );
@@ -93,7 +101,7 @@ export default function Profile() {
                     <div className={"mx-20 flex"}>
                         <div className={"w-3/4  mr-4"}>
                             <WhiteBox>
-                                <ExtendedPersonalInformation />
+                                <ExtendedPersonalInformation veInfo={{veInterests, veGoals, experience, preferredFormats}} />
                             </WhiteBox>
                             <WhiteBox>
                                 <div className={"h-96"}> {/* remove height once content is implemented to avoid unexpected overflow */}

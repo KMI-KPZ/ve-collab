@@ -73,6 +73,10 @@ export default function EditProfile() {
                         setExpertise(data.profile.expertise)
                         setBirthday(data.profile.birthday)
                         setLanguageTags(data.profile.languages.map((language: string) => ({ id: language, text: language })))
+                        setVeInterests(data.profile.ve_interests)
+                        setVeGoals(data.profile.ve_goals)
+                        setExperience(data.profile.experience)
+                        setPreferredFormats(data.profile.preferred_formats)
                     }
                 }
             );
@@ -188,7 +192,17 @@ export default function EditProfile() {
 
         await fetchPOST(
             "/profileinformation",
-            { first_name: firstName, last_name: lastName, bio: bio, expertise: expertise, birthday: birthday, languages: languageTags.map(elem => elem.text) },
+            { first_name: firstName, 
+                last_name: lastName, 
+                bio: bio, 
+                expertise: expertise, 
+                birthday: birthday, 
+                languages: languageTags.map(elem => elem.text),
+                ve_interests: veInterests,
+                ve_goals: veGoals,
+                experience: experience,
+                preferred_formats: preferredFormats
+            },
             session?.accessToken
         );
 

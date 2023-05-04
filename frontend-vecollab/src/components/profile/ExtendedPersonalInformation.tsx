@@ -13,11 +13,20 @@ declare module 'react' {
     }
 }
 
-export default function ExtendedPersonalInformation() {
+interface Props {
+    veInfo: {
+        veInterests: string[],
+        veGoals: string[],
+        experience: string[],
+        preferredFormats: string[]
+    }
+}
+
+export default function ExtendedPersonalInformation({ veInfo }: Props) {
     return (
         <Tabs>
             <div tabname="VE-Infos">
-                <VEInformation />
+                <VEInformation veInterests={veInfo.veInterests} veGoals={veInfo.veGoals} experiences={veInfo.experience} preferredFormats={veInfo.preferredFormats} />
             </div>
             <div tabname="Lehre & Forschung">
                 <TeachingAndResearchInformation />

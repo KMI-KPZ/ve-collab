@@ -43,6 +43,9 @@ class Profiles:
             "education": list,
             "expertise": (str, type(None)),
             "languages": list,
+            "ve_interests": list,
+            "ve_goals": list,
+            "preferred_formats": list,
         }
 
     def __enter__(self):
@@ -95,6 +98,9 @@ class Profiles:
             "education": [],
             "expertise": None,
             "languages": [],
+            "ve_interests": [],
+            "ve_goals": [],
+            "preferred_formats": [],
         }
         self.db.profiles.insert_one(profile)
         return profile
@@ -125,6 +131,9 @@ class Profiles:
             "education": [],
             "expertise": None,
             "languages": [],
+            "ve_interests": [],
+            "ve_goals": [],
+            "preferred_formats": [],
         }
         self.db.profiles.insert_one(profile)
         return profile
