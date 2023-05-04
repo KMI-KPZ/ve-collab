@@ -1,4 +1,5 @@
 import json
+from keycloak import KeycloakGetError
 
 import tornado.web
 
@@ -8,12 +9,16 @@ from resources.network.space import Spaces
 
 
 class ProfileInformationHandler(BaseHandler):
-
     @auth_needed
     async def get(self):
         """
         GET /profileinformation
-            request full information about the current user
+            request full information about a user. By default, information
+            about the current user is returned. Supply a username to get
+            information about an arbitrary user.
+
+            query params:
+                username: optional, request information about this user instead
 
             returns:
                 200 OK
@@ -32,7 +37,11 @@ class ProfileInformationHandler(BaseHandler):
                     "address": <string>,
                     "birthday": <string>,
                     "experience": [<string1>, <string2>, ...],
-                    "education": [<string1>, <string2>, ...]
+                    "education": [<string1>, <string2>, ...],
+                    "languages": [<string1>, <string2>, ...],
+                    "ve_interests": [<string1>, <string2>, ...],
+                    "ve_goals": [<string1>, <string2>, ...],
+                    "preferred_formats": [<string1>, <string2>, ...],
                  },
                  "spaces": [<string1>, <string2>, ...],
                  "follows": [<string1>, <string2>, ...],
@@ -42,13 +51,25 @@ class ProfileInformationHandler(BaseHandler):
                 401 Unauthorized
                 {"status": 401,
                  "reason": "no_logged_in_user"}
+
+                409 Conflict
+                {"status": 409,
+                 "reason": "user_doesnt_exist"}
         """
         username = self.get_argument("username", None)
         if not username:
             username = self.current_user.username
 
-        # get account information from keycloak
-        keycloak_info = self.get_keycloak_user(username)
+        # get account information from keycloak, abort if the requested user
+        # doesnt exist there
+        try:
+            keycloak_info = self.get_keycloak_user(username)
+        except KeycloakGetError as e:
+            error_response = json.loads(e.error_message.decode())
+            if error_response["error"] == "User not found":
+                self.set_status(409)
+                self.write({"success": False, "reason": "user_doesnt_exist"})
+                return
 
         # add user data to response
         user_information_response = {
@@ -104,7 +125,10 @@ class ProfileInformationHandler(BaseHandler):
                     "address": <string>,
                     "birthday": <string>,
                     "experience": [<string1>, <string2>, ...],
-                    "education": [<string1>, <string2>, ...]
+                    "education": [<string1>, <string2>, ...],
+                    "ve_interests": [<string1>, <string2>, ...],
+                    "ve_goals": [<string1>, <string2>, ...],
+                    "preferred_formats": [<string1>, <string2>, ...],
                 }
 
             returns:
@@ -121,33 +145,7 @@ class ProfileInformationHandler(BaseHandler):
                  "reason": "no_logged_in_user"}
         """
 
-        #bio = self.get_body_argument("bio", None)
-        #institution = self.get_body_argument("institution", None)
-        #projects = self.get_body_argument("projects", None).split(",")
-        #first_name = self.get_body_argument("first_name", None)
-        #last_name = self.get_body_argument("last_name", None)
-        #gender = self.get_body_argument("gender", None)
-        #address = self.get_body_argument("address", None)
-        #birthday = self.get_body_argument("birthday", None)
-        #experience = self.get_body_argument("experience", None).split(",")
-        #education = self.get_body_argument("education", None).split(",")
-
         updated_attribute_dict = json.loads(self.request.body)
-
-        """
-        updated_attribute_dict = {
-            "bio": bio,
-            "institution": institution,
-            "projects": projects,
-            "first_name": first_name,
-            "last_name": last_name,
-            "gender": gender,
-            "address": address,
-            "birthday": birthday,
-            "experience": experience,
-            "education": education,
-        }
-        """
 
         with Profiles() as profile_manager:
             # handle profile pic
