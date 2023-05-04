@@ -289,7 +289,7 @@ export default function EditProfile() {
                                     <div className={"my-5"}>
                                         <div className={"mb-1 font-bold text-slate-900 text-lg"}>VE-Zielsetzungen</div>
                                         {veGoals.map((goal, index) => (
-                                            <input key={index} className={"border border-gray-500 rounded-lg px-2 py-1 w-full"} type="text" placeholder={"Welche Ziele willst du mit VE erreichen?"} value={goal} onChange={e => modifyVeGoals(index, e.target.value)} />
+                                            <input key={index} className={"border border-gray-500 rounded-lg px-2 py-1 mb-1 w-full"} type="text" placeholder={"Welche Ziele willst du mit VE erreichen?"} value={goal} onChange={e => modifyVeGoals(index, e.target.value)} />
                                         ))}
                                         <div className={'w-full mt-1 flex justify-end'}>
                                             <button onClick={removeVeGoalsInputField}>
@@ -304,7 +304,7 @@ export default function EditProfile() {
                                     <div className={"my-5"}>
                                         <div className={"mb-1 font-bold text-slate-900 text-lg"}>Erfahrungen</div>
                                         {experience.map((exp, index) => (
-                                            <input key={index} className={"border border-gray-500 rounded-lg px-2 py-1 w-full"} type="text" placeholder={"Welche Erfahrungen konntest du bereits sammeln?"} value={exp} onChange={e => modifyExperience(index, e.target.value)} />
+                                            <input key={index} className={"border border-gray-500 rounded-lg px-2 py-1 mb-1 w-full"} type="text" placeholder={"Welche Erfahrungen konntest du bereits sammeln?"} value={exp} onChange={e => modifyExperience(index, e.target.value)} />
                                         ))}
                                         <div className={'w-full mt-1 flex justify-end'}>
                                             <button onClick={removeExperienceInputField}>
@@ -319,7 +319,7 @@ export default function EditProfile() {
                                     <div className={"my-5"}>
                                         <div className={"mb-1 font-bold text-slate-900 text-lg"}>präferierte Formate</div>
                                         {preferredFormats.map((format, index) => (
-                                            <input key={index} className={"border border-gray-500 rounded-lg px-2 py-1 w-full"} type="text" placeholder={"In welchen Formaten möchtest du VEs abhalten? z.B. synchron/asynchron/hybrid"} value={format} onChange={e => modifyPreferredFormats(index, e.target.value)} />
+                                            <input key={index} className={"border border-gray-500 rounded-lg px-2 py-1 mb-1 w-full"} type="text" placeholder={"In welchen Formaten möchtest du VEs abhalten? z.B. synchron/asynchron/hybrid"} value={format} onChange={e => modifyPreferredFormats(index, e.target.value)} />
                                         ))}
                                         <div className={'w-full mt-1 flex justify-end'}>
                                             <button onClick={removePreferredFormatsInputField}>
