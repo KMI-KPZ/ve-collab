@@ -1,11 +1,14 @@
 import WhiteBox from "@/components/Layout/WhiteBox";
+import LoadingAnimation from "@/components/LoadingAnimation";
 import VerticalTabs from "@/components/profile/VerticalTabs";
 import { BACKEND_URL } from "@/constants";
+import { fetchGET, fetchPOST } from "@/lib/backend";
 import { GetServerSideProps, GetServerSidePropsContext } from "next";
 import { getToken } from "next-auth/jwt";
-import { useSession } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { useRouter } from "next/router";
+import { FormEvent, useEffect, useState } from "react";
 import { WithContext as ReactTags } from 'react-tag-input';
 
 interface Props {
@@ -21,34 +24,75 @@ interface Props {
     accessToken: string,
 }
 
-export default function EditProfile(props: Props) {
+export default function EditProfile() {
 
-    const [firstName, setFirstName] = useState(props.firstName)
-    const [lastName, setLastName] = useState(props.lastName)
-    const [bio, setBio] = useState(props.bio)
-    const [expertise, setExpertise] = useState(props.department)
-    const [birthday, setBirthday] = useState(props.birthday)
-
-    const [tags, setTags] = useState(
-        props.languages.map(language => ({ id: language, text: language }))
+    const [firstName, setFirstName] = useState<string|undefined>()
+    const [lastName, setLastName] = useState<string|undefined>()
+    const [bio, setBio] = useState("")
+    const [expertise, setExpertise] = useState("")
+    const [birthday, setBirthday] = useState("")
+    const [languageTags, setLanguageTags] = useState(
+        [{ id: "", text: "" }]
     );
 
+    const { data: session, status } = useSession();
+    const [loading, setLoading] = useState(false)
+    const router = useRouter();
+
+    // check for session errors and trigger the login flow if necessary
+    useEffect(() => {
+        if (status !== "loading") {
+            if (!session || session?.error === "RefreshAccessTokenError") {
+                console.log("forced new signIn")
+                signIn("keycloak");
+            }
+        }
+    }, [session, status]);
+
+    useEffect(() => {
+        // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
+        if (!router.isReady || status === "loading") {
+            setLoading(true)
+            return
+        }
+        // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
+        if (session) {
+            fetchGET(`/profileinformation`, session?.accessToken).then(
+                (data) => {
+                    setLoading(false)
+                    if (data) {
+                        console.log(data)
+                        setFirstName(data.profile.first_name)
+                        setLastName(data.profile.last_name)
+                        setBio(data.profile.bio)
+                        setExpertise(data.profile.expertise)
+                        setBirthday(data.profile.birthday)
+                        setLanguageTags(data.profile.languages.map((language: string) => ({ id: language, text: language })))
+                    }
+                }
+            );
+        }
+        else {
+            signIn("keycloak");
+        }
+    }, [session, status, router]);
+
     const handleDelete = (i: number) => {
-        setTags(tags.filter((tag, index) => index !== i));
+        setLanguageTags(languageTags.filter((tag, index) => index !== i));
     };
 
     const handleAddition = (tag: { id: string, text: string }) => {
-        setTags([...tags, tag]);
+        setLanguageTags([...languageTags, tag]);
     };
 
     const handleDrag = (tag: { id: string, text: string }, currPos: number, newPos: number) => {
-        const newTags = tags.slice();
+        const newTags = languageTags.slice();
 
         newTags.splice(currPos, 1);
         newTags.splice(newPos, 0, tag);
 
         // re-render
-        setTags(newTags);
+        setLanguageTags(newTags);
     };
 
     const handleTagClick = (index: number) => {
@@ -64,162 +108,89 @@ export default function EditProfile(props: Props) {
 
     const updateProfileData = async (evt: FormEvent) => {
         evt.preventDefault()
-        console.log("backend updaten")
-        console.log({ firstName: firstName, lastName: lastName, bio: bio, expertise: expertise, birthday: birthday, languages: tags.map(elem => elem.text) })
-        
-        const headers = {
-            "Authorization": "Bearer " + props.accessToken,
-        }
-        
-        try {
 
-            const backendUpdate = await fetch(BACKEND_URL + "/profileinformation", {
-                method: "POST",
-                headers: headers,
-                body: JSON.stringify({first_name: firstName, last_name: lastName, bio: bio, expertise: expertise, birthday:birthday, languages: tags.map(elem => elem.text) })
-            })
-            
-            const response = await backendUpdate.json()
-            console.log(response)
-        }
-        catch(e){
-            console.log("Fetch Error")
-            console.log(e)
-        }
+        await fetchPOST(
+            "/profileinformation",
+            { first_name: firstName, last_name: lastName, bio: bio, expertise: expertise, birthday: birthday, languages: languageTags.map(elem => elem.text) },
+            session?.accessToken
+        );
+        
+        // TODO render success ui feedback
     }
 
     return (
         <div className={"flex justify-center"}>
             <WhiteBox>
                 <div className={"w-[60rem]"}>
-                    <VerticalTabs>
-                        <div tabname="Stammdaten">
-                            <form onSubmit={updateProfileData}>
-                                <div className={"flex justify-end"}>
-                                    <Link href={"/profile"}>
-                                        <button className={"mx-4 py-2 px-5 border border-ve-collab-orange rounded-lg"}>Abbrechen</button>
-                                    </Link>
-                                    <button type="submit" className={"bg-ve-collab-orange text-white py-2 px-5 rounded-lg"}>Speichern</button>
-                                </div>
-                                <div className={"my-5"}>
-                                    <div className={"mb-1 font-bold text-slate-900 text-lg"}>Name</div>
-                                    <div className={"flex justify-between"}>
-                                        <input className={"border border-gray-500 rounded-lg px-2 py-1"} type="text" placeholder={"Vorname"} value={firstName} onChange={e => setFirstName(e.target.value)} />
-                                        <input className={"border border-gray-500 rounded-lg px-2 py-1"} type="text" placeholder={"Nachname"} value={lastName} onChange={e => setLastName(e.target.value)} />
+                    {loading ? (
+                        <LoadingAnimation />
+                    ) : (
+                        <VerticalTabs>
+                            <div tabname="Stammdaten">
+                                <form onSubmit={updateProfileData}>
+                                    <div className={"flex justify-end"}>
+                                        <Link href={"/profile"}>
+                                            <button className={"mx-4 py-2 px-5 border border-ve-collab-orange rounded-lg"}>Abbrechen</button>
+                                        </Link>
+                                        <button type="submit" className={"bg-ve-collab-orange text-white py-2 px-5 rounded-lg"}>Speichern</button>
                                     </div>
-                                </div>
-                                <div className={"my-5"}>
-                                    <div className={"mb-1 font-bold text-slate-900 text-lg"}>Bio</div>
-                                    <textarea className={"w-full border border-gray-500 rounded-lg px-2 py-1"} rows={5} placeholder={"Erzähle kurz etwas über dich"} value={bio} onChange={e => setBio(e.target.value)}></textarea>
-                                </div>
-                                <div className={"my-5"}>
-                                    <div className={"mb-1 font-bold text-slate-900 text-lg"}>Fachgebiet</div>
-                                    <input className={"border border-gray-500 rounded-lg px-2 py-1"} type="text" placeholder={"In welcher Abteilung lehrst du?"} value={expertise} onChange={e => setExpertise(e.target.value)} />
-                                </div>
-                                <div className={"my-5"}>
-                                    <div className={"mb-1 font-bold text-slate-900 text-lg"}>Geburtstag</div>
-                                    <input className={"border border-gray-500 rounded-lg px-2 py-1"} type="date" value={birthday} onChange={e => setBirthday(e.target.value)} />
-                                </div>
-                                <div className={"my-5"}>
+                                    <div className={"my-5"}>
+                                        <div className={"mb-1 font-bold text-slate-900 text-lg"}>Name</div>
+                                        <div className={"flex justify-between"}>
+                                            {/* TODO validation: treat first name and last name as required information*/}
+                                            <input className={"border border-gray-500 rounded-lg px-2 py-1"} type="text" placeholder={"Vorname"} value={firstName} onChange={e => setFirstName(e.target.value)} />
+                                            <input className={"border border-gray-500 rounded-lg px-2 py-1"} type="text" placeholder={"Nachname"} value={lastName} onChange={e => setLastName(e.target.value)} />
+                                        </div>
+                                    </div>
+                                    <div className={"my-5"}>
+                                        <div className={"mb-1 font-bold text-slate-900 text-lg"}>Bio</div>
+                                        <textarea className={"w-full border border-gray-500 rounded-lg px-2 py-1"} rows={5} placeholder={"Erzähle kurz etwas über dich"} value={bio} onChange={e => setBio(e.target.value)}></textarea>
+                                    </div>
+                                    <div className={"my-5"}>
+                                        <div className={"mb-1 font-bold text-slate-900 text-lg"}>Fachgebiet</div>
+                                        <input className={"border border-gray-500 rounded-lg px-2 py-1"} type="text" placeholder={"In welcher Abteilung lehrst du?"} value={expertise} onChange={e => setExpertise(e.target.value)} />
+                                    </div>
+                                    <div className={"my-5"}>
+                                        <div className={"mb-1 font-bold text-slate-900 text-lg"}>Geburtstag</div>
+                                        <input className={"border border-gray-500 rounded-lg px-2 py-1"} type="date" value={birthday} onChange={e => setBirthday(e.target.value)} />
+                                    </div>
+                                    <div className={"my-5"}>
 
-                                    <div className={"mb-1 font-bold text-slate-900 text-lg"}>Sprachen</div>
-                                    <ReactTags tags={tags}
-                                        delimiters={delimiters}
-                                        handleDelete={handleDelete}
-                                        handleAddition={handleAddition}
-                                        handleDrag={handleDrag}
-                                        handleTagClick={handleTagClick}
-                                        inputFieldPosition="bottom"
-                                        placeholder="Enter oder Komma, um neue Sprache hinzuzufügen"
-                                        classNames={{
-                                            tag: "mr-2 mb-2 px-2 py-1 rounded-lg bg-gray-300 shadow-lg",
-                                            tagInputField: "w-2/3 border border-gray-500 rounded-lg my-4 px-2 py-1",
-                                            remove: "ml-1"
-                                        }} />
-                                </div>
-                            </form>
-                        </div>
-                        <div tabname="VE-Info">
-                            auch Empty
-                        </div>
-                        <div tabname="Lehre & Forschung">
-                            ebenfalls Empty
-                        </div>
-                        <div tabname="CV">
-                            ofc Empty
-                        </div>
-                        <div tabname="VE-Schaufenster">
-                            <div className={""}>
-                                logo Empty
+                                        <div className={"mb-1 font-bold text-slate-900 text-lg"}>Sprachen</div>
+                                        <ReactTags tags={languageTags}
+                                            delimiters={delimiters}
+                                            handleDelete={handleDelete}
+                                            handleAddition={handleAddition}
+                                            handleDrag={handleDrag}
+                                            handleTagClick={handleTagClick}
+                                            inputFieldPosition="bottom"
+                                            placeholder="Enter oder Komma, um neue Sprache hinzuzufügen"
+                                            classNames={{
+                                                tag: "mr-2 mb-2 px-2 py-1 rounded-lg bg-gray-300 shadow-lg",
+                                                tagInputField: "w-2/3 border border-gray-500 rounded-lg my-4 px-2 py-1",
+                                                remove: "ml-1"
+                                            }} />
+                                    </div>
+                                </form>
                             </div>
-                        </div>
-                    </VerticalTabs>
+                            <div tabname="VE-Info">
+                                auch Empty
+                            </div>
+                            <div tabname="Lehre & Forschung">
+                                ebenfalls Empty
+                            </div>
+                            <div tabname="CV">
+                                ofc Empty
+                            </div>
+                            <div tabname="VE-Schaufenster">
+                                <div className={""}>
+                                    logo Empty
+                                </div>
+                            </div>
+                        </VerticalTabs>
+                    )}
                 </div>
             </WhiteBox>
         </div >
     )
-}
-
-export const getServerSideProps: GetServerSideProps = async (context: GetServerSidePropsContext) => {
-
-    const token = await getToken({ req: context.req })
-    if (token) {
-        const headers = {
-            "Authorization": "Bearer " + token.accessToken
-        }
-
-        let backendResponse = null;
-        let data = null;
-        try {
-            backendResponse = await fetch(BACKEND_URL + "/profileinformation", {
-                headers: headers
-            })
-            data = await backendResponse.json()
-            if (backendResponse.status === 200) {
-                return {
-                    props: {
-                        firstName: data.profile.first_name,
-                        lastName: data.profile.last_name,
-                        institution: data.profile.institution,
-                        profilePictureUrl: "/images/random_user.jpg",
-                        bio: data.profile.bio,
-                        department: data.profile.expertise,
-                        birthday: data.profile.birthday,
-                        languages: data.profile.languages,
-                        accessToken: token.accessToken,
-                    }
-                }
-            }
-        }
-        catch (e) {
-            console.log("network error, probably backend down")
-            return {
-                props: {
-                    firstName: "Max",
-                    lastName: "Mustermann",
-                    institution: "Universität Leipzig",
-                    profilePictureUrl: "/images/random_user.jpg",
-                    bio: "Lorem ipsum dolor si ameterto de la consectetur adipiscing elit. Lets make this text slightly longer so the box looks more filled.",
-                    department: "Informatik",
-                    birthday: "01.01.1990",
-                    languages: ["Deutsch", "Englisch", "Spanisch", "Französisch", "Italienisch"],
-                    accessToken: "",
-                }
-            }
-        }
-    }
-
-    return {
-        props: {
-            firstName: "Max",
-            lastName: "Mustermann",
-            institution: "Universität Leipzig",
-            profilePictureUrl: "/images/random_user.jpg",
-            bio: "Lorem ipsum dolor si ameterto de la consectetur adipiscing elit. Lets make this text slightly longer so the box looks more filled.",
-            department: "Informatik",
-            birthday: "01.01.1990",
-            languages: ["Deutsch", "Englisch", "Spanisch", "Französisch", "Italienisch"],
-            accessToken: "",
-        }
-    }
 }

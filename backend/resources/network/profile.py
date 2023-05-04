@@ -31,17 +31,17 @@ class Profiles:
         self.db = self.client[global_vars.mongodb_db_name]
 
         self.profile_attributes = {
-            "bio": str,
-            "institution": str,
+            "bio": (str, type(None)),
+            "institution": (str, type(None)),
             "projects": list,
-            "first_name": str,
-            "last_name": str,
-            "gender": str,
-            "address": str,
-            "birthday": str,
+            "first_name": (str, type(None)),
+            "last_name": (str, type(None)),
+            "gender": (str, type(None)),
+            "address": (str, type(None)),
+            "birthday": (str, type(None)),
             "experience": list,
             "education": list,
-            "expertise": str,
+            "expertise": (str, type(None)),
             "languages": list,
         }
 
@@ -359,7 +359,7 @@ class Profiles:
         # verify types of attributes
         for attr_key in updated_profile:
             if attr_key in self.profile_attributes:
-                if type(updated_profile[attr_key]) != self.profile_attributes[attr_key]:
+                if not isinstance(updated_profile[attr_key], self.profile_attributes[attr_key]):
                     raise TypeError(
                         "Type mismatch on attribute '{}'. expected type '{}', got '{}'".format(
                             attr_key,

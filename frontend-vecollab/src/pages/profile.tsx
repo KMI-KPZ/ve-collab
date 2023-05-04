@@ -2,13 +2,14 @@ import Container from "@/components/Layout/container"
 import PersonalInformation from "@/components/profile/personal-information"
 import ProfileBanner from "@/components/profile/profile-banner"
 import ProfileHeader from "@/components/profile/profile-header"
-import { GetServerSideProps, GetServerSidePropsContext } from "next/types"
 import WhiteBox from "@/components/Layout/WhiteBox"
 import VEVitrine from "@/components/profile/VEVitrine"
 import ExtendedPersonalInformation from "@/components/profile/ExtendedPersonalInformation"
 import BoxHeadline from "@/components/profile/BoxHeadline"
-import { BACKEND_URL } from "@/constants"
-import { getToken } from "next-auth/jwt"
+import { useEffect, useState } from "react"
+import { fetchGET } from "@/lib/backend"
+import { useSession, signIn } from "next-auth/react"
+import { useRouter } from "next/router"
 
 interface Props {
     name: string,
@@ -20,13 +21,73 @@ interface Props {
     languages: string[]
 }
 
-export default function Profile(props: Props) {
+export default function Profile() {
+
+    const [name, setName] = useState("")
+    const [institution, setInstitution] = useState("")
+    const [profilePictureUrl, setProfilePicUrl] = useState("")
+    const [bio, setBio] =useState("")
+    const [expertise, setExpertise] = useState("")
+    const [birthday, setBirthday] = useState("")
+    const [languages, setLanguages] = useState([""])
+
+    const { data: session, status } = useSession();
+    const [loading, setLoading] = useState(false)
+    const router = useRouter();
+
+    // check for session errors and trigger the login flow if necessary
+    useEffect(() => {
+        if (status !== "loading") {
+            if (!session || session?.error === "RefreshAccessTokenError") {
+                console.log("forced new signIn")
+                signIn("keycloak");
+            }
+        }
+    }, [session, status]);
+
+    useEffect(() => {
+        // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
+        if (!router.isReady || status === "loading") {
+            setLoading(true)
+            return
+        }
+        // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
+        if (session) {
+            fetchGET(`/profileinformation`, session?.accessToken).then(
+                (data) => {
+                    setLoading(false)
+                    if (data) {
+                        // if the minimum profile data such as first_name and last_name is not set, 
+                        // chances are high it is after the first register, therefore incentivize user
+                        // to fill out his profile by sending him to the edit page
+                        // TODO maybe also popup hint on there with some text that says exactly that
+                        if(data.profile.first_name === null || data.profile.last_name === null || data.profile.first_name === "" || data.profile.last_name === ""){
+                            router.push("/editProfile")
+                        }
+                        console.log(data)
+
+                        setName(data.profile.first_name + " " + data.profile.last_name)
+                        setProfilePicUrl("/images/random_user.jpg")
+                        setInstitution(data.profile.institution)
+                        setBio(data.profile.bio)
+                        setExpertise(data.profile.expertise)
+                        setBirthday(data.profile.birthday)
+                        setLanguages(data.profile.languages)
+                    }
+                }
+            );
+        }
+        else {
+            signIn("keycloak");
+        }
+    }, [session, status, router]);
+
     return (
         <>
             <Container>
                 <ProfileBanner followsNum={2500} followersNum={3500} />
                 <div className={"mx-20 mb-2 px-5 relative -mt-16 z-10"}>
-                    <ProfileHeader name={props.name} institution={props.institution} profilePictureUrl={props.profilePictureUrl} />
+                    <ProfileHeader name={name} institution={institution} profilePictureUrl={profilePictureUrl} />
                 </div>
                 <Container>
                     <div className={"mx-20 flex"}>
@@ -42,7 +103,7 @@ export default function Profile(props: Props) {
                         </div>
                         <div className={"w-1/4  ml-4"}>
                             <WhiteBox>
-                                <PersonalInformation name={props.name} bio={props.bio} department={props.department} birthday={props.birthday} languages={props.languages} />
+                                <PersonalInformation name={name} bio={bio} expertise={expertise} birthday={birthday} languages={languages} />
                             </WhiteBox>
                             <WhiteBox>
                                 <VEVitrine />
@@ -53,62 +114,4 @@ export default function Profile(props: Props) {
             </Container>
         </>
     )
-}
-
-export const getServerSideProps: GetServerSideProps = async (context: GetServerSidePropsContext) => {
-
-    const token = await getToken({ req: context.req })
-    if (token) {
-        const headers = {
-            "Authorization": "Bearer " + token.accessToken
-        }
-
-        let backendResponse = null;
-        let data = null;
-        try {
-            backendResponse = await fetch(BACKEND_URL + "/profileinformation", {
-                headers: headers
-            })
-            data = await backendResponse.json()
-            if (backendResponse.status === 200) {
-                return {
-                    props: {
-                        name: data.profile.first_name + " " + data.profile.last_name,
-                        institution: data.profile.institution,
-                        profilePictureUrl: "/images/random_user.jpg",
-                        bio: data.profile.bio,
-                        department: data.profile.expertise,
-                        birthday: data.profile.birthday,
-                        languages: data.profile.languages
-                    }
-                }
-            }
-        }
-        catch (e) {
-            console.log("network error, probably backend down")
-            return {
-                props: {
-                    name: "Max Mustermann",
-                    institution: "Universität Leipzig",
-                    profilePictureUrl: "/images/random_user.jpg",
-                    bio: "Lorem ipsum dolor si ameterto de la consectetur adipiscing elit. Lets make this text slightly longer so the box looks more filled.",
-                    department: "Informatik",
-                    birthday: "01.01.1990",
-                    languages: ["Deutsch", "Englisch", "Spanisch", "Französisch", "Italienisch"]
-                }
-            }
-        }
-    }
-
-    return {
-        props: {
-            name: "Max Mustermann",
-            institution: "Universität Leipzig",
-            profilePictureUrl: "/images/random_user.jpg",
-            bio: "Lorem ipsum dolor si ameterto de la consectetur adipiscing elit. Lets make this text slightly longer so the box looks more filled.",
-            department: "Informatik",
-            birthday: "01.01.1990",
-            languages: ["Deutsch", "Englisch", "Spanisch", "Französisch", "Italienisch"]
-        }
-    }
 }
