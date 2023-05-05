@@ -1,9 +1,9 @@
-import { RxDotFilled } from "react-icons/rx";
-import Tabs from "./Tabs";
-import { AriaAttributes, DOMAttributes } from "react"
-import VEInformation from "./VEInformation";
-import TeachingAndResearchInformation from "./TeachingAndResearchInformation";
-import CVInformation from "./CVInformation";
+import { RxDotFilled } from 'react-icons/rx';
+import Tabs from './Tabs';
+import { AriaAttributes, DOMAttributes } from 'react';
+import VEInformation from './VEInformation';
+import TeachingAndResearchInformation from './TeachingAndResearchInformation';
+import CVInformation from './CVInformation';
 
 // have to declare "tabname" as a valid attribute for div tags, otherwise typescript is bothered
 declare module 'react' {
@@ -15,18 +15,23 @@ declare module 'react' {
 
 interface Props {
     veInfo: {
-        veInterests: string[],
-        veGoals: string[],
-        experience: string[],
-        preferredFormats: string[]
-    }
+        veInterests: string[];
+        veGoals: string[];
+        experience: string[];
+        preferredFormats: string[];
+    };
 }
 
 export default function ExtendedPersonalInformation({ veInfo }: Props) {
     return (
         <Tabs>
             <div tabname="VE-Infos">
-                <VEInformation veInterests={veInfo.veInterests} veGoals={veInfo.veGoals} experiences={veInfo.experience} preferredFormats={veInfo.preferredFormats} />
+                <VEInformation
+                    veInterests={veInfo.veInterests}
+                    veGoals={veInfo.veGoals}
+                    experiences={veInfo.experience}
+                    preferredFormats={veInfo.preferredFormats}
+                />
             </div>
             <div tabname="Lehre & Forschung">
                 <TeachingAndResearchInformation />
@@ -35,5 +40,5 @@ export default function ExtendedPersonalInformation({ veInfo }: Props) {
                 <CVInformation />
             </div>
         </Tabs>
-    )
+    );
 }

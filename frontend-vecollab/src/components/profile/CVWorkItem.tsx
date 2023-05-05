@@ -1,29 +1,37 @@
-import { RxDotFilled } from "react-icons/rx";
+import { RxDotFilled } from 'react-icons/rx';
 
 interface Props {
-    position: string,
-    institution: string,
-    timeStampFrom: string,
-    timeStampTo: string,
-    duration: string,
-    city: string,
-    additionalInformation?: string
+    position: string;
+    institution: string;
+    timeStampFrom: string;
+    timeStampTo: string;
+    duration: string;
+    city: string;
+    additionalInformation?: string;
 }
 
-export function CVWorkItem({position, institution, timeStampFrom, timeStampTo, duration, city, additionalInformation}: Props) {
+export function CVWorkItem({
+    position,
+    institution,
+    timeStampFrom,
+    timeStampTo,
+    duration,
+    city,
+    additionalInformation,
+}: Props) {
     return (
-        <li className={"py-3"}>
-            <div className={"font-bold"}>{position}</div>
-            <div className={"flex items-center"}>
+        <li className={'py-3'}>
+            <div className={'font-bold'}>{position}</div>
+            <div className={'flex items-center'}>
                 <div>{institution}</div>
             </div>
-            <div className={"flex items-center text-sm text-gray-600"}>
+            <div className={'flex items-center text-sm text-gray-600'}>
                 <div>{`${timeStampFrom} - ${timeStampTo}`}</div>
                 <RxDotFilled />
                 <div>{duration}</div>
             </div>
-            <div className={"text-sm text-gray-600"}>{city}</div>
-            <div className={"mt-1"}>{additionalInformation}</div>
+            <div className={'text-sm text-gray-600'}>{city}</div>
+            <div className={'mt-1'}>{additionalInformation}</div>
         </li>
-    )
+    );
 }
