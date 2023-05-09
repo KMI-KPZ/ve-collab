@@ -6672,7 +6672,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.lecture = self.create_lecture("test")
         self.default_plan = {
             "_id": self.plan_id,
-            "author": "test_user",
+            "author": CURRENT_USER.username,
             "creation_timestamp": datetime.now(),
             "last_modified": datetime.now(),
             "name": "test",
@@ -6760,6 +6760,9 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.duration, default_plan.duration)
         self.assertEqual(response_plan.workload, default_plan.workload)
         self.assertEqual(response_plan.steps, default_plan.steps)
+        self.assertIsNotNone(response_plan.creation_timestamp)
+        self.assertIsNotNone(response_plan.last_modified)
+        
 
     def test_get_plan_error_missing_key(self):
         """
@@ -6829,6 +6832,8 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.duration, default_plan.duration)
         self.assertEqual(response_plan.workload, default_plan.workload)
         self.assertEqual(response_plan.steps, default_plan.steps)
+        self.assertIsNotNone(response_plan.creation_timestamp)
+        self.assertIsNotNone(response_plan.last_modified)
 
     def test_get_all_plans_error_insufficient_permissions(self):
         """

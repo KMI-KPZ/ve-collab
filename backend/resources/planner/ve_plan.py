@@ -257,8 +257,8 @@ class VEPlanResource:
             {"_id": plan_id},
             {
                 "$set": {
-                    field_name: value_copy,
                     "last_modified": now_timestamp,
+                    field_name: value_copy,
                 },
                 "$setOnInsert": on_insert_plan_dict,
             },

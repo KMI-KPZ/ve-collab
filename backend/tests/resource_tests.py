@@ -1,5 +1,6 @@
 from datetime import datetime
 import json
+import time
 from unittest import TestCase
 from bson import ObjectId
 
@@ -156,6 +157,9 @@ class PlanResourceTest(BaseResourceTestCase):
         self.lecture = self.create_lecture("test")
         self.default_plan = {
             "_id": self.plan_id,
+            "author": "test_user",
+            "creation_timestamp": datetime.now(),
+            "last_modified": datetime.now(),
             "name": "test",
             "institutions": [self.institution.to_dict()],
             "topic": "test",
@@ -196,7 +200,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 plan = self.planner.get_plan(id_input)
                 self.assertIsInstance(plan, VEPlan)
                 self.assertEqual(plan._id, self.default_plan["_id"])
-                self.assertIsNone(plan.author)
+                self.assertEqual(plan.author, self.default_plan["author"])
                 self.assertEqual(plan.name, self.default_plan["name"])
                 self.assertEqual(
                     [institution.to_dict() for institution in plan.institutions],
@@ -227,6 +231,8 @@ class PlanResourceTest(BaseResourceTestCase):
                 self.assertEqual(plan.timestamp_to, self.step.timestamp_to)
                 self.assertEqual(plan.workload, self.step.workload)
                 self.assertEqual(plan.duration, self.step.duration)
+                self.assertIsNotNone(plan.creation_timestamp)
+                self.assertIsNotNone(plan.last_modified)
 
     def test_get_plan_error_plan_doesnt_exist(self):
         """
@@ -261,7 +267,7 @@ class PlanResourceTest(BaseResourceTestCase):
         plan = plans[0]
         self.assertIsInstance(plan, VEPlan)
         self.assertEqual(plan._id, self.default_plan["_id"])
-        self.assertIsNone(plan.author)
+        self.assertEqual(plan.author, self.default_plan["author"])
         self.assertEqual(plan.name, self.default_plan["name"])
         self.assertEqual(
             [institution.to_dict() for institution in plan.institutions],
@@ -290,6 +296,8 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(plan.timestamp_to, self.step.timestamp_to)
         self.assertEqual(plan.workload, self.step.workload)
         self.assertEqual(plan.duration, self.step.duration)
+        self.assertIsNotNone(plan.creation_timestamp)
+        self.assertIsNotNone(plan.last_modified)
 
     def test_get_plans_for_user(self):
         """
@@ -301,8 +309,10 @@ class PlanResourceTest(BaseResourceTestCase):
         additional_plans = [
             {
                 "_id": ObjectId(),
-                "name": "admin",
                 "author": "test_admin",
+                "creation_timestamp": datetime.now(),
+                "last_modified": datetime.now(),
+                "name": "admin",
                 "institutions": [self.institution.to_dict()],
                 "topic": "test",
                 "lectures": [self.lecture.to_dict()],
@@ -322,8 +332,9 @@ class PlanResourceTest(BaseResourceTestCase):
             },
             {
                 "_id": ObjectId(),
+                "creation_timestamp": datetime.now(),
+                "last_modified": datetime.now(),
                 "name": "user",
-                "author": "test_user",
                 "institutions": [self.institution.to_dict()],
                 "topic": "test",
                 "lectures": [self.lecture.to_dict()],
@@ -379,6 +390,8 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(plan.timestamp_to, self.step.timestamp_to)
         self.assertEqual(plan.workload, self.step.workload)
         self.assertEqual(plan.duration, self.step.duration)
+        self.assertIsNotNone(plan.creation_timestamp)
+        self.assertIsNotNone(plan.last_modified)
 
     def test_insert_plan(self):
         """
@@ -388,6 +401,7 @@ class PlanResourceTest(BaseResourceTestCase):
         # don't supply a _id, letting the system create a fresh one
         plan = {
             "name": "new plan",
+            "author": "test_user",
             "institutions": [self.institution.to_dict()],
             "topic": "test",
             "lectures": [self.lecture.to_dict()],
@@ -417,11 +431,13 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertIn("workload", db_state)
         self.assertEqual(db_state["duration"], self.step.duration.total_seconds())
         self.assertEqual(db_state["workload"], self.step.workload)
+        self.assertEqual(db_state["creation_timestamp"], db_state["last_modified"])
 
         # this time supply a _id, but if I "know" that it is not already existing,
         # the result will despite that be an insert as expected
         plan_with_id = {
             "_id": ObjectId(),
+            "author": "test_user",
             "name": "new plan",
             "institutions": [self.institution.to_dict()],
             "topic": "test",
@@ -454,6 +470,7 @@ class PlanResourceTest(BaseResourceTestCase):
             db_state_with_id["duration"], self.step.duration.total_seconds()
         )
         self.assertEqual(db_state_with_id["workload"], self.step.workload)
+        self.assertEqual(db_state["creation_timestamp"], db_state["last_modified"])
 
     def test_insert_plan_error_plan_already_exists(self):
         """
@@ -486,6 +503,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(db_state["name"], existing_plan.name)
         self.assertEqual(db_state["topic"], existing_plan.topic)
         self.assertEqual(db_state["realization"], self.default_plan["realization"])
+        self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
     def test_update_plan_upsert(self):
         """
@@ -503,6 +521,7 @@ class PlanResourceTest(BaseResourceTestCase):
         db_state = self.db.plans.find_one({"_id": plan._id})
         self.assertIsNotNone(db_state)
         self.assertEqual(db_state["name"], plan.name)
+        self.assertEqual(db_state["creation_timestamp"], db_state["last_modified"])
 
     def test_update_plan_error_plan_doesnt_exist(self):
         """
@@ -535,6 +554,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(db_state["learning_env"], "updated_learning_env")
         self.assertEqual(db_state["tools"], ["update1", "update2"])
         self.assertEqual(db_state["new_content"], True)
+        self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
     def test_update_field_object(self):
         """
@@ -551,7 +571,11 @@ class PlanResourceTest(BaseResourceTestCase):
             mother_tongue="de",
             foreign_languages={"en": "c1"},
         )
-
+        # we need to delay our execution here just a little bit, because otherwise
+        # the updated would happen too fast relative to the setup, which would result
+        # in creation_timestamp and last_modified being equal, despite correctly being
+        # executed after each other
+        time.sleep(0.1)
         self.planner.update_field(self.plan_id, "audience", [tg.to_dict()])
 
         db_state = self.db.plans.find_one({"_id": self.plan_id})
@@ -565,6 +589,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(
             db_state["audience"][0]["foreign_languages"], tg.foreign_languages
         )
+        self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
         # same, but this time manually specify a _id
         tg2 = TargetGroup(
@@ -577,7 +602,11 @@ class PlanResourceTest(BaseResourceTestCase):
             mother_tongue="de2",
             foreign_languages={"en": "c1"},
         )
-
+        # we need to delay our execution here just a little bit, because otherwise
+        # the updated would happen too fast relative to the setup, which would result
+        # in creation_timestamp and last_modified being equal, despite correctly being
+        # executed after each other
+        time.sleep(0.1)
         self.planner.update_field(self.plan_id, "audience", [tg2.to_dict()])
 
         db_state = self.db.plans.find_one({"_id": self.plan_id})
@@ -593,6 +622,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(
             db_state["audience"][0]["foreign_languages"], tg2.foreign_languages
         )
+        self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
     def test_update_field_upsert(self):
         """
@@ -611,6 +641,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(db_state["realization"], "updated_realization")
         self.assertIsNone(db_state["name"])
         self.assertEqual(db_state["tools"], [])
+        self.assertEqual(db_state["creation_timestamp"], db_state["last_modified"])
 
         # now same test, but with a complex attribute
         self.db.plans.delete_one({"_id": _id})
@@ -637,6 +668,7 @@ class PlanResourceTest(BaseResourceTestCase):
             db_state["institutions"][0]["academic_courses"],
             ["updated", "updated"],
         )
+        self.assertEqual(db_state["creation_timestamp"], db_state["last_modified"])
 
     def test_update_field_error_wrong_type(self):
         """
