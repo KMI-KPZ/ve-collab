@@ -9,8 +9,6 @@ from exceptions import (
 )
 
 from model import (
-    AcademicCourse,
-    Department,
     Institution,
     Lecture,
     Step,
@@ -774,232 +772,12 @@ class TargetGroupModelTest(TestCase):
         target_group_dict["foreign_languages"] = dict()
 
 
-class AcademicCourseModelTest(TestCase):
-    def setUp(self) -> None:
-        return super().setUp()
-
-    def tearDown(self) -> None:
-        return super().tearDown()
-
-    def test_init_default(self):
-        """
-        expect: successful creation of a minimal AcademicCourse object
-        """
-
-        course = AcademicCourse()
-
-        self.assertIsInstance(course._id, ObjectId)
-        self.assertIsNone(course.name)
-
-    def test_init(self):
-        """
-        expect: successful creation of a AcademicCourse object, passing values for each attribute
-        """
-
-        course = AcademicCourse(name="test")
-        self.assertIsInstance(course._id, ObjectId)
-        self.assertEqual(course.name, "test")
-
-        _id = ObjectId()
-        course = AcademicCourse(_id=_id, name="test")
-        self.assertEqual(course._id, _id)
-        self.assertEqual(course.name, "test")
-
-        course = AcademicCourse(_id=str(_id), name="test")
-        self.assertEqual(course._id, _id)
-        self.assertEqual(course.name, "test")
-
-    def test_to_dict(self):
-        """
-        expect: successful serialization of a minimal AcademicCourse object into
-        its dictionary representation
-        """
-
-        _id = ObjectId()
-        course_dict = AcademicCourse(_id=_id, name="test").to_dict()
-        self.assertIn("_id", course_dict)
-        self.assertIn("name", course_dict)
-        self.assertEqual(_id, course_dict["_id"])
-        self.assertEqual("test", course_dict["name"])
-
-    def test_from_dict(self):
-        """
-        expect: successful creation of a AcademicCourse object derived from a dictionary
-        """
-        _id = ObjectId()
-        params = {"_id": _id, "name": "test"}
-
-        course = AcademicCourse.from_dict(params)
-
-        self.assertEqual(course._id, params["_id"])
-        self.assertEqual(course.name, params["name"])
-
-    def test_from_dict_error_params_not_dict(self):
-        """
-        expect: creation of AcademicCourse object from dict raises TypeError because source is
-        not a dict
-        """
-
-        self.assertRaises(TypeError, AcademicCourse.from_dict, "wrong_type")
-
-    def test_from_dict_error_missing_key(self):
-        """
-        expect: creation of AcademicCourse object from dict raises MissingKeyError because
-        the dict is missing required keys
-        """
-
-        # name is missing
-        _id = ObjectId()
-        params = {
-            "_id": _id,
-        }
-        self.assertRaises(MissingKeyError, AcademicCourse.from_dict, params)
-
-    def test_from_dict_error_wrong_types(self):
-        """
-        expect: creation of AcademicCourse object from dict raises TypeError's because
-        arguments have the wrong types
-        """
-
-        params = {"name": "test"}
-
-        params["name"] = list()
-        self.assertRaises(TypeError, AcademicCourse.from_dict, params)
-        params["name"] = None
-
-
-class DepartmentModelTest(TestCase):
-    def setUp(self) -> None:
-        return super().setUp()
-
-    def tearDown(self) -> None:
-        return super().tearDown()
-
-    def create_academic_course(self, name="test") -> AcademicCourse:
-        return AcademicCourse(name=name)
-
-    def test_init_default(self):
-        """
-        expect: successful creation of a minimal Department object
-        """
-
-        department = Department()
-        self.assertIsInstance(department._id, ObjectId)
-        self.assertEqual(department.name, None)
-        self.assertEqual(department.academic_courses, [])
-
-    def test_init(self):
-        """
-        expect: successful creation of a Department object, passing values for each attribute
-        """
-
-        _id = ObjectId()
-        department = Department(
-            _id=_id,
-            name="test",
-            academic_courses=[
-                self.create_academic_course("test1"),
-                self.create_academic_course("test2"),
-            ],
-        )
-
-        self.assertEqual(department._id, _id)
-        self.assertEqual(department.name, "test")
-        self.assertEqual(len(department.academic_courses), 2)
-        self.assertIsInstance(department.academic_courses[0], AcademicCourse)
-        self.assertIsInstance(department.academic_courses[1], AcademicCourse)
-
-    def test_to_dict(self):
-        """
-        expect: successful serialization of a minimal Department object into
-        its dictionary representation
-        """
-        _id = ObjectId()
-        name = "test"
-        course = self.create_academic_course()
-        department = Department(_id=_id, name=name, academic_courses=[course]).to_dict()
-
-        self.assertIn("_id", department)
-        self.assertIn("name", department)
-        self.assertIn("academic_courses", department)
-        self.assertEqual(department["_id"], _id)
-        self.assertEqual(department["name"], name)
-        self.assertEqual(len(department["academic_courses"]), 1)
-        self.assertEqual(department["academic_courses"][0], course.to_dict())
-
-    def test_from_dict(self):
-        """
-        expect: successful creation of a Department object derived from a dictionary
-        """
-
-        _id = ObjectId()
-        params = {
-            "_id": _id,
-            "name": "test",
-            "academic_courses": [{"_id": ObjectId(), "name": "test"}],
-        }
-        department = Department.from_dict(params)
-
-        self.assertEqual(department._id, _id)
-        self.assertEqual(department.name, params["name"])
-        self.assertEqual(len(department.academic_courses), 1)
-        self.assertIsInstance(department.academic_courses[0], AcademicCourse)
-        self.assertEqual(department.academic_courses[0].name, "test")
-
-    def test_from_dict_error_params_not_dict(self):
-        """
-        expect: creation of Department object from dict raises TypeError because source is
-        not a dict
-        """
-
-        self.assertRaises(TypeError, Department.from_dict, "wrong_type")
-
-    def test_from_dict_error_missing_key(self):
-        """
-        expect: creation of Department object from dict raises MissingKeyError because
-        the dict is missing required keys
-        """
-
-        # academic_courses is missing
-        _id = ObjectId()
-        params = {
-            "_id": _id,
-            "name": "test",
-        }
-        self.assertRaises(MissingKeyError, Department.from_dict, params)
-
-    def test_from_dict_error_wrong_types(self):
-        """
-        expect: creation of Department object from dict raises TypeError's because
-        arguments have the wrong types
-        """
-
-        params = {
-            "name": "test",
-            "academic_courses": [{"name": "test"}],
-        }
-
-        params["name"] = list()
-        self.assertRaises(TypeError, Department.from_dict, params)
-        params["name"] = None
-
-        params["academic_courses"] = 123
-        self.assertRaises(TypeError, Department.from_dict, params)
-        params["name"] = list()
-
-
 class InstitutionModelTest(TestCase):
     def setUp(self) -> None:
         return super().setUp()
 
     def tearDown(self) -> None:
         return super().tearDown()
-
-    def create_academic_course(self, name="test") -> AcademicCourse:
-        return AcademicCourse(name=name)
-
-    def create_department(self, name="test") -> Department:
-        return Department(name=name, academic_courses=[self.create_academic_course()])
 
     def test_init_default(self):
         """
@@ -1012,6 +790,7 @@ class InstitutionModelTest(TestCase):
         self.assertEqual(institution.school_type, None)
         self.assertEqual(institution.country, None)
         self.assertEqual(institution.departments, [])
+        self.assertEqual(institution.academic_courses, [])
 
     def test_init(self):
         """
@@ -1024,19 +803,17 @@ class InstitutionModelTest(TestCase):
             name="test",
             school_type="test",
             country="de",
-            departments=[self.create_department(name="test")],
+            departments=["test", "test"],
+            academic_courses=["test", "test"],
         )
         self.assertEqual(institution._id, _id)
         self.assertEqual(institution.name, "test")
         self.assertEqual(institution.school_type, "test")
         self.assertEqual(institution.country, "de")
-        self.assertEqual(len(institution.departments), 1)
-        self.assertIsInstance(institution.departments[0], Department)
-        self.assertEqual(institution.departments[0].name, "test")
-        self.assertEqual(len(institution.departments[0].academic_courses), 1)
-        self.assertIsInstance(
-            institution.departments[0].academic_courses[0], AcademicCourse
-        )
+        self.assertEqual(len(institution.departments), 2)
+        self.assertEqual(institution.departments, ["test", "test"])
+        self.assertEqual(len(institution.academic_courses), 2)
+        self.assertEqual(institution.academic_courses, ["test", "test"])
 
     def test_to_dict(self):
         """
@@ -1045,13 +822,13 @@ class InstitutionModelTest(TestCase):
         """
 
         _id = ObjectId()
-        dep = self.create_department(name="test")
         institution = Institution(
             _id=_id,
             name="test",
             school_type="test",
             country="de",
-            departments=[dep],
+            departments=["test", "test"],
+            academic_courses=["test", "test"],
         ).to_dict()
 
         self.assertIn("_id", institution)
@@ -1059,12 +836,15 @@ class InstitutionModelTest(TestCase):
         self.assertIn("school_type", institution)
         self.assertIn("country", institution)
         self.assertIn("departments", institution)
+        self.assertIn("academic_courses", institution)
         self.assertEqual(institution["_id"], _id)
         self.assertEqual(institution["name"], "test")
         self.assertEqual(institution["school_type"], "test")
         self.assertEqual(institution["country"], "de")
-        self.assertEqual(len(institution["departments"]), 1)
-        self.assertEqual(institution["departments"][0], dep.to_dict())
+        self.assertEqual(len(institution["departments"]), 2)
+        self.assertEqual(institution["departments"], ["test", "test"])
+        self.assertEqual(len(institution["academic_courses"]), 2)
+        self.assertEqual(institution["academic_courses"], ["test", "test"])
 
     def test_from_dict(self):
         """
@@ -1076,12 +856,8 @@ class InstitutionModelTest(TestCase):
             "name": "test",
             "school_type": "test",
             "country": "de",
-            "departments": [
-                {
-                    "name": "test",
-                    "academic_courses": [{"name": "test"}],
-                }
-            ],
+            "departments": ["test", "test"],
+            "academic_courses": ["test", "test"],
         }
 
         institution = Institution.from_dict(params)
@@ -1090,31 +866,20 @@ class InstitutionModelTest(TestCase):
         self.assertEqual(institution.name, "test")
         self.assertEqual(institution.school_type, "test")
         self.assertEqual(institution.country, "de")
-        self.assertEqual(len(institution.departments), 1)
-        self.assertIsInstance(institution.departments[0], Department)
-        self.assertEqual(institution.departments[0].name, "test")
-        self.assertEqual(len(institution.departments[0].academic_courses), 1)
-        self.assertIsInstance(
-            institution.departments[0].academic_courses[0], AcademicCourse
-        )
-        self.assertEqual(institution.departments[0].academic_courses[0].name, "test")
+        self.assertEqual(len(institution.departments), 2)
+        self.assertEqual(institution.departments, ["test", "test"])
+        self.assertEqual(len(institution.academic_courses), 2)
+        self.assertEqual(institution.academic_courses, ["test", "test"])
 
         # with _ids
         _id = ObjectId()
-        dep_id = ObjectId()
-        course_id = ObjectId()
         params = {
             "_id": _id,
             "name": "test",
             "school_type": "test",
             "country": "de",
-            "departments": [
-                {
-                    "_id": dep_id,
-                    "name": "test",
-                    "academic_courses": [{"_id": course_id, "name": "test"}],
-                }
-            ],
+            "departments": ["test", "test"],
+            "academic_courses": ["test", "test"],
         }
 
         institution = Institution.from_dict(params)
@@ -1122,16 +887,10 @@ class InstitutionModelTest(TestCase):
         self.assertEqual(institution.name, "test")
         self.assertEqual(institution.school_type, "test")
         self.assertEqual(institution.country, "de")
-        self.assertEqual(len(institution.departments), 1)
-        self.assertIsInstance(institution.departments[0], Department)
-        self.assertEqual(institution.departments[0]._id, dep_id)
-        self.assertEqual(institution.departments[0].name, "test")
-        self.assertEqual(len(institution.departments[0].academic_courses), 1)
-        self.assertIsInstance(
-            institution.departments[0].academic_courses[0], AcademicCourse
-        )
-        self.assertEqual(institution.departments[0].academic_courses[0]._id, course_id)
-        self.assertEqual(institution.departments[0].academic_courses[0].name, "test")
+        self.assertEqual(len(institution.departments), 2)
+        self.assertEqual(institution.departments, ["test", "test"])
+        self.assertEqual(len(institution.academic_courses), 2)
+        self.assertEqual(institution.academic_courses, ["test", "test"])
 
     def test_from_dict_error_params_not_dict(self):
         """
@@ -1151,12 +910,8 @@ class InstitutionModelTest(TestCase):
         params = {
             "name": "test",
             "country": "de",
-            "departments": [
-                {
-                    "name": "test",
-                    "academic_courses": [{"name": "test"}],
-                }
-            ],
+            "departments": ["test", "test"],
+            "academic_courses": ["test", "test"],
         }
 
         self.assertRaises(MissingKeyError, Institution.from_dict, params)
@@ -1171,12 +926,8 @@ class InstitutionModelTest(TestCase):
             "name": "test",
             "school_type": "test",
             "country": "de",
-            "departments": [
-                {
-                    "name": "test",
-                    "academic_courses": [{"name": "test"}],
-                }
-            ],
+            "departments": ["test", "test"],
+            "academic_courses": ["test", "test"],
         }
 
         params["name"] = list()
@@ -1194,6 +945,10 @@ class InstitutionModelTest(TestCase):
         params["departments"] = "test"
         self.assertRaises(TypeError, Institution.from_dict, params)
         params["departments"] = []
+
+        params["academic_courses"] = "test"
+        self.assertRaises(TypeError, Institution.from_dict, params)
+        params["academic_courses"] = []
 
 
 class LectureModelTest(TestCase):
@@ -1405,7 +1160,8 @@ class VEPlanModelTest(TestCase):
             name=name,
             school_type="test",
             country="test",
-            departments=[Department(name="test", academic_courses=[AcademicCourse()])],
+            departments=["test", "test"],
+            academic_courses=["test", "test"],
         )
 
     def create_lecture(self, name: str = "test") -> Lecture:
@@ -1598,7 +1354,9 @@ class VEPlanModelTest(TestCase):
         )
         institution = self.create_institution()
         lecture = self.create_lecture()
-        plan_dict = VEPlan(steps=[step], institutions=[institution], lectures=[lecture]).to_dict()
+        plan_dict = VEPlan(
+            steps=[step], institutions=[institution], lectures=[lecture]
+        ).to_dict()
 
         self.assertIn("_id", plan_dict)
         self.assertIn("author", plan_dict)
@@ -1658,22 +1416,8 @@ class VEPlanModelTest(TestCase):
                     "name": institution.name,
                     "school_type": institution.school_type,
                     "country": institution.country,
-                    "departments": [
-                        {
-                            "_id": institution.departments[0]._id,
-                            "name": institution.departments[0].name,
-                            "academic_courses": [
-                                {
-                                    "_id": institution.departments[0]
-                                    .academic_courses[0]
-                                    ._id,
-                                    "name": institution.departments[0]
-                                    .academic_courses[0]
-                                    .name,
-                                }
-                            ],
-                        }
-                    ],
+                    "departments": institution.departments,
+                    "academic_courses": institution.academic_courses
                 }
             ],
             "topic": None,
@@ -1754,18 +1498,8 @@ class VEPlanModelTest(TestCase):
                     "name": institution.name,
                     "school_type": institution.school_type,
                     "country": institution.country,
-                    "departments": [
-                        {
-                            "name": institution.departments[0].name,
-                            "academic_courses": [
-                                {
-                                    "name": institution.departments[0]
-                                    .academic_courses[0]
-                                    .name,
-                                }
-                            ],
-                        }
-                    ],
+                    "departments": institution.departments,
+                    "academic_courses": institution.academic_courses
                 }
             ],
             "topic": None,
@@ -1837,10 +1571,6 @@ class VEPlanModelTest(TestCase):
         self.assertIsInstance(plan.audience[0]._id, ObjectId)
         self.assertIsInstance(plan.lectures[0]._id, ObjectId)
         self.assertIsInstance(plan.institutions[0]._id, ObjectId)
-        self.assertIsInstance(plan.institutions[0].departments[0]._id, ObjectId)
-        self.assertIsInstance(
-            plan.institutions[0].departments[0].academic_courses[0]._id, ObjectId
-        )
 
     def test_from_dict_error_params_not_dict(self):
         """

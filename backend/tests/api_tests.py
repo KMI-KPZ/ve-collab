@@ -17,8 +17,6 @@ from resources.network.acl import ACL
 import global_vars
 from main import make_app
 from model import (
-    AcademicCourse,
-    Department,
     Institution,
     Lecture,
     Step,
@@ -6649,7 +6647,8 @@ class VEPlanHandlerTest(BaseApiTestCase):
             name=name,
             school_type="test",
             country="test",
-            departments=[Department(name="test", academic_courses=[AcademicCourse()])],
+            departments=["test", "test"],
+            academic_courses=["test", "test"]
         )
 
     def create_lecture(self, name: str = "test") -> Lecture:

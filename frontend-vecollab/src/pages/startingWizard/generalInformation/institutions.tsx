@@ -20,43 +20,43 @@ interface Institution {
 export default function Institutions() {
     const [institutions, setInstitutions] = useState<Institution[]>([]);
     const { data: session, status } = useSession();
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(false);
     const router = useRouter();
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
-        if (status !== "loading") {
-            if (!session || session?.error === "RefreshAccessTokenError") {
-                console.log("forced new signIn")
-                signIn("keycloak");
+        if (status !== 'loading') {
+            if (!session || session?.error === 'RefreshAccessTokenError') {
+                console.log('forced new signIn');
+                signIn('keycloak');
             }
         }
     }, [session, status]);
 
     useEffect(() => {
         // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
-        if (!router.isReady || status === "loading") {
-            setLoading(true)
-            return
+        if (!router.isReady || status === 'loading') {
+            setLoading(true);
+            return;
         }
         // router is loaded, but still no plan ID in the query --> redirect to overview because we can't do anything without an ID
         if (!router.query.plannerId) {
             router.push('/overviewProjects');
-            return
+            return;
         }
         // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
         if (session) {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
-                    setLoading(false)
+                    setLoading(false);
                     if (data.plan) {
                         if (data.plan.institutions.length > 0) {
                             let list = data.plan.institutions.map((institution: any) => ({
                                 name: institution.name,
                                 school_type: institution.school_type,
                                 country: institution.country,
-                                department: institution.departments[0].name,
-                                academic_courses: institution.departments[0].academic_courses[0].name,
+                                department: institution.departments[0],
+                                academic_courses: institution.academic_courses[0],
                             }));
                             setInstitutions(list);
                         } else {
@@ -93,16 +93,8 @@ export default function Institutions() {
                 name: institution.name,
                 school_type: institution.school_type,
                 country: institution.country,
-                departments: [
-                    {
-                        name: institution.department,
-                        academic_courses: [
-                            {
-                                name: institution.academic_courses,
-                            },
-                        ],
-                    },
-                ],
+                departments: [institution.department],
+                academic_courses: [institution.academic_courses],
             };
             institutionsList.push(payload);
         });
@@ -198,7 +190,10 @@ export default function Institutions() {
                                             </div>
                                             <div className="mt-4 flex">
                                                 <div className="w-1/4 flex items-center">
-                                                    <label htmlFor="schoolType" className="px-2 py-2">
+                                                    <label
+                                                        htmlFor="schoolType"
+                                                        className="px-2 py-2"
+                                                    >
                                                         Schulform
                                                     </label>
                                                 </div>
@@ -236,7 +231,10 @@ export default function Institutions() {
                                             </div>
                                             <div className="mt-4 flex">
                                                 <div className="w-1/3 flex items-center">
-                                                    <label htmlFor="department" className="px-2 py-2">
+                                                    <label
+                                                        htmlFor="department"
+                                                        className="px-2 py-2"
+                                                    >
                                                         Abteilungsname
                                                     </label>
                                                 </div>
@@ -268,7 +266,10 @@ export default function Institutions() {
                                                         name="academicCourses"
                                                         value={institution.academic_courses}
                                                         onChange={(e) =>
-                                                            modifyAcademicCourses(index, e.target.value)
+                                                            modifyAcademicCourses(
+                                                                index,
+                                                                e.target.value
+                                                            )
                                                         }
                                                         placeholder="mehrere durch Komma trennen"
                                                         className="border border-gray-500 rounded-lg w-full h-12 p-2"
@@ -294,7 +295,8 @@ export default function Institutions() {
                             <div>
                                 <Link
                                     href={{
-                                        pathname: '/startingWizard/generalInformation/externalParties',
+                                        pathname:
+                                            '/startingWizard/generalInformation/externalParties',
                                         query: { plannerId: router.query.plannerId },
                                     }}
                                 >

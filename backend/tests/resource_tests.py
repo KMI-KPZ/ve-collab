@@ -14,8 +14,6 @@ from exceptions import (
 
 import global_vars
 from model import (
-    AcademicCourse,
-    Department,
     Institution,
     Lecture,
     Step,
@@ -129,7 +127,8 @@ class BaseResourceTestCase(TestCase):
             name=name,
             school_type="test",
             country="test",
-            departments=[Department(name="test", academic_courses=[AcademicCourse()])],
+            departments=["test", "test"],
+            academic_courses=["test", "test"],
         )
 
     def create_lecture(self, name: str = "test") -> Lecture:
@@ -618,20 +617,10 @@ class PlanResourceTest(BaseResourceTestCase):
 
         institution = Institution(
             name="updated_institution_name",
-            departments=[
-                Department(
-                    name="updated_department_name",
-                    academic_courses=[
-                        AcademicCourse(name="updated_academic_course_name")
-                    ],
-                )
-            ],
+            departments=["updated", "updated"],
+            academic_courses=["updated", "updated"],
         )
         institution_dict = institution.to_dict()
-        # also check _id creation in one pass
-        del institution_dict["_id"]
-        del institution_dict["departments"][0]["_id"]
-        del institution_dict["departments"][0]["academic_courses"][0]["_id"]
 
         self.planner.update_field(_id, "institutions", [institution_dict], upsert=True)
         db_state = self.db.plans.find_one({"_id": _id})
@@ -641,22 +630,12 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(
             db_state["institutions"][0]["name"], "updated_institution_name"
         )
-        self.assertIsInstance(
-            db_state["institutions"][0]["departments"][0]["_id"], ObjectId
+        self.assertEqual(
+            db_state["institutions"][0]["departments"], ["updated", "updated"]
         )
         self.assertEqual(
-            db_state["institutions"][0]["departments"][0]["name"],
-            "updated_department_name",
-        )
-        self.assertIsInstance(
-            db_state["institutions"][0]["departments"][0]["academic_courses"][0]["_id"],
-            ObjectId,
-        )
-        self.assertEqual(
-            db_state["institutions"][0]["departments"][0]["academic_courses"][0][
-                "name"
-            ],
-            "updated_academic_course_name",
+            db_state["institutions"][0]["academic_courses"],
+            ["updated", "updated"],
         )
 
     def test_update_field_error_wrong_type(self):
