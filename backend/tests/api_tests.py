@@ -6758,7 +6758,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.tools, default_plan.tools)
         self.assertEqual(response_plan.new_content, default_plan.new_content)
         self.assertEqual(response_plan.duration, default_plan.duration)
-
         self.assertEqual(response_plan.workload, default_plan.workload)
         self.assertEqual(response_plan.steps, default_plan.steps)
 
@@ -6828,7 +6827,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.tools, default_plan.tools)
         self.assertEqual(response_plan.new_content, default_plan.new_content)
         self.assertEqual(response_plan.duration, default_plan.duration)
-
         self.assertEqual(response_plan.workload, default_plan.workload)
         self.assertEqual(response_plan.steps, default_plan.steps)
 

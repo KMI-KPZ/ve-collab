@@ -1222,6 +1222,12 @@ class VEPlan:
         else:
             params["_id"] = ObjectId()
 
+        # if present, handle correct type of creation and modified timestamps
+        if "creation_timestamp" in params:
+            params["creation_timestamp"] = util.parse_datetime(params["creation_timestamp"])
+        if "last_modified" in params:
+            params["last_modified"] = util.parse_datetime(params["last_modified"])
+
         # build step objects, asserting that the names of the steps are unique,
         # gotta do this manually, since __dict__.update doesn't initialize nested objects
         steps = [Step.from_dict(step) for step in params["steps"]]
