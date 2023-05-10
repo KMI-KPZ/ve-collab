@@ -27,6 +27,15 @@ interface Course {
     semester: string;
 }
 
+interface Education {
+    institution: string;
+    degree: string;
+    department: string;
+    timestamp_from: string;
+    timestamp_to: string;
+    additional_info: string;
+}
+
 export default function Profile() {
     const [name, setName] = useState('');
     const [institution, setInstitution] = useState('');
@@ -42,6 +51,16 @@ export default function Profile() {
     const [researchTags, setResearchTags] = useState(['']);
     const [courses, setCourses] = useState<Course[]>([
         { title: '', academic_courses: '', semester: '' },
+    ]);
+    const [educations, setEducations] = useState<Education[]>([
+        {
+            institution: '',
+            degree: '',
+            department: '',
+            timestamp_from: '',
+            timestamp_to: '',
+            additional_info: '',
+        },
     ]);
 
     const { data: session, status } = useSession();
@@ -96,6 +115,7 @@ export default function Profile() {
                     setPreferredFormats(data.profile.preferred_formats);
                     setResearchTags(data.profile.research_tags);
                     setCourses(data.profile.courses);
+                    setEducations(data.profile.educations);
                 }
             });
         } else {
@@ -124,6 +144,7 @@ export default function Profile() {
                                         researchInterests: researchTags,
                                         courses,
                                     }}
+                                    cvInfo={{ educations }}
                                 />
                             </WhiteBox>
                             <WhiteBox>

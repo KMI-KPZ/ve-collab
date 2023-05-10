@@ -39,7 +39,6 @@ class Profiles:
             "address": (str, type(None)),
             "birthday": (str, type(None)),
             "experience": list,
-            "education": list,
             "expertise": (str, type(None)),
             "languages": list,
             "ve_interests": list,
@@ -47,6 +46,7 @@ class Profiles:
             "preferred_formats": list,
             "research_tags": list,
             "courses": list,
+            "educations": list,
         }
 
     def __enter__(self):
@@ -95,7 +95,6 @@ class Profiles:
             "address": None,
             "birthday": None,
             "experience": [],
-            "education": [],
             "expertise": None,
             "languages": [],
             "ve_interests": [],
@@ -103,6 +102,7 @@ class Profiles:
             "preferred_formats": [],
             "research_tags": [],
             "courses": [],
+            "educations": []
         }
         self.db.profiles.insert_one(profile)
         return profile
@@ -129,7 +129,6 @@ class Profiles:
             "address": None,
             "birthday": None,
             "experience": [],
-            "education": [],
             "expertise": None,
             "languages": [],
             "ve_interests": [],
@@ -137,6 +136,7 @@ class Profiles:
             "preferred_formats": [],
             "research_tags": [],
             "courses": [],
+            "educations": []
         }
         self.db.profiles.insert_one(profile)
         return profile

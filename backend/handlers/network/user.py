@@ -37,7 +37,6 @@ class ProfileInformationHandler(BaseHandler):
                         "address": <string>,
                         "birthday": <string>,
                         "experience": [<string1>, <string2>, ...],
-                        "education": [<string1>, <string2>, ...],
                         "languages": [<string1>, <string2>, ...],
                         "ve_interests": [<string1>, <string2>, ...],
                         "ve_goals": [<string1>, <string2>, ...],
@@ -45,8 +44,19 @@ class ProfileInformationHandler(BaseHandler):
                         "courses": [
                             {
                                 "title": "<string>",
-                                "academic_course: "<string>",
+                                "academic_course": "<string>",
                                 "semester": "<string>",
+                            },
+                            ...
+                        ],
+                        "educations": [
+                            {
+                                institution: "<string>",
+                                degree: "<string>",
+                                department: "<string>",
+                                timestamp_from: "<string>",
+                                timestamp_to: "<string>",
+                                additional_info: "<string>",
                             },
                             ...
                         ],
@@ -132,7 +142,6 @@ class ProfileInformationHandler(BaseHandler):
                     "address": <string>,
                     "birthday": <string>,
                     "experience": [<string1>, <string2>, ...],
-                    "education": [<string1>, <string2>, ...],
                     "ve_interests": [<string1>, <string2>, ...],
                     "ve_goals": [<string1>, <string2>, ...],
                     "preferred_formats": [<string1>, <string2>, ...],
@@ -141,6 +150,17 @@ class ProfileInformationHandler(BaseHandler):
                             "title": "<string>",
                             "academic_course: "<string>",
                             "semester": "<string>",
+                        },
+                        ...
+                    ],
+                    "educations": [
+                        {
+                            institution: "<string>",
+                            degree: "<string>",
+                            department: "<string>",
+                            timestamp_from: "<string>",
+                            timestamp_to: "<string>",
+                            additional_info: "<string>",
                         },
                         ...
                     ],

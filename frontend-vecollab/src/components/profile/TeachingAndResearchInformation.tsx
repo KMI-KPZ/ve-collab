@@ -23,8 +23,9 @@ export default function TeachingAndResearchInformation({ researchInterests, cour
             </div>
             <BoxContentHeadline className={'mt-6'} text={'Lehrveranstaltungen'} />
             <ul className={'divide-y'}>
-                {courses.map((course) => (
+                {courses.map((course, index) => (
                     <TeachingInformationContentItem
+                        key={index}
                         courseTitle={course.title}
                         participatingAcademicCourses={course.academic_courses}
                         term={course.semester}
