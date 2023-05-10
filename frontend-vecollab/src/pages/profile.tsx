@@ -36,6 +36,17 @@ interface Education {
     additional_info: string;
 }
 
+interface WorkExperience {
+    position: string;
+    institution: string;
+    department: string;
+    timestamp_from: string;
+    timestamp_to: string;
+    city: string;
+    country: string;
+    additional_info: string;
+}
+
 export default function Profile() {
     const [name, setName] = useState('');
     const [institution, setInstitution] = useState('');
@@ -59,6 +70,18 @@ export default function Profile() {
             department: '',
             timestamp_from: '',
             timestamp_to: '',
+            additional_info: '',
+        },
+    ]);
+    const [workExperience, setWorkExperience] = useState<WorkExperience[]>([
+        {
+            position: '',
+            institution: '',
+            department: '',
+            timestamp_from: '',
+            timestamp_to: '',
+            city: '',
+            country: '',
             additional_info: '',
         },
     ]);
@@ -116,6 +139,7 @@ export default function Profile() {
                     setResearchTags(data.profile.research_tags);
                     setCourses(data.profile.courses);
                     setEducations(data.profile.educations);
+                    setWorkExperience(data.profile.work_experience);
                 }
             });
         } else {
@@ -144,7 +168,7 @@ export default function Profile() {
                                         researchInterests: researchTags,
                                         courses,
                                     }}
-                                    cvInfo={{ educations }}
+                                    cvInfo={{ educations, workExperience }}
                                 />
                             </WhiteBox>
                             <WhiteBox>

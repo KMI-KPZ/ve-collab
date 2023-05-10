@@ -7,6 +7,7 @@ interface Props {
     timeStampTo: string;
     duration: string;
     city: string;
+    country: string;
     additionalInformation?: string;
 }
 
@@ -17,6 +18,7 @@ export function CVWorkItem({
     timeStampTo,
     duration,
     city,
+    country,
     additionalInformation,
 }: Props) {
     return (
@@ -30,7 +32,7 @@ export function CVWorkItem({
                 <RxDotFilled />
                 <div>{duration}</div>
             </div>
-            <div className={'text-sm text-gray-600'}>{city}</div>
+            <div className={'text-sm text-gray-600'}>{city}, {country}</div>
             <div className={'mt-1'}>{additionalInformation}</div>
         </li>
     );

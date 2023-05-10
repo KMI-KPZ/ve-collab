@@ -238,7 +238,8 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                 "preferred_formats": [],
                 "research_tags": [],
                 "courses": [],
-                "educations": []
+                "educations": [],
+                "work_experience": [],
             },
             CURRENT_USER.username: {
                 "username": CURRENT_USER.username,
@@ -261,6 +262,7 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                 "research_tags": [],
                 "courses": [],
                 "educations": [],
+                "work_experience": [],
             },
         }
 

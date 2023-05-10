@@ -47,6 +47,7 @@ class Profiles:
             "research_tags": list,
             "courses": list,
             "educations": list,
+            "work_experience": list,
         }
 
     def __enter__(self):
@@ -102,7 +103,8 @@ class Profiles:
             "preferred_formats": [],
             "research_tags": [],
             "courses": [],
-            "educations": []
+            "educations": [],
+            "work_experience": [],
         }
         self.db.profiles.insert_one(profile)
         return profile
@@ -136,7 +138,8 @@ class Profiles:
             "preferred_formats": [],
             "research_tags": [],
             "courses": [],
-            "educations": []
+            "educations": [],
+            "work_experience": [],
         }
         self.db.profiles.insert_one(profile)
         return profile
@@ -365,13 +368,15 @@ class Profiles:
         """
 
         # verify space has all the necessary attributes
-        #if not all(attr in updated_profile for attr in self.profile_attributes.keys()):
+        # if not all(attr in updated_profile for attr in self.profile_attributes.keys()):
         #    raise ValueError("Profile misses required attribute")
 
         # verify types of attributes
         for attr_key in updated_profile:
             if attr_key in self.profile_attributes:
-                if not isinstance(updated_profile[attr_key], self.profile_attributes[attr_key]):
+                if not isinstance(
+                    updated_profile[attr_key], self.profile_attributes[attr_key]
+                ):
                     raise TypeError(
                         "Type mismatch on attribute '{}'. expected type '{}', got '{}'".format(
                             attr_key,

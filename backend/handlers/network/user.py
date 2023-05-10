@@ -60,6 +60,18 @@ class ProfileInformationHandler(BaseHandler):
                             },
                             ...
                         ],
+                        "work_experience": [
+                            {
+                                position: "<string>",
+                                institution: "<string>",
+                                department: "<string>",
+                                timestamp_from: "<string>",
+                                timestamp_to: "<string>",
+                                city: "<string>",
+                                country: "<string>",
+                                additional_info: "<string>",
+                            },
+                        ],
                     },
                     "spaces": [<string1>, <string2>, ...],
                     "follows": [<string1>, <string2>, ...],
@@ -163,6 +175,18 @@ class ProfileInformationHandler(BaseHandler):
                             additional_info: "<string>",
                         },
                         ...
+                    ],
+                    "work_experience": [
+                        {
+                            position: "<string>",
+                            institution: "<string>",
+                            department: "<string>",
+                            timestamp_from: "<string>",
+                            timestamp_to: "<string>",
+                            city: "<string>",
+                            country: "<string>",
+                            additional_info: "<string>",
+                        },
                     ],
                 }
 
