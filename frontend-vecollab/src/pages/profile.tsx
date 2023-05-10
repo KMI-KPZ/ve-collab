@@ -21,6 +21,12 @@ interface Props {
     languages: string[];
 }
 
+interface Course {
+    title: string;
+    academic_courses: string;
+    semester: string;
+}
+
 export default function Profile() {
     const [name, setName] = useState('');
     const [institution, setInstitution] = useState('');
@@ -33,6 +39,10 @@ export default function Profile() {
     const [veGoals, setVeGoals] = useState(['']);
     const [experience, setExperience] = useState(['']);
     const [preferredFormats, setPreferredFormats] = useState(['']);
+    const [researchTags, setResearchTags] = useState(['']);
+    const [courses, setCourses] = useState<Course[]>([
+        { title: '', academic_courses: '', semester: '' },
+    ]);
 
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
@@ -84,6 +94,8 @@ export default function Profile() {
                     setVeGoals(data.profile.ve_goals);
                     setExperience(data.profile.experience);
                     setPreferredFormats(data.profile.preferred_formats);
+                    setResearchTags(data.profile.research_tags);
+                    setCourses(data.profile.courses);
                 }
             });
         } else {
@@ -108,6 +120,10 @@ export default function Profile() {
                             <WhiteBox>
                                 <ExtendedPersonalInformation
                                     veInfo={{ veInterests, veGoals, experience, preferredFormats }}
+                                    researchAndTeachingInfo={{
+                                        researchInterests: researchTags,
+                                        courses,
+                                    }}
                                 />
                             </WhiteBox>
                             <WhiteBox>

@@ -33,7 +33,6 @@ class Profiles:
         self.profile_attributes = {
             "bio": (str, type(None)),
             "institution": (str, type(None)),
-            "projects": list,
             "first_name": (str, type(None)),
             "last_name": (str, type(None)),
             "gender": (str, type(None)),
@@ -46,6 +45,8 @@ class Profiles:
             "ve_interests": list,
             "ve_goals": list,
             "preferred_formats": list,
+            "research_tags": list,
+            "courses": list,
         }
 
     def __enter__(self):
@@ -87,7 +88,6 @@ class Profiles:
             "follows": [],
             "bio": None,
             "institution": None,
-            "projects": [],
             "profile_pic": "default_profile_pic.jpg",
             "first_name": None,
             "last_name": None,
@@ -101,6 +101,8 @@ class Profiles:
             "ve_interests": [],
             "ve_goals": [],
             "preferred_formats": [],
+            "research_tags": [],
+            "courses": [],
         }
         self.db.profiles.insert_one(profile)
         return profile
@@ -120,7 +122,6 @@ class Profiles:
             "follows": [],
             "bio": None,
             "institution": None,
-            "projects": [],
             "profile_pic": "default_profile_pic.jpg",
             "first_name": None,
             "last_name": None,
@@ -134,6 +135,8 @@ class Profiles:
             "ve_interests": [],
             "ve_goals": [],
             "preferred_formats": [],
+            "research_tags": [],
+            "courses": [],
         }
         self.db.profiles.insert_one(profile)
         return profile

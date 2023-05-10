@@ -1,6 +1,6 @@
 interface Props {
     courseTitle: string;
-    participatingAcademicCourses: string[];
+    participatingAcademicCourses: string;
     term: string;
 }
 
@@ -12,7 +12,7 @@ export default function TeachingInformationContentItem({
     return (
         <li className={'py-2 mr-2'}>
             <div className={'font-semibold'}>{courseTitle}</div>
-            <div>{participatingAcademicCourses.join(', ')}</div>
+            <div>{participatingAcademicCourses}</div>
             <div className={'text-gray-600'}>{term}</div>
         </li>
     );

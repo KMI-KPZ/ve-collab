@@ -73,6 +73,13 @@ export default function EditProfile() {
                     setVeGoals(data.profile.ve_goals);
                     setExperience(data.profile.experience);
                     setPreferredFormats(data.profile.preferred_formats);
+                    setResearchTags(
+                        data.profile.research_tags.map((tag: string) => ({
+                            id: tag,
+                            text: tag,
+                        }))
+                    );
+                    setCourses(data.profile.courses)
                 }
             });
         } else {
@@ -258,6 +265,8 @@ export default function EditProfile() {
                 ve_goals: veGoals,
                 experience: experience,
                 preferred_formats: preferredFormats,
+                research_tags: researchTags.map((elem) => elem.text),
+                courses: courses
             },
             session?.accessToken
         );

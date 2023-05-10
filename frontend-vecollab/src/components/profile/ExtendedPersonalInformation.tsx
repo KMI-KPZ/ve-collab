@@ -20,9 +20,19 @@ interface Props {
         experience: string[];
         preferredFormats: string[];
     };
+    researchAndTeachingInfo: {
+        researchInterests: string[];
+        courses: Course[];
+    };
 }
 
-export default function ExtendedPersonalInformation({ veInfo }: Props) {
+interface Course {
+    title: string;
+    academic_courses: string;
+    semester: string;
+}
+
+export default function ExtendedPersonalInformation({ veInfo, researchAndTeachingInfo }: Props) {
     return (
         <Tabs>
             <div tabname="VE-Infos">
@@ -34,7 +44,10 @@ export default function ExtendedPersonalInformation({ veInfo }: Props) {
                 />
             </div>
             <div tabname="Lehre & Forschung">
-                <TeachingAndResearchInformation />
+                <TeachingAndResearchInformation
+                    researchInterests={researchAndTeachingInfo.researchInterests}
+                    courses={researchAndTeachingInfo.courses}
+                />
             </div>
             <div tabname="CV">
                 <CVInformation />

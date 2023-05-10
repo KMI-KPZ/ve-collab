@@ -23,29 +23,37 @@ class ProfileInformationHandler(BaseHandler):
             returns:
                 200 OK
                 {
-                 "user_id": <int>,
-                 "username": <string>,
-                 "email": <string>,
-                 "role": <string>,
-                 "profile": {
-                    "bio": <string>,
-                    "institution": <string>,
-                    "projects": [<string1>, <string2>, ...],
-                    "first_name": <string>,
-                    "last_name": <string>,
-                    "gender": <string>,
-                    "address": <string>,
-                    "birthday": <string>,
-                    "experience": [<string1>, <string2>, ...],
-                    "education": [<string1>, <string2>, ...],
-                    "languages": [<string1>, <string2>, ...],
-                    "ve_interests": [<string1>, <string2>, ...],
-                    "ve_goals": [<string1>, <string2>, ...],
-                    "preferred_formats": [<string1>, <string2>, ...],
-                 },
-                 "spaces": [<string1>, <string2>, ...],
-                 "follows": [<string1>, <string2>, ...],
-                 "followers": [<string1>, <string2>, ...]
+                    "user_id": <int>,
+                    "username": <string>,
+                    "email": <string>,
+                    "role": <string>,
+                    "profile": {
+                        "bio": <string>,
+                        "institution": <string>,
+                        "research_tags": [<string1>, <string2>, ...],
+                        "first_name": <string>,
+                        "last_name": <string>,
+                        "gender": <string>,
+                        "address": <string>,
+                        "birthday": <string>,
+                        "experience": [<string1>, <string2>, ...],
+                        "education": [<string1>, <string2>, ...],
+                        "languages": [<string1>, <string2>, ...],
+                        "ve_interests": [<string1>, <string2>, ...],
+                        "ve_goals": [<string1>, <string2>, ...],
+                        "preferred_formats": [<string1>, <string2>, ...],
+                        "courses": [
+                            {
+                                "title": "<string>",
+                                "academic_course: "<string>",
+                                "semester": "<string>",
+                            },
+                            ...
+                        ],
+                    },
+                    "spaces": [<string1>, <string2>, ...],
+                    "follows": [<string1>, <string2>, ...],
+                    "followers": [<string1>, <string2>, ...]
                 }
 
                 401 Unauthorized
@@ -117,8 +125,7 @@ class ProfileInformationHandler(BaseHandler):
                 {
                     "bio": <string>,
                     "institution": <string>,
-                    "projects": [<string1>, <string2>, ...],
-
+                    "research_tags": [<string1>, <string2>, ...],
                     "first_name": <string>,
                     "last_name": <string>,
                     "gender": <string>,
@@ -129,6 +136,14 @@ class ProfileInformationHandler(BaseHandler):
                     "ve_interests": [<string1>, <string2>, ...],
                     "ve_goals": [<string1>, <string2>, ...],
                     "preferred_formats": [<string1>, <string2>, ...],
+                    "courses": [
+                        {
+                            "title": "<string>",
+                            "academic_course: "<string>",
+                            "semester": "<string>",
+                        },
+                        ...
+                    ],
                 }
 
             returns:
