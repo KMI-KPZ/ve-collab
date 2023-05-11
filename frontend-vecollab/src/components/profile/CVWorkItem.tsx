@@ -28,7 +28,7 @@ export function CVWorkItem({
                 <div>{institution}</div>
             </div>
             <div className={'flex items-center text-sm text-gray-600'}>
-                <div>{`${timeStampFrom} - ${timeStampTo}`}</div>
+                <div>{`${timeStampFrom} - ${timeStampTo === "" ? "heute" : timeStampTo}`}</div>
                 <RxDotFilled />
                 <div>{duration}</div>
             </div>

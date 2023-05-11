@@ -1,29 +1,29 @@
-import NextAuth, { Account, Session, TokenSet, User } from "next-auth"
-import { JWT } from "next-auth/jwt"
-import KeycloakProvider, { KeycloakProfile } from "next-auth/providers/keycloak"
-import { type OAuthConfig } from "next-auth/providers";
-import { AdapterUser } from "next-auth/adapters";
+import NextAuth, { Account, Session, User } from 'next-auth';
+import { JWT } from 'next-auth/jwt';
+import KeycloakProvider, { KeycloakProfile } from 'next-auth/providers/keycloak';
+import { type OAuthConfig } from 'next-auth/providers';
+import { AdapterUser } from 'next-auth/adapters';
 
 if (!process.env.KEYCLOAK_ID) {
     throw new Error(`
       Please provide a valid KEYCLOAK_ID in .env.local .
-    `)
+    `);
 }
 if (!process.env.KEYCLOAK_SECRET) {
     throw new Error(`
       Please provide a valid KEYCLOAK_SECRET in .env.local .
-    `)
+    `);
 }
 
 interface JWTProps {
-    token: JWT,
-    user?: User | AdapterUser | undefined
-    account?: Account | null | undefined
+    token: JWT;
+    user?: User | AdapterUser | undefined;
+    account?: Account | null | undefined;
 }
 
 interface SessionProps {
-    token: JWT,
-    session: Session
+    token: JWT;
+    session: Session;
 }
 
 declare module 'next-auth' {
@@ -53,18 +53,35 @@ declare module 'next-auth' {
         scope: string;
     }
 
+    interface User {
+        id: string;
+        name?: string | null;
+        email?: string | null;
+        image?: string | null;
+        given_name?: string | null;
+        family_name?: string | null;
+        iss?: string | null;
+        email_verified?: boolean | null;
+        role?: string | null;
+        groups?: string[] | null;
+        preferred_username?: string | null;
+        orcid?: string | null | undefined;
+    }
+
     interface Session {
         user: {
-            sub: string;
-            email_verified: boolean;
-            name: string;
-            preferred_username: string;
-            given_name: string;
-            family_name: string;
-            email: string;
             id: string;
-            org_name?: string;
-            telephone?: string;
+            name?: string | null;
+            email?: string | null;
+            image?: string | null;
+            given_name?: string | null;
+            family_name?: string | null;
+            iss?: string | null;
+            email_verified?: boolean | null;
+            role?: string | null;
+            groups?: string[] | null;
+            preferred_username?: string | null;
+            orcid?: string | null | undefined;
         };
         error: string;
         accessToken: string;
@@ -120,12 +137,11 @@ const refreshAccessToken = async (token: JWT): Promise<JWT> => {
             accessToken: refreshedTokens.access_token,
             accessTokenExpired: Date.now() + (refreshedTokens.expires_in - 15) * 1000,
             refreshToken: refreshedTokens.refresh_token ?? token.refreshToken,
-            refreshTokenExpired:
-                Date.now() + (refreshedTokens.refresh_expires_in - 15) * 1000,
-            idToken: refreshedTokens.id_token
+            refreshTokenExpired: Date.now() + (refreshedTokens.refresh_expires_in - 15) * 1000,
+            idToken: refreshedTokens.id_token,
         };
     } catch (error) {
-        console.log(error)
+        console.log(error);
         return {
             ...token,
             error: 'RefreshAccessTokenError',
@@ -139,7 +155,22 @@ export const authOptions = {
             clientId: process.env.KEYCLOAK_ID,
             clientSecret: process.env.KEYCLOAK_SECRET,
             issuer: process.env.KEYCLOAK_ISSUER,
-        })
+            profile(profile: KeycloakProfile) {
+                return {
+                    iss: profile.iss,
+                    email_verified: profile.email_verified,
+                    role: profile.role,
+                    name: profile.name,
+                    groups: profile.groups,
+                    preferred_username: profile.preferred_username,
+                    given_name: profile.given_name,
+                    family_name: profile.family_name,
+                    email: profile.email,
+                    id: profile.sub,
+                    orcid: profile.orcid,
+                };
+            },
+        }),
     ],
     callbacks: {
         async jwt({ token, user, account }: JWTProps): Promise<JWT> {
@@ -151,8 +182,7 @@ export const authOptions = {
                 if (account.expires_at) {
                     token.accessTokenExpired = account.expires_at;
                 }
-                token.refreshTokenExpired =
-                    Date.now() + (account.refresh_expires_in - 15) * 1000;
+                token.refreshTokenExpired = Date.now() + (account.refresh_expires_in - 15) * 1000;
                 token.user = user;
 
                 return token;
@@ -160,31 +190,35 @@ export const authOptions = {
 
             // Return previous token if the access token has not expired yet
             if (Date.now() < token.accessTokenExpired) {
-                console.log("token still valid")
+                console.log('token still valid');
                 return token;
             }
 
             // Access token has expired, try to update it
             return refreshAccessToken(token);
-
         },
         async session({ session, token }: SessionProps): Promise<Session> {
-            session.error = token.error
-            session.accessToken = token.accessToken
-            return session
+            session.error = token.error;
+            session.accessToken = token.accessToken;
+            session.user = token.user;
+            return session;
         },
     },
     events: {
         // perform Single Logout on Keycloak IdP when user triggers a logout on our site, i.e. logout on every site that the user uses this account on
         async signOut({ token }: { token: JWT }) {
-            const issuerUrl = (authOptions.providers.find(p => p.id === "keycloak") as OAuthConfig<KeycloakProfile>).options!.issuer!
-            const logOutUrl = new URL(`${issuerUrl}/protocol/openid-connect/logout`)
-            logOutUrl.searchParams.set("id_token_hint", token.idToken!)
+            const issuerUrl = (
+                authOptions.providers.find(
+                    (p) => p.id === 'keycloak'
+                ) as OAuthConfig<KeycloakProfile>
+            ).options!.issuer!;
+            const logOutUrl = new URL(`${issuerUrl}/protocol/openid-connect/logout`);
+            logOutUrl.searchParams.set('id_token_hint', token.idToken!);
             const res = await fetch(logOutUrl);
             if (res.status !== 200) {
-                console.log("Single Logout to Keycloak failed")
+                console.log('Single Logout to Keycloak failed');
             }
         },
-    }
-}
-export default NextAuth(authOptions)
+    },
+};
+export default NextAuth(authOptions);

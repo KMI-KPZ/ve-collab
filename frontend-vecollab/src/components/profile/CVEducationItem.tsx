@@ -22,13 +22,13 @@ export default function CVEducationItem({
             <div className={'font-bold'}>{institution}</div>
             <div className={'flex items-center'}>
                 <div>{level}</div>
-                {field !== undefined ? (
+                {(field === undefined || field === null || field === "") ? (
+                    <></>
+                ) : (
                     <>
                         <RxDotFilled />
                         <div>{field}</div>
                     </>
-                ) : (
-                    ''
                 )}
             </div>
             <div className={'text-sm text-gray-600'}>{`${timeStampFrom}-${timeStampTo}`}</div>

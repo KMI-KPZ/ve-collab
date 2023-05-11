@@ -1,5 +1,7 @@
 import json
+import pprint
 from keycloak import KeycloakGetError
+import requests
 
 import tornado.web
 
@@ -224,6 +226,132 @@ class ProfileInformationHandler(BaseHandler):
 
             self.set_status(200)
             self.write({"status": 200, "success": True})
+
+
+class OrcidProfileHandler(BaseHandler):
+    """
+    request profile data from ORCiD API
+    """
+
+    @auth_needed
+    async def get(self):
+        if not self.current_user.orcid:
+            self.set_status(409)
+            self.write({"success": False, "reason": "not_authenticated_via_orcid"})
+            return
+
+        orcid_api_response = requests.get(
+            "https://pub.orcid.org/v3.0/{}/record".format(self.current_user.orcid),
+            headers={"Accept": "application/json"},
+        )
+        orcid_record = json.loads(orcid_api_response.content)
+
+        # if the orcid api said anything else then 200, report back the error
+        if orcid_api_response.status_code != 200:
+            self.set_status(409)
+            self.write(
+                {
+                    "success": False,
+                    "reason": "orcid_api_error",
+                    "orcid_error": orcid_record,
+                }
+            )
+            return
+
+        pprint.pprint(orcid_record)
+
+        bio = first_name = last_name = research_tags = institution = None
+        educations = employments = []
+
+        # TODO only a proof of concept and prone to breaking (adapted to one certain ORCiD for testing),
+        # needs error checking for fields
+        try:
+            bio = orcid_record["person"]["biography"]
+            first_name = orcid_record["person"]["name"]["given-names"]["value"]
+            last_name = orcid_record["person"]["name"]["family-name"]["value"]
+            research_tags = [
+                elem["content"]
+                for elem in orcid_record["person"]["keywords"]["keyword"]
+            ]
+            educations = [
+                {
+                    "institution": elem["summaries"][0]["education-summary"][
+                        "organization"
+                    ]["name"],
+                    "degree": elem["summaries"][0]["education-summary"]["role-title"],
+                    "department": "",
+                    "timestamp_from": elem["summaries"][0]["education-summary"][
+                        "start-date"
+                    ]["year"]["value"],
+                    "timestamp_to": elem["summaries"][0]["education-summary"][
+                        "end-date"
+                    ]["year"]["value"],
+                    "additional_info": "",
+                }
+                for elem in orcid_record["activities-summary"]["educations"][
+                    "affiliation-group"
+                ]
+            ]
+
+            employments = [
+                {
+                    "position": elem["summaries"][0]["employment-summary"]["role-title"]
+                    if elem["summaries"][0]["employment-summary"]["role-title"]
+                    is not None
+                    else "",
+                    "institution": elem["summaries"][0]["employment-summary"][
+                        "organization"
+                    ]["name"],
+                    "department": elem["summaries"][0]["employment-summary"][
+                        "department-name"
+                    ],
+                    "city": elem["summaries"][0]["employment-summary"]["organization"][
+                        "address"
+                    ]["city"],
+                    "country": elem["summaries"][0]["employment-summary"][
+                        "organization"
+                    ]["address"]["country"],
+                    "timestamp_from": elem["summaries"][0]["employment-summary"][
+                        "start-date"
+                    ]["year"]["value"]
+                    if elem["summaries"][0]["employment-summary"]["start-date"]
+                    is not None
+                    else "",
+                    "timestamp_to": elem["summaries"][0]["employment-summary"][
+                        "end-date"
+                    ]["year"]["value"]
+                    if elem["summaries"][0]["employment-summary"]["end-date"]
+                    is not None
+                    else "",
+                    "additional_info": "",
+                }
+                for elem in orcid_record["activities-summary"]["employments"][
+                    "affiliation-group"
+                ]
+            ]
+
+            institution = employments[0]["institution"]
+        except Exception as e:
+            print("error caught")
+            print(e)
+
+        profile_response = {
+            "bio": "" if bio == None else bio,
+            "institution": "" if institution == None else institution,
+            "research_tags": research_tags,
+            "first_name": first_name,
+            "last_name": last_name,
+            "educations": educations,
+            "work_experience": employments,
+        }
+
+        pprint.pprint(profile_response)
+
+        self.write({"success": True, "suggested_profile": profile_response})
+
+    @auth_needed
+    async def post(self):
+        self.write({"success": False})
 
 
 class UserHandler(BaseHandler):

@@ -50,7 +50,7 @@ interface WorkExperience {
 export default function Profile() {
     const [name, setName] = useState('');
     const [institution, setInstitution] = useState('');
-    const [profilePictureUrl, setProfilePicUrl] = useState('');
+    const [profilePictureUrl, setProfilePicUrl] = useState('/images/random_user.jpg');
     const [bio, setBio] = useState('');
     const [expertise, setExpertise] = useState('');
     const [birthday, setBirthday] = useState('');

@@ -13,7 +13,7 @@ import util
 
 
 class User:
-    def __init__(self, username: str, user_id: str, email: str):
+    def __init__(self, username: str, user_id: str, email: str, orcid: str = ""):
         # ensure types
         if not isinstance(username, str):
             raise TypeError(
@@ -33,10 +33,17 @@ class User:
                     str, type(email)
                 )
             )
+        if not isinstance(orcid, str):
+            raise TypeError(
+                "expected type '{}' for attribute 'orcid', got '{}'".format(
+                    str, type(orcid)
+                )
+            )
 
         self.username = username
         self.user_id = user_id
         self.email = email
+        self.orcid = orcid
 
     def to_dict(self) -> dict:
         return {"username": self.username, "user_id": self.user_id, "email": self.email}

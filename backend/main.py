@@ -93,6 +93,7 @@ def make_app(cookie_secret):
             (r"/wordpress/posts", WordpressCollectionHandler),
             (r"/wordpress/posts/([0-9]+)", WordpressPostHandler),
             (r"/planner/(.+)", VEPlanHandler),
+            (r"/orcid", OrcidProfileHandler),
             (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
             (r"/assets/(.*)", tornado.web.StaticFileHandler, {"path": "./assets/"}),
             (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./html/"}),

@@ -85,6 +85,7 @@ class BaseHandler(tornado.web.RequestHandler):
                     token_info = jwt.decode(
                         bearer_token, KEYCLOAK_PUBLIC_KEY, audience="account"
                     )
+                    #print(token_info)
                 except jose.exceptions.JWTError as e:
                     logger.info("Caught Exception: {} ".format(e))
                     self.current_user = None
@@ -96,6 +97,13 @@ class BaseHandler(tornado.web.RequestHandler):
                     token_info["sub"],
                     token_info["email"],
                 )
+
+                # if the user was authenticated via ORCiD, set their id for use within the handlers
+                if "orcid" in token_info:
+                    # the format in the token is "https://orcid.org/0000-0000-0000-0000",
+                    # but we are only interested in the actual id, so we discard anything left of the last "/"
+                    self.current_user.orcid = token_info["orcid"].rsplit("/", 1)[-1]
+
                 self._access_token = bearer_token
                 return
             

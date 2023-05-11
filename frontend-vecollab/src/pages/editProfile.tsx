@@ -8,6 +8,7 @@ import { useRouter } from 'next/router';
 import { FormEvent, useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { WithContext as ReactTags } from 'react-tag-input';
+import Image from 'next/image';
 
 interface Course {
     title: string;
@@ -36,8 +37,9 @@ interface WorkExperience {
 }
 
 export default function EditProfile() {
-    const [firstName, setFirstName] = useState<string | undefined>();
-    const [lastName, setLastName] = useState<string | undefined>();
+    const [firstName, setFirstName] = useState<string | undefined>('');
+    const [lastName, setLastName] = useState<string | undefined>('');
+    const [institution, setInstitution] = useState<string | undefined>('');
     const [bio, setBio] = useState('');
     const [expertise, setExpertise] = useState('');
     const [birthday, setBirthday] = useState('');
@@ -102,6 +104,7 @@ export default function EditProfile() {
                     console.log(data);
                     setFirstName(data.profile.first_name);
                     setLastName(data.profile.last_name);
+                    setInstitution(data.profile.institution);
                     setBio(data.profile.bio);
                     setExpertise(data.profile.expertise);
                     setBirthday(data.profile.birthday);
@@ -430,6 +433,7 @@ export default function EditProfile() {
             {
                 first_name: firstName,
                 last_name: lastName,
+                institution: institution,
                 bio: bio,
                 expertise: expertise,
                 birthday: birthday,
@@ -449,6 +453,27 @@ export default function EditProfile() {
         // TODO render success ui feedback
     };
 
+    const importOrcidProfile = async (evt: FormEvent) => {
+        evt.preventDefault();
+
+        await fetchGET('/orcid', session?.accessToken).then((data) => {
+            let profile = data.suggested_profile;
+            console.log(profile);
+            setBio(profile.bio);
+            setInstitution(profile.institution);
+            setResearchTags(
+                profile.research_tags.map((tag: string) => ({
+                    id: tag,
+                    text: tag,
+                }))
+            );
+            setFirstName(profile.first_name);
+            setLastName(profile.last_name);
+            setEducations(profile.educations);
+            setWorkExperience(profile.work_experience);
+        });
+    };
+
     return (
         <div className={'flex justify-center'}>
             <WhiteBox>
@@ -459,24 +484,43 @@ export default function EditProfile() {
                         <VerticalTabs>
                             <div tabname="Stammdaten">
                                 <form onSubmit={updateProfileData}>
-                                    <div className={'flex justify-end'}>
-                                        <Link href={'/profile'}>
-                                            <button
-                                                className={
-                                                    'mx-4 py-2 px-5 border border-ve-collab-orange rounded-lg'
-                                                }
-                                            >
-                                                Abbrechen
-                                            </button>
-                                        </Link>
+                                    <div className={'flex justify-between'}>
                                         <button
                                             type="submit"
+                                            disabled={session?.user.orcid === undefined}
                                             className={
-                                                'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'
+                                                'flex items-center bg-ve-collab-orange text-white py-2 px-5 rounded-lg disabled:cursor-not-allowed disabled:opacity-40'
                                             }
+                                            onClick={(e) => importOrcidProfile(e)}
                                         >
-                                            Speichern
+                                            <Image
+                                                className="mr-2"
+                                                src={'/images/orcid_icon.png'}
+                                                width={24}
+                                                height={24}
+                                                alt={''}
+                                            ></Image>
+                                            von ORCiD importieren
                                         </button>
+                                        <div className="flex justify-end">
+                                            <Link href={'/profile'}>
+                                                <button
+                                                    className={
+                                                        'mx-4 py-2 px-5 border border-ve-collab-orange rounded-lg'
+                                                    }
+                                                >
+                                                    Abbrechen
+                                                </button>
+                                            </Link>
+                                            <button
+                                                type="submit"
+                                                className={
+                                                    'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'
+                                                }
+                                            >
+                                                Speichern
+                                            </button>
+                                        </div>
                                     </div>
                                     <div className={'my-5'}>
                                         <div className={'mb-1 font-bold text-slate-900 text-lg'}>
@@ -506,6 +550,20 @@ export default function EditProfile() {
                                     </div>
                                     <div className={'my-5'}>
                                         <div className={'mb-1 font-bold text-slate-900 text-lg'}>
+                                            Institution
+                                        </div>
+                                        <input
+                                            className={
+                                                'border border-gray-500 rounded-lg px-2 py-1 w-1/2'
+                                            }
+                                            type="text"
+                                            placeholder={'Name deiner aktuellen Institution'}
+                                            value={institution}
+                                            onChange={(e) => setInstitution(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className={'my-5'}>
+                                        <div className={'mb-1 font-bold text-slate-900 text-lg'}>
                                             Bio
                                         </div>
                                         <textarea
@@ -524,10 +582,10 @@ export default function EditProfile() {
                                         </div>
                                         <input
                                             className={
-                                                'border border-gray-500 rounded-lg px-2 py-1'
+                                                'border border-gray-500 rounded-lg px-2 py-1 w-1/2'
                                             }
                                             type="text"
-                                            placeholder={'In welcher Abteilung lehrst du?'}
+                                            placeholder={'Worin liegt deine Expertise?'}
                                             value={expertise}
                                             onChange={(e) => setExpertise(e.target.value)}
                                         />
@@ -557,11 +615,11 @@ export default function EditProfile() {
                                             handleDrag={handleDragLanguage}
                                             handleTagClick={handleTagClickLanguage}
                                             inputFieldPosition="bottom"
-                                            placeholder="Enter oder Komma, um neuen Schwerpunkt hinzuzufügen"
+                                            placeholder="Enter, um neue Sprache hinzuzufügen"
                                             classNames={{
                                                 tag: 'mr-2 mb-2 px-2 py-1 rounded-lg bg-gray-300 shadow-lg',
                                                 tagInputField:
-                                                    'w-2/3 border border-gray-500 rounded-lg my-4 px-2 py-1',
+                                                    'w-3/4 border border-gray-500 rounded-lg my-4 px-2 py-1',
                                                 remove: 'ml-1',
                                             }}
                                         />
@@ -912,7 +970,7 @@ export default function EditProfile() {
                                                             htmlFor="degree"
                                                             className="px-2 py-2"
                                                         >
-                                                            Art des Abschlusses
+                                                            Abschluss und Fach
                                                         </label>
                                                     </div>
                                                     <div className="w-2/3">
@@ -926,7 +984,7 @@ export default function EditProfile() {
                                                                     e.target.value
                                                                 )
                                                             }
-                                                            placeholder="z.B. Bachelor/Master/PhD"
+                                                            placeholder="z.B. Bachelor/Master/PhD Informatik"
                                                             className="border border-gray-500 rounded-lg w-full h-12 p-2"
                                                         />
                                                     </div>
@@ -966,6 +1024,7 @@ export default function EditProfile() {
                                                         </label>
                                                     </div>
                                                     <div className="w-2/3">
+                                                        {/* TODO month/year only date picker*/}
                                                         <input
                                                             type="text"
                                                             name="timestampFrom"
@@ -991,6 +1050,7 @@ export default function EditProfile() {
                                                         </label>
                                                     </div>
                                                     <div className="w-2/3 flex">
+                                                        {/* TODO month/year only date picker*/}
                                                         <input
                                                             type="text"
                                                             name="timestampTo"
@@ -1171,6 +1231,7 @@ export default function EditProfile() {
                                                         </label>
                                                     </div>
                                                     <div className="w-2/3">
+                                                        {/* TODO month/year only date picker*/}
                                                         <input
                                                             type="text"
                                                             name="timestampFrom"
@@ -1196,6 +1257,7 @@ export default function EditProfile() {
                                                         </label>
                                                     </div>
                                                     <div className="w-2/3 flex">
+                                                        {/* TODO month/year only date picker*/}
                                                         <input
                                                             type="text"
                                                             name="timestampTo"
@@ -1305,7 +1367,7 @@ export default function EditProfile() {
                                 </form>
                             </div>
                             <div tabname="VE-Schaufenster">
-                                <div className={''}>logo Empty</div>
+                                <div className={''}>empty</div>
                             </div>
                         </VerticalTabs>
                     )}

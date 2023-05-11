@@ -57,7 +57,7 @@ export default function CVInformation({ educations, workExperience }: Props) {
                             institution={workExp.institution}
                             timeStampFrom={workExp.timestamp_from}
                             timeStampTo={workExp.timestamp_to}
-                            duration={'6 Monate'}
+                            duration={'6000 Monate'}
                             city={workExp.city}
                             country={workExp.country}
                             additionalInformation={workExp.additional_info}

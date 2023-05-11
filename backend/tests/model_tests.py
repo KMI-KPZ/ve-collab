@@ -49,6 +49,14 @@ class UserModelTest(TestCase):
         self.assertEqual(user.username, name)
         self.assertEqual(user.user_id, user_id)
         self.assertEqual(user.email, mail)
+        self.assertEqual(user.orcid, "")
+
+        orcid = "0000-0000-0000-0000"
+        user = User(name, user_id, mail, orcid)
+        self.assertEqual(user.username, name)
+        self.assertEqual(user.user_id, user_id)
+        self.assertEqual(user.email, mail)
+        self.assertEqual(user.orcid, orcid)
 
     def test_init_error_wrong_types(self):
         """
@@ -59,6 +67,7 @@ class UserModelTest(TestCase):
         name = "test"
         user_id = "abc123"
         mail = "test@mail.com"
+        orcid = "0000-0000-0000-0000"
 
         name = 123
         self.assertRaises(TypeError, User, name, user_id, mail)
@@ -71,6 +80,10 @@ class UserModelTest(TestCase):
         mail = 123
         self.assertRaises(TypeError, User, name, user_id, mail)
         mail = "test@mail.com"
+
+        orcid = 123
+        self.assertRaises(TypeError, User, name, user_id, mail, orcid)
+        orcid = "0000-0000-0000-0000"
 
 
 class TaskModelTest(TestCase):
