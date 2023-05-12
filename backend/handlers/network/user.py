@@ -1,5 +1,6 @@
 import json
 import pprint
+from typing import Dict, List, Tuple
 from keycloak import KeycloakGetError
 import requests
 
@@ -235,6 +236,82 @@ class OrcidProfileHandler(BaseHandler):
 
     @auth_needed
     async def get(self):
+        """
+        GET /orcid
+            Extract profile information from the public ORCiD record of the user.
+            This is only possible if the user is authenticated via ORCiD, i.e.
+            on login he/she has chosen to login with their ORCiD, or the account
+            is atleast linked (possible TODO, tbd).
+            If the user just has a "regular" account, an error is thrown.
+
+            The returned profile is a suggestion and therefore not directly stored
+            as the users profile in the backend. Suggest this data to the user but give
+            them control to change it to their wishes and save it manually afterwards
+            using the `/profileinformation`-endpoint.
+
+            The returned profile is only a subset of the full profile information that is
+            stored, it contains only those values that are potentially extractable from ORCiD.
+
+            Response structure:
+            {
+                "suggested_profile": {
+                    "bio": "",
+                    "institution": "",
+                    "research_tags": ["", "", ""],
+                    "first_name": "",
+                    "last_name": "",
+                    "educations": [
+                        {
+                            "institution": "",
+                            "degree": "",
+                            "department": "",
+                            "timestamp_from": "",
+                            "timestamp_to": "",
+                            "additional_info": "",
+                        }
+                    ],
+                    "work_experience": [
+                        {
+                            "position": "",
+                            "institution": "",
+                            "department": "",
+                            "city": "",
+                            "country": "",
+                            "timestamp_from": "",
+                            "timestamp_to": "",
+                            "additional_info": "",
+                        }
+                    ],
+                }
+            }
+
+
+            query params:
+                None (the ORCiD is already stored in the access token if successfully
+                      authenticated)
+
+            http body:
+                None
+
+            returns:
+                200 OK
+                {"success": True,
+                 "suggested_profile": "<see_above>"}
+
+                401 Unauthorized
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
+                409 Conflict
+                {"success": False,
+                 "reason": "not_authenticated_via_orcid"}
+
+                409 Conflict
+                {"success": False,
+                 "reason": "orcid_api_error",
+                 "orcid_error": "<error_from_orcid_api>"}
+        """
+
         if not self.current_user.orcid:
             self.set_status(409)
             self.write({"success": False, "reason": "not_authenticated_via_orcid"})
@@ -258,100 +335,366 @@ class OrcidProfileHandler(BaseHandler):
             )
             return
 
-        pprint.pprint(orcid_record)
-
-        bio = first_name = last_name = research_tags = institution = None
-        educations = employments = []
-
-        # TODO only a proof of concept and prone to breaking (adapted to one certain ORCiD for testing),
-        # needs error checking for fields
-        try:
-            bio = orcid_record["person"]["biography"]
-            first_name = orcid_record["person"]["name"]["given-names"]["value"]
-            last_name = orcid_record["person"]["name"]["family-name"]["value"]
-            research_tags = [
-                elem["content"]
-                for elem in orcid_record["person"]["keywords"]["keyword"]
-            ]
-            educations = [
-                {
-                    "institution": elem["summaries"][0]["education-summary"][
-                        "organization"
-                    ]["name"],
-                    "degree": elem["summaries"][0]["education-summary"]["role-title"],
-                    "department": "",
-                    "timestamp_from": elem["summaries"][0]["education-summary"][
-                        "start-date"
-                    ]["year"]["value"],
-                    "timestamp_to": elem["summaries"][0]["education-summary"][
-                        "end-date"
-                    ]["year"]["value"],
-                    "additional_info": "",
-                }
-                for elem in orcid_record["activities-summary"]["educations"][
-                    "affiliation-group"
-                ]
-            ]
-
-            employments = [
-                {
-                    "position": elem["summaries"][0]["employment-summary"]["role-title"]
-                    if elem["summaries"][0]["employment-summary"]["role-title"]
-                    is not None
-                    else "",
-                    "institution": elem["summaries"][0]["employment-summary"][
-                        "organization"
-                    ]["name"],
-                    "department": elem["summaries"][0]["employment-summary"][
-                        "department-name"
-                    ],
-                    "city": elem["summaries"][0]["employment-summary"]["organization"][
-                        "address"
-                    ]["city"],
-                    "country": elem["summaries"][0]["employment-summary"][
-                        "organization"
-                    ]["address"]["country"],
-                    "timestamp_from": elem["summaries"][0]["employment-summary"][
-                        "start-date"
-                    ]["year"]["value"]
-                    if elem["summaries"][0]["employment-summary"]["start-date"]
-                    is not None
-                    else "",
-                    "timestamp_to": elem["summaries"][0]["employment-summary"][
-                        "end-date"
-                    ]["year"]["value"]
-                    if elem["summaries"][0]["employment-summary"]["end-date"]
-                    is not None
-                    else "",
-                    "additional_info": "",
-                }
-                for elem in orcid_record["activities-summary"]["employments"][
-                    "affiliation-group"
-                ]
-            ]
-
-            institution = employments[0]["institution"]
-        except Exception as e:
-            print("error caught")
-            print(e)
-
+        first_name, last_name = self._parse_name(orcid_record)
         profile_response = {
-            "bio": "" if bio == None else bio,
-            "institution": "" if institution == None else institution,
-            "research_tags": research_tags,
+            "bio": self._parse_bio(orcid_record),
+            "institution": self._parse_institutions(orcid_record),
+            "research_tags": self._parse_keywords(orcid_record),
             "first_name": first_name,
             "last_name": last_name,
-            "educations": educations,
-            "work_experience": employments,
+            "educations": self._parse_educations(orcid_record),
+            "work_experience": self._parse_employments(orcid_record),
         }
-
-        pprint.pprint(profile_response)
 
         self.write({"success": True, "suggested_profile": profile_response})
 
     @auth_needed
     async def post(self):
-        self.write({"success": False})
+        self.set_status(405)
+        self.write({"success": False, "reason": "POST_not_implemented"})
+
+    ##############################################################################
+    #                             helper functions                               #
+    ##############################################################################
+
+    def __extract_start_date(self, summary_obj: dict) -> str:
+        """
+        helper function to extract a valid ISO-8601 date string
+        from the very "special" representation of dates in an orcid summary
+        object...
+        """
+
+        start_date = ""
+        if summary_obj["start-date"] != None:
+            if summary_obj["start-date"]["year"] != None:
+                year = summary_obj["start-date"]["year"]["value"]
+                if summary_obj["start-date"]["month"] != None:
+                    month = summary_obj["start-date"]["month"]["value"]
+                    start_date = "{}-{}".format(year, month)
+                else:
+                    start_date = year
+        return start_date
+
+    def __extract_end_date(self, summary_obj: dict) -> str:
+        """
+        helper function to extract a valid ISO-8601 date string
+        from the very "special" representation of dates in an orcid summary
+        object...
+        """
+
+        end_date = ""
+        if summary_obj["end-date"] != None:
+            if summary_obj["end-date"]["year"] != None:
+                year = summary_obj["end-date"]["year"]["value"]
+                if summary_obj["end-date"]["month"] != None:
+                    month = summary_obj["end-date"]["month"]["value"]
+                    end_date = "{}-{}".format(year, month)
+                else:
+                    end_date = year
+        return end_date
+
+    def _parse_bio(self, orcid_record: dict) -> str:
+        """
+        extract the bio from the orcid record and return it, if
+        it exists. Otherwise returns an empty string
+        """
+
+        try:
+            if orcid_record["person"]["biography"] == None:
+                return ""
+            else:
+                return orcid_record["person"]["biography"]
+        except Exception as e:
+            print("caught exception @ bio parsing:")
+            print(e)
+            return ""
+
+    def _parse_name(self, orcid_record: dict) -> Tuple[str, str]:
+        """
+        extract the given name and family name from the orcid record
+        and return them, if they exist. if any of them does not exist,
+        return an empty string instead.
+
+        Returns a Tuple containing the given name in first position and
+        family name in second position.
+        """
+
+        given_name = family_name = ""
+
+        # split the extraction into separate try/excepts because if any one fails
+        # we still want to try the other one
+        try:
+            if orcid_record["person"]["name"]["given-names"] is not None:
+                given_name = orcid_record["person"]["name"]["given-names"]["value"]
+        except Exception as e:
+            print("caught exception @ given_name parsing:")
+            print(e)
+
+        try:
+            if orcid_record["person"]["name"]["family-name"] is not None:
+                family_name = orcid_record["person"]["name"]["family-name"]["value"]
+        except Exception as e:
+            print("caught exception @ family_name parsing:")
+            print(e)
+
+        return given_name, family_name
+
+    def _parse_keywords(self, orcid_record: dict) -> List[str]:
+        """
+        extract the keywords from the orcid record and return them in a list
+        if they exist. Otherwise return an empty list.
+        """
+
+        try:
+            if orcid_record["person"]["keywords"]["keyword"] == []:
+                return []
+            else:
+                return [
+                    elem["content"]
+                    for elem in orcid_record["person"]["keywords"]["keyword"]
+                ]
+        except Exception as e:
+            print("caught exception @ family_name parsing:")
+            print(e)
+            return []
+
+    def _parse_educations(self, orcid_record: dict) -> List[Dict]:
+        """
+        extract educations and qualifications from the orcid record
+        and return them in a list of dicts if they exist. Whenever there is some
+        information missing, empty strings are returned instead in the dicts.
+        if no educations are present at all, an empty list is returned.
+        """
+
+        def __extract_educations(orcid_record: dict) -> List[Dict]:
+            educations = []
+            try:
+                if (
+                    orcid_record["activities-summary"]["educations"][
+                        "affiliation-group"
+                    ]
+                    != []
+                ):
+                    for education_record in orcid_record["activities-summary"][
+                        "educations"
+                    ]["affiliation-group"]:
+                        try:
+                            education_record_summary = education_record["summaries"][0][
+                                "education-summary"
+                            ]
+
+                            # parse the fields
+                            department = (
+                                education_record_summary["department-name"]
+                                if education_record_summary["department-name"] != None
+                                else ""
+                            )
+                            degree = (
+                                education_record_summary["role-title"]
+                                if education_record_summary["role-title"] != None
+                                else ""
+                            )
+                            institution = education_record_summary["organization"][
+                                "name"
+                            ]
+                            start_date = self.__extract_start_date(
+                                education_record_summary
+                            )
+                            end_date = self.__extract_end_date(education_record_summary)
+
+                            # add the record
+                            educations.append(
+                                {
+                                    "institution": institution,
+                                    "degree": degree,
+                                    "department": department,
+                                    "timestamp_from": start_date,
+                                    "timestamp_to": end_date,
+                                    "additional_info": "",
+                                }
+                            )
+                        except Exception:
+                            continue
+
+            except Exception as e:
+                print("caught exception @ educations parsing:")
+                print(e)
+
+            return educations
+
+        def __extract_qualifications(orcid_record: dict) -> List[Dict]:
+            qualifications = []
+            try:
+                if (
+                    orcid_record["activities-summary"]["qualifications"][
+                        "affiliation-group"
+                    ]
+                    != []
+                ):
+                    for qualification_record in orcid_record["activities-summary"][
+                        "qualifications"
+                    ]["affiliation-group"]:
+                        try:
+                            qualification_record_summary = qualification_record[
+                                "summaries"
+                            ][0]["qualification-summary"]
+
+                            # parse the fields
+                            department = (
+                                qualification_record_summary["department-name"]
+                                if qualification_record_summary["department-name"]
+                                != None
+                                else ""
+                            )
+                            degree = (
+                                qualification_record_summary["role-title"]
+                                if qualification_record_summary["role-title"] != None
+                                else ""
+                            )
+                            institution = qualification_record_summary["organization"][
+                                "name"
+                            ]
+                            start_date = self.__extract_start_date(
+                                qualification_record_summary
+                            )
+                            end_date = self.__extract_end_date(
+                                qualification_record_summary
+                            )
+
+                            # add the record
+                            qualifications.append(
+                                {
+                                    "institution": institution,
+                                    "degree": degree,
+                                    "department": department,
+                                    "timestamp_from": start_date,
+                                    "timestamp_to": end_date,
+                                    "additional_info": "",
+                                }
+                            )
+                        except Exception:
+                            continue
+
+            except Exception as e:
+                print("caught exception @ qualifications parsing:")
+                print(e)
+
+            return qualifications
+
+        extracted_educations = __extract_educations(orcid_record)
+        extracted_qualifications = __extract_qualifications(orcid_record)
+
+        # join the two lists since we extract the same information
+        extracted_educations.extend(extracted_qualifications)
+
+        # sort in reverse order based on end times,
+        # since orcid interprets no given end time as "present",
+        # we do the same by putting them in first in the ordering
+        extracted_educations.sort(key=lambda item: item["timestamp_from"], reverse=True)
+
+        return extracted_educations
+
+    def _parse_employments(self, orcid_record: dict) -> List[Dict]:
+        """
+        extract employments from the orcid record and return them in a list of dicts
+        if they exist. Whenever there is some information missing,
+        empty strings are returned instead in the dicts. if no employments
+        are present at all, an empty list is returned.
+        """
+
+        employments = []
+        try:
+            if (
+                orcid_record["activities-summary"]["employments"]["affiliation-group"]
+                != []
+            ):
+                for employment_record in orcid_record["activities-summary"][
+                    "employments"
+                ]["affiliation-group"]:
+                    try:
+                        employment_record_summary = employment_record["summaries"][0][
+                            "employment-summary"
+                        ]
+
+                        # parse the fields
+                        department = (
+                            employment_record_summary["department-name"]
+                            if employment_record_summary["department-name"] != None
+                            else ""
+                        )
+                        position = (
+                            employment_record_summary["role-title"]
+                            if employment_record_summary["role-title"] != None
+                            else ""
+                        )
+                        institution = employment_record_summary["organization"]["name"]
+                        city = employment_record_summary["organization"]["address"][
+                            "city"
+                        ]
+                        country = employment_record_summary["organization"]["address"][
+                            "country"
+                        ]
+                        start_date = self.__extract_start_date(
+                            employment_record_summary
+                        )
+                        end_date = self.__extract_end_date(employment_record_summary)
+
+                        # add the record
+                        employments.append(
+                            {
+                                "position": position,
+                                "institution": institution,
+                                "department": department,
+                                "city": city,
+                                "country": country,
+                                "timestamp_from": start_date,
+                                "timestamp_to": end_date,
+                                "additional_info": "",
+                            }
+                        )
+                    except Exception:
+                        # if something fails, still try to parse the next one
+                        continue
+
+        except Exception as e:
+            print("caught exception @ employments parsing:")
+            print(e)
+
+        # sort in reverse order based on end times,
+        # since orcid interprets no given end time as the "current employment",
+        # we do the same by putting them in first in the ordering
+        employments.sort(key=lambda item: item["timestamp_from"], reverse=True)
+
+        return employments
+
+    def _parse_institutions(self, orcid_record: dict) -> str:
+        """
+        Extract the institution from the orcid record.
+        Since the current institution is not directly represented in the record,
+        we will do an "educated guess" based on the following heuristic:
+        1. if there are employments, take the institution from the first one
+            (since employments are sorted, this is treated as the current employment)
+        2. if there are no employments, take the first appearing institution from
+            the educations (again, most current)
+        3. if there is still no hit, we cannot determine an institution and return
+            an empty string instead
+        """
+
+        employments = self._parse_employments(orcid_record)
+        try:
+            if employments:
+                return employments[0]["institution"]
+            else:
+                educations = self._parse_educations(orcid_record)
+                if educations:
+                    return educations[0]["institution"]
+
+            # no hits, cannnot determine institution
+            return ""
+        except Exception as e:
+            print("caught exception @ institutions parsing:")
+            print(e)
+            return ""
 
 
 class UserHandler(BaseHandler):
