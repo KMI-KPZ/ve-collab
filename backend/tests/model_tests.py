@@ -1004,6 +1004,21 @@ class LectureModelTest(TestCase):
         self.assertEqual(lecture.lecture_format, "test")
         self.assertEqual(lecture.participants_amount, 10)
 
+        # try an empty string and expect None
+        _id = ObjectId()
+        lecture = Lecture(
+            _id=_id,
+            name="test",
+            lecture_type="test",
+            lecture_format="test",
+            participants_amount="",
+        )
+
+        self.assertEqual(lecture._id, _id)
+        self.assertEqual(lecture.lecture_type, "test")
+        self.assertEqual(lecture.lecture_format, "test")
+        self.assertIsNone(lecture.participants_amount)
+
     def test_to_dict(self):
         """
         expect: successful serialization of a minimal Lecture object into
