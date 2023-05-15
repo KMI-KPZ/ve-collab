@@ -14,7 +14,7 @@ interface Lecture {
     name: string;
     lecture_type: string;
     lecture_format: string;
-    participants_amount: number | null;
+    participants_amount: string;
 }
 
 interface FormValues {
@@ -51,7 +51,7 @@ export default function Lectures() {
                     name: '',
                     lecture_type: '',
                     lecture_format: '',
-                    participants_amount: null,
+                    participants_amount: '',
                 },
             ],
         },
@@ -203,17 +203,14 @@ export default function Lectures() {
                             <input
                                 type="number"
                                 {...register(`lectures.${index}.participants_amount`, {
-                                    max: {
-                                        value: 999,
-                                        message:
-                                            'Das Feld darf nicht mehr als 9999 Teilnehmer haben.',
+                                    maxLength: {
+                                        value: 4,
+                                        message: 'Bitte geben sie eine realistische Zahl ein',
                                     },
-                                    min: {
-                                        value: 0,
-                                        message:
-                                            'Das Feld darf nicht mehr als 9999 Teilnehmer haben.',
+                                    pattern: {
+                                        value: /^\d+$/,
+                                        message: 'Bitte nur ganze postive Zahlen',
                                     },
-                                    valueAsNumber: true,
                                 })}
                                 placeholder="Anzahl eingeben"
                                 className="border border-gray-500 rounded-lg w-full h-12 p-2"
@@ -257,7 +254,7 @@ export default function Lectures() {
                                             name: '',
                                             lecture_type: '',
                                             lecture_format: '',
-                                            participants_amount: null,
+                                            participants_amount: '',
                                         });
                                     }}
                                 >
