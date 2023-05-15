@@ -689,7 +689,7 @@ class Institution:
             "school_type": self.school_type,
             "country": self.country,
             "departments": self.departments,
-            "academic_courses": self.academic_courses
+            "academic_courses": self.academic_courses,
         }
 
     @classmethod
@@ -697,7 +697,7 @@ class Institution:
         """
         initialize an `Institution`-object from a dictionary (`params`).
         All of the followings keys have to be present in the dict:
-        `"name"`, `"school_type"`, `"country"`, `"departments"`, 
+        `"name"`, `"school_type"`, `"country"`, `"departments"`,
         `"academic_courses"`.
         However no values are required, any attributes may be
         initialized with None (name/school_type/country) or [] (departments,
@@ -764,12 +764,11 @@ class Institution:
 
 
 class Lecture:
-
     EXPECTED_DICT_ENTRIES = {
         "name": (str, type(None)),
         "lecture_type": (str, type(None)),
         "lecture_format": (str, type(None)),
-        "participants_amount": int,
+        "participants_amount": (int, str, type(None)),
     }
 
     def __init__(
@@ -778,9 +777,8 @@ class Lecture:
         name: str = None,
         lecture_type: str = None,
         lecture_format: str = None,
-        participants_amount: int = 0,
+        participants_amount: int = None,
     ) -> None:
-
         # ensure _id becomes type ObjectId, either using the given value or
         # creating a fresh ID
         self._id = util.parse_object_id(_id) if _id != None else ObjectId()
@@ -788,7 +786,11 @@ class Lecture:
         self.name = name
         self.lecture_type = lecture_type
         self.lecture_format = lecture_format
-        self.participants_amount = participants_amount
+
+        if isinstance(participants_amount, str):
+            self.participants_amount = int(participants_amount)
+        else:
+            self.participants_amount = participants_amount
 
     def __str__(self) -> str:
         return str(self.__dict__)
@@ -812,7 +814,9 @@ class Lecture:
             "name": self.name,
             "lecture_type": self.lecture_type,
             "lecture_format": self.lecture_format,
-            "participants_amount": self.participants_amount,
+            "participants_amount": str(self.participants_amount)
+            if self.participants_amount != None
+            else None,
         }
 
     @classmethod
@@ -822,8 +826,8 @@ class Lecture:
         All of the followings keys have to be present in the dict:
         `"name"`, `"lecture_type"`, `"lecture_format"`, `"participants_amount"`.
         However values are not required, any attributes may be
-        initialized with None (name/lecture_type/lecture_format)
-        or 0 (participants_amount).
+        initialized with None / empty strings (name/lecture_type/lecture_format/
+        participants_amount) or 0 (participants_amount).
 
         Optionally, a `"_id"` may be supplied, conveying the semantics that this Lecture
         already exists. However, true existence is handled by the database itself and
@@ -889,6 +893,12 @@ class Lecture:
             params["_id"] = util.parse_object_id(params["_id"])
         else:
             params["_id"] = ObjectId()
+
+        # handle correct transformation from participants_amount to int or None
+        # e.g. if a string is supplied
+        if "participants_amount" in params:
+            if params["participants_amount"] != None:
+                params["participants_amount"] = int(params["participants_amount"])
 
         # create and return object
         instance = cls()
@@ -1224,7 +1234,9 @@ class VEPlan:
 
         # if present, handle correct type of creation and modified timestamps
         if "creation_timestamp" in params:
-            params["creation_timestamp"] = util.parse_datetime(params["creation_timestamp"])
+            params["creation_timestamp"] = util.parse_datetime(
+                params["creation_timestamp"]
+            )
         if "last_modified" in params:
             params["last_modified"] = util.parse_datetime(params["last_modified"])
 
