@@ -788,7 +788,13 @@ class Lecture:
         self.lecture_format = lecture_format
 
         if isinstance(participants_amount, str):
-            self.participants_amount = int(participants_amount)
+            # since we allow empty string, we have to check for it
+            # because otherwise it would try to cast it to int which
+            # results in a value error
+            if participants_amount == "":
+                self.participants_amount = None
+            else:
+                self.participants_amount = int(participants_amount)
         else:
             self.participants_amount = participants_amount
 
@@ -898,7 +904,10 @@ class Lecture:
         # e.g. if a string is supplied
         if "participants_amount" in params:
             if params["participants_amount"] != None:
-                params["participants_amount"] = int(params["participants_amount"])
+                if params["participants_amount"] == "":
+                    params["participants_amount"] = None
+                else:
+                    params["participants_amount"] = int(params["participants_amount"])
 
         # create and return object
         instance = cls()

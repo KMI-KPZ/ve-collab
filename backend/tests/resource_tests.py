@@ -486,6 +486,12 @@ class PlanResourceTest(BaseResourceTestCase):
         expect: successfully update a plan by supplying one with a _id that already exists
         """
 
+        # we need to delay our execution here just a little bit, because otherwise
+        # the update would happen too fast relative to the setup, which would result
+        # in creation_timestamp and last_modified being equal, despite correctly being
+        # executed after each other
+        time.sleep(0.1)
+
         # use the default plan, but change its name and topic
         existing_plan = VEPlan.from_dict(self.default_plan)
         existing_plan.name = "updated_name"
