@@ -4,126 +4,229 @@ import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarS
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { FormEvent, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
+import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 
 interface Lecture {
     name: string;
     lecture_type: string;
     lecture_format: string;
-    participants_amount?: number;
+    participants_amount: number | null;
+}
+
+interface FormValues {
+    lectures: Lecture[];
 }
 
 export default function Lectures() {
-    const [lectures, setLectures] = useState<Lecture[]>([
-        { name: '', lecture_type: '', lecture_format: '', participants_amount: undefined },
-        { name: '', lecture_type: '', lecture_format: '', participants_amount: undefined },
-    ]);
-
     const { data: session, status } = useSession();
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(false);
     const router = useRouter();
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
-        if (status !== "loading") {
-            if (!session || session?.error === "RefreshAccessTokenError") {
-                console.log("forced new signIn")
-                signIn("keycloak");
+        if (status !== 'loading') {
+            if (!session || session?.error === 'RefreshAccessTokenError') {
+                console.log('forced new signIn');
+                signIn('keycloak');
             }
         }
     }, [session, status]);
 
+    const {
+        register,
+        formState: { errors },
+        handleSubmit,
+        control,
+        watch,
+        setValue,
+    } = useForm<FormValues>({
+        mode: 'onChange',
+        defaultValues: {
+            lectures: [
+                {
+                    name: '',
+                    lecture_type: '',
+                    lecture_format: '',
+                    participants_amount: null,
+                },
+            ],
+        },
+    });
+
     useEffect(() => {
         // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
-        if (!router.isReady || status === "loading") {
-            setLoading(true)
-            return
+        if (!router.isReady || status === 'loading') {
+            setLoading(true);
+            return;
         }
         // router is loaded, but still no plan ID in the query --> redirect to overview because we can't do anything without an ID
         if (!router.query.plannerId) {
             router.push('/overviewProjects');
-            return
+            return;
         }
         // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
         if (session) {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
-                    setLoading(false)
-                    if (data.plan) {
-                        if (data.plan.lectures.length > 0) {
-                            setLectures(data.plan.lectures);
-                        } else {
-                            setLectures([
-                                {
-                                    name: '',
-                                    lecture_type: '',
-                                    lecture_format: '',
-                                    participants_amount: undefined,
-                                },
-                            ]);
-                        }
-                    } else {
-                        setLectures([
-                            {
-                                name: '',
-                                lecture_type: '',
-                                lecture_format: '',
-                                participants_amount: undefined,
-                            },
-                        ]);
+                    setLoading(false);
+                    if (data.plan.lectures.length !== 0) {
+                        setValue('lectures', data.plan.lectures);
                     }
                 }
             );
         }
-    }, [session, status, router]);
+    }, [session, status, router, setValue]);
 
-    const handleSubmit = async () => {
+    const { fields, append, remove } = useFieldArray({
+        name: 'lectures',
+        control,
+    });
+
+    const onSubmit: SubmitHandler<FormValues> = async () => {
         await fetchPOST(
             '/planner/update_field',
-            { plan_id: router.query.plannerId, field_name: 'lectures', value: lectures },
+            {
+                plan_id: router.query.plannerId,
+                field_name: 'lectures',
+                value: watch('lectures'),
+            },
             session?.accessToken
         );
+        await router.push({
+            pathname: '/startingWizard/generalInformation/targetGroups',
+            query: { plannerId: router.query.plannerId },
+        });
     };
 
-    const modifyName = (index: number, value: string) => {
-        let newLectures = [...lectures];
-        newLectures[index].name = value;
-        setLectures(newLectures);
+    const renderLecturesInputs = (): JSX.Element[] => {
+        return fields.map((lecture, index) => (
+            <div key={lecture.id} className="mx-2">
+                <WhiteBox>
+                    <div className="mt-4 flex">
+                        <div className="w-1/4 flex items-center">
+                            <label htmlFor="name" className="px-2 py-2">
+                                Name
+                            </label>
+                        </div>
+                        <div className="w-3/4">
+                            <input
+                                type="text"
+                                {...register(`lectures.${index}.name`, {
+                                    maxLength: {
+                                        value: 50,
+                                        message:
+                                            'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                    },
+                                    pattern: {
+                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
+                                        message:
+                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
+                                    },
+                                })}
+                                placeholder="Name eingeben"
+                                className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                            />
+                            <p className="text-red-600 pt-2">
+                                {errors?.lectures?.[index]?.name?.message}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="mt-4 flex">
+                        <div className="w-1/4 flex items-center">
+                            <label htmlFor="type" className="px-2 py-2">
+                                Typ
+                            </label>
+                        </div>
+                        <div className="w-3/4">
+                            <input
+                                type="text"
+                                {...register(`lectures.${index}.lecture_type`, {
+                                    maxLength: {
+                                        value: 50,
+                                        message:
+                                            'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                    },
+                                    pattern: {
+                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
+                                        message:
+                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
+                                    },
+                                })}
+                                placeholder="z.B. Wahl, Wahlpflicht, Pflicht"
+                                className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                            />
+                            <p className="text-red-600 pt-2">
+                                {errors?.lectures?.[index]?.lecture_type?.message}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="mt-4 flex">
+                        <div className="w-1/4 flex items-center">
+                            <label htmlFor="format" className="px-2 py-2">
+                                Format
+                            </label>
+                        </div>
+                        <div className="w-3/4">
+                            <input
+                                type="text"
+                                {...register(`lectures.${index}.lecture_format`, {
+                                    maxLength: {
+                                        value: 50,
+                                        message:
+                                            'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                    },
+                                    pattern: {
+                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
+                                        message:
+                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
+                                    },
+                                })}
+                                placeholder="z.B. online, hybrid, präsenz"
+                                className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                            />
+                            <p className="text-red-600 pt-2">
+                                {errors?.lectures?.[index]?.lecture_format?.message}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="mt-4 flex">
+                        <div className="w-1/2 flex items-center">
+                            <label htmlFor="participants" className="px-2 py-2">
+                                Teilnehmendenanzahl
+                            </label>
+                        </div>
+                        <div className="w-1/2">
+                            <input
+                                type="number"
+                                {...register(`lectures.${index}.participants_amount`, {
+                                    max: {
+                                        value: 999,
+                                        message:
+                                            'Das Feld darf nicht mehr als 9999 Teilnehmer haben.',
+                                    },
+                                    min: {
+                                        value: 0,
+                                        message:
+                                            'Das Feld darf nicht mehr als 9999 Teilnehmer haben.',
+                                    },
+                                    valueAsNumber: true,
+                                })}
+                                placeholder="Anzahl eingeben"
+                                className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                            />
+                            <p className="text-red-600 pt-2">
+                                {errors?.lectures?.[index]?.participants_amount?.message}
+                            </p>
+                        </div>
+                    </div>
+                </WhiteBox>
+            </div>
+        ));
     };
-    const modifyLectureType = (index: number, value: string) => {
-        let newLectures = [...lectures];
-        newLectures[index].lecture_type = value;
-        setLectures(newLectures);
-    };
-    const modifyLectureFormat = (index: number, value: string) => {
-        let newLectures = [...lectures];
-        newLectures[index].lecture_format = value;
-        setLectures(newLectures);
-    };
-    const modifyParticipantsAmount = (index: number, value: number) => {
-        let newLectures = [...lectures];
-        newLectures[index].participants_amount = value;
-        setLectures(newLectures);
-    };
-
-    const addInstitutionBox = (e: FormEvent) => {
-        e.preventDefault();
-        setLectures([
-            ...lectures,
-            { name: '', lecture_type: '', lecture_format: '', participants_amount: undefined },
-        ]);
-    };
-
-    const removeInstitutionBox = (e: FormEvent) => {
-        e.preventDefault();
-        let copy = [...lectures]; // have to create a deep copy that changes reference, because re-render is triggered by reference, not by values in the array
-        copy.pop();
-        setLectures(copy);
-    };
-
     return (
         <>
             <HeadProgressBarSection stage={0} />
@@ -131,108 +234,35 @@ export default function Lectures() {
                 {loading ? (
                     <LoadingAnimation />
                 ) : (
-                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
+                    <form
+                        onSubmit={handleSubmit(onSubmit)}
+                        className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
+                    >
                         <div>
                             <div className={'text-center font-bold text-4xl mb-2'}>
                                 Beschreibe die teilnehmenden Lehrveranstaltungen
                             </div>
                             <div className={'text-center mb-20'}>optional</div>
                             <div className="flex flex-wrap justify-center">
-                                {lectures.map((lecture, index) => (
-                                    <div key={index} className={'mx-2'}>
-                                        <WhiteBox>
-                                            <div className="mt-4 flex">
-                                                <div className="w-1/4 flex items-center">
-                                                    <label htmlFor="name" className="px-2 py-2">
-                                                        Name
-                                                    </label>
-                                                </div>
-                                                <div className="w-3/4">
-                                                    <input
-                                                        type="text"
-                                                        name="name"
-                                                        value={lecture.name}
-                                                        onChange={(e) =>
-                                                            modifyName(index, e.target.value)
-                                                        }
-                                                        placeholder="Name eingeben"
-                                                        className="border border-gray-500 rounded-lg w-full h-12 p-2"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div className="mt-4 flex">
-                                                <div className="w-1/4 flex items-center">
-                                                    <label htmlFor="type" className="px-2 py-2">
-                                                        Typ
-                                                    </label>
-                                                </div>
-                                                <div className="w-3/4">
-                                                    <input
-                                                        type="text"
-                                                        name="type"
-                                                        value={lecture.lecture_type}
-                                                        onChange={(e) =>
-                                                            modifyLectureType(index, e.target.value)
-                                                        }
-                                                        placeholder="z.B. Wahl, Wahlpflicht, Pflicht"
-                                                        className="border border-gray-500 rounded-lg w-full h-12 p-2"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div className="mt-4 flex">
-                                                <div className="w-1/4 flex items-center">
-                                                    <label htmlFor="format" className="px-2 py-2">
-                                                        Format
-                                                    </label>
-                                                </div>
-                                                <div className="w-3/4">
-                                                    <input
-                                                        type="text"
-                                                        name="format"
-                                                        value={lecture.lecture_format}
-                                                        onChange={(e) =>
-                                                            modifyLectureFormat(index, e.target.value)
-                                                        }
-                                                        placeholder="z.B. online, hybrid, präsenz"
-                                                        className="border border-gray-500 rounded-lg w-full h-12 p-2"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div className="mt-4 flex">
-                                                <div className="w-1/2 flex items-center">
-                                                    <label htmlFor="participants" className="px-2 py-2">
-                                                        Teilnehmendenanzahl
-                                                    </label>
-                                                </div>
-                                                <div className="w-1/2">
-                                                    <input
-                                                        type="number"
-                                                        name="participants"
-                                                        value={lecture.participants_amount}
-                                                        onChange={(e) =>
-                                                            modifyParticipantsAmount(
-                                                                index,
-                                                                Number(e.target.value)
-                                                            )
-                                                        }
-                                                        placeholder="Anzahl eingeben"
-                                                        className="border border-gray-500 rounded-lg w-full h-12 p-2"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </WhiteBox>
-                                    </div>
-                                ))}
+                                {renderLecturesInputs()}
                             </div>
                             <div className={'mx-2 flex justify-end'}>
-                                <button onClick={removeInstitutionBox}>
+                                <button type="button" onClick={() => remove(fields.length - 1)}>
                                     <RxMinus size={20} />
-                                </button>{' '}
-                                {/* todo state + useeffect to create more input fields*/}
-                                <button onClick={addInstitutionBox}>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        append({
+                                            name: '',
+                                            lecture_type: '',
+                                            lecture_format: '',
+                                            participants_amount: null,
+                                        });
+                                    }}
+                                >
                                     <RxPlus size={20} />
-                                </button>{' '}
-                                {/* todo state + useeffect to create more input fields*/}
+                                </button>
                             </div>
                         </div>
                         <div className="flex justify-around w-full">
@@ -252,20 +282,12 @@ export default function Lectures() {
                                 </Link>
                             </div>
                             <div>
-                                <Link
-                                    href={{
-                                        pathname: '/startingWizard/generalInformation/targetGroups',
-                                        query: { plannerId: router.query.plannerId },
-                                    }}
+                                <button
+                                    type="submit"
+                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
                                 >
-                                    <button
-                                        type="submit"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                        onClick={handleSubmit}
-                                    >
-                                        Weiter
-                                    </button>
-                                </Link>
+                                    Weiter
+                                </button>
                             </div>
                         </div>
                     </form>
