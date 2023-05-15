@@ -968,7 +968,7 @@ class LectureModelTest(TestCase):
         self.assertIsInstance(lecture._id, ObjectId)
         self.assertIsNone(lecture.lecture_type)
         self.assertIsNone(lecture.lecture_format)
-        self.assertEqual(lecture.participants_amount, 0)
+        self.assertIsNone(lecture.participants_amount)
 
     def test_init(self):
         """
@@ -982,6 +982,21 @@ class LectureModelTest(TestCase):
             lecture_type="test",
             lecture_format="test",
             participants_amount=10,
+        )
+
+        self.assertEqual(lecture._id, _id)
+        self.assertEqual(lecture.lecture_type, "test")
+        self.assertEqual(lecture.lecture_format, "test")
+        self.assertEqual(lecture.participants_amount, 10)
+
+        # try str as participants amount input and expect int outcome
+        _id = ObjectId()
+        lecture = Lecture(
+            _id=_id,
+            name="test",
+            lecture_type="test",
+            lecture_format="test",
+            participants_amount="10",
         )
 
         self.assertEqual(lecture._id, _id)
@@ -1013,7 +1028,7 @@ class LectureModelTest(TestCase):
         self.assertEqual(lecture["name"], "test")
         self.assertEqual(lecture["lecture_type"], "test")
         self.assertEqual(lecture["lecture_format"], "test")
-        self.assertEqual(lecture["participants_amount"], 10)
+        self.assertEqual(lecture["participants_amount"], "10")
 
     def test_from_dict(self):
         """
@@ -1036,6 +1051,22 @@ class LectureModelTest(TestCase):
         self.assertEqual(lecture.lecture_type, params["lecture_type"])
         self.assertEqual(lecture.lecture_format, params["lecture_format"])
         self.assertEqual(lecture.participants_amount, params["participants_amount"])
+
+        params = {
+            "_id": ObjectId(),
+            "name": "test",
+            "lecture_type": "test",
+            "lecture_format": "test",
+            "participants_amount": "10",
+        }
+
+        lecture = Lecture.from_dict(params)
+
+        self.assertEqual(lecture._id, params["_id"])
+        self.assertEqual(lecture.name, params["name"])
+        self.assertEqual(lecture.lecture_type, params["lecture_type"])
+        self.assertEqual(lecture.lecture_format, params["lecture_format"])
+        self.assertEqual(lecture.participants_amount, 10)
 
         # without _id
         params = {
@@ -1101,7 +1132,7 @@ class LectureModelTest(TestCase):
         self.assertRaises(TypeError, Lecture.from_dict, params)
         params["lecture_format"] = None
 
-        params["participants_amount"] = "123"
+        params["participants_amount"] = list()
         self.assertRaises(TypeError, Lecture.from_dict, params)
         params["participants_amount"] = 10
 
