@@ -1,3 +1,4 @@
+import { Course, ResearchTag } from '@/interfaces/profile/profileInterfaces';
 import Link from 'next/link';
 import { Dispatch, FormEvent, SetStateAction } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
@@ -10,16 +11,6 @@ interface Props {
     setCourses: Dispatch<SetStateAction<Course[]>>;
     updateProfileData(evt: FormEvent): Promise<void>;
     keyCodeDelimiters: number[];
-}
-
-interface ResearchTag {
-    id: string;
-    text: string;
-}
-interface Course {
-    title: string;
-    academic_courses: string;
-    semester: string;
 }
 
 export default function EditResearchAndTeachingInformation({

@@ -10,42 +10,8 @@ import { useEffect, useState } from 'react';
 import { fetchGET } from '@/lib/backend';
 import { useSession, signIn } from 'next-auth/react';
 import { useRouter } from 'next/router';
+import { Course, Education, WorkExperience } from '@/interfaces/profile/profileInterfaces';
 
-interface Props {
-    name: string;
-    institution: string;
-    profilePictureUrl: string;
-    bio: string;
-    department: string;
-    birthday: string;
-    languages: string[];
-}
-
-interface Course {
-    title: string;
-    academic_courses: string;
-    semester: string;
-}
-
-interface Education {
-    institution: string;
-    degree: string;
-    department: string;
-    timestamp_from: string;
-    timestamp_to: string;
-    additional_info: string;
-}
-
-interface WorkExperience {
-    position: string;
-    institution: string;
-    department: string;
-    timestamp_from: string;
-    timestamp_to: string;
-    city: string;
-    country: string;
-    additional_info: string;
-}
 
 export default function Profile() {
     const [name, setName] = useState('');

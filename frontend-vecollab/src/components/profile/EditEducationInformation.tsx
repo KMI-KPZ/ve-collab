@@ -1,3 +1,4 @@
+import { Education } from '@/interfaces/profile/profileInterfaces';
 import Link from 'next/link';
 import { Dispatch, FormEvent, SetStateAction } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
@@ -6,15 +7,6 @@ interface Props {
     educations: Education[];
     setEducations: Dispatch<SetStateAction<Education[]>>;
     updateProfileData(evt: FormEvent): Promise<void>;
-}
-
-interface Education {
-    institution: string;
-    degree: string;
-    department?: string;
-    timestamp_from: string;
-    timestamp_to: string;
-    additional_info?: string;
 }
 
 export default function EditEducationInformation({

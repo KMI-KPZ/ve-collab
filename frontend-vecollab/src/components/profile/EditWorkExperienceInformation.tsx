@@ -1,3 +1,4 @@
+import { WorkExperience } from '@/interfaces/profile/profileInterfaces';
 import Link from 'next/link';
 import { Dispatch, FormEvent, SetStateAction } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
@@ -6,17 +7,6 @@ interface Props {
     workExperience: WorkExperience[];
     setWorkExperience: Dispatch<SetStateAction<WorkExperience[]>>;
     updateProfileData(evt: FormEvent): Promise<void>;
-}
-
-interface WorkExperience {
-    position: string;
-    institution: string;
-    department?: string;
-    timestamp_from?: string;
-    timestamp_to?: string;
-    city?: string;
-    country?: string;
-    additional_info?: string;
 }
 
 export default function EditWorkExperienceInformation({

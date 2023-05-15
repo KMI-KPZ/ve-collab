@@ -174,6 +174,9 @@ export const authOptions = {
     ],
     callbacks: {
         async jwt({ token, user, account }: JWTProps): Promise<JWT> {
+            console.log(token);
+            console.log(user);
+            console.log(account);
             if (account && user) {
                 // Add access_token, refresh_token and expirations to the token right after signin
                 token.accessToken = account.access_token;

@@ -1,3 +1,4 @@
+import { Education, WorkExperience } from '@/interfaces/profile/profileInterfaces';
 import BoxContentHeadline from './BoxContentHeadline';
 import CVEducationItem from './CVEducationItem';
 import { CVWorkItem } from './CVWorkItem';
@@ -5,26 +6,6 @@ import { CVWorkItem } from './CVWorkItem';
 interface Props {
     educations: Education[];
     workExperience: WorkExperience[];
-}
-
-interface Education {
-    institution: string;
-    degree: string;
-    department: string;
-    timestamp_from: string;
-    timestamp_to: string;
-    additional_info: string;
-}
-
-interface WorkExperience {
-    position: string;
-    institution: string;
-    department: string;
-    timestamp_from: string;
-    timestamp_to: string;
-    city: string;
-    country: string;
-    additional_info: string;
 }
 
 export default function CVInformation({ educations, workExperience }: Props) {
@@ -55,12 +36,12 @@ export default function CVInformation({ educations, workExperience }: Props) {
                             key={index}
                             position={workExp.position}
                             institution={workExp.institution}
-                            timeStampFrom={workExp.timestamp_from}
-                            timeStampTo={workExp.timestamp_to}
-                            duration={'6000 Monate'}
+                            timestamp_from={workExp.timestamp_from}
+                            timestamp_to={workExp.timestamp_to}
                             city={workExp.city}
                             country={workExp.country}
-                            additionalInformation={workExp.additional_info}
+                            additional_info={workExp.additional_info}
+                            department={''}
                         />
                     ))}
                 </ul>

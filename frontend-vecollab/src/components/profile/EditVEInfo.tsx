@@ -1,100 +1,88 @@
+import { VEInformation } from '@/interfaces/profile/profileInterfaces';
 import Link from 'next/link';
 import { Dispatch, FormEvent, SetStateAction } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 
 interface Props {
-    veInterests: string[];
-    setVeInterests: Dispatch<SetStateAction<string[]>>;
-    veGoals: string[];
-    setVeGoals: Dispatch<SetStateAction<string[]>>;
-    experience: string[];
-    setExperience: Dispatch<SetStateAction<string[]>>;
-    preferredFormats: string[];
-    setPreferredFormats: Dispatch<SetStateAction<string[]>>;
+    veInformation: VEInformation;
+    setVeInformation: Dispatch<SetStateAction<VEInformation>>;
     updateProfileData(evt: FormEvent): Promise<void>;
 }
 
-export default function EditVEInfo({
-    veInterests,
-    setVeInterests,
-    veGoals,
-    setVeGoals,
-    experience,
-    setExperience,
-    preferredFormats,
-    setPreferredFormats,
-    updateProfileData,
-}: Props) {
+export default function EditVEInfo({ veInformation, setVeInformation, updateProfileData }: Props) {
     const modifyVeInterests = (index: number, value: string) => {
-        let newInterests = [...veInterests];
+        let newInterests = [...veInformation.veInterests];
         newInterests[index] = value;
-        setVeInterests(newInterests);
+        setVeInformation({ ...veInformation, veInterests: newInterests });
     };
 
     const addVeInterestInputField = (e: FormEvent) => {
         e.preventDefault();
-        setVeInterests([...veInterests, '']);
+        setVeInformation({ ...veInformation, veInterests: [...veInformation.veInterests, ''] });
     };
 
     const removeVeInterestInputField = (e: FormEvent) => {
         e.preventDefault();
-        let copy = [...veInterests]; // have to create a deep copy that changes reference, because re-render is triggered by reference, not by values in the array
+        let copy = [...veInformation.veInterests]; // have to create a deep copy that changes reference, because re-render is triggered by reference, not by values in the array
         copy.pop();
-        setVeInterests(copy);
+        setVeInformation({ ...veInformation, veInterests: copy });
     };
 
     const modifyVeGoals = (index: number, value: string) => {
-        let newGoals = [...veGoals];
+        let newGoals = [...veInformation.veGoals];
         newGoals[index] = value;
-        setVeGoals(newGoals);
+        setVeInformation({ ...veInformation, veGoals: newGoals });
     };
 
     const addVeGoalsInputField = (e: FormEvent) => {
         e.preventDefault();
-        setVeGoals([...veGoals, '']);
+        setVeInformation({ ...veInformation, veGoals: [...veInformation.veGoals, ''] });
     };
 
     const removeVeGoalsInputField = (e: FormEvent) => {
         e.preventDefault();
-        let copy = [...veGoals]; // have to create a deep copy that changes reference, because re-render is triggered by reference, not by values in the array
+        let copy = [...veInformation.veGoals]; // have to create a deep copy that changes reference, because re-render is triggered by reference, not by values in the array
         copy.pop();
-        setVeGoals(copy);
+        setVeInformation({ ...veInformation, veGoals: copy });
     };
 
     const modifyExperience = (index: number, value: string) => {
-        let newExperience = [...experience];
+        let newExperience = [...veInformation.experience];
         newExperience[index] = value;
-        setExperience(newExperience);
+        setVeInformation({ ...veInformation, experience: newExperience });
     };
 
     const addExperienceInputField = (e: FormEvent) => {
         e.preventDefault();
-        setExperience([...experience, '']);
+        setVeInformation({ ...veInformation, experience: [...veInformation.experience, ''] });
     };
 
     const removeExperienceInputField = (e: FormEvent) => {
         e.preventDefault();
-        let copy = [...experience]; // have to create a deep copy that changes reference, because re-render is triggered by reference, not by values in the array
+        let copy = [...veInformation.experience]; // have to create a deep copy that changes reference, because re-render is triggered by reference, not by values in the array
         copy.pop();
-        setExperience(copy);
+        setVeInformation({ ...veInformation, experience: copy });
     };
 
     const modifyPreferredFormats = (index: number, value: string) => {
-        let newFormats = [...preferredFormats];
+        let newFormats = [...veInformation.preferredFormats];
         newFormats[index] = value;
-        setPreferredFormats(newFormats);
+        setVeInformation({ ...veInformation, preferredFormats: newFormats });
     };
 
     const addPreferredFormatsInputField = (e: FormEvent) => {
         e.preventDefault();
-        setPreferredFormats([...preferredFormats, '']);
+        setVeInformation({
+            ...veInformation,
+            preferredFormats: [...veInformation.preferredFormats, ''],
+        });
     };
 
     const removePreferredFormatsInputField = (e: FormEvent) => {
         e.preventDefault();
-        let copy = [...preferredFormats]; // have to create a deep copy that changes reference, because re-render is triggered by reference, not by values in the array
+        let copy = [...veInformation.preferredFormats]; // have to create a deep copy that changes reference, because re-render is triggered by reference, not by values in the array
         copy.pop();
-        setPreferredFormats(copy);
+        setVeInformation({...veInformation, preferredFormats: copy})
     };
     return (
         <form onSubmit={updateProfileData}>
@@ -113,7 +101,7 @@ export default function EditVEInfo({
             </div>
             <div className={'my-5'}>
                 <div className={'mb-1 font-bold text-slate-900 text-lg'}>VE-Themeninteressen</div>
-                {veInterests.map((interest, index) => (
+                {veInformation.veInterests.map((interest, index) => (
                     <input
                         key={index}
                         className={'border border-gray-500 rounded-lg px-2 py-1 mb-1 w-full'}
@@ -134,7 +122,7 @@ export default function EditVEInfo({
             </div>
             <div className={'my-5'}>
                 <div className={'mb-1 font-bold text-slate-900 text-lg'}>VE-Zielsetzungen</div>
-                {veGoals.map((goal, index) => (
+                {veInformation.veGoals.map((goal, index) => (
                     <input
                         key={index}
                         className={'border border-gray-500 rounded-lg px-2 py-1 mb-1 w-full'}
@@ -155,7 +143,7 @@ export default function EditVEInfo({
             </div>
             <div className={'my-5'}>
                 <div className={'mb-1 font-bold text-slate-900 text-lg'}>Erfahrungen</div>
-                {experience.map((exp, index) => (
+                {veInformation.experience.map((exp, index) => (
                     <input
                         key={index}
                         className={'border border-gray-500 rounded-lg px-2 py-1 mb-1 w-full'}
@@ -176,7 +164,7 @@ export default function EditVEInfo({
             </div>
             <div className={'my-5'}>
                 <div className={'mb-1 font-bold text-slate-900 text-lg'}>präferierte Formate</div>
-                {preferredFormats.map((format, index) => (
+                {veInformation.preferredFormats.map((format, index) => (
                     <input
                         key={index}
                         className={'border border-gray-500 rounded-lg px-2 py-1 mb-1 w-full'}

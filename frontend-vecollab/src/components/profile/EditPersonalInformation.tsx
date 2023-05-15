@@ -2,59 +2,37 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Dispatch, FormEvent, SetStateAction } from 'react';
 import { WithContext as ReactTags } from 'react-tag-input';
+import { PersonalInformation } from '@/interfaces/profile/profileInterfaces';
 
 interface Props {
-    firstName: string;
-    setFirstName: Dispatch<SetStateAction<string>>;
-    lastName: string;
-    setLastName: Dispatch<SetStateAction<string>>;
-    institution: string;
-    setInstitution: Dispatch<SetStateAction<string>>;
-    bio: string;
-    setBio: Dispatch<SetStateAction<string>>;
-    expertise: string;
-    setExpertise: Dispatch<SetStateAction<string>>;
-    birthday: string;
-    setBirthday: Dispatch<SetStateAction<string>>;
-    languageTags: LanguageTag[];
-    setLanguageTags: Dispatch<SetStateAction<LanguageTag[]>>;
+    personalInformation: PersonalInformation;
+    setPersonalInformation: Dispatch<SetStateAction<PersonalInformation>>;
     updateProfileData(evt: FormEvent): Promise<void>;
     keyCodeDelimiters: number[];
     orcid: string | null | undefined;
     importOrcidProfile(evt: FormEvent): Promise<void>;
 }
 
-interface LanguageTag {
-    id: string;
-    text: string;
-}
-
 export default function EditPersonalInformation({
-    firstName,
-    setFirstName,
-    lastName,
-    setLastName,
-    institution,
-    setInstitution,
-    bio,
-    setBio,
-    expertise,
-    setExpertise,
-    birthday,
-    setBirthday,
-    languageTags,
-    setLanguageTags,
+    personalInformation,
+    setPersonalInformation,
     updateProfileData,
     keyCodeDelimiters,
     orcid,
     importOrcidProfile,
 }: Props) {
     const handleDeleteLanguage = (i: number) => {
-        setLanguageTags(languageTags.filter((tag, index) => index !== i));
+        setPersonalInformation({
+            ...personalInformation,
+            languageTags: personalInformation.languageTags.filter((tag, index) => index !== i),
+        });
     };
 
     const handleAdditionLanguage = (tag: { id: string; text: string }) => {
-        setLanguageTags([...languageTags, tag]);
+        setPersonalInformation({
+            ...personalInformation,
+            languageTags: [...personalInformation.languageTags, tag],
+        });
     };
 
     const handleDragLanguage = (
@@ -62,13 +40,16 @@ export default function EditPersonalInformation({
         currPos: number,
         newPos: number
     ) => {
-        const newTags = languageTags.slice();
+        const newTags = personalInformation.languageTags.slice();
 
         newTags.splice(currPos, 1);
         newTags.splice(newPos, 0, tag);
 
         // re-render
-        setLanguageTags(newTags);
+        setPersonalInformation({
+            ...personalInformation,
+            languageTags: newTags,
+        });
     };
 
     const handleTagClickLanguage = (index: number) => {
@@ -119,15 +100,15 @@ export default function EditPersonalInformation({
                         className={'border border-gray-500 rounded-lg px-2 py-1'}
                         type="text"
                         placeholder={'Vorname'}
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
+                        value={personalInformation.firstName}
+                        onChange={(e) => setPersonalInformation({...personalInformation, firstName: e.target.value})}
                     />
                     <input
                         className={'border border-gray-500 rounded-lg px-2 py-1'}
                         type="text"
                         placeholder={'Nachname'}
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
+                        value={personalInformation.lastName}
+                        onChange={(e) => setPersonalInformation({...personalInformation, lastName: e.target.value})}
                     />
                 </div>
             </div>
@@ -137,8 +118,8 @@ export default function EditPersonalInformation({
                     className={'border border-gray-500 rounded-lg px-2 py-1 w-1/2'}
                     type="text"
                     placeholder={'Name deiner aktuellen Institution'}
-                    value={institution}
-                    onChange={(e) => setInstitution(e.target.value)}
+                    value={personalInformation.institution}
+                    onChange={(e) => setPersonalInformation({...personalInformation, institution: e.target.value})}
                 />
             </div>
             <div className={'my-5'}>
@@ -147,8 +128,8 @@ export default function EditPersonalInformation({
                     className={'w-full border border-gray-500 rounded-lg px-2 py-1'}
                     rows={5}
                     placeholder={'Erzähle kurz etwas über dich'}
-                    value={bio}
-                    onChange={(e) => setBio(e.target.value)}
+                    value={personalInformation.bio}
+                    onChange={(e) => setPersonalInformation({...personalInformation, bio: e.target.value})}
                 ></textarea>
             </div>
             <div className={'my-5'}>
@@ -157,8 +138,8 @@ export default function EditPersonalInformation({
                     className={'border border-gray-500 rounded-lg px-2 py-1 w-1/2'}
                     type="text"
                     placeholder={'Worin liegt deine Expertise?'}
-                    value={expertise}
-                    onChange={(e) => setExpertise(e.target.value)}
+                    value={personalInformation.expertise}
+                    onChange={(e) => setPersonalInformation({...personalInformation, expertise: e.target.value})}
                 />
             </div>
             <div className={'my-5'}>
@@ -166,14 +147,14 @@ export default function EditPersonalInformation({
                 <input
                     className={'border border-gray-500 rounded-lg px-2 py-1'}
                     type="date"
-                    value={birthday}
-                    onChange={(e) => setBirthday(e.target.value)}
+                    value={personalInformation.birthday}
+                    onChange={(e) => setPersonalInformation({...personalInformation, birthday: e.target.value})}
                 />
             </div>
             <div className={'my-5'}>
                 <div className={'mb-1 font-bold text-slate-900 text-lg'}>Sprachen</div>
                 <ReactTags
-                    tags={languageTags}
+                    tags={personalInformation.languageTags}
                     delimiters={keyCodeDelimiters}
                     handleDelete={handleDeleteLanguage}
                     handleAddition={handleAdditionLanguage}

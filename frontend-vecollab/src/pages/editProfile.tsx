@@ -10,45 +10,30 @@ import EditPersonalInformation from '@/components/profile/EditPersonalInformatio
 import EditResearchAndTeachingInformation from '@/components/profile/EditResearchAndTeachingInformation';
 import EditEducationInformation from '@/components/profile/EditEducationInformation';
 import EditWorkExperienceInformation from '@/components/profile/EditWorkExperienceInformation';
-
-interface Course {
-    title: string;
-    academic_courses: string;
-    semester: string;
-}
-
-interface Education {
-    institution: string;
-    degree: string;
-    department?: string;
-    timestamp_from: string;
-    timestamp_to: string;
-    additional_info?: string;
-}
-
-interface WorkExperience {
-    position: string;
-    institution: string;
-    department?: string;
-    timestamp_from?: string;
-    timestamp_to?: string;
-    city?: string;
-    country?: string;
-    additional_info?: string;
-}
+import {
+    Course,
+    Education,
+    PersonalInformation,
+    VEInformation,
+    WorkExperience,
+} from '@/interfaces/profile/profileInterfaces';
 
 export default function EditProfile() {
-    const [firstName, setFirstName] = useState<string>('');
-    const [lastName, setLastName] = useState<string>('');
-    const [institution, setInstitution] = useState<string>('');
-    const [bio, setBio] = useState('');
-    const [expertise, setExpertise] = useState('');
-    const [birthday, setBirthday] = useState('');
-    const [languageTags, setLanguageTags] = useState([{ id: '', text: '' }]);
-    const [veInterests, setVeInterests] = useState(['', '']);
-    const [veGoals, setVeGoals] = useState(['']);
-    const [experience, setExperience] = useState(['']);
-    const [preferredFormats, setPreferredFormats] = useState(['']);
+    const [personalInformation, setPersonalInformation] = useState<PersonalInformation>({
+        firstName: '',
+        lastName: '',
+        institution: '',
+        bio: '',
+        expertise: '',
+        birthday: '',
+        languageTags: [],
+    });
+    const [veInformation, setVeInformation] = useState<VEInformation>({
+        veInterests: [''],
+        veGoals: [''],
+        experience: [''],
+        preferredFormats: [''],
+    });
     const [researchTags, setResearchTags] = useState([{ id: '', text: '' }]);
     const [courses, setCourses] = useState<Course[]>([
         { title: '', academic_courses: '', semester: '' },
@@ -103,22 +88,24 @@ export default function EditProfile() {
                 setLoading(false);
                 if (data) {
                     console.log(data);
-                    setFirstName(data.profile.first_name);
-                    setLastName(data.profile.last_name);
-                    setInstitution(data.profile.institution);
-                    setBio(data.profile.bio);
-                    setExpertise(data.profile.expertise);
-                    setBirthday(data.profile.birthday);
-                    setLanguageTags(
-                        data.profile.languages.map((language: string) => ({
+                    setPersonalInformation({
+                        firstName: data.profile.first_name,
+                        lastName: data.profile.last_name,
+                        institution: data.profile.institution,
+                        bio: data.profile.bio,
+                        expertise: data.profile.expertise,
+                        birthday: data.profile.birthday,
+                        languageTags: data.profile.languages.map((language: string) => ({
                             id: language,
                             text: language,
-                        }))
-                    );
-                    setVeInterests(data.profile.ve_interests);
-                    setVeGoals(data.profile.ve_goals);
-                    setExperience(data.profile.experience);
-                    setPreferredFormats(data.profile.preferred_formats);
+                        })),
+                    });
+                    setVeInformation({
+                        veInterests: data.profile.ve_interests,
+                        veGoals: data.profile.ve_goals,
+                        experience: data.profile.experience,
+                        preferredFormats: data.profile.preferred_formats
+                    })
                     setResearchTags(
                         data.profile.research_tags.map((tag: string) => ({
                             id: tag,
@@ -148,17 +135,17 @@ export default function EditProfile() {
         await fetchPOST(
             '/profileinformation',
             {
-                first_name: firstName,
-                last_name: lastName,
-                institution: institution,
-                bio: bio,
-                expertise: expertise,
-                birthday: birthday,
-                languages: languageTags.map((elem) => elem.text),
-                ve_interests: veInterests,
-                ve_goals: veGoals,
-                experience: experience,
-                preferred_formats: preferredFormats,
+                first_name: personalInformation.firstName,
+                last_name: personalInformation.lastName,
+                institution: personalInformation.institution,
+                bio: personalInformation.bio,
+                expertise: personalInformation.expertise,
+                birthday: personalInformation.birthday,
+                languages: personalInformation.languageTags.map((elem) => elem.text),
+                ve_interests: veInformation.veInterests,
+                ve_goals: veInformation.veGoals,
+                experience: veInformation.experience,
+                preferred_formats: veInformation.preferredFormats,
                 research_tags: researchTags.map((elem) => elem.text),
                 courses: courses,
                 educations: educations,
@@ -176,16 +163,21 @@ export default function EditProfile() {
         await fetchGET('/orcid', session?.accessToken).then((data) => {
             let profile = data.suggested_profile;
             console.log(profile);
-            setBio(profile.bio);
-            setInstitution(profile.institution);
+            setPersonalInformation({
+                firstName: profile.first_name,
+                lastName: profile.last_name,
+                bio: profile.bio,
+                institution: profile.institution,
+                expertise: personalInformation.expertise,
+                birthday: personalInformation.birthday,
+                languageTags: personalInformation.languageTags,
+            });
             setResearchTags(
                 profile.research_tags.map((tag: string) => ({
                     id: tag,
                     text: tag,
                 }))
             );
-            setFirstName(profile.first_name);
-            setLastName(profile.last_name);
             setEducations(profile.educations);
             setWorkExperience(profile.work_experience);
         });
@@ -201,20 +193,8 @@ export default function EditProfile() {
                         <VerticalTabs>
                             <div tabname="Stammdaten">
                                 <EditPersonalInformation
-                                    firstName={firstName}
-                                    setFirstName={setFirstName}
-                                    lastName={lastName}
-                                    setLastName={setLastName}
-                                    institution={institution}
-                                    setInstitution={setInstitution}
-                                    bio={bio}
-                                    setBio={setBio}
-                                    expertise={expertise}
-                                    setExpertise={setExpertise}
-                                    birthday={birthday}
-                                    setBirthday={setBirthday}
-                                    languageTags={languageTags}
-                                    setLanguageTags={setLanguageTags}
+                                    personalInformation={personalInformation}
+                                    setPersonalInformation={setPersonalInformation}
                                     updateProfileData={updateProfileData}
                                     keyCodeDelimiters={delimiters}
                                     orcid={session?.user.orcid}
@@ -223,14 +203,8 @@ export default function EditProfile() {
                             </div>
                             <div tabname="VE-Info">
                                 <EditVEInfo
-                                    veInterests={veInterests}
-                                    setVeInterests={setVeInterests}
-                                    veGoals={veGoals}
-                                    setVeGoals={setVeGoals}
-                                    experience={experience}
-                                    setExperience={setExperience}
-                                    preferredFormats={preferredFormats}
-                                    setPreferredFormats={setPreferredFormats}
+                                    veInformation={veInformation}
+                                    setVeInformation={setVeInformation}
                                     updateProfileData={updateProfileData}
                                 />
                             </div>

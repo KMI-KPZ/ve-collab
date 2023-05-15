@@ -1,9 +1,9 @@
-import { RxDotFilled } from 'react-icons/rx';
 import Tabs from './Tabs';
 import { AriaAttributes, DOMAttributes } from 'react';
 import VEInformation from './VEInformation';
 import TeachingAndResearchInformation from './TeachingAndResearchInformation';
 import CVInformation from './CVInformation';
+import { Course, Education, WorkExperience } from '@/interfaces/profile/profileInterfaces';
 
 // have to declare "tabname" as a valid attribute for div tags, otherwise typescript is bothered
 declare module 'react' {
@@ -28,31 +28,6 @@ interface Props {
         educations: Education[];
         workExperience: WorkExperience[];
     };
-}
-
-interface Course {
-    title: string;
-    academic_courses: string;
-    semester: string;
-}
-
-interface Education {
-    institution: string;
-    degree: string;
-    department: string;
-    timestamp_from: string;
-    timestamp_to: string;
-    additional_info: string;
-}
-interface WorkExperience {
-    position: string;
-    institution: string;
-    department: string;
-    timestamp_from: string;
-    timestamp_to: string;
-    city: string;
-    country: string;
-    additional_info: string;
 }
 
 export default function ExtendedPersonalInformation({

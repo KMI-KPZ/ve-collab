@@ -1,26 +1,15 @@
+import { WorkExperience } from '@/interfaces/profile/profileInterfaces';
 import { RxDotFilled } from 'react-icons/rx';
-
-interface Props {
-    position: string;
-    institution: string;
-    timeStampFrom: string;
-    timeStampTo: string;
-    duration: string;
-    city: string;
-    country: string;
-    additionalInformation?: string;
-}
 
 export function CVWorkItem({
     position,
     institution,
-    timeStampFrom,
-    timeStampTo,
-    duration,
+    timestamp_from,
+    timestamp_to,
     city,
     country,
-    additionalInformation,
-}: Props) {
+    additional_info,
+}: WorkExperience) {
     return (
         <li className={'py-3'}>
             <div className={'font-bold'}>{position}</div>
@@ -28,12 +17,12 @@ export function CVWorkItem({
                 <div>{institution}</div>
             </div>
             <div className={'flex items-center text-sm text-gray-600'}>
-                <div>{`${timeStampFrom} - ${timeStampTo === "" ? "heute" : timeStampTo}`}</div>
+                <div>{`${timestamp_from} - ${timestamp_to === "" ? "heute" : timestamp_to}`}</div>
                 <RxDotFilled />
-                <div>{duration}</div>
+                <div>{"6000 Monate"}</div> {/* TODO compute as soon as inputs are true iso timestamps*/}
             </div>
             <div className={'text-sm text-gray-600'}>{city}, {country}</div>
-            <div className={'mt-1'}>{additionalInformation}</div>
+            <div className={'mt-1'}>{additional_info}</div>
         </li>
     );
 }
