@@ -11,7 +11,7 @@ interface Props {
     languages: string[];
 }
 
-export default function PersonalInformation({ bio, name, expertise, birthday, languages }: Props) {
+export default function PersonalData({ bio, name, expertise, birthday, languages }: Props) {
     return (
         <>
             <BoxHeadline title={'Bio'} />

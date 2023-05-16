@@ -1,5 +1,5 @@
 import Container from '@/components/Layout/container';
-import PersonalInformation from '@/components/profile/personal-information';
+import PersonalData from '@/components/profile/PersonalData';
 import ProfileBanner from '@/components/profile/profile-banner';
 import ProfileHeader from '@/components/profile/profile-header';
 import WhiteBox from '@/components/Layout/WhiteBox';
@@ -10,21 +10,31 @@ import { useEffect, useState } from 'react';
 import { fetchGET } from '@/lib/backend';
 import { useSession, signIn } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { Course, Education, WorkExperience } from '@/interfaces/profile/profileInterfaces';
-
+import {
+    Course,
+    Education,
+    WorkExperience,
+    PersonalInformation,
+    VEInformation,
+} from '@/interfaces/profile/profileInterfaces';
 
 export default function Profile() {
-    const [name, setName] = useState('');
-    const [institution, setInstitution] = useState('');
+    const [personalInformation, setPersonalInformation] = useState<PersonalInformation>({
+        firstName: '',
+        lastName: '',
+        institution: '',
+        bio: '',
+        expertise: '',
+        birthday: '',
+        languageTags: [],
+    });
     const [profilePictureUrl, setProfilePicUrl] = useState('/images/random_user.jpg');
-    const [bio, setBio] = useState('');
-    const [expertise, setExpertise] = useState('');
-    const [birthday, setBirthday] = useState('');
-    const [languages, setLanguages] = useState(['']);
-    const [veInterests, setVeInterests] = useState(['', '']);
-    const [veGoals, setVeGoals] = useState(['']);
-    const [experience, setExperience] = useState(['']);
-    const [preferredFormats, setPreferredFormats] = useState(['']);
+    const [veInformation, setVeInformation] = useState<VEInformation>({
+        veInterests: [''],
+        veGoals: [''],
+        experience: [''],
+        preferredFormats: [''],
+    });
     const [researchTags, setResearchTags] = useState(['']);
     const [courses, setCourses] = useState<Course[]>([
         { title: '', academic_courses: '', semester: '' },
@@ -91,17 +101,26 @@ export default function Profile() {
                     }
                     console.log(data);
 
-                    setName(data.profile.first_name + ' ' + data.profile.last_name);
+                    setPersonalInformation({
+                        firstName: data.profile.first_name,
+                        lastName: data.profile.last_name,
+                        institution: data.profile.institution,
+                        bio: data.profile.bio,
+                        expertise: data.profile.expertise,
+                        birthday: data.profile.birthday,
+                        languageTags: data.profile.languages.map((language: string) => ({
+                            id: language,
+                            text: language,
+                        })),
+                    });
                     setProfilePicUrl('/images/random_user.jpg');
-                    setInstitution(data.profile.institution);
-                    setBio(data.profile.bio);
-                    setExpertise(data.profile.expertise);
-                    setBirthday(data.profile.birthday);
-                    setLanguages(data.profile.languages);
-                    setVeInterests(data.profile.ve_interests);
-                    setVeGoals(data.profile.ve_goals);
-                    setExperience(data.profile.experience);
-                    setPreferredFormats(data.profile.preferred_formats);
+                    setVeInformation({
+                        veInterests: data.profile.ve_interests,
+                        veGoals: data.profile.ve_goals,
+                        experience: data.profile.experience,
+                        preferredFormats: data.profile.preferred_formats,
+                    });
+
                     setResearchTags(data.profile.research_tags);
                     setCourses(data.profile.courses);
                     setEducations(data.profile.educations);
@@ -119,8 +138,8 @@ export default function Profile() {
                 <ProfileBanner followsNum={2500} followersNum={3500} />
                 <div className={'mx-20 mb-2 px-5 relative -mt-16 z-10'}>
                     <ProfileHeader
-                        name={name}
-                        institution={institution}
+                        name={personalInformation.firstName + personalInformation.lastName}
+                        institution={personalInformation.institution}
                         profilePictureUrl={profilePictureUrl}
                     />
                 </div>
@@ -129,7 +148,7 @@ export default function Profile() {
                         <div className={'w-3/4  mr-4'}>
                             <WhiteBox>
                                 <ExtendedPersonalInformation
-                                    veInfo={{ veInterests, veGoals, experience, preferredFormats }}
+                                    veInfo={veInformation}
                                     researchAndTeachingInfo={{
                                         researchInterests: researchTags,
                                         courses,
@@ -147,12 +166,12 @@ export default function Profile() {
                         </div>
                         <div className={'w-1/4  ml-4'}>
                             <WhiteBox>
-                                <PersonalInformation
-                                    name={name}
-                                    bio={bio}
-                                    expertise={expertise}
-                                    birthday={birthday}
-                                    languages={languages}
+                                <PersonalData
+                                    name={personalInformation.firstName + personalInformation.lastName}
+                                    bio={personalInformation.bio}
+                                    expertise={personalInformation.expertise}
+                                    birthday={personalInformation.birthday}
+                                    languages={personalInformation.languageTags.map((tag) => tag.text)}
                                 />
                             </WhiteBox>
                             <WhiteBox>
