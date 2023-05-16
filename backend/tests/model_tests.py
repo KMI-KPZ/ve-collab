@@ -554,12 +554,12 @@ class TargetGroupModelTest(TestCase):
 
         target_group = TargetGroup()
         self.assertEqual(target_group.name, None)
-        self.assertEqual(target_group.age_min, 0)
-        self.assertEqual(target_group.age_max, 99)
+        self.assertEqual(target_group.age_min, None)
+        self.assertEqual(target_group.age_max, None)
         self.assertEqual(target_group.experience, None)
         self.assertEqual(target_group.academic_course, None)
         self.assertEqual(target_group.mother_tongue, None)
-        self.assertEqual(target_group.foreign_languages, {})
+        self.assertEqual(target_group.foreign_languages, None)
         self.assertIsInstance(target_group._id, ObjectId)
 
     def test_init(self):
@@ -586,6 +586,48 @@ class TargetGroupModelTest(TestCase):
         self.assertEqual(target_group.academic_course, "test")
         self.assertEqual(target_group.mother_tongue, "test")
         self.assertEqual(target_group.foreign_languages, {"test": "l1"})
+        self.assertEqual(target_group._id, _id)
+
+        _id = ObjectId()
+        target_group = TargetGroup(
+            _id=_id,
+            name="test",
+            age_min="30",
+            age_max="40",
+            experience="test",
+            academic_course="test",
+            mother_tongue="test",
+            foreign_languages={"test": "l1"},
+        )
+
+        self.assertEqual(target_group.name, "test")
+        self.assertEqual(target_group.age_min, 30)
+        self.assertEqual(target_group.age_max, 40)
+        self.assertEqual(target_group.experience, "test")
+        self.assertEqual(target_group.academic_course, "test")
+        self.assertEqual(target_group.mother_tongue, "test")
+        self.assertEqual(target_group.foreign_languages, {"test": "l1"})
+        self.assertEqual(target_group._id, _id)
+
+        _id = ObjectId()
+        target_group = TargetGroup(
+            _id=_id,
+            name="test",
+            age_min=30,
+            age_max=40,
+            experience="test",
+            academic_course="test",
+            mother_tongue="test",
+            foreign_languages="test: c1",
+        )
+
+        self.assertEqual(target_group.name, "test")
+        self.assertEqual(target_group.age_min, 30)
+        self.assertEqual(target_group.age_max, 40)
+        self.assertEqual(target_group.experience, "test")
+        self.assertEqual(target_group.academic_course, "test")
+        self.assertEqual(target_group.mother_tongue, "test")
+        self.assertEqual(target_group.foreign_languages, "test: c1")
         self.assertEqual(target_group._id, _id)
 
         # test again without supplying a _id
@@ -628,12 +670,33 @@ class TargetGroupModelTest(TestCase):
         self.assertIn("foreign_languages", target_group_dict)
         self.assertIsInstance(target_group_dict["_id"], ObjectId)
         self.assertEqual(target_group_dict["name"], None)
-        self.assertEqual(target_group_dict["age_min"], 0)
-        self.assertEqual(target_group_dict["age_max"], 99)
+        self.assertEqual(target_group_dict["age_min"], None)
+        self.assertEqual(target_group_dict["age_max"], None)
         self.assertEqual(target_group_dict["experience"], None)
         self.assertEqual(target_group_dict["academic_course"], None)
         self.assertEqual(target_group_dict["mother_tongue"], None)
-        self.assertEqual(target_group_dict["foreign_languages"], {})
+        self.assertEqual(target_group_dict["foreign_languages"], None)
+
+        target_group = TargetGroup(age_min=10, age_max=20, foreign_languages="test: c1")
+        target_group_dict = target_group.to_dict()
+
+        self.assertIsInstance(target_group_dict, dict)
+        self.assertIn("_id", target_group_dict)
+        self.assertIn("name", target_group_dict)
+        self.assertIn("age_min", target_group_dict)
+        self.assertIn("age_max", target_group_dict)
+        self.assertIn("experience", target_group_dict)
+        self.assertIn("academic_course", target_group_dict)
+        self.assertIn("mother_tongue", target_group_dict)
+        self.assertIn("foreign_languages", target_group_dict)
+        self.assertIsInstance(target_group_dict["_id"], ObjectId)
+        self.assertEqual(target_group_dict["name"], None)
+        self.assertEqual(target_group_dict["age_min"], "10")
+        self.assertEqual(target_group_dict["age_max"], "20")
+        self.assertEqual(target_group_dict["experience"], None)
+        self.assertEqual(target_group_dict["academic_course"], None)
+        self.assertEqual(target_group_dict["mother_tongue"], None)
+        self.assertEqual(target_group_dict["foreign_languages"], "test: c1")
 
     def test_from_dict(self):
         """
@@ -659,6 +722,34 @@ class TargetGroupModelTest(TestCase):
         self.assertEqual(target_group.name, target_group_dict["name"])
         self.assertEqual(target_group.age_min, target_group_dict["age_min"])
         self.assertEqual(target_group.age_max, target_group_dict["age_max"])
+        self.assertEqual(target_group.experience, target_group_dict["experience"])
+        self.assertEqual(
+            target_group.academic_course, target_group_dict["academic_course"]
+        )
+        self.assertEqual(target_group.mother_tongue, target_group_dict["mother_tongue"])
+        self.assertEqual(
+            target_group.foreign_languages, target_group_dict["foreign_languages"]
+        )
+
+        _id = ObjectId()
+        target_group_dict = {
+            "_id": _id,
+            "name": "test",
+            "age_min": "10",
+            "age_max": "20",
+            "experience": "test",
+            "academic_course": "test",
+            "mother_tongue": "test",
+            "foreign_languages": {"test": "l1"},
+        }
+
+        target_group = TargetGroup.from_dict(target_group_dict.copy())
+
+        self.assertIsInstance(target_group, TargetGroup)
+        self.assertEqual(target_group._id, _id)
+        self.assertEqual(target_group.name, target_group_dict["name"])
+        self.assertEqual(target_group.age_min, 10)
+        self.assertEqual(target_group.age_max, 20)
         self.assertEqual(target_group.experience, target_group_dict["experience"])
         self.assertEqual(
             target_group.academic_course, target_group_dict["academic_course"]
@@ -747,7 +838,7 @@ class TargetGroupModelTest(TestCase):
         self.assertRaises(TypeError, TargetGroup.from_dict, target_group_dict)
         target_group_dict["name"] = "test"
 
-        target_group_dict["age_min"] = "0"
+        target_group_dict["age_min"] = list()
         self.assertRaises(TypeError, TargetGroup.from_dict, target_group_dict)
         target_group_dict["age_min"] = 0
 

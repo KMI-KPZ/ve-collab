@@ -7125,8 +7125,8 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(len(db_state["audience"]), 1)
         self.assertIsInstance(db_state["audience"][0]["_id"], ObjectId)
         self.assertEqual(db_state["audience"][0]["name"], "updated_name")
-        self.assertEqual(db_state["audience"][0]["age_min"], 10)
-        self.assertEqual(db_state["audience"][0]["age_max"], 20)
+        self.assertEqual(db_state["audience"][0]["age_min"], "10")
+        self.assertEqual(db_state["audience"][0]["age_max"], "20")
         self.assertEqual(db_state["audience"][0]["experience"], "updated_experience")
         self.assertEqual(
             db_state["audience"][0]["academic_course"], "updated_academic_course"
@@ -7166,8 +7166,8 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(len(db_state["audience"]), 1)
         self.assertIsInstance(db_state["audience"][0]["_id"], ObjectId)
         self.assertEqual(db_state["audience"][0]["name"], "updated_name")
-        self.assertEqual(db_state["audience"][0]["age_min"], 10)
-        self.assertEqual(db_state["audience"][0]["age_max"], 20)
+        self.assertEqual(db_state["audience"][0]["age_min"], "10")
+        self.assertEqual(db_state["audience"][0]["age_max"], "20")
         self.assertEqual(db_state["audience"][0]["experience"], "updated_experience")
         self.assertEqual(
             db_state["audience"][0]["academic_course"], "updated_academic_course"

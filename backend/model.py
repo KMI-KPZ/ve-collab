@@ -457,24 +457,24 @@ class TargetGroup:
     EXPECTED_DICT_ENTRIES = {
         # "_id": (str, ObjectId, type(None)),
         "name": (str, type(None)),
-        "age_min": int,
-        "age_max": int,
+        "age_min": (int, str, type(None)),
+        "age_max": (int, str, type(None)),
         "experience": (str, type(None)),
         "academic_course": (str, type(None)),
         "mother_tongue": str,
-        "foreign_languages": dict,
+        "foreign_languages": (dict, str, type(None)),
     }
 
     def __init__(
         self,
         _id: str | ObjectId = None,
         name: str = None,
-        age_min: int = 0,
-        age_max: int = 99,
+        age_min: int | str = None,
+        age_max: int | str = None,
         experience: str = None,
         academic_course: str = None,
         mother_tongue: str = None,
-        foreign_languages: Dict[str, str] = {},
+        foreign_languages: Dict[str, str] | str = None,
     ) -> None:
         """
         Initialization of a `TargetGroup` instance.
@@ -499,8 +499,29 @@ class TargetGroup:
         self._id = util.parse_object_id(_id) if _id != None else ObjectId()
 
         self.name = name
-        self.age_min = age_min
-        self.age_max = age_max
+
+        if isinstance(age_min, str):
+            # since we allow empty string, we have to check for it
+            # because otherwise it would try to cast it to int which
+            # results in a value error
+            if age_min == "":
+                self.age_min = None
+            else:
+                self.age_min = int(age_min)
+        else:
+            self.age_min = age_min
+
+        if isinstance(age_max, str):
+            # since we allow empty string, we have to check for it
+            # because otherwise it would try to cast it to int which
+            # results in a value error
+            if age_max == "":
+                self.age_max = None
+            else:
+                self.age_max = int(age_max)
+        else:
+            self.age_max = age_max
+
         self.experience = experience
         self.academic_course = academic_course
         self.mother_tongue = mother_tongue
@@ -526,8 +547,8 @@ class TargetGroup:
         return {
             "_id": self._id,
             "name": self.name,
-            "age_min": self.age_min,
-            "age_max": self.age_max,
+            "age_min": str(self.age_min) if self.age_min != None else None,
+            "age_max": str(self.age_max) if self.age_max != None else None,
             "experience": self.experience,
             "academic_course": self.academic_course,
             "mother_tongue": self.mother_tongue,
@@ -609,6 +630,23 @@ class TargetGroup:
             params["_id"] = util.parse_object_id(params["_id"])
         else:
             params["_id"] = ObjectId()
+
+        # handle correct transformation of age_min to int or None
+        # e.g. if a string is supplied
+        if "age_min" in params:
+            if params["age_min"] != None:
+                if params["age_min"] == "":
+                    params["age_min"] = None
+                else:
+                    params["age_min"] = int(params["age_min"])
+        # handle correct transformation of age_max to int or None
+        # e.g. if a string is supplied
+        if "age_max" in params:
+            if params["age_max"] != None:
+                if params["age_max"] == "":
+                    params["age_max"] = None
+                else:
+                    params["age_max"] = int(params["age_max"])
 
         # create and return object
         instance = cls()
