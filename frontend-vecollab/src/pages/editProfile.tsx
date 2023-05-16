@@ -104,8 +104,8 @@ export default function EditProfile() {
                         veInterests: data.profile.ve_interests,
                         veGoals: data.profile.ve_goals,
                         experience: data.profile.experience,
-                        preferredFormats: data.profile.preferred_formats
-                    })
+                        preferredFormats: data.profile.preferred_formats,
+                    });
                     setResearchTags(
                         data.profile.research_tags.map((tag: string) => ({
                             id: tag,
@@ -206,6 +206,8 @@ export default function EditProfile() {
                                     veInformation={veInformation}
                                     setVeInformation={setVeInformation}
                                     updateProfileData={updateProfileData}
+                                    orcid={session?.user.orcid}
+                                    importOrcidProfile={importOrcidProfile}
                                 />
                             </div>
                             <div tabname="Lehre & Forschung">
@@ -216,6 +218,8 @@ export default function EditProfile() {
                                     setCourses={setCourses}
                                     updateProfileData={updateProfileData}
                                     keyCodeDelimiters={delimiters}
+                                    orcid={session?.user.orcid}
+                                    importOrcidProfile={importOrcidProfile}
                                 />
                             </div>
                             <div tabname="Ausbildung">
@@ -223,6 +227,8 @@ export default function EditProfile() {
                                     educations={educations}
                                     setEducations={setEducations}
                                     updateProfileData={updateProfileData}
+                                    orcid={session?.user.orcid}
+                                    importOrcidProfile={importOrcidProfile}
                                 />
                             </div>
                             <div tabname="Berufserfahrung">
@@ -230,6 +236,8 @@ export default function EditProfile() {
                                     workExperience={workExperience}
                                     setWorkExperience={setWorkExperience}
                                     updateProfileData={updateProfileData}
+                                    orcid={session?.user.orcid}
+                                    importOrcidProfile={importOrcidProfile}
                                 />
                             </div>
                             <div tabname="VE-Schaufenster">

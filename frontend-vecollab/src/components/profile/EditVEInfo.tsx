@@ -1,15 +1,25 @@
 import { VEInformation } from '@/interfaces/profile/profileInterfaces';
-import Link from 'next/link';
 import { Dispatch, FormEvent, SetStateAction } from 'react';
-import { RxMinus, RxPlus } from 'react-icons/rx';
+import EditProfileHeader from './EditProfileHeader';
+import EditProfileVerticalSpacer from './EditProfileVerticalSpacer';
+import EditProfileHeadline from './EditProfileHeadline';
+import EditProfilePlusMinusButtons from './EditProfilePlusMinusButtons';
 
 interface Props {
     veInformation: VEInformation;
     setVeInformation: Dispatch<SetStateAction<VEInformation>>;
     updateProfileData(evt: FormEvent): Promise<void>;
+    orcid: string | null | undefined;
+    importOrcidProfile(evt: FormEvent): Promise<void>;
 }
 
-export default function EditVEInfo({ veInformation, setVeInformation, updateProfileData }: Props) {
+export default function EditVEInfo({
+    veInformation,
+    setVeInformation,
+    updateProfileData,
+    orcid,
+    importOrcidProfile,
+}: Props) {
     const modifyVeInterests = (index: number, value: string) => {
         let newInterests = [...veInformation.veInterests];
         newInterests[index] = value;
@@ -82,25 +92,13 @@ export default function EditVEInfo({ veInformation, setVeInformation, updateProf
         e.preventDefault();
         let copy = [...veInformation.preferredFormats]; // have to create a deep copy that changes reference, because re-render is triggered by reference, not by values in the array
         copy.pop();
-        setVeInformation({...veInformation, preferredFormats: copy})
+        setVeInformation({ ...veInformation, preferredFormats: copy });
     };
     return (
         <form onSubmit={updateProfileData}>
-            <div className={'flex justify-end'}>
-                <Link href={'/profile'}>
-                    <button className={'mx-4 py-2 px-5 border border-ve-collab-orange rounded-lg'}>
-                        Abbrechen
-                    </button>
-                </Link>
-                <button
-                    type="submit"
-                    className={'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'}
-                >
-                    Speichern
-                </button>
-            </div>
-            <div className={'my-5'}>
-                <div className={'mb-1 font-bold text-slate-900 text-lg'}>VE-Themeninteressen</div>
+            <EditProfileHeader orcid={orcid} importOrcidProfile={importOrcidProfile} />
+            <EditProfileVerticalSpacer>
+                <EditProfileHeadline name={'VE-Themeninteressen'} />
                 {veInformation.veInterests.map((interest, index) => (
                     <input
                         key={index}
@@ -111,17 +109,13 @@ export default function EditVEInfo({ veInformation, setVeInformation, updateProf
                         onChange={(e) => modifyVeInterests(index, e.target.value)}
                     />
                 ))}
-                <div className={'w-full mt-1 flex justify-end'}>
-                    <button onClick={removeVeInterestInputField}>
-                        <RxMinus size={20} />
-                    </button>
-                    <button onClick={addVeInterestInputField}>
-                        <RxPlus size={20} />
-                    </button>
-                </div>
-            </div>
-            <div className={'my-5'}>
-                <div className={'mb-1 font-bold text-slate-900 text-lg'}>VE-Zielsetzungen</div>
+                <EditProfilePlusMinusButtons
+                    minusCallback={removeVeInterestInputField}
+                    plusCallback={addVeInterestInputField}
+                />
+            </EditProfileVerticalSpacer>
+            <EditProfileVerticalSpacer>
+                <EditProfileHeadline name={'VE-Zielsetzung'} />
                 {veInformation.veGoals.map((goal, index) => (
                     <input
                         key={index}
@@ -132,17 +126,13 @@ export default function EditVEInfo({ veInformation, setVeInformation, updateProf
                         onChange={(e) => modifyVeGoals(index, e.target.value)}
                     />
                 ))}
-                <div className={'w-full mt-1 flex justify-end'}>
-                    <button onClick={removeVeGoalsInputField}>
-                        <RxMinus size={20} />
-                    </button>
-                    <button onClick={addVeGoalsInputField}>
-                        <RxPlus size={20} />
-                    </button>
-                </div>
-            </div>
-            <div className={'my-5'}>
-                <div className={'mb-1 font-bold text-slate-900 text-lg'}>Erfahrungen</div>
+                <EditProfilePlusMinusButtons
+                    minusCallback={removeVeGoalsInputField}
+                    plusCallback={addVeGoalsInputField}
+                />
+            </EditProfileVerticalSpacer>
+            <EditProfileVerticalSpacer>
+                <EditProfileHeadline name={'VE-Erfahrungen'} />
                 {veInformation.experience.map((exp, index) => (
                     <input
                         key={index}
@@ -153,17 +143,13 @@ export default function EditVEInfo({ veInformation, setVeInformation, updateProf
                         onChange={(e) => modifyExperience(index, e.target.value)}
                     />
                 ))}
-                <div className={'w-full mt-1 flex justify-end'}>
-                    <button onClick={removeExperienceInputField}>
-                        <RxMinus size={20} />
-                    </button>
-                    <button onClick={addExperienceInputField}>
-                        <RxPlus size={20} />
-                    </button>
-                </div>
-            </div>
-            <div className={'my-5'}>
-                <div className={'mb-1 font-bold text-slate-900 text-lg'}>präferierte Formate</div>
+                <EditProfilePlusMinusButtons
+                    minusCallback={removeExperienceInputField}
+                    plusCallback={addExperienceInputField}
+                />
+            </EditProfileVerticalSpacer>
+            <EditProfileVerticalSpacer>
+                <EditProfileHeadline name={'präferierte Formate'} />
                 {veInformation.preferredFormats.map((format, index) => (
                     <input
                         key={index}
@@ -176,15 +162,11 @@ export default function EditVEInfo({ veInformation, setVeInformation, updateProf
                         onChange={(e) => modifyPreferredFormats(index, e.target.value)}
                     />
                 ))}
-                <div className={'w-full mt-1 flex justify-end'}>
-                    <button onClick={removePreferredFormatsInputField}>
-                        <RxMinus size={20} />
-                    </button>
-                    <button onClick={addPreferredFormatsInputField}>
-                        <RxPlus size={20} />
-                    </button>
-                </div>
-            </div>
+                <EditProfilePlusMinusButtons
+                    minusCallback={removePreferredFormatsInputField}
+                    plusCallback={addPreferredFormatsInputField}
+                />
+            </EditProfileVerticalSpacer>
         </form>
     );
 }
