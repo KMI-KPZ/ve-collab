@@ -136,6 +136,9 @@ export default function TargetGroups() {
                                 placeholder="Name eingeben"
                                 className="border border-gray-500 rounded-lg w-full h-12 p-2"
                             />
+                            <p className="text-red-600 pt-2">
+                                {errors?.targetGroups?.[index]?.name?.message}
+                            </p>
                         </div>
                     </div>
                     <div className="mt-4 flex">
@@ -145,40 +148,46 @@ export default function TargetGroups() {
                             </label>
                         </div>
                         <div className="w-3/4 flex">
-                            <input
-                                type="number"
-                                {...register(`targetGroups.${index}.age_min`, {
-                                    maxLength: {
-                                        value: 50,
-                                        message:
-                                            'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
-                                    },
-                                    pattern: {
-                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
-                                        message:
-                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
-                                    },
-                                })}
-                                placeholder="von"
-                                className="border border-gray-500 rounded-lg w-1/2 h-12 p-2 mr-2"
-                            />
-                            <input
-                                type="number"
-                                {...register(`targetGroups.${index}.age_max`, {
-                                    maxLength: {
-                                        value: 50,
-                                        message:
-                                            'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
-                                    },
-                                    pattern: {
-                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
-                                        message:
-                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
-                                    },
-                                })}
-                                placeholder="bis"
-                                className="border border-gray-500 rounded-lg w-1/2 h-12 p-2 ml-2"
-                            />
+                            <div>
+                                <input
+                                    type="text"
+                                    {...register(`targetGroups.${index}.age_min`, {
+                                        maxLength: {
+                                            value: 4,
+                                            message: 'Bitte geben sie eine realistische Zahl ein',
+                                        },
+                                        pattern: {
+                                            value: /^\d+$/,
+                                            message: 'Bitte nur ganze postive Zahlen',
+                                        },
+                                    })}
+                                    placeholder="von"
+                                    className="border border-gray-500 rounded-lg w-1/2 h-12 p-2 mr-2"
+                                />
+                                <p className="text-red-600 pt-2">
+                                    {errors?.targetGroups?.[index]?.age_min?.message}
+                                </p>
+                            </div>
+                            <div>
+                                <input
+                                    type="text"
+                                    {...register(`targetGroups.${index}.age_max`, {
+                                        maxLength: {
+                                            value: 4,
+                                            message: 'Bitte geben sie eine realistische Zahl ein',
+                                        },
+                                        pattern: {
+                                            value: /^\d+$/,
+                                            message: 'Bitte nur ganze postive Zahlen',
+                                        },
+                                    })}
+                                    placeholder="bis"
+                                    className="border border-gray-500 rounded-lg w-1/2 h-12 p-2 ml-2"
+                                />
+                                <p className="text-red-600 pt-2">
+                                    {errors?.targetGroups?.[index]?.age_max?.message}
+                                </p>
+                            </div>
                         </div>
                     </div>
                     <div className="mt-4 flex">
@@ -205,6 +214,9 @@ export default function TargetGroups() {
                                 placeholder="welche Erfahrung hat die Zielgruppe bereits?"
                                 className="border border-gray-500 rounded-lg w-full p-2"
                             />
+                            <p className="text-red-600 pt-2">
+                                {errors?.targetGroups?.[index]?.experience?.message}
+                            </p>
                         </div>
                     </div>
                     <div className="mt-4 flex">
@@ -231,6 +243,9 @@ export default function TargetGroups() {
                                 placeholder="Studiengang eingeben"
                                 className="border border-gray-500 rounded-lg w-full h-12 p-2"
                             />
+                            <p className="text-red-600 pt-2">
+                                {errors?.targetGroups?.[index]?.academic_course?.message}
+                            </p>
                         </div>
                     </div>
                     <div className="mt-4 flex">
@@ -257,6 +272,9 @@ export default function TargetGroups() {
                                 placeholder="Muttersprache eingeben"
                                 className="border border-gray-500 rounded-lg w-full h-12 p-2"
                             />
+                            <p className="text-red-600 pt-2">
+                                {errors?.targetGroups?.[index]?.mother_tongue?.message}
+                            </p>
                         </div>
                     </div>
                     <div className="mt-4 flex">
@@ -283,6 +301,9 @@ export default function TargetGroups() {
                                 placeholder="mehrere durch Komma trennen"
                                 className="border border-gray-500 rounded-lg w-full h-12 p-2"
                             />
+                            <p className="text-red-600 pt-2">
+                                {errors?.targetGroups?.[index]?.foreign_languages?.message}
+                            </p>
                         </div>
                     </div>
                 </WhiteBox>
