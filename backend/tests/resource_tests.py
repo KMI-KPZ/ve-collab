@@ -588,7 +588,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertIsNotNone(db_state)
         self.assertIsInstance(db_state["audience"][0]["_id"], ObjectId)
         self.assertEqual(db_state["audience"][0]["name"], tg.name)
-        self.assertEqual(db_state["audience"][0]["age_min"], tg.age_min)
+        self.assertEqual(db_state["audience"][0]["age_min"], str(tg.age_min))
         self.assertEqual(db_state["audience"][0]["experience"], tg.experience)
         self.assertEqual(db_state["audience"][0]["academic_course"], tg.academic_course)
         self.assertEqual(db_state["audience"][0]["mother_tongue"], tg.mother_tongue)
@@ -619,7 +619,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertIsNotNone(db_state)
         self.assertEqual(db_state["audience"][0]["_id"], tg2._id)
         self.assertEqual(db_state["audience"][0]["name"], tg2.name)
-        self.assertEqual(db_state["audience"][0]["age_min"], tg2.age_min)
+        self.assertEqual(db_state["audience"][0]["age_min"], str(tg2.age_min))
         self.assertEqual(db_state["audience"][0]["experience"], tg2.experience)
         self.assertEqual(
             db_state["audience"][0]["academic_course"], tg2.academic_course
