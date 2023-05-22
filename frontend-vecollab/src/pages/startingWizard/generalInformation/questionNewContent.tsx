@@ -111,6 +111,9 @@ export default function NewContent() {
                                                 value="true"
                                                 className="border border-gray-500 rounded-lg p-2"
                                             />
+                                            <p className="text-red-600 pt-2">
+                                                {errors.newContent?.message}
+                                            </p>
                                         </div>
                                     </div>
                                     <div className="flex my-1">
@@ -124,6 +127,9 @@ export default function NewContent() {
                                                 value="false"
                                                 className="border border-gray-500 rounded-lg p-2"
                                             />
+                                            <p className="text-red-600 pt-2">
+                                                {errors.newContent?.message}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
