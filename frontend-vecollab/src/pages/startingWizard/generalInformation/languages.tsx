@@ -61,7 +61,6 @@ export default function Languages() {
         if (session) {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
-                    console.log('test');
                     setLoading(false);
                     if (data.plan.languages.length !== 0) {
                         setValue('languages', data.plan.languages);
