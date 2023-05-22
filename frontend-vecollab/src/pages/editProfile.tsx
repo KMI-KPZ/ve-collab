@@ -17,6 +17,7 @@ import {
     VEInformation,
     WorkExperience,
 } from '@/interfaces/profile/profileInterfaces';
+import EditProfileSuccessAlert from '@/components/profile/EditProfileSuccessAlert';
 
 export default function EditProfile() {
     const [personalInformation, setPersonalInformation] = useState<PersonalInformation>({
@@ -64,6 +65,7 @@ export default function EditProfile() {
 
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
+    const [successPopupOpen, setSuccessPopupOpen] = useState(false);
     const router = useRouter();
 
     // check for session errors and trigger the login flow if necessary
@@ -154,7 +156,11 @@ export default function EditProfile() {
             session?.accessToken
         );
 
-        // TODO render success ui feedback
+        // render success message that disappears after 2 seconds
+        setSuccessPopupOpen(true);
+        setTimeout(() => {
+            setSuccessPopupOpen((successPopupOpen) => false);
+        }, 2000);
     };
 
     const importOrcidProfile = async (evt: FormEvent) => {
@@ -247,6 +253,7 @@ export default function EditProfile() {
                     )}
                 </div>
             </WhiteBox>
+            {successPopupOpen && <EditProfileSuccessAlert message={'Gespeichert'}/>}
         </div>
     );
 }
