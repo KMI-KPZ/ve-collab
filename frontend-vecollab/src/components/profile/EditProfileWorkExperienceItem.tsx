@@ -1,4 +1,6 @@
 import { WorkExperience } from '@/interfaces/profile/profileInterfaces';
+import SlateBox from '../Layout/SlateBox';
+import EditProfileItemRow from './EditProfileItemRow';
 
 interface Props {
     workExperience: WorkExperience;
@@ -21,64 +23,37 @@ export default function EditProfileWorkExperienceItem({
     modifyCallbacks,
 }: Props) {
     return (
-        <div className={'p-4 my-4 bg-slate-200 rounded-3xl shadow-2xl'}>
-            <div className="mt-2 flex">
-                <div className="w-1/3 flex items-center">
-                    <label htmlFor="position" className="px-2 py-2">
-                        Position
-                    </label>
-                </div>
-                <div className="w-2/3">
-                    <input
-                        type="text"
-                        name="position"
-                        value={workExperience.position}
-                        onChange={(e) =>
-                            modifyCallbacks.modifyWorkExperiencePosition(index, e.target.value)
-                        }
-                        placeholder="Berufsbezeichnung"
-                        className="border border-gray-500 rounded-lg w-full h-12 p-2"
-                    />
-                </div>
-            </div>
-            <div className="mt-2 flex">
-                <div className="w-1/3 flex items-center">
-                    <label htmlFor="institution" className="px-2 py-2">
-                        Institution
-                    </label>
-                </div>
-                <div className="w-2/3">
-                    <input
-                        type="text"
-                        name="institution"
-                        value={workExperience.institution}
-                        onChange={(e) =>
-                            modifyCallbacks.modifyWorkExperienceInstitution(index, e.target.value)
-                        }
-                        placeholder="Name der Institution"
-                        className="border border-gray-500 rounded-lg w-full h-12 p-2"
-                    />
-                </div>
-            </div>
-            <div className="mt-2 flex">
-                <div className="w-1/3 flex items-center">
-                    <label htmlFor="department" className="px-2 py-2">
-                        Abteilung
-                    </label>
-                </div>
-                <div className="w-2/3">
-                    <input
-                        type="text"
-                        name="department"
-                        value={workExperience.department}
-                        onChange={(e) =>
-                            modifyCallbacks.modifyWorkExperienceDepartment(index, e.target.value)
-                        }
-                        placeholder="optional, z.B. Fakultät der Uni / Abteilung der Firma"
-                        className="border border-gray-500 rounded-lg w-full h-12 p-2"
-                    />
-                </div>
-            </div>
+        <SlateBox>
+            <EditProfileItemRow
+                label={'Position'}
+                value={workExperience.position}
+                onChange={(e) =>
+                    modifyCallbacks.modifyWorkExperiencePosition(index, e.target.value)
+                }
+                labelElementWidth="w-1/3"
+                inputElemenWidth="w-2/3"
+                placeholder="Berufsbezeichnung"
+            />
+            <EditProfileItemRow
+                label={'Institution'}
+                value={workExperience.institution}
+                onChange={(e) =>
+                    modifyCallbacks.modifyWorkExperienceInstitution(index, e.target.value)
+                }
+                labelElementWidth="w-1/3"
+                inputElemenWidth="w-2/3"
+                placeholder="Name der Institution"
+            />
+            <EditProfileItemRow
+                label={'Abteilung'}
+                value={workExperience.department}
+                onChange={(e) =>
+                    modifyCallbacks.modifyWorkExperienceDepartment(index, e.target.value)
+                }
+                labelElementWidth="w-1/3"
+                inputElemenWidth="w-2/3"
+                placeholder="optional, z.B. Fakultät der Uni / Abteilung der Firma"
+            />
             <div className="mt-2 flex">
                 <div className="w-1/3 flex items-center">
                     <label htmlFor="timestampFrom" className="px-2 py-2">
@@ -123,66 +98,32 @@ export default function EditProfileWorkExperienceItem({
                     </div>
                 </div>
             </div>
-            <div className="mt-2 flex">
-                <div className="w-1/3 flex items-center">
-                    <label htmlFor="city" className="px-2 py-2">
-                        Stadt
-                    </label>
-                </div>
-                <div className="w-2/3">
-                    <input
-                        type="text"
-                        name="city"
-                        value={workExperience.city}
-                        onChange={(e) =>
-                            modifyCallbacks.modifyWorkExperienceCity(index, e.target.value)
-                        }
-                        placeholder="optional"
-                        className="border border-gray-500 rounded-lg w-full h-12 p-2"
-                    />
-                </div>
-            </div>
-            <div className="mt-2 flex">
-                <div className="w-1/3 flex items-center">
-                    <label htmlFor="country" className="px-2 py-2">
-                        Land
-                    </label>
-                </div>
-                <div className="w-2/3">
-                    <input
-                        type="text"
-                        name="country"
-                        value={workExperience.country}
-                        onChange={(e) =>
-                            modifyCallbacks.modifyWorkExperienceCountry(index, e.target.value)
-                        }
-                        placeholder="optional"
-                        className="border border-gray-500 rounded-lg w-full h-12 p-2"
-                    />
-                </div>
-            </div>
-            <div className="mt-2 flex">
-                <div className="w-1/3 flex items-center">
-                    <label htmlFor="additionalInfo" className="px-2 py-2">
-                        Zusatzinfos
-                    </label>
-                </div>
-                <div className="w-2/3">
-                    <input
-                        type="text"
-                        name="additionalInfo"
-                        value={workExperience.additional_info}
-                        onChange={(e) =>
-                            modifyCallbacks.modifyWorkExperienceAdditionalInfo(
-                                index,
-                                e.target.value
-                            )
-                        }
-                        placeholder="optional, z.B. Tätigkeiten"
-                        className="border border-gray-500 rounded-lg w-full h-12 p-2"
-                    />
-                </div>
-            </div>
-        </div>
+            <EditProfileItemRow
+                label={'Stadt'}
+                value={workExperience.city}
+                onChange={(e) => modifyCallbacks.modifyWorkExperienceCity(index, e.target.value)}
+                labelElementWidth="w-1/3"
+                inputElemenWidth="w-2/3"
+                placeholder="optional"
+            />
+            <EditProfileItemRow
+                label={'Land'}
+                value={workExperience.country}
+                onChange={(e) => modifyCallbacks.modifyWorkExperienceCountry(index, e.target.value)}
+                labelElementWidth="w-1/3"
+                inputElemenWidth="w-2/3"
+                placeholder="optional"
+            />
+            <EditProfileItemRow
+                label={'Zusatzinfos'}
+                value={workExperience.additional_info}
+                onChange={(e) =>
+                    modifyCallbacks.modifyWorkExperienceAdditionalInfo(index, e.target.value)
+                }
+                labelElementWidth="w-1/3"
+                inputElemenWidth="w-2/3"
+                placeholder="optional, z.B. Tätigkeiten"
+            />
+        </SlateBox>
     );
 }
