@@ -85,6 +85,8 @@ declare module 'next-auth' {
         };
         error: string;
         accessToken: string;
+        idToken: string;
+        sessionState: string;
     }
 }
 
@@ -101,6 +103,7 @@ declare module 'next-auth/jwt' {
         user: User;
         error: string;
         idToken: string;
+        sessionState: string;
     }
 }
 
@@ -152,10 +155,13 @@ const refreshAccessToken = async (token: JWT): Promise<JWT> => {
 export const authOptions = {
     providers: [
         KeycloakProvider({
+            id: 'keycloak',
             clientId: process.env.KEYCLOAK_ID,
             clientSecret: process.env.KEYCLOAK_SECRET,
             issuer: process.env.KEYCLOAK_ISSUER,
             profile(profile: KeycloakProfile) {
+                console.log("profile:")
+                console.log(profile)
                 return {
                     iss: profile.iss,
                     email_verified: profile.email_verified,
@@ -181,6 +187,7 @@ export const authOptions = {
                 // Add access_token, refresh_token and expirations to the token right after signin
                 token.accessToken = account.access_token;
                 token.refreshToken = account.refresh_token;
+                token.sessionState = account.session_state;
                 token.idToken = account.id_token;
                 if (account.expires_at) {
                     token.accessTokenExpired = account.expires_at;
@@ -203,7 +210,9 @@ export const authOptions = {
         async session({ session, token }: SessionProps): Promise<Session> {
             session.error = token.error;
             session.accessToken = token.accessToken;
+            session.idToken = token.idToken;
             session.user = token.user;
+            session.sessionState = token.sessionState;
             return session;
         },
     },

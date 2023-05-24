@@ -73,7 +73,7 @@ export default function EditProfile() {
         if (status !== 'loading') {
             if (!session || session?.error === 'RefreshAccessTokenError') {
                 console.log('forced new signIn');
-                signIn('keycloak');
+                //signIn('keycloak');
             }
         }
     }, [session, status]);
@@ -120,7 +120,7 @@ export default function EditProfile() {
                 }
             });
         } else {
-            signIn('keycloak');
+            //signIn('keycloak');
         }
     }, [session, status, router]);
 
