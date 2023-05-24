@@ -7,126 +7,127 @@ import { FormEvent, useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
+import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
+import { TargetGroup } from '@/pages/startingWizard/generalInformation/targetGroups';
 
 interface Goal {
-    target_group: string;
+    targetGroup: string;
     goal: string;
 }
 
+interface FormValues {
+    goalsList: Goal[];
+    sameGoal: boolean;
+}
+
 export default function Goals() {
-    const [goals, setGoals] = useState<Goal[]>([{ target_group: '', goal: '' }]);
-
-    const [allSameGoal, setAllSameGoal] = useState(false);
-
-    const goalsAlreadyHaveTargetGroup = (goals: Goal[], tgName: string) => {
-        for (const obj of goals) {
-            if (obj.target_group === tgName) {
-                return true;
-            }
-        }
-        return false;
-    };
-
     const { data: session, status } = useSession();
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(false);
     const router = useRouter();
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
-        if (status !== "loading") {
-            if (!session || session?.error === "RefreshAccessTokenError") {
-                console.log("forced new signIn")
-                signIn("keycloak");
+        if (status !== 'loading') {
+            if (!session || session?.error === 'RefreshAccessTokenError') {
+                console.log('forced new signIn');
+                signIn('keycloak');
             }
         }
     }, [session, status]);
 
+    const {
+        register,
+        formState: { errors },
+        handleSubmit,
+        control,
+        watch,
+        setValue,
+    } = useForm<FormValues>({
+        mode: 'onChange',
+        defaultValues: {
+            goalsList: [{ targetGroup: '', goal: '' }],
+            sameGoal: false,
+        },
+    });
+
     useEffect(() => {
         // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
-        if (!router.isReady || status === "loading") {
-            setLoading(true)
-            return
+        if (!router.isReady || status === 'loading') {
+            setLoading(true);
+            return;
         }
         // router is loaded, but still no plan ID in the query --> redirect to overview because we can't do anything without an ID
         if (!router.query.plannerId) {
             router.push('/overviewProjects');
-            return
+            return;
         }
         // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
         if (session) {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
-                    setLoading(false)
-                    if (data.plan) {
-                        if (Object.keys(data.plan.goals).length > 0) {
-                            let list: Goal[] = [];
-                            for (const [key, value] of Object.entries(data.plan.goals)) {
-                                let value_copy = String(value);
-                                list.push({ target_group: key, goal: value_copy });
-                            }
-                            data.plan.audience.forEach((tg: any) => {
-                                if (!goalsAlreadyHaveTargetGroup(list, tg.name)) {
-                                    list.push({ target_group: tg.name, goal: '' });
-                                }
-                            });
-                            setGoals(list);
-                        } else if (data.plan.audience.length > 0) {
-                            console.log('lol');
-                            let list: Goal[] = [];
-                            data.plan.audience.forEach((tg: any) => {
-                                list.push({ target_group: tg.name, goal: '' });
-                            });
-                            setGoals(list);
-                        } else {
-                            setGoals([{ target_group: '', goal: '' }]);
-                        }
-                    } else {
-                        setGoals([{ target_group: '', goal: '' }]);
-                    }
+                    setLoading(false);
+                    const sameGoal: boolean = data.plan.goals.sameGoal;
+                    const targetGroups: TargetGroup[] = data.plan.audience;
+                    const fetched = data.plan.goals.goalsList;
+                    setValue('sameGoal', sameGoal);
+                    const goals: Goal[] = targetGroups.map((targetGroup, index) => {
+                        return {
+                            targetGroup: targetGroup.name,
+                            goal: '',
+                        };
+                    });
+                    setValue('goalsList', goals);
                 }
             );
         }
-    }, [session, status, router]);
+    }, [session, status, router, setValue]);
 
-    const handleSubmit = async () => {
-        let payload: Record<string, string> = {};
-        goals.forEach((goal) => {
-            payload[goal.target_group] = goal.goal;
-        });
-        const response = await fetchPOST(
+    const allSameGoal = watch('sameGoal');
+
+    const { fields } = useFieldArray({
+        name: 'goalsList',
+        control,
+    });
+
+    const onSubmit: SubmitHandler<FormValues> = async () => {
+        await fetchPOST(
             '/planner/update_field',
-            { plan_id: router.query.plannerId, field_name: 'goals', value: payload },
+            {
+                plan_id: router.query.plannerId,
+                field_name: 'goals',
+                value: { goalsTargetList: watch('goalsList'), sameGoal: watch('sameGoal') },
+            },
             session?.accessToken
         );
-        console.log(response);
-        console.log(goals);
+        await router.push({
+            pathname: '/startingWizard/generalInformation/courseFormat',
+            query: { plannerId: router.query.plannerId },
+        });
     };
 
-    const modifyGoal = (index: number, value: string) => {
-        let newGoals = [...goals];
-        if (allSameGoal) {
-            newGoals.forEach((element) => {
-                element.goal = value;
-            });
-        } else {
-            newGoals[index].goal = value;
-        }
-        setGoals(newGoals);
-    };
-    const modifyAllSameGoal = (sameGoal: boolean) => {
-        setAllSameGoal(sameGoal);
-    };
-
-    const addInputField = (e: FormEvent) => {
-        e.preventDefault();
-        setGoals([...goals, { target_group: '', goal: '' }]);
-    };
-
-    const removeInputField = (e: FormEvent) => {
-        e.preventDefault();
-        let copy = [...goals]; // have to create a deep copy that changes reference, because re-render is triggered by reference, not by values in the array
-        copy.pop();
-        setGoals(copy);
+    const renderGoalsInputs = (): JSX.Element[] => {
+        return fields.map((goal, index) => (
+            <div key={goal.id} className="mt-4 flex justify-center">
+                <div className="w-3/4">
+                    <div className="px-2 py-2">für Zielgruppe: {goal.targetGroup}</div>
+                    <textarea
+                        rows={5}
+                        placeholder="Ziele beschreiben"
+                        className="border border-gray-500 rounded-lg w-full p-2"
+                        {...register(`goalsList.${index}.goal`, {
+                            maxLength: {
+                                value: 500,
+                                message: 'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
+                            },
+                            pattern: {
+                                value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
+                                message: 'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?-',
+                            },
+                        })}
+                    />
+                </div>
+            </div>
+        ));
     };
 
     return (
@@ -136,7 +137,10 @@ export default function Goals() {
                 {loading ? (
                     <LoadingAnimation />
                 ) : (
-                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
+                    <form
+                        onSubmit={handleSubmit(onSubmit)}
+                        className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
+                    >
                         <div>
                             <div className={'text-center font-bold text-4xl mb-2'}>
                                 Welche Ziele sollen die einzelnen Zielgruppen erreichen?
@@ -147,11 +151,10 @@ export default function Goals() {
                                     alle Zielgruppen haben die gleichen Ziele?
                                 </label>
                                 <input
-                                    type={'checkbox'}
-                                    checked={allSameGoal}
-                                    onChange={() => modifyAllSameGoal(!allSameGoal)}
+                                    type="checkbox"
                                     placeholder="Name eingeben"
                                     className="border border-gray-500 rounded-lg p-2"
+                                    {...register(`sameGoal`)}
                                 />
                             </div>
                             {allSameGoal && (
@@ -160,41 +163,25 @@ export default function Goals() {
                                         <div className="px-2 py-2">für alle Zielgruppen</div>
                                         <textarea
                                             rows={5}
-                                            onChange={(e) => modifyGoal(0, e.target.value)}
                                             placeholder="Ziele beschreiben"
                                             className="border border-gray-500 rounded-lg w-full p-2"
+                                            {...register(`goalsList.0.goal`, {
+                                                maxLength: {
+                                                    value: 500,
+                                                    message:
+                                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
+                                                },
+                                                pattern: {
+                                                    value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
+                                                    message:
+                                                        'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?-',
+                                                },
+                                            })}
                                         />
                                     </div>
                                 </div>
                             )}
-                            {!allSameGoal && (
-                                <>
-                                    {goals.map((goalEntry, index) => (
-                                        <div key={index} className="mt-4 flex justify-center">
-                                            <div className="w-3/4">
-                                                <div className="px-2 py-2">
-                                                    für Zielgruppe: {goalEntry.target_group}
-                                                </div>
-                                                <textarea
-                                                    rows={5}
-                                                    value={goalEntry.goal}
-                                                    onChange={(e) => modifyGoal(index, e.target.value)}
-                                                    placeholder="Ziele beschreiben"
-                                                    className="border border-gray-500 rounded-lg w-full p-2"
-                                                />
-                                            </div>
-                                        </div>
-                                    ))}
-                                    <div className={'mx-2 flex justify-end mr-36 mt-4'}>
-                                        <button onClick={removeInputField}>
-                                            <RxMinus size={20} />
-                                        </button>
-                                        <button onClick={addInputField}>
-                                            <RxPlus size={20} />
-                                        </button>
-                                    </div>
-                                </>
-                            )}
+                            {!allSameGoal && <>{renderGoalsInputs()}</>}
                         </div>
                         <div className="flex justify-around w-full">
                             <div>
@@ -214,21 +201,12 @@ export default function Goals() {
                                 </Link>
                             </div>
                             <div>
-                                <Link
-                                    href={{
-                                        pathname:
-                                            '/startingWizard/generalInformation/courseFormat',
-                                        query: { plannerId: router.query.plannerId },
-                                    }}
+                                <button
+                                    type="submit"
+                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
                                 >
-                                    <button
-                                        type="submit"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                        onClick={handleSubmit}
-                                    >
-                                        Weiter
-                                    </button>
-                                </Link>
+                                    Weiter
+                                </button>
                             </div>
                         </div>
                     </form>
