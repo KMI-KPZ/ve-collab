@@ -4,14 +4,19 @@ import KeycloakProvider, { KeycloakProfile } from 'next-auth/providers/keycloak'
 import { type OAuthConfig } from 'next-auth/providers';
 import { AdapterUser } from 'next-auth/adapters';
 
-if (!process.env.KEYCLOAK_ID) {
+if (!process.env.NEXT_PUBLIC_KEYCLOAK_ID) {
     throw new Error(`
-      Please provide a valid KEYCLOAK_ID in .env.local .
+      Please provide a valid NEXT_PUBLIC_KEYCLOAK_ID in .env.local .
     `);
 }
 if (!process.env.KEYCLOAK_SECRET) {
     throw new Error(`
       Please provide a valid KEYCLOAK_SECRET in .env.local .
+    `);
+}
+if (!process.env.NEXT_PUBLIC_KEYCLOAK_ISSUER) {
+    throw new Error(`
+      Please provide a valid NEXT_PUBLIC_KEYCLOAK_ID in .env.local .
     `);
 }
 
@@ -112,7 +117,7 @@ const refreshAccessToken = async (token: JWT): Promise<JWT> => {
         if (!token.refreshTokenExpired) throw Error;
         if (Date.now() > token.refreshTokenExpired) throw Error;
         const details = {
-            client_id: process.env.KEYCLOAK_ID,
+            client_id: process.env.NEXT_PUBLIC_KEYCLOAK_ID,
             client_secret: process.env.KEYCLOAK_SECRET,
             grant_type: ['refresh_token'],
             refresh_token: token.refreshToken,
@@ -124,7 +129,7 @@ const refreshAccessToken = async (token: JWT): Promise<JWT> => {
             formBody.push(encodedKey + '=' + encodedValue);
         });
         const formData = formBody.join('&');
-        const url = `${process.env.KEYCLOAK_ISSUER}/protocol/openid-connect/token`;
+        const url = `${process.env.NEXT_PUBLIC_KEYCLOAK_ISSUER}/protocol/openid-connect/token`;
         const response = await fetch(url, {
             method: 'POST',
             headers: {
@@ -156,9 +161,9 @@ export const authOptions = {
     providers: [
         KeycloakProvider({
             id: 'keycloak',
-            clientId: process.env.KEYCLOAK_ID,
+            clientId: process.env.NEXT_PUBLIC_KEYCLOAK_ID,
             clientSecret: process.env.KEYCLOAK_SECRET,
-            issuer: process.env.KEYCLOAK_ISSUER,
+            issuer: process.env.NEXT_PUBLIC_KEYCLOAK_ISSUER,
             profile(profile: KeycloakProfile) {
                 console.log("profile:")
                 console.log(profile)

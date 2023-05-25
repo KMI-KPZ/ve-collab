@@ -1,11 +1,9 @@
-import { FormEvent, useEffect } from 'react';
+import { FormEvent } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { createHash } from 'crypto';
 import { useRouter } from 'next/router';
-import { signIn } from 'next-auth/react';
-import { signOut } from 'next-auth/react';
 
 interface Props {
     orcid: string | undefined | null;
@@ -15,45 +13,33 @@ interface Props {
 // renders the header bar within the edit form,
 // holds the buttons for ORCiD import, cancel and save
 export default function EditProfileHeader({ orcid, importOrcidProfile }: Props) {
-    const { data: session, status } = useSession();
+    const { data: session } = useSession();
     const router = useRouter();
 
-    useEffect(() => {
-        if (!router.isReady || status === 'loading') {
-            console.log('waiting');
-            return;
-        }
-        if (router.query.logout === 'true') {
-            console.log('trying logout');
-            signOut({ callbackUrl: '/waiting?login=true' });
-        } else if (router.query.login === 'true') {
-            console.log('try login');
-            signIn('keycloak', undefined, {
-                kc_idp_hint: 'orcid',
-                prompt: 'login',
-                redirect_uri: 'http://localhost:3000/editProfile',
-            });
-        }
-    }, [session, status, router]);
-
+    // trigger a client initiated account linking flow with orcid as per
+    // https://www.keycloak.org/docs/latest/server_development/#client-initiated-account-linking
     const triggerOrcidAccountLink = async (evt: FormEvent) => {
         evt.preventDefault();
-        console.log('löol');
 
-        let provider = 'orcid';
-        let realm = 'kavaq';
-        let clientId = 'test';
-        let redirectUri = 'http://localhost:3000/editProfile?logout=true'; // todo other page that tells the user that he gets relogged automatically, if no he has to click link
-        let nonce = 'kekwlol';
+        const provider = 'orcid';
+        const clientId = process.env.NEXT_PUBLIC_KEYCLOAK_ID;
+        const redirectUri = encodeURIComponent(
+            window.location.origin + '/orcidAccountLinkCallback?logout=true&fwd=/editProfile'
+        );
+        const nonce = crypto.randomUUID();
 
-        let toHash = nonce + session?.sessionState + clientId + provider;
-        let hash = createHash('sha256').update(toHash).digest();
-        let b64Encoded = hash.toString('base64');
-        b64Encoded = b64Encoded.replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-        console.log(b64Encoded);
+        // create a bas64-urlencoded sha256 hash of nonce + session_state + client id + provider
+        const toHash = nonce + session?.sessionState + clientId + provider;
+        const base64Hash = createHash('sha256').update(toHash).digest().toString('base64');
+        const b64HashUrlEncoded = base64Hash
+            .replace(/=/g, '')
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_');
 
-        let url = `https://skm.sc.uni-leipzig.de/auth/realms/${realm}/broker/${provider}/link?client_id=${clientId}&redirect_uri=${redirectUri}&nonce=${nonce}&hash=${b64Encoded}`;
-        console.log(url);
+        // send user to link keycloak account with ORCiD
+        let url =
+            process.env.NEXT_PUBLIC_KEYCLOAK_ISSUER +
+            `/broker/${provider}/link?client_id=${clientId}&redirect_uri=${redirectUri}&nonce=${nonce}&hash=${b64HashUrlEncoded}`;
         router.push(url);
     };
 
