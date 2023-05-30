@@ -85,8 +85,6 @@ class BaseHandler(tornado.web.RequestHandler):
                     token_info = jwt.decode(
                         bearer_token, KEYCLOAK_PUBLIC_KEY, audience="account"
                     )
-                    import pprint
-                    pprint.pprint(token_info)
                 except jose.exceptions.JWTError as e:
                     logger.info("Caught Exception: {} ".format(e))
                     self.current_user = None
