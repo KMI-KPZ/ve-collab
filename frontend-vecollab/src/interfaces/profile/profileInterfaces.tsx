@@ -5,6 +5,7 @@ export interface PersonalInformation {
     bio: string;
     expertise: string;
     birthday: string;
+    profilePicId?: string;
     languageTags: LanguageTag[];
 }
 

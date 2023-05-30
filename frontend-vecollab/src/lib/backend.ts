@@ -61,3 +61,22 @@ export async function fetchDELETE(relativeUrl: string, payload?: Record<string, 
         return {}
     }
 }
+
+export async function fetchImage(relativeUrl: string, accessToken?: string): Promise<Blob>{
+    const headers: {Authorization?: string} = {}
+
+    if (accessToken) {
+        headers["Authorization"] = "Bearer " + accessToken
+    }
+
+    try {
+        let backendResponse = await fetch(BACKEND_URL + relativeUrl, {
+            headers: headers
+        })
+        return backendResponse.blob()
+    }
+    catch (e) {
+        console.log("network error, probably backend down")
+        return new Blob()
+    }
+}

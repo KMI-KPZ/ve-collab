@@ -22,7 +22,17 @@ if (!process.env.NEXT_PUBLIC_KEYCLOAK_ISSUER) {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     reactStrictMode: true,
-    output: "standalone"
+    output: "standalone",
+    images: {
+      remotePatterns: [
+        {
+          protocol: 'http',
+          hostname: 'localhost',
+          port: '8888',
+          pathname: '/uploads/**',
+        },
+      ],
+    },
 };
 
 module.exports = nextConfig;

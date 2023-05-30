@@ -1,9 +1,16 @@
-import { Dispatch, FormEvent, SetStateAction } from 'react';
+import { Dispatch, FormEvent, SetStateAction, useState, ChangeEvent } from 'react';
 import { WithContext as ReactTags } from 'react-tag-input';
 import { PersonalInformation } from '@/interfaces/profile/profileInterfaces';
 import EditProfileHeader from './EditProfileHeader';
 import EditProfileHeadline from './EditProfileHeadline';
 import EditProfileVerticalSpacer from './EditProfileVerticalSpacer';
+import Dialog from './Dialog';
+import AvatarEditor from './AvatarEditor';
+import { fetchPOST } from '@/lib/backend';
+import { useSession } from 'next-auth/react';
+import Image from 'next/image';
+import { BACKEND_URL } from '@/constants';
+import ProfileImage from './ProfileImage';
 
 interface Props {
     personalInformation: PersonalInformation;
@@ -22,6 +29,28 @@ export default function EditPersonalInformation({
     orcid,
     importOrcidProfile,
 }: Props) {
+    const { data: session } = useSession();
+
+    const [isOpen, setIsOpen] = useState(false);
+    const [file, setFile] = useState('');
+    const handleOpenDialog = () => {
+        setIsOpen(true);
+    };
+    const handleCloseDialog = () => {
+        setIsOpen(false);
+    };
+
+    const onSelectFile = (e: ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files.length > 0) {
+            const reader = new FileReader();
+            // on load the reader.result is always an image
+            reader.addEventListener('load', () => {
+                setFile(reader.result as string);
+            });
+            reader.readAsDataURL(e.target.files[0]);
+        }
+    };
+
     const handleDeleteLanguage = (i: number) => {
         setPersonalInformation({
             ...personalInformation,
@@ -160,6 +189,73 @@ export default function EditPersonalInformation({
                         remove: 'ml-1',
                     }}
                 />
+            </EditProfileVerticalSpacer>
+            <EditProfileVerticalSpacer>
+                <EditProfileHeadline name={'Profilbild'} />
+                <div>
+                    <button
+                        className={'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            handleOpenDialog();
+                        }}
+                    >
+                        ändern
+                    </button>
+
+                    <Dialog
+                        isOpen={isOpen}
+                        title="Profilbild hochladen"
+                        onClose={handleCloseDialog}
+                    >
+                        <div className="my-2 mx-2">
+                            Wähle ein neues Profilbild aus und schneide es zurecht
+                        </div>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            className="my-2"
+                            onChange={onSelectFile}
+                            onClick={(e) => {
+                                e.currentTarget.value = '';
+                            }}
+                        />
+                        {file !== '' ? (
+                            <div className="w-[90vw] max-w-[450px] max-h-[85vh]">
+                                <AvatarEditor
+                                    sourceImg={file}
+                                    onFinishUpload={(blob) => {
+                                        console.log(blob);
+                                        const reader = new FileReader();
+                                        reader.readAsDataURL(blob);
+                                        reader.onloadend = function () {
+                                            var base64dataUri = reader.result as string;
+                                            const profilePicPayload = base64dataUri.replace(
+                                                /^data:image\/[a-z]+;base64,/,
+                                                ''
+                                            );
+                                            console.log(profilePicPayload);
+                                            fetchPOST(
+                                                '/profileinformation',
+                                                {
+                                                    profile_pic: {
+                                                        type: blob.type,
+                                                        payload: profilePicPayload
+                                                    },
+                                                },
+                                                session?.accessToken
+                                            );
+                                        };
+                                        handleCloseDialog;
+                                    }}
+                                />
+                            </div>
+                        ) : (
+                            <></>
+                        )}
+                    </Dialog>
+                </div>
+                <div><ProfileImage profilePicId={personalInformation.profilePicId}/></div>
             </EditProfileVerticalSpacer>
         </form>
     );

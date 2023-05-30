@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { RxDotsVertical } from 'react-icons/rx';
+import ProfileImage from './ProfileImage';
 
 interface Props {
     name: string;
@@ -12,7 +13,7 @@ export default function ProfileHeader({ name, institution, profilePictureUrl }: 
     return (
         <div className={'flex'}>
             <div className={'mr-8 rounded-full overflow-hidden border-4 border-white shadow-2xl'}>
-                <Image height={180} width={180} src={profilePictureUrl} alt={''} />
+                <ProfileImage profilePicId={profilePictureUrl} />
             </div>
             <div className={'mr-auto'}>
                 <Link href={'/editProfile'}>

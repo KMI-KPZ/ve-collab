@@ -113,7 +113,7 @@ export default function Profile() {
                             text: language,
                         })),
                     });
-                    setProfilePicUrl('/images/random_user.jpg');
+                    setProfilePicUrl(data.profile.profile_pic);
                     setVeInformation({
                         veInterests: data.profile.ve_interests,
                         veGoals: data.profile.ve_goals,

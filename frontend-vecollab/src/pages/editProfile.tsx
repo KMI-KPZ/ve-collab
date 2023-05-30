@@ -27,6 +27,7 @@ export default function EditProfile() {
         bio: '',
         expertise: '',
         birthday: '',
+        profilePicId: '',
         languageTags: [],
     });
     const [veInformation, setVeInformation] = useState<VEInformation>({
@@ -97,6 +98,7 @@ export default function EditProfile() {
                         bio: data.profile.bio,
                         expertise: data.profile.expertise,
                         birthday: data.profile.birthday,
+                        profilePicId: data.profile.profile_pic,
                         languageTags: data.profile.languages.map((language: string) => ({
                             id: language,
                             text: language,

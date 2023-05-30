@@ -1,5 +1,5 @@
+from base64 import b64decode
 import json
-import pprint
 from typing import Dict, List, Tuple
 from keycloak import KeycloakGetError
 import requests
@@ -211,9 +211,14 @@ class ProfileInformationHandler(BaseHandler):
 
         with Profiles() as profile_manager:
             # handle profile pic
-            if "profile_pic" in self.request.files:
-                profile_pic_obj = self.request.files["profile_pic"][0]
-                updated_attribute_dict["profile_pic"] = profile_pic_obj["filename"]
+            if "profile_pic" in updated_attribute_dict:
+                profile_pic_obj = {
+                    "body": b64decode(updated_attribute_dict["profile_pic"]["payload"]),
+                    "content_type": updated_attribute_dict["profile_pic"]["type"],
+                }
+                updated_attribute_dict["profile_pic"] = "avatar_{}".format(
+                    self.current_user.username
+                )
                 profile_manager.update_profile_information(
                     self.current_user.username,
                     updated_attribute_dict,
