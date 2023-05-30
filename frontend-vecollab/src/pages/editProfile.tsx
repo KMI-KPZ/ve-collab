@@ -251,7 +251,7 @@ export default function EditProfile() {
                     )}
                 </div>
             </WhiteBox>
-            {successPopupOpen && <EditProfileSuccessAlert message={'Gespeichert'}/>}
+            {successPopupOpen && <EditProfileSuccessAlert message={'Gespeichert'} />}
         </div>
     );
 }
