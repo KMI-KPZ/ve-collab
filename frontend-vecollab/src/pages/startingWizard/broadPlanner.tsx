@@ -45,15 +45,6 @@ export default function BroadPlanner() {
         setValue,
     } = useForm<FormValues>({
         mode: 'onChange',
-        /*        defaultValues: {
-            broadSteps: [
-                {
-                    from: '',
-                    to: '',
-                    name: '',
-                },
-            ],
-        },*/
     });
 
     useEffect(() => {
@@ -72,6 +63,13 @@ export default function BroadPlanner() {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
                     setLoading(false);
+                    setValue('broadSteps', [
+                        {
+                            from: '',
+                            to: '',
+                            name: '',
+                        },
+                    ]);
                     if (data.plan.steps?.length > 0) {
                         const steps: Step[] = data.plan.steps;
                         const broadSteps: BroadStep[] = steps.map((step) => {
