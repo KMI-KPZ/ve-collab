@@ -16,7 +16,7 @@ interface Task {
     tools: string[];
 }
 
-interface Step {
+export interface Step {
     _id?: string;
     timestamp_from: string;
     timestamp_to: string;
