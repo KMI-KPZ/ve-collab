@@ -10,7 +10,7 @@ import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 
-interface TargetGroup {
+export interface TargetGroup {
     name: string;
     age_min: string;
     age_max: string;
