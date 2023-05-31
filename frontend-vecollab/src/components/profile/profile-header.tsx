@@ -7,24 +7,36 @@ interface Props {
     name: string;
     institution: string;
     profilePictureUrl: string;
+    foreignUser: boolean;
 }
 
-export default function ProfileHeader({ name, institution, profilePictureUrl }: Props) {
+export default function ProfileHeader({
+    name,
+    institution,
+    profilePictureUrl,
+    foreignUser,
+}: Props) {
     return (
         <div className={'flex'}>
             <div className={'mr-8 rounded-full overflow-hidden border-4 border-white shadow-2xl'}>
                 <ProfileImage profilePicId={profilePictureUrl} />
             </div>
             <div className={'mr-auto'}>
-                <Link href={'/editProfile'}>
-                    <button
-                        className={
-                            'border border-white bg-black/75 text-white rounded-lg px-3 py-1 mt-2'
-                        }
-                    >
-                        <span>Profil bearbeiten</span>
-                    </button>
-                </Link>
+                <div className="mt-2 min-h-[2rem]">
+                    {!foreignUser && (
+                        <>
+                            <Link href={'/editProfile'}>
+                                <button
+                                    className={
+                                        'border border-white bg-black/75 text-white rounded-lg px-3 py-1'
+                                    }
+                                >
+                                    <span>Profil bearbeiten</span>
+                                </button>
+                            </Link>
+                        </>
+                    )}
+                </div>
                 <div className={'mt-11 font-bold text-4xl text-slate-900'}>{name}</div>
                 <div className={'text-gray-500'}>{institution}</div>
             </div>

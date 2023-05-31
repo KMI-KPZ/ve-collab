@@ -28,7 +28,7 @@ export default function Profile() {
         birthday: '',
         languageTags: [],
     });
-    const [profilePictureUrl, setProfilePicUrl] = useState('/images/random_user.jpg');
+    const [profilePictureUrl, setProfilePicUrl] = useState('');
     const [veInformation, setVeInformation] = useState<VEInformation>({
         veInterests: [''],
         veGoals: [''],
@@ -62,6 +62,8 @@ export default function Profile() {
         },
     ]);
 
+    const [foreignUser, setForeignUser] = useState(false);
+
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
@@ -84,53 +86,79 @@ export default function Profile() {
         }
         // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
         if (session) {
-            fetchGET(`/profileinformation`, session?.accessToken).then((data) => {
-                setLoading(false);
-                if (data) {
-                    // if the minimum profile data such as first_name and last_name is not set,
-                    // chances are high it is after the first register, therefore incentivize user
-                    // to fill out his profile by sending him to the edit page
-                    // TODO maybe also popup hint on there with some text that says exactly that
-                    if (
-                        data.profile.first_name === null ||
-                        data.profile.last_name === null ||
-                        data.profile.first_name === '' ||
-                        data.profile.last_name === ''
-                    ) {
-                        router.push('/editProfile');
-                    }
-                    console.log(data);
-
-                    setPersonalInformation({
-                        firstName: data.profile.first_name,
-                        lastName: data.profile.last_name,
-                        institution: data.profile.institution,
-                        bio: data.profile.bio,
-                        expertise: data.profile.expertise,
-                        birthday: data.profile.birthday,
-                        languageTags: data.profile.languages.map((language: string) => ({
-                            id: language,
-                            text: language,
-                        })),
+            // determine if we are watching the profile of a foreign user or my own
+            // by checking for a username query parameter and comparing against
+            // the user stored in the session
+            let username = '';
+            if (router.query.username) {
+                username = router.query.username as string;
+                if (username !== session.user.preferred_username) {
+                    setForeignUser((prev) => {
+                        return true;
                     });
-                    setProfilePicUrl(data.profile.profile_pic);
-                    setVeInformation({
-                        veInterests: data.profile.ve_interests,
-                        veGoals: data.profile.ve_goals,
-                        experience: data.profile.experience,
-                        preferredFormats: data.profile.preferred_formats,
+                } else {
+                    setForeignUser((prev) => {
+                        return false;
                     });
-
-                    setResearchTags(data.profile.research_tags);
-                    setCourses(data.profile.courses);
-                    setEducations(data.profile.educations);
-                    setWorkExperience(data.profile.work_experience);
                 }
-            });
+            } else {
+                setForeignUser((prev) => {
+                    return false;
+                });
+            }
+
+            // fetch profile information of the determined user
+            fetchGET(`/profileinformation?username=${username}`, session?.accessToken).then(
+                (data) => {
+                    setLoading(false);
+                    if (data) {
+                        // if the minimum profile data such as first_name and last_name is not set,
+                        // chances are high it is after the first register, therefore incentivize user
+                        // to fill out his profile by sending him to the edit page
+                        // TODO maybe also popup hint on there with some text that says exactly that.
+
+                        // foreignUser state always says false in the first pass, so gotta check manually -.-
+                        if (username == '' || username == session.user.preferred_username) {
+                            if (
+                                data.profile.first_name === null ||
+                                data.profile.last_name === null ||
+                                data.profile.first_name === '' ||
+                                data.profile.last_name === ''
+                            ) {
+                                router.push('/editProfile');
+                            }
+                        }
+                        setPersonalInformation({
+                            firstName: data.profile.first_name,
+                            lastName: data.profile.last_name,
+                            institution: data.profile.institution,
+                            bio: data.profile.bio,
+                            expertise: data.profile.expertise,
+                            birthday: data.profile.birthday,
+                            languageTags: data.profile.languages.map((language: string) => ({
+                                id: language,
+                                text: language,
+                            })),
+                        });
+                        setProfilePicUrl(data.profile.profile_pic);
+                        setVeInformation({
+                            veInterests: data.profile.ve_interests,
+                            veGoals: data.profile.ve_goals,
+                            experience: data.profile.experience,
+                            preferredFormats: data.profile.preferred_formats,
+                        });
+
+                        setResearchTags(data.profile.research_tags);
+                        setCourses(data.profile.courses);
+                        setEducations(data.profile.educations);
+                        setWorkExperience(data.profile.work_experience);
+                    }
+                }
+            );
         } else {
             signIn('keycloak');
         }
-    }, [session, status, router]);
+    }, [session, status, router, foreignUser]);
 
     return (
         <>
@@ -138,9 +166,10 @@ export default function Profile() {
                 <ProfileBanner followsNum={2500} followersNum={3500} />
                 <div className={'mx-20 mb-2 px-5 relative -mt-16 z-10'}>
                     <ProfileHeader
-                        name={personalInformation.firstName + personalInformation.lastName}
+                        name={personalInformation.firstName + ' ' + personalInformation.lastName}
                         institution={personalInformation.institution}
                         profilePictureUrl={profilePictureUrl}
+                        foreignUser={foreignUser}
                     />
                 </div>
                 <Container>
@@ -167,11 +196,15 @@ export default function Profile() {
                         <div className={'w-1/4  ml-4'}>
                             <WhiteBox>
                                 <PersonalData
-                                    name={personalInformation.firstName + personalInformation.lastName}
+                                    name={
+                                        personalInformation.firstName + personalInformation.lastName
+                                    }
                                     bio={personalInformation.bio}
                                     expertise={personalInformation.expertise}
                                     birthday={personalInformation.birthday}
-                                    languages={personalInformation.languageTags.map((tag) => tag.text)}
+                                    languages={personalInformation.languageTags.map(
+                                        (tag) => tag.text
+                                    )}
                                 />
                             </WhiteBox>
                             <WhiteBox>
