@@ -56,7 +56,7 @@ export default function Realization() {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
                     setLoading(false);
-                    if (data.plan.realization?.courseFormat !== null) {
+                    if (data.plan.realization !== null) {
                         setValue('courseFormat', data.plan.realization);
                     }
                 }
