@@ -8,8 +8,6 @@ import Dialog from './Dialog';
 import AvatarEditor from './AvatarEditor';
 import { fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import Image from 'next/image';
-import { BACKEND_URL } from '@/constants';
 import ProfileImage from './ProfileImage';
 
 interface Props {
@@ -31,21 +29,26 @@ export default function EditPersonalInformation({
 }: Props) {
     const { data: session } = useSession();
 
-    const [isOpen, setIsOpen] = useState(false);
-    const [file, setFile] = useState('');
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [profilePicFile, setProfilePicFile] = useState('');
     const handleOpenDialog = () => {
-        setIsOpen(true);
+        setIsDialogOpen(true);
     };
     const handleCloseDialog = () => {
-        setIsOpen(false);
+        setIsDialogOpen(false);
     };
 
-    const onSelectFile = (e: ChangeEvent<HTMLInputElement>) => {
+    /*
+    callback that is triggered when the user selects a new profile pic in
+    the input element. transforms the image to a base64 data uri and sets it
+    as profilePicFile
+    */
+    const onSelectProfilePicFile = (e: ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
             const reader = new FileReader();
             // on load the reader.result is always an image
             reader.addEventListener('load', () => {
-                setFile(reader.result as string);
+                setProfilePicFile(reader.result as string);
             });
             reader.readAsDataURL(e.target.files[0]);
         }
@@ -86,14 +89,22 @@ export default function EditPersonalInformation({
         console.log('The tag at index ' + index + ' was clicked');
     };
 
+    /*
+    upload the newly selected and cropped profile picture
+    to the backend. This is done separately from the rest of
+    the profile information to reduce state shares across components.
+    */
     const uploadProfileImage = (blob: Blob) => {
-        console.log(blob);
         const reader = new FileReader();
         reader.readAsDataURL(blob);
         reader.onloadend = function () {
+            // transform base64 payload via base64 data uri and stripping the
+            // pre-information
             var base64dataUri = reader.result as string;
             const profilePicPayload = base64dataUri.replace(/^data:image\/[a-z]+;base64,/, '');
-            console.log(profilePicPayload);
+
+            // send to backend and update state with returned _id to be able
+            // to retrieve image from uploads endpoint
             fetchPOST(
                 '/profileinformation',
                 {
@@ -104,7 +115,6 @@ export default function EditPersonalInformation({
                 },
                 session?.accessToken
             ).then((data) => {
-                console.log(data);
                 setPersonalInformation({
                     ...personalInformation,
                     profilePicId: data.profile_pic_id,
@@ -236,9 +246,8 @@ export default function EditPersonalInformation({
                             </button>
                         </div>
                     </div>
-
                     <Dialog
-                        isOpen={isOpen}
+                        isOpen={isDialogOpen}
                         title="Profilbild hochladen"
                         onClose={handleCloseDialog}
                     >
@@ -249,15 +258,15 @@ export default function EditPersonalInformation({
                             type="file"
                             accept="image/*"
                             className="my-2"
-                            onChange={onSelectFile}
+                            onChange={onSelectProfilePicFile}
                             onClick={(e) => {
                                 e.currentTarget.value = '';
                             }}
                         />
-                        {file !== '' ? (
+                        {profilePicFile !== '' ? (
                             <div className="w-[90vw] max-w-[450px] max-h-[85vh]">
                                 <AvatarEditor
-                                    sourceImg={file}
+                                    sourceImg={profilePicFile}
                                     onFinishUpload={(blob) => {
                                         uploadProfileImage(blob);
                                         handleCloseDialog();

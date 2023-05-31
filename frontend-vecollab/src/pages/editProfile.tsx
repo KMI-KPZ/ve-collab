@@ -131,6 +131,9 @@ export default function EditProfile() {
 
     const delimiters = [KeyCodes.comma, KeyCodes.enter];
 
+    /*
+    sync the currently entered form data with the backend
+    */
     const updateProfileData = async (evt: FormEvent) => {
         evt.preventDefault();
 
@@ -163,6 +166,12 @@ export default function EditProfile() {
         }, 2000);
     };
 
+    /*
+    import profile data from the users public ORCiD record.
+    This requires the user to have linked his ORCiD account,
+    which will result in the orcid being a part of the user's
+    access token. The backend ensures that.
+    */
     const importOrcidProfile = async (evt: FormEvent) => {
         evt.preventDefault();
 

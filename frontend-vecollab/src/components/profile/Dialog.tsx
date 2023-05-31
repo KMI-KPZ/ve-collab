@@ -7,6 +7,16 @@ interface Props {
     children: JSX.Element | JSX.Element[];
 }
 
+/*
+render a dialog modal with variable content
+both the "X" in top right corner and clicking anywhere outside the dialog close it.
+control structures need to be added from outside:
+- isOpen: controls to state if the dialog is rendered or not
+- onClose: is the callback triggered when the "X" or anywhere outside the modal is clicked
+  it should set isOpen to false to hide the modal.
+- title: if self explanatory - a simple title in bold font
+- children: content that is rendered inside the modal
+*/
 export default function Dialog({ isOpen, title, onClose, children }: Props) {
     return (
         <>
