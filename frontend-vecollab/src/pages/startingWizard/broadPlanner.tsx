@@ -121,28 +121,6 @@ export default function BroadPlanner() {
         });
     };
 
-    /*    const handleSubmit = async () => {
-        steps.forEach(async (step) => {
-            let payload = {
-                name: step.name,
-                workload: 0,
-                timestamp_from: step.from,
-                timestamp_to: step.to,
-                social_form: null,
-                learning_env: null,
-                ve_approach: null,
-                tasks: [],
-                evaluation_tools: [],
-                attachments: [],
-                custom_attributes: {},
-            };
-            await fetchPOST(
-                '/planner/append_step',
-                { plan_id: router.query.plannerId, step: payload },
-                session?.accessToken
-            );
-        });
-    };*/
     const renderBroadStepsInputs = (): JSX.Element[] => {
         return fields.map((step, index) => (
             <WhiteBox key={index}>
