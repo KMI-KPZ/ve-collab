@@ -3,8 +3,7 @@ import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarS
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { FormEvent, useEffect, useState } from 'react';
-import { RxMinus, RxPlus } from 'react-icons/rx';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
@@ -68,15 +67,17 @@ export default function Goals() {
                     setLoading(false);
                     const sameGoal: boolean = data.plan.goals.sameGoal;
                     const targetGroups: TargetGroup[] = data.plan.audience;
-                    const fetched = data.plan.goals.goalsList;
+                    let goalsAndTargets: Goal[] = data.plan.goals.goalsTargetList;
                     setValue('sameGoal', sameGoal);
-                    const goals: Goal[] = targetGroups.map((targetGroup, index) => {
-                        return {
-                            targetGroup: targetGroup.name,
-                            goal: '',
-                        };
-                    });
-                    setValue('goalsList', goals);
+                    if(goalsAndTargets===undefined) {
+                        goalsAndTargets = targetGroups.map((targetGroup) => {
+                            return {
+                                targetGroup: targetGroup.name,
+                                goal: '',
+                            };
+                        });
+                    }
+                    setValue('goalsList', goalsAndTargets);
                 }
             );
         }
@@ -119,12 +120,11 @@ export default function Goals() {
                                 value: 500,
                                 message: 'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                             },
-                            pattern: {
-                                value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
-                                message: 'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?-',
-                            },
                         })}
                     />
+                    <p className="text-red-600 pt-2">
+                        {errors?.goalsList?.[index]?.goal?.message}
+                    </p>
                 </div>
             </div>
         ));
@@ -171,13 +171,11 @@ export default function Goals() {
                                                     message:
                                                         'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                                                 },
-                                                pattern: {
-                                                    value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
-                                                    message:
-                                                        'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?-',
-                                                },
                                             })}
                                         />
+                                        <p className="text-red-600 pt-2">
+                                            {errors?.goalsList?.[0]?.goal?.message}
+                                        </p>
                                     </div>
                                 </div>
                             )}
