@@ -1,4 +1,5 @@
 from typing import Dict, List, Optional
+from bson import ObjectId
 
 import gridfs
 from pymongo import MongoClient
@@ -357,7 +358,7 @@ class Profiles:
         updated_profile: Dict,
         profile_pic: bytes = None,
         profile_pic_content_type: str = None,
-    ) -> None:
+    ) -> Optional[ObjectId]:
         """
         update the profile information including (optionally) the profile picture.
         The following keys are necessary in the `updated_profile` dict:
@@ -365,6 +366,9 @@ class Profiles:
         experience, education.
         The following keys are optional:
         profile_pic
+
+        If a profile_pic was updated, its inserted _id is returned, otherwise (regular
+        update of profile data) None is returned.
         """
 
         # verify space has all the necessary attributes
@@ -412,4 +416,8 @@ class Profiles:
                 "$setOnInsert": {"username": username, "role": "guest", "follows": []},
             },
             upsert=True,
+        )
+
+        return (
+            updated_profile["profile_pic"] if "profile_pic" in updated_profile else None
         )

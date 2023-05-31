@@ -36,7 +36,7 @@ export async function fetchPOST(relativeUrl: string, payload?: Record<string, an
         return await backendResponse.json()
     }
     catch (e) {
-        console.log("network error, probably backend down")
+        console.log(e)
         return {}
     }
 }

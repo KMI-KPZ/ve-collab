@@ -144,7 +144,14 @@ class ProfileInformationHandler(BaseHandler):
         """
         POST /profileinformation
 
-            update the profile information (bio, institution and projects)
+            update the profile information by supplying any of the information
+            that should be updated. Information that remains the same
+            can be left out. See possible keys down below.
+            Updating the profile pic is special, because JSON has no type for binary,
+            so the image is expected to be a base64 encoded string.
+            Whenever the profile_pic is updated, the response includes
+            a "profile_pic_id" key that indicated the _id of the stored picture.
+            Use this _id to retrieve it from /uploads/<_id> endpoint.
 
             http body:
                 {
@@ -191,12 +198,22 @@ class ProfileInformationHandler(BaseHandler):
                             additional_info: "<string>",
                         },
                     ],
+                    "profile_pic": {
+                        "body": "<base64_encoded_image>",
+                        "content_type": "<image/jpeg|image/png|...>"
+                    }
                 }
 
             returns:
                 200 OK,
                 {"status": 200,
                  "success": True}
+
+                 200 OK,
+                 --> profile pic was updated
+                {"status": 200,
+                 "success": True,
+                 "profile_pic_id": "<_id>"}
 
                 400 Bad Request
                 {"status": 400,
@@ -219,12 +236,22 @@ class ProfileInformationHandler(BaseHandler):
                 updated_attribute_dict["profile_pic"] = "avatar_{}".format(
                     self.current_user.username
                 )
-                profile_manager.update_profile_information(
+                profile_pic_id = profile_manager.update_profile_information(
                     self.current_user.username,
                     updated_attribute_dict,
                     profile_pic_obj["body"],
                     profile_pic_obj["content_type"],
                 )
+
+                self.set_status(200)
+                self.write(
+                    {
+                        "status": 200,
+                        "success": True,
+                        "profile_pic_id": str(profile_pic_id),
+                    }
+                )
+                return
             else:
                 profile_manager.update_profile_information(
                     self.current_user.username, updated_attribute_dict

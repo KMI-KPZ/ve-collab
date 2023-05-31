@@ -86,6 +86,33 @@ export default function EditPersonalInformation({
         console.log('The tag at index ' + index + ' was clicked');
     };
 
+    const uploadProfileImage = (blob: Blob) => {
+        console.log(blob);
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onloadend = function () {
+            var base64dataUri = reader.result as string;
+            const profilePicPayload = base64dataUri.replace(/^data:image\/[a-z]+;base64,/, '');
+            console.log(profilePicPayload);
+            fetchPOST(
+                '/profileinformation',
+                {
+                    profile_pic: {
+                        type: blob.type,
+                        payload: profilePicPayload,
+                    },
+                },
+                session?.accessToken
+            ).then((data) => {
+                console.log(data);
+                setPersonalInformation({
+                    ...personalInformation,
+                    profilePicId: data.profile_pic_id,
+                });
+            });
+        };
+    };
+
     return (
         <form onSubmit={updateProfileData}>
             <EditProfileHeader orcid={orcid} importOrcidProfile={importOrcidProfile} />
@@ -193,15 +220,22 @@ export default function EditPersonalInformation({
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'Profilbild'} />
                 <div>
-                    <button
-                        className={'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'}
-                        onClick={(e) => {
-                            e.preventDefault();
-                            handleOpenDialog();
-                        }}
-                    >
-                        ändern
-                    </button>
+                    <div className="w-fit">
+                        <div className="my-2 rounded-full overflow-hidden w-fit border-black border">
+                            <ProfileImage profilePicId={personalInformation.profilePicId} />
+                        </div>
+                        <div className="flex justify-center">
+                            <button
+                                className={'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    handleOpenDialog();
+                                }}
+                            >
+                                ändern
+                            </button>
+                        </div>
+                    </div>
 
                     <Dialog
                         isOpen={isOpen}
@@ -225,28 +259,8 @@ export default function EditPersonalInformation({
                                 <AvatarEditor
                                     sourceImg={file}
                                     onFinishUpload={(blob) => {
-                                        console.log(blob);
-                                        const reader = new FileReader();
-                                        reader.readAsDataURL(blob);
-                                        reader.onloadend = function () {
-                                            var base64dataUri = reader.result as string;
-                                            const profilePicPayload = base64dataUri.replace(
-                                                /^data:image\/[a-z]+;base64,/,
-                                                ''
-                                            );
-                                            console.log(profilePicPayload);
-                                            fetchPOST(
-                                                '/profileinformation',
-                                                {
-                                                    profile_pic: {
-                                                        type: blob.type,
-                                                        payload: profilePicPayload
-                                                    },
-                                                },
-                                                session?.accessToken
-                                            );
-                                        };
-                                        handleCloseDialog;
+                                        uploadProfileImage(blob);
+                                        handleCloseDialog();
                                     }}
                                 />
                             </div>
@@ -255,7 +269,6 @@ export default function EditPersonalInformation({
                         )}
                     </Dialog>
                 </div>
-                <div><ProfileImage profilePicId={personalInformation.profilePicId}/></div>
             </EditProfileVerticalSpacer>
         </form>
     );
