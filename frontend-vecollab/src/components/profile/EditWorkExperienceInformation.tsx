@@ -5,6 +5,7 @@ import EditProfileVerticalSpacer from './EditProfileVerticalSpacer';
 import EditProfileHeadline from './EditProfileHeadline';
 import EditProfileWorkExperienceItem from './EditProfileWorkExperienceItem';
 import EditProfilePlusMinusButtons from './EditProfilePlusMinusButtons';
+import Swapper from './Swapper';
 
 interface Props {
     workExperience: WorkExperience[];
@@ -69,6 +70,27 @@ export default function EditWorkExperienceInformation({
         setWorkExperience(newExperiences);
     };
 
+    const swapWorkExperiences = (e: FormEvent, firstIndex: number, secondIndex: number) => {
+        e.preventDefault();
+
+        let newExperiences = [...workExperience];
+
+        // swap indices
+        [newExperiences[firstIndex], newExperiences[secondIndex]] = [
+            newExperiences[secondIndex],
+            newExperiences[firstIndex],
+        ];
+        setWorkExperience(newExperiences);
+    };
+
+    const deleteFromWorkExperiences = (e: FormEvent, index: number) => {
+        e.preventDefault();
+
+        let copy = [...workExperience];
+        copy.splice(index, 1);
+        setWorkExperience(copy);
+    };
+
     const addWorkExperienceField = (e: FormEvent) => {
         e.preventDefault();
         setWorkExperience([
@@ -86,40 +108,37 @@ export default function EditWorkExperienceInformation({
         ]);
     };
 
-    const removeWorkExperienceField = (e: FormEvent) => {
-        e.preventDefault();
-        let copy = [...workExperience]; // have to create a deep copy that changes reference, because re-render is triggered by reference, not by values in the array
-        copy.pop();
-        setWorkExperience(copy);
-    };
-
     return (
         <form onSubmit={updateProfileData}>
             <EditProfileHeader orcid={orcid} importOrcidProfile={importOrcidProfile} />
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'Berufserfahrung'} />
                 {workExperience.map((workExp, index) => (
-                    <EditProfileWorkExperienceItem
+                    <Swapper
                         key={index}
-                        workExperience={workExp}
                         index={index}
-                        modifyCallbacks={{
-                            modifyWorkExperiencePosition,
-                            modifyWorkExperienceInstitution,
-                            modifyWorkExperienceDepartment,
-                            modifyWorkExperienceTimestampFrom,
-                            modifyWorkExperienceTimestampTo,
-                            modifyWorkExperienceCity,
-                            modifyWorkExperienceCountry,
-                            modifyWorkExperienceAdditionalInfo,
-                        }}
-                    />
+                        arrayLength={workExperience.length}
+                        swapCallback={swapWorkExperiences}
+                        deleteCallback={deleteFromWorkExperiences}
+                    >
+                        <EditProfileWorkExperienceItem
+                            key={index}
+                            workExperience={workExp}
+                            index={index}
+                            modifyCallbacks={{
+                                modifyWorkExperiencePosition,
+                                modifyWorkExperienceInstitution,
+                                modifyWorkExperienceDepartment,
+                                modifyWorkExperienceTimestampFrom,
+                                modifyWorkExperienceTimestampTo,
+                                modifyWorkExperienceCity,
+                                modifyWorkExperienceCountry,
+                                modifyWorkExperienceAdditionalInfo,
+                            }}
+                        />
+                    </Swapper>
                 ))}
-                <EditProfilePlusMinusButtons
-                    extendClassName="px-2"
-                    minusCallback={removeWorkExperienceField}
-                    plusCallback={addWorkExperienceField}
-                />
+                <EditProfilePlusMinusButtons plusCallback={addWorkExperienceField} />
             </EditProfileVerticalSpacer>
         </form>
     );

@@ -6,6 +6,7 @@ import EditProfileVerticalSpacer from './EditProfileVerticalSpacer';
 import EditProfileHeadline from './EditProfileHeadline';
 import EditProfilePlusMinusButtons from './EditProfilePlusMinusButtons';
 import EditProfileTeachingItem from './EditProfileTeachingItem';
+import Swapper from './Swapper';
 
 interface Props {
     researchTags: ResearchTag[];
@@ -72,16 +73,30 @@ export default function EditResearchAndTeachingInformation({
         setCourses(newCourses);
     };
 
+    const swapCourses = (e: FormEvent, firstIndex: number, secondIndex: number) => {
+        e.preventDefault();
+
+        let newCourses = [...courses];
+
+        // swap indices
+        [newCourses[firstIndex], newCourses[secondIndex]] = [
+            newCourses[secondIndex],
+            newCourses[firstIndex],
+        ];
+        setCourses(newCourses);
+    };
+
+    const deleteFromCourses = (e: FormEvent, index: number) => {
+        e.preventDefault();
+
+        let copy = [...courses];
+        copy.splice(index, 1);
+        setCourses(copy);
+    };
+
     const addCourseField = (e: FormEvent) => {
         e.preventDefault();
         setCourses([...courses, { title: '', academic_courses: '', semester: '' }]);
-    };
-
-    const removeCourseField = (e: FormEvent) => {
-        e.preventDefault();
-        let copy = [...courses]; // have to create a deep copy that changes reference, because re-render is triggered by reference, not by values in the array
-        copy.pop();
-        setCourses(copy);
     };
 
     return (
@@ -108,22 +123,25 @@ export default function EditResearchAndTeachingInformation({
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'Lehrveranstaltungen'} />
                 {courses.map((course, index) => (
-                    <EditProfileTeachingItem
+                    <Swapper
                         key={index}
-                        course={course}
                         index={index}
-                        modifyCallbacks={{
-                            modifyCourseTitle,
-                            modifyCourseAcademicCourses,
-                            modifyCourseSemester,
-                        }}
-                    />
+                        arrayLength={courses.length}
+                        swapCallback={swapCourses}
+                        deleteCallback={deleteFromCourses}
+                    >
+                        <EditProfileTeachingItem
+                            course={course}
+                            index={index}
+                            modifyCallbacks={{
+                                modifyCourseTitle,
+                                modifyCourseAcademicCourses,
+                                modifyCourseSemester,
+                            }}
+                        />
+                    </Swapper>
                 ))}
-                <EditProfilePlusMinusButtons
-                    extendClassName="px-2"
-                    minusCallback={removeCourseField}
-                    plusCallback={addCourseField}
-                />
+                <EditProfilePlusMinusButtons plusCallback={addCourseField} />
             </EditProfileVerticalSpacer>
         </form>
     );

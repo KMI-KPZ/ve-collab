@@ -5,6 +5,7 @@ import EditProfileVerticalSpacer from './EditProfileVerticalSpacer';
 import EditProfilePlusMinusButtons from './EditProfilePlusMinusButtons';
 import EditProfileHeadline from './EditProfileHeadline';
 import EditProfileEducationItem from './EditProfileEducationItem';
+import Swapper from './Swapper';
 
 interface Props {
     educations: Education[];
@@ -57,6 +58,27 @@ export default function EditEducationInformation({
         setEducations(newEducations);
     };
 
+    const swapEducations = (e: FormEvent, firstIndex: number, secondIndex: number) => {
+        e.preventDefault();
+
+        let newEducations = [...educations];
+
+        // swap indices
+        [newEducations[firstIndex], newEducations[secondIndex]] = [
+            newEducations[secondIndex],
+            newEducations[firstIndex],
+        ];
+        setEducations(newEducations);
+    };
+
+    const deleteFromEducations = (e: FormEvent, index: number) => {
+        e.preventDefault();
+
+        let copy = [...educations];
+        copy.splice(index, 1);
+        setEducations(copy);
+    };
+
     const addEducationField = (e: FormEvent) => {
         e.preventDefault();
         setEducations([
@@ -72,38 +94,34 @@ export default function EditEducationInformation({
         ]);
     };
 
-    const removeEducationField = (e: FormEvent) => {
-        e.preventDefault();
-        let copy = [...educations]; // have to create a deep copy that changes reference, because re-render is triggered by reference, not by values in the array
-        copy.pop();
-        setEducations(copy);
-    };
-
     return (
         <form onSubmit={updateProfileData}>
             <EditProfileHeader orcid={orcid} importOrcidProfile={importOrcidProfile} />
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'Ausbildung'} />
                 {educations.map((education, index) => (
-                    <EditProfileEducationItem
+                    <Swapper
                         key={index}
-                        education={education}
                         index={index}
-                        modifyCallbacks={{
-                            modifyEducationInstitution,
-                            modifyEducationDegree,
-                            modifyEducationDepartment,
-                            modifyEducationTimestampFrom,
-                            modifyEducationTimestampTo,
-                            modifyEducationAdditionalInfo,
-                        }}
-                    />
+                        arrayLength={educations.length}
+                        swapCallback={swapEducations}
+                        deleteCallback={deleteFromEducations}
+                    >
+                        <EditProfileEducationItem
+                            education={education}
+                            index={index}
+                            modifyCallbacks={{
+                                modifyEducationInstitution,
+                                modifyEducationDegree,
+                                modifyEducationDepartment,
+                                modifyEducationTimestampFrom,
+                                modifyEducationTimestampTo,
+                                modifyEducationAdditionalInfo,
+                            }}
+                        />
+                    </Swapper>
                 ))}
-                <EditProfilePlusMinusButtons
-                    extendClassName="px-2"
-                    minusCallback={removeEducationField}
-                    plusCallback={addEducationField}
-                />
+                <EditProfilePlusMinusButtons plusCallback={addEducationField} />
             </EditProfileVerticalSpacer>
         </form>
     );
