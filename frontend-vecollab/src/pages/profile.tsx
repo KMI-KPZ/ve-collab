@@ -197,7 +197,9 @@ export default function Profile() {
                             <WhiteBox>
                                 <PersonalData
                                     name={
-                                        personalInformation.firstName + personalInformation.lastName
+                                        personalInformation.firstName +
+                                        ' ' +
+                                        personalInformation.lastName
                                     }
                                     bio={personalInformation.bio}
                                     expertise={personalInformation.expertise}
