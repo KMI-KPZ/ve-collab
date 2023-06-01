@@ -28,7 +28,7 @@ export default function Swapper({
                             swapCallback(e, index - 1, index);
                         }}
                     >
-                        <RxArrowUp size={20} />
+                        <RxArrowUp size={20} color='gray'/>
                     </button>
                 )}
                 {/* use same for min-w as for icon size*/}
@@ -39,7 +39,7 @@ export default function Swapper({
                                 swapCallback(e, index, index + 1);
                             }}
                         >
-                            <RxArrowDown size={20} />
+                            <RxArrowDown size={20} color='gray'/>
                         </button>
                     )}
                 </div>
@@ -48,7 +48,7 @@ export default function Swapper({
                         deleteCallback(e, index);
                     }}
                 >
-                    <RxTrash size={20} />
+                    <RxTrash size={20} color='gray'/>
                 </button>
             </div>
         </div>

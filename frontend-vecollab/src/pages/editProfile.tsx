@@ -90,7 +90,6 @@ export default function EditProfile() {
             fetchGET(`/profileinformation`, session?.accessToken).then((data) => {
                 setLoading(false);
                 if (data) {
-                    console.log(data);
                     setPersonalInformation({
                         firstName: data.profile.first_name,
                         lastName: data.profile.last_name,
