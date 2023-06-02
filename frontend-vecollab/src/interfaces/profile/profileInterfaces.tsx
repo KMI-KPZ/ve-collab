@@ -51,3 +51,9 @@ export interface WorkExperience {
     country: string;
     additional_info: string;
 }
+
+export interface UserSnippet {
+    profilPicUrl: string;
+    name: string;
+    institution: string;
+}

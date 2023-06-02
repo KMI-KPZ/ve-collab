@@ -163,7 +163,12 @@ export default function Profile() {
     return (
         <>
             <Container>
-                <ProfileBanner followsNum={2500} followersNum={3500} />
+                <ProfileBanner
+                    followsNum={2500}
+                    followersNum={3500}
+                    foreignUser={foreignUser}
+                    username={personalInformation.firstName + ' ' + personalInformation.lastName}
+                />
                 <div className={'mx-20 mb-2 px-5 relative -mt-16 z-10'}>
                     <ProfileHeader
                         name={personalInformation.firstName + ' ' + personalInformation.lastName}
