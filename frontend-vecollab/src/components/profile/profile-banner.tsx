@@ -8,28 +8,56 @@ import { RxTrash } from 'react-icons/rx';
 import { useSession, signIn } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '../LoadingAnimation';
+import { fetchDELETE, fetchPOST } from '@/lib/backend';
+import AuthenticatedImage from './AuthenticatedImage';
 
 interface Props {
-    followsNum: number;
-    followersNum: number;
+    follows: string[];
+    followers: string[];
     foreignUser: boolean;
     username: string;
 }
 
-export default function ProfileBanner({ followsNum, followersNum, foreignUser, username }: Props) {
+export default function ProfileBanner({ follows, followers, foreignUser, username }: Props) {
+    const { data: session, status } = useSession();
+    const [loading, setLoading] = useState(false);
+    const router = useRouter();
+
     const [isFollowingDialogOpen, setIsFollowingDialogOpen] = useState(false);
+    const [followerSnippets, setFollowerSnippets] = useState<UserSnippet[]>([
+        { name: '', profilePicUrl: '', institution: '', preferredUsername: '' },
+    ]);
+
     const handleOpenFollowingDialog = () => {
         setIsFollowingDialogOpen(true);
-        //setLoading(true);
+        setLoading(true);
         // TODO request folling snippets and set state to trigger rerender and setLoading(false) on finish
+        fetchPOST('/profile_snippets', { usernames: follows }, session?.accessToken).then(
+            (data) => {
+                setFollowerSnippets(
+                    data.user_snippets.map((snippet: any) => ({
+                        name: snippet.first_name + ' ' + snippet.last_name,
+                        profilePicUrl: snippet.profile_pic,
+                        institution: snippet.institution,
+                        preferredUsername: snippet.username,
+                    }))
+                );
+                setLoading(false);
+            }
+        );
     };
     const handleCloseFollowingDialog = () => {
         setIsFollowingDialogOpen(false);
     };
 
-    const { data: session, status } = useSession();
-    const [loading, setLoading] = useState(false);
-    const router = useRouter();
+    const unfollowUser = (username: string) => {
+        fetchDELETE(`/follow?user=${username}`, {}, session?.accessToken).then(() => {
+            const removedUser = followerSnippets.filter(
+                (snippet) => snippet.preferredUsername !== username
+            );
+            setFollowerSnippets(removedUser);
+        });
+    };
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -53,11 +81,11 @@ export default function ProfileBanner({ followsNum, followersNum, foreignUser, u
                             handleOpenFollowingDialog();
                         }}
                     >
-                        <div className={'font-bold'}>{followsNum}</div>
+                        <div className={'font-bold'}>{follows.length}</div>
                         <div>Folgt</div>
                     </div>
                     <div className={'pl-6 text-lg text-white'}>
-                        <div className={'font-bold'}>{followersNum}</div>
+                        <div className={'font-bold'}>{followers.length}</div>
                         <div>Follower</div>
                     </div>
                 </div>
@@ -74,58 +102,48 @@ export default function ProfileBanner({ followsNum, followersNum, foreignUser, u
                         </div>
                     ) : (
                         <ul className="px-1 divide-y">
-                            <li
-                                className="flex py-2 cursor-pointer"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    console.log('test');
-                                }}
-                            >
-                                <div>
-                                    <Image
-                                        src={'/images/random_user.jpg'}
-                                        alt={'Profilbild'}
-                                        width={60}
-                                        height={60}
-                                        className="rounded-full"
-                                    ></Image>
-                                </div>
-                                <div className="">
-                                    <BoxHeadline title={'Name'} />
-                                    <div className="mx-2 px-1 my-1 text-gray-600">institution</div>
-                                </div>
-                                {!foreignUser && (
-                                    <div className="ml-auto flex items-center">
-                                        <RxTrash size={20} />
+                            {followerSnippets.map((snippet, index) => (
+                                <li key={index} className="flex py-2">
+                                    <div
+                                        className="flex cursor-pointer"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            router.push(
+                                                `/profile?username=${snippet.preferredUsername}`
+                                            );
+                                            handleCloseFollowingDialog();
+                                        }}
+                                    >
+                                        <div>
+                                            <AuthenticatedImage
+                                                imageId={snippet.profilePicUrl}
+                                                alt={'Profilbild'}
+                                                width={60}
+                                                height={60}
+                                                className="rounded-full"
+                                            ></AuthenticatedImage>
+                                        </div>
+                                        <div>
+                                            <BoxHeadline title={snippet.name} />
+                                            <div className="mx-2 px-1 my-1 text-gray-600">
+                                                {snippet.institution}
+                                            </div>
+                                        </div>
                                     </div>
-                                )}
-                            </li>
-                            <li
-                                className="flex py-2 cursor-pointer"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    console.log('test2');
-                                }}
-                            >
-                                <div>
-                                    <Image
-                                        src={'/images/random_user.jpg'}
-                                        alt={'Profilbild'}
-                                        width={60}
-                                        height={60}
-                                        className="rounded-full"
-                                    ></Image>
-                                </div>
-                                <div className="">
-                                    <BoxHeadline title={'Name'} />
-                                    <div className="mx-2 px-1 my-1 text-gray-600">institution</div>
-                                </div>
-                                {!foreignUser && (
-                                    <div className="ml-auto flex items-center">
-                                        <RxTrash size={20} />
-                                    </div>
-                                )}
-                            </li>
+                                    {!foreignUser && (
+                                        <div className="ml-auto flex items-center">
+                                            <RxTrash
+                                                size={20}
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    unfollowUser(snippet.preferredUsername);
+                                                }}
+                                                className="cursor-pointer"
+                                            />
+                                        </div>
+                                    )}
+                                </li>
+                            ))}
                         </ul>
                     )}
                 </div>

@@ -421,3 +421,44 @@ class Profiles:
         return (
             updated_profile["profile_pic"] if "profile_pic" in updated_profile else None
         )
+
+    def get_profile_snippets(self, usernames: List[str]) -> List[Dict]:
+        """
+        request the profile snippet (i.e. username, first_name, last_name, institution
+        and profile_pic) for every given username in `usernames` and return them as
+        a Dict.
+        If any of the usernames has no profile, it is omitted from the response,
+        meaning the length of the response list and the given list of usernames
+        might differ.
+        """
+
+        if not isinstance(usernames, list):
+            raise TypeError(
+                "expected type 'list' for argument 'usernames', got {}".format(
+                    type(usernames)
+                )
+            )
+
+        if not usernames:
+            return []
+
+        profiles = self.db.profiles.find(
+            {"username": {"$in": usernames}},
+            projection={
+                "username": True,
+                "first_name": True,
+                "last_name": True,
+                "institution": True,
+                "profile_pic": True,
+            },
+        )
+        return [
+            {
+                "username": profile["username"],
+                "first_name": profile["first_name"],
+                "last_name": profile["last_name"],
+                "institution": profile["institution"],
+                "profile_pic": profile["profile_pic"],
+            }
+            for profile in profiles
+        ]

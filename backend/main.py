@@ -84,6 +84,7 @@ def make_app(cookie_secret):
             (r"/timeline/user/(.+)", UserTimelineHandler),
             (r"/timeline/you", PersonalTimelineHandler),
             (r"/profileinformation", ProfileInformationHandler),
+            (r"/profile_snippets", BulkProfileSnippets),
             (r"/users/(.+)", UserHandler),
             (r"/role/(.+)", RoleHandler),
             (r"/global_acl/(.+)", GlobalACLHandler),

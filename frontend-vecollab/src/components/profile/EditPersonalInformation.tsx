@@ -8,7 +8,7 @@ import Dialog from './Dialog';
 import AvatarEditor from './AvatarEditor';
 import { fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import ProfileImage from './ProfileImage';
+import AuthenticatedImage from './AuthenticatedImage';
 
 interface Props {
     personalInformation: PersonalInformation;
@@ -232,7 +232,12 @@ export default function EditPersonalInformation({
                 <div>
                     <div className="w-fit">
                         <div className="my-2 rounded-full overflow-hidden w-fit border-black border">
-                            <ProfileImage profilePicId={personalInformation.profilePicId} />
+                            <AuthenticatedImage
+                                imageId={personalInformation.profilePicId as string}
+                                alt={'Profilbild'}
+                                width={180}
+                                height={180}
+                            />
                         </div>
                         <div className="flex justify-center">
                             <button

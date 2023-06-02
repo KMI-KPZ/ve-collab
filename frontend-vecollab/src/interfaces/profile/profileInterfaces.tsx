@@ -53,7 +53,8 @@ export interface WorkExperience {
 }
 
 export interface UserSnippet {
-    profilPicUrl: string;
+    profilePicUrl: string;
     name: string;
+    preferredUsername: string;
     institution: string;
 }

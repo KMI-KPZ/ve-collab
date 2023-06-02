@@ -261,6 +261,73 @@ class ProfileInformationHandler(BaseHandler):
             self.write({"status": 200, "success": True})
 
 
+class BulkProfileSnippets(BaseHandler):
+    @auth_needed
+    def post(self):
+        """
+        POST /profile_snippets
+            request profile snippets, i.e. username, first_name, last_name,
+            institution and profile_pic for a list of users. Specify
+            this list of usernames in the body.
+            The profile_pic is an identifier that can be exchanged for the actual
+            profile image at the /uploads endpoint. See the documentation for
+            `GridFSStaticFileHandler` for reference.
+
+            query params:
+                None
+
+            http body:
+                {
+                    "usernames": ["username1", "username2"]
+                }
+
+            returns:
+                200 OK,
+                {"success": True,
+                 "user_snippets": [
+                    {
+                        "username": "<string>",
+                        "first_name": "<string>",
+                        "last_name": "<string>",
+                        "profile_pic": "<string>",
+                        "institution": "<string>",
+                    }
+                 ]
+                }
+
+                400 Bad Request
+                --> http body is not valid json
+                {"success": False,
+                 "reason": "json_parsing_error"}
+
+                400 Bad Request
+                {"success": False,
+                 "reason": "missing_key_in_http_body"}
+
+                401 Unauthorized
+                {"sucess": False,
+                 "reason": "no_logged_in_user"}
+        """
+
+        try:
+            http_body = json.loads(self.request.body)
+        except Exception:
+            self.set_status(400)
+            self.write({"success": False, "reason": "json_parsing_error"})
+            return
+
+        if "usernames" not in http_body:
+            self.set_status(400)
+            self.write({"success": False, "reason": "missing_key_in_http_body"})
+            return
+
+        with Profiles() as profile_manager:
+            profiles = profile_manager.get_profile_snippets(http_body["usernames"])
+
+            self.set_status(200)
+            self.write({"success": True, "user_snippets": profiles})
+
+
 class OrcidProfileHandler(BaseHandler):
     """
     request profile data from ORCiD API

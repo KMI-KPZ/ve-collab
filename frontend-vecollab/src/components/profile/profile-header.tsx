@@ -1,10 +1,10 @@
 import Link from 'next/link';
 import { RxDotsVertical } from 'react-icons/rx';
-import ProfileImage from './ProfileImage';
 import { fetchDELETE, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import { useEffect} from 'react';
 import { useRouter } from 'next/router';
+import AuthenticatedImage from './AuthenticatedImage';
 
 interface Props {
     name: string;
@@ -57,7 +57,7 @@ export default function ProfileHeader({
     return (
         <div className={'flex'}>
             <div className={'mr-8 rounded-full overflow-hidden border-4 border-white shadow-2xl'}>
-                <ProfileImage profilePicId={profilePictureUrl} />
+                <AuthenticatedImage imageId={profilePictureUrl} alt={'Profilbild'} width={180} height={180} />
             </div>
             <div className={'mr-auto'}>
                 <div className="mt-2 min-h-[2rem]">

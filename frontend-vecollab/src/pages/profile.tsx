@@ -28,7 +28,8 @@ export default function Profile() {
         birthday: '',
         languageTags: [],
     });
-    const [followers, setFollowers] = useState(['']);
+    const [followers, setFollowers] = useState(['']); // other users that follow this user (usernames)
+    const [follows, setFollows] = useState(['']); // the other users that this user follows (usernames)
     const [profilePictureUrl, setProfilePicUrl] = useState('');
     const [veInformation, setVeInformation] = useState<VEInformation>({
         veInterests: [''],
@@ -142,7 +143,8 @@ export default function Profile() {
                                 text: language,
                             })),
                         });
-                        setFollowers(data.followers)
+                        setFollowers(data.followers);
+                        setFollows(data.follows);
                         setProfilePicUrl(data.profile.profile_pic);
                         setVeInformation({
                             veInterests: data.profile.ve_interests,
@@ -167,8 +169,8 @@ export default function Profile() {
         <>
             <Container>
                 <ProfileBanner
-                    followsNum={2500}
-                    followersNum={3500}
+                    follows={follows}
+                    followers={followers}
                     foreignUser={foreignUser}
                     username={personalInformation.firstName + ' ' + personalInformation.lastName}
                 />
