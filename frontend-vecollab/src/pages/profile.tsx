@@ -28,6 +28,7 @@ export default function Profile() {
         birthday: '',
         languageTags: [],
     });
+    const [followers, setFollowers] = useState(['']);
     const [profilePictureUrl, setProfilePicUrl] = useState('');
     const [veInformation, setVeInformation] = useState<VEInformation>({
         veInterests: [''],
@@ -112,6 +113,7 @@ export default function Profile() {
                 (data) => {
                     setLoading(false);
                     if (data) {
+                        console.log(data);
                         // if the minimum profile data such as first_name and last_name is not set,
                         // chances are high it is after the first register, therefore incentivize user
                         // to fill out his profile by sending him to the edit page
@@ -140,6 +142,7 @@ export default function Profile() {
                                 text: language,
                             })),
                         });
+                        setFollowers(data.followers)
                         setProfilePicUrl(data.profile.profile_pic);
                         setVeInformation({
                             veInterests: data.profile.ve_interests,
@@ -158,7 +161,7 @@ export default function Profile() {
         } else {
             signIn('keycloak');
         }
-    }, [session, status, router, foreignUser]);
+    }, [session, status, router]);
 
     return (
         <>
@@ -175,6 +178,7 @@ export default function Profile() {
                         institution={personalInformation.institution}
                         profilePictureUrl={profilePictureUrl}
                         foreignUser={foreignUser}
+                        followers={followers}
                     />
                 </div>
                 <Container>
