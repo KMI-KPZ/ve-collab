@@ -117,6 +117,7 @@ class BaseResourceTestCase(TestCase):
             academic_course="test",
             mother_tongue="test",
             foreign_languages={"test": "l1"},
+            learning_goal="test",
         )
 
     def create_institution(self, name: str = "test") -> Institution:
@@ -168,7 +169,6 @@ class PlanResourceTest(BaseResourceTestCase):
             "languages": ["test", "test"],
             "timestamp_from": self.step.timestamp_from,
             "timestamp_to": self.step.timestamp_to,
-            "goals": {"test": "test"},
             "involved_parties": ["test", "test"],
             "realization": "test",
             "learning_env": "test",
@@ -216,7 +216,6 @@ class PlanResourceTest(BaseResourceTestCase):
                     self.default_plan["audience"],
                 )
                 self.assertEqual(plan.languages, self.default_plan["languages"])
-                self.assertEqual(plan.goals, self.default_plan["goals"])
                 self.assertEqual(
                     plan.involved_parties, self.default_plan["involved_parties"]
                 )
@@ -283,7 +282,6 @@ class PlanResourceTest(BaseResourceTestCase):
             self.default_plan["audience"],
         )
         self.assertEqual(plan.languages, self.default_plan["languages"])
-        self.assertEqual(plan.goals, self.default_plan["goals"])
         self.assertEqual(plan.involved_parties, self.default_plan["involved_parties"])
         self.assertEqual(plan.realization, self.default_plan["realization"])
         self.assertEqual(plan.learning_env, self.default_plan["learning_env"])
@@ -320,7 +318,6 @@ class PlanResourceTest(BaseResourceTestCase):
                 "languages": ["test", "test"],
                 "timestamp_from": self.step.timestamp_from,
                 "timestamp_to": self.step.timestamp_to,
-                "goals": {"test": "test"},
                 "involved_parties": ["test", "test"],
                 "realization": "test",
                 "learning_env": "test",
@@ -342,7 +339,6 @@ class PlanResourceTest(BaseResourceTestCase):
                 "languages": ["test", "test"],
                 "timestamp_from": self.step.timestamp_from,
                 "timestamp_to": self.step.timestamp_to,
-                "goals": {"test": "test"},
                 "involved_parties": ["test", "test"],
                 "realization": "test",
                 "learning_env": "test",
@@ -377,7 +373,6 @@ class PlanResourceTest(BaseResourceTestCase):
             self.default_plan["audience"],
         )
         self.assertEqual(plan.languages, self.default_plan["languages"])
-        self.assertEqual(plan.goals, self.default_plan["goals"])
         self.assertEqual(plan.involved_parties, self.default_plan["involved_parties"])
         self.assertEqual(plan.realization, self.default_plan["realization"])
         self.assertEqual(plan.learning_env, self.default_plan["learning_env"])
@@ -409,7 +404,6 @@ class PlanResourceTest(BaseResourceTestCase):
             "languages": ["test", "test"],
             "timestamp_from": self.step.timestamp_from,
             "timestamp_to": self.step.timestamp_to,
-            "goals": {"test": "test"},
             "involved_parties": ["test", "test"],
             "realization": "test",
             "learning_env": "test",
@@ -446,7 +440,6 @@ class PlanResourceTest(BaseResourceTestCase):
             "languages": ["test", "test"],
             "timestamp_from": self.step.timestamp_from,
             "timestamp_to": self.step.timestamp_to,
-            "goals": {"test": "test"},
             "involved_parties": ["test", "test"],
             "realization": "test",
             "learning_env": "test",
@@ -542,7 +535,6 @@ class PlanResourceTest(BaseResourceTestCase):
         """
 
         self.planner.update_field(self.plan_id, "topic", "updated_topic")
-        self.planner.update_field(self.plan_id, "goals", {"updated": "updated"})
         self.planner.update_field(
             self.plan_id, "involved_parties", ["update1", "update2"]
         )
@@ -554,7 +546,6 @@ class PlanResourceTest(BaseResourceTestCase):
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
         self.assertEqual(db_state["topic"], "updated_topic")
-        self.assertEqual(db_state["goals"], {"updated": "updated"})
         self.assertEqual(db_state["involved_parties"], ["update1", "update2"])
         self.assertEqual(db_state["realization"], "updated_realization")
         self.assertEqual(db_state["learning_env"], "updated_learning_env")
@@ -576,6 +567,7 @@ class PlanResourceTest(BaseResourceTestCase):
             academic_course="updated_academic_course",
             mother_tongue="de",
             foreign_languages={"en": "c1"},
+            learning_goal="test",
         )
         # we need to delay our execution here just a little bit, because otherwise
         # the updated would happen too fast relative to the setup, which would result
@@ -595,6 +587,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(
             db_state["audience"][0]["foreign_languages"], tg.foreign_languages
         )
+        self.assertEqual(db_state["audience"][0]["learning_goal"], tg.learning_goal)
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
         # same, but this time manually specify a _id
@@ -607,6 +600,7 @@ class PlanResourceTest(BaseResourceTestCase):
             academic_course="updated_academic_course2",
             mother_tongue="de2",
             foreign_languages={"en": "c1"},
+            learning_goal="test",
         )
         # we need to delay our execution here just a little bit, because otherwise
         # the updated would happen too fast relative to the setup, which would result
@@ -628,6 +622,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(
             db_state["audience"][0]["foreign_languages"], tg2.foreign_languages
         )
+        self.assertEqual(db_state["audience"][0]["learning_goal"], tg.learning_goal)
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
     def test_update_field_upsert(self):

@@ -178,11 +178,11 @@ class VEPlanHandler(BaseHandler):
                                 "experience": "test",
                                 "academic_course": "test",
                                 "mother_tongue": "test",
-                                "foreign_languages": {}
+                                "foreign_languages": {},
+                                "learning_goal": "test",
                             }
                         ],
                         "languages": ["test"],
-                        "goals": {"test":"test"},
                         "involved_parties": ["test"],
                         "realization": "test",
                         "learning_env": "test",
@@ -347,11 +347,11 @@ class VEPlanHandler(BaseHandler):
                                 "experience": "test",
                                 "academic_course": "test",
                                 "mother_tongue": "test",
-                                "foreign_languages": {}
+                                "foreign_languages": {},
+                                "learning_goal": "test",
                             }
                         ],
                         "languages": ["test"],
-                        "goals": {"test":"test"},
                         "involved_parties": ["test"],
                         "realization": "test",
                         "learning_env": "test",
@@ -524,13 +524,13 @@ class VEPlanHandler(BaseHandler):
             Append a new step to an already existing plan by specifying the
             plan's id and the desired step in the http body.
 
-            The step-object in the http body has to be parseable by 
+            The step-object in the http body has to be parseable by
             `Step.from_dict()`. Additionally, the constraint that step names
             have to be unique within a plan is also enforced.
 
             query params:
                 None
-            
+
             http body:
                 {
                     "plan_id": <id_of_plan>,

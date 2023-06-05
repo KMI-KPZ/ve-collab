@@ -560,6 +560,7 @@ class TargetGroupModelTest(TestCase):
         self.assertEqual(target_group.academic_course, None)
         self.assertEqual(target_group.mother_tongue, None)
         self.assertEqual(target_group.foreign_languages, None)
+        self.assertEqual(target_group.learning_goal, None)
         self.assertIsInstance(target_group._id, ObjectId)
 
     def test_init(self):
@@ -577,6 +578,7 @@ class TargetGroupModelTest(TestCase):
             academic_course="test",
             mother_tongue="test",
             foreign_languages={"test": "l1"},
+            learning_goal="test",
         )
 
         self.assertEqual(target_group.name, "test")
@@ -586,6 +588,7 @@ class TargetGroupModelTest(TestCase):
         self.assertEqual(target_group.academic_course, "test")
         self.assertEqual(target_group.mother_tongue, "test")
         self.assertEqual(target_group.foreign_languages, {"test": "l1"})
+        self.assertEqual(target_group.learning_goal, "test")
         self.assertEqual(target_group._id, _id)
 
         _id = ObjectId()
@@ -598,6 +601,7 @@ class TargetGroupModelTest(TestCase):
             academic_course="test",
             mother_tongue="test",
             foreign_languages={"test": "l1"},
+            learning_goal="test",
         )
 
         self.assertEqual(target_group.name, "test")
@@ -607,6 +611,7 @@ class TargetGroupModelTest(TestCase):
         self.assertEqual(target_group.academic_course, "test")
         self.assertEqual(target_group.mother_tongue, "test")
         self.assertEqual(target_group.foreign_languages, {"test": "l1"})
+        self.assertEqual(target_group.learning_goal, "test")
         self.assertEqual(target_group._id, _id)
 
         _id = ObjectId()
@@ -619,6 +624,7 @@ class TargetGroupModelTest(TestCase):
             academic_course="test",
             mother_tongue="test",
             foreign_languages="test: c1",
+            learning_goal="test",
         )
 
         self.assertEqual(target_group.name, "test")
@@ -628,6 +634,7 @@ class TargetGroupModelTest(TestCase):
         self.assertEqual(target_group.academic_course, "test")
         self.assertEqual(target_group.mother_tongue, "test")
         self.assertEqual(target_group.foreign_languages, "test: c1")
+        self.assertEqual(target_group.learning_goal, "test")
         self.assertEqual(target_group._id, _id)
 
         # test again without supplying a _id
@@ -640,6 +647,7 @@ class TargetGroupModelTest(TestCase):
             academic_course="test",
             mother_tongue="test",
             foreign_languages={"test": "l1"},
+            learning_goal="test",
         )
         self.assertEqual(target_group.name, "test")
         self.assertEqual(target_group.age_min, 30)
@@ -648,6 +656,7 @@ class TargetGroupModelTest(TestCase):
         self.assertEqual(target_group.academic_course, "test")
         self.assertEqual(target_group.mother_tongue, "test")
         self.assertEqual(target_group.foreign_languages, {"test": "l1"})
+        self.assertEqual(target_group.learning_goal, "test")
         self.assertIsInstance(target_group._id, ObjectId)
 
     def test_to_dict(self):
@@ -668,6 +677,7 @@ class TargetGroupModelTest(TestCase):
         self.assertIn("academic_course", target_group_dict)
         self.assertIn("mother_tongue", target_group_dict)
         self.assertIn("foreign_languages", target_group_dict)
+        self.assertIn("learning_goal", target_group_dict)
         self.assertIsInstance(target_group_dict["_id"], ObjectId)
         self.assertEqual(target_group_dict["name"], None)
         self.assertEqual(target_group_dict["age_min"], None)
@@ -676,8 +686,11 @@ class TargetGroupModelTest(TestCase):
         self.assertEqual(target_group_dict["academic_course"], None)
         self.assertEqual(target_group_dict["mother_tongue"], None)
         self.assertEqual(target_group_dict["foreign_languages"], None)
+        self.assertEqual(target_group_dict["learning_goal"], None)
 
-        target_group = TargetGroup(age_min=10, age_max=20, foreign_languages="test: c1")
+        target_group = TargetGroup(
+            age_min=10, age_max=20, foreign_languages="test: c1", learning_goal="test"
+        )
         target_group_dict = target_group.to_dict()
 
         self.assertIsInstance(target_group_dict, dict)
@@ -689,6 +702,7 @@ class TargetGroupModelTest(TestCase):
         self.assertIn("academic_course", target_group_dict)
         self.assertIn("mother_tongue", target_group_dict)
         self.assertIn("foreign_languages", target_group_dict)
+        self.assertIn("learning_goal", target_group_dict)
         self.assertIsInstance(target_group_dict["_id"], ObjectId)
         self.assertEqual(target_group_dict["name"], None)
         self.assertEqual(target_group_dict["age_min"], "10")
@@ -697,6 +711,7 @@ class TargetGroupModelTest(TestCase):
         self.assertEqual(target_group_dict["academic_course"], None)
         self.assertEqual(target_group_dict["mother_tongue"], None)
         self.assertEqual(target_group_dict["foreign_languages"], "test: c1")
+        self.assertEqual(target_group_dict["learning_goal"], "test")
 
     def test_from_dict(self):
         """
@@ -713,6 +728,7 @@ class TargetGroupModelTest(TestCase):
             "academic_course": "test",
             "mother_tongue": "test",
             "foreign_languages": {"test": "l1"},
+            "learning_goal": "test",
         }
 
         target_group = TargetGroup.from_dict(target_group_dict.copy())
@@ -730,6 +746,7 @@ class TargetGroupModelTest(TestCase):
         self.assertEqual(
             target_group.foreign_languages, target_group_dict["foreign_languages"]
         )
+        self.assertEqual(target_group.learning_goal, target_group_dict["learning_goal"])
 
         _id = ObjectId()
         target_group_dict = {
@@ -741,6 +758,7 @@ class TargetGroupModelTest(TestCase):
             "academic_course": "test",
             "mother_tongue": "test",
             "foreign_languages": {"test": "l1"},
+            "learning_goal": "test",
         }
 
         target_group = TargetGroup.from_dict(target_group_dict.copy())
@@ -758,6 +776,7 @@ class TargetGroupModelTest(TestCase):
         self.assertEqual(
             target_group.foreign_languages, target_group_dict["foreign_languages"]
         )
+        self.assertEqual(target_group.learning_goal, target_group_dict["learning_goal"])
 
         # test again without supplying a _id
         target_group_dict = {
@@ -768,6 +787,7 @@ class TargetGroupModelTest(TestCase):
             "academic_course": "test",
             "mother_tongue": "test",
             "foreign_languages": {"test": "l1"},
+            "learning_goal": "test",
         }
 
         target_group = TargetGroup.from_dict(target_group_dict.copy())
@@ -785,6 +805,7 @@ class TargetGroupModelTest(TestCase):
         self.assertEqual(
             target_group.foreign_languages, target_group_dict["foreign_languages"]
         )
+        self.assertEqual(target_group.learning_goal, target_group_dict["learning_goal"])
 
     def test_from_dict_error_params_no_dict(self):
         """
@@ -809,6 +830,7 @@ class TargetGroupModelTest(TestCase):
             "experience": "test",
             "academic_course": "test",
             "mother_tongue": "test",
+            "learning_goal": "test",
         }
         self.assertRaises(MissingKeyError, TargetGroup.from_dict, target_group_dict)
 
@@ -827,6 +849,7 @@ class TargetGroupModelTest(TestCase):
             "academic_course": "test",
             "mother_tongue": "test",
             "foreign_languages": {"test": "l1"},
+            "learning_goal": "test",
         }
 
         # try out each attribute with a wrong type and expect ValueErrors
@@ -861,6 +884,10 @@ class TargetGroupModelTest(TestCase):
         target_group_dict["foreign_languages"] = list()
         self.assertRaises(TypeError, TargetGroup.from_dict, target_group_dict)
         target_group_dict["foreign_languages"] = dict()
+
+        target_group_dict["learning_goal"] = list()
+        self.assertRaises(TypeError, TargetGroup.from_dict, target_group_dict)
+        target_group_dict["learning_goal"] = "test"
 
 
 class InstitutionModelTest(TestCase):
@@ -1286,6 +1313,7 @@ class VEPlanModelTest(TestCase):
             academic_course="test",
             mother_tongue="test",
             foreign_languages={"test": "l1"},
+            learning_goal="test",
         )
 
     def create_institution(self, name: str = "test") -> Institution:
@@ -1327,7 +1355,6 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.lectures, [])
         self.assertEqual(plan.audience, [])
         self.assertEqual(plan.languages, [])
-        self.assertEqual(plan.goals, {})
         self.assertEqual(plan.involved_parties, [])
         self.assertIsNone(plan.realization)
         self.assertIsNone(plan.learning_env)
@@ -1378,7 +1405,6 @@ class VEPlanModelTest(TestCase):
             lectures=lectures,
             audience=target_groups,
             languages=["test", "test"],
-            goals={"test1": "test", "test2": "test"},
             involved_parties=["test", "test"],
             realization="test",
             learning_env="test",
@@ -1395,7 +1421,6 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.lectures, lectures)
         self.assertEqual(plan.audience, target_groups)
         self.assertEqual(plan.languages, ["test", "test"])
-        self.assertEqual(plan.goals, {"test1": "test", "test2": "test"})
         self.assertEqual(plan.involved_parties, ["test", "test"])
         self.assertEqual(plan.realization, "test")
         self.assertEqual(plan.learning_env, "test")
@@ -1421,7 +1446,6 @@ class VEPlanModelTest(TestCase):
             lectures=lectures,
             audience=target_groups,
             languages=["test", "test"],
-            goals={"test1": "test", "test2": "test"},
             involved_parties=["test", "test"],
             realization="test",
             learning_env="test",
@@ -1436,7 +1460,6 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.lectures, lectures)
         self.assertEqual(plan.audience, target_groups)
         self.assertEqual(plan.languages, ["test", "test"])
-        self.assertEqual(plan.goals, {"test1": "test", "test2": "test"})
         self.assertEqual(plan.involved_parties, ["test", "test"])
         self.assertEqual(plan.realization, "test")
         self.assertEqual(plan.learning_env, "test")
@@ -1505,7 +1528,6 @@ class VEPlanModelTest(TestCase):
         self.assertIn("languages", plan_dict)
         self.assertIn("timestamp_from", plan_dict)
         self.assertIn("timestamp_to", plan_dict)
-        self.assertIn("goals", plan_dict)
         self.assertIn("involved_parties", plan_dict)
         self.assertIn("realization", plan_dict)
         self.assertIn("learning_env", plan_dict)
@@ -1522,7 +1544,6 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan_dict["lectures"], [lecture.to_dict()])
         self.assertEqual(plan_dict["audience"], [])
         self.assertEqual(plan_dict["languages"], [])
-        self.assertEqual(plan_dict["goals"], {})
         self.assertEqual(plan_dict["involved_parties"], [])
         self.assertIsNone(plan_dict["realization"])
         self.assertIsNone(plan_dict["learning_env"])
@@ -1554,7 +1575,7 @@ class VEPlanModelTest(TestCase):
                     "school_type": institution.school_type,
                     "country": institution.country,
                     "departments": institution.departments,
-                    "academic_courses": institution.academic_courses
+                    "academic_courses": institution.academic_courses,
                 }
             ],
             "topic": None,
@@ -1577,10 +1598,10 @@ class VEPlanModelTest(TestCase):
                     "academic_course": target_group.academic_course,
                     "mother_tongue": target_group.mother_tongue,
                     "foreign_languages": target_group.foreign_languages,
+                    "learning_goal": target_group.learning_goal,
                 }
             ],
             "languages": [],
-            "goals": {},
             "involved_parties": [],
             "realization": None,
             "learning_env": None,
@@ -1613,7 +1634,6 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.lectures, [lecture])
         self.assertEqual(plan.audience, [target_group])
         self.assertEqual(plan.languages, [])
-        self.assertEqual(plan.goals, {})
         self.assertEqual(plan.involved_parties, [])
         self.assertIsNone(plan.realization)
         self.assertIsNone(plan.learning_env)
@@ -1636,7 +1656,7 @@ class VEPlanModelTest(TestCase):
                     "school_type": institution.school_type,
                     "country": institution.country,
                     "departments": institution.departments,
-                    "academic_courses": institution.academic_courses
+                    "academic_courses": institution.academic_courses,
                 }
             ],
             "topic": None,
@@ -1657,10 +1677,10 @@ class VEPlanModelTest(TestCase):
                     "academic_course": target_group.academic_course,
                     "mother_tongue": target_group.mother_tongue,
                     "foreign_languages": target_group.foreign_languages,
+                    "learning_goal": target_group.learning_goal,
                 }
             ],
             "languages": [],
-            "goals": {},
             "involved_parties": [],
             "realization": None,
             "learning_env": None,
@@ -1693,7 +1713,6 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(len(plan.lectures), 1)
         self.assertIsInstance(plan.lectures[0], Lecture)
         self.assertEqual(plan.languages, [])
-        self.assertEqual(plan.goals, {})
         self.assertEqual(plan.involved_parties, [])
         self.assertIsNone(plan.realization)
         self.assertIsNone(plan.learning_env)
@@ -1732,7 +1751,6 @@ class VEPlanModelTest(TestCase):
             "lectures": [],
             "audience": [],
             "languages": [],
-            "goals": {},
             "involved_parties": [],
             "realization": None,
             "learning_env": None,
@@ -1755,7 +1773,6 @@ class VEPlanModelTest(TestCase):
             "lectures": [],
             "audience": [],
             "languages": [],
-            "goals": {},
             "involved_parties": [],
             "realization": None,
             "learning_env": None,
@@ -1792,10 +1809,6 @@ class VEPlanModelTest(TestCase):
         plan_dict["languages"] = "test"
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
         plan_dict["languages"] = list()
-
-        plan_dict["goals"] = list()
-        self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
-        plan_dict["goals"] = dict()
 
         plan_dict["involved_parties"] = 123
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
@@ -1835,7 +1848,6 @@ class VEPlanModelTest(TestCase):
             "lectures": [],
             "audience": [],
             "languages": [],
-            "goals": {},
             "involved_parties": [],
             "realization": None,
             "learning_env": None,

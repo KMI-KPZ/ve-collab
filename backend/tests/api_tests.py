@@ -6636,6 +6636,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             academic_course="test",
             mother_tongue="test",
             foreign_languages={"test": "l1"},
+            learning_goal="test",
         )
 
     def create_institution(self, name: str = "test") -> Institution:
@@ -6648,7 +6649,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             school_type="test",
             country="test",
             departments=["test", "test"],
-            academic_courses=["test", "test"]
+            academic_courses=["test", "test"],
         )
 
     def create_lecture(self, name: str = "test") -> Lecture:
@@ -6683,7 +6684,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "languages": ["test", "test"],
             "timestamp_from": self.step.timestamp_from,
             "timestamp_to": self.step.timestamp_to,
-            "goals": {"test": "test"},
             "involved_parties": ["test", "test"],
             "realization": "test",
             "learning_env": "test",
@@ -6751,7 +6751,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.languages, default_plan.languages)
         self.assertEqual(response_plan.timestamp_from, default_plan.timestamp_from)
         self.assertEqual(response_plan.timestamp_to, default_plan.timestamp_to)
-        self.assertEqual(response_plan.goals, default_plan.goals)
         self.assertEqual(response_plan.involved_parties, default_plan.involved_parties)
         self.assertEqual(response_plan.realization, default_plan.realization)
         self.assertEqual(response_plan.learning_env, default_plan.learning_env)
@@ -6762,7 +6761,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.steps, default_plan.steps)
         self.assertIsNotNone(response_plan.creation_timestamp)
         self.assertIsNotNone(response_plan.last_modified)
-        
 
     def test_get_plan_error_missing_key(self):
         """
@@ -6823,7 +6821,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.languages, default_plan.languages)
         self.assertEqual(response_plan.timestamp_from, default_plan.timestamp_from)
         self.assertEqual(response_plan.timestamp_to, default_plan.timestamp_to)
-        self.assertEqual(response_plan.goals, default_plan.goals)
         self.assertEqual(response_plan.involved_parties, default_plan.involved_parties)
         self.assertEqual(response_plan.realization, default_plan.realization)
         self.assertEqual(response_plan.learning_env, default_plan.learning_env)
@@ -7106,6 +7103,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "academic_course": "updated_academic_course",
                     "mother_tongue": "de",
                     "foreign_languages": {"en": "c1"},
+                    "learning_goal": "test",
                 }
             ],
         }
@@ -7133,6 +7131,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(db_state["audience"][0]["mother_tongue"], "de")
         self.assertEqual(db_state["audience"][0]["foreign_languages"], {"en": "c1"})
+        self.assertEqual(db_state["audience"][0]["learning_goal"], "test")
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
         # again, but this time upsert
@@ -7148,6 +7147,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "academic_course": "updated_academic_course",
                     "mother_tongue": "de",
                     "foreign_languages": {"en": "c1"},
+                    "learning_goal": "test",
                 }
             ],
         }
@@ -7174,6 +7174,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(db_state["audience"][0]["mother_tongue"], "de")
         self.assertEqual(db_state["audience"][0]["foreign_languages"], {"en": "c1"})
+        self.assertEqual(db_state["audience"][0]["learning_goal"], "test")
         self.assertEqual(db_state["topic"], None)
         self.assertEqual(db_state["steps"], [])
         self.assertEqual(db_state["last_modified"], db_state["creation_timestamp"])
@@ -7256,6 +7257,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "academic_course": "updated_academic_course",
                     "mother_tongue": "de",
                     "foreign_languages": {"en": "c1"},
+                    "learning_goal": "test",
                 }
             ],
         }
@@ -7324,6 +7326,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "academic_course": "updated_academic_course",
                     "mother_tongue": "de",
                     "foreign_languages": {"en": "c1"},
+                    "learning_goal": "test",
                 }
             ],
         }
@@ -7353,6 +7356,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "academic_course": "updated_academic_course",
                     "mother_tongue": "de",
                     "foreign_languages": {"en": "c1"},
+                    "learning_goal": "test",
                 }
             ],
         }
