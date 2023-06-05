@@ -370,3 +370,57 @@ class VEPlanResource:
 
         if result.deleted_count != 1:
             raise PlanDoesntExistError()
+
+    def delete_step_by_id(self, _id: str | ObjectId, step_id: str | ObjectId):
+        """
+        Remove a step from a plan by specifying the plans _id and the steps _id as well.
+
+        The id's can either be an instance of `bson.ObjectId` or a
+        corresponding str-representation.
+
+        Raises `PlanDoesntExistError` if no plan with the supplied `_id` is found.
+        """
+
+        # if supplied _id is no valid ObjectId, we can also raise the PlanDoesntExistError,
+        # since there logically can't be any matching plan
+        try:
+            _id = util.parse_object_id(_id)
+        except InvalidId:
+            raise PlanDoesntExistError()
+
+        try:
+            step_id = util.parse_object_id(step_id)
+        except InvalidId:
+            pass
+
+        result = self.db.plans.update_one(
+            {"_id": _id}, {"$pull": {"steps": {"_id": step_id}}}
+        )
+
+        if result.matched_count != 1:
+            raise PlanDoesntExistError()
+
+    def delete_step_by_name(self, _id: str | ObjectId, step_name: str):
+        """
+        Remove a step from a plan by specifying the plans _id and the name
+        of the step.
+
+        The _id can either be an instance of `bson.ObjectId` or a
+        corresponding str-representation.
+
+        Raises `PlanDoesntExistError` if no plan with the supplied `_id` is found.
+        """
+
+        # if supplied _id is no valid ObjectId, we can also raise the PlanDoesntExistError,
+        # since there logically can't be any matching plan
+        try:
+            _id = util.parse_object_id(_id)
+        except InvalidId:
+            raise PlanDoesntExistError()
+
+        result = self.db.plans.update_one(
+            {"_id": _id}, {"$pull": {"steps": {"name": step_name}}}
+        )
+
+        if result.matched_count != 1:
+            raise PlanDoesntExistError()

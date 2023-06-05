@@ -716,6 +716,37 @@ class VEPlanHandler(BaseHandler):
                 also a success)
                 {"success": False,
                  "reason": "plan_doesnt_exist"}
+
+        DELETE /planner/delete_step
+            delete a step from a plan by specifying the plans _id and
+            the steps name or _id. Speciy either step_id or step_name, if
+            both are given, the step_id takes precedence.
+
+            query params:
+                _id: the _id of the plan whose step should be removed from
+                step_id: the _id of the step that should be removed
+                step_name: the name of the step that should be removed
+
+            http body:
+
+            returns:
+                200 OK,
+                (step was deleted)
+                {"success": True}
+
+                400 Bad Request
+                {"success": False,
+                 "reason": "missing_key:_id"}
+
+                401 Unauthorized
+                (access token is not valid)
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
+                409 Conflict
+                (no plan with the given _id was found)
+                {"success": False,
+                 "reason": "plan_doesnt_exist"}
         """
         with util.get_mongodb() as db:
             if slug == "delete":
@@ -728,6 +759,33 @@ class VEPlanHandler(BaseHandler):
 
                 self.delete_plan(db, _id)
                 return
+
+            elif slug == "delete_step":
+                try:
+                    _id = self.get_argument("_id")
+                except tornado.web.MissingArgumentError:
+                    self.set_status(400)
+                    self.write({"success": False, "reason": MISSING_KEY_SLUG + "_id"})
+                    return
+
+                step_id = self.get_argument("step_id", None)
+                step_name = self.get_argument("step_name", None)
+
+                if step_id is not None:
+                    self.delete_step_by_id(db, _id, step_id)
+                    return
+                elif step_name is not None:
+                    self.delete_step_by_name(db, _id, step_name)
+                    return
+                else:
+                    self.set_status(400)
+                    self.write(
+                        {
+                            "success": False,
+                            "reason": MISSING_KEY_SLUG + "step_id_or_step_name",
+                        }
+                    )
+                    return
 
             else:
                 self.set_status(404)
@@ -1034,6 +1092,50 @@ class VEPlanHandler(BaseHandler):
         planner = VEPlanResource(db)
         try:
             planner.delete_plan(_id)
+        except PlanDoesntExistError:
+            self.set_status(409)
+            self.write({"success": False, "reason": PLAN_DOESNT_EXIST})
+            return
+
+        self.write({"success": True})
+
+    def delete_step_by_id(
+        self, db: Database, plan_id: str | ObjectId, step_id: str | ObjectId
+    ) -> None:
+        """
+        This function is invoked by the handler when the correspoding endpoint
+        is requested. It just de-crowds the handler function and should therefore
+        not be called manually anywhere else.
+
+        Remove a step from a plan by specifying its _id and the _id of the
+        corresponding step.
+        """
+
+        planner = VEPlanResource(db)
+        try:
+            planner.delete_step_by_id(plan_id, step_id)
+        except PlanDoesntExistError:
+            self.set_status(409)
+            self.write({"success": False, "reason": PLAN_DOESNT_EXIST})
+            return
+
+        self.write({"success": True})
+
+    def delete_step_by_name(
+        self, db: Database, plan_id: str | ObjectId, step_name: str
+    ) -> None:
+        """
+        This function is invoked by the handler when the correspoding endpoint
+        is requested. It just de-crowds the handler function and should therefore
+        not be called manually anywhere else.
+
+        Remove a step from a plan by specifying its _id and the name of the
+        corresponding step.
+        """
+
+        planner = VEPlanResource(db)
+        try:
+            planner.delete_step_by_name(plan_id, step_name)
         except PlanDoesntExistError:
             self.set_status(409)
             self.write({"success": False, "reason": PLAN_DOESNT_EXIST})
