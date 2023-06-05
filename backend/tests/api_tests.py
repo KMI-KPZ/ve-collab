@@ -6689,6 +6689,10 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "learning_env": "test",
             "tools": ["test", "test"],
             "new_content": False,
+            "formalities": {
+                "technology": False,
+                "exam_regulations": False,
+            },
             "duration": self.step.duration.total_seconds(),
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
@@ -6756,6 +6760,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.learning_env, default_plan.learning_env)
         self.assertEqual(response_plan.tools, default_plan.tools)
         self.assertEqual(response_plan.new_content, default_plan.new_content)
+        self.assertEqual(response_plan.formalities, default_plan.formalities)
         self.assertEqual(response_plan.duration, default_plan.duration)
         self.assertEqual(response_plan.workload, default_plan.workload)
         self.assertEqual(response_plan.steps, default_plan.steps)
@@ -6826,6 +6831,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.learning_env, default_plan.learning_env)
         self.assertEqual(response_plan.tools, default_plan.tools)
         self.assertEqual(response_plan.new_content, default_plan.new_content)
+        self.assertEqual(response_plan.formalities, default_plan.formalities)
         self.assertEqual(response_plan.duration, default_plan.duration)
         self.assertEqual(response_plan.workload, default_plan.workload)
         self.assertEqual(response_plan.steps, default_plan.steps)
@@ -7061,6 +7067,30 @@ class VEPlanHandlerTest(BaseApiTestCase):
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
         self.assertEqual(db_state["realization"], "updated_realization")
+        self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
+
+        # again with formalities dict attribute
+        payload = {
+            "plan_id": self.plan_id,
+            "field_name": "formalities",
+            "value": {"technology": True, "exam_regulations": True},
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/update_field",
+            True,
+            200,
+            body=self.json_serialize(payload),
+        )
+
+        self.assertEqual(response["updated_id"], str(self.plan_id))
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(
+            db_state["formalities"], {"technology": True, "exam_regulations": True}
+        )
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
         # again, but this time upsert

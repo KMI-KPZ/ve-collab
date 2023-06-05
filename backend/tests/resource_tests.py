@@ -174,6 +174,10 @@ class PlanResourceTest(BaseResourceTestCase):
             "learning_env": "test",
             "tools": ["test", "test"],
             "new_content": False,
+            "formalities": {
+                "technology": False,
+                "exam_regulations": False,
+            },
             "duration": self.step.duration.total_seconds(),
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
@@ -223,6 +227,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 self.assertEqual(plan.learning_env, self.default_plan["learning_env"])
                 self.assertEqual(plan.tools, self.default_plan["tools"])
                 self.assertEqual(plan.new_content, self.default_plan["new_content"])
+                self.assertEqual(plan.formalities, self.default_plan["formalities"])
                 self.assertEqual(
                     [step.to_dict() for step in plan.steps], self.default_plan["steps"]
                 )
@@ -287,6 +292,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(plan.learning_env, self.default_plan["learning_env"])
         self.assertEqual(plan.tools, self.default_plan["tools"])
         self.assertEqual(plan.new_content, self.default_plan["new_content"])
+        self.assertEqual(plan.formalities, self.default_plan["formalities"])
         self.assertEqual(
             [step.to_dict() for step in plan.steps], self.default_plan["steps"]
         )
@@ -323,6 +329,10 @@ class PlanResourceTest(BaseResourceTestCase):
                 "learning_env": "test",
                 "tools": ["test", "test"],
                 "new_content": False,
+                "formalities": {
+                    "technology": False,
+                    "exam_regulations": False,
+                },
                 "duration": self.step.duration.total_seconds(),
                 "workload": self.step.workload,
                 "steps": [self.step.to_dict()],
@@ -344,6 +354,10 @@ class PlanResourceTest(BaseResourceTestCase):
                 "learning_env": "test",
                 "tools": ["test", "test"],
                 "new_content": False,
+                "formalities": {
+                    "technology": False,
+                    "exam_regulations": False,
+                },
                 "duration": self.step.duration.total_seconds(),
                 "workload": self.step.workload,
                 "steps": [self.step.to_dict()],
@@ -378,6 +392,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(plan.learning_env, self.default_plan["learning_env"])
         self.assertEqual(plan.tools, self.default_plan["tools"])
         self.assertEqual(plan.new_content, self.default_plan["new_content"])
+        self.assertEqual(plan.formalities, self.default_plan["formalities"])
         self.assertEqual(
             [step.to_dict() for step in plan.steps], self.default_plan["steps"]
         )
@@ -409,6 +424,10 @@ class PlanResourceTest(BaseResourceTestCase):
             "learning_env": "test",
             "tools": ["test", "test"],
             "new_content": False,
+            "formalities": {
+                "technology": False,
+                "exam_regulations": False,
+            },
             "duration": self.step.duration.total_seconds(),
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
@@ -445,6 +464,10 @@ class PlanResourceTest(BaseResourceTestCase):
             "learning_env": "test",
             "tools": ["test", "test"],
             "new_content": False,
+            "formalities": {
+                "technology": False,
+                "exam_regulations": False,
+            },
             "duration": self.step.duration.total_seconds(),
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
@@ -542,6 +565,9 @@ class PlanResourceTest(BaseResourceTestCase):
         self.planner.update_field(self.plan_id, "learning_env", "updated_learning_env")
         self.planner.update_field(self.plan_id, "tools", ["update1", "update2"])
         self.planner.update_field(self.plan_id, "new_content", True)
+        self.planner.update_field(
+            self.plan_id, "formalities", {"technology": True, "exam_regulations": True}
+        )
 
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
@@ -551,6 +577,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(db_state["learning_env"], "updated_learning_env")
         self.assertEqual(db_state["tools"], ["update1", "update2"])
         self.assertEqual(db_state["new_content"], True)
+        self.assertEqual(db_state["formalities"], {"technology": True, "exam_regulations": True})
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
     def test_update_field_object(self):

@@ -188,6 +188,10 @@ class VEPlanHandler(BaseHandler):
                         "learning_env": "test",
                         "tools": ["test"],
                         "new_content": False,
+                        "formalities": {
+                            "technology": False,
+                            "exam_regulations": False,
+                        },
                         "steps": [
                             {
                                 "name": "test",
@@ -357,6 +361,10 @@ class VEPlanHandler(BaseHandler):
                         "learning_env": "test",
                         "tools": ["test"],
                         "new_content": False,
+                        "formalities": {
+                            "technology": False,
+                            "exam_regulations": False,
+                        },
                         "steps": [
                             {
                                 "name": "test",

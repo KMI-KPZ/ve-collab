@@ -8,6 +8,7 @@ from pymongo.errors import DuplicateKeyError
 from typing import Any, List
 
 from exceptions import (
+    MissingKeyError,
     NonUniqueStepsError,
     PlanAlreadyExistsError,
     PlanDoesntExistError,
@@ -236,6 +237,37 @@ class VEPlanResource:
                         type(value_copy),
                     )
                 )
+
+            # formalities is another special case that enforces keys in the dict
+            if field_name == "formalities":
+                if "technology" not in value_copy:
+                    raise MissingKeyError(
+                        "Missing key {} in {} dictionary".format(
+                            "technology", "formalities"
+                        ),
+                        "technology",
+                        "formalities",
+                    )
+                if "exam_regulations" not in value_copy:
+                    raise MissingKeyError(
+                        "Missing key {} in {} dictionary".format(
+                            "technology", "exam_regulations"
+                        ),
+                        "technology",
+                        "exam_regulations",
+                    )
+                if not isinstance(value_copy["technology"], (bool, type(None))):
+                    raise TypeError(
+                        "expected type 'bool|None' for attribute 'formalitites['technology']', got {} instead".format(
+                            type(value_copy["technology"])
+                        )
+                    )
+                if not isinstance(value_copy["exam_regulations"], (bool, type(None))):
+                    raise TypeError(
+                        "expected type 'bool|None' for attribute 'formalitites['exam_regulations']', got {} instead".format(
+                            type(value_copy["exam_regulations"])
+                        )
+                    )
 
         # attribute is not expected in a VEPlan, so reject it
         else:

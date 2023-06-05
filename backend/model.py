@@ -463,7 +463,7 @@ class TargetGroup:
         "academic_course": (str, type(None)),
         "mother_tongue": str,
         "foreign_languages": (dict, str, type(None)),
-        "learning_goal": str
+        "learning_goal": str,
     }
 
     def __init__(
@@ -556,7 +556,7 @@ class TargetGroup:
             "academic_course": self.academic_course,
             "mother_tongue": self.mother_tongue,
             "foreign_languages": self.foreign_languages,
-            "learning_goal": self.learning_goal
+            "learning_goal": self.learning_goal,
         }
 
     @classmethod
@@ -974,6 +974,7 @@ class VEPlan:
         "learning_env": (str, type(None)),
         "tools": list,
         "new_content": (bool, type(None)),
+        "formalities": dict,
         "steps": list,
     }
 
@@ -994,12 +995,15 @@ class VEPlan:
         learning_env: str = None,
         tools: List[str] = [],
         new_content: bool = None,
+        formalities: dict = {},
         steps: List[Step] = [],
     ) -> None:
         """
         Initialization of a `VEPlan` object.
 
         Sets the function arguments as corresponding instance attributes.
+        Formalities is a dict expected to contain the keys "technology" and
+        "exam_regulations" with either True, False or None value respectively.
 
         If `_id` is given, the indication is conveyed that this instance represents
         an already existing VEPlan (e.g. `VEPlanResource` will set correct _id fields
@@ -1041,6 +1045,39 @@ class VEPlan:
         # ensure that steps have unique names
         if not self._check_unique_step_names(self.steps):
             raise NonUniqueStepsError
+
+        if formalities:
+            self.formalities = formalities
+            if "technology" not in self.formalities:
+                raise MissingKeyError(
+                    "Missing key {} in {} dictionary".format(
+                        "technology", "formalities"
+                    ),
+                    "technology",
+                    "formalities",
+                )
+            if "exam_regulations" not in self.formalities:
+                raise MissingKeyError(
+                    "Missing key {} in {} dictionary".format(
+                        "technology", "exam_regulations"
+                    ),
+                    "exam_regulations",
+                    "formalities",
+                )
+            if not isinstance(self.formalities["technology"], (bool, type(None))):
+                raise TypeError(
+                    "expected type 'bool|None' for attribute 'formalitites['technology']', got {} instead".format(
+                        type(self.formalities["technology"])
+                    )
+                )
+            if not isinstance(self.formalities["exam_regulations"], (bool, type(None))):
+                raise TypeError(
+                    "expected type 'bool|None' for attribute 'formalitites['exam_regulations']', got {} instead".format(
+                        type(self.formalities["exam_regulations"])
+                    )
+                )
+        else:
+            self.formalities = {"technology": None, "exam_regulations": None}
 
         self.workload = 0
 
@@ -1093,6 +1130,7 @@ class VEPlan:
             "learning_env": self.learning_env,
             "tools": self.tools,
             "new_content": self.new_content,
+            "formalities": self.formalities,
             "duration": self.duration.total_seconds() if self.duration else None,
             "workload": self.workload,
             "steps": [step.to_dict() for step in self.steps],
@@ -1129,7 +1167,9 @@ class VEPlan:
         """
         initialize a VEPlan object from a dictionary containing the expected attributes.
         This dictionary has to atleast contain all the keys that can be presented to `__init__`,
-        however their values may be None. Note that `steps` is a list of
+        however their values may be None, except for formalities (this dict has to contain the keys
+        "technology" and "exam_regulations", but their values can be None again).
+        Note that `steps` is a list of
         dictionaries that in turn have to satisfy the `from_dict()` method
         of the `Step` class. The steps inside a VEPlan have to have unique names!
         Same thing applies for the audience list. This list has to contain dictionaries that
@@ -1207,6 +1247,10 @@ class VEPlan:
                 "learning_env": None,
                 "tools": [],
                 "new_content": None,
+                "formalities": {
+                    "technology": None,
+                    "exam_regulations": None,
+                },
                 "steps": [
                     {
                         "_id": "object_id_str",
@@ -1286,6 +1330,36 @@ class VEPlan:
             )
         if "last_modified" in params:
             params["last_modified"] = util.parse_datetime(params["last_modified"])
+
+        # handle correct type of formalities
+        if "technology" not in params["formalities"]:
+            raise MissingKeyError(
+                "Missing key {} in {} dictionary".format("technology", "formalities"),
+                "technology",
+                "formalities",
+            )
+        if "exam_regulations" not in params["formalities"]:
+            raise MissingKeyError(
+                "Missing key {} in {} dictionary".format(
+                    "technology", "exam_regulations"
+                ),
+                "technology",
+                "exam_regulations",
+            )
+        if not isinstance(params["formalities"]["technology"], (bool, type(None))):
+            raise TypeError(
+                "expected type 'bool|None' for attribute 'formalitites['technology']', got {} instead".format(
+                    type(params["formalities"]["technology"])
+                )
+            )
+        if not isinstance(
+            params["formalities"]["exam_regulations"], (bool, type(None))
+        ):
+            raise TypeError(
+                "expected type 'bool|None' for attribute 'formalitites['exam_regulations']', got {} instead".format(
+                    type(params["formalities"]["exam_regulations"])
+                )
+            )
 
         # build step objects, asserting that the names of the steps are unique,
         # gotta do this manually, since __dict__.update doesn't initialize nested objects
