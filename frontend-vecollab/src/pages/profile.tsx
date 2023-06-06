@@ -170,6 +170,7 @@ export default function Profile() {
             <Container>
                 <ProfileBanner
                     follows={follows}
+                    setFollows={setFollows}
                     followers={followers}
                     foreignUser={foreignUser}
                     username={personalInformation.firstName + ' ' + personalInformation.lastName}

@@ -325,7 +325,7 @@ class BulkProfileSnippets(BaseHandler):
             profiles = profile_manager.get_profile_snippets(http_body["usernames"])
 
             self.set_status(200)
-            self.write({"success": True, "user_snippets": profiles})
+            self.serialize_and_write({"success": True, "user_snippets": profiles})
 
 
 class OrcidProfileHandler(BaseHandler):
