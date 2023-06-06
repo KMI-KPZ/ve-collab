@@ -7522,3 +7522,103 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "DELETE", "/planner/delete?_id={}".format(str(ObjectId())), False, 409
         )
         self.assertEqual(response["reason"], PLAN_DOESNT_EXIST_ERROR)
+
+    def test_delete_step_by_id(self):
+        """
+        expect: successfully delete step from plan
+        """
+
+        self.base_checks(
+            "DELETE",
+            "/planner/delete_step?_id={}&step_id={}".format(
+                self.plan_id, self.step._id
+            ),
+            True,
+            200,
+        )
+
+        # expect no step in the plan after deletion
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertEqual(db_state["steps"], [])
+
+    def test_delete_step_by_name(self):
+        """
+        expect: successfully delete step from plan
+        """
+
+        self.base_checks(
+            "DELETE",
+            "/planner/delete_step?_id={}&step_name={}".format(
+                self.plan_id, self.step.name
+            ),
+            True,
+            200,
+        )
+
+        # expect no step in the plan after deletion
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertEqual(db_state["steps"], [])
+
+    def test_delete_step_error_missing_key(self):
+        """
+        fail message because _id or any of step_id or step_name is missing
+        """
+
+        response = self.base_checks("DELETE", "/planner/delete_step?", False, 400)
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "_id")
+
+        response2 = self.base_checks(
+            "DELETE", "/planner/delete_step?_id={}".format(ObjectId()), False, 400
+        )
+        self.assertEqual(
+            response2["reason"], MISSING_KEY_ERROR_SLUG + "step_id_or_step_name"
+        )
+
+    def test_delete_step_error_plan_doesnt_exist(self):
+        """
+        expect: fail message because plan doesnt exist
+        """
+
+        response = self.base_checks(
+            "DELETE",
+            "/planner/delete_step?_id={}&step_id={}".format(ObjectId(), ObjectId()),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], PLAN_DOESNT_EXIST_ERROR)
+
+        response2 = self.base_checks(
+            "DELETE",
+            "/planner/delete_step?_id={}&step_name={}".format(ObjectId(), "test"),
+            False,
+            409,
+        )
+        self.assertEqual(response2["reason"], PLAN_DOESNT_EXIST_ERROR)
+
+    def test_delete_step_step_doesnt_exist(self):
+        """
+        expect: when an non-existing step_id or step_name is provided no error should appear
+        because it is technically a success that no such record exists
+        """
+
+        self.base_checks(
+            "DELETE",
+            "/planner/delete_step?_id={}&step_id={}".format(self.plan_id, ObjectId()),
+            True,
+            200,
+        )
+
+        # expect step to still be there
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertEqual(len(db_state["steps"]), 1)
+
+        self.base_checks(
+            "DELETE",
+            "/planner/delete_step?_id={}&step_name={}".format(self.plan_id, "non_existing"),
+            True,
+            200,
+        )
+
+        # expect step to still be there
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertEqual(len(db_state["steps"]), 1)

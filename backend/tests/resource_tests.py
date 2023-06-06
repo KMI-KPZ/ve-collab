@@ -577,7 +577,9 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(db_state["learning_env"], "updated_learning_env")
         self.assertEqual(db_state["tools"], ["update1", "update2"])
         self.assertEqual(db_state["new_content"], True)
-        self.assertEqual(db_state["formalities"], {"technology": True, "exam_regulations": True})
+        self.assertEqual(
+            db_state["formalities"], {"technology": True, "exam_regulations": True}
+        )
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
     def test_update_field_object(self):
@@ -822,3 +824,69 @@ class PlanResourceTest(BaseResourceTestCase):
         """
 
         self.assertRaises(PlanDoesntExistError, self.planner.delete_plan, "123")
+
+    def test_delete_step_by_name(self):
+        """
+        expect: successfully delete step from the plan by name
+        """
+
+        self.planner.delete_step_by_name(self.plan_id, self.step.name)
+
+        # expect no step in the plan after deletion
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertEqual(db_state["steps"], [])
+
+    def test_delete_step_by_id(self):
+        """
+        expect: successfully delete step from the plan by id
+        """
+
+        self.planner.delete_step_by_id(self.plan_id, str(self.step._id))
+
+        # expect no step in the plan after deletion
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertEqual(db_state["steps"], [])
+
+    def test_delete_step_error_invalid_id(self):
+        """
+        expect: PlanDoesntExistError is raised because an invalid _id is specified
+        --> such a plan cannot exist
+        """
+
+        self.assertRaises(
+            PlanDoesntExistError, self.planner.delete_step_by_id, "123", "123"
+        )
+        self.assertRaises(
+            PlanDoesntExistError, self.planner.delete_step_by_name, "123", "123"
+        )
+
+    def test_delete_step_error_plan_doesnt_exist(self):
+        """
+        expect: PlanDoesntExistError is raised because no plan with the given _id exists
+        (step id doesnt matter)
+        """
+
+        self.assertRaises(
+            PlanDoesntExistError, self.planner.delete_step_by_id, ObjectId(), "123"
+        )
+        self.assertRaises(
+            PlanDoesntExistError, self.planner.delete_step_by_name, ObjectId(), "123"
+        )
+
+    def test_delete_step_step_doesnt_exist(self):
+        """
+        expect: when an non-existing step_id or step_name is provided no error should appear
+        because it is technically a success that no such record exists
+        """
+
+        self.planner.delete_step_by_id(self.plan_id, str(ObjectId()))
+
+        # expect step to still be there
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertEqual(len(db_state["steps"]), 1)
+
+        self.planner.delete_step_by_name(self.plan_id, "not_existing")
+
+        # expect step to still be there
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertEqual(len(db_state["steps"]), 1)
