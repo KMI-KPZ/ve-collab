@@ -6,7 +6,9 @@ on:
 jobs:
   analyze_code:
     runs-on: ubuntu-latest
-    working-directory: ./frontend-vecollab
+    defaults:
+      run:
+        working-directory: ./frontend-vecollab
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
