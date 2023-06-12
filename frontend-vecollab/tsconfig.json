@@ -26,6 +26,6 @@
             "@/constants": ["./src/constants.ts"]
         }
     },
-    "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx","./public/**/*", "./src/**/*", "**/*.png,", "**/*.svg,"],
+    "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx","./public/**/*", "./src/**/*"],
     "exclude": ["node_modules"]
 }

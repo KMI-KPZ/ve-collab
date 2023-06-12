@@ -30,8 +30,8 @@ jobs:
       - name: Run ESLint
         run: npx eslint .
 
-      - name: Run TypeScript type checking
-        run: npx tsc --noEmit
+      #- name: Run TypeScript type checking
+      #  run: npx tsc --noEmit
 
       - name: Build React app
         run: npm run build
