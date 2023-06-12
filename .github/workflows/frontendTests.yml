@@ -16,23 +16,25 @@ jobs:
         with:
           node-version-file: './frontend-vecollab/.nvmrc'
 
-      - name: Navigate to frontend folder
-        run: cd frontend-vecollab
-
       - name: Cache dependencies
         uses: actions/cache@v3
         with:
           path: ~/.npm
           key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+        working-directory: ./frontend-vecollab
 
       - name: Install dependencies
         run: npm install
+        working-directory: ./frontend-vecollab
 
       - name: Run ESLint
         run: npm run lint
+        working-directory: ./frontend-vecollab
 
       - name: Run TypeScript type checking
         run: npx tsc --noEmit
+        working-directory: ./frontend-vecollab
 
       - name: Build React app
         run: npm run build
+        working-directory: ./frontend-vecollab
