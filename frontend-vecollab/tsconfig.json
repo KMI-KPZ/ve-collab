@@ -23,9 +23,9 @@
             "@/images/*": ["./public/images/*"],
             "@/styles/*": ["./public/styles/*"],
             "@/interfaces": ["./src/interfaces"],
-            "@/constants": ["./src/constants.ts"],
+            "@/constants": ["./src/constants.ts"]
         }
     },
-    "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx","public", "src"],
+    "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx","./public/**/*", "./src/**/*"],
     "exclude": ["node_modules"]
 }
