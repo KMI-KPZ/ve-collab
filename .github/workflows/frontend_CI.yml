@@ -30,7 +30,6 @@ jobs:
       - name: Run ESLint
         run: npx eslint .
 
-      ## type error with @image path (tsconfig)
       - name: Run TypeScript type checking
         run: npx tsc --noEmit
 
