@@ -28,7 +28,7 @@ jobs:
         run: npm install
 
       - name: Run ESLint
-        run: npm run lint
+        run: npx eslint .
 
       - name: Run TypeScript type checking
         run: npx tsc --noEmit
