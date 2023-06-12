@@ -30,8 +30,10 @@ jobs:
       - name: Run ESLint
         run: npx eslint .
 
-      #- name: Run TypeScript type checking
-      #  run: npx tsc --noEmit
+      ## type error with @image path (tsconfig)
+      - name: Run TypeScript type checking
+        run: npx tsc --noEmit
 
-      - name: Build React app
-        run: npm run build
+      ## .env.local secrets have to be added to github secrets
+      #- name: Build React app
+      #  run: npm run build
