@@ -1,0 +1,38 @@
+name: CI_frontend
+
+on:
+  pull_request:
+
+jobs:
+  analyze_code:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend-vecollab
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v2
+        with:
+          node-version-file: './frontend-vecollab/.nvmrc'
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run ESLint
+        run: npx eslint .
+
+      - name: Run TypeScript type checking
+        run: npx tsc --noEmit
+
+      ## .env.local secrets have to be added to github secrets
+      #- name: Build React app
+      #  run: npm run build
