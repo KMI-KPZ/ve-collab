@@ -19,6 +19,7 @@ import {
 } from '@/interfaces/profile/profileInterfaces';
 import EditProfileSuccessAlert from '@/components/profile/EditProfileSuccessAlert';
 import EditVisibilitySettings from '@/components/profile/EditVisibilitySettings';
+import EditProfileVeWindow from '@/components/profile/EditProfileVeWindow';
 
 export default function EditProfile() {
     const [personalInformation, setPersonalInformation] = useState<PersonalInformation>({
@@ -256,7 +257,11 @@ export default function EditProfile() {
                                 />
                             </div>
                             <div tabname="VE-Schaufenster">
-                                <div className={''}>empty</div>
+                                <EditProfileVeWindow 
+                                    updateProfileData={updateProfileData}
+                                    orcid={session?.user.orcid}
+                                    importOrcidProfile={importOrcidProfile}
+                                />
                             </div>
                             <div tabname="Sichtbarkeiten">
                                 <EditVisibilitySettings
