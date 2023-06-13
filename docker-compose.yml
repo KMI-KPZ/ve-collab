@@ -1,0 +1,58 @@
+version: "3.9"
+services:
+  mongodb:
+    image: mongo:latest
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+    volumes:
+      - mongodb_data:/data/db
+    network_mode: host
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-file: 5
+        max-size: 10m
+
+  backend:
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    network_mode: host
+    healthcheck:
+      test: wget http://localhost:8888/health || exit 1
+      interval: 1s
+      timeout: 20s
+      retries: 30
+      start_period: 3s
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    logging:
+      driver: "json-file"
+      options:
+        max-file: 5
+        max-size: 10m
+
+  frontend:
+    build:
+      context: frontend-vecollab
+      dockerfile: Dockerfile
+    network_mode: host
+    depends_on:
+      backend:
+        condition: service_healthy
+    logging:
+      driver: "json-file"
+      options:
+        max-file: 5
+        max-size: 10m
+
+volumes:
+  mongodb_data:
