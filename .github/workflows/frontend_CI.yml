@@ -33,7 +33,10 @@ jobs:
 
       - name: Run TypeScript type checking
         run: npx tsc --noEmit
+        
+      - name: Create env file
+        run: |
+          echo "${{ secrets.FRONTEND_ENV }}" > .env.local
 
-      ## .env.local secrets have to be added to github secrets
-      #- name: Build React app
-      #  run: npm run build
+      - name: Build React app
+        run: npm run build
