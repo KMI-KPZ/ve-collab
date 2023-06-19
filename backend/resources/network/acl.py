@@ -67,7 +67,9 @@ class ACL:
         """
 
         logger.info("Running ACL cleanup")
-
+        
+        # initiate new mongo connection, because old objects might have been GC'ed
+        self.__init__()
         with self:
             db = self.client[global_vars.mongodb_db_name]
             currently_existing_roles = db.profiles.distinct("role")
