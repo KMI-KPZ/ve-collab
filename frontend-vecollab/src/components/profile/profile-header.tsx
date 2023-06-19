@@ -86,7 +86,7 @@ export default function ProfileHeader({
                         {followers.includes(session?.user.preferred_username as string) ? (
                             <button
                                 className={
-                                    'w-32 h-12 bg-green-100 border border-green-500 py-3 px-6 mr-2 rounded-lg shadow-lg'
+                                    'w-32 h-12 bg-ve-collab-blue/10 border border-ve-collab-blue py-3 px-6 mr-2 rounded-lg shadow-lg'
                                 }
                                 onClick={unfollowUser}
                             >
