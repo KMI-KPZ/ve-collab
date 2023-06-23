@@ -7,18 +7,22 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
+  backend_test:
     # run tests first using reusable workflow test_caller, if tests fail, deploy job won't run
     uses: ./.github/workflows/test_caller.yml
     secrets:
       CONFIG: ${{ secrets.CONFIG }}
       MONGODB_USERNAME: ${{ secrets.MONGODB_USERNAME }}
       MONGODB_PASSWORD: ${{ secrets.MONGODB_PASSWORD }}
+  frontend_test:
+    uses: ./.github/workflows/frontend_CI.yml
+    secrets:
+      FRONTEND_ENV: ${{ secrets.FRONTEND_ENV }}
 
   deploy:
     name: deploy to staging
     runs-on: ubuntu-latest
-    needs: test
+    needs: [backend_test,frontend_test]
     steps:
     - name: trigger deploy workflow webhook
       uses: distributhor/workflow-webhook@v3.0.5
