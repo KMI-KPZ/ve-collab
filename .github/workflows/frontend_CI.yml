@@ -1,7 +1,11 @@
 name: CI_frontend
 
 on:
-  pull_request:
+  workflow_call:
+    secrets:
+      FRONTEND_ENV:
+        required: true
+  #pull_request:
   workflow_dispatch:
 
 jobs:
