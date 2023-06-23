@@ -1,9 +1,9 @@
 name: Test and Deploy
 
-# run on push to master (includes when PR is merged) and test_deploy (testing of this script) or when manually triggered
+# run on push to staging (includes when PR is merged) and test_deploy (testing of this script) or when manually triggered
 on:
   push:
-    branches: [ "master", "test_deploy"]
+    branches: [ "staging", "test_deploy"]
   workflow_dispatch:
 
 jobs:
@@ -15,6 +15,12 @@ jobs:
       MONGODB_USERNAME: ${{ secrets.MONGODB_USERNAME }}
       MONGODB_PASSWORD: ${{ secrets.MONGODB_PASSWORD }}
 
-  # leave actual deployment empty for now
-  #deploy:
-    
+  deploy:
+    name: deploy to staging
+    runs-on: ubuntu-latest
+    steps:
+    - name: trigger deploy workflow webhook
+      uses: distributhor/workflow-webhook@v3.0.5
+      env:
+        webhook_url: ${{ secrets.WEBHOOK_URL }}
+        webhook_auth: ${{ secrets.WEBHOOK_AUTH }}
