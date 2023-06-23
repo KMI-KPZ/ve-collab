@@ -1,11 +1,12 @@
 name: Test
 
-# run on push to any branches except master or when manually triggered
-# on push to master the other deploy.yml workflows handles the test call itself
+# run on push to any branches except master, staging or when manually triggered
+# on push to master or staging the other deploy.yml workflows handles the test call itself
 on:
   push:
     branches-ignore:
       - "master"
+      - "staging"
   workflow_dispatch:
 
 jobs:
