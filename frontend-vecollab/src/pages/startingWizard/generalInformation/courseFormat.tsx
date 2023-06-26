@@ -114,7 +114,7 @@ export default function Realization() {
                             <div>
                                 <Link
                                     href={{
-                                        pathname: '/startingWizard/generalInformation/goals',
+                                        pathname: '/startingWizard/generalInformation/questionNewContent',
                                         query: { plannerId: router.query.plannerId },
                                     }}
                                 >
