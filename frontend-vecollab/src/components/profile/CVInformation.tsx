@@ -1,26 +1,51 @@
-import BoxContentHeadline from "./BoxContentHeadline";
-import CVEducationItem from "./CVEducationItem";
-import { CVWorkItem } from "./CVWorkItem";
+import { Education, WorkExperience } from '@/interfaces/profile/profileInterfaces';
+import BoxContentHeadline from './BoxContentHeadline';
+import CVEducationItem from './CVEducationItem';
+import { CVWorkItem } from './CVWorkItem';
 
-export default function CVInformation() {
+interface Props {
+    educations: Education[];
+    workExperience: WorkExperience[];
+}
+
+export default function CVInformation({ educations, workExperience }: Props) {
     return (
-        <div className={"h-full mx-2 my-1 flex"}> {/* fixed height to enable scrolling instead of letting to box grow very large */}
-            <div className={"w-1/2 overflow-y-auto content-scrollbar"}>
-                <BoxContentHeadline className={"text-center"} text={"Ausbildung"} />
-                <ul className={"divide-y mr-4"}>
-                    <CVEducationItem institution={"Universität Leipzig"} level={"Master of Science"} field={"Informatik"} timeStampFrom={"2020"} timeStampTo={"2022"} additionalInformation={"Zusatzinfos, z.B. Note"} />
-                    <CVEducationItem institution={"Universität Leipzig"} level={"Bachelor of Science"} field={"Informatik"} timeStampFrom={"2016"} timeStampTo={"2020"} additionalInformation={"Zusatzinfos, z.B. Note"} />
-                    <CVEducationItem institution={"Gymnasium"} level={"Abitur"} timeStampFrom={"2009"} timeStampTo={"2016"} />
-                    <CVEducationItem institution={"Grundschule"} level={"gymnasiale Bildungsempfehlung"} timeStampFrom={"2005"} timeStampTo={"2009"} />
+        <div className={'h-full mx-2 my-1 flex'}>
+            {/* fixed height to enable scrolling instead of letting to box grow very large */}
+            <div className={'w-1/2 overflow-y-auto content-scrollbar'}>
+                <BoxContentHeadline className={'text-center'} text={'Ausbildung'} />
+                <ul className={'divide-y mr-4'}>
+                    {educations.map((education, index) => (
+                        <CVEducationItem
+                            key={index}
+                            institution={education.institution}
+                            level={education.degree}
+                            field={education.department}
+                            timeStampFrom={education.timestamp_from}
+                            timeStampTo={education.timestamp_to}
+                            additionalInformation={education.additional_info}
+                        />
+                    ))}
                 </ul>
             </div>
-            <div className={"w-1/2 overflow-y-auto content-scrollbar"}>
-                <BoxContentHeadline className={"text-center"} text={"Berufserfahrung"} />
-                <ul className={"divide-y ml-4"}>
-                    <CVWorkItem position={"wissenschaftlicher Mitarbeiter"} institution={"Institut für angewandte Informatik (InfAI) e.V."} timeStampFrom={"10/2022"} timeStampTo={"heute"} duration={"6 Monate"} city={"Leipzig"} additionalInformation={"Projekt VE-Collab"} />
-                    <CVWorkItem position={"wissenschaftliche Hilfskraft"} institution={"Universität Leipzig, Rechenzentrum (URZ)"} timeStampFrom={"05/2018"} timeStampTo={"10/2022"} duration={"4 Jahre, 6 Monate"} city={"Leipzig"} additionalInformation={"Entwicklertätigkeiten in diversen Projekten, z.B. SB:Digital, SO-SERVE"} />
+            <div className={'w-1/2 overflow-y-auto content-scrollbar'}>
+                <BoxContentHeadline className={'text-center'} text={'Berufserfahrung'} />
+                <ul className={'divide-y ml-4'}>
+                    {workExperience.map((workExp, index) => (
+                        <CVWorkItem
+                            key={index}
+                            position={workExp.position}
+                            institution={workExp.institution}
+                            timestamp_from={workExp.timestamp_from}
+                            timestamp_to={workExp.timestamp_to}
+                            city={workExp.city}
+                            country={workExp.country}
+                            additional_info={workExp.additional_info}
+                            department={''}
+                        />
+                    ))}
                 </ul>
             </div>
         </div>
-    )
+    );
 }

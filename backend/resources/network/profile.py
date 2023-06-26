@@ -1,4 +1,5 @@
 from typing import Dict, List, Optional
+from bson import ObjectId
 
 import gridfs
 from pymongo import MongoClient
@@ -31,18 +32,23 @@ class Profiles:
         self.db = self.client[global_vars.mongodb_db_name]
 
         self.profile_attributes = {
-            "bio": str,
-            "institution": str,
-            "projects": list,
-            "first_name": str,
-            "last_name": str,
-            "gender": str,
-            "address": str,
-            "birthday": str,
+            "bio": (str, type(None)),
+            "institution": (str, type(None)),
+            "first_name": (str, type(None)),
+            "last_name": (str, type(None)),
+            "gender": (str, type(None)),
+            "address": (str, type(None)),
+            "birthday": (str, type(None)),
             "experience": list,
-            "education": list,
-            "expertise": str,
+            "expertise": (str, type(None)),
             "languages": list,
+            "ve_interests": list,
+            "ve_goals": list,
+            "preferred_formats": list,
+            "research_tags": list,
+            "courses": list,
+            "educations": list,
+            "work_experience": list,
         }
 
     def __enter__(self):
@@ -82,19 +88,24 @@ class Profiles:
             "username": username,
             "role": "guest",
             "follows": [],
-            "bio": None,
-            "institution": None,
-            "projects": [],
+            "bio": "",
+            "institution": "",
             "profile_pic": "default_profile_pic.jpg",
-            "first_name": None,
-            "last_name": None,
-            "gender": None,
-            "address": None,
-            "birthday": None,
-            "experience": [],
-            "education": [],
-            "expertise": None,
+            "first_name": "",
+            "last_name": "",
+            "gender": "",
+            "address": "",
+            "birthday": "",
+            "experience": [""],
+            "expertise": "",
             "languages": [],
+            "ve_interests": [""],
+            "ve_goals": [""],
+            "preferred_formats": [""],
+            "research_tags": [],
+            "courses": [],
+            "educations": [],
+            "work_experience": [],
         }
         self.db.profiles.insert_one(profile)
         return profile
@@ -112,19 +123,24 @@ class Profiles:
             "username": username,
             "role": "admin",
             "follows": [],
-            "bio": None,
-            "institution": None,
-            "projects": [],
+            "bio": "",
+            "institution": "",
             "profile_pic": "default_profile_pic.jpg",
-            "first_name": None,
-            "last_name": None,
-            "gender": None,
-            "address": None,
-            "birthday": None,
-            "experience": [],
-            "education": [],
-            "expertise": None,
+            "first_name": "",
+            "last_name": "",
+            "gender": "",
+            "address": "",
+            "birthday": "",
+            "experience": [""],
+            "expertise": "",
             "languages": [],
+            "ve_interests": [""],
+            "ve_goals": [""],
+            "preferred_formats": [""],
+            "research_tags": [],
+            "courses": [],
+            "educations": [],
+            "work_experience": [],
         }
         self.db.profiles.insert_one(profile)
         return profile
@@ -342,7 +358,7 @@ class Profiles:
         updated_profile: Dict,
         profile_pic: bytes = None,
         profile_pic_content_type: str = None,
-    ) -> None:
+    ) -> Optional[ObjectId]:
         """
         update the profile information including (optionally) the profile picture.
         The following keys are necessary in the `updated_profile` dict:
@@ -350,16 +366,21 @@ class Profiles:
         experience, education.
         The following keys are optional:
         profile_pic
+
+        If a profile_pic was updated, its inserted _id is returned, otherwise (regular
+        update of profile data) None is returned.
         """
 
         # verify space has all the necessary attributes
-        #if not all(attr in updated_profile for attr in self.profile_attributes.keys()):
+        # if not all(attr in updated_profile for attr in self.profile_attributes.keys()):
         #    raise ValueError("Profile misses required attribute")
 
         # verify types of attributes
         for attr_key in updated_profile:
             if attr_key in self.profile_attributes:
-                if type(updated_profile[attr_key]) != self.profile_attributes[attr_key]:
+                if not isinstance(
+                    updated_profile[attr_key], self.profile_attributes[attr_key]
+                ):
                     raise TypeError(
                         "Type mismatch on attribute '{}'. expected type '{}', got '{}'".format(
                             attr_key,
@@ -396,3 +417,48 @@ class Profiles:
             },
             upsert=True,
         )
+
+        return (
+            updated_profile["profile_pic"] if "profile_pic" in updated_profile else None
+        )
+
+    def get_profile_snippets(self, usernames: List[str]) -> List[Dict]:
+        """
+        request the profile snippet (i.e. username, first_name, last_name, institution
+        and profile_pic) for every given username in `usernames` and return them as
+        a Dict.
+        If any of the usernames has no profile, it is omitted from the response,
+        meaning the length of the response list and the given list of usernames
+        might differ.
+        """
+
+        if not isinstance(usernames, list):
+            raise TypeError(
+                "expected type 'list' for argument 'usernames', got {}".format(
+                    type(usernames)
+                )
+            )
+
+        if not usernames:
+            return []
+
+        profiles = self.db.profiles.find(
+            {"username": {"$in": usernames}},
+            projection={
+                "username": True,
+                "first_name": True,
+                "last_name": True,
+                "institution": True,
+                "profile_pic": True,
+            },
+        )
+        return [
+            {
+                "username": profile["username"],
+                "first_name": profile["first_name"],
+                "last_name": profile["last_name"],
+                "institution": profile["institution"],
+                "profile_pic": profile["profile_pic"],
+            }
+            for profile in profiles
+        ]

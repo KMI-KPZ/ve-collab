@@ -96,6 +96,13 @@ class BaseHandler(tornado.web.RequestHandler):
                     token_info["sub"],
                     token_info["email"],
                 )
+
+                # if the user was authenticated via ORCiD, 
+                # or atleast has their ORCiD account linked,
+                # set their id for use within the handlers
+                if "orcid" in token_info:
+                    self.current_user.orcid = token_info["orcid"]
+
                 self._access_token = bearer_token
                 return
             
