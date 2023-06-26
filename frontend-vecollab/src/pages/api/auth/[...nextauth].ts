@@ -4,14 +4,19 @@ import KeycloakProvider, { KeycloakProfile } from 'next-auth/providers/keycloak'
 import { type OAuthConfig } from 'next-auth/providers';
 import { AdapterUser } from 'next-auth/adapters';
 
-if (!process.env.KEYCLOAK_ID) {
+if (!process.env.NEXT_PUBLIC_KEYCLOAK_ID) {
     throw new Error(`
-      Please provide a valid KEYCLOAK_ID in .env.local .
+      Please provide a valid NEXT_PUBLIC_KEYCLOAK_ID in .env.local .
     `);
 }
 if (!process.env.KEYCLOAK_SECRET) {
     throw new Error(`
       Please provide a valid KEYCLOAK_SECRET in .env.local .
+    `);
+}
+if (!process.env.NEXT_PUBLIC_KEYCLOAK_ISSUER) {
+    throw new Error(`
+      Please provide a valid NEXT_PUBLIC_KEYCLOAK_ID in .env.local .
     `);
 }
 
@@ -65,23 +70,28 @@ declare module 'next-auth' {
         role?: string | null;
         groups?: string[] | null;
         preferred_username?: string | null;
+        orcid?: string | null | undefined;
     }
 
     interface Session {
         user: {
-            sub: string;
-            email_verified: boolean;
-            name: string;
-            preferred_username: string;
-            given_name: string;
-            family_name: string;
-            email: string;
             id: string;
-            org_name?: string;
-            telephone?: string;
+            name?: string | null;
+            email?: string | null;
+            image?: string | null;
+            given_name?: string | null;
+            family_name?: string | null;
+            iss?: string | null;
+            email_verified?: boolean | null;
+            role?: string | null;
+            groups?: string[] | null;
+            preferred_username?: string | null;
+            orcid?: string | null | undefined;
         };
         error: string;
         accessToken: string;
+        idToken: string;
+        sessionState: string;
     }
 }
 
@@ -98,6 +108,7 @@ declare module 'next-auth/jwt' {
         user: User;
         error: string;
         idToken: string;
+        sessionState: string;
     }
 }
 
@@ -106,7 +117,7 @@ const refreshAccessToken = async (token: JWT): Promise<JWT> => {
         if (!token.refreshTokenExpired) throw Error;
         if (Date.now() > token.refreshTokenExpired) throw Error;
         const details = {
-            client_id: process.env.KEYCLOAK_ID,
+            client_id: process.env.NEXT_PUBLIC_KEYCLOAK_ID,
             client_secret: process.env.KEYCLOAK_SECRET,
             grant_type: ['refresh_token'],
             refresh_token: token.refreshToken,
@@ -118,7 +129,7 @@ const refreshAccessToken = async (token: JWT): Promise<JWT> => {
             formBody.push(encodedKey + '=' + encodedValue);
         });
         const formData = formBody.join('&');
-        const url = `${process.env.KEYCLOAK_ISSUER}/protocol/openid-connect/token`;
+        const url = `${process.env.NEXT_PUBLIC_KEYCLOAK_ISSUER}/protocol/openid-connect/token`;
         const response = await fetch(url, {
             method: 'POST',
             headers: {
@@ -149,10 +160,13 @@ const refreshAccessToken = async (token: JWT): Promise<JWT> => {
 export const authOptions = {
     providers: [
         KeycloakProvider({
-            clientId: process.env.KEYCLOAK_ID,
+            id: 'keycloak',
+            clientId: process.env.NEXT_PUBLIC_KEYCLOAK_ID,
             clientSecret: process.env.KEYCLOAK_SECRET,
-            issuer: process.env.KEYCLOAK_ISSUER,
-            profile: (profile: KeycloakProfile) => {
+            issuer: process.env.NEXT_PUBLIC_KEYCLOAK_ISSUER,
+            profile(profile: KeycloakProfile) {
+                console.log("profile:")
+                console.log(profile)
                 return {
                     iss: profile.iss,
                     email_verified: profile.email_verified,
@@ -164,16 +178,21 @@ export const authOptions = {
                     family_name: profile.family_name,
                     email: profile.email,
                     id: profile.sub,
+                    orcid: profile.orcid,
                 };
             },
         }),
     ],
     callbacks: {
         async jwt({ token, user, account }: JWTProps): Promise<JWT> {
+            console.log(token);
+            console.log(user);
+            console.log(account);
             if (account && user) {
                 // Add access_token, refresh_token and expirations to the token right after signin
                 token.accessToken = account.access_token;
                 token.refreshToken = account.refresh_token;
+                token.sessionState = account.session_state;
                 token.idToken = account.id_token;
                 if (account.expires_at) {
                     token.accessTokenExpired = account.expires_at;
@@ -186,6 +205,7 @@ export const authOptions = {
 
             // Return previous token if the access token has not expired yet
             if (Date.now() < token.accessTokenExpired) {
+                console.log('token still valid');
                 return token;
             }
 
@@ -195,6 +215,9 @@ export const authOptions = {
         async session({ session, token }: SessionProps): Promise<Session> {
             session.error = token.error;
             session.accessToken = token.accessToken;
+            session.idToken = token.idToken;
+            session.user = token.user;
+            session.sessionState = token.sessionState;
             return session;
         },
     },

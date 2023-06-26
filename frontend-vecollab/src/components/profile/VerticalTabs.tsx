@@ -1,9 +1,9 @@
-import { Component } from "react";
-import Tab from "./Tab";
-import VerticalTab from "./VerticalTab";
+import { Component } from 'react';
+import Tab from './Tab';
+import VerticalTab from './VerticalTab';
 
 interface TabsProps {
-    children: JSX.Element[],
+    children: JSX.Element[];
 }
 
 class Tabs extends Component<TabsProps, { activeTab: string }> {
@@ -27,9 +27,9 @@ class Tabs extends Component<TabsProps, { activeTab: string }> {
         } = this;
 
         return (
-            <div className={"flex"}>
-                <div className={"w-1/4"}>
-                    <ol className={"pb-2"}>
+            <div className={'flex'}>
+                <div className={'w-1/4'}>
+                    <ol className={'pb-2'}>
                         {children.map((child) => {
                             return (
                                 <VerticalTab
@@ -42,7 +42,8 @@ class Tabs extends Component<TabsProps, { activeTab: string }> {
                         })}
                     </ol>
                 </div>
-                <div className={"w-3/4 mx-14"}> {/* tab content wrapper*/}
+                <div className={'w-3/4 mx-14'}>
+                    {/* tab content wrapper*/}
                     {children.map((child) => {
                         if (child.props.tabname !== activeTab) return undefined;
                         return child.props.children;
