@@ -3,84 +3,111 @@ import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarS
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { FormEvent, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
+import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
+
+interface FormValues {
+    tools: Tool[];
+}
+
+interface Tool {
+    tool: string;
+}
 
 export default function Tools() {
-    const [tools, setTools] = useState(['']);
-
     const { data: session, status } = useSession();
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(false);
     const router = useRouter();
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
-        if (status !== "loading") {
-            if (!session || session?.error === "RefreshAccessTokenError") {
-                console.log("forced new signIn")
-                signIn("keycloak");
+        if (status !== 'loading') {
+            if (!session || session?.error === 'RefreshAccessTokenError') {
+                console.log('forced new signIn');
+                signIn('keycloak');
             }
         }
     }, [session, status]);
 
+    const {
+        register,
+        control,
+        formState: { errors },
+        handleSubmit,
+        watch,
+        setValue,
+    } = useForm<FormValues>({
+        mode: 'onChange',
+        defaultValues: {
+            tools: [{ tool: '' }],
+        },
+    });
+
     useEffect(() => {
         // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
-        if (!router.isReady || status === "loading") {
-            setLoading(true)
-            return
+        if (!router.isReady || status === 'loading') {
+            setLoading(true);
+            return;
         }
         // router is loaded, but still no plan ID in the query --> redirect to overview because we can't do anything without an ID
         if (!router.query.plannerId) {
             router.push('/overviewProjects');
-            return
+            return;
         }
         // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
         if (session) {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
-                    setLoading(false)
-                    if (data.plan) {
-                        if (data.plan.tools.length > 0) {
-                            setTools(data.plan.tools);
-                        } else {
-                            setTools(['']);
-                        }
-                    } else {
-                        setTools(['']);
+                    setLoading(false);
+                    if (data.plan.tools.length > 0) {
+                        setValue('tools', data.plan.tools);
                     }
                 }
             );
         }
-    }, [session, status, router]);
+    }, [session, status, router, setValue]);
 
-    const handleSubmit = async () => {
-        const response = await fetchPOST(
+    const { fields, append, remove } = useFieldArray({
+        name: 'tools',
+        control,
+    });
+
+    const onSubmit: SubmitHandler<FormValues> = async () => {
+        await fetchPOST(
             '/planner/update_field',
-            { plan_id: router.query.plannerId, field_name: 'tools', value: tools },
+            {
+                plan_id: router.query.plannerId,
+                field_name: 'tools',
+                value: watch('tools'),
+            },
             session?.accessToken
         );
-        console.log(response);
-        console.log(tools);
+        await router.push({
+            pathname: '/startingWizard/generalInformation/formalConditions',
+            query: { plannerId: router.query.plannerId },
+        });
     };
 
-    const modifyTools = (index: number, value: string) => {
-        let newTools = [...tools];
-        newTools[index] = value;
-        setTools(newTools);
-    };
-
-    const addInputField = (e: FormEvent) => {
-        e.preventDefault();
-        setTools([...tools, '']);
-    };
-
-    const removeInputField = (e: FormEvent) => {
-        e.preventDefault();
-        let copy = [...tools]; // have to create a deep copy that changes reference, because re-render is triggered by reference, not by values in the array
-        copy.pop();
-        setTools(copy);
+    const renderToolsInput = (): JSX.Element[] => {
+        return fields.map((tool, index) => (
+            <div key={index} className="mt-4 flex justify-center">
+                <input
+                    type="text"
+                    placeholder="Tool eingeben"
+                    className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
+                    {...register(`tools.${index}.tool`, {
+                        maxLength: {
+                            value: 50,
+                            message: 'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                        },
+                    })}
+                />
+                <p className="text-red-600 pt-2">{errors?.tools?.[index]?.tool?.message}</p>
+            </div>
+        ));
     };
 
     return (
@@ -90,28 +117,28 @@ export default function Tools() {
                 {loading ? (
                     <LoadingAnimation />
                 ) : (
-                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
+                    <form
+                        onSubmit={handleSubmit(onSubmit)}
+                        className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
+                    >
                         <div>
                             <div className={'text-center font-bold text-4xl mb-2'}>
                                 Mit welchen Tools können die Studierenden arbeiten?
                             </div>
                             <div className={'text-center mb-20'}>optional</div>
-                            {tools.map((tool, index) => (
-                                <div key={index} className="mt-4 flex justify-center">
-                                    <input
-                                        type="text"
-                                        value={tool}
-                                        onChange={(e) => modifyTools(index, e.target.value)}
-                                        placeholder="Tool eingeben"
-                                        className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
-                                    />
-                                </div>
-                            ))}
+                            {renderToolsInput()}
                             <div className={'w-3/4 mx-7 mt-3 flex justify-end'}>
-                                <button onClick={removeInputField}>
+                                <button type="button" onClick={() => remove(fields.length - 1)}>
                                     <RxMinus size={20} />
                                 </button>
-                                <button onClick={addInputField}>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        append({
+                                            tool: '',
+                                        });
+                                    }}
+                                >
                                     <RxPlus size={20} />
                                 </button>
                             </div>
@@ -134,21 +161,12 @@ export default function Tools() {
                                 </Link>
                             </div>
                             <div>
-                                <Link
-                                    href={{
-                                        pathname:
-                                            '/startingWizard/generalInformation/formalConditions',
-                                        query: { plannerId: router.query.plannerId },
-                                    }}
+                                <button
+                                    type="submit"
+                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
                                 >
-                                    <button
-                                        type="submit"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                        onClick={handleSubmit}
-                                    >
-                                        Weiter
-                                    </button>
-                                </Link>
+                                    Weiter
+                                </button>
                             </div>
                         </div>
                     </form>

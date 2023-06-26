@@ -16,7 +16,7 @@ interface Task {
     tools: string[];
 }
 
-interface Step {
+export interface Step {
     _id?: string;
     timestamp_from: string;
     timestamp_to: string;
@@ -27,6 +27,8 @@ interface Step {
     ve_approach: string;
     tasks: Task[];
     evaluation_tools: string[];
+    attachments?: string[];
+    custom_attributes?: Record<string, string>;
 }
 
 export default function FinePlanner() {
@@ -45,35 +47,35 @@ export default function FinePlanner() {
     ]);
 
     const { data: session, status } = useSession();
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(false);
     const router = useRouter();
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
-        if (status !== "loading") {
-            if (!session || session?.error === "RefreshAccessTokenError") {
-                console.log("forced new signIn")
-                signIn("keycloak");
+        if (status !== 'loading') {
+            if (!session || session?.error === 'RefreshAccessTokenError') {
+                console.log('forced new signIn');
+                signIn('keycloak');
             }
         }
     }, [session, status]);
 
     useEffect(() => {
         // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
-        if (!router.isReady || status === "loading") {
-            setLoading(true)
-            return
+        if (!router.isReady || status === 'loading') {
+            setLoading(true);
+            return;
         }
         // router is loaded, but still no plan ID in the query --> redirect to overview because we can't do anything without an ID
         if (!router.query.plannerId) {
             router.push('/overviewProjects');
-            return
+            return;
         }
         // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
         if (session) {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
-                    setLoading(false)
+                    setLoading(false);
                     if (data.plan) {
                         if (data.plan.steps.length > 0) {
                             let list = data.plan.steps.map((step: any) => ({
@@ -83,13 +85,13 @@ export default function FinePlanner() {
                                 tasks:
                                     step.tasks.length === 0
                                         ? [
-                                            {
-                                                title: '',
-                                                description: '',
-                                                learning_goal: '',
-                                                tools: ['', ''],
-                                            },
-                                        ]
+                                              {
+                                                  title: '',
+                                                  description: '',
+                                                  learning_goal: '',
+                                                  tools: ['', ''],
+                                              },
+                                          ]
                                         : step.tasks,
                             }));
                             setSteps(list);
@@ -112,6 +114,8 @@ export default function FinePlanner() {
                                             tools: ['', ''],
                                         },
                                     ],
+                                    attachments: [''],
+                                    custom_attributes: { '': '' },
                                 },
                             ]);
                         }
@@ -127,8 +131,15 @@ export default function FinePlanner() {
                                 ve_approach: '',
                                 evaluation_tools: ['', ''],
                                 tasks: [
-                                    { title: '', description: '', learning_goal: '', tools: ['', ''] },
+                                    {
+                                        title: '',
+                                        description: '',
+                                        learning_goal: '',
+                                        tools: ['', ''],
+                                    },
                                 ],
+                                attachments: [''],
+                                custom_attributes: { '': '' },
                             },
                         ]);
                     }
@@ -256,7 +267,10 @@ export default function FinePlanner() {
                                                     name="workload"
                                                     value={step.workload}
                                                     onChange={(e) =>
-                                                        modifyWorkload(index, Number(e.target.value))
+                                                        modifyWorkload(
+                                                            index,
+                                                            Number(e.target.value)
+                                                        )
                                                     }
                                                     placeholder="in Stunden"
                                                     className="border border-gray-500 rounded-lg w-full h-12 p-2"
@@ -435,7 +449,8 @@ export default function FinePlanner() {
                                                                                         index,
                                                                                         taskIndex,
                                                                                         toolIndex,
-                                                                                        e.target.value
+                                                                                        e.target
+                                                                                            .value
                                                                                     )
                                                                                 }
                                                                                 placeholder="Welche Tools können verwendet werden?"

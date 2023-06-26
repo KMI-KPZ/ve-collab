@@ -1,0 +1,47 @@
+name: CI_frontend
+
+on:
+  workflow_call:
+    secrets:
+      FRONTEND_ENV:
+        required: true
+  #pull_request:
+  workflow_dispatch:
+
+jobs:
+  analyze_code:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend-vecollab
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: './frontend-vecollab/.nvmrc'
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: npm-
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run ESLint
+        run: npx eslint .
+
+      - name: Run TypeScript type checking
+        run: npx tsc --noEmit
+        
+      - name: Create env file
+        run: |
+          echo "${{ secrets.FRONTEND_ENV }}" > .env.local
+
+      - name: Build React app
+        run: npm run build

@@ -29,7 +29,6 @@ import util
 
 
 class VEPlanHandler(BaseHandler):
-
     def options(self, slug):
         # no body
         self.set_status(200)
@@ -68,6 +67,27 @@ class VEPlanHandler(BaseHandler):
                 {"success": False,
                  "reason": "plan_doesnt_exist"}
 
+        GET /planner/get_available
+            request all plans that are available to the current user,
+            i.e. their own plans and those that he/she has read or write
+            access to (r/w TODO).
+
+            query params:
+
+            http body:
+
+            returns:
+                200 OK,
+                (the plans in a list of their dictionary representation
+                (= product of `to_dict()` of `VEPlan` instance))
+                {"success": True,
+                 "plans": [<VEPlan.to_dict()>, ...]}
+
+                401 Unauthorized
+                (access token is not valid)
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
         GET /planner/get_all
             request all plans, requires admin privileges
 
@@ -105,6 +125,10 @@ class VEPlanHandler(BaseHandler):
                 self.get_plan_by_id(db, _id)
                 return
 
+            elif slug == "get_available":
+                self.get_available_plans_for_user(db)
+                return
+
             elif slug == "get_all":
                 self.get_all_plans(db)
                 return
@@ -118,7 +142,7 @@ class VEPlanHandler(BaseHandler):
         POST /planner/insert
             insert a new plan into the db. To do this, the safest approach is
             to omit any _id fields (not only for the plan itself, but also for steps,
-            tasks, and audience) and let the system created them.
+            tasks, audience, institutions and lectures) and let the system create them.
 
             HTTP Body:
                 Supply a JSON containing the dictionary representation of a `VEPlan`,
@@ -132,18 +156,8 @@ class VEPlanHandler(BaseHandler):
                                 "name": "test",
                                 "school_type": "test",
                                 "country": "test",
-                                "departments": [
-                                    {
-                                        "_id": "<object_id_str>",
-                                        "name": "test",
-                                        "academic_courses": [
-                                            {
-                                                "_id": "<object_id_str>",
-                                                "name": "test",
-                                            }
-                                        ],
-                                    }
-                                ],
+                                "departments": ["test", "test"],
+                                "academic_courses: ["test", "test"]
                             }
                         ],
                         "topic": "test",
@@ -164,16 +178,20 @@ class VEPlanHandler(BaseHandler):
                                 "experience": "test",
                                 "academic_course": "test",
                                 "mother_tongue": "test",
-                                "foreign_languages": {}
+                                "foreign_languages": {},
+                                "learning_goal": "test",
                             }
                         ],
                         "languages": ["test"],
-                        "goals": {"test":"test"},
                         "involved_parties": ["test"],
                         "realization": "test",
                         "learning_env": "test",
                         "tools": ["test"],
                         "new_content": False,
+                        "formalities": {
+                            "technology": False,
+                            "exam_regulations": False,
+                        },
                         "steps": [
                             {
                                 "name": "test",
@@ -204,8 +222,9 @@ class VEPlanHandler(BaseHandler):
                 keys of complex attributes like "audience" should be supplied nonetheless, only
                 primitive attributes are meant).
 
-                Keep in mind, that some plan attributes are derived from it's steps and should
-                not be included (timestamp_from, timestamp_to, workload, duration).
+                Keep in mind, that some plan attributes are derived from it's steps (timestamp_from,
+                timestamp_to, workload, duration) or generally system derived (creation_timestamp,
+                last_modified) and should therefore not be included.
 
                 The attachments list of a step is somewhat special, as this list holds references
                 to uploaded files, but not the files directly. Upload the files separately
@@ -249,7 +268,7 @@ class VEPlanHandler(BaseHandler):
                 {"success": False,
                  "reason": "plan_already_exists"}
 
-        
+
         POST /planner/insert_empty
             Insert an fresh empty plan into the db and return its _id to work with further.
             This endpoint is usually used by the plan to initiate a new planning process by
@@ -287,12 +306,12 @@ class VEPlanHandler(BaseHandler):
             update an existing plan by overwriting all attributes, i.e. the HTTP body has to
             contain all required attributes and the plan will be fully overwritten by those.
             Adding to that, your payload has to include the _id of the plan you want to update.
-            _ids of other attributes (steps, tasks, audience) may be supplied, but can be omitted
-            to be regenerated by the system (all associated linked data to those attributes like e.g.
-            comments will be lost though).
+            _ids of other attributes (steps, tasks, audience, institutions, lectures) may be supplied,
+            but can be omitted to be regenerated by the system (all associated linked data
+            to those attributes like e.g. comments will be lost though).
 
             query params:
-                "upsert" : <boolean>, Indicator to insert a new plan instead of updating an existing one,
+                "upsert" : <boolean>, Indicator to insert a new plan instead of updating an existing one
                                       if no match was found. If set to false and no matching plan was found,
                                       nothing will happen.
                                       default: false
@@ -310,18 +329,8 @@ class VEPlanHandler(BaseHandler):
                                 "name": "test",
                                 "school_type": "test",
                                 "country": "test",
-                                "departments": [
-                                    {
-                                        "_id": "<object_id_str>",
-                                        "name": "test",
-                                        "academic_courses": [
-                                            {
-                                                "_id": "<object_id_str>",
-                                                "name": "test",
-                                            }
-                                        ],
-                                    }
-                                ],
+                                "departments": ["test", "test"],
+                                "academic_courses: ["test", "test"]
                             }
                         ],
                         "topic": "test",
@@ -342,16 +351,20 @@ class VEPlanHandler(BaseHandler):
                                 "experience": "test",
                                 "academic_course": "test",
                                 "mother_tongue": "test",
-                                "foreign_languages": {}
+                                "foreign_languages": {},
+                                "learning_goal": "test",
                             }
                         ],
                         "languages": ["test"],
-                        "goals": {"test":"test"},
                         "involved_parties": ["test"],
                         "realization": "test",
                         "learning_env": "test",
                         "tools": ["test"],
                         "new_content": False,
+                        "formalities": {
+                            "technology": False,
+                            "exam_regulations": False,
+                        },
                         "steps": [
                             {
                                 "name": "test",
@@ -438,8 +451,8 @@ class VEPlanHandler(BaseHandler):
             lectures, steps, ...), pay attention to supply all of those objects in a list (as
             there are naturally multiple possible as per model), because they will be overwritten
             (i.e. if you want to append a new step, send all other already existing steps as well).
-            If you want to simple append or remove new objects to/from those list, 
-            use the append/remove-endpoints (TODO) instead.
+            If you want to simple append or remove new objects to/from those list,
+            use the append/remove-endpoints instead.
 
             query params:
                 "upsert" : <boolean>, Indicator to insert a new plan instead of updating an existing one,
@@ -514,6 +527,42 @@ class VEPlanHandler(BaseHandler):
                 unique)
                 {"success": False,
                  "reason": "non_unique_task_titles"}
+
+        POST /planner/append_step
+            Append a new step to an already existing plan by specifying the
+            plan's id and the desired step in the http body.
+
+            The step-object in the http body has to be parseable by
+            `Step.from_dict()`. Additionally, the constraint that step names
+            have to be unique within a plan is also enforced.
+
+            query params:
+                None
+
+            http body:
+                {
+                    "plan_id": <id_of_plan>,
+                    "step": {
+                        "name": "test",
+                        "workload": 10,
+                        "timestamp_from": "2000-01-01",
+                        "timestamp_to": "2000-01-08",
+                        "social_form": "test",
+                        "learning_env": "test",
+                        "ve_approach": "test",
+                        "tasks": [
+                            {
+                                "title": "test",
+                                "description": "test",
+                                "learning_goal": "test",
+                                "tools": ["test"]
+                            }
+                        ],
+                        "evaluation_tools": ["test"],
+                        "attachments": ["<object_id_str>", "<object_id_str>"],
+                        "custom_attributes": {"my_attr": "my_value"}
+                    }
+                }
         """
 
         try:
@@ -547,15 +596,20 @@ class VEPlanHandler(BaseHandler):
                 if not plan:
                     return
 
+                plan.author = self.current_user.username
+
                 self.insert_plan(db, plan)
                 return
-            
+
             if slug == "insert_empty":
                 if "name" in http_body:
                     optional_name = http_body["name"]
                 else:
                     optional_name = None
+
                 plan = VEPlan(name=optional_name)
+                plan.author = self.current_user.username
+
                 self.insert_plan(db, plan)
                 return
 
@@ -601,10 +655,10 @@ class VEPlanHandler(BaseHandler):
                     http_body["plan_id"],
                     http_body["field_name"],
                     http_body["value"],
-                    upsert=upsert
+                    upsert=upsert,
                 )
                 return
-            
+
             elif slug == "append_step":
                 if "plan_id" not in http_body:
                     self.set_status(400)
@@ -624,7 +678,7 @@ class VEPlanHandler(BaseHandler):
                         }
                     )
                     return
-                
+
                 step = Step.from_dict(http_body["step"])
 
                 self.append_step_to_plan(db, http_body["plan_id"], step)
@@ -662,6 +716,37 @@ class VEPlanHandler(BaseHandler):
                 also a success)
                 {"success": False,
                  "reason": "plan_doesnt_exist"}
+
+        DELETE /planner/delete_step
+            delete a step from a plan by specifying the plans _id and
+            the steps name or _id. Speciy either step_id or step_name, if
+            both are given, the step_id takes precedence.
+
+            query params:
+                _id: the _id of the plan whose step should be removed from
+                step_id: the _id of the step that should be removed
+                step_name: the name of the step that should be removed
+
+            http body:
+
+            returns:
+                200 OK,
+                (step was deleted)
+                {"success": True}
+
+                400 Bad Request
+                {"success": False,
+                 "reason": "missing_key:_id"}
+
+                401 Unauthorized
+                (access token is not valid)
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
+                409 Conflict
+                (no plan with the given _id was found)
+                {"success": False,
+                 "reason": "plan_doesnt_exist"}
         """
         with util.get_mongodb() as db:
             if slug == "delete":
@@ -675,6 +760,33 @@ class VEPlanHandler(BaseHandler):
                 self.delete_plan(db, _id)
                 return
 
+            elif slug == "delete_step":
+                try:
+                    _id = self.get_argument("_id")
+                except tornado.web.MissingArgumentError:
+                    self.set_status(400)
+                    self.write({"success": False, "reason": MISSING_KEY_SLUG + "_id"})
+                    return
+
+                step_id = self.get_argument("step_id", None)
+                step_name = self.get_argument("step_name", None)
+
+                if step_id is not None:
+                    self.delete_step_by_id(db, _id, step_id)
+                    return
+                elif step_name is not None:
+                    self.delete_step_by_name(db, _id, step_name)
+                    return
+                else:
+                    self.set_status(400)
+                    self.write(
+                        {
+                            "success": False,
+                            "reason": MISSING_KEY_SLUG + "step_id_or_step_name",
+                        }
+                    )
+                    return
+
             else:
                 self.set_status(404)
 
@@ -682,10 +794,12 @@ class VEPlanHandler(BaseHandler):
     #                             helper functions                               #
     ##############################################################################
 
-    def load_plan_from_http_body_or_write_error(self, http_body: dict) -> Optional[VEPlan]:
+    def load_plan_from_http_body_or_write_error(
+        self, http_body: dict
+    ) -> Optional[VEPlan]:
         """
         helper function to parse a VEPlan from the dict (should be http body of the request)
-        and enforce type and model checks. 
+        and enforce type and model checks.
         """
         try:
             plan = VEPlan.from_dict(http_body)
@@ -736,6 +850,26 @@ class VEPlanHandler(BaseHandler):
             return
 
         self.serialize_and_write({"success": True, "plan": plan.to_dict()})
+
+    def get_available_plans_for_user(self, db: Database) -> None:
+        """
+        This function is invoked by the handler when the correspoding endpoint
+        is requested. It just de-crowds the handler function and should therefore
+        not be called manually anywhere else.
+
+        Request all available plans for the current user, i.e. their own plans and
+        those that he/she has read/write access to (r/w TODO).
+
+        Responses:
+            200 OK --> contains all available plans in a list of dictionaries
+        """
+
+        planner = VEPlanResource(db)
+        plans = [
+            plan.to_dict()
+            for plan in planner.get_plans_for_user(self.current_user.username)
+        ]
+        self.serialize_and_write({"success": True, "plans": plans})
 
     def get_all_plans(self, db: Database) -> None:
         """
@@ -834,8 +968,8 @@ class VEPlanHandler(BaseHandler):
         be updated (`field_name`) and the corresponding `value` that should be set.
         If you plan to update one of the attribute that are object-like, e.g. audience,
         lectures, etc. be sure to supply a list of all the dictionaries, as they are
-        overwritten and not appended. Though, you may use the separate append-endpoints 
-        (TODO) instead.
+        overwritten and not appended. Though, you may use the separate append-endpoints
+        instead.
 
         Optionally, by setting the "upsert"-parameter to True, the plan will be inserted
         if no matching plan was found. By default, this is set to False, resulting in
@@ -883,7 +1017,29 @@ class VEPlanHandler(BaseHandler):
         else:
             self.serialize_and_write({"success": True, "updated_id": _id})
 
-    def append_step_to_plan(self, db: Database, plan_id: str | ObjectId, step: dict | Step):
+    def append_step_to_plan(
+        self, db: Database, plan_id: str | ObjectId, step: dict | Step
+    ):
+        """
+        This function is invoked by the handler when the correspoding endpoint
+        is requested. It just de-crowds the handler function and should therefore
+        not be called manually anywhere else.
+
+        Append the given step to the steps of the plan that is associated with
+        the given `plan_id`.
+
+        Responses:
+            200 OK          --> successfully appended the step to the plan
+            400 Bad Request --> invalid object id format
+                            --> TypeError, something wrong with format of the supplied
+                                data
+                            --> there was an unexpected additional attribute in the dict
+                            --> missing key in http body
+            409 Conflict    --> Steps don't have unique names (i.e. the to-be-added step
+                                has a name that is already present in the db)
+                            --> Tasks don't have unique titles within a step
+        """
+
         planner = VEPlanResource(db)
         error_reason = None
         _id = None
@@ -936,6 +1092,50 @@ class VEPlanHandler(BaseHandler):
         planner = VEPlanResource(db)
         try:
             planner.delete_plan(_id)
+        except PlanDoesntExistError:
+            self.set_status(409)
+            self.write({"success": False, "reason": PLAN_DOESNT_EXIST})
+            return
+
+        self.write({"success": True})
+
+    def delete_step_by_id(
+        self, db: Database, plan_id: str | ObjectId, step_id: str | ObjectId
+    ) -> None:
+        """
+        This function is invoked by the handler when the correspoding endpoint
+        is requested. It just de-crowds the handler function and should therefore
+        not be called manually anywhere else.
+
+        Remove a step from a plan by specifying its _id and the _id of the
+        corresponding step.
+        """
+
+        planner = VEPlanResource(db)
+        try:
+            planner.delete_step_by_id(plan_id, step_id)
+        except PlanDoesntExistError:
+            self.set_status(409)
+            self.write({"success": False, "reason": PLAN_DOESNT_EXIST})
+            return
+
+        self.write({"success": True})
+
+    def delete_step_by_name(
+        self, db: Database, plan_id: str | ObjectId, step_name: str
+    ) -> None:
+        """
+        This function is invoked by the handler when the correspoding endpoint
+        is requested. It just de-crowds the handler function and should therefore
+        not be called manually anywhere else.
+
+        Remove a step from a plan by specifying its _id and the name of the
+        corresponding step.
+        """
+
+        planner = VEPlanResource(db)
+        try:
+            planner.delete_step_by_name(plan_id, step_name)
         except PlanDoesntExistError:
             self.set_status(409)
             self.write({"success": False, "reason": PLAN_DOESNT_EXIST})

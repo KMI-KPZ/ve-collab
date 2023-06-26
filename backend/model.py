@@ -351,7 +351,7 @@ class Step:
         initialize a `Step`-object from a dictionary (`params`).
         All of the followings keys have to be present in the dict:
         `"name"`, `"duration"`, `"workload"`, `"description"`,
-        `"learning_goal"`, `"tasks"`, `"attachments"`.
+        `"learning_goal"`, `"tasks"`, `"attachments"`, `"custom_attributes"`.
         However only `name` requires a value, all other attributes may be
         initialized with None (description/learning_goal), 0 (duration/workload)
         or [] (tasks/attachements).
@@ -464,24 +464,26 @@ class TargetGroup:
     EXPECTED_DICT_ENTRIES = {
         # "_id": (str, ObjectId, type(None)),
         "name": (str, type(None)),
-        "age_min": int,
-        "age_max": int,
+        "age_min": (int, str, type(None)),
+        "age_max": (int, str, type(None)),
         "experience": (str, type(None)),
         "academic_course": (str, type(None)),
         "mother_tongue": str,
-        "foreign_languages": dict,
+        "foreign_languages": (dict, str, type(None)),
+        "learning_goal": str,
     }
 
     def __init__(
         self,
         _id: str | ObjectId = None,
         name: str = None,
-        age_min: int = 0,
-        age_max: int = 99,
+        age_min: int | str = None,
+        age_max: int | str = None,
         experience: str = None,
         academic_course: str = None,
         mother_tongue: str = None,
-        foreign_languages: Dict[str, str] = {},
+        foreign_languages: Dict[str, str] | str = None,
+        learning_goal: str = None,
     ) -> None:
         """
         Initialization of a `TargetGroup` instance.
@@ -506,12 +508,34 @@ class TargetGroup:
         self._id = util.parse_object_id(_id) if _id != None else ObjectId()
 
         self.name = name
-        self.age_min = age_min
-        self.age_max = age_max
+
+        if isinstance(age_min, str):
+            # since we allow empty string, we have to check for it
+            # because otherwise it would try to cast it to int which
+            # results in a value error
+            if age_min == "":
+                self.age_min = None
+            else:
+                self.age_min = int(age_min)
+        else:
+            self.age_min = age_min
+
+        if isinstance(age_max, str):
+            # since we allow empty string, we have to check for it
+            # because otherwise it would try to cast it to int which
+            # results in a value error
+            if age_max == "":
+                self.age_max = None
+            else:
+                self.age_max = int(age_max)
+        else:
+            self.age_max = age_max
+
         self.experience = experience
         self.academic_course = academic_course
         self.mother_tongue = mother_tongue
         self.foreign_languages = foreign_languages
+        self.learning_goal = learning_goal
 
     def __str__(self) -> str:
         return str(self.__dict__)
@@ -533,12 +557,13 @@ class TargetGroup:
         return {
             "_id": self._id,
             "name": self.name,
-            "age_min": self.age_min,
-            "age_max": self.age_max,
+            "age_min": str(self.age_min) if self.age_min != None else None,
+            "age_max": str(self.age_max) if self.age_max != None else None,
             "experience": self.experience,
             "academic_course": self.academic_course,
             "mother_tongue": self.mother_tongue,
             "foreign_languages": self.foreign_languages,
+            "learning_goal": self.learning_goal,
         }
 
     @classmethod
@@ -547,9 +572,9 @@ class TargetGroup:
         initialize a `TargetGroup`-object from a dictionary (`params`).
         All of the followings keys have to be present in the dict:
         `"name"`, `"age_min"`, `"age_max"`, `"experience"`, `"academic_course"`,
-        `"mother_tongue"`, `"foreign_languages"`.
+        `"mother_tongue"`, `"foreign_languages"`, `"learning_goal"`.
         However values are not required, any attributes may be
-        initialized with None (name/experience/academic_course/mother_tongue),
+        initialized with None (name/experience/academic_course/mother_tongue/learning_goal),
         0 (age_min/age_max) or {} (foreign_languages).
 
         Optionally, a `"_id"` may be supplied, conveying the semantics that this TargetGroup
@@ -617,276 +642,25 @@ class TargetGroup:
         else:
             params["_id"] = ObjectId()
 
+        # handle correct transformation of age_min to int or None
+        # e.g. if a string is supplied
+        if "age_min" in params:
+            if params["age_min"] != None:
+                if params["age_min"] == "":
+                    params["age_min"] = None
+                else:
+                    params["age_min"] = int(params["age_min"])
+        # handle correct transformation of age_max to int or None
+        # e.g. if a string is supplied
+        if "age_max" in params:
+            if params["age_max"] != None:
+                if params["age_max"] == "":
+                    params["age_max"] = None
+                else:
+                    params["age_max"] = int(params["age_max"])
+
         # create and return object
         instance = cls()
-        instance.__dict__.update(params)
-        return instance
-
-
-class AcademicCourse:
-    """
-    model class to represent a academic course (== Studiengang) (typically of a `Department`)
-    """
-
-    EXPECTED_DICT_ENTRIES = {"name": (str, type(None))}
-
-    def __init__(self, _id: str | ObjectId = None, name: str = None) -> None:
-        """
-        Initialization of a `AcademicCourse` instance.
-
-        Sets all of the function parameters as equivalent instance attributes.
-
-        Usually a `AcademicCourse` is of no standalone use, but rather a part of a
-        `Department`-object.
-
-        If `_id` is given, the indication is conveyed that this instance represents
-        an already existing AcademicCourse (e.g. `VEPlanResource` will set correct _id
-        fields as in the database when requesting them).
-        If no `_id` is given, a "new" `AcademicCourse` is meant, resulting in a fresh
-        `_id` being created.
-        However, initializing this class does not interact with the actual resources
-        in the database since it is simply a model; to get AcademicCourses of VEPlans
-        with the actual data in them, use the `VEPlanResource` class.
-        """
-
-        # ensure _id becomes type ObjectId, either using the given value or
-        # creating a fresh ID
-        self._id = util.parse_object_id(_id) if _id != None else ObjectId()
-
-        self.name = name
-
-    def __str__(self) -> str:
-        return str(self.__dict__)
-
-    def __repr__(self) -> str:
-        return str(self)
-
-    def __eq__(self, other: object) -> bool:
-        if isinstance(other, self.__class__):
-            return self.__dict__ == other.__dict__
-        else:
-            return False
-
-    def to_dict(self) -> Dict:
-        """
-        serialize all attributes of this instance into a dictionary
-        """
-
-        return {"_id": self._id, "name": self.name}
-
-    @classmethod
-    def from_dict(cls, params: Dict[str, Any]) -> AcademicCourse:
-        """
-        initialize a `AcademicCourse`-object from a dictionary (`params`).
-        All of the followings keys have to be present in the dict: `"name"`.
-        However values are not required, any attributes may be
-        initialized with None (name).
-
-        Optionally, a `"_id"` may be supplied, conveying the semantics that this AcademicCourse
-        already exists. However, true existence is handled by the database itself and
-        not by this model.
-        If no "_id" is supplied, a fresh one will be generated by the system.
-
-        Any other entries in `params` that do not represent an attribute
-        of a AcademicCourse will be ignored and deleted from the dictionary
-        (keep in mind for further use of the `params`-dict).
-
-        Returns an instance of `AcademicCourse`.
-
-        Raises `TypeError` if params is not a dictionary, or any of the values in the
-        dict have the wrong type.
-
-        Raises `MissingKeyError` if any of the required keys is missing
-        in the `params`-dict.
-
-        Usage example::
-
-            academic_course = AcademicCourse.from_dict(params)
-        """
-
-        if not isinstance(params, dict):
-            raise TypeError(
-                "Expecting type 'dict' of params, got {}".format(type(params))
-            )
-
-        # ensure all necessary keys are in the dict
-        for expected_key in cls.EXPECTED_DICT_ENTRIES.keys():
-            if expected_key not in params:
-                raise MissingKeyError(
-                    "Missing key {} in {} dictionary".format(
-                        expected_key, cls.__name__
-                    ),
-                    expected_key,
-                    cls.__name__,
-                )
-
-        # delete any keys from params that are not expected to avoid having
-        # any other additional attributes that might cause trouble
-        # (e.g. on serialization)
-        # since _id is optional, we also allow it.
-        for key in list(params.keys()):
-            if key not in [*cls.EXPECTED_DICT_ENTRIES.keys(), *["_id"]]:
-                del params[key]
-
-        # ensure types of attributes are correct (only those that are passed from the dict)
-        for key in params:
-            if key in cls.EXPECTED_DICT_ENTRIES:
-                if not isinstance(params[key], cls.EXPECTED_DICT_ENTRIES[key]):
-                    raise TypeError(
-                        "expected type '{}' for key '{}', got '{}'".format(
-                            cls.EXPECTED_DICT_ENTRIES[key],
-                            key,
-                            type(params[key]),
-                        )
-                    )
-
-        # handle existence and correct type of object id's
-        if "_id" in params:
-            params["_id"] = util.parse_object_id(params["_id"])
-        else:
-            params["_id"] = ObjectId()
-
-        # build AcademicCourse and set remaining values
-        instance = cls()
-        instance.__dict__.update(params)
-        return instance
-
-
-class Department:
-    """
-    model class to represent a department (typically of an `Institution`)
-    """
-
-    EXPECTED_DICT_ENTRIES = {"name": (str, type(None)), "academic_courses": list}
-
-    def __init__(
-        self,
-        _id: str | ObjectId = None,
-        name: str = None,
-        academic_courses: List[AcademicCourse] = [],
-    ) -> None:
-        """
-        Initialization of a `Department` instance.
-
-        Sets all of the function parameters as equivalent instance attributes.
-
-        Usually a `Department` is of no standalone use, but rather a part
-        of an `Institution`-object.
-
-        If `_id` is given, the indication is conveyed that this instance represents
-        an already existing Department (e.g. `VEPlanResource` will set correct _id fields
-        as in the database when requesting them).
-        If no `_id` is given, a "new" `Department` is meant, resulting in a fresh `_id` being
-        created.
-        However, initializing this class does not interact with the actual resources
-        in the database since it is simply a model; to get Department of Institutions with the
-        actual data in them, use the `VEPlanResource` class.
-        """
-
-        # ensure _id becomes type ObjectId, either using the given value or
-        # creating a fresh ID
-        self._id = util.parse_object_id(_id) if _id != None else ObjectId()
-
-        self.name = name
-        self.academic_courses = academic_courses
-
-    def __str__(self) -> str:
-        return str(self.__dict__)
-
-    def __repr__(self) -> str:
-        return str(self)
-
-    def __eq__(self, other: object) -> bool:
-        if isinstance(other, self.__class__):
-            return self.__dict__ == other.__dict__
-        else:
-            return False
-
-    def to_dict(self) -> Dict:
-        """
-        serialize all attributes of this instance into a dictionary
-        """
-
-        return {
-            "_id": self._id,
-            "name": self.name,
-            "academic_courses": [course.to_dict() for course in self.academic_courses],
-        }
-
-    @classmethod
-    def from_dict(cls, params: Dict[str, Any]) -> Department:
-        """
-        initialize a `Department`-object from a dictionary (`params`).
-        All of the followings keys have to be present in the dict:
-        `"name"`, `"academic_courses"`.
-        However no values are required, any attributes may be
-        initialized with None (name) or [] (academic_courses).
-
-        If Academic Courses are supplied, they have to be in a list of
-        dictionary-representations that are parseable by `AcademicCourse.from_dict()`.
-
-        Returns an instance of `Department`.
-
-        Raises `TypeError` if params is not a dictionary, or any of the values in the
-        dict have the wrong type.
-
-        Raises `MissingKeyError` if any of the required keys is missing in the `params`-dict.
-
-        Usage example::
-
-            department = Department.from_dict(params)
-        """
-
-        if not isinstance(params, dict):
-            raise TypeError(
-                "Expecting type 'dict' of params, got {}".format(type(params))
-            )
-
-        # ensure all necessary keys are in the dict
-        for expected_key in cls.EXPECTED_DICT_ENTRIES.keys():
-            if expected_key not in params:
-                raise MissingKeyError(
-                    "Missing key {} in {} dictionary".format(
-                        expected_key, cls.__name__
-                    ),
-                    expected_key,
-                    cls.__name__,
-                )
-
-        # delete any keys from params that are not expected to avoid having
-        # any other additional attributes that might cause trouble
-        # (e.g. on serialization)
-        # since _id is optional, we also allow it.
-        for key in list(params.keys()):
-            if key not in [*cls.EXPECTED_DICT_ENTRIES.keys(), *["_id"]]:
-                del params[key]
-
-        # ensure types of attributes are correct (only those that are passed from the dict)
-        for key in params:
-            if key in cls.EXPECTED_DICT_ENTRIES:
-                if not isinstance(params[key], cls.EXPECTED_DICT_ENTRIES[key]):
-                    raise TypeError(
-                        "expected type '{}' for key '{}', got '{}'".format(
-                            cls.EXPECTED_DICT_ENTRIES[key],
-                            key,
-                            type(params[key]),
-                        )
-                    )
-
-        # build academic courses manually
-        academic_courses = [
-            AcademicCourse.from_dict(course) for course in params["academic_courses"]
-        ]
-        del params["academic_courses"]
-
-        # handle existence and correct type of object id's
-        if "_id" in params:
-            params["_id"] = util.parse_object_id(params["_id"])
-        else:
-            params["_id"] = ObjectId()
-
-        # build Department and set remaining values
-        instance = cls(academic_courses=academic_courses)
         instance.__dict__.update(params)
         return instance
 
@@ -901,6 +675,7 @@ class Institution:
         "school_type": (str, type(None)),
         "country": (str, type(None)),
         "departments": list,
+        "academic_courses": list,
     }
 
     def __init__(
@@ -909,7 +684,8 @@ class Institution:
         name: str = None,
         school_type: str = None,
         country: str = None,
-        departments: List[Department] = [],
+        departments: List[str] = [],
+        academic_courses: List[str] = [],
     ) -> None:
         """
         Initialization of an `Institution` instance.
@@ -937,6 +713,7 @@ class Institution:
         self.school_type = school_type
         self.country = country
         self.departments = departments
+        self.academic_courses = academic_courses
 
     def __str__(self) -> str:
         return str(self.__dict__)
@@ -960,7 +737,8 @@ class Institution:
             "name": self.name,
             "school_type": self.school_type,
             "country": self.country,
-            "departments": [department.to_dict() for department in self.departments],
+            "departments": self.departments,
+            "academic_courses": self.academic_courses,
         }
 
     @classmethod
@@ -968,12 +746,11 @@ class Institution:
         """
         initialize an `Institution`-object from a dictionary (`params`).
         All of the followings keys have to be present in the dict:
-        `"name"`, `"school_type"`, `"country"`, `"departments"`.
+        `"name"`, `"school_type"`, `"country"`, `"departments"`,
+        `"academic_courses"`.
         However no values are required, any attributes may be
-        initialized with None (name/school_type/country) or [] (departments).
-
-        If Departments are supplied, they have to be in a list of
-        dictionary-representations that are parseable by `Department.from_dict()`.
+        initialized with None (name/school_type/country) or [] (departments,
+        academic_courses).
 
         Returns an instance of `Institution`.
 
@@ -1023,10 +800,6 @@ class Institution:
                         )
                     )
 
-        # build departments manually
-        departments = [Department.from_dict(dep) for dep in params["departments"]]
-        del params["departments"]
-
         # handle existence and correct type of object id's
         if "_id" in params:
             params["_id"] = util.parse_object_id(params["_id"])
@@ -1034,18 +807,17 @@ class Institution:
             params["_id"] = ObjectId()
 
         # build Institution and set remaining values
-        instance = cls(departments=departments)
+        instance = cls()
         instance.__dict__.update(params)
         return instance
 
 
 class Lecture:
-
     EXPECTED_DICT_ENTRIES = {
         "name": (str, type(None)),
         "lecture_type": (str, type(None)),
         "lecture_format": (str, type(None)),
-        "participants_amount": int,
+        "participants_amount": (int, str, type(None)),
     }
 
     def __init__(
@@ -1054,9 +826,8 @@ class Lecture:
         name: str = None,
         lecture_type: str = None,
         lecture_format: str = None,
-        participants_amount: int = 0,
+        participants_amount: int = None,
     ) -> None:
-
         # ensure _id becomes type ObjectId, either using the given value or
         # creating a fresh ID
         self._id = util.parse_object_id(_id) if _id != None else ObjectId()
@@ -1064,7 +835,17 @@ class Lecture:
         self.name = name
         self.lecture_type = lecture_type
         self.lecture_format = lecture_format
-        self.participants_amount = participants_amount
+
+        if isinstance(participants_amount, str):
+            # since we allow empty string, we have to check for it
+            # because otherwise it would try to cast it to int which
+            # results in a value error
+            if participants_amount == "":
+                self.participants_amount = None
+            else:
+                self.participants_amount = int(participants_amount)
+        else:
+            self.participants_amount = participants_amount
 
     def __str__(self) -> str:
         return str(self.__dict__)
@@ -1088,7 +869,9 @@ class Lecture:
             "name": self.name,
             "lecture_type": self.lecture_type,
             "lecture_format": self.lecture_format,
-            "participants_amount": self.participants_amount,
+            "participants_amount": str(self.participants_amount)
+            if self.participants_amount != None
+            else None,
         }
 
     @classmethod
@@ -1098,8 +881,8 @@ class Lecture:
         All of the followings keys have to be present in the dict:
         `"name"`, `"lecture_type"`, `"lecture_format"`, `"participants_amount"`.
         However values are not required, any attributes may be
-        initialized with None (name/lecture_type/lecture_format)
-        or 0 (participants_amount).
+        initialized with None / empty strings (name/lecture_type/lecture_format/
+        participants_amount) or 0 (participants_amount).
 
         Optionally, a `"_id"` may be supplied, conveying the semantics that this Lecture
         already exists. However, true existence is handled by the database itself and
@@ -1166,6 +949,15 @@ class Lecture:
         else:
             params["_id"] = ObjectId()
 
+        # handle correct transformation from participants_amount to int or None
+        # e.g. if a string is supplied
+        if "participants_amount" in params:
+            if params["participants_amount"] != None:
+                if params["participants_amount"] == "":
+                    params["participants_amount"] = None
+                else:
+                    params["participants_amount"] = int(params["participants_amount"])
+
         # create and return object
         instance = cls()
         instance.__dict__.update(params)
@@ -1184,36 +976,41 @@ class VEPlan:
         "lectures": list,
         "audience": list,
         "languages": list,
-        "goals": dict,
         "involved_parties": list,
         "realization": (str, type(None)),
         "learning_env": (str, type(None)),
         "tools": list,
         "new_content": (bool, type(None)),
+        "formalities": dict,
         "steps": list,
     }
 
     def __init__(
         self,
         _id: str | ObjectId = None,
+        author: str = None,
+        creation_timestamp: str | datetime = None,
+        last_modified: str | datetime = None,
         name: str = None,
         institutions: List[Institution] = [],
         topic: str = None,
         lectures: List[Lecture] = [],
         audience: List[TargetGroup] = [],
         languages: List[str] = [],
-        goals: Dict[str, str] = {},
         involved_parties: List[str] = [],
         realization: str = None,
         learning_env: str = None,
         tools: List[str] = [],
         new_content: bool = None,
+        formalities: dict = {},
         steps: List[Step] = [],
     ) -> None:
         """
         Initialization of a `VEPlan` object.
 
         Sets the function arguments as corresponding instance attributes.
+        Formalities is a dict expected to contain the keys "technology" and
+        "exam_regulations" with either True, False or None value respectively.
 
         If `_id` is given, the indication is conveyed that this instance represents
         an already existing VEPlan (e.g. `VEPlanResource` will set correct _id fields
@@ -1235,13 +1032,16 @@ class VEPlan:
         # creating a fresh ID
         self._id = util.parse_object_id(_id) if _id != None else ObjectId()
 
+        self.author = author
+        self.creation_timestamp = util.parse_datetime(creation_timestamp)
+        self.last_modified = util.parse_datetime(last_modified)
+
         self.name = name
         self.institutions = institutions
         self.topic = topic
         self.lectures = lectures
         self.audience = audience
         self.languages = languages
-        self.goals = goals
         self.involved_parties = involved_parties
         self.realization = realization
         self.learning_env = learning_env
@@ -1252,6 +1052,39 @@ class VEPlan:
         # ensure that steps have unique names
         if not self._check_unique_step_names(self.steps):
             raise NonUniqueStepsError
+
+        if formalities:
+            self.formalities = formalities
+            if "technology" not in self.formalities:
+                raise MissingKeyError(
+                    "Missing key {} in {} dictionary".format(
+                        "technology", "formalities"
+                    ),
+                    "technology",
+                    "formalities",
+                )
+            if "exam_regulations" not in self.formalities:
+                raise MissingKeyError(
+                    "Missing key {} in {} dictionary".format(
+                        "technology", "exam_regulations"
+                    ),
+                    "exam_regulations",
+                    "formalities",
+                )
+            if not isinstance(self.formalities["technology"], (bool, type(None))):
+                raise TypeError(
+                    "expected type 'bool|None' for attribute 'formalitites['technology']', got {} instead".format(
+                        type(self.formalities["technology"])
+                    )
+                )
+            if not isinstance(self.formalities["exam_regulations"], (bool, type(None))):
+                raise TypeError(
+                    "expected type 'bool|None' for attribute 'formalitites['exam_regulations']', got {} instead".format(
+                        type(self.formalities["exam_regulations"])
+                    )
+                )
+        else:
+            self.formalities = {"technology": None, "exam_regulations": None}
 
         self.workload = 0
 
@@ -1276,8 +1109,9 @@ class VEPlan:
     def to_dict(self) -> Dict:
         """
         Serialize the attributes of this `VEPlan` into a dictionary.
-        Calls `to_dict` on every step in the steps-list and on every
-        target group in the audience list to serialize those as well.
+        Calls `to_dict` on every step in the steps-list, on every
+        target group in the audience list, on all institutions and on
+        all lectures to serialize those as well.
 
         The duration-attribute will be transformed from a `datetime.timedelta`
         object into an integer representing this timespan in total seconds.
@@ -1285,6 +1119,9 @@ class VEPlan:
 
         return {
             "_id": self._id,
+            "author": self.author,
+            "creation_timestamp": self.creation_timestamp,
+            "last_modified": self.last_modified,
             "name": self.name,
             "institutions": [
                 institution.to_dict() for institution in self.institutions
@@ -1295,12 +1132,12 @@ class VEPlan:
             "languages": self.languages,
             "timestamp_from": self.timestamp_from,
             "timestamp_to": self.timestamp_to,
-            "goals": self.goals,
             "involved_parties": self.involved_parties,
             "realization": self.realization,
             "learning_env": self.learning_env,
             "tools": self.tools,
             "new_content": self.new_content,
+            "formalities": self.formalities,
             "duration": self.duration.total_seconds() if self.duration else None,
             "workload": self.workload,
             "steps": [step.to_dict() for step in self.steps],
@@ -1337,11 +1174,14 @@ class VEPlan:
         """
         initialize a VEPlan object from a dictionary containing the expected attributes.
         This dictionary has to atleast contain all the keys that can be presented to `__init__`,
-        however their values may be None. Note that `steps` is a list of
+        however their values may be None, except for formalities (this dict has to contain the keys
+        "technology" and "exam_regulations", but their values can be None again).
+        Note that `steps` is a list of
         dictionaries that in turn have to satisfy the `from_dict()` method
         of the `Step` class. The steps inside a VEPlan have to have unique names!
         Same thing applies for the audience list. This list has to contain dictionaries that
         satisfy `TargetGroup.from_dict()` and also have to have unique "title"-attributes.
+        `institutions` and `lectures` work exactly analogous, but there are no uniqueness-constraints.
 
         Optionally, a `"_id"`-key may be supplied, indicating that an existing VEPlan is supposed
         to be referenced (e.g. update the plan), otherwise a fresh _id will be created on
@@ -1381,18 +1221,8 @@ class VEPlan:
                         "name": None,
                         "school_type": None,
                         "country": None,
-                        "departments": [
-                            {
-                                "_id": "object_id_str",
-                                "name": None,
-                                "academic_courses": [
-                                    {
-                                        "_id": "object_id_str",
-                                        "name": None,
-                                    }
-                                ],
-                            }
-                        ],
+                        "departments": [],
+                        "academic_courses": [],
                     }
                 ],
                 "topic": None,
@@ -1415,15 +1245,19 @@ class VEPlan:
                         "academic_course": None,
                         "mother_tongue": None,
                         "foreign_languages": {},
+                        "learning_goal": None,
                     }
                 ],
                 "languages": [],
-                "goals": {},
                 "involved_parties": [],
                 "realization": None,
                 "learning_env": None,
                 "tools": [],
                 "new_content": None,
+                "formalities": {
+                    "technology": None,
+                    "exam_regulations": None,
+                },
                 "steps": [
                     {
                         "_id": "object_id_str",
@@ -1469,10 +1303,13 @@ class VEPlan:
 
         # delete any keys from params that are not expected to avoid having
         # any other additional attributes that might cause trouble
-        # (e.g. on serialization)
-        # since _id is optional, we also allow it.
+        # (e.g. on serialization).
+        # but we also have to allow system derived attributes like _id or the author.
         for key in list(params.keys()):
-            if key not in [*cls.EXPECTED_DICT_ENTRIES.keys(), *["_id"]]:
+            if key not in [
+                *cls.EXPECTED_DICT_ENTRIES.keys(),
+                *["_id", "author", "creation_timestamp", "last_modified"],
+            ]:
                 del params[key]
 
         # ensure types of attributes are correct (only those that are passed from the dict)
@@ -1492,6 +1329,44 @@ class VEPlan:
             params["_id"] = util.parse_object_id(params["_id"])
         else:
             params["_id"] = ObjectId()
+
+        # if present, handle correct type of creation and modified timestamps
+        if "creation_timestamp" in params:
+            params["creation_timestamp"] = util.parse_datetime(
+                params["creation_timestamp"]
+            )
+        if "last_modified" in params:
+            params["last_modified"] = util.parse_datetime(params["last_modified"])
+
+        # handle correct type of formalities
+        if "technology" not in params["formalities"]:
+            raise MissingKeyError(
+                "Missing key {} in {} dictionary".format("technology", "formalities"),
+                "technology",
+                "formalities",
+            )
+        if "exam_regulations" not in params["formalities"]:
+            raise MissingKeyError(
+                "Missing key {} in {} dictionary".format(
+                    "technology", "exam_regulations"
+                ),
+                "technology",
+                "exam_regulations",
+            )
+        if not isinstance(params["formalities"]["technology"], (bool, type(None))):
+            raise TypeError(
+                "expected type 'bool|None' for attribute 'formalitites['technology']', got {} instead".format(
+                    type(params["formalities"]["technology"])
+                )
+            )
+        if not isinstance(
+            params["formalities"]["exam_regulations"], (bool, type(None))
+        ):
+            raise TypeError(
+                "expected type 'bool|None' for attribute 'formalitites['exam_regulations']', got {} instead".format(
+                    type(params["formalities"]["exam_regulations"])
+                )
+            )
 
         # build step objects, asserting that the names of the steps are unique,
         # gotta do this manually, since __dict__.update doesn't initialize nested objects
@@ -1538,17 +1413,17 @@ class VEPlan:
         # the start/end timestamp as min/max of step timestamps.
         # if they are not the same timedelta, there might have been some
         # semantic error at the step timestamps, e.g. end before start
-        
-        #if params["timestamp_to"] and params["timestamp_from"]:
-         #   if params["duration"] != (
-          #      params["timestamp_to"] - params["timestamp_from"]
-           # ):
-            #    raise ValueError(
-             #       """
-              #      duration and min/max timestamps do not match, 
-               #     maybe mixed up Step timestamps?
-                #    """
-                #)
+
+        # if params["timestamp_to"] and params["timestamp_from"]:
+        #   if params["duration"] != (
+        #      params["timestamp_to"] - params["timestamp_from"]
+        # ):
+        #    raise ValueError(
+        #       """
+        #      duration and min/max timestamps do not match,
+        #     maybe mixed up Step timestamps?
+        #    """
+        # )
 
         # build VEPlan and set remaining values
         instance = cls(

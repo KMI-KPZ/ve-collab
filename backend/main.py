@@ -23,6 +23,7 @@ import tornado.web
 import global_vars
 from handlers.authentication import LoginHandler, LoginCallbackHandler, LogoutHandler
 from handlers.db_static_files import GridFSStaticFileHandler
+from handlers.healthcheck import HealthCheckHandler
 from handlers.network.follow import FollowHandler
 from handlers.network.permissions import (
     GlobalACLHandler,
@@ -66,6 +67,7 @@ def make_app(cookie_secret):
             (r"/login/callback", LoginCallbackHandler),
             (r"/logout", LogoutHandler),
             (r"/main", MainHandler),
+            (r"/health", HealthCheckHandler),
             (r"/acl", ACLHandler),
             (r"/myprofile", MyProfileHandler),
             (r"/profile/(.+)", ProfileHandler),

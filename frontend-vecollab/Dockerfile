@@ -36,6 +36,9 @@ RUN npm run build
 FROM base AS runner
 WORKDIR /app
 
+# since NODE_ENV cannot use local, we simply copy our only env files into .env.production
+COPY .env.local .env.production
+
 ENV NODE_ENV production
 # Uncomment the following line in case you want to disable telemetry during runtime.
 # ENV NEXT_TELEMETRY_DISABLED 1

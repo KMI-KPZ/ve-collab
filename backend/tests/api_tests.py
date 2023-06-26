@@ -5,6 +5,7 @@ import logging
 from typing import List
 
 from bson import ObjectId
+import dateutil
 import gridfs
 import pymongo
 import pymongo.errors
@@ -16,8 +17,6 @@ from resources.network.acl import ACL
 import global_vars
 from main import make_app
 from model import (
-    AcademicCourse,
-    Department,
     Institution,
     Lecture,
     Step,
@@ -6651,6 +6650,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             academic_course="test",
             mother_tongue="test",
             foreign_languages={"test": "l1"},
+            learning_goal="test",
         )
 
     def create_institution(self, name: str = "test") -> Institution:
@@ -6662,7 +6662,8 @@ class VEPlanHandlerTest(BaseApiTestCase):
             name=name,
             school_type="test",
             country="test",
-            departments=[Department(name="test", academic_courses=[AcademicCourse()])],
+            departments=["test", "test"],
+            academic_courses=["test", "test"],
         )
 
     def create_lecture(self, name: str = "test") -> Lecture:
@@ -6686,6 +6687,9 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.lecture = self.create_lecture("test")
         self.default_plan = {
             "_id": self.plan_id,
+            "author": CURRENT_USER.username,
+            "creation_timestamp": datetime.now(),
+            "last_modified": datetime.now(),
             "name": "test",
             "institutions": [self.institution.to_dict()],
             "topic": "test",
@@ -6694,12 +6698,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "languages": ["test", "test"],
             "timestamp_from": self.step.timestamp_from,
             "timestamp_to": self.step.timestamp_to,
-            "goals": {"test": "test"},
             "involved_parties": ["test", "test"],
             "realization": "test",
             "learning_env": "test",
             "tools": ["test", "test"],
             "new_content": False,
+            "formalities": {
+                "technology": False,
+                "exam_regulations": False,
+            },
             "duration": self.step.duration.total_seconds(),
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
@@ -6751,7 +6758,28 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertIsInstance(response["plan"], dict)
 
         response_plan = VEPlan.from_dict(response["plan"])
-        self.assertEqual(response_plan, VEPlan.from_dict(self.default_plan))
+        default_plan = VEPlan.from_dict(self.default_plan)
+        self.assertEqual(response_plan._id, default_plan._id)
+        self.assertEqual(response_plan.author, default_plan.author)
+        self.assertEqual(response_plan.name, default_plan.name)
+        self.assertEqual(response_plan.institutions, default_plan.institutions)
+        self.assertEqual(response_plan.topic, default_plan.topic)
+        self.assertEqual(response_plan.lectures, default_plan.lectures)
+        self.assertEqual(response_plan.audience, default_plan.audience)
+        self.assertEqual(response_plan.languages, default_plan.languages)
+        self.assertEqual(response_plan.timestamp_from, default_plan.timestamp_from)
+        self.assertEqual(response_plan.timestamp_to, default_plan.timestamp_to)
+        self.assertEqual(response_plan.involved_parties, default_plan.involved_parties)
+        self.assertEqual(response_plan.realization, default_plan.realization)
+        self.assertEqual(response_plan.learning_env, default_plan.learning_env)
+        self.assertEqual(response_plan.tools, default_plan.tools)
+        self.assertEqual(response_plan.new_content, default_plan.new_content)
+        self.assertEqual(response_plan.formalities, default_plan.formalities)
+        self.assertEqual(response_plan.duration, default_plan.duration)
+        self.assertEqual(response_plan.workload, default_plan.workload)
+        self.assertEqual(response_plan.steps, default_plan.steps)
+        self.assertIsNotNone(response_plan.creation_timestamp)
+        self.assertIsNotNone(response_plan.last_modified)
 
     def test_get_plan_error_missing_key(self):
         """
@@ -6771,6 +6799,25 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], PLAN_DOESNT_EXIST_ERROR)
 
+    def test_get_available_plans(self):
+        """
+        expect: successfully request all plans the user is allowed to view, i.e.
+        own and with read/write permissions
+        """
+
+        # switch to user mode
+        options.test_user = True
+        options.test_admin = False
+
+        # add one more plan to db that is should not be viewable
+        self.db.plans.insert_one(VEPlan(author="test_admin").to_dict())
+
+        response = self.base_checks("GET", "/planner/get_available", True, 200)
+        self.assertIn("plans", response)
+        self.assertIsInstance(response["plans"], list)
+        self.assertEqual(len(response["plans"]), 1)
+        self.assertEqual(response["plans"][0]["_id"], str(self.plan_id))
+
     def test_get_all_plans(self):
         """
         expect: successfully request all plans (should be only the default plan)
@@ -6782,7 +6829,28 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(len(response["plans"]), 1)
 
         response_plan = VEPlan.from_dict(response["plans"][0])
-        self.assertEqual(response_plan, VEPlan.from_dict(self.default_plan))
+        default_plan = VEPlan.from_dict(self.default_plan)
+        self.assertEqual(response_plan._id, default_plan._id)
+        self.assertEqual(response_plan.author, default_plan.author)
+        self.assertEqual(response_plan.name, default_plan.name)
+        self.assertEqual(response_plan.institutions, default_plan.institutions)
+        self.assertEqual(response_plan.topic, default_plan.topic)
+        self.assertEqual(response_plan.lectures, default_plan.lectures)
+        self.assertEqual(response_plan.audience, default_plan.audience)
+        self.assertEqual(response_plan.languages, default_plan.languages)
+        self.assertEqual(response_plan.timestamp_from, default_plan.timestamp_from)
+        self.assertEqual(response_plan.timestamp_to, default_plan.timestamp_to)
+        self.assertEqual(response_plan.involved_parties, default_plan.involved_parties)
+        self.assertEqual(response_plan.realization, default_plan.realization)
+        self.assertEqual(response_plan.learning_env, default_plan.learning_env)
+        self.assertEqual(response_plan.tools, default_plan.tools)
+        self.assertEqual(response_plan.new_content, default_plan.new_content)
+        self.assertEqual(response_plan.formalities, default_plan.formalities)
+        self.assertEqual(response_plan.duration, default_plan.duration)
+        self.assertEqual(response_plan.workload, default_plan.workload)
+        self.assertEqual(response_plan.steps, default_plan.steps)
+        self.assertIsNotNone(response_plan.creation_timestamp)
+        self.assertIsNotNone(response_plan.last_modified)
 
     def test_get_all_plans_error_insufficient_permissions(self):
         """
@@ -6883,6 +6951,17 @@ class VEPlanHandlerTest(BaseApiTestCase):
         # expect plan to be in the db
         db_state = self.db.plans.find_one({"_id": ObjectId(response["inserted_id"])})
         self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["author"], CURRENT_ADMIN.username)
+        self.assertIsNotNone(db_state["creation_timestamp"])
+        self.assertIsNotNone(db_state["last_modified"])
+        self.assertEqual(db_state["creation_timestamp"], db_state["last_modified"])
+
+        # just update the field in the supplied plan for easier equality check below
+        plan["author"] = CURRENT_ADMIN.username
+        plan["creation_timestamp"] = plan["last_modified"] = db_state[
+            "creation_timestamp"
+        ]
+
         self.assertEqual(db_state, plan)
 
     def test_post_insert_plan_error_plan_already_exists(self):
@@ -6919,6 +6998,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertIsNotNone(db_state)
         self.assertEqual(db_state["name"], "updated_plan")
         self.assertEqual(db_state["topic"], None)
+        self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
     def test_post_upsert_plan(self):
         """
@@ -6942,7 +7022,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         db_state = self.db.plans.find_one({"_id": ObjectId(response["updated_id"])})
         self.assertIsNotNone(db_state)
         self.assertEqual(db_state["name"], plan["name"])
-
+        self.assertEqual(db_state["creation_timestamp"], db_state["last_modified"])
         # but also expect the other dummy plan to still be there
         default_plan = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(default_plan)
@@ -7001,6 +7081,31 @@ class VEPlanHandlerTest(BaseApiTestCase):
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
         self.assertEqual(db_state["realization"], "updated_realization")
+        self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
+
+        # again with formalities dict attribute
+        payload = {
+            "plan_id": self.plan_id,
+            "field_name": "formalities",
+            "value": {"technology": True, "exam_regulations": True},
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/update_field",
+            True,
+            200,
+            body=self.json_serialize(payload),
+        )
+
+        self.assertEqual(response["updated_id"], str(self.plan_id))
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(
+            db_state["formalities"], {"technology": True, "exam_regulations": True}
+        )
+        self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
         # again, but this time upsert
         payload = {
@@ -7023,6 +7128,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(db_state["topic"], "updated_topic")
         self.assertEqual(db_state["realization"], None)
         self.assertEqual(db_state["steps"], [])
+        self.assertEqual(db_state["last_modified"], db_state["creation_timestamp"])
 
     def test_post_update_field_compound_attribute(self):
         """
@@ -7041,6 +7147,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "academic_course": "updated_academic_course",
                     "mother_tongue": "de",
                     "foreign_languages": {"en": "c1"},
+                    "learning_goal": "test",
                 }
             ],
         }
@@ -7060,14 +7167,16 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(len(db_state["audience"]), 1)
         self.assertIsInstance(db_state["audience"][0]["_id"], ObjectId)
         self.assertEqual(db_state["audience"][0]["name"], "updated_name")
-        self.assertEqual(db_state["audience"][0]["age_min"], 10)
-        self.assertEqual(db_state["audience"][0]["age_max"], 20)
+        self.assertEqual(db_state["audience"][0]["age_min"], "10")
+        self.assertEqual(db_state["audience"][0]["age_max"], "20")
         self.assertEqual(db_state["audience"][0]["experience"], "updated_experience")
         self.assertEqual(
             db_state["audience"][0]["academic_course"], "updated_academic_course"
         )
         self.assertEqual(db_state["audience"][0]["mother_tongue"], "de")
         self.assertEqual(db_state["audience"][0]["foreign_languages"], {"en": "c1"})
+        self.assertEqual(db_state["audience"][0]["learning_goal"], "test")
+        self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
         # again, but this time upsert
         payload = {
@@ -7082,6 +7191,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "academic_course": "updated_academic_course",
                     "mother_tongue": "de",
                     "foreign_languages": {"en": "c1"},
+                    "learning_goal": "test",
                 }
             ],
         }
@@ -7100,16 +7210,18 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(len(db_state["audience"]), 1)
         self.assertIsInstance(db_state["audience"][0]["_id"], ObjectId)
         self.assertEqual(db_state["audience"][0]["name"], "updated_name")
-        self.assertEqual(db_state["audience"][0]["age_min"], 10)
-        self.assertEqual(db_state["audience"][0]["age_max"], 20)
+        self.assertEqual(db_state["audience"][0]["age_min"], "10")
+        self.assertEqual(db_state["audience"][0]["age_max"], "20")
         self.assertEqual(db_state["audience"][0]["experience"], "updated_experience")
         self.assertEqual(
             db_state["audience"][0]["academic_course"], "updated_academic_course"
         )
         self.assertEqual(db_state["audience"][0]["mother_tongue"], "de")
         self.assertEqual(db_state["audience"][0]["foreign_languages"], {"en": "c1"})
+        self.assertEqual(db_state["audience"][0]["learning_goal"], "test")
         self.assertEqual(db_state["topic"], None)
         self.assertEqual(db_state["steps"], [])
+        self.assertEqual(db_state["last_modified"], db_state["creation_timestamp"])
 
     def test_post_update_field_error_missing_key(self):
         """
@@ -7189,6 +7301,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "academic_course": "updated_academic_course",
                     "mother_tongue": "de",
                     "foreign_languages": {"en": "c1"},
+                    "learning_goal": "test",
                 }
             ],
         }
@@ -7257,6 +7370,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "academic_course": "updated_academic_course",
                     "mother_tongue": "de",
                     "foreign_languages": {"en": "c1"},
+                    "learning_goal": "test",
                 }
             ],
         }
@@ -7286,6 +7400,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "academic_course": "updated_academic_course",
                     "mother_tongue": "de",
                     "foreign_languages": {"en": "c1"},
+                    "learning_goal": "test",
                 }
             ],
         }
@@ -7421,3 +7536,103 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "DELETE", "/planner/delete?_id={}".format(str(ObjectId())), False, 409
         )
         self.assertEqual(response["reason"], PLAN_DOESNT_EXIST_ERROR)
+
+    def test_delete_step_by_id(self):
+        """
+        expect: successfully delete step from plan
+        """
+
+        self.base_checks(
+            "DELETE",
+            "/planner/delete_step?_id={}&step_id={}".format(
+                self.plan_id, self.step._id
+            ),
+            True,
+            200,
+        )
+
+        # expect no step in the plan after deletion
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertEqual(db_state["steps"], [])
+
+    def test_delete_step_by_name(self):
+        """
+        expect: successfully delete step from plan
+        """
+
+        self.base_checks(
+            "DELETE",
+            "/planner/delete_step?_id={}&step_name={}".format(
+                self.plan_id, self.step.name
+            ),
+            True,
+            200,
+        )
+
+        # expect no step in the plan after deletion
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertEqual(db_state["steps"], [])
+
+    def test_delete_step_error_missing_key(self):
+        """
+        fail message because _id or any of step_id or step_name is missing
+        """
+
+        response = self.base_checks("DELETE", "/planner/delete_step?", False, 400)
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "_id")
+
+        response2 = self.base_checks(
+            "DELETE", "/planner/delete_step?_id={}".format(ObjectId()), False, 400
+        )
+        self.assertEqual(
+            response2["reason"], MISSING_KEY_ERROR_SLUG + "step_id_or_step_name"
+        )
+
+    def test_delete_step_error_plan_doesnt_exist(self):
+        """
+        expect: fail message because plan doesnt exist
+        """
+
+        response = self.base_checks(
+            "DELETE",
+            "/planner/delete_step?_id={}&step_id={}".format(ObjectId(), ObjectId()),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], PLAN_DOESNT_EXIST_ERROR)
+
+        response2 = self.base_checks(
+            "DELETE",
+            "/planner/delete_step?_id={}&step_name={}".format(ObjectId(), "test"),
+            False,
+            409,
+        )
+        self.assertEqual(response2["reason"], PLAN_DOESNT_EXIST_ERROR)
+
+    def test_delete_step_step_doesnt_exist(self):
+        """
+        expect: when an non-existing step_id or step_name is provided no error should appear
+        because it is technically a success that no such record exists
+        """
+
+        self.base_checks(
+            "DELETE",
+            "/planner/delete_step?_id={}&step_id={}".format(self.plan_id, ObjectId()),
+            True,
+            200,
+        )
+
+        # expect step to still be there
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertEqual(len(db_state["steps"]), 1)
+
+        self.base_checks(
+            "DELETE",
+            "/planner/delete_step?_id={}&step_name={}".format(self.plan_id, "non_existing"),
+            True,
+            200,
+        )
+
+        # expect step to still be there
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertEqual(len(db_state["steps"]), 1)

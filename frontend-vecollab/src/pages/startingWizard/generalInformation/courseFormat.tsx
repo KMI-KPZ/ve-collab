@@ -3,61 +3,81 @@ import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarS
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
+import { SubmitHandler, useForm } from 'react-hook-form';
+
+interface FormValues {
+    courseFormat: string;
+}
 
 export default function Realization() {
-    const [realization, setRealization] = useState('');
-
     const { data: session, status } = useSession();
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(false);
     const router = useRouter();
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
-        if (status !== "loading") {
-            if (!session || session?.error === "RefreshAccessTokenError") {
-                console.log("forced new signIn")
-                signIn("keycloak");
+        if (status !== 'loading') {
+            if (!session || session?.error === 'RefreshAccessTokenError') {
+                console.log('forced new signIn');
+                signIn('keycloak');
             }
         }
     }, [session, status]);
 
+    const {
+        register,
+        formState: { errors },
+        handleSubmit,
+        watch,
+        setValue,
+    } = useForm<FormValues>({
+        mode: 'onChange',
+        defaultValues: {
+            courseFormat: '',
+        },
+    });
+
     useEffect(() => {
         // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
-        if (!router.isReady || status === "loading") {
-            setLoading(true)
-            return
+        if (!router.isReady || status === 'loading') {
+            setLoading(true);
+            return;
         }
         // router is loaded, but still no plan ID in the query --> redirect to overview because we can't do anything without an ID
         if (!router.query.plannerId) {
             router.push('/overviewProjects');
-            return
+            return;
         }
         // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
         if (session) {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
-                    setLoading(false)
-                    if (data.plan) {
-                        if (data.plan.realization) {
-                            setRealization(data.plan.realization);
-                        }
-                    } else {
-                        setRealization('');
+                    setLoading(false);
+                    if (data.plan.realization !== null) {
+                        setValue('courseFormat', data.plan.realization);
                     }
                 }
             );
         }
-    }, [session, status, router]);
+    }, [session, status, router, setValue]);
 
-    const handleSubmit = async () => {
+    const onSubmit: SubmitHandler<FormValues> = async () => {
         await fetchPOST(
             '/planner/update_field',
-            { plan_id: router.query.plannerId, field_name: 'realization', value: realization },
+            {
+                plan_id: router.query.plannerId,
+                field_name: 'realization',
+                value: watch('courseFormat'),
+            },
             session?.accessToken
         );
+        await router.push({
+            pathname: '/startingWizard/generalInformation/learningPlatform',
+            query: { plannerId: router.query.plannerId },
+        });
     };
 
     return (
@@ -67,7 +87,10 @@ export default function Realization() {
                 {loading ? (
                     <LoadingAnimation />
                 ) : (
-                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
+                    <form
+                        onSubmit={handleSubmit(onSubmit)}
+                        className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
+                    >
                         <div>
                             <div className={'text-center font-bold text-4xl mb-2'}>
                                 Wie wird der VE umgesetzt?
@@ -75,24 +98,23 @@ export default function Realization() {
                             <div className={'text-center mb-20'}>optional</div>
                             <div className="mx-7 mt-7 flex justify-center">
                                 <select
-                                    value={realization}
-                                    onChange={(e) => setRealization(e.target.value)}
                                     placeholder="Name eingeben"
                                     className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
+                                    {...register('courseFormat')}
                                 >
                                     <option value="">keine Auswahl</option>
                                     <option value="asynchron">asynchron</option>
                                     <option value="synchron">synchron</option>
                                     <option value="gemischt">gemischt</option>
                                 </select>
+                                <p className="text-red-600 pt-2">{errors?.courseFormat?.message}</p>
                             </div>
                         </div>
                         <div className="flex justify-around w-full">
                             <div>
                                 <Link
                                     href={{
-                                        pathname:
-                                            '/startingWizard/generalInformation/goals',
+                                        pathname: '/startingWizard/generalInformation/goals',
                                         query: { plannerId: router.query.plannerId },
                                     }}
                                 >
@@ -105,21 +127,12 @@ export default function Realization() {
                                 </Link>
                             </div>
                             <div>
-                                <Link
-                                    href={{
-                                        pathname:
-                                            '/startingWizard/generalInformation/learningPlatform',
-                                        query: { plannerId: router.query.plannerId },
-                                    }}
+                                <button
+                                    type="submit"
+                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
                                 >
-                                    <button
-                                        type="submit"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                        onClick={handleSubmit}
-                                    >
-                                        Weiter
-                                    </button>
-                                </Link>
+                                    Weiter
+                                </button>
                             </div>
                         </div>
                     </form>

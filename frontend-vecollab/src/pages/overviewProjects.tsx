@@ -4,10 +4,16 @@ import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { HiOutlineTrash } from "react-icons/hi"
+import { format, parse } from "date-fns"
+import { parseISO } from 'date-fns';
+import { de } from 'date-fns/locale';
 
 interface PlanPreview {
     _id: string;
     name: string;
+    author: string;
+    creation_timestamp: string;
+    last_modified: string;
 }
 
 export default function Overview() {
@@ -26,8 +32,9 @@ export default function Overview() {
     };
 
     const getAllPlans = useCallback(async () => {
-        return fetchGET(`/planner/get_all`, session?.accessToken).then((data) => {
+        return fetchGET(`/planner/get_available`, session?.accessToken).then((data) => {
             if (data.plans) {
+                console.log(data.plans);
                 setPlans(data.plans);
             }
         });
@@ -81,8 +88,15 @@ export default function Overview() {
                                         <h2 className="text-xl font-bold leading-tight text-gray-800">
                                             {plan.name}
                                         </h2>
-                                        <p className="text-sm text-gray-500">Max Mustermann</p>
-                                        <p className="text-gray-700 mt-3 text-sm">28.04.2023</p>
+                                        <p className="text-sm text-gray-500">{plan.author}</p>
+                                        <div className="mt-3 text-sm">
+                                            <div className="text-gray-500">Erstellt:</div>
+                                            <time dateTime={plan.creation_timestamp}>{format(parseISO(plan.creation_timestamp), 'd. MMM yyyy H:mm', { locale: de })}</time>
+                                        </div>
+                                        <div className="mt-3 text-sm">
+                                            <div className="text-gray-500">Zuletzt geändert:</div>
+                                            <time dateTime={plan.creation_timestamp}>{format(parseISO(plan.last_modified), 'd. MMM yyyy H:mm', { locale: de })}</time>
+                                        </div>
                                     </div>
                                     <button className="absolute top-0 right-0 bg-gray-300 rounded-lg p-2 flex justify-center items-center" onClick={e => deletePlan(plan._id, index)}>
                                         <HiOutlineTrash />

@@ -93,27 +93,23 @@ export default function Partners() {
     const renderPartnersInputs = (): JSX.Element[] => {
         return fields.map((partner, index) => (
             <div key={partner.id}>
-                <div className="mx-7 mt-7 flex justify-center">
-                        <input
-                            type="text"
-                            placeholder="Name eingeben"
-                            className="border border-gray-500 rounded-lg w-full h-12 p-2"
-                            {...register(`partners.${index}.name`, {
-                                maxLength: {
-                                    value: 50,
-                                    message:
-                                        'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
-                                },
-                                pattern: {
-                                    value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
-                                    message:
-                                        'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?-',
-                                },
-                            })}
-                        />
-                        <p className="text-red-600 pt-2">
-                            {errors?.partners?.[index]?.name?.message}
-                        </p>
+                <div className="mx-7 mt-7 justify-center">
+                    <input
+                        type="text"
+                        placeholder="Name eingeben"
+                        className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                        {...register(`partners.${index}.name`, {
+                            maxLength: {
+                                value: 50,
+                                message: 'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                            },
+                            pattern: {
+                                value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
+                                message: 'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?-',
+                            },
+                        })}
+                    />
+                    <p className="text-red-600 pt-2">{errors?.partners?.[index]?.name?.message}</p>
                 </div>
             </div>
         ));

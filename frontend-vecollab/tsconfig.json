@@ -16,16 +16,16 @@
         "incremental": true,
         "baseUrl": ".",
         "paths": {
-            "@/components/*": ["src/components/*"],
-            "@/pages/*": ["src/pages/*"],
-            "@/lib/*": ["src/lib/*"],
-            "@/interfaces/*": ["src/interfaces/*"],
-            "@/images/*": ["public/images/*"],
-            "@/styles/*": ["public/styles/*"],
-            "@/interfaces": ["src/interfaces"],
-            "@/constants": ["src/constants.ts"],
+            "@/components/*": ["./src/components/*"],
+            "@/pages/*": ["./src/pages/*"],
+            "@/lib/*": ["./src/lib/*"],
+            "@/interfaces/*": ["./src/interfaces/*"],
+            "@/images/*": ["./public/images/*"],
+            "@/styles/*": ["./public/styles/*"],
+            "@/interfaces": ["./src/interfaces"],
+            "@/constants": ["./src/constants.ts"]
         }
     },
-    "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
+    "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx","./public/images/**/*", "./public/styles/**/*","./src/**/*"],
     "exclude": ["node_modules"]
 }
