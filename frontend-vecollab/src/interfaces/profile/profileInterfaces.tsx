@@ -1,3 +1,31 @@
+export interface PersonalInformation {
+    firstName: string;
+    lastName: string;
+    institution: string;
+    bio: string;
+    expertise: string;
+    birthday: string;
+    profilePicId?: string;
+    languageTags: LanguageTag[];
+}
+
+export interface LanguageTag {
+    id: string;
+    text: string;
+}
+
+export interface ResearchTag {
+    id: string;
+    text: string;
+}
+
+export interface VEInformation {
+    veInterests: string[];
+    veGoals: string[];
+    experience: string[];
+    preferredFormats: string[];
+}
+
 export interface Course {
     title: string;
     academic_courses: string;
@@ -7,46 +35,37 @@ export interface Course {
 export interface Education {
     institution: string;
     degree: string;
-    department?: string;
+    department: string;
     timestamp_from: string;
     timestamp_to: string;
-    additional_info?: string;
+    additional_info: string;
 }
 
 export interface WorkExperience {
     position: string;
     institution: string;
-    department?: string;
-    timestamp_from?: string;
-    timestamp_to?: string;
-    city?: string;
-    country?: string;
-    additional_info?: string;
+    department: string;
+    timestamp_from: string;
+    timestamp_to: string;
+    city: string;
+    country: string;
+    additional_info: string;
 }
 
-export interface ResearchTag {
-    id: string;
-    text: string;
-}
-
-export interface LanguageTag {
-    id: string;
-    text: string;
-}
-
-export interface PersonalInformation {
-    firstName: string;
-    lastName: string;
+export interface UserSnippet {
+    profilePicUrl: string;
+    name: string;
+    preferredUsername: string;
     institution: string;
-    bio: string;
-    expertise: string;
-    birthday: string;
-    languageTags: LanguageTag[];
 }
 
-export interface VEInformation {
-    veInterests: string[];
-    veGoals: string[];
-    experience: string[];
-    preferredFormats: string[];
+export interface VEPlanSnippet {
+    id: string,
+    title: string
+}
+
+export interface VEWindowItem {
+    plan: VEPlanSnippet
+    title: string;
+    description: string;
 }

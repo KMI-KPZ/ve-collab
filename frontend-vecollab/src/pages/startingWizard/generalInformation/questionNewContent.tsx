@@ -76,7 +76,7 @@ export default function NewContent() {
             session?.accessToken
         );
         await router.push({
-            pathname: '/startingWizard/generalInformation/goals',
+            pathname: '/startingWizard/generalInformation/courseFormat',
             query: { plannerId: router.query.plannerId },
         });
     };
@@ -139,7 +139,7 @@ export default function NewContent() {
                             <div>
                                 <Link
                                     href={{
-                                        pathname: '/startingWizard/generalInformation/goals',
+                                        pathname: '/startingWizard/generalInformation/languages',
                                         query: { plannerId: router.query.plannerId },
                                     }}
                                 >

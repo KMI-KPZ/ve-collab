@@ -54,11 +54,6 @@ export const sideMenuSteps: SideMenuStep[] = [
         state: ProgressState.notStarted,
     },
     {
-        text: 'Lernziele',
-        link: '/startingWizard/generalInformation/goals',
-        state: ProgressState.notStarted,
-    },
-    {
         text: 'Digitale Umsetzung',
         link: '/startingWizard/generalInformation/courseFormat',
         state: ProgressState.notStarted,

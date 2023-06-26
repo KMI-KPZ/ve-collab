@@ -1,4 +1,8 @@
+from base64 import b64decode
 import json
+from typing import Dict, List, Tuple
+from keycloak import KeycloakGetError
+import requests
 
 import tornado.web
 
@@ -8,47 +12,97 @@ from resources.network.space import Spaces
 
 
 class ProfileInformationHandler(BaseHandler):
-
     @auth_needed
     async def get(self):
         """
         GET /profileinformation
-            request full information about the current user
+            request full information about a user. By default, information
+            about the current user is returned. Supply a username to get
+            information about an arbitrary user.
+
+            query params:
+                username: optional, request information about this user instead
 
             returns:
                 200 OK
                 {
-                 "user_id": <int>,
-                 "username": <string>,
-                 "email": <string>,
-                 "role": <string>,
-                 "profile": {
-                    "bio": <string>,
-                    "institution": <string>,
-                    "projects": [<string1>, <string2>, ...],
-                    "first_name": <string>,
-                    "last_name": <string>,
-                    "gender": <string>,
-                    "address": <string>,
-                    "birthday": <string>,
-                    "experience": [<string1>, <string2>, ...],
-                    "education": [<string1>, <string2>, ...]
-                 },
-                 "spaces": [<string1>, <string2>, ...],
-                 "follows": [<string1>, <string2>, ...],
-                 "followers": [<string1>, <string2>, ...]
+                    "user_id": <int>,
+                    "username": <string>,
+                    "email": <string>,
+                    "role": <string>,
+                    "profile": {
+                        "bio": <string>,
+                        "institution": <string>,
+                        "research_tags": [<string1>, <string2>, ...],
+                        "first_name": <string>,
+                        "last_name": <string>,
+                        "gender": <string>,
+                        "address": <string>,
+                        "birthday": <string>,
+                        "experience": [<string1>, <string2>, ...],
+                        "languages": [<string1>, <string2>, ...],
+                        "ve_interests": [<string1>, <string2>, ...],
+                        "ve_goals": [<string1>, <string2>, ...],
+                        "preferred_formats": [<string1>, <string2>, ...],
+                        "courses": [
+                            {
+                                "title": "<string>",
+                                "academic_course": "<string>",
+                                "semester": "<string>",
+                            },
+                            ...
+                        ],
+                        "educations": [
+                            {
+                                institution: "<string>",
+                                degree: "<string>",
+                                department: "<string>",
+                                timestamp_from: "<string>",
+                                timestamp_to: "<string>",
+                                additional_info: "<string>",
+                            },
+                            ...
+                        ],
+                        "work_experience": [
+                            {
+                                position: "<string>",
+                                institution: "<string>",
+                                department: "<string>",
+                                timestamp_from: "<string>",
+                                timestamp_to: "<string>",
+                                city: "<string>",
+                                country: "<string>",
+                                additional_info: "<string>",
+                            },
+                        ],
+                    },
+                    "spaces": [<string1>, <string2>, ...],
+                    "follows": [<string1>, <string2>, ...],
+                    "followers": [<string1>, <string2>, ...]
                 }
 
                 401 Unauthorized
                 {"status": 401,
                  "reason": "no_logged_in_user"}
+
+                409 Conflict
+                {"status": 409,
+                 "reason": "user_doesnt_exist"}
         """
         username = self.get_argument("username", None)
         if not username:
             username = self.current_user.username
 
-        # get account information from keycloak
-        keycloak_info = self.get_keycloak_user(username)
+        # get account information from keycloak, abort if the requested user
+        # doesnt exist there
+        try:
+            keycloak_info = self.get_keycloak_user(username)
+        except KeycloakGetError as e:
+            error_response = json.loads(e.error_message.decode())
+            if error_response["error"] == "User not found":
+                self.set_status(409)
+                self.write({"success": False, "reason": "user_doesnt_exist"})
+                return
 
         # add user data to response
         user_information_response = {
@@ -90,27 +144,76 @@ class ProfileInformationHandler(BaseHandler):
         """
         POST /profileinformation
 
-            update the profile information (bio, institution and projects)
+            update the profile information by supplying any of the information
+            that should be updated. Information that remains the same
+            can be left out. See possible keys down below.
+            Updating the profile pic is special, because JSON has no type for binary,
+            so the image is expected to be a base64 encoded string.
+            Whenever the profile_pic is updated, the response includes
+            a "profile_pic_id" key that indicated the _id of the stored picture.
+            Use this _id to retrieve it from /uploads/<_id> endpoint.
 
             http body:
                 {
                     "bio": <string>,
                     "institution": <string>,
-                    "projects": [<string1>, <string2>, ...],
-
+                    "research_tags": [<string1>, <string2>, ...],
                     "first_name": <string>,
                     "last_name": <string>,
                     "gender": <string>,
                     "address": <string>,
                     "birthday": <string>,
                     "experience": [<string1>, <string2>, ...],
-                    "education": [<string1>, <string2>, ...]
+                    "ve_interests": [<string1>, <string2>, ...],
+                    "ve_goals": [<string1>, <string2>, ...],
+                    "preferred_formats": [<string1>, <string2>, ...],
+                    "courses": [
+                        {
+                            "title": "<string>",
+                            "academic_course: "<string>",
+                            "semester": "<string>",
+                        },
+                        ...
+                    ],
+                    "educations": [
+                        {
+                            institution: "<string>",
+                            degree: "<string>",
+                            department: "<string>",
+                            timestamp_from: "<string>",
+                            timestamp_to: "<string>",
+                            additional_info: "<string>",
+                        },
+                        ...
+                    ],
+                    "work_experience": [
+                        {
+                            position: "<string>",
+                            institution: "<string>",
+                            department: "<string>",
+                            timestamp_from: "<string>",
+                            timestamp_to: "<string>",
+                            city: "<string>",
+                            country: "<string>",
+                            additional_info: "<string>",
+                        },
+                    ],
+                    "profile_pic": {
+                        "body": "<base64_encoded_image>",
+                        "content_type": "<image/jpeg|image/png|...>"
+                    }
                 }
 
             returns:
                 200 OK,
                 {"status": 200,
                  "success": True}
+
+                 200 OK,
+                 --> profile pic was updated
+                {"status": 200,
+                 "success": True,
+                 "profile_pic_id": "<_id>"}
 
                 400 Bad Request
                 {"status": 400,
@@ -121,45 +224,34 @@ class ProfileInformationHandler(BaseHandler):
                  "reason": "no_logged_in_user"}
         """
 
-        #bio = self.get_body_argument("bio", None)
-        #institution = self.get_body_argument("institution", None)
-        #projects = self.get_body_argument("projects", None).split(",")
-        #first_name = self.get_body_argument("first_name", None)
-        #last_name = self.get_body_argument("last_name", None)
-        #gender = self.get_body_argument("gender", None)
-        #address = self.get_body_argument("address", None)
-        #birthday = self.get_body_argument("birthday", None)
-        #experience = self.get_body_argument("experience", None).split(",")
-        #education = self.get_body_argument("education", None).split(",")
-
         updated_attribute_dict = json.loads(self.request.body)
-
-        """
-        updated_attribute_dict = {
-            "bio": bio,
-            "institution": institution,
-            "projects": projects,
-            "first_name": first_name,
-            "last_name": last_name,
-            "gender": gender,
-            "address": address,
-            "birthday": birthday,
-            "experience": experience,
-            "education": education,
-        }
-        """
 
         with Profiles() as profile_manager:
             # handle profile pic
-            if "profile_pic" in self.request.files:
-                profile_pic_obj = self.request.files["profile_pic"][0]
-                updated_attribute_dict["profile_pic"] = profile_pic_obj["filename"]
-                profile_manager.update_profile_information(
+            if "profile_pic" in updated_attribute_dict:
+                profile_pic_obj = {
+                    "body": b64decode(updated_attribute_dict["profile_pic"]["payload"]),
+                    "content_type": updated_attribute_dict["profile_pic"]["type"],
+                }
+                updated_attribute_dict["profile_pic"] = "avatar_{}".format(
+                    self.current_user.username
+                )
+                profile_pic_id = profile_manager.update_profile_information(
                     self.current_user.username,
                     updated_attribute_dict,
                     profile_pic_obj["body"],
                     profile_pic_obj["content_type"],
                 )
+
+                self.set_status(200)
+                self.write(
+                    {
+                        "status": 200,
+                        "success": True,
+                        "profile_pic_id": str(profile_pic_id),
+                    }
+                )
+                return
             else:
                 profile_manager.update_profile_information(
                     self.current_user.username, updated_attribute_dict
@@ -167,6 +259,541 @@ class ProfileInformationHandler(BaseHandler):
 
             self.set_status(200)
             self.write({"status": 200, "success": True})
+
+
+class BulkProfileSnippets(BaseHandler):
+    @auth_needed
+    def post(self):
+        """
+        POST /profile_snippets
+            request profile snippets, i.e. username, first_name, last_name,
+            institution and profile_pic for a list of users. Specify
+            this list of usernames in the body.
+            The profile_pic is an identifier that can be exchanged for the actual
+            profile image at the /uploads endpoint. See the documentation for
+            `GridFSStaticFileHandler` for reference.
+
+            query params:
+                None
+
+            http body:
+                {
+                    "usernames": ["username1", "username2"]
+                }
+
+            returns:
+                200 OK,
+                {"success": True,
+                 "user_snippets": [
+                    {
+                        "username": "<string>",
+                        "first_name": "<string>",
+                        "last_name": "<string>",
+                        "profile_pic": "<string>",
+                        "institution": "<string>",
+                    }
+                 ]
+                }
+
+                400 Bad Request
+                --> http body is not valid json
+                {"success": False,
+                 "reason": "json_parsing_error"}
+
+                400 Bad Request
+                {"success": False,
+                 "reason": "missing_key_in_http_body"}
+
+                401 Unauthorized
+                {"sucess": False,
+                 "reason": "no_logged_in_user"}
+        """
+
+        try:
+            http_body = json.loads(self.request.body)
+        except Exception:
+            self.set_status(400)
+            self.write({"success": False, "reason": "json_parsing_error"})
+            return
+
+        if "usernames" not in http_body:
+            self.set_status(400)
+            self.write({"success": False, "reason": "missing_key_in_http_body"})
+            return
+
+        with Profiles() as profile_manager:
+            profiles = profile_manager.get_profile_snippets(http_body["usernames"])
+
+            self.set_status(200)
+            self.serialize_and_write({"success": True, "user_snippets": profiles})
+
+
+class OrcidProfileHandler(BaseHandler):
+    """
+    request profile data from ORCiD API
+    """
+
+    @auth_needed
+    async def get(self):
+        """
+        GET /orcid
+            Extract profile information from the public ORCiD record of the user.
+            This is only possible if the user is authenticated via ORCiD, i.e.
+            on login he/she has chosen to login with their ORCiD, or the account
+            is atleast linked (possible TODO, tbd).
+            If the user just has a "regular" account, an error is thrown.
+
+            The returned profile is a suggestion and therefore not directly stored
+            as the users profile in the backend. Suggest this data to the user but give
+            them control to change it to their wishes and save it manually afterwards
+            using the `/profileinformation`-endpoint.
+
+            The returned profile is only a subset of the full profile information that is
+            stored, it contains only those values that are potentially extractable from ORCiD.
+
+            Response structure:
+            {
+                "suggested_profile": {
+                    "bio": "",
+                    "institution": "",
+                    "research_tags": ["", "", ""],
+                    "first_name": "",
+                    "last_name": "",
+                    "educations": [
+                        {
+                            "institution": "",
+                            "degree": "",
+                            "department": "",
+                            "timestamp_from": "",
+                            "timestamp_to": "",
+                            "additional_info": "",
+                        }
+                    ],
+                    "work_experience": [
+                        {
+                            "position": "",
+                            "institution": "",
+                            "department": "",
+                            "city": "",
+                            "country": "",
+                            "timestamp_from": "",
+                            "timestamp_to": "",
+                            "additional_info": "",
+                        }
+                    ],
+                }
+            }
+
+
+            query params:
+                None (the ORCiD is already stored in the access token if successfully
+                      authenticated)
+
+            http body:
+                None
+
+            returns:
+                200 OK
+                {"success": True,
+                 "suggested_profile": "<see_above>"}
+
+                401 Unauthorized
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
+                409 Conflict
+                {"success": False,
+                 "reason": "not_authenticated_via_orcid"}
+
+                409 Conflict
+                {"success": False,
+                 "reason": "orcid_api_error",
+                 "orcid_error": "<error_from_orcid_api>"}
+        """
+
+        if not self.current_user.orcid:
+            self.set_status(409)
+            self.write({"success": False, "reason": "not_authenticated_via_orcid"})
+            return
+
+        orcid_api_response = requests.get(
+            "https://pub.orcid.org/v3.0/{}/record".format(self.current_user.orcid),
+            headers={"Accept": "application/json"},
+        )
+        orcid_record = json.loads(orcid_api_response.content)
+
+        # if the orcid api said anything else then 200, report back the error
+        if orcid_api_response.status_code != 200:
+            self.set_status(409)
+            self.write(
+                {
+                    "success": False,
+                    "reason": "orcid_api_error",
+                    "orcid_error": orcid_record,
+                }
+            )
+            return
+
+        first_name, last_name = self._parse_name(orcid_record)
+        profile_response = {
+            "bio": self._parse_bio(orcid_record),
+            "institution": self._parse_institutions(orcid_record),
+            "research_tags": self._parse_keywords(orcid_record),
+            "first_name": first_name,
+            "last_name": last_name,
+            "educations": self._parse_educations(orcid_record),
+            "work_experience": self._parse_employments(orcid_record),
+        }
+
+        self.write({"success": True, "suggested_profile": profile_response})
+
+    @auth_needed
+    async def post(self):
+        self.set_status(405)
+        self.write({"success": False, "reason": "POST_not_implemented"})
+
+    ##############################################################################
+    #                             helper functions                               #
+    ##############################################################################
+
+    def __extract_start_date(self, summary_obj: dict) -> str:
+        """
+        helper function to extract a valid ISO-8601 date string
+        from the very "special" representation of dates in an orcid summary
+        object...
+        """
+
+        start_date = ""
+        if summary_obj["start-date"] != None:
+            if summary_obj["start-date"]["year"] != None:
+                year = summary_obj["start-date"]["year"]["value"]
+                if summary_obj["start-date"]["month"] != None:
+                    month = summary_obj["start-date"]["month"]["value"]
+                    start_date = "{}-{}".format(year, month)
+                else:
+                    start_date = year
+        return start_date
+
+    def __extract_end_date(self, summary_obj: dict) -> str:
+        """
+        helper function to extract a valid ISO-8601 date string
+        from the very "special" representation of dates in an orcid summary
+        object...
+        """
+
+        end_date = ""
+        if summary_obj["end-date"] != None:
+            if summary_obj["end-date"]["year"] != None:
+                year = summary_obj["end-date"]["year"]["value"]
+                if summary_obj["end-date"]["month"] != None:
+                    month = summary_obj["end-date"]["month"]["value"]
+                    end_date = "{}-{}".format(year, month)
+                else:
+                    end_date = year
+        return end_date
+
+    def _parse_bio(self, orcid_record: dict) -> str:
+        """
+        extract the bio from the orcid record and return it, if
+        it exists. Otherwise returns an empty string
+        """
+
+        try:
+            if orcid_record["person"]["biography"] == None:
+                return ""
+            else:
+                return orcid_record["person"]["biography"]
+        except Exception as e:
+            print("caught exception @ bio parsing:")
+            print(e)
+            return ""
+
+    def _parse_name(self, orcid_record: dict) -> Tuple[str, str]:
+        """
+        extract the given name and family name from the orcid record
+        and return them, if they exist. if any of them does not exist,
+        return an empty string instead.
+
+        Returns a Tuple containing the given name in first position and
+        family name in second position.
+        """
+
+        given_name = family_name = ""
+
+        # split the extraction into separate try/excepts because if any one fails
+        # we still want to try the other one
+        try:
+            if orcid_record["person"]["name"]["given-names"] is not None:
+                given_name = orcid_record["person"]["name"]["given-names"]["value"]
+        except Exception as e:
+            print("caught exception @ given_name parsing:")
+            print(e)
+
+        try:
+            if orcid_record["person"]["name"]["family-name"] is not None:
+                family_name = orcid_record["person"]["name"]["family-name"]["value"]
+        except Exception as e:
+            print("caught exception @ family_name parsing:")
+            print(e)
+
+        return given_name, family_name
+
+    def _parse_keywords(self, orcid_record: dict) -> List[str]:
+        """
+        extract the keywords from the orcid record and return them in a list
+        if they exist. Otherwise return an empty list.
+        """
+
+        try:
+            if orcid_record["person"]["keywords"]["keyword"] == []:
+                return []
+            else:
+                return [
+                    elem["content"]
+                    for elem in orcid_record["person"]["keywords"]["keyword"]
+                ]
+        except Exception as e:
+            print("caught exception @ family_name parsing:")
+            print(e)
+            return []
+
+    def _parse_educations(self, orcid_record: dict) -> List[Dict]:
+        """
+        extract educations and qualifications from the orcid record
+        and return them in a list of dicts if they exist. Whenever there is some
+        information missing, empty strings are returned instead in the dicts.
+        if no educations are present at all, an empty list is returned.
+        """
+
+        def __extract_educations(orcid_record: dict) -> List[Dict]:
+            educations = []
+            try:
+                if (
+                    orcid_record["activities-summary"]["educations"][
+                        "affiliation-group"
+                    ]
+                    != []
+                ):
+                    for education_record in orcid_record["activities-summary"][
+                        "educations"
+                    ]["affiliation-group"]:
+                        try:
+                            education_record_summary = education_record["summaries"][0][
+                                "education-summary"
+                            ]
+
+                            # parse the fields
+                            department = (
+                                education_record_summary["department-name"]
+                                if education_record_summary["department-name"] != None
+                                else ""
+                            )
+                            degree = (
+                                education_record_summary["role-title"]
+                                if education_record_summary["role-title"] != None
+                                else ""
+                            )
+                            institution = education_record_summary["organization"][
+                                "name"
+                            ]
+                            start_date = self.__extract_start_date(
+                                education_record_summary
+                            )
+                            end_date = self.__extract_end_date(education_record_summary)
+
+                            # add the record
+                            educations.append(
+                                {
+                                    "institution": institution,
+                                    "degree": degree,
+                                    "department": department,
+                                    "timestamp_from": start_date,
+                                    "timestamp_to": end_date,
+                                    "additional_info": "",
+                                }
+                            )
+                        except Exception:
+                            continue
+
+            except Exception as e:
+                print("caught exception @ educations parsing:")
+                print(e)
+
+            return educations
+
+        def __extract_qualifications(orcid_record: dict) -> List[Dict]:
+            qualifications = []
+            try:
+                if (
+                    orcid_record["activities-summary"]["qualifications"][
+                        "affiliation-group"
+                    ]
+                    != []
+                ):
+                    for qualification_record in orcid_record["activities-summary"][
+                        "qualifications"
+                    ]["affiliation-group"]:
+                        try:
+                            qualification_record_summary = qualification_record[
+                                "summaries"
+                            ][0]["qualification-summary"]
+
+                            # parse the fields
+                            department = (
+                                qualification_record_summary["department-name"]
+                                if qualification_record_summary["department-name"]
+                                != None
+                                else ""
+                            )
+                            degree = (
+                                qualification_record_summary["role-title"]
+                                if qualification_record_summary["role-title"] != None
+                                else ""
+                            )
+                            institution = qualification_record_summary["organization"][
+                                "name"
+                            ]
+                            start_date = self.__extract_start_date(
+                                qualification_record_summary
+                            )
+                            end_date = self.__extract_end_date(
+                                qualification_record_summary
+                            )
+
+                            # add the record
+                            qualifications.append(
+                                {
+                                    "institution": institution,
+                                    "degree": degree,
+                                    "department": department,
+                                    "timestamp_from": start_date,
+                                    "timestamp_to": end_date,
+                                    "additional_info": "",
+                                }
+                            )
+                        except Exception:
+                            continue
+
+            except Exception as e:
+                print("caught exception @ qualifications parsing:")
+                print(e)
+
+            return qualifications
+
+        extracted_educations = __extract_educations(orcid_record)
+        extracted_qualifications = __extract_qualifications(orcid_record)
+
+        # join the two lists since we extract the same information
+        extracted_educations.extend(extracted_qualifications)
+
+        # sort in reverse order based on end times,
+        # since orcid interprets no given end time as "present",
+        # we do the same by putting them in first in the ordering
+        extracted_educations.sort(key=lambda item: item["timestamp_from"], reverse=True)
+
+        return extracted_educations
+
+    def _parse_employments(self, orcid_record: dict) -> List[Dict]:
+        """
+        extract employments from the orcid record and return them in a list of dicts
+        if they exist. Whenever there is some information missing,
+        empty strings are returned instead in the dicts. if no employments
+        are present at all, an empty list is returned.
+        """
+
+        employments = []
+        try:
+            if (
+                orcid_record["activities-summary"]["employments"]["affiliation-group"]
+                != []
+            ):
+                for employment_record in orcid_record["activities-summary"][
+                    "employments"
+                ]["affiliation-group"]:
+                    try:
+                        employment_record_summary = employment_record["summaries"][0][
+                            "employment-summary"
+                        ]
+
+                        # parse the fields
+                        department = (
+                            employment_record_summary["department-name"]
+                            if employment_record_summary["department-name"] != None
+                            else ""
+                        )
+                        position = (
+                            employment_record_summary["role-title"]
+                            if employment_record_summary["role-title"] != None
+                            else ""
+                        )
+                        institution = employment_record_summary["organization"]["name"]
+                        city = employment_record_summary["organization"]["address"][
+                            "city"
+                        ]
+                        country = employment_record_summary["organization"]["address"][
+                            "country"
+                        ]
+                        start_date = self.__extract_start_date(
+                            employment_record_summary
+                        )
+                        end_date = self.__extract_end_date(employment_record_summary)
+
+                        # add the record
+                        employments.append(
+                            {
+                                "position": position,
+                                "institution": institution,
+                                "department": department,
+                                "city": city,
+                                "country": country,
+                                "timestamp_from": start_date,
+                                "timestamp_to": end_date,
+                                "additional_info": "",
+                            }
+                        )
+                    except Exception:
+                        # if something fails, still try to parse the next one
+                        continue
+
+        except Exception as e:
+            print("caught exception @ employments parsing:")
+            print(e)
+
+        # sort in reverse order based on end times,
+        # since orcid interprets no given end time as the "current employment",
+        # we do the same by putting them in first in the ordering
+        employments.sort(key=lambda item: item["timestamp_from"], reverse=True)
+
+        return employments
+
+    def _parse_institutions(self, orcid_record: dict) -> str:
+        """
+        Extract the institution from the orcid record.
+        Since the current institution is not directly represented in the record,
+        we will do an "educated guess" based on the following heuristic:
+        1. if there are employments, take the institution from the first one
+            (since employments are sorted, this is treated as the current employment)
+        2. if there are no employments, take the first appearing institution from
+            the educations (again, most current)
+        3. if there is still no hit, we cannot determine an institution and return
+            an empty string instead
+        """
+
+        employments = self._parse_employments(orcid_record)
+        try:
+            if employments:
+                return employments[0]["institution"]
+            else:
+                educations = self._parse_educations(orcid_record)
+                if educations:
+                    return educations[0]["institution"]
+
+            # no hits, cannnot determine institution
+            return ""
+        except Exception as e:
+            print("caught exception @ institutions parsing:")
+            print(e)
+            return ""
 
 
 class UserHandler(BaseHandler):
