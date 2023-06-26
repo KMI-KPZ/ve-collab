@@ -15,6 +15,7 @@ import {
     Education,
     PersonalInformation,
     VEInformation,
+    VEWindowItem,
     WorkExperience,
 } from '@/interfaces/profile/profileInterfaces';
 import EditProfileSuccessAlert from '@/components/profile/EditProfileSuccessAlert';
@@ -65,6 +66,32 @@ export default function EditProfile() {
             additional_info: '',
         },
     ]);
+
+    const [veWindowItems, setVeWindowItems] = useState<VEWindowItem[]>([
+        {
+            plan: {
+                id: "12345",
+                title: "test"
+            },
+            title: "visible title1",
+            description: "description1"
+        },
+        {
+            plan: {
+                id: "123456",
+                title: "test2"
+            },
+            title: "visible title2",
+            description: "description2"
+        },{
+            plan: {
+                id: "1234567",
+                title: "test3"
+            },
+            title: "visible title3",
+            description: "description2"
+        }
+    ])
 
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
@@ -257,7 +284,9 @@ export default function EditProfile() {
                                 />
                             </div>
                             <div tabname="VE-Schaufenster">
-                                <EditProfileVeWindow 
+                                <EditProfileVeWindow
+                                    items={veWindowItems}
+                                    setItems={setVeWindowItems} 
                                     updateProfileData={updateProfileData}
                                     orcid={session?.user.orcid}
                                     importOrcidProfile={importOrcidProfile}

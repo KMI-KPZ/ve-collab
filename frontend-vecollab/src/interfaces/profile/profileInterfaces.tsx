@@ -58,3 +58,14 @@ export interface UserSnippet {
     preferredUsername: string;
     institution: string;
 }
+
+export interface VEPlanSnippet {
+    id: string,
+    title: string
+}
+
+export interface VEWindowItem {
+    plan: VEPlanSnippet
+    title: string;
+    description: string;
+}
