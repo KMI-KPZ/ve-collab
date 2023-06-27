@@ -32,6 +32,7 @@ export default function Profile() {
     const [followers, setFollowers] = useState(['']); // other users that follow this user (usernames)
     const [follows, setFollows] = useState(['']); // the other users that this user follows (usernames)
     const [profilePictureUrl, setProfilePicUrl] = useState('');
+    const [veReady, setVeReady] = useState(true);
     const [veInformation, setVeInformation] = useState<VEInformation>({
         veInterests: [''],
         veGoals: [''],
@@ -157,6 +158,7 @@ export default function Profile() {
                         setFollowers(data.followers);
                         setFollows(data.follows);
                         setProfilePicUrl(data.profile.profile_pic);
+                        setVeReady(data.profile.ve_ready);
                         setVeInformation({
                             veInterests: data.profile.ve_interests,
                             veGoals: data.profile.ve_goals,
@@ -200,6 +202,7 @@ export default function Profile() {
                         profilePictureUrl={profilePictureUrl}
                         foreignUser={foreignUser}
                         followers={followers}
+                        veReady={veReady}
                     />
                 </div>
                 <Container>

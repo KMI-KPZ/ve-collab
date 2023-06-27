@@ -21,7 +21,6 @@ import {
 import EditProfileSuccessAlert from '@/components/profile/EditProfileSuccessAlert';
 import EditVisibilitySettings from '@/components/profile/EditVisibilitySettings';
 import EditProfileVeWindow from '@/components/profile/EditProfileVeWindow';
-import { title } from 'process';
 
 export default function EditProfile() {
     const [personalInformation, setPersonalInformation] = useState<PersonalInformation>({
@@ -34,6 +33,7 @@ export default function EditProfile() {
         profilePicId: '',
         languageTags: [],
     });
+    const [veReady, setVeReady] = useState(true);
     const [veInformation, setVeInformation] = useState<VEInformation>({
         veInterests: [''],
         veGoals: [''],
@@ -118,6 +118,7 @@ export default function EditProfile() {
                             text: language,
                         })),
                     });
+                    setVeReady(data.profile.ve_ready);
                     setVeInformation({
                         veInterests: data.profile.ve_interests,
                         veGoals: data.profile.ve_goals,
@@ -168,6 +169,7 @@ export default function EditProfile() {
                 expertise: personalInformation.expertise,
                 birthday: personalInformation.birthday,
                 languages: personalInformation.languageTags.map((elem) => elem.text),
+                ve_ready: veReady,
                 ve_interests: veInformation.veInterests,
                 ve_goals: veInformation.veGoals,
                 experience: veInformation.experience,
@@ -246,6 +248,8 @@ export default function EditProfile() {
                                 <EditVEInfo
                                     veInformation={veInformation}
                                     setVeInformation={setVeInformation}
+                                    veReady={veReady}
+                                    setVeReady={setVeReady}
                                     updateProfileData={updateProfileData}
                                     orcid={session?.user.orcid}
                                     importOrcidProfile={importOrcidProfile}
