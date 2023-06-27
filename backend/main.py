@@ -59,7 +59,8 @@ define(
     help="start application in test mode (bypass authentication) as a user. never run the app in this mode, it is purely for unit tests!",
 )
 
-def make_app(cookie_secret):
+
+def make_app(cookie_secret: str, debug: bool = False):
     return tornado.web.Application(
         [
             (r"/", MainRedirectHandler),
@@ -109,6 +110,7 @@ def make_app(cookie_secret):
         ],
         cookie_secret=cookie_secret,
         template_path="html",
+        debug=debug,
     )
 
 
@@ -220,7 +222,6 @@ def create_initial_admin(username: str) -> None:
     """
 
     with Profiles() as profile_manager:
-
         # check if the user already has a non-admin role and issue a warning
         # about elevated permissions if so
         try:
@@ -243,7 +244,7 @@ def create_initial_admin(username: str) -> None:
         profile_manager.insert_default_admin_profile(username)
 
         # also insert admin acl rules
-        with (ACL() as acl, Spaces() as space_manager):
+        with ACL() as acl, Spaces() as space_manager:
             acl.global_acl.insert_admin()
 
             for space in space_manager.get_space_names():
@@ -394,6 +395,12 @@ async def main():
         help="path to config file, defaults to config.json",
     )
     define(
+        "debug",
+        default=False,
+        type=bool,
+        help="start application in debug mode (autoreload, etc.). don't use this flag in production",
+    )
+    define(
         "build_indexes",
         default=False,
         type=bool,
@@ -427,7 +434,7 @@ async def main():
 
     # build and start server
     cookie_secret = conf["cookie_secret"]
-    app = make_app(cookie_secret)
+    app = make_app(cookie_secret, options.debug)
     server = tornado.httpserver.HTTPServer(app)
     logger.info("Starting server on port: " + str(global_vars.port))
     server.listen(global_vars.port)
