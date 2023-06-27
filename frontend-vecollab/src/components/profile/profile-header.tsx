@@ -1,8 +1,8 @@
 import Link from 'next/link';
-import { RxDotsVertical } from 'react-icons/rx';
+import { RxDotFilled, RxDotsVertical } from 'react-icons/rx';
 import { fetchDELETE, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
-import { useEffect} from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import AuthenticatedImage from './AuthenticatedImage';
 
@@ -12,6 +12,7 @@ interface Props {
     profilePictureUrl: string;
     foreignUser: boolean;
     followers: string[];
+    veReady: boolean;
 }
 
 export default function ProfileHeader({
@@ -20,6 +21,7 @@ export default function ProfileHeader({
     profilePictureUrl,
     foreignUser,
     followers,
+    veReady,
 }: Props) {
     const router = useRouter();
     const { data: session, status } = useSession();
@@ -57,7 +59,12 @@ export default function ProfileHeader({
     return (
         <div className={'flex'}>
             <div className={'mr-8 rounded-full overflow-hidden border-4 border-white shadow-2xl'}>
-                <AuthenticatedImage imageId={profilePictureUrl} alt={'Profilbild'} width={180} height={180} />
+                <AuthenticatedImage
+                    imageId={profilePictureUrl}
+                    alt={'Profilbild'}
+                    width={180}
+                    height={180}
+                />
             </div>
             <div className={'mr-auto'}>
                 <div className="mt-2 min-h-[2rem]">
@@ -79,6 +86,29 @@ export default function ProfileHeader({
                 <div className={'text-gray-500'}>{institution}</div>
             </div>
             <div className={'flex items-end mb-12'}>
+                <div className="flex mx-16 h-12 items-center">
+                    {veReady ? (
+                        <>
+                            <RxDotFilled
+                                size={50}
+                                className="text-green-500 drop-shadow-[0_0_8px_rgba(34,197,94,1)]"
+                            />
+                            <div className="flex items-center text-green-600">
+                                für VE&apos;s verfügbar
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <RxDotFilled
+                                size={50}
+                                className="text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,1)]"
+                            />
+                            <div className="flex items-center text-red-600">
+                                zur Zeit keine VE&apos;s
+                            </div>
+                        </>
+                    )}
+                </div>
                 {/* we only render follow and message buttons if it is not our own profile*/}
                 {foreignUser && (
                     <>

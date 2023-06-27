@@ -10,6 +10,8 @@ import Swapper from './Swapper';
 interface Props {
     veInformation: VEInformation;
     setVeInformation: Dispatch<SetStateAction<VEInformation>>;
+    veReady: boolean;
+    setVeReady: Dispatch<SetStateAction<boolean>>;
     updateProfileData(evt: FormEvent): Promise<void>;
     orcid: string | null | undefined;
     importOrcidProfile(evt: FormEvent): Promise<void>;
@@ -18,6 +20,8 @@ interface Props {
 export default function EditVEInfo({
     veInformation,
     setVeInformation,
+    veReady,
+    setVeReady,
     updateProfileData,
     orcid,
     importOrcidProfile,
@@ -141,6 +145,19 @@ export default function EditVEInfo({
     return (
         <form onSubmit={updateProfileData}>
             <EditProfileHeader orcid={orcid} importOrcidProfile={importOrcidProfile} />
+            <EditProfileVerticalSpacer>
+                <EditProfileHeadline name={'aktuelle Verfügbarkeit für VE'} />
+                <select
+                    value={veReady === true ? 'true' : 'false'}
+                    onChange={(e) =>
+                        e.target.value === 'true' ? setVeReady(true) : setVeReady(false)
+                    }
+                    className="border border-gray-500 rounded-lg p-2 bg-white"
+                >
+                    <option value="true">Ja</option>
+                    <option value="false">Nein</option>
+                </select>
+            </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'VE-Themeninteressen'} />
                 {veInformation.veInterests.map((interest, index) => (
