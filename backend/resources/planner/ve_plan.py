@@ -86,6 +86,22 @@ class VEPlanResource:
         that match the criteria.
         """
 
+        # r/w access to plans of other users is not yet implemented,
+        # so return only the plans owned by the user 
+        result = self.db.plans.find({"author": username})
+        return [VEPlan.from_dict(res) for res in result]
+    
+    def get_public_plans_of_user(self, username: str) -> List[VEPlan]:
+        """
+        Request all plans that the user given by `username` is an author of and are
+        publically readable (TODO).
+
+        Returns a list of `VEPlan` objects, or an empty list, if there are no plans
+        that match the criteria.
+        """
+
+        # omit the "public readability" criteria since access to foreign
+        # plans is not yet implemented
         result = self.db.plans.find({"author": username})
         return [VEPlan.from_dict(res) for res in result]
 

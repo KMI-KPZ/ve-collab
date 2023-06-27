@@ -20,6 +20,9 @@ class ProfileInformationHandler(BaseHandler):
             about the current user is returned. Supply a username to get
             information about an arbitrary user.
 
+            The profile_pic contains the _id of the resource that can be exchanged
+            for the real image data at the `GridFSStaticFileHandler`.
+
             query params:
                 username: optional, request information about this user instead
 
@@ -39,6 +42,7 @@ class ProfileInformationHandler(BaseHandler):
                         "gender": <string>,
                         "address": <string>,
                         "birthday": <string>,
+                        "profile_pic": <string>,
                         "experience": [<string1>, <string2>, ...],
                         "languages": [<string1>, <string2>, ...],
                         "ve_interests": [<string1>, <string2>, ...],
@@ -74,6 +78,13 @@ class ProfileInformationHandler(BaseHandler):
                                 country: "<string>",
                                 additional_info: "<string>",
                             },
+                        ],
+                        "ve_window": [
+                            {
+                                "plan_id": "<_id_of_ve_plan_object>",
+                                "title": "<string>",
+                                "description": "<string>",
+                            }
                         ],
                     },
                     "spaces": [<string1>, <string2>, ...],
@@ -197,6 +208,13 @@ class ProfileInformationHandler(BaseHandler):
                             country: "<string>",
                             additional_info: "<string>",
                         },
+                    ],
+                    "ve_window": [
+                        {
+                            "plan_id": "<_id_of_ve_plan_object>",
+                            "title": "<string>",
+                            "description": "<string>",
+                        }
                     ],
                     "profile_pic": {
                         "body": "<base64_encoded_image>",

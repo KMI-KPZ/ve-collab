@@ -16,6 +16,7 @@ import {
     WorkExperience,
     PersonalInformation,
     VEInformation,
+    VEWindowItem,
 } from '@/interfaces/profile/profileInterfaces';
 
 export default function Profile() {
@@ -61,6 +62,16 @@ export default function Profile() {
             city: '',
             country: '',
             additional_info: '',
+        },
+    ]);
+    const [veWindowItems, setVeWindowItems] = useState<VEWindowItem[]>([
+        {
+            plan: {
+                _id: '',
+                name: '',
+            },
+            title: '',
+            description: '',
         },
     ]);
 
@@ -157,6 +168,13 @@ export default function Profile() {
                         setCourses(data.profile.courses);
                         setEducations(data.profile.educations);
                         setWorkExperience(data.profile.work_experience);
+                        setVeWindowItems(
+                            data.profile.ve_window.map((elem: any) => ({
+                                plan: { _id: elem.plan_id, name: '' },
+                                title: elem.title,
+                                description: elem.description,
+                            }))
+                        );
                     }
                 }
             );
@@ -222,7 +240,7 @@ export default function Profile() {
                                 />
                             </WhiteBox>
                             <WhiteBox>
-                                <VEVitrine />
+                                <VEVitrine items={veWindowItems}/>
                             </WhiteBox>
                         </div>
                     </div>
