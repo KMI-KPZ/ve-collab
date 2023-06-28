@@ -1,5 +1,11 @@
-import { BACKEND_URL } from '@/constants';
 import { signIn } from 'next-auth/react';
+
+if (!process.env.NEXT_PUBLIC_BACKEND_URL) {
+    throw new Error(`
+      Please provide a valid NEXT_PUBLIC_BACKEND_URL in .env.local .
+    `);
+}
+let BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 export async function fetchGET(relativeUrl: string, accessToken?: string) {
     const headers: { Authorization?: string } = {};
