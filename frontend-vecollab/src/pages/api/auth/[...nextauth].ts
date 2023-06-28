@@ -158,6 +158,9 @@ const refreshAccessToken = async (token: JWT): Promise<JWT> => {
 };
 
 export const authOptions = {
+    session: {
+        maxAge: 60 * 60,
+    },
     providers: [
         KeycloakProvider({
             id: 'keycloak',
@@ -165,8 +168,6 @@ export const authOptions = {
             clientSecret: process.env.KEYCLOAK_SECRET,
             issuer: process.env.NEXT_PUBLIC_KEYCLOAK_ISSUER,
             profile(profile: KeycloakProfile) {
-                console.log("profile:")
-                console.log(profile)
                 return {
                     iss: profile.iss,
                     email_verified: profile.email_verified,
@@ -185,18 +186,13 @@ export const authOptions = {
     ],
     callbacks: {
         async jwt({ token, user, account }: JWTProps): Promise<JWT> {
-            console.log(token);
-            console.log(user);
-            console.log(account);
             if (account && user) {
                 // Add access_token, refresh_token and expirations to the token right after signin
                 token.accessToken = account.access_token;
                 token.refreshToken = account.refresh_token;
                 token.sessionState = account.session_state;
                 token.idToken = account.id_token;
-                if (account.expires_at) {
-                    token.accessTokenExpired = account.expires_at;
-                }
+                token.accessTokenExpired = account.expires_at!;
                 token.refreshTokenExpired = Date.now() + (account.refresh_expires_in - 15) * 1000;
                 token.user = user;
 
@@ -218,6 +214,7 @@ export const authOptions = {
             session.idToken = token.idToken;
             session.user = token.user;
             session.sessionState = token.sessionState;
+            session.expires = new Date(token.accessTokenExpired).toISOString();
             return session;
         },
     },

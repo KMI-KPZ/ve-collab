@@ -1,3 +1,5 @@
+import { signIn } from 'next-auth/react';
+
 if (!process.env.NEXT_PUBLIC_BACKEND_URL) {
     throw new Error(`
       Please provide a valid NEXT_PUBLIC_BACKEND_URL in .env.local .
@@ -16,6 +18,10 @@ export async function fetchGET(relativeUrl: string, accessToken?: string) {
         let backendResponse = await fetch(BACKEND_URL + relativeUrl, {
             headers: headers,
         });
+        if(backendResponse.status === 401){
+            console.log("forced new signIn by api call");
+            signIn("keycloak");
+        }
         return await backendResponse.json();
     } catch (e) {
         console.log('network error, probably backend down');
@@ -40,6 +46,10 @@ export async function fetchPOST(
             headers: headers,
             body: JSON.stringify(payload),
         });
+        if(backendResponse.status === 401){
+            console.log("forced new signIn by api call");
+            signIn("keycloak");
+        }
         return await backendResponse.json();
     } catch (e) {
         console.log(e);
@@ -64,6 +74,10 @@ export async function fetchDELETE(
             headers: headers,
             body: JSON.stringify(payload),
         });
+        if(backendResponse.status === 401){
+            console.log("forced new signIn by api call");
+            signIn("keycloak");
+        }
         return await backendResponse.json();
     } catch (e) {
         console.log('network error, probably backend down');
@@ -82,6 +96,10 @@ export async function fetchImage(relativeUrl: string, accessToken?: string): Pro
         let backendResponse = await fetch(BACKEND_URL + relativeUrl, {
             headers: headers,
         });
+        if(backendResponse.status === 401){
+            console.log("forced new signIn by api call");
+            signIn("keycloak");
+        }
         return backendResponse.blob();
     } catch (e) {
         console.log('network error, probably backend down');

@@ -33,6 +33,7 @@ export default function EditProfile() {
         profilePicId: '',
         languageTags: [],
     });
+    const [veReady, setVeReady] = useState(true);
     const [veInformation, setVeInformation] = useState<VEInformation>({
         veInterests: [''],
         veGoals: [''],
@@ -70,28 +71,13 @@ export default function EditProfile() {
     const [veWindowItems, setVeWindowItems] = useState<VEWindowItem[]>([
         {
             plan: {
-                id: "12345",
-                title: "test"
+                _id: '',
+                name: '',
             },
-            title: "visible title1",
-            description: "description1"
+            title: '',
+            description: '',
         },
-        {
-            plan: {
-                id: "123456",
-                title: "test2"
-            },
-            title: "visible title2",
-            description: "description2"
-        },{
-            plan: {
-                id: "1234567",
-                title: "test3"
-            },
-            title: "visible title3",
-            description: "description2"
-        }
-    ])
+    ]);
 
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
@@ -132,6 +118,7 @@ export default function EditProfile() {
                             text: language,
                         })),
                     });
+                    setVeReady(data.profile.ve_ready);
                     setVeInformation({
                         veInterests: data.profile.ve_interests,
                         veGoals: data.profile.ve_goals,
@@ -147,6 +134,13 @@ export default function EditProfile() {
                     setCourses(data.profile.courses);
                     setEducations(data.profile.educations);
                     setWorkExperience(data.profile.work_experience);
+                    setVeWindowItems(
+                        data.profile.ve_window.map((elem: any) => ({
+                            plan: { _id: elem.plan_id, name: '' },
+                            title: elem.title,
+                            description: elem.description,
+                        }))
+                    );
                 }
             });
         }
@@ -175,6 +169,7 @@ export default function EditProfile() {
                 expertise: personalInformation.expertise,
                 birthday: personalInformation.birthday,
                 languages: personalInformation.languageTags.map((elem) => elem.text),
+                ve_ready: veReady,
                 ve_interests: veInformation.veInterests,
                 ve_goals: veInformation.veGoals,
                 experience: veInformation.experience,
@@ -183,6 +178,11 @@ export default function EditProfile() {
                 courses: courses,
                 educations: educations,
                 work_experience: workExperience,
+                ve_window: veWindowItems.map((elem) => ({
+                    plan_id: elem.plan._id,
+                    title: elem.title,
+                    description: elem.description,
+                })),
             },
             session?.accessToken
         );
@@ -248,6 +248,8 @@ export default function EditProfile() {
                                 <EditVEInfo
                                     veInformation={veInformation}
                                     setVeInformation={setVeInformation}
+                                    veReady={veReady}
+                                    setVeReady={setVeReady}
                                     updateProfileData={updateProfileData}
                                     orcid={session?.user.orcid}
                                     importOrcidProfile={importOrcidProfile}
@@ -286,7 +288,7 @@ export default function EditProfile() {
                             <div tabname="VE-Schaufenster">
                                 <EditProfileVeWindow
                                     items={veWindowItems}
-                                    setItems={setVeWindowItems} 
+                                    setItems={setVeWindowItems}
                                     updateProfileData={updateProfileData}
                                     orcid={session?.user.orcid}
                                     importOrcidProfile={importOrcidProfile}

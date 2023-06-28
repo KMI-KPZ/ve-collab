@@ -128,6 +128,17 @@ class VEPlanHandler(BaseHandler):
             elif slug == "get_available":
                 self.get_available_plans_for_user(db)
                 return
+            
+            elif slug == "get_public_of_user":
+                try:
+                    username = self.get_argument("username")
+                except tornado.web.MissingArgumentError:
+                    self.set_status(400)
+                    self.write({"success": False, "reason": MISSING_KEY_SLUG + "username"})
+                    return
+                
+                self.get_public_plans_of_user(db, username)
+                return
 
             elif slug == "get_all":
                 self.get_all_plans(db)
@@ -868,6 +879,26 @@ class VEPlanHandler(BaseHandler):
         plans = [
             plan.to_dict()
             for plan in planner.get_plans_for_user(self.current_user.username)
+        ]
+        self.serialize_and_write({"success": True, "plans": plans})
+
+    def get_public_plans_of_user(self, db: Database, username: str) -> None:
+        """
+        This function is invoked by the handler when the correspoding endpoint
+        is requested. It just de-crowds the handler function and should therefore
+        not be called manually anywhere else.
+
+        Request all the public plans that the user given by the `username` is the author
+        of and, in addtion, are publically readable.
+
+        Responses:
+            200 OK --> contains all plans that the user is an author of
+        """
+
+        planner = VEPlanResource(db)
+        plans = [
+            plan.to_dict()
+            for plan in planner.get_public_plans_of_user(username)
         ]
         self.serialize_and_write({"success": True, "plans": plans})
 

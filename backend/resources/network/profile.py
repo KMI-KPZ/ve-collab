@@ -42,6 +42,7 @@ class Profiles:
             "experience": list,
             "expertise": (str, type(None)),
             "languages": list,
+            "ve_ready": bool,
             "ve_interests": list,
             "ve_goals": list,
             "preferred_formats": list,
@@ -49,6 +50,7 @@ class Profiles:
             "courses": list,
             "educations": list,
             "work_experience": list,
+            "ve_window": list,
         }
 
     def __enter__(self):
@@ -99,6 +101,7 @@ class Profiles:
             "experience": [""],
             "expertise": "",
             "languages": [],
+            "ve_ready": True,
             "ve_interests": [""],
             "ve_goals": [""],
             "preferred_formats": [""],
@@ -106,6 +109,7 @@ class Profiles:
             "courses": [],
             "educations": [],
             "work_experience": [],
+            "ve_window": [],
         }
         self.db.profiles.insert_one(profile)
         return profile
@@ -134,6 +138,7 @@ class Profiles:
             "experience": [""],
             "expertise": "",
             "languages": [],
+            "ve_ready": True,
             "ve_interests": [""],
             "ve_goals": [""],
             "preferred_formats": [""],
@@ -141,6 +146,7 @@ class Profiles:
             "courses": [],
             "educations": [],
             "work_experience": [],
+            "ve_window": [],
         }
         self.db.profiles.insert_one(profile)
         return profile
@@ -362,8 +368,7 @@ class Profiles:
         """
         update the profile information including (optionally) the profile picture.
         The following keys are necessary in the `updated_profile` dict:
-        bio, institution, projects, first_name, last_name, gender, address, birthday,
-        experience, education.
+        see `self.profile_attributes` of class `Profiles`
         The following keys are optional:
         profile_pic
 
