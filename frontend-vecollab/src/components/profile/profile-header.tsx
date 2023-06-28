@@ -2,9 +2,10 @@ import Link from 'next/link';
 import { RxDotFilled, RxDotsVertical } from 'react-icons/rx';
 import { fetchDELETE, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import AuthenticatedImage from './AuthenticatedImage';
+import Dialog from './Dialog';
 
 interface Props {
     name: string;
@@ -25,6 +26,7 @@ export default function ProfileHeader({
 }: Props) {
     const router = useRouter();
     const { data: session, status } = useSession();
+
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
         if (status !== 'loading') {
@@ -34,6 +36,16 @@ export default function ProfileHeader({
             }
         }
     }, [session, status]);
+
+    const [isInvitationDialogOpen, setIsInvitationDialogOpen] = useState(false);
+    const handleOpenInvitationDialog = () => {
+        setIsInvitationDialogOpen(true);
+    };
+    const handleCloseInvitationDialog = () => {
+        setIsInvitationDialogOpen(false);
+    };
+
+    const [appendPlanCheckboxChecked, setAppendPlanCheckboxChecked] = useState(false);
 
     const usernameOfProfileOwner =
         router.query.username !== undefined ? (router.query.username as string) : '';
@@ -116,7 +128,7 @@ export default function ProfileHeader({
                         {followers.includes(session?.user.preferred_username as string) ? (
                             <button
                                 className={
-                                    'w-32 h-12 bg-ve-collab-blue/10 border border-ve-collab-blue py-3 px-6 mr-2 rounded-lg shadow-lg'
+                                    'w-40 h-12 bg-ve-collab-blue/10 border border-ve-collab-blue py-3 px-6 mr-2 rounded-lg shadow-lg'
                                 }
                                 onClick={unfollowUser}
                             >
@@ -126,7 +138,7 @@ export default function ProfileHeader({
                         ) : (
                             <button
                                 className={
-                                    'w-32 h-12 bg-transparent border border-gray-500 py-3 px-6 mr-2 rounded-lg shadow-lg'
+                                    'w-40 h-12 bg-transparent border border-gray-500 py-3 px-6 mr-2 rounded-lg shadow-lg'
                                 }
                                 onClick={followUser}
                             >
@@ -136,17 +148,81 @@ export default function ProfileHeader({
                         )}
                         <button
                             className={
-                                'w-32 h-12 bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
+                                'w-40 h-12 bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
                             }
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handleOpenInvitationDialog();
+                            }}
                         >
                             {' '}
-                            <span>Nachricht</span>
+                            <span>VE-Einladung</span>
                         </button>
                         <button className={'h-12 ml-2'}>
                             <span>
                                 <RxDotsVertical size={30} color={''} />
                             </span>
                         </button>
+                        <Dialog
+                            isOpen={isInvitationDialogOpen}
+                            title={`zum VE einladen`}
+                            onClose={handleCloseInvitationDialog}
+                        >
+                            <div className="w-[30rem] h-[28rem] overflow-y-auto content-scrollbar relative">
+                                <div>Nachricht</div>
+                                <textarea
+                                    className={'w-full border border-gray-500 rounded-lg px-2 py-1'}
+                                    rows={5}
+                                    placeholder={
+                                        'Beschreibe, worum es in deinem VE gehen soll. Das erhöht die Chance, dass die Person annimmt!'
+                                    }
+                                ></textarea>
+                                <div className="flex">
+                                    <input
+                                        type="checkbox"
+                                        className="mx-2"
+                                        checked={appendPlanCheckboxChecked}
+                                        onChange={(e) =>
+                                            setAppendPlanCheckboxChecked(!appendPlanCheckboxChecked)
+                                        }
+                                    />
+                                    <p>vorhandenen Plan anhängen</p>
+                                </div>
+                                {appendPlanCheckboxChecked && (
+                                    <select
+                                        name="plan"
+                                        className="w-2/3 border border-gray-500 rounded-lg h-12 p-2 bg-white"
+                                    >
+                                        <option value="1">Plan1</option>
+                                        <option value="1">Plan1</option>
+                                        <option value="1">Plan1</option>
+                                        <option value="1">Plan1</option>
+                                        <option value="1">Plan1</option>
+                                        <option value="1">Plan1</option>
+                                    </select>
+                                )}
+
+                                <div className="flex absolute bottom-0 w-full">
+                                    <button
+                                        className={
+                                            'w-40 h-12 bg-transparent border border-gray-500 py-3 px-6 mr-auto rounded-lg shadow-lg'
+                                        }
+                                        onClick={handleCloseInvitationDialog}
+                                    >
+                                        {' '}
+                                        <span>Abbrechen</span>
+                                    </button>
+                                    <button
+                                        className={
+                                            'w-40 h-12 bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
+                                        }
+                                    >
+                                        {' '}
+                                        <span>Absenden</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </Dialog>
                     </>
                 )}
             </div>
