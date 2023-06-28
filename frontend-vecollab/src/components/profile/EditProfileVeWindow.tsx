@@ -50,7 +50,6 @@ export default function EditProfileVeWindow({
                 `/planner/get_public_of_user?username=${session.user.preferred_username}`,
                 session?.accessToken
             ).then((data) => {
-                console.log(data);
                 setMyPublicPlans(
                     data.plans.map((plan: any) => ({
                         _id: plan._id,
