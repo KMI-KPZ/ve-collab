@@ -1,15 +1,19 @@
-import { ChangeEvent, FormEvent, useState } from 'react';
+import { ChangeEvent, Dispatch, FormEvent, SetStateAction, useState } from 'react';
 import EditProfileHeader from './EditProfileHeader';
 import EditProfileHeadline from './EditProfileHeadline';
 import EditProfileVerticalSpacer from './EditProfileVerticalSpacer';
 import EditVisibilityRadioButtons from './EditVisibilityRadioButtons';
 
 interface Props {
+    excludedFromMatching: boolean;
+    setExcludedFromMatching: Dispatch<SetStateAction<boolean>>;
     updateProfileData(evt: FormEvent): Promise<void>;
     orcid: string | null | undefined;
     importOrcidProfile(evt: FormEvent): Promise<void>;
 }
 export default function EditVisibilitySettings({
+    excludedFromMatching,
+    setExcludedFromMatching,
     updateProfileData,
     orcid,
     importOrcidProfile,
@@ -91,6 +95,34 @@ export default function EditVisibilitySettings({
                     visibility={visibilities.veWindow}
                     onChange={updateVeWindow}
                 />
+            </EditProfileVerticalSpacer>
+            <EditProfileVerticalSpacer>
+                <div className="p-2 rounded-xl border border-red-600">
+                    <EditProfileHeadline name={'Ausschluss vom Matching'} />
+                    <div>
+                        Achtung: wenn du dich vom Matching ausschließt, gibt es keine Chance für
+                        andere Personen dich im Rahmen der VE-Partnersuche zu finden!
+                    </div>
+                    <select
+                        value={excludedFromMatching === true ? 'true' : 'false'}
+                        onChange={(e) => {
+                            e.target.value === 'true'
+                                ? setExcludedFromMatching(true)
+                                : setExcludedFromMatching(false);
+                        }}
+                        className={
+                            'border border-gray-500 rounded-lg p-2 mt-2 bg-white ' +
+                            (excludedFromMatching === true ? 'text-red-500' : 'text-green-500')
+                        }
+                    >
+                        <option value="false" className="text-green-500">
+                            ich nehme am Matching teil
+                        </option>
+                        <option value="true" className="text-red-500">
+                            vom Matching ausschließen
+                        </option>
+                    </select>
+                </div>
             </EditProfileVerticalSpacer>
         </form>
     );

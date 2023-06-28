@@ -43,6 +43,7 @@ class Profiles:
             "expertise": (str, type(None)),
             "languages": list,
             "ve_ready": bool,
+            "excluded_from_matching": bool,
             "ve_interests": list,
             "ve_goals": list,
             "preferred_formats": list,
@@ -102,6 +103,7 @@ class Profiles:
             "expertise": "",
             "languages": [],
             "ve_ready": True,
+            "excluded_from_matching": False,
             "ve_interests": [""],
             "ve_goals": [""],
             "preferred_formats": [""],
@@ -139,6 +141,7 @@ class Profiles:
             "expertise": "",
             "languages": [],
             "ve_ready": True,
+            "excluded_from_matching": False,
             "ve_interests": [""],
             "ve_goals": [""],
             "preferred_formats": [""],
@@ -467,3 +470,19 @@ class Profiles:
             }
             for profile in profiles
         ]
+
+    def get_matching_exclusion(self, username: str) -> bool:
+        """
+        Retrieve the information from the profile if a user given by its username 
+        is currently excluded from matching.
+
+        Returns a boolean indication if the user is excluded or not.
+
+        If no profile exists for the user, a `ProfileDoesntExistException` is thrown.
+        """
+        result = self.get_profile(username, projection={"excluded_from_matching": True})
+
+        if not result:
+            raise ProfileDoesntExistException()
+
+        return result["excluded_from_matching"]

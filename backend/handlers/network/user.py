@@ -5,6 +5,8 @@ from keycloak import KeycloakGetError
 import requests
 
 import tornado.web
+from error_reasons import USER_DOESNT_EXIST
+from exceptions import ProfileDoesntExistException
 
 from handlers.base_handler import BaseHandler, auth_needed
 from resources.network.profile import Profiles
@@ -46,6 +48,7 @@ class ProfileInformationHandler(BaseHandler):
                         "experience": [<string1>, <string2>, ...],
                         "languages": [<string1>, <string2>, ...],
                         "ve_ready": boolean,
+                        "excluded_from_matching": boolean,
                         "ve_interests": [<string1>, <string2>, ...],
                         "ve_goals": [<string1>, <string2>, ...],
                         "preferred_formats": [<string1>, <string2>, ...],
@@ -177,6 +180,7 @@ class ProfileInformationHandler(BaseHandler):
                     "birthday": <string>,
                     "experience": [<string1>, <string2>, ...],
                     "ve_ready": boolean,
+                    "excluded_from_matching": boolean,
                     "ve_interests": [<string1>, <string2>, ...],
                     "ve_goals": [<string1>, <string2>, ...],
                     "preferred_formats": [<string1>, <string2>, ...],
@@ -916,3 +920,55 @@ class UserHandler(BaseHandler):
 
         else:
             self.set_status(404)
+
+
+class MatchingExclusionHandler(BaseHandler):
+    @auth_needed
+    def get(self):
+        """
+        GET /matching_exclusion_info
+
+            request information about a user if he/she is currently
+            excluded from matching. By default, the current active user is
+            requested. Use the query param `username` to request the info of
+            a different user instead.
+
+            This information is also represented in the profile information
+            (see `ProfileInformationHandler` for details) but that endpoint
+            requires way more computing resources. if the sole purpose is to
+            determine if a user is excluded from matching and nothing else,
+            use this endpoint right here to induce less load onto the server.
+
+            To change the exclusion setting, use the profile information endpoint's
+            update functionality (see `ProfileInformationHandler` again for details).
+
+            query params:
+                username: optional, request information about this user instead
+
+            returns:
+                200 OK,
+                {"success": True,
+                 "excluded_from_matching": True/False}
+
+                401 Unauthorized
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
+                409 Conflict
+                {"success": False,
+                 "reason": "user_doesnt_exist"}
+        """
+
+        username = self.get_argument("username", None)
+        if not username:
+            username = self.current_user.username
+
+        with Profiles() as profile_manager:
+            try:
+                excluded = profile_manager.get_matching_exclusion(username)
+            except ProfileDoesntExistException:
+                self.set_status(409)
+                self.write({"success": False, "reason": USER_DOESNT_EXIST})
+                return
+
+            self.write({"success": True, "excluded_from_matching": excluded})
