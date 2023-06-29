@@ -90,8 +90,20 @@ export default function HeadProgressBarSection({ stage }: HeadProgressBar) {
     }
 
     return (
-        <nav className="flex w-full justify-center py-6">
-            {renderHeadProgressBar(headMenuProgressSteps)}
-        </nav>
+        <>
+            <nav className="flex w-full justify-center py-6">
+                {renderHeadProgressBar(headMenuProgressSteps)}
+            </nav>
+            <div className='flex justify-center'>
+                <Link href={`/meeting?meetingId=${router.query.plannerId}`} target="_blank">
+                    <button
+                        type="submit"
+                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                    >
+                        Jitsi Raum betreten
+                    </button>
+                </Link>
+            </div>
+        </>
     );
 }
