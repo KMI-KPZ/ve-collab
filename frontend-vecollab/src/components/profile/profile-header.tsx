@@ -2,10 +2,12 @@ import Link from 'next/link';
 import { RxDotFilled, RxDotsVertical } from 'react-icons/rx';
 import { fetchDELETE, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
-import { useEffect, useState } from 'react';
+import { SetStateAction, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import AuthenticatedImage from './AuthenticatedImage';
 import Dialog from './Dialog';
+import PublicPlansSelect from './PublicPlansSelect';
+import SuccessAlert from './SuccessAlert';
 
 interface Props {
     name: string;
@@ -27,6 +29,8 @@ export default function ProfileHeader({
     const router = useRouter();
     const { data: session, status } = useSession();
 
+    const [successPopupOpen, setSuccessPopupOpen] = useState(false);
+
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
         if (status !== 'loading') {
@@ -46,6 +50,8 @@ export default function ProfileHeader({
     };
 
     const [appendPlanCheckboxChecked, setAppendPlanCheckboxChecked] = useState(false);
+    const [chosenPlanId, setChosenPlanId] = useState('');
+    const [veInvitationMessage, setVeInvitationMessage] = useState('');
 
     const usernameOfProfileOwner =
         router.query.username !== undefined ? (router.query.username as string) : '';
@@ -66,6 +72,22 @@ export default function ProfileHeader({
             // but for now it works
             router.reload();
         });
+    };
+
+    const sendVeInvitation = () => {
+        const payload = {
+            message: veInvitationMessage,
+            plan: chosenPlanId === '' ? null : chosenPlanId,
+        };
+
+        // TODO api call once finished
+        console.log(payload);
+
+        // render success message that disappears after 2 seconds
+        setSuccessPopupOpen(true);
+        setTimeout(() => {
+            setSuccessPopupOpen((successPopupOpen) => false);
+        }, 2000);
     };
 
     return (
@@ -168,19 +190,23 @@ export default function ProfileHeader({
                             title={`zum VE einladen`}
                             onClose={handleCloseInvitationDialog}
                         >
-                            <div className="w-[30rem] h-[28rem] overflow-y-auto content-scrollbar relative">
-                                <div>Nachricht</div>
+                            <div className="w-[30rem] h-[26rem] overflow-y-auto content-scrollbar relative">
+                                <div>Nachricht:</div>
                                 <textarea
-                                    className={'w-full border border-gray-500 rounded-lg px-2 py-1'}
+                                    className={
+                                        'w-full border border-gray-500 rounded-lg px-2 py-1 my-1'
+                                    }
                                     rows={5}
                                     placeholder={
                                         'Beschreibe, worum es in deinem VE gehen soll. Das erhöht die Chance, dass die Person annimmt!'
                                     }
+                                    value={veInvitationMessage}
+                                    onChange={(e) => setVeInvitationMessage(e.target.value)}
                                 ></textarea>
-                                <div className="flex">
+                                <div className="flex mb-2 mt-4">
                                     <input
                                         type="checkbox"
-                                        className="mx-2"
+                                        className="mr-2"
                                         checked={appendPlanCheckboxChecked}
                                         onChange={(e) =>
                                             setAppendPlanCheckboxChecked(!appendPlanCheckboxChecked)
@@ -189,17 +215,16 @@ export default function ProfileHeader({
                                     <p>vorhandenen Plan anhängen</p>
                                 </div>
                                 {appendPlanCheckboxChecked && (
-                                    <select
-                                        name="plan"
-                                        className="w-2/3 border border-gray-500 rounded-lg h-12 p-2 bg-white"
-                                    >
-                                        <option value="1">Plan1</option>
-                                        <option value="1">Plan1</option>
-                                        <option value="1">Plan1</option>
-                                        <option value="1">Plan1</option>
-                                        <option value="1">Plan1</option>
-                                        <option value="1">Plan1</option>
-                                    </select>
+                                    <>
+                                        <PublicPlansSelect
+                                            chosenPlanId={chosenPlanId}
+                                            setChosenPlanId={setChosenPlanId}
+                                        />
+                                        <p className="my-2 text-gray-400">
+                                            es werden automatisch Leserechte an eingeladene
+                                            Personen vergeben!
+                                        </p>
+                                    </>
                                 )}
 
                                 <div className="flex absolute bottom-0 w-full">
@@ -209,20 +234,23 @@ export default function ProfileHeader({
                                         }
                                         onClick={handleCloseInvitationDialog}
                                     >
-                                        {' '}
                                         <span>Abbrechen</span>
                                     </button>
                                     <button
                                         className={
                                             'w-40 h-12 bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
                                         }
+                                        onClick={(e) => {
+                                            sendVeInvitation();
+                                            handleCloseInvitationDialog();
+                                        }}
                                     >
-                                        {' '}
                                         <span>Absenden</span>
                                     </button>
                                 </div>
                             </div>
                         </Dialog>
+                        {successPopupOpen && <SuccessAlert message={'Einladung gesendet'} />}
                     </>
                 )}
             </div>
