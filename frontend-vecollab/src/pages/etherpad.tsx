@@ -11,10 +11,9 @@ export default function Etherpad() {
         if (!router.isReady) {
             return;
         } else {
-            //createPad(router.query.padID as string);
             setPadID(router.query.padID as string);
         }
-    });
+    }, [router]);
 
     return (
         <>
@@ -29,8 +28,9 @@ export default function Etherpad() {
     );
 }
 
-export const getServerSideProps = (context: GetServerSidePropsContext) => {
-    createPad(context.query.padID as string);
+export const getServerSideProps = async (context: GetServerSidePropsContext) => {
+    const response = await createPad(context.query.padID as string);
+    console.log(response);
 
     return {
         props: {},
