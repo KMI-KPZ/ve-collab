@@ -513,7 +513,7 @@ class VEPlanResource:
     def set_write_permissions(self, plan_id: str | ObjectId, username: str) -> None:
         """
         Set write permissions for the user given by `username` for the plan with the
-        `plan_id`, i.e. the username gets added to the read_access list.
+        `plan_id`, i.e. the username gets added to the write_access list.
         Obviously, write permission without read permission are quite useless, so
         setting write permission automatically also sets the corresponding read permission.
 
@@ -533,6 +533,62 @@ class VEPlanResource:
         update_result = self.db.plans.update_one(
             {"_id": plan_id},
             {"$addToSet": {"read_access": username, "write_access": username}},
+        )
+
+        if update_result.matched_count != 1:
+            raise PlanDoesntExistError()
+
+    def revoke_read_permissions(self, plan_id: str | ObjectId, username: str) -> None:
+        """
+        Revoke read permissions for the user given by `username` for the plan with the
+        `plan_id`, i.e. the username gets removed from the read_access list.
+
+        Since being able to write without reading is useless, write permissions are also
+        automatically revoked.
+
+        The plan_id can either be an instance of `bson.ObjectId` or a
+        corresponding str-representation.
+
+        Returns nothing.
+
+        Raises `PlanDoesntExistError` if no plan with such a _id exists.
+        """
+
+        try:
+            plan_id = util.parse_object_id(plan_id)
+        except InvalidId:
+            raise PlanDoesntExistError()
+
+        update_result = self.db.plans.update_one(
+            {"_id": plan_id},
+            {"$pull": {"read_access": username, "write_access": username}},
+        )
+
+        if update_result.matched_count != 1:
+            raise PlanDoesntExistError()
+        
+    def revoke_write_permissions(self, plan_id: str | ObjectId, username: str) -> None:
+        """
+        Revoke write permissions for the user given by `username` for the plan with the
+        `plan_id`, i.e. the username gets removed from the write_access list. Note that
+        the read access state is not modified, the user still has read permissions.
+
+        The plan_id can either be an instance of `bson.ObjectId` or a
+        corresponding str-representation.
+
+        Returns nothing.
+
+        Raises `PlanDoesntExistError` if no plan with such a _id exists.
+        """
+
+        try:
+            plan_id = util.parse_object_id(plan_id)
+        except InvalidId:
+            raise PlanDoesntExistError()
+
+        update_result = self.db.plans.update_one(
+            {"_id": plan_id},
+            {"$pull": {"write_access": username}},
         )
 
         if update_result.matched_count != 1:
