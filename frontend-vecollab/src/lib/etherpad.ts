@@ -24,3 +24,62 @@ export async function createPad(name: string) {
         return {};
     }
 }
+
+export async function createGroupPad(groupId: string, name: string) {
+    try {
+        let backendResponse = await fetch(
+            ETHERPAD_URL +
+                `/api/1.3.0/createGroupPad?groupID=${groupId}&padName=${name}&apikey=${ETHERPAD_API_KEY}`,
+            {}
+        );
+        return await backendResponse.json();
+    } catch (e) {
+        console.log('network error, probably backend down');
+        return {};
+    }
+}
+
+export async function createAuthorIfNotExistsFor(authorMapper: string, name: string) {
+    try {
+        let backendResponse = await fetch(
+            ETHERPAD_URL +
+                `/api/1.3.0/createAuthorIfNotExistsFor?authorMapper=${authorMapper}&name=${name}&apikey=${ETHERPAD_API_KEY}`,
+            {}
+        );
+        return await backendResponse.json();
+    } catch (e) {
+        console.log('network error, probably backend down');
+        return {};
+    }
+}
+
+export async function createGroupIfNotExistsFor(groupMapper: string) {
+    try {
+        let backendResponse = await fetch(
+            ETHERPAD_URL +
+                `/api/1.3.0/createGroupIfNotExistsFor?groupMapper=${groupMapper}&apikey=${ETHERPAD_API_KEY}`,
+            {}
+        );
+        return await backendResponse.json();
+    } catch (e) {
+        console.log('network error, probably backend down');
+        return {};
+    }
+}
+
+export async function createSession(groupId: string, authorId: string) {
+    // 01.01.3000 as unix timestamp in seconds
+    const validUntil = Math.floor(new Date(3000, 1, 1).getTime() / 1000).toFixed(0);
+
+    try {
+        let backendResponse = await fetch(
+            ETHERPAD_URL +
+                `/api/1.3.0/createSession?groupID=${groupId}&authorID=${authorId}&validUntil=${validUntil}&apikey=${ETHERPAD_API_KEY}`,
+            {}
+        );
+        return await backendResponse.json();
+    } catch (e) {
+        console.log('network error, probably backend down');
+        return {};
+    }
+}

@@ -233,6 +233,8 @@ export const authOptions = {
                 console.log('Single Logout to Keycloak failed');
             }
         },
+
+        // TODO also call etherpad logout endpoint /ep_openid_connect/logout
     },
 };
 export default NextAuth(authOptions);
