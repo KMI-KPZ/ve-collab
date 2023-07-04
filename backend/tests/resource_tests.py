@@ -1099,6 +1099,33 @@ class PlanResourceTest(BaseResourceTestCase):
             "user_with_no_access_rights",
         )
 
+    def test_set_read_permission(self):
+        """
+        expect: successfully set read permission for the user
+        """
+
+        self.planner.set_read_permissions(str(self.plan_id), "another_test_user")
+
+        # expect the user to be in the read_permission list
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state)
+        self.assertIn("another_test_user", db_state["read_access"])
+        self.assertNotIn("another_test_user", db_state["write_access"])
+
+    def test_set_write_permission(self):
+        """
+        expect: successfully set write permission for the user, which also includes read
+        permissions
+        """
+
+        self.planner.set_write_permissions(str(self.plan_id), "another_test_user")
+
+        # expect the user to be in the read_access and write_access list
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state)
+        self.assertIn("another_test_user", db_state["read_access"])
+        self.assertIn("another_test_user", db_state["write_access"])
+
     def test_delete_plan_str(self):
         """
         expect: successfully delete plan by passing _id as str

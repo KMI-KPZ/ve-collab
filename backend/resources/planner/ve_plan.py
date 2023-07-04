@@ -485,6 +485,59 @@ class VEPlanResource:
 
         return plan_id
 
+    def set_read_permissions(self, plan_id: str | ObjectId, username: str) -> None:
+        """
+        Set read permissions for the user given by `username` for the plan with the
+        `plan_id`, i.e. the username gets added to the read_access list.
+
+        The plan_id can either be an instance of `bson.ObjectId` or a
+        corresponding str-representation.
+
+        Returns nothing.
+
+        Raises `PlanDoesntExistError` if no plan with such a _id exists.
+        """
+
+        try:
+            plan_id = util.parse_object_id(plan_id)
+        except InvalidId:
+            raise PlanDoesntExistError()
+
+        update_result = self.db.plans.update_one(
+            {"_id": plan_id}, {"$addToSet": {"read_access": username}}
+        )
+
+        if update_result.matched_count != 1:
+            raise PlanDoesntExistError()
+
+    def set_write_permissions(self, plan_id: str | ObjectId, username: str) -> None:
+        """
+        Set write permissions for the user given by `username` for the plan with the
+        `plan_id`, i.e. the username gets added to the read_access list.
+        Obviously, write permission without read permission are quite useless, so
+        setting write permission automatically also sets the corresponding read permission.
+
+        The plan_id can either be an instance of `bson.ObjectId` or a
+        corresponding str-representation.
+
+        Returns nothing.
+
+        Raises `PlanDoesntExistError` if no plan with such a _id exists.
+        """
+
+        try:
+            plan_id = util.parse_object_id(plan_id)
+        except InvalidId:
+            raise PlanDoesntExistError()
+
+        update_result = self.db.plans.update_one(
+            {"_id": plan_id},
+            {"$addToSet": {"read_access": username, "write_access": username}},
+        )
+
+        if update_result.matched_count != 1:
+            raise PlanDoesntExistError()
+
     def delete_plan(self, _id: str | ObjectId) -> None:
         """
         Remove a plan from the database by specifying its `_id`.
