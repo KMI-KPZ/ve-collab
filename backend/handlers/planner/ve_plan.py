@@ -17,6 +17,8 @@ from error_reasons import (
 )
 from exceptions import (
     MissingKeyError,
+    NoReadAccessError,
+    NoWriteAccessError,
     NonUniqueStepsError,
     NonUniqueTasksError,
     PlanAlreadyExistsError,
@@ -128,15 +130,17 @@ class VEPlanHandler(BaseHandler):
             elif slug == "get_available":
                 self.get_available_plans_for_user(db)
                 return
-            
+
             elif slug == "get_public_of_user":
                 try:
                     username = self.get_argument("username")
                 except tornado.web.MissingArgumentError:
                     self.set_status(400)
-                    self.write({"success": False, "reason": MISSING_KEY_SLUG + "username"})
+                    self.write(
+                        {"success": False, "reason": MISSING_KEY_SLUG + "username"}
+                    )
                     return
-                
+
                 self.get_public_plans_of_user(db, username)
                 return
 
@@ -607,8 +611,6 @@ class VEPlanHandler(BaseHandler):
                 if not plan:
                     return
 
-                plan.author = self.current_user.username
-
                 self.insert_plan(db, plan)
                 return
 
@@ -619,7 +621,6 @@ class VEPlanHandler(BaseHandler):
                     optional_name = None
 
                 plan = VEPlan(name=optional_name)
-                plan.author = self.current_user.username
 
                 self.insert_plan(db, plan)
                 return
@@ -849,15 +850,20 @@ class VEPlanHandler(BaseHandler):
 
         Responses:
             200 OK --> contains the requested plan as a dictionary
+            403 Forbidden --> no read access to plan
             409 Conflict --> no plan was found with the given _id
         """
 
         planner = VEPlanResource(db)
         try:
-            plan = planner.get_plan(_id)
+            plan = planner.get_plan(_id, requesting_username=self.current_user.username)
         except PlanDoesntExistError:
             self.set_status(409)
             self.write({"success": False, "reason": PLAN_DOESNT_EXIST})
+            return
+        except NoReadAccessError:
+            self.set_status(403)
+            self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
             return
 
         self.serialize_and_write({"success": True, "plan": plan.to_dict()})
@@ -869,7 +875,7 @@ class VEPlanHandler(BaseHandler):
         not be called manually anywhere else.
 
         Request all available plans for the current user, i.e. their own plans and
-        those that he/she has read/write access to (r/w TODO).
+        those that he/she has read/write access to.
 
         Responses:
             200 OK --> contains all available plans in a list of dictionaries
@@ -896,10 +902,7 @@ class VEPlanHandler(BaseHandler):
         """
 
         planner = VEPlanResource(db)
-        plans = [
-            plan.to_dict()
-            for plan in planner.get_public_plans_of_user(username)
-        ]
+        plans = [plan.to_dict() for plan in planner.get_public_plans_of_user(username)]
         self.serialize_and_write({"success": True, "plans": plans})
 
     def get_all_plans(self, db: Database) -> None:
@@ -940,6 +943,10 @@ class VEPlanHandler(BaseHandler):
                              consider using the update endpoint instead
         """
 
+        plan.author = self.current_user.username
+        plan.read_access = [self.current_user.username]
+        plan.write_access = [self.current_user.username]
+
         planner = VEPlanResource(db)
         try:
             _id = planner.insert_plan(plan)
@@ -966,17 +973,24 @@ class VEPlanHandler(BaseHandler):
         no action if no matching plan was found.
 
         Responses:
-            200 OK       --> successfully updated the plan (full overwrite)
-            409 Conflict --> no plan with the given _id exists in the db, consider
-                             inserting it instead
+            200 OK        --> successfully updated the plan (full overwrite)
+            403 Forbidden --> no write access to the plan
+            409 Conflict  --> no plan with the given _id exists in the db, consider
+                              inserting it instead
         """
 
         planner = VEPlanResource(db)
         try:
-            _id = planner.update_full_plan(plan, upsert=upsert)
+            _id = planner.update_full_plan(
+                plan, upsert=upsert, requesting_username=self.current_user.username
+            )
         except PlanDoesntExistError:
             self.set_status(409)
             self.write({"success": False, "reason": PLAN_DOESNT_EXIST})
+            return
+        except NoWriteAccessError:
+            self.set_status(403)
+            self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
             return
 
         self.serialize_and_write({"success": True, "updated_id": _id})
@@ -1013,6 +1027,7 @@ class VEPlanHandler(BaseHandler):
                                 data
                             --> supplied field_name is not an attribute of a VEPlan
                             --> missing key in http body
+            403 Forbidden   --> no write access to plan
             409 Conflict    --> Steps don't have unique names
                             --> Tasks don't have unique titles
         """
@@ -1023,7 +1038,13 @@ class VEPlanHandler(BaseHandler):
 
         try:
             plan_id = util.parse_object_id(plan_id)
-            _id = planner.update_field(plan_id, field_name, field_value, upsert=upsert)
+            _id = planner.update_field(
+                plan_id,
+                field_name,
+                field_value,
+                upsert=upsert,
+                requesting_username=self.current_user.username,
+            )
         except InvalidId:
             error_reason = "invalid_object_id"
             self.set_status(400)
@@ -1036,6 +1057,9 @@ class VEPlanHandler(BaseHandler):
         except MissingKeyError as e:
             error_reason = MISSING_KEY_IN_HTTP_BODY_SLUG + e.missing_value
             self.set_status(400)
+        except NoWriteAccessError:
+            error_reason = INSUFFICIENT_PERMISSIONS
+            self.set_status(403)
         except NonUniqueStepsError:
             error_reason = NON_UNIQUE_STEP_NAMES
             self.set_status(409)
@@ -1066,6 +1090,7 @@ class VEPlanHandler(BaseHandler):
                                 data
                             --> there was an unexpected additional attribute in the dict
                             --> missing key in http body
+            403 Forbidden   --> no write access to plan
             409 Conflict    --> Steps don't have unique names (i.e. the to-be-added step
                                 has a name that is already present in the db)
                             --> Tasks don't have unique titles within a step
@@ -1078,7 +1103,9 @@ class VEPlanHandler(BaseHandler):
         try:
             plan_id = util.parse_object_id(plan_id)
             step = Step.from_dict(step) if isinstance(step, dict) else step
-            _id = planner.append_step(plan_id, step)
+            _id = planner.append_step(
+                plan_id, step, requesting_username=self.current_user.username
+            )
         except InvalidId:
             error_reason = "invalid_object_id"
             self.set_status(400)
@@ -1091,6 +1118,9 @@ class VEPlanHandler(BaseHandler):
         except MissingKeyError as e:
             error_reason = MISSING_KEY_IN_HTTP_BODY_SLUG + e.missing_value
             self.set_status(400)
+        except NoWriteAccessError:
+            error_reason = INSUFFICIENT_PERMISSIONS
+            self.set_status(403)
         except NonUniqueTasksError:
             error_reason = NON_UNIQUE_TASK_TITLES
             self.set_status(409)
@@ -1112,16 +1142,23 @@ class VEPlanHandler(BaseHandler):
         is requested. It just de-crowds the handler function and should therefore
         not be called manually anywhere else.
 
-        Delete a plan by specifying its _id.
+        Delete a plan by specifying its _id. Only the author of a plan is able to do that,
+        write access is not sufficient
 
         Responses:
-            200 OK --> successfully deleted
-            409 Conflict --> no plan with the given _id was found.
-                             therefore technically also success
+            200 OK        --> successfully deleted
+            403 Forbidden --> user is not author of the plan
+            409 Conflict  --> no plan with the given _id was found.
+                              therefore technically also success
         """
 
         planner = VEPlanResource(db)
         try:
+            if not planner._check_user_is_author(_id, self.current_user.username):
+                self.set_status(403)
+                self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
+                return
+
             planner.delete_plan(_id)
         except PlanDoesntExistError:
             self.set_status(409)
@@ -1140,14 +1177,26 @@ class VEPlanHandler(BaseHandler):
 
         Remove a step from a plan by specifying its _id and the _id of the
         corresponding step.
+
+        Responses:
+            200 OK        --> successfully deleted
+            403 Forbidden --> no write access to plan
+            409 Conflict  --> no plan with the given _id was found.
+                              therefore technically also success
         """
 
         planner = VEPlanResource(db)
         try:
-            planner.delete_step_by_id(plan_id, step_id)
+            planner.delete_step_by_id(
+                plan_id, step_id, requesting_username=self.current_user.username
+            )
         except PlanDoesntExistError:
             self.set_status(409)
             self.write({"success": False, "reason": PLAN_DOESNT_EXIST})
+            return
+        except NoWriteAccessError:
+            self.set_status(403)
+            self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
             return
 
         self.write({"success": True})
@@ -1162,14 +1211,26 @@ class VEPlanHandler(BaseHandler):
 
         Remove a step from a plan by specifying its _id and the name of the
         corresponding step.
+
+        Responses:
+            200 OK        --> successfully deleted
+            403 Forbidden --> user is not author of the plan
+            409 Conflict  --> no plan with the given _id was found.
+                              therefore technically also success
         """
 
         planner = VEPlanResource(db)
         try:
-            planner.delete_step_by_name(plan_id, step_name)
+            planner.delete_step_by_name(
+                plan_id, step_name, requesting_username=self.current_user.username
+            )
         except PlanDoesntExistError:
             self.set_status(409)
             self.write({"success": False, "reason": PLAN_DOESNT_EXIST})
+            return
+        except NoWriteAccessError:
+            self.set_status(403)
+            self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
             return
 
         self.write({"success": True})

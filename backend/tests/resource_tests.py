@@ -8,6 +8,8 @@ import pymongo
 from tornado.options import options
 from exceptions import (
     MissingKeyError,
+    NoReadAccessError,
+    NoWriteAccessError,
     NonUniqueTasksError,
     PlanAlreadyExistsError,
     PlanDoesntExistError,
@@ -159,6 +161,8 @@ class PlanResourceTest(BaseResourceTestCase):
         self.default_plan = {
             "_id": self.plan_id,
             "author": "test_user",
+            "read_access": ["test_user", "test_admin"],
+            "write_access": ["test_user"],
             "creation_timestamp": datetime.now(),
             "last_modified": datetime.now(),
             "name": "test",
@@ -238,6 +242,52 @@ class PlanResourceTest(BaseResourceTestCase):
                 self.assertIsNotNone(plan.creation_timestamp)
                 self.assertIsNotNone(plan.last_modified)
 
+    def test_get_plan_with_user(self):
+        """
+        expect: sucessfully get the plan from the db, both by passing the _id as str
+        or as an ObjectId and passing the access checks
+        """
+
+        # test with both input types (str and ObjectId)
+        for id_input in [self.plan_id, str(self.plan_id)]:
+            with self.subTest(id_input=id_input):
+                plan = self.planner.get_plan(id_input, "test_user")
+                self.assertIsInstance(plan, VEPlan)
+                self.assertEqual(plan._id, self.default_plan["_id"])
+                self.assertEqual(plan.author, self.default_plan["author"])
+                self.assertEqual(plan.name, self.default_plan["name"])
+                self.assertEqual(
+                    [institution.to_dict() for institution in plan.institutions],
+                    self.default_plan["institutions"],
+                )
+                self.assertEqual(plan.topic, self.default_plan["topic"])
+                self.assertEqual(
+                    [lecture.to_dict() for lecture in plan.lectures],
+                    self.default_plan["lectures"],
+                )
+                self.assertEqual(
+                    [target_group.to_dict() for target_group in plan.audience],
+                    self.default_plan["audience"],
+                )
+                self.assertEqual(plan.languages, self.default_plan["languages"])
+                self.assertEqual(
+                    plan.involved_parties, self.default_plan["involved_parties"]
+                )
+                self.assertEqual(plan.realization, self.default_plan["realization"])
+                self.assertEqual(plan.learning_env, self.default_plan["learning_env"])
+                self.assertEqual(plan.tools, self.default_plan["tools"])
+                self.assertEqual(plan.new_content, self.default_plan["new_content"])
+                self.assertEqual(plan.formalities, self.default_plan["formalities"])
+                self.assertEqual(
+                    [step.to_dict() for step in plan.steps], self.default_plan["steps"]
+                )
+                self.assertEqual(plan.timestamp_from, self.step.timestamp_from)
+                self.assertEqual(plan.timestamp_to, self.step.timestamp_to)
+                self.assertEqual(plan.workload, self.step.workload)
+                self.assertEqual(plan.duration, self.step.duration)
+                self.assertIsNotNone(plan.creation_timestamp)
+                self.assertIsNotNone(plan.last_modified)
+
     def test_get_plan_error_plan_doesnt_exist(self):
         """
         expect: PlanDoesntExistError is raised because no plan with the given _id
@@ -249,6 +299,21 @@ class PlanResourceTest(BaseResourceTestCase):
         for id_input in [non_existing_id, str(non_existing_id)]:
             with self.subTest(id_input=id_input):
                 self.assertRaises(PlanDoesntExistError, self.planner.get_plan, id_input)
+
+    def test_get_plan_error_no_read_access(self):
+        """
+        expect: fail message because username has no read access
+        """
+
+        # test with both input types (str and ObjectId)
+        for id_input in [self.plan_id, str(self.plan_id)]:
+            with self.subTest(id_input=id_input):
+                self.assertRaises(
+                    NoReadAccessError,
+                    self.planner.get_plan,
+                    id_input,
+                    "user_with_no_access",
+                )
 
     def test_get_plan_error_plan_doesnt_exist_invalid_id(self):
         """
@@ -306,7 +371,7 @@ class PlanResourceTest(BaseResourceTestCase):
     def test_get_plans_for_user(self):
         """
         expect: only show plans that the user is allowed to see, i.e. their
-        own and those with read/write permissions (r/w TODO)
+        own and those with read/write permissions.
         """
 
         # insert 2 more plans with different authorships
@@ -366,42 +431,14 @@ class PlanResourceTest(BaseResourceTestCase):
         self.db.plans.insert_many(additional_plans)
 
         plans = self.planner.get_plans_for_user("test_admin")
-        # since only one of the plans belong to the user, we expect
-        # the result to be filtered accordingly
-        self.assertEqual(len(plans), 1)
+        # since one of the plans belong to the user and he has read_access to the default one,
+        # we expect the result to be filtered accordingly (2 results here)
+        self.assertEqual(len(plans), 2)
         plan = plans[0]
-        self.assertEqual(plan._id, additional_plans[0]["_id"])
-        self.assertEqual(plan.author, "test_admin")
-        self.assertEqual(plan.name, "admin")
-        self.assertEqual(
-            [institution.to_dict() for institution in plan.institutions],
-            self.default_plan["institutions"],
-        )
-        self.assertEqual(plan.topic, self.default_plan["topic"])
-        self.assertEqual(
-            [lecture.to_dict() for lecture in plan.lectures],
-            self.default_plan["lectures"],
-        )
-        self.assertEqual(
-            [target_group.to_dict() for target_group in plan.audience],
-            self.default_plan["audience"],
-        )
-        self.assertEqual(plan.languages, self.default_plan["languages"])
-        self.assertEqual(plan.involved_parties, self.default_plan["involved_parties"])
-        self.assertEqual(plan.realization, self.default_plan["realization"])
-        self.assertEqual(plan.learning_env, self.default_plan["learning_env"])
-        self.assertEqual(plan.tools, self.default_plan["tools"])
-        self.assertEqual(plan.new_content, self.default_plan["new_content"])
-        self.assertEqual(plan.formalities, self.default_plan["formalities"])
-        self.assertEqual(
-            [step.to_dict() for step in plan.steps], self.default_plan["steps"]
-        )
-        self.assertEqual(plan.timestamp_from, self.step.timestamp_from)
-        self.assertEqual(plan.timestamp_to, self.step.timestamp_to)
-        self.assertEqual(plan.workload, self.step.workload)
-        self.assertEqual(plan.duration, self.step.duration)
-        self.assertIsNotNone(plan.creation_timestamp)
-        self.assertIsNotNone(plan.last_modified)
+        for plan in plans:
+            self.assertIn(
+                plan._id, [self.default_plan["_id"], additional_plans[0]["_id"]]
+            )
 
     def test_insert_plan(self):
         """
@@ -412,6 +449,8 @@ class PlanResourceTest(BaseResourceTestCase):
         plan = {
             "name": "new plan",
             "author": "test_user",
+            "read_access": ["test_user"],
+            "write_access": ["test_user"],
             "institutions": [self.institution.to_dict()],
             "topic": "test",
             "lectures": [self.lecture.to_dict()],
@@ -451,6 +490,8 @@ class PlanResourceTest(BaseResourceTestCase):
         plan_with_id = {
             "_id": ObjectId(),
             "author": "test_user",
+            "read_access": ["test_user"],
+            "write_access": ["test_user"],
             "name": "new plan",
             "institutions": [self.institution.to_dict()],
             "topic": "test",
@@ -527,6 +568,39 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(db_state["realization"], self.default_plan["realization"])
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
+    def test_update_plan_with_user(self):
+        """
+        expect: successfully update a plan by supplying one with a _id that already exists and passing
+        access checks
+        """
+
+        # we need to delay our execution here just a little bit, because otherwise
+        # the update would happen too fast relative to the setup, which would result
+        # in creation_timestamp and last_modified being equal, despite correctly being
+        # executed after each other
+        time.sleep(0.1)
+
+        # use the default plan, but change its name and topic
+        existing_plan = VEPlan.from_dict(self.default_plan)
+        existing_plan.name = "updated_name"
+        existing_plan.topic = "new_topic"
+
+        # expect an "updated" response
+        result = self.planner.update_full_plan(
+            existing_plan, requesting_username="test_user"
+        )
+        self.assertIsInstance(result, ObjectId)
+        self.assertEqual(result, existing_plan._id)
+
+        # expect that the name and topic was updated in the db, but other values
+        # remain the same
+        db_state = self.db.plans.find_one({"_id": existing_plan._id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["name"], existing_plan.name)
+        self.assertEqual(db_state["topic"], existing_plan.topic)
+        self.assertEqual(db_state["realization"], self.default_plan["realization"])
+        self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
+
     def test_update_plan_upsert(self):
         """
         expect: even though the update function is called, a new plan is inserted
@@ -545,12 +619,49 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(db_state["name"], plan.name)
         self.assertEqual(db_state["creation_timestamp"], db_state["last_modified"])
 
+    def test_update_plan_upsert_with_user(self):
+        """
+        expect: even though the update function is called, a new plan is inserted
+        because the upsert flag was set to True. write access checks don't matter, since
+        the plan gets inserted freshly.
+        """
+
+        plan = VEPlan(name="upsert_test")
+
+        result = self.planner.update_full_plan(
+            plan,
+            upsert=True,
+            requesting_username="access_doesnt_matter_in_this_case_user",
+        )
+        self.assertIsInstance(result, ObjectId)
+        self.assertEqual(result, plan._id)
+
+        # expect the plan to be in the db
+        db_state = self.db.plans.find_one({"_id": plan._id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["name"], plan.name)
+        self.assertEqual(db_state["creation_timestamp"], db_state["last_modified"])
+
     def test_update_plan_error_plan_doesnt_exist(self):
         """
         expect: PlanDoesntExistError is raised because no plan with the specified
         _id is present in the db and the upsert flag is set to False
         """
+
         self.assertRaises(PlanDoesntExistError, self.planner.update_full_plan, VEPlan())
+
+    def test_update_plan_erro_no_write_access(self):
+        """
+        expect: NoWriteAccessError is raised because user has no write permission
+        """
+
+        self.assertRaises(
+            NoWriteAccessError,
+            self.planner.update_full_plan,
+            VEPlan(_id=self.default_plan["_id"], name="trying_to_update"),
+            False,
+            "user_with_no_write_access",
+        )
 
     def test_update_field(self):
         """
@@ -567,6 +678,61 @@ class PlanResourceTest(BaseResourceTestCase):
         self.planner.update_field(self.plan_id, "new_content", True)
         self.planner.update_field(
             self.plan_id, "formalities", {"technology": True, "exam_regulations": True}
+        )
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["topic"], "updated_topic")
+        self.assertEqual(db_state["involved_parties"], ["update1", "update2"])
+        self.assertEqual(db_state["realization"], "updated_realization")
+        self.assertEqual(db_state["learning_env"], "updated_learning_env")
+        self.assertEqual(db_state["tools"], ["update1", "update2"])
+        self.assertEqual(db_state["new_content"], True)
+        self.assertEqual(
+            db_state["formalities"], {"technology": True, "exam_regulations": True}
+        )
+        self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
+
+    def test_update_field_with_user(self):
+        """
+        expect: successfully update a single field of a VEPlan and passing access checks
+        """
+
+        self.planner.update_field(
+            self.plan_id, "topic", "updated_topic", requesting_username="test_user"
+        )
+        self.planner.update_field(
+            self.plan_id,
+            "involved_parties",
+            ["update1", "update2"],
+            requesting_username="test_user",
+        )
+        self.planner.update_field(
+            self.plan_id,
+            "realization",
+            "updated_realization",
+            requesting_username="test_user",
+        )
+        self.planner.update_field(
+            self.plan_id,
+            "learning_env",
+            "updated_learning_env",
+            requesting_username="test_user",
+        )
+        self.planner.update_field(
+            self.plan_id,
+            "tools",
+            ["update1", "update2"],
+            requesting_username="test_user",
+        )
+        self.planner.update_field(
+            self.plan_id, "new_content", True, requesting_username="test_user"
+        )
+        self.planner.update_field(
+            self.plan_id,
+            "formalities",
+            {"technology": True, "exam_regulations": True},
+            requesting_username="test_user",
         )
 
         db_state = self.db.plans.find_one({"_id": self.plan_id})
@@ -654,6 +820,82 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(db_state["audience"][0]["learning_goal"], tg.learning_goal)
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
+    def test_update_field_object_with_user(self):
+        """
+        expect: successfully update a single field of a VEPlan that
+        is not a primitive type and passing access checks
+        """
+
+        tg = TargetGroup(
+            name="updated_name",
+            age_min=10,
+            age_max=20,
+            experience="updated_experience",
+            academic_course="updated_academic_course",
+            mother_tongue="de",
+            foreign_languages={"en": "c1"},
+            learning_goal="test",
+        )
+        # we need to delay our execution here just a little bit, because otherwise
+        # the updated would happen too fast relative to the setup, which would result
+        # in creation_timestamp and last_modified being equal, despite correctly being
+        # executed after each other
+        time.sleep(0.1)
+        self.planner.update_field(
+            self.plan_id, "audience", [tg.to_dict()], requesting_username="test_user"
+        )
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state)
+        self.assertIsInstance(db_state["audience"][0]["_id"], ObjectId)
+        self.assertEqual(db_state["audience"][0]["name"], tg.name)
+        self.assertEqual(db_state["audience"][0]["age_min"], str(tg.age_min))
+        self.assertEqual(db_state["audience"][0]["experience"], tg.experience)
+        self.assertEqual(db_state["audience"][0]["academic_course"], tg.academic_course)
+        self.assertEqual(db_state["audience"][0]["mother_tongue"], tg.mother_tongue)
+        self.assertEqual(
+            db_state["audience"][0]["foreign_languages"], tg.foreign_languages
+        )
+        self.assertEqual(db_state["audience"][0]["learning_goal"], tg.learning_goal)
+        self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
+
+        # same, but this time manually specify a _id
+        tg2 = TargetGroup(
+            _id=ObjectId(),
+            name="updated_name2",
+            age_min=10,
+            age_max=20,
+            experience="updated_experience2",
+            academic_course="updated_academic_course2",
+            mother_tongue="de2",
+            foreign_languages={"en": "c1"},
+            learning_goal="test",
+        )
+        # we need to delay our execution here just a little bit, because otherwise
+        # the updated would happen too fast relative to the setup, which would result
+        # in creation_timestamp and last_modified being equal, despite correctly being
+        # executed after each other
+        time.sleep(0.1)
+        self.planner.update_field(
+            self.plan_id, "audience", [tg2.to_dict()], requesting_username="test_user"
+        )
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["audience"][0]["_id"], tg2._id)
+        self.assertEqual(db_state["audience"][0]["name"], tg2.name)
+        self.assertEqual(db_state["audience"][0]["age_min"], str(tg2.age_min))
+        self.assertEqual(db_state["audience"][0]["experience"], tg2.experience)
+        self.assertEqual(
+            db_state["audience"][0]["academic_course"], tg2.academic_course
+        )
+        self.assertEqual(db_state["audience"][0]["mother_tongue"], tg2.mother_tongue)
+        self.assertEqual(
+            db_state["audience"][0]["foreign_languages"], tg2.foreign_languages
+        )
+        self.assertEqual(db_state["audience"][0]["learning_goal"], tg.learning_goal)
+        self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
+
     def test_update_field_upsert(self):
         """
         expect: successfully upsert field, i.e. create new plan with only this field set
@@ -684,6 +926,62 @@ class PlanResourceTest(BaseResourceTestCase):
         institution_dict = institution.to_dict()
 
         self.planner.update_field(_id, "institutions", [institution_dict], upsert=True)
+        db_state = self.db.plans.find_one({"_id": _id})
+        self.assertIsNotNone(db_state)
+        self.assertIsNone(db_state["realization"])
+        self.assertIsInstance(db_state["institutions"][0]["_id"], ObjectId)
+        self.assertEqual(
+            db_state["institutions"][0]["name"], "updated_institution_name"
+        )
+        self.assertEqual(
+            db_state["institutions"][0]["departments"], ["updated", "updated"]
+        )
+        self.assertEqual(
+            db_state["institutions"][0]["academic_courses"],
+            ["updated", "updated"],
+        )
+        self.assertEqual(db_state["creation_timestamp"], db_state["last_modified"])
+
+    def test_update_field_upsert_with_user(self):
+        """
+        expect: successfully upsert field, i.e. create new plan with only this field set
+        to non-default
+        """
+
+        _id = ObjectId()
+
+        # first try a primitve attribute
+        self.planner.update_field(
+            _id,
+            "realization",
+            "updated_realization",
+            upsert=True,
+            requesting_username="doesnt_matter",
+        )
+        db_state = self.db.plans.find_one({"_id": _id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["realization"], "updated_realization")
+        self.assertIsNone(db_state["name"])
+        self.assertEqual(db_state["tools"], [])
+        self.assertEqual(db_state["creation_timestamp"], db_state["last_modified"])
+
+        # now same test, but with a complex attribute
+        self.db.plans.delete_one({"_id": _id})
+
+        institution = Institution(
+            name="updated_institution_name",
+            departments=["updated", "updated"],
+            academic_courses=["updated", "updated"],
+        )
+        institution_dict = institution.to_dict()
+
+        self.planner.update_field(
+            _id,
+            "institutions",
+            [institution_dict],
+            upsert=True,
+            requesting_username="doesnt_matter",
+        )
         db_state = self.db.plans.find_one({"_id": _id})
         self.assertIsNotNone(db_state)
         self.assertIsNone(db_state["realization"])
@@ -785,6 +1083,22 @@ class PlanResourceTest(BaseResourceTestCase):
             "updated",
         )
 
+    def test_update_field_error_no_write_access(self):
+        """
+        expect: NoWriteAccessError is raised because user has no write access to
+        the plan
+        """
+
+        self.assertRaises(
+            NoWriteAccessError,
+            self.planner.update_field,
+            self.plan_id,
+            "name",
+            "trying_update",
+            False,
+            "user_with_no_access_rights",
+        )
+
     def test_delete_plan_str(self):
         """
         expect: successfully delete plan by passing _id as str
@@ -836,12 +1150,38 @@ class PlanResourceTest(BaseResourceTestCase):
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertEqual(db_state["steps"], [])
 
+    def test_delete_step_by_name_with_user(self):
+        """
+        expect: successfully delete step from the plan by name by passing access checks
+        """
+
+        self.planner.delete_step_by_name(
+            self.plan_id, self.step.name, requesting_username="test_user"
+        )
+
+        # expect no step in the plan after deletion
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertEqual(db_state["steps"], [])
+
     def test_delete_step_by_id(self):
         """
         expect: successfully delete step from the plan by id
         """
 
         self.planner.delete_step_by_id(self.plan_id, str(self.step._id))
+
+        # expect no step in the plan after deletion
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertEqual(db_state["steps"], [])
+
+    def test_delete_step_by_id_with_user(self):
+        """
+        expect: successfully delete step from the plan by id by passing access checks
+        """
+
+        self.planner.delete_step_by_id(
+            self.plan_id, str(self.step._id), requesting_username="test_user"
+        )
 
         # expect no step in the plan after deletion
         db_state = self.db.plans.find_one({"_id": self.plan_id})
@@ -871,6 +1211,35 @@ class PlanResourceTest(BaseResourceTestCase):
         )
         self.assertRaises(
             PlanDoesntExistError, self.planner.delete_step_by_name, ObjectId(), "123"
+        )
+
+    def test_delete_step_error_no_write_access(self):
+        """
+        expect: NoWriteAccessError is raised because user has no write access to the plan
+        """
+
+        self.assertRaises(
+            NoWriteAccessError,
+            self.planner.delete_step_by_id,
+            self.plan_id,
+            self.step._id,
+            "user_without_write_access",
+        )
+
+        self.assertRaises(
+            NoWriteAccessError,
+            self.planner.delete_step_by_id,
+            self.plan_id,
+            str(self.step._id),
+            "user_without_write_access",
+        )
+
+        self.assertRaises(
+            NoWriteAccessError,
+            self.planner.delete_step_by_name,
+            self.plan_id,
+            self.step.name,
+            "user_without_write_access",
         )
 
     def test_delete_step_step_doesnt_exist(self):
