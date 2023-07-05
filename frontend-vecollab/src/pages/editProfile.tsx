@@ -18,7 +18,7 @@ import {
     VEWindowItem,
     WorkExperience,
 } from '@/interfaces/profile/profileInterfaces';
-import EditProfileSuccessAlert from '@/components/profile/EditProfileSuccessAlert';
+import SuccessAlert from '@/components/profile/SuccessAlert';
 import EditVisibilitySettings from '@/components/profile/EditVisibilitySettings';
 import EditProfileVeWindow from '@/components/profile/EditProfileVeWindow';
 import ExcludedFromMatchingBanner from '@/components/profile/ExcludedFromMatchingBanner';
@@ -316,7 +316,7 @@ export default function EditProfile() {
                         )}
                     </div>
                 </WhiteBox>
-                {successPopupOpen && <EditProfileSuccessAlert message={'Gespeichert'} />}
+                {successPopupOpen && <SuccessAlert message={'Gespeichert'} />}
             </div>
         </>
     );
