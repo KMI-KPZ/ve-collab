@@ -7571,6 +7571,319 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
 
+    def test_post_grant_read_permission(self):
+        """
+        expect: successfully set read permissions for the user
+        """
+
+        payload = {
+            "plan_id": self.plan_id,
+            "username": "another_test_user",
+            "read": "true",
+            "write": "false",
+        }
+
+        self.base_checks(
+            "POST",
+            "/planner/grant_access",
+            True,
+            200,
+            body=self.json_serialize(payload),
+        )
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state)
+        self.assertIn("another_test_user", db_state["read_access"])
+        self.assertNotIn("another_test_user", db_state["write_access"])
+
+    def test_post_grant_read_permission_error_insufficient_permission(self):
+        """
+        expect: fail message because current user is not the author of the plan
+        and therefore cannot set access rights
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        payload = {
+            "plan_id": self.plan_id,
+            "username": "another_test_user",
+            "read": "true",
+            "write": "false",
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/grant_access",
+            False,
+            403,
+            body=self.json_serialize(payload),
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_post_grant_read_permission_error_plan_doesnt_exist(self):
+        """
+        expect: fail message because no plan with the id exists
+        """
+
+        payload = {
+            "plan_id": ObjectId(),
+            "username": "another_test_user",
+            "read": "true",
+            "write": "false",
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/grant_access",
+            False,
+            409,
+            body=self.json_serialize(payload),
+        )
+        self.assertEqual(response["reason"], PLAN_DOESNT_EXIST_ERROR)
+
+
+    def test_post_grant_write_permission(self):
+        """
+        expect: successfully set write permissions for the user, which includes
+        read permissions
+        """
+
+        payload = {
+            "plan_id": self.plan_id,
+            "username": "another_test_user",
+            "read": "true",
+            "write": "true",
+        }
+
+        self.base_checks(
+            "POST",
+            "/planner/grant_access",
+            True,
+            200,
+            body=self.json_serialize(payload),
+        )
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state)
+        self.assertIn("another_test_user", db_state["read_access"])
+        self.assertIn("another_test_user", db_state["write_access"])
+
+    def test_post_grant_write_permission_error_insufficient_permission(self):
+        """
+        expect: fail message because current user is not the author of the plan
+        and therefore cannot set access rights
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        payload = {
+            "plan_id": self.plan_id,
+            "username": "another_test_user",
+            "read": "true",
+            "write": "true",
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/grant_access",
+            False,
+            403,
+            body=self.json_serialize(payload),
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_post_grant_write_permission_error_plan_doesnt_exist(self):
+        """
+        expect: fail message because no plan with the id exists
+        """
+
+        payload = {
+            "plan_id": ObjectId(),
+            "username": "another_test_user",
+            "read": "true",
+            "write": "true",
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/grant_access",
+            False,
+            409,
+            body=self.json_serialize(payload),
+        )
+        self.assertEqual(response["reason"], PLAN_DOESNT_EXIST_ERROR)
+
+    def test_post_revoke_read_permission(self):
+        """
+        expect: sucessfully revoke read permission of the user, which includes write permission
+        """
+
+        # manually add another user
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$addToSet": {
+                    "read_access": "another_test_user",
+                    "write_access": "another_test_user",
+                }
+            },
+        )
+
+        payload = {
+            "plan_id": self.plan_id,
+            "username": "another_test_user",
+            "read": "true",
+            "write": "true",
+        }
+
+        self.base_checks(
+            "POST",
+            "/planner/revoke_access",
+            True,
+            200,
+            body=self.json_serialize(payload),
+        )
+        
+        # expect the user not to be in the read_access nor write_access list
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state)
+        self.assertNotIn("another_test_user", db_state["read_access"])
+        self.assertNotIn("another_test_user", db_state["write_access"])
+
+    def test_post_revoke_read_permission_error_insufficient_permission(self):
+        """
+        expect: fail message because current user is not the author of the plan
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        payload = {
+            "plan_id": self.plan_id,
+            "username": "another_test_user",
+            "read": "true",
+            "write": "true",
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/revoke_access",
+            False,
+            403,
+            body=self.json_serialize(payload),
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_post_revoke_read_permission_error_plan_doesnt_exist(self):
+        """
+        expect: fail message because no plan with the id exists
+        """
+
+        payload = {
+            "plan_id": ObjectId(),
+            "username": "another_test_user",
+            "read": "true",
+            "write": "true",
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/revoke_access",
+            False,
+            409,
+            body=self.json_serialize(payload),
+        )
+        self.assertEqual(response["reason"], PLAN_DOESNT_EXIST_ERROR)
+
+
+    def test_post_revoke_write_permission(self):
+        """
+        expect: sucessfully revoke write permission, but not read
+        """
+
+        # manually add another user
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$addToSet": {
+                    "read_access": "another_test_user",
+                    "write_access": "another_test_user",
+                }
+            },
+        )
+
+        payload = {
+            "plan_id": self.plan_id,
+            "username": "another_test_user",
+            "read": "false",
+            "write": "true",
+        }
+
+        self.base_checks(
+            "POST",
+            "/planner/revoke_access",
+            True,
+            200,
+            body=self.json_serialize(payload),
+        )
+        
+        # expect the user not to be in the write_access, but still in the read_access list
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state)
+        self.assertIn("another_test_user", db_state["read_access"])
+        self.assertNotIn("another_test_user", db_state["write_access"])
+
+    def test_post_revoke_write_permission_error_insufficient_permission(self):
+        """
+        expect: fail message because current user is not the author of the plan
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        payload = {
+            "plan_id": self.plan_id,
+            "username": "another_test_user",
+            "read": "false",
+            "write": "true",
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/revoke_access",
+            False,
+            403,
+            body=self.json_serialize(payload),
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_post_revoke_write_permission_error_plan_doesnt_exist(self):
+        """
+        expect: fail message because no plan with the id exists
+        """
+
+        payload = {
+            "plan_id": ObjectId(),
+            "username": "another_test_user",
+            "read": "false",
+            "write": "true",
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/revoke_access",
+            False,
+            409,
+            body=self.json_serialize(payload),
+        )
+        self.assertEqual(response["reason"], PLAN_DOESNT_EXIST_ERROR)
+
     def test_delete_plan(self):
         """
         expect: successfully delete plan

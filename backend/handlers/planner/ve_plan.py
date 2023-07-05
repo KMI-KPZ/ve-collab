@@ -578,6 +578,93 @@ class VEPlanHandler(BaseHandler):
                         "custom_attributes": {"my_attr": "my_value"}
                     }
                 }
+
+        POST /planner/grant_access
+            As the author of a plan, grant another user read and/or write access to
+            this plan.
+
+            Since write access without being able to read is quite useless, allowing write
+            access always includes read access automatically.
+
+            query params:
+                None
+
+            http body:
+                {
+                    "plan_id": <id_of_plan>,
+                    "username": "<username_who_should_get_access>",
+                    "read": "<true|false>",     --> read access will be granted if true
+                    "write": "<true|false>",    --> write access will be granted if true
+                }
+
+            returns:
+                200 OK
+                (successfully granted access)
+                {"sucess": True}
+
+                400 Bad Request
+                (the http body misses a required key)
+                {"success": False,
+                 "reason": "missing_key_in_http_body:<missing_key>"}
+
+                401 Unauthorized
+                (access token is not valid)
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                (you are not the author of the plan)
+                {"success": False,
+                 "reason": "insufficient_permission"}
+
+                409 Conflict
+                (No plan with the given id exists)
+                {"success": False,
+                 "reason": "plan_doesnt_exist"}
+
+        POST /planner/revoke_access
+            As the author of a plan, revoke read and/or write access to
+            this plan for other users.
+
+            Removing write access does not automatically revoke read access,
+            it also has to be revoked explicitely. However the opposite applies,
+            when revoking read access, write access is also automatically revoked.
+
+            query params:
+                None
+
+            http body:
+                {
+                    "plan_id": <id_of_plan>,
+                    "username": "<username_who_should_get_access>",
+                    "read": "<true|false>",     --> read access will be revoked if true
+                    "write": "<true|false>",    --> write access will be revoked if true
+                }
+
+            returns:
+                200 OK
+                (successfully revoked access)
+                {"sucess": True}
+
+                400 Bad Request
+                (the http body misses a required key)
+                {"success": False,
+                 "reason": "missing_key_in_http_body:<missing_key>"}
+
+                401 Unauthorized
+                (access token is not valid)
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                (you are not the author of the plan)
+                {"success": False,
+                 "reason": "insufficient_permission"}
+
+                409 Conflict
+                (No plan with the given id exists)
+                {"success": False,
+                 "reason": "plan_doesnt_exist"}
         """
 
         try:
@@ -694,6 +781,100 @@ class VEPlanHandler(BaseHandler):
                 step = Step.from_dict(http_body["step"])
 
                 self.append_step_to_plan(db, http_body["plan_id"], step)
+
+            elif slug == "grant_access":
+                if "plan_id" not in http_body:
+                    self.set_status(400)
+                    self.write(
+                        {
+                            "success": False,
+                            "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "plan_id",
+                        }
+                    )
+                    return
+                if "username" not in http_body:
+                    self.set_status(400)
+                    self.write(
+                        {
+                            "success": False,
+                            "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "username",
+                        }
+                    )
+                    return
+                if "read" not in http_body:
+                    self.set_status(400)
+                    self.write(
+                        {
+                            "success": False,
+                            "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "read",
+                        }
+                    )
+                    return
+                if "write" not in http_body:
+                    self.set_status(400)
+                    self.write(
+                        {
+                            "success": False,
+                            "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "write",
+                        }
+                    )
+                    return
+
+                # assert bool type
+                read = True if http_body["read"] == "true" else False
+                write = True if http_body["write"] == "true" else False
+
+                self.grant_acces_right(
+                    db, http_body["plan_id"], http_body["username"], read, write
+                )
+                return
+
+            elif slug == "revoke_access":
+                if "plan_id" not in http_body:
+                    self.set_status(400)
+                    self.write(
+                        {
+                            "success": False,
+                            "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "plan_id",
+                        }
+                    )
+                    return
+                if "username" not in http_body:
+                    self.set_status(400)
+                    self.write(
+                        {
+                            "success": False,
+                            "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "username",
+                        }
+                    )
+                    return
+                if "read" not in http_body:
+                    self.set_status(400)
+                    self.write(
+                        {
+                            "success": False,
+                            "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "read",
+                        }
+                    )
+                    return
+                if "write" not in http_body:
+                    self.set_status(400)
+                    self.write(
+                        {
+                            "success": False,
+                            "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "write",
+                        }
+                    )
+                    return
+
+                # assert bool type
+                read = True if http_body["read"] == "true" else False
+                write = True if http_body["write"] == "true" else False
+
+                self.revoke_access_rights(
+                    db, http_body["plan_id"], http_body["username"], read, write
+                )
+                return
 
             else:
                 self.set_status(404)
@@ -1135,6 +1316,117 @@ class VEPlanHandler(BaseHandler):
             self.write({"success": False, "reason": error_reason})
         else:
             self.serialize_and_write({"success": True, "updated_id": _id})
+
+    def grant_acces_right(
+        self,
+        db: Database,
+        plan_id: str | ObjectId,
+        username: str,
+        read: bool,
+        write: bool,
+    ):
+        """
+        This function is invoked by the handler when the correspoding endpoint
+        is requested. It just de-crowds the handler function and should therefore
+        not be called manually anywhere else.
+
+        Grant access to the user (given by `username`) to the plan (given by `plan_id`).
+        `read` and `write` determine which kind of permission will be set, i.e.
+        if `read` is `True`, read permission will be set, and if `write` is `True`,
+        write permission will be set respectively. However, setting write permissions
+        will obviously include read permissions.
+
+        Only the author of the plan is able to set read/write access.
+
+        Responses:
+            200 OK          --> succesfully set permissions
+            400 Bad Request --> both read and write are False, i.e. there is nothing to do
+            403 Forbidden   --> you are not the author of the plan
+            409 Conflict    --> no plan with the specified id exists
+        """
+
+        planner = VEPlanResource(db)
+
+        # if no rights should be granted, there is nothing to do here
+        if read is False and write is False:
+            self.set_status(400)
+            self.write({"success": False, "reason": "read_and_write_false"})
+            return
+
+        try:
+            if not planner._check_user_is_author(plan_id, self.current_user.username):
+                self.set_status(403)
+                self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
+                return
+
+            if write is True:
+                planner.set_write_permissions(plan_id, username)
+            # since write permission includes read, we can skip if read == True and write == True,
+            # so we only gotta check read == True and write == False
+            if read is True and write is False:
+                planner.set_read_permissions(plan_id, username)
+
+        except PlanDoesntExistError:
+            self.set_status(409)
+            self.write({"success": False, "reason": PLAN_DOESNT_EXIST})
+            return
+
+        self.write({"success": True})
+
+    def revoke_access_rights(
+        self,
+        db: Database,
+        plan_id: str | ObjectId,
+        username: str,
+        read: bool,
+        write: bool,
+    ):
+        """
+        This function is invoked by the handler when the correspoding endpoint
+        is requested. It just de-crowds the handler function and should therefore
+        not be called manually anywhere else.
+
+        Revoke access of the user (given by `username`) to the plan (given by `plan_id`).
+        `read` and `write` determine which kind of permission will be removed, i.e.
+        if `read` is `True`, read permission will be removed, and if `write` is `True`,
+        write permission will be removed respectively. However, removing write permissions
+        does not automatically remove read permission as well, they will remain unless also
+        explicitely revoked.
+
+        Only the author of the plan is able to set read/write access.
+
+        Responses:
+            200 OK          --> succesfully revoked permissions
+            400 Bad Request --> both read and write are False, i.e. there is nothing to do
+            403 Forbidden   --> you are not the author of the plan
+            409 Conflict    --> no plan with the specified id exists
+        """
+
+        planner = VEPlanResource(db)
+
+        # if no rights should be revoked, there is nothing to do here
+        if read is False and write is False:
+            self.set_status(400)
+            self.write({"success": False, "reason": "read_and_write_false"})
+            return
+
+        try:
+            if not planner._check_user_is_author(plan_id, self.current_user.username):
+                self.set_status(403)
+                self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
+                return
+
+            if write is True:
+                planner.revoke_write_permissions(plan_id, username)
+            if read is True:
+                planner.revoke_read_permissions(plan_id, username)
+
+        except PlanDoesntExistError:
+            self.set_status(409)
+            self.write({"success": False, "reason": PLAN_DOESNT_EXIST})
+            return
+
+        self.write({"success": True})
 
     def delete_plan(self, db: Database, _id: str | ObjectId) -> None:
         """
