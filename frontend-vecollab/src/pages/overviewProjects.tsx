@@ -3,10 +3,12 @@ import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { HiOutlineTrash } from "react-icons/hi"
-import { format, parse } from "date-fns"
+import { HiOutlineShare, HiOutlineTrash } from 'react-icons/hi';
+import { format, parse } from 'date-fns';
 import { parseISO } from 'date-fns';
 import { de } from 'date-fns/locale';
+import Dialog from '@/components/profile/Dialog';
+import EditProfileSuccessAlert from '@/components/profile/EditProfileSuccessAlert';
 
 interface PlanPreview {
     _id: string;
@@ -23,6 +25,18 @@ export default function Overview() {
 
     const router = useRouter();
 
+    const [successPopupOpen, setSuccessPopupOpen] = useState(false);
+
+    const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+    const [shareUsername, setShareUsername] = useState('');
+    const [shareAccessRight, setShareAccessRight] = useState('write');
+    const handleOpenShareDialog = () => {
+        setIsShareDialogOpen(true);
+    };
+    const handleCloseShareDialog = () => {
+        setIsShareDialogOpen(false);
+    };
+
     const createAndForwardNewPlanner = async () => {
         const newPlanner = await fetchPOST('/planner/insert_empty', {}, session?.accessToken);
         await router.push({
@@ -38,37 +52,61 @@ export default function Overview() {
                 setPlans(data.plans);
             }
         });
-    }, [session])
+    }, [session]);
+
+    const sharePlan = async (planId: string) => {
+        const payload = {
+            plan_id: planId,
+            username: shareUsername,
+            read: shareAccessRight === 'read' || shareAccessRight === 'write',
+            write: shareAccessRight === 'write',
+        };
+
+        console.log(payload);
+
+        await fetchPOST('/planner/grant_access', payload, session?.accessToken).then((data) => {
+            console.log(data);
+            // render success message that disappears after 2 seconds
+            setSuccessPopupOpen(true);
+            setTimeout(() => {
+                setSuccessPopupOpen((successPopupOpen) => false);
+            }, 2000);
+        });
+    };
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
-        if (status !== "loading") {
-            if (!session || session?.error === "RefreshAccessTokenError") {
-                console.log("forced new signIn")
-                signIn("keycloak");
+        if (status !== 'loading') {
+            if (!session || session?.error === 'RefreshAccessTokenError') {
+                console.log('forced new signIn');
+                signIn('keycloak');
             }
         }
     }, [session, status]);
 
     useEffect(() => {
         // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
-        if (!router.isReady || status === "loading") {
-            return
+        if (!router.isReady || status === 'loading') {
+            return;
         }
         // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
         if (session) {
-            getAllPlans()
+            getAllPlans();
         }
     }, [session, status, router, getAllPlans]);
 
     const deletePlan = async (planId: string, index: number) => {
-        const response = await fetchDELETE(`/planner/delete?_id=${planId}`, {}, session?.accessToken)
+        const response = await fetchDELETE(
+            `/planner/delete?_id=${planId}`,
+            {},
+            session?.accessToken
+        );
         if (response.success === true) {
             let copy = [...plans]; // have to create a deep copy that changes reference, because re-render is triggered by reference, not by values in the array
-            copy.splice(index, 1)
-            getAllPlans()
+            copy.splice(index, 1);
+            getAllPlans();
         }
-    }
+    };
 
     return (
         <>
@@ -88,19 +126,135 @@ export default function Overview() {
                                         <h2 className="text-xl font-bold leading-tight text-gray-800">
                                             {plan.name}
                                         </h2>
-                                        <p className="text-sm text-gray-500">{plan.author}</p>
+                                        {plan.author === session?.user.preferred_username ? (
+                                            <p className="text-sm text-gray-500">{plan.author}</p>
+                                        ) : (
+                                            <p className="text-sm text-gray-500">
+                                                freigegeben von {plan.author}
+                                            </p>
+                                        )}
                                         <div className="mt-3 text-sm">
                                             <div className="text-gray-500">Erstellt:</div>
-                                            <time dateTime={plan.creation_timestamp}>{format(parseISO(plan.creation_timestamp), 'd. MMM yyyy H:mm', { locale: de })}</time>
+                                            <time dateTime={plan.creation_timestamp}>
+                                                {format(
+                                                    parseISO(plan.creation_timestamp),
+                                                    'd. MMM yyyy H:mm',
+                                                    { locale: de }
+                                                )}
+                                            </time>
                                         </div>
                                         <div className="mt-3 text-sm">
                                             <div className="text-gray-500">Zuletzt geändert:</div>
-                                            <time dateTime={plan.creation_timestamp}>{format(parseISO(plan.last_modified), 'd. MMM yyyy H:mm', { locale: de })}</time>
+                                            <time dateTime={plan.creation_timestamp}>
+                                                {format(
+                                                    parseISO(plan.last_modified),
+                                                    'd. MMM yyyy H:mm',
+                                                    { locale: de }
+                                                )}
+                                            </time>
                                         </div>
                                     </div>
-                                    <button className="absolute top-0 right-0 bg-gray-300 rounded-lg p-2 flex justify-center items-center" onClick={e => deletePlan(plan._id, index)}>
-                                        <HiOutlineTrash />
-                                    </button>
+                                    <div className="absolute top-0 right-0 flex">
+                                        {/* render share button only if user is the author */}
+                                        {plan.author === session?.user.preferred_username && (
+                                            <>
+                                                <button
+                                                    className="p-2 flex justify-center items-center"
+                                                    onClick={handleOpenShareDialog}
+                                                >
+                                                    <HiOutlineShare />
+                                                </button>
+                                                <Dialog
+                                                    isOpen={isShareDialogOpen}
+                                                    title={`Teilen`}
+                                                    onClose={handleCloseShareDialog}
+                                                >
+                                                    <div className="w-[30rem] h-[28rem] overflow-y-auto content-scrollbar relative">
+                                                        <input
+                                                            type="text"
+                                                            className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                                            placeholder="Nutzernamen eingeben"
+                                                            value={shareUsername}
+                                                            onChange={(e) =>
+                                                                setShareUsername(e.target.value)
+                                                            }
+                                                        />
+                                                        <div className="flex justify-between my-8 mx-6">
+                                                            <div>
+                                                                <label className="mx-2">
+                                                                    <input
+                                                                        className="mx-2"
+                                                                        type="radio"
+                                                                        name="access"
+                                                                        id="readInput"
+                                                                        value="read"
+                                                                        defaultChecked={
+                                                                            shareAccessRight ===
+                                                                            'read'
+                                                                        }
+                                                                        onChange={(e) =>
+                                                                            setShareAccessRight(
+                                                                                e.target.value
+                                                                            )
+                                                                        }
+                                                                    />
+                                                                    Lesen
+                                                                </label>
+                                                            </div>
+                                                            <div>
+                                                                <label className="mx-2">
+                                                                    <input
+                                                                        className="mx-2"
+                                                                        type="radio"
+                                                                        name="access"
+                                                                        id="writeInput"
+                                                                        value={'write'}
+                                                                        defaultChecked={
+                                                                            shareAccessRight ===
+                                                                            'write'
+                                                                        }
+                                                                        onChange={(e) =>
+                                                                            setShareAccessRight(
+                                                                                e.target.value
+                                                                            )
+                                                                        }
+                                                                    />
+                                                                    Lesen & Schreiben
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex absolute bottom-0 w-full">
+                                                            <button
+                                                                className={
+                                                                    'bg-transparent border border-gray-500 py-3 px-6 mr-auto rounded-lg shadow-lg'
+                                                                }
+                                                                onClick={handleCloseShareDialog}
+                                                            >
+                                                                <span>Abbrechen</span>
+                                                            </button>
+                                                            <button
+                                                                className={
+                                                                    'bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
+                                                                }
+                                                                onClick={(e) => {
+                                                                    sharePlan(plan._id);
+                                                                    handleCloseShareDialog();
+                                                                }}
+                                                            >
+                                                                <span>Absenden</span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </Dialog>
+                                            </>
+                                        )}
+                                        <button
+                                            className="bg-gray-300 rounded-lg p-2 flex justify-center items-center"
+                                            onClick={(e) => deletePlan(plan._id, index)}
+                                        >
+                                            <HiOutlineTrash />
+                                        </button>
+                                    </div>
                                     <Link
                                         href={{
                                             pathname:
@@ -151,6 +305,7 @@ export default function Overview() {
                     </div>
                 </div>
             </div>
+            {successPopupOpen && <EditProfileSuccessAlert message={'Plan freigegeben'} />}
         </>
     );
 }
