@@ -92,8 +92,8 @@ export default function HeadProgressBarSection({ stage }: HeadProgressBar) {
     return (
         <>
             <nav className="flex w-full justify-center py-6">
-                {renderHeadProgressBar(headMenuProgressSteps)}
-            </nav>
+                    {renderHeadProgressBar(headMenuProgressSteps)}
+                </nav>
             <div className="flex justify-center">
                 <Link href={`/etherpad?padID=${router.query.plannerId}`} target="_blank">
                     <button
