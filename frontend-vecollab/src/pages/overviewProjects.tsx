@@ -8,7 +8,7 @@ import { format, parse } from 'date-fns';
 import { parseISO } from 'date-fns';
 import { de } from 'date-fns/locale';
 import Dialog from '@/components/profile/Dialog';
-import EditProfileSuccessAlert from '@/components/profile/EditProfileSuccessAlert';
+import SuccessAlert from '@/components/profile/SuccessAlert';
 
 interface PlanPreview {
     _id: string;
@@ -305,7 +305,7 @@ export default function Overview() {
                     </div>
                 </div>
             </div>
-            {successPopupOpen && <EditProfileSuccessAlert message={'Plan freigegeben'} />}
+            {successPopupOpen && <SuccessAlert message={'Plan freigegeben'} />}
         </>
     );
 }
