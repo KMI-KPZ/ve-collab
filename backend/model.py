@@ -989,6 +989,8 @@ class VEPlan:
         self,
         _id: str | ObjectId = None,
         author: str = None,
+        read_access: List[str] = [],
+        write_access: List[str] = [],
         creation_timestamp: str | datetime = None,
         last_modified: str | datetime = None,
         name: str = None,
@@ -1033,6 +1035,9 @@ class VEPlan:
         self._id = util.parse_object_id(_id) if _id != None else ObjectId()
 
         self.author = author
+        self.read_access = read_access
+        self.write_access = write_access
+
         self.creation_timestamp = util.parse_datetime(creation_timestamp)
         self.last_modified = util.parse_datetime(last_modified)
 
@@ -1120,6 +1125,8 @@ class VEPlan:
         return {
             "_id": self._id,
             "author": self.author,
+            "read_access": self.read_access,
+            "write_access": self.write_access,
             "creation_timestamp": self.creation_timestamp,
             "last_modified": self.last_modified,
             "name": self.name,
@@ -1308,7 +1315,14 @@ class VEPlan:
         for key in list(params.keys()):
             if key not in [
                 *cls.EXPECTED_DICT_ENTRIES.keys(),
-                *["_id", "author", "creation_timestamp", "last_modified"],
+                *[
+                    "_id",
+                    "author",
+                    "read_access",
+                    "write_access",
+                    "creation_timestamp",
+                    "last_modified",
+                ],
             ]:
                 del params[key]
 

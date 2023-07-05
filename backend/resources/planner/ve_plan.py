@@ -9,6 +9,8 @@ from typing import Any, List
 
 from exceptions import (
     MissingKeyError,
+    NoReadAccessError,
+    NoWriteAccessError,
     NonUniqueStepsError,
     PlanAlreadyExistsError,
     PlanDoesntExistError,
@@ -51,16 +53,22 @@ class VEPlanResource:
 
         return [VEPlan.from_dict(res) for res in self.db.plans.find()]
 
-    def get_plan(self, _id: str | ObjectId) -> VEPlan:
+    def get_plan(self, _id: str | ObjectId, requesting_username: str = None) -> VEPlan:
         """
         Request a specific `VEPlan` by specifying its `_id`.
 
         The _id can either be an instance of `bson.ObjectId` or a
         corresponding str-representation.
 
+        If the `requesting_username` is not None, sanity checks will be applied, i.e.
+        this user has to have read access to the plan (determined by his name being in the
+        read_access list). If this is not the case, a `NoReadAccessError` is thrown.
+
         Returns an instance of `VEPlan`.
 
         Raises `PlanDoesntExistError` if no plan with the supplied `_id` is found.
+        Raises `NoReadAccessError` if `requesting_username` is given and has no
+        read access to this plan.
         """
 
         # if supplied _id is no valid ObjectId, we can also raise the PlanDoesntExistError,
@@ -75,22 +83,33 @@ class VEPlanResource:
         if not result:
             raise PlanDoesntExistError()
 
+        if requesting_username is not None:
+            if requesting_username not in result["read_access"]:
+                raise NoReadAccessError()
+
         return VEPlan.from_dict(result)
 
     def get_plans_for_user(self, username: str) -> List[VEPlan]:
         """
         Request all plans that are avaible to the user determined by their `username`,
-        i.e. their own plans and those that he/she has read or write access to (r/w TODO)
+        i.e. their own plans and those that he/she has read or write access to.
 
         Returns a list of `VEPlan` objects, or an empty list, if there are no plans
         that match the criteria.
         """
 
-        # r/w access to plans of other users is not yet implemented,
-        # so return only the plans owned by the user 
-        result = self.db.plans.find({"author": username})
+        # query plans where the user is the author or has read or write access
+        result = self.db.plans.find(
+            {
+                "$or": [
+                    {"author": username},
+                    {"read_access": username},
+                    {"write_access": username},
+                ]
+            }
+        )
         return [VEPlan.from_dict(res) for res in result]
-    
+
     def get_public_plans_of_user(self, username: str) -> List[VEPlan]:
         """
         Request all plans that the user given by `username` is an author of and are
@@ -128,7 +147,50 @@ class VEPlanResource:
 
         return result.inserted_id
 
-    def update_full_plan(self, plan: VEPlan, upsert: bool = False) -> ObjectId:
+    def _check_write_access(self, plan_id: ObjectId, username: str) -> bool:
+        """
+        Determine if the user given by his `username` has write access to the plan
+        given by its _id, i.e. check if the username is within the write_access list.
+
+        Returns True if the user has write access, False otherwise.
+
+        Raises `PlanDoesntExistError`if no such plan with the given `plan_id` is found in
+        the db.
+        """
+
+        result = self.db.plans.find_one({"_id": plan_id}, {"write_access": True})
+
+        if not result:
+            raise PlanDoesntExistError()
+
+        return username in result["write_access"]
+
+    def _check_user_is_author(self, plan_id: str | ObjectId, username: str) -> bool:
+        """
+        Determine if the user given by his `username` is the author of the plan given
+        by its _id.
+
+        Returns True if the user is the author, False otherwise.
+
+        Raises `PlanDoesntExistError`if no such plan with the given `plan_id` is found in
+        the db.
+        """
+
+        try:
+            plan_id = util.parse_object_id(plan_id)
+        except InvalidId:
+            raise PlanDoesntExistError()
+
+        result = self.db.plans.find_one({"_id": plan_id}, {"author": True})
+
+        if not result:
+            raise PlanDoesntExistError()
+
+        return username == result["author"]
+
+    def update_full_plan(
+        self, plan: VEPlan, upsert: bool = False, requesting_username: str = None
+    ) -> ObjectId:
         """
         Update an already existing plan in the db by completely overwriting it
         with the specified one, i.e. the plan in the db will have all the attributes that
@@ -137,8 +199,17 @@ class VEPlanResource:
         Optionally, the `upsert` parameter may be set to True to insert the plan freshly instead
         if no matching plan was found, resulting in an "insert".
 
+        If the `requesting_username` is not None, sanity checks will be applied, i.e.
+        this user has to have write access to the plan (determined by his name being in the
+        write_access list). If this is not the case, a `NoWriteAccessError` is thrown.
+
         Returns the updated, or (in case of an upsert) inserted _id, which is be
         identical to the _id of the supplied plan.
+
+        Raises `PlanDoesntExistError` if upsert is False and no plan with the same _id
+        already exists.
+        Raises `NoWriteAccessError` if the requesting user (if supplied) has no write access
+        to the plan.
         """
 
         now_timestamp = datetime.datetime.now()
@@ -147,6 +218,17 @@ class VEPlanResource:
         del plan_dict[
             "creation_timestamp"
         ]  # make sure creation timestamp doesn't get overridden
+
+        # if a user is given, check if he/she has appropriate write access
+        if requesting_username is not None:
+            try:
+                if not self._check_write_access(plan._id, requesting_username):
+                    raise NoWriteAccessError()
+            except PlanDoesntExistError:
+                # since non-existence can already happen here, we simply re-raise
+                # if upsert is not True
+                if not upsert:
+                    raise
 
         update_result = self.db.plans.update_one(
             {"_id": plan._id},
@@ -163,7 +245,12 @@ class VEPlanResource:
         return plan._id
 
     def update_field(
-        self, plan_id: str | ObjectId, field_name: str, value: Any, upsert: bool = False
+        self,
+        plan_id: str | ObjectId,
+        field_name: str,
+        value: Any,
+        upsert: bool = False,
+        requesting_username: str = None,
     ) -> ObjectId:
         """
         update a single field (i.e. attribute) of a VEPlan by specifying
@@ -188,7 +275,16 @@ class VEPlanResource:
         a new plan with the attribute passed to this function set to the corresponding value
         and any other attribute as default.
 
+        If the `requesting_username` is not None, sanity checks will be applied, i.e.
+        this user has to have write access to the plan (determined by his name being in the
+        write_access list). If this is not the case, a `NoWriteAccessError` is thrown.
+
         Returns the updated, or (in case of an upsert) inserted _id.
+
+        Raises `PlanDoesntExistError` if upsert is False and no plan with the same _id
+        already exists.
+        Raises `NoWriteAccessError` if the requesting username (if supplied) has no write access
+        to the plan.
         """
 
         plan_id = util.parse_object_id(plan_id)
@@ -291,7 +387,18 @@ class VEPlanResource:
                 "attribute '{}' is not expected by VEPlan".format(field_name)
             )
 
-        # typechecks were successfull, we can finally do the update
+        # if a user is given, check if he/she has appropriate write access
+        if requesting_username is not None:
+            try:
+                if not self._check_write_access(plan_id, requesting_username):
+                    raise NoWriteAccessError()
+            except PlanDoesntExistError:
+                # since non-existence can already happen here, we simply re-raise
+                # if upsert is not True
+                if not upsert:
+                    raise
+
+        # typechecks an access checks were successfull, we can finally do the update
         # for the upsert case, we need to construct a plan dict that doesn't
         # contain the field we tried to update and all fields we want to
         # set in the query because of a write concern at mongodb
@@ -326,17 +433,33 @@ class VEPlanResource:
             else plan_id
         )
 
-    def append_step(self, plan_id: str | ObjectId, step: Step) -> ObjectId:
+    def append_step(
+        self, plan_id: str | ObjectId, step: Step, requesting_username: str = None
+    ) -> ObjectId:
         """
         Append a new step object to a given plan. The `name` of the step
         must not have a name that already exists within the other steps
         of this plan, otherwise a `NonUniqueStepsError` is thrown.
 
-        If no plan with the given `plan_id` is found, a `PlanDoesntExistError`
-        is thrown.
+        If the `requesting_username` is not None, sanity checks will be applied, i.e.
+        this user has to have write access to the plan (determined by his name being in the
+        write_access list). If this is not the case, a `NoWriteAccessError` is thrown.
+
+        Raises `PlanDoesntExistError` if no plan with the _id exists.
+        Raises `NoWriteAccessError` if the requesting_user (if supplied) has no write access
+        to the plan.
         """
 
         plan_id = util.parse_object_id(plan_id)
+
+        # if a user is given, check if he/she has appropriate write access
+        if requesting_username is not None:
+            try:
+                if not self._check_write_access(plan_id, requesting_username):
+                    raise NoWriteAccessError()
+            except PlanDoesntExistError:
+                # since non-existence can already happen here, we simply re-raise
+                raise
 
         steps_of_plan = self.db.plans.find_one(
             {"_id": plan_id}, projection={"steps": True}
@@ -361,6 +484,115 @@ class VEPlanResource:
         )
 
         return plan_id
+
+    def set_read_permissions(self, plan_id: str | ObjectId, username: str) -> None:
+        """
+        Set read permissions for the user given by `username` for the plan with the
+        `plan_id`, i.e. the username gets added to the read_access list.
+
+        The plan_id can either be an instance of `bson.ObjectId` or a
+        corresponding str-representation.
+
+        Returns nothing.
+
+        Raises `PlanDoesntExistError` if no plan with such a _id exists.
+        """
+
+        try:
+            plan_id = util.parse_object_id(plan_id)
+        except InvalidId:
+            raise PlanDoesntExistError()
+
+        update_result = self.db.plans.update_one(
+            {"_id": plan_id}, {"$addToSet": {"read_access": username}}
+        )
+
+        if update_result.matched_count != 1:
+            raise PlanDoesntExistError()
+
+    def set_write_permissions(self, plan_id: str | ObjectId, username: str) -> None:
+        """
+        Set write permissions for the user given by `username` for the plan with the
+        `plan_id`, i.e. the username gets added to the write_access list.
+        Obviously, write permission without read permission are quite useless, so
+        setting write permission automatically also sets the corresponding read permission.
+
+        The plan_id can either be an instance of `bson.ObjectId` or a
+        corresponding str-representation.
+
+        Returns nothing.
+
+        Raises `PlanDoesntExistError` if no plan with such a _id exists.
+        """
+
+        try:
+            plan_id = util.parse_object_id(plan_id)
+        except InvalidId:
+            raise PlanDoesntExistError()
+
+        update_result = self.db.plans.update_one(
+            {"_id": plan_id},
+            {"$addToSet": {"read_access": username, "write_access": username}},
+        )
+
+        if update_result.matched_count != 1:
+            raise PlanDoesntExistError()
+
+    def revoke_read_permissions(self, plan_id: str | ObjectId, username: str) -> None:
+        """
+        Revoke read permissions for the user given by `username` for the plan with the
+        `plan_id`, i.e. the username gets removed from the read_access list.
+
+        Since being able to write without reading is useless, write permissions are also
+        automatically revoked.
+
+        The plan_id can either be an instance of `bson.ObjectId` or a
+        corresponding str-representation.
+
+        Returns nothing.
+
+        Raises `PlanDoesntExistError` if no plan with such a _id exists.
+        """
+
+        try:
+            plan_id = util.parse_object_id(plan_id)
+        except InvalidId:
+            raise PlanDoesntExistError()
+
+        update_result = self.db.plans.update_one(
+            {"_id": plan_id},
+            {"$pull": {"read_access": username, "write_access": username}},
+        )
+
+        if update_result.matched_count != 1:
+            raise PlanDoesntExistError()
+        
+    def revoke_write_permissions(self, plan_id: str | ObjectId, username: str) -> None:
+        """
+        Revoke write permissions for the user given by `username` for the plan with the
+        `plan_id`, i.e. the username gets removed from the write_access list. Note that
+        the read access state is not modified, the user still has read permissions.
+
+        The plan_id can either be an instance of `bson.ObjectId` or a
+        corresponding str-representation.
+
+        Returns nothing.
+
+        Raises `PlanDoesntExistError` if no plan with such a _id exists.
+        """
+
+        try:
+            plan_id = util.parse_object_id(plan_id)
+        except InvalidId:
+            raise PlanDoesntExistError()
+
+        update_result = self.db.plans.update_one(
+            {"_id": plan_id},
+            {"$pull": {"write_access": username}},
+        )
+
+        if update_result.matched_count != 1:
+            raise PlanDoesntExistError()
 
     def delete_plan(self, _id: str | ObjectId) -> None:
         """
@@ -387,14 +619,27 @@ class VEPlanResource:
         if result.deleted_count != 1:
             raise PlanDoesntExistError()
 
-    def delete_step_by_id(self, _id: str | ObjectId, step_id: str | ObjectId):
+    def delete_step_by_id(
+        self,
+        _id: str | ObjectId,
+        step_id: str | ObjectId,
+        requesting_username: str = None,
+    ):
         """
         Remove a step from a plan by specifying the plans _id and the steps _id as well.
 
         The id's can either be an instance of `bson.ObjectId` or a
         corresponding str-representation.
 
+        If the `requesting_username` is not None, sanity checks will be applied, i.e.
+        this user has to have write access to the plan (determined by his name being in the
+        write_access list). If this is not the case, a `NoWriteAccessError` is thrown.
+
+        Returns nothing.
+
         Raises `PlanDoesntExistError` if no plan with the supplied `_id` is found.
+        Raises `NoWriteAccessError` if the requesting_user (if supplied) has no write access
+        to the plan.
         """
 
         # if supplied _id is no valid ObjectId, we can also raise the PlanDoesntExistError,
@@ -409,6 +654,15 @@ class VEPlanResource:
         except InvalidId:
             pass
 
+        # if a user is given, check if he/she has appropriate write access
+        if requesting_username is not None:
+            try:
+                if not self._check_write_access(_id, requesting_username):
+                    raise NoWriteAccessError()
+            except PlanDoesntExistError:
+                # since non-existence can already happen here, we simply re-raise
+                raise
+
         result = self.db.plans.update_one(
             {"_id": _id}, {"$pull": {"steps": {"_id": step_id}}}
         )
@@ -416,7 +670,9 @@ class VEPlanResource:
         if result.matched_count != 1:
             raise PlanDoesntExistError()
 
-    def delete_step_by_name(self, _id: str | ObjectId, step_name: str):
+    def delete_step_by_name(
+        self, _id: str | ObjectId, step_name: str, requesting_username: str = None
+    ):
         """
         Remove a step from a plan by specifying the plans _id and the name
         of the step.
@@ -424,7 +680,15 @@ class VEPlanResource:
         The _id can either be an instance of `bson.ObjectId` or a
         corresponding str-representation.
 
+        If the `requesting_username` is not None, sanity checks will be applied, i.e.
+        this user has to have write access to the plan (determined by his name being in the
+        write_access list). If this is not the case, a `NoWriteAccessError` is thrown.
+
+        Returns nothing.
+
         Raises `PlanDoesntExistError` if no plan with the supplied `_id` is found.
+        Raises `NoWriteAccessError` if the requesting_user (if supplied) has no write access
+        to the plan.
         """
 
         # if supplied _id is no valid ObjectId, we can also raise the PlanDoesntExistError,
@@ -433,6 +697,15 @@ class VEPlanResource:
             _id = util.parse_object_id(_id)
         except InvalidId:
             raise PlanDoesntExistError()
+
+        # if a user is given, check if he/she has appropriate write access
+        if requesting_username is not None:
+            try:
+                if not self._check_write_access(_id, requesting_username):
+                    raise NoWriteAccessError()
+            except PlanDoesntExistError:
+                # since non-existence can already happen here, we simply re-raise
+                raise
 
         result = self.db.plans.update_one(
             {"_id": _id}, {"$pull": {"steps": {"name": step_name}}}
