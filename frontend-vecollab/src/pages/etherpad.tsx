@@ -5,27 +5,41 @@ import {
     createSession,
 } from '@/lib/etherpad';
 import { GetServerSideProps, GetServerSidePropsContext, InferGetServerSidePropsType } from 'next';
-import { getSession } from 'next-auth/react';
+import { getSession, signIn, useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 interface Props {
-    groupID: string;
+    groupID: string | null;
 }
 
 export default function Etherpad({
     groupID,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+    const { data: session, status } = useSession();
     const router = useRouter();
     const [padID, setPadID] = useState('');
+
+    // check for session errors and trigger the login flow if necessary
+    useEffect(() => {
+        if (status !== 'loading') {
+            if (!session || session?.error === 'RefreshAccessTokenError') {
+                console.log('forced new signIn');
+                signIn('keycloak');
+            }
+        }
+    }, [session, status]);
 
     useEffect(() => {
         if (!router.isReady) {
             return;
+        } else if (groupID === null) {
+            // group-id null means no session was available server side and we have to force a login 
+            signIn("keycloak");
         } else {
             setPadID(router.query.padID as string);
         }
-    }, [router]);
+    }, [router, groupID]);
 
     return (
         <>
@@ -44,8 +58,12 @@ export const getServerSideProps: GetServerSideProps<Props> = async (
     context: GetServerSidePropsContext
 ) => {
     const session = await getSession(context);
-    console.log(session);
-    // TODO break if not session --> force signIn --> maybe reload needed?
+    // break if not session --> force signIn from client side
+    if (!session) {
+        return {
+            props: { groupID: null },
+        };
+    }
 
     // give the curently authenticated user access to this pad
     // only for demo purpose, ofc this flow has to be placed at the access-setting of plans, i.e.:
