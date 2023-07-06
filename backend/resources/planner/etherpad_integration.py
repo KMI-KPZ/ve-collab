@@ -56,8 +56,6 @@ class EtherpadResouce:
 
         response_content = json.loads(response.text)
 
-        print(response_content)
-
         return response_content["data"]["authorID"]
 
     def create_etherpad_group_for_plan_if_not_exists(
@@ -85,8 +83,6 @@ class EtherpadResouce:
 
         response_content = json.loads(response.text)
 
-        print(response_content)
-
         return response_content["data"]["groupID"]
 
     def create_etherpad_group_pad_for_plan(
@@ -103,16 +99,12 @@ class EtherpadResouce:
         if isinstance(plan_id, ObjectId):
             plan_id = str(plan_id)
 
-        response = requests.get(
+        requests.get(
             global_vars.etherpad_base_url
             + "/api/1.3.0/createGroupPad?groupID={}&padName={}&apikey={}".format(
                 group_id, plan_id, global_vars.etherpad_api_key
             )
         )
-
-        response_content = json.loads(response.text)
-
-        print(response_content)
 
     def create_etherpad_user_session_for_plan(
         self, group_id: str, author_id: str
@@ -123,18 +115,67 @@ class EtherpadResouce:
 
         Returns the SessionID (has to be placed in a cookie to be recognizable by etherpad)
         """
-        # 01.01.3000 as unix timestamp in seconds as int
-        valid_unti = math.floor(time.mktime(datetime.datetime(3000, 1, 1).timetuple()))
+        # tomorrow as unix timestamp in seconds as int
+        valid_until = math.floor(
+            time.mktime(
+                (datetime.datetime.now() + datetime.timedelta(minutes=1)).timetuple()
+            )
+        )
 
         response = requests.get(
             global_vars.etherpad_base_url
             + "/api/1.3.0/createSession?groupID={}&authorID={}&validUntil={}&apikey={}".format(
-                group_id, author_id, valid_unti, global_vars.etherpad_api_key
+                group_id, author_id, valid_until, global_vars.etherpad_api_key
             )
         )
 
         response_content = json.loads(response.text)
 
-        print(response_content)
-
         return response_content["data"]["sessionID"]
+
+    def revoke_session(self, session_id: str) -> None:
+        """
+        Using the etherpad API, delete the given session
+        """
+
+        requests.get(
+            global_vars.etherpad_base_url
+            + "/api/1.3.0/deleteSession?sessionID={}&apikey={}".format(
+                session_id, global_vars.etherpad_api_key
+            )
+        )
+
+    def revoke_all_session_for_user_in_group(
+        self, author_id: str, group_id: str
+    ) -> None:
+        """
+        revoke all existing sessions for the author in the group
+        (i.e. revoke all sessions of the user towards a plan,
+        because group == plan mapping).
+        """
+
+        all_sessions_response = requests.get(
+            global_vars.etherpad_base_url
+            + "/api/1.3.0/listSessionsOfAuthor?authorID={}&apikey={}".format(
+                author_id, global_vars.etherpad_api_key
+            )
+        )
+        all_sessions_of_user = json.loads(all_sessions_response.text)["data"]
+
+        # delete all session of the user that are in that group (i.e. for that plan)
+        for key, session_obj in all_sessions_of_user.items():
+            if session_obj is not None:
+                if group_id == session_obj["groupID"]:
+                    self.revoke_session(key)
+
+    def initiate_etherpad_for_plan(self, plan_id: str | ObjectId) -> None:
+        """
+        Wrapper to initiate a pad that is associated with the plan (given by it`s `plan_id`),
+        which is ready to enforce access control.
+        """
+
+        if isinstance(plan_id, ObjectId):
+            plan_id = str(plan_id)
+
+        group_id = self.create_etherpad_group_for_plan_if_not_exists(plan_id)
+        self.create_etherpad_group_pad_for_plan(group_id, plan_id)

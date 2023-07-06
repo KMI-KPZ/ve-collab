@@ -1,8 +1,10 @@
 import tornado
 
-from error_reasons import MISSING_KEY_SLUG
+from error_reasons import INSUFFICIENT_PERMISSIONS, MISSING_KEY_SLUG, PLAN_DOESNT_EXIST
+from exceptions import PlanDoesntExistError
 from handlers.base_handler import BaseHandler, auth_needed
 from resources.planner.etherpad_integration import EtherpadResouce
+from resources.planner.ve_plan import VEPlanResource
 import util
 
 
@@ -25,12 +27,34 @@ class EtherpadIntegrationHandler(BaseHandler):
                 # - deletion of sessionID vice versa whenever access to plan gets revoked
                 # - creation of the pad gets moved to where a new plan gets created
 
+                # if the user has no write access to the plan nor is the author
+                # reject access to the plan
+                # in the same pass also catch the error case if no such plan even
+                # exists
+                planner = VEPlanResource(db)
+                try:
+                    if not (
+                        planner._check_write_access(plan_id, self.current_user.username)
+                        or planner._check_user_is_author(
+                            plan_id, self.current_user.username
+                        )
+                    ):
+                        self.set_status(403)
+                        self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
+                        return
+                except PlanDoesntExistError:
+                    self.set_status(409)
+                    self.write({"success": False, "reason": PLAN_DOESNT_EXIST})
+                    return
+
+                # user has access, so we obtain a session for him and invalidate
+                # all other previous sessions
                 er = EtherpadResouce(db)
                 authorID = er.create_etherpad_author_for_user_if_not_exists(
                     self.current_user.user_id, self.current_user.username
                 )
                 groupID = er.create_etherpad_group_for_plan_if_not_exists(plan_id)
-                er.create_etherpad_group_pad_for_plan(groupID, plan_id)
+                er.revoke_all_session_for_user_in_group(authorID, groupID)
                 sessionID = er.create_etherpad_user_session_for_plan(groupID, authorID)
 
                 self.write(
