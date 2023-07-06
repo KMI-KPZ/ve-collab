@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import completedImage from '@/images/icons/progressBar/completed.svg';
 import uncompletedImage from '@/images/icons/progressBar/uncompleted.svg';
 import notStartedImage from '@/images/icons/progressBar/notStarted.svg';
@@ -6,6 +6,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ProgressState, SideMenuStep } from '@/interfaces/startingWizard/sideProgressBar';
+import { fetchGET } from '@/lib/backend';
+import { useSession } from 'next-auth/react';
 
 export const sideMenuSteps: SideMenuStep[] = [
     {
@@ -87,8 +89,32 @@ export const sideMenuSteps: SideMenuStep[] = [
 
 export default function SideProgressBarSection() {
     const router = useRouter();
+    const { data: session, status } = useSession();
 
-    const [sideMenuStepsData] = useState<SideMenuStep[]>(sideMenuSteps);
+    function calculateStepProgress(partners: any) {
+        console.log(partners);
+        if (partners.length > 0 && partners[0].name !== '') {
+            sideMenuSteps[1].state = ProgressState.completed;
+        } else {
+            sideMenuSteps[1].state = ProgressState.notStarted;
+        }
+    }
+
+    useEffect(() => {
+        if (session) {
+            fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
+                (data) => {
+                    if (data.plan.involved_parties.length !== 0) {
+                        console.log(data.plan.involved_parties);
+                        calculateStepProgress(data.plan.involved_parties);
+                        setSideMenuStepsData(sideMenuSteps);
+                    }
+                }
+            );
+        }
+    }, [router, session]);
+
+    const [sideMenuStepsData, setSideMenuStepsData] = useState<SideMenuStep[]>(sideMenuSteps);
 
     function renderIcon(state: ProgressState) {
         switch (state) {
