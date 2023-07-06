@@ -15,3 +15,5 @@ mongodb_port: int = 0
 mongodb_username: str = ""
 mongodb_password: str = ""
 mongodb_db_name: str = ""
+etherpad_base_url: str = ""
+etherpad_api_key: str = ""
