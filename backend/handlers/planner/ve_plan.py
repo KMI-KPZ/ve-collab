@@ -26,6 +26,7 @@ from exceptions import (
 )
 from handlers.base_handler import auth_needed, BaseHandler
 from model import Step, VEPlan
+from resources.planner.etherpad_integration import EtherpadResouce
 from resources.planner.ve_plan import VEPlanResource
 import util
 
@@ -1137,6 +1138,9 @@ class VEPlanHandler(BaseHandler):
             self.set_status(409)
             self.write({"success": False, "reason": PLAN_ALREADY_EXISTS})
             return
+        
+        er = EtherpadResouce(db)
+        er.initiate_etherpad_for_plan(_id)
 
         self.serialize_and_write({"success": True, "inserted_id": _id})
 
@@ -1175,6 +1179,10 @@ class VEPlanHandler(BaseHandler):
             self.set_status(403)
             self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
             return
+        
+        if upsert is True:
+            er = EtherpadResouce(db)
+            er.initiate_etherpad_for_plan(_id)
 
         self.serialize_and_write({"success": True, "updated_id": _id})
 
@@ -1253,6 +1261,10 @@ class VEPlanHandler(BaseHandler):
         if error_reason:
             self.write({"success": False, "reason": error_reason})
         else:
+            if upsert is True:
+                er = EtherpadResouce(db)
+                er.initiate_etherpad_for_plan(_id)
+
             self.serialize_and_write({"success": True, "updated_id": _id})
 
     def append_step_to_plan(

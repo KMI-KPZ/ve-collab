@@ -14,5 +14,7 @@
   "mongodb_port": 27017,
   "mongodb_username": "<mongo_username>",
   "mongodb_password": "<mongo_password>",
-  "mongodb_db_name": "lionet_kavaq"
+  "mongodb_db_name": "lionet_kavaq",
+  "etherpad_base_url": "http://host:port",
+  "etherpad_api_key": "<your_etherpad_api_key>"
 }

@@ -147,7 +147,7 @@ class VEPlanResource:
 
         return result.inserted_id
 
-    def _check_write_access(self, plan_id: ObjectId, username: str) -> bool:
+    def _check_write_access(self, plan_id: str | ObjectId, username: str) -> bool:
         """
         Determine if the user given by his `username` has write access to the plan
         given by its _id, i.e. check if the username is within the write_access list.
@@ -157,6 +157,11 @@ class VEPlanResource:
         Raises `PlanDoesntExistError`if no such plan with the given `plan_id` is found in
         the db.
         """
+
+        try:
+            plan_id = util.parse_object_id(plan_id)
+        except InvalidId:
+            raise PlanDoesntExistError()
 
         result = self.db.plans.find_one({"_id": plan_id}, {"write_access": True})
 
