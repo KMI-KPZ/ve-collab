@@ -105,3 +105,15 @@ class PlanAlreadyExistsError(Exception):
     """a VEPlan with this _id already exists"""
 
     pass
+
+
+class NoReadAccessError(Exception):
+    """a user has no read access to a VEPlan"""
+
+    pass
+
+
+class NoWriteAccessError(Exception):
+    """a user has no write access to a VEPlan"""
+
+    pass

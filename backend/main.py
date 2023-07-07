@@ -40,6 +40,7 @@ from handlers.network.wordpress import WordpressCollectionHandler, WordpressPost
 from resources.network.acl import ACL
 from resources.network.profile import ProfileDoesntExistException, Profiles
 from resources.network.space import Spaces
+from handlers.planner.etherpad_integration import EtherpadIntegrationHandler
 from handlers.planner.ve_plan import VEPlanHandler
 
 
@@ -59,7 +60,8 @@ define(
     help="start application in test mode (bypass authentication) as a user. never run the app in this mode, it is purely for unit tests!",
 )
 
-def make_app(cookie_secret):
+
+def make_app(cookie_secret: str, debug: bool = False):
     return tornado.web.Application(
         [
             (r"/", MainRedirectHandler),
@@ -97,6 +99,8 @@ def make_app(cookie_secret):
             (r"/wordpress/posts/([0-9]+)", WordpressPostHandler),
             (r"/planner/(.+)", VEPlanHandler),
             (r"/orcid", OrcidProfileHandler),
+            (r"/matching_exclusion_info", MatchingExclusionHandler),
+            (r"/etherpad_integration/(.+)", EtherpadIntegrationHandler),
             (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
             (r"/assets/(.*)", tornado.web.StaticFileHandler, {"path": "./assets/"}),
             (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./html/"}),
@@ -109,6 +113,7 @@ def make_app(cookie_secret):
         ],
         cookie_secret=cookie_secret,
         template_path="html",
+        debug=debug,
     )
 
 
@@ -220,7 +225,6 @@ def create_initial_admin(username: str) -> None:
     """
 
     with Profiles() as profile_manager:
-
         # check if the user already has a non-admin role and issue a warning
         # about elevated permissions if so
         try:
@@ -243,7 +247,7 @@ def create_initial_admin(username: str) -> None:
         profile_manager.insert_default_admin_profile(username)
 
         # also insert admin acl rules
-        with (ACL() as acl, Spaces() as space_manager):
+        with ACL() as acl, Spaces() as space_manager:
             acl.global_acl.insert_admin()
 
             for space in space_manager.get_space_names():
@@ -277,6 +281,8 @@ def set_global_vars(conf: dict) -> None:
         "mongodb_username",
         "mongodb_password",
         "mongodb_db_name",
+        "etherpad_base_url",
+        "etherpad_api_key"
     ]
 
     for key in expected_config_keys:
@@ -292,6 +298,8 @@ def set_global_vars(conf: dict) -> None:
     global_vars.mongodb_username = conf["mongodb_username"]
     global_vars.mongodb_password = conf["mongodb_password"]
     global_vars.mongodb_db_name = conf["mongodb_db_name"]
+    global_vars.etherpad_base_url = conf["etherpad_base_url"]
+    global_vars.etherpad_api_key = conf["etherpad_api_key"]
 
     if not (options.test_admin or options.test_user):
         global_vars.keycloak = KeycloakOpenID(
@@ -394,6 +402,12 @@ async def main():
         help="path to config file, defaults to config.json",
     )
     define(
+        "debug",
+        default=False,
+        type=bool,
+        help="start application in debug mode (autoreload, etc.). don't use this flag in production",
+    )
+    define(
         "build_indexes",
         default=False,
         type=bool,
@@ -427,7 +441,7 @@ async def main():
 
     # build and start server
     cookie_secret = conf["cookie_secret"]
-    app = make_app(cookie_secret)
+    app = make_app(cookie_secret, options.debug)
     server = tornado.httpserver.HTTPServer(app)
     logger.info("Starting server on port: " + str(global_vars.port))
     server.listen(global_vars.port)

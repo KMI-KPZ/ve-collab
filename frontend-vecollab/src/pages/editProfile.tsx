@@ -4,7 +4,7 @@ import VerticalTabs from '@/components/profile/VerticalTabs';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, SetStateAction, useEffect, useState } from 'react';
 import EditVEInfo from '@/components/profile/EditVEInfo';
 import EditPersonalInformation from '@/components/profile/EditPersonalInformation';
 import EditResearchAndTeachingInformation from '@/components/profile/EditResearchAndTeachingInformation';
@@ -18,9 +18,10 @@ import {
     VEWindowItem,
     WorkExperience,
 } from '@/interfaces/profile/profileInterfaces';
-import EditProfileSuccessAlert from '@/components/profile/EditProfileSuccessAlert';
+import SuccessAlert from '@/components/profile/SuccessAlert';
 import EditVisibilitySettings from '@/components/profile/EditVisibilitySettings';
 import EditProfileVeWindow from '@/components/profile/EditProfileVeWindow';
+import ExcludedFromMatchingBanner from '@/components/profile/ExcludedFromMatchingBanner';
 
 export default function EditProfile() {
     const [personalInformation, setPersonalInformation] = useState<PersonalInformation>({
@@ -33,6 +34,8 @@ export default function EditProfile() {
         profilePicId: '',
         languageTags: [],
     });
+    const [veReady, setVeReady] = useState(true);
+    const [excludedFromMatching, setExcludedFromMatching] = useState(false);
     const [veInformation, setVeInformation] = useState<VEInformation>({
         veInterests: [''],
         veGoals: [''],
@@ -70,28 +73,13 @@ export default function EditProfile() {
     const [veWindowItems, setVeWindowItems] = useState<VEWindowItem[]>([
         {
             plan: {
-                id: "12345",
-                title: "test"
+                _id: '',
+                name: '',
             },
-            title: "visible title1",
-            description: "description1"
+            title: '',
+            description: '',
         },
-        {
-            plan: {
-                id: "123456",
-                title: "test2"
-            },
-            title: "visible title2",
-            description: "description2"
-        },{
-            plan: {
-                id: "1234567",
-                title: "test3"
-            },
-            title: "visible title3",
-            description: "description2"
-        }
-    ])
+    ]);
 
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
@@ -132,6 +120,8 @@ export default function EditProfile() {
                             text: language,
                         })),
                     });
+                    setVeReady(data.profile.ve_ready);
+                    setExcludedFromMatching(data.profile.excluded_from_matching);
                     setVeInformation({
                         veInterests: data.profile.ve_interests,
                         veGoals: data.profile.ve_goals,
@@ -147,6 +137,13 @@ export default function EditProfile() {
                     setCourses(data.profile.courses);
                     setEducations(data.profile.educations);
                     setWorkExperience(data.profile.work_experience);
+                    setVeWindowItems(
+                        data.profile.ve_window.map((elem: any) => ({
+                            plan: { _id: elem.plan_id, name: '' },
+                            title: elem.title,
+                            description: elem.description,
+                        }))
+                    );
                 }
             });
         }
@@ -175,6 +172,7 @@ export default function EditProfile() {
                 expertise: personalInformation.expertise,
                 birthday: personalInformation.birthday,
                 languages: personalInformation.languageTags.map((elem) => elem.text),
+                ve_ready: veReady,
                 ve_interests: veInformation.veInterests,
                 ve_goals: veInformation.veGoals,
                 experience: veInformation.experience,
@@ -183,6 +181,12 @@ export default function EditProfile() {
                 courses: courses,
                 educations: educations,
                 work_experience: workExperience,
+                ve_window: veWindowItems.map((elem) => ({
+                    plan_id: elem.plan._id,
+                    title: elem.title,
+                    description: elem.description,
+                })),
+                excluded_from_matching: excludedFromMatching,
             },
             session?.accessToken
         );
@@ -192,6 +196,10 @@ export default function EditProfile() {
         setTimeout(() => {
             setSuccessPopupOpen((successPopupOpen) => false);
         }, 2000);
+
+        // perform a reload to propagate the possible change of excluded_from_matching
+        // to the parent (LayoutSection.tsx)
+        router.reload();
     };
 
     /*
@@ -227,83 +235,89 @@ export default function EditProfile() {
     };
 
     return (
-        <div className={'flex justify-center'}>
-            <WhiteBox>
-                <div className={'w-[60rem]'}>
-                    {loading ? (
-                        <LoadingAnimation />
-                    ) : (
-                        <VerticalTabs>
-                            <div tabname="Stammdaten">
-                                <EditPersonalInformation
-                                    personalInformation={personalInformation}
-                                    setPersonalInformation={setPersonalInformation}
-                                    updateProfileData={updateProfileData}
-                                    keyCodeDelimiters={delimiters}
-                                    orcid={session?.user.orcid}
-                                    importOrcidProfile={importOrcidProfile}
-                                />
-                            </div>
-                            <div tabname="VE-Info">
-                                <EditVEInfo
-                                    veInformation={veInformation}
-                                    setVeInformation={setVeInformation}
-                                    updateProfileData={updateProfileData}
-                                    orcid={session?.user.orcid}
-                                    importOrcidProfile={importOrcidProfile}
-                                />
-                            </div>
-                            <div tabname="Lehre & Forschung">
-                                <EditResearchAndTeachingInformation
-                                    researchTags={researchTags}
-                                    setResearchTags={setResearchTags}
-                                    courses={courses}
-                                    setCourses={setCourses}
-                                    updateProfileData={updateProfileData}
-                                    keyCodeDelimiters={delimiters}
-                                    orcid={session?.user.orcid}
-                                    importOrcidProfile={importOrcidProfile}
-                                />
-                            </div>
-                            <div tabname="Ausbildung">
-                                <EditEducationInformation
-                                    educations={educations}
-                                    setEducations={setEducations}
-                                    updateProfileData={updateProfileData}
-                                    orcid={session?.user.orcid}
-                                    importOrcidProfile={importOrcidProfile}
-                                />
-                            </div>
-                            <div tabname="Berufserfahrung">
-                                <EditWorkExperienceInformation
-                                    workExperience={workExperience}
-                                    setWorkExperience={setWorkExperience}
-                                    updateProfileData={updateProfileData}
-                                    orcid={session?.user.orcid}
-                                    importOrcidProfile={importOrcidProfile}
-                                />
-                            </div>
-                            <div tabname="VE-Schaufenster">
-                                <EditProfileVeWindow
-                                    items={veWindowItems}
-                                    setItems={setVeWindowItems} 
-                                    updateProfileData={updateProfileData}
-                                    orcid={session?.user.orcid}
-                                    importOrcidProfile={importOrcidProfile}
-                                />
-                            </div>
-                            <div tabname="Sichtbarkeiten">
-                                <EditVisibilitySettings
-                                    updateProfileData={updateProfileData}
-                                    orcid={session?.user.orcid}
-                                    importOrcidProfile={importOrcidProfile}
-                                />
-                            </div>
-                        </VerticalTabs>
-                    )}
-                </div>
-            </WhiteBox>
-            {successPopupOpen && <EditProfileSuccessAlert message={'Gespeichert'} />}
-        </div>
+        <>
+            <div className={'flex justify-center'}>
+                <WhiteBox>
+                    <div className={'w-[60rem]'}>
+                        {loading ? (
+                            <LoadingAnimation />
+                        ) : (
+                            <VerticalTabs>
+                                <div tabname="Stammdaten">
+                                    <EditPersonalInformation
+                                        personalInformation={personalInformation}
+                                        setPersonalInformation={setPersonalInformation}
+                                        updateProfileData={updateProfileData}
+                                        keyCodeDelimiters={delimiters}
+                                        orcid={session?.user.orcid}
+                                        importOrcidProfile={importOrcidProfile}
+                                    />
+                                </div>
+                                <div tabname="VE-Info">
+                                    <EditVEInfo
+                                        veInformation={veInformation}
+                                        setVeInformation={setVeInformation}
+                                        veReady={veReady}
+                                        setVeReady={setVeReady}
+                                        updateProfileData={updateProfileData}
+                                        orcid={session?.user.orcid}
+                                        importOrcidProfile={importOrcidProfile}
+                                    />
+                                </div>
+                                <div tabname="Lehre & Forschung">
+                                    <EditResearchAndTeachingInformation
+                                        researchTags={researchTags}
+                                        setResearchTags={setResearchTags}
+                                        courses={courses}
+                                        setCourses={setCourses}
+                                        updateProfileData={updateProfileData}
+                                        keyCodeDelimiters={delimiters}
+                                        orcid={session?.user.orcid}
+                                        importOrcidProfile={importOrcidProfile}
+                                    />
+                                </div>
+                                <div tabname="Ausbildung">
+                                    <EditEducationInformation
+                                        educations={educations}
+                                        setEducations={setEducations}
+                                        updateProfileData={updateProfileData}
+                                        orcid={session?.user.orcid}
+                                        importOrcidProfile={importOrcidProfile}
+                                    />
+                                </div>
+                                <div tabname="Berufserfahrung">
+                                    <EditWorkExperienceInformation
+                                        workExperience={workExperience}
+                                        setWorkExperience={setWorkExperience}
+                                        updateProfileData={updateProfileData}
+                                        orcid={session?.user.orcid}
+                                        importOrcidProfile={importOrcidProfile}
+                                    />
+                                </div>
+                                <div tabname="VE-Schaufenster">
+                                    <EditProfileVeWindow
+                                        items={veWindowItems}
+                                        setItems={setVeWindowItems}
+                                        updateProfileData={updateProfileData}
+                                        orcid={session?.user.orcid}
+                                        importOrcidProfile={importOrcidProfile}
+                                    />
+                                </div>
+                                <div tabname="Sichtbarkeiten">
+                                    <EditVisibilitySettings
+                                        updateProfileData={updateProfileData}
+                                        orcid={session?.user.orcid}
+                                        importOrcidProfile={importOrcidProfile}
+                                        excludedFromMatching={excludedFromMatching}
+                                        setExcludedFromMatching={setExcludedFromMatching}
+                                    />
+                                </div>
+                            </VerticalTabs>
+                        )}
+                    </div>
+                </WhiteBox>
+                {successPopupOpen && <SuccessAlert message={'Gespeichert'} />}
+            </div>
+        </>
     );
 }

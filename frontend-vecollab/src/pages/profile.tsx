@@ -16,6 +16,7 @@ import {
     WorkExperience,
     PersonalInformation,
     VEInformation,
+    VEWindowItem,
 } from '@/interfaces/profile/profileInterfaces';
 
 export default function Profile() {
@@ -31,6 +32,7 @@ export default function Profile() {
     const [followers, setFollowers] = useState(['']); // other users that follow this user (usernames)
     const [follows, setFollows] = useState(['']); // the other users that this user follows (usernames)
     const [profilePictureUrl, setProfilePicUrl] = useState('');
+    const [veReady, setVeReady] = useState(true);
     const [veInformation, setVeInformation] = useState<VEInformation>({
         veInterests: [''],
         veGoals: [''],
@@ -61,6 +63,16 @@ export default function Profile() {
             city: '',
             country: '',
             additional_info: '',
+        },
+    ]);
+    const [veWindowItems, setVeWindowItems] = useState<VEWindowItem[]>([
+        {
+            plan: {
+                _id: '',
+                name: '',
+            },
+            title: '',
+            description: '',
         },
     ]);
 
@@ -114,7 +126,6 @@ export default function Profile() {
                 (data) => {
                     setLoading(false);
                     if (data) {
-                        console.log(data);
                         // if the minimum profile data such as first_name and last_name is not set,
                         // chances are high it is after the first register, therefore incentivize user
                         // to fill out his profile by sending him to the edit page
@@ -146,6 +157,7 @@ export default function Profile() {
                         setFollowers(data.followers);
                         setFollows(data.follows);
                         setProfilePicUrl(data.profile.profile_pic);
+                        setVeReady(data.profile.ve_ready);
                         setVeInformation({
                             veInterests: data.profile.ve_interests,
                             veGoals: data.profile.ve_goals,
@@ -157,6 +169,13 @@ export default function Profile() {
                         setCourses(data.profile.courses);
                         setEducations(data.profile.educations);
                         setWorkExperience(data.profile.work_experience);
+                        setVeWindowItems(
+                            data.profile.ve_window.map((elem: any) => ({
+                                plan: { _id: elem.plan_id, name: '' },
+                                title: elem.title,
+                                description: elem.description,
+                            }))
+                        );
                     }
                 }
             );
@@ -182,6 +201,7 @@ export default function Profile() {
                         profilePictureUrl={profilePictureUrl}
                         foreignUser={foreignUser}
                         followers={followers}
+                        veReady={veReady}
                     />
                 </div>
                 <Container>
@@ -222,7 +242,7 @@ export default function Profile() {
                                 />
                             </WhiteBox>
                             <WhiteBox>
-                                <VEVitrine />
+                                <VEVitrine items={veWindowItems} />
                             </WhiteBox>
                         </div>
                     </div>

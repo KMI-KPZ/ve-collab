@@ -1,10 +1,13 @@
 import Link from 'next/link';
-import { RxDotsVertical } from 'react-icons/rx';
+import { RxDotFilled, RxDotsVertical } from 'react-icons/rx';
 import { fetchDELETE, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
-import { useEffect} from 'react';
+import { SetStateAction, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import AuthenticatedImage from './AuthenticatedImage';
+import Dialog from './Dialog';
+import PublicPlansSelect from './PublicPlansSelect';
+import SuccessAlert from './SuccessAlert';
 
 interface Props {
     name: string;
@@ -12,6 +15,7 @@ interface Props {
     profilePictureUrl: string;
     foreignUser: boolean;
     followers: string[];
+    veReady: boolean;
 }
 
 export default function ProfileHeader({
@@ -20,9 +24,13 @@ export default function ProfileHeader({
     profilePictureUrl,
     foreignUser,
     followers,
+    veReady,
 }: Props) {
     const router = useRouter();
     const { data: session, status } = useSession();
+
+    const [successPopupOpen, setSuccessPopupOpen] = useState(false);
+
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
         if (status !== 'loading') {
@@ -32,6 +40,18 @@ export default function ProfileHeader({
             }
         }
     }, [session, status]);
+
+    const [isInvitationDialogOpen, setIsInvitationDialogOpen] = useState(false);
+    const handleOpenInvitationDialog = () => {
+        setIsInvitationDialogOpen(true);
+    };
+    const handleCloseInvitationDialog = () => {
+        setIsInvitationDialogOpen(false);
+    };
+
+    const [appendPlanCheckboxChecked, setAppendPlanCheckboxChecked] = useState(false);
+    const [chosenPlanId, setChosenPlanId] = useState('');
+    const [veInvitationMessage, setVeInvitationMessage] = useState('');
 
     const usernameOfProfileOwner =
         router.query.username !== undefined ? (router.query.username as string) : '';
@@ -54,10 +74,31 @@ export default function ProfileHeader({
         });
     };
 
+    const sendVeInvitation = () => {
+        const payload = {
+            message: veInvitationMessage,
+            plan: chosenPlanId === '' ? null : chosenPlanId,
+        };
+
+        // TODO api call once finished
+        console.log(payload);
+
+        // render success message that disappears after 2 seconds
+        setSuccessPopupOpen(true);
+        setTimeout(() => {
+            setSuccessPopupOpen((successPopupOpen) => false);
+        }, 2000);
+    };
+
     return (
         <div className={'flex'}>
             <div className={'mr-8 rounded-full overflow-hidden border-4 border-white shadow-2xl'}>
-                <AuthenticatedImage imageId={profilePictureUrl} alt={'Profilbild'} width={180} height={180} />
+                <AuthenticatedImage
+                    imageId={profilePictureUrl}
+                    alt={'Profilbild'}
+                    width={180}
+                    height={180}
+                />
             </div>
             <div className={'mr-auto'}>
                 <div className="mt-2 min-h-[2rem]">
@@ -79,6 +120,29 @@ export default function ProfileHeader({
                 <div className={'text-gray-500'}>{institution}</div>
             </div>
             <div className={'flex items-end mb-12'}>
+                <div className="flex mx-16 h-12 items-center">
+                    {veReady ? (
+                        <>
+                            <RxDotFilled
+                                size={50}
+                                className="text-green-500 drop-shadow-[0_0_8px_rgba(34,197,94,1)]"
+                            />
+                            <div className="flex items-center text-green-600">
+                                für VE&apos;s verfügbar
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <RxDotFilled
+                                size={50}
+                                className="text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,1)]"
+                            />
+                            <div className="flex items-center text-red-600">
+                                zur Zeit keine VE&apos;s
+                            </div>
+                        </>
+                    )}
+                </div>
                 {/* we only render follow and message buttons if it is not our own profile*/}
                 {foreignUser && (
                     <>
@@ -86,7 +150,7 @@ export default function ProfileHeader({
                         {followers.includes(session?.user.preferred_username as string) ? (
                             <button
                                 className={
-                                    'w-32 h-12 bg-ve-collab-blue/10 border border-ve-collab-blue py-3 px-6 mr-2 rounded-lg shadow-lg'
+                                    'w-40 h-12 bg-ve-collab-blue/10 border border-ve-collab-blue py-3 px-6 mr-2 rounded-lg shadow-lg'
                                 }
                                 onClick={unfollowUser}
                             >
@@ -96,7 +160,7 @@ export default function ProfileHeader({
                         ) : (
                             <button
                                 className={
-                                    'w-32 h-12 bg-transparent border border-gray-500 py-3 px-6 mr-2 rounded-lg shadow-lg'
+                                    'w-40 h-12 bg-transparent border border-gray-500 py-3 px-6 mr-2 rounded-lg shadow-lg'
                                 }
                                 onClick={followUser}
                             >
@@ -106,17 +170,87 @@ export default function ProfileHeader({
                         )}
                         <button
                             className={
-                                'w-32 h-12 bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
+                                'w-40 h-12 bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
                             }
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handleOpenInvitationDialog();
+                            }}
                         >
                             {' '}
-                            <span>Nachricht</span>
+                            <span>VE-Einladung</span>
                         </button>
                         <button className={'h-12 ml-2'}>
                             <span>
                                 <RxDotsVertical size={30} color={''} />
                             </span>
                         </button>
+                        <Dialog
+                            isOpen={isInvitationDialogOpen}
+                            title={`zum VE einladen`}
+                            onClose={handleCloseInvitationDialog}
+                        >
+                            <div className="w-[30rem] h-[26rem] overflow-y-auto content-scrollbar relative">
+                                <div>Nachricht:</div>
+                                <textarea
+                                    className={
+                                        'w-full border border-gray-500 rounded-lg px-2 py-1 my-1'
+                                    }
+                                    rows={5}
+                                    placeholder={
+                                        'Beschreibe, worum es in deinem VE gehen soll. Das erhöht die Chance, dass die Person annimmt!'
+                                    }
+                                    value={veInvitationMessage}
+                                    onChange={(e) => setVeInvitationMessage(e.target.value)}
+                                ></textarea>
+                                <div className="flex mb-2 mt-4">
+                                    <input
+                                        type="checkbox"
+                                        className="mr-2"
+                                        checked={appendPlanCheckboxChecked}
+                                        onChange={(e) =>
+                                            setAppendPlanCheckboxChecked(!appendPlanCheckboxChecked)
+                                        }
+                                    />
+                                    <p>vorhandenen Plan anhängen</p>
+                                </div>
+                                {appendPlanCheckboxChecked && (
+                                    <>
+                                        <PublicPlansSelect
+                                            chosenPlanId={chosenPlanId}
+                                            setChosenPlanId={setChosenPlanId}
+                                        />
+                                        <p className="my-2 text-gray-400">
+                                            es werden automatisch Leserechte an eingeladene
+                                            Personen vergeben!
+                                        </p>
+                                    </>
+                                )}
+
+                                <div className="flex absolute bottom-0 w-full">
+                                    <button
+                                        className={
+                                            'w-40 h-12 bg-transparent border border-gray-500 py-3 px-6 mr-auto rounded-lg shadow-lg'
+                                        }
+                                        onClick={handleCloseInvitationDialog}
+                                    >
+                                        <span>Abbrechen</span>
+                                    </button>
+                                    <button
+                                        className={
+                                            'w-40 h-12 bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
+                                        }
+                                        onClick={(e) => {
+                                            sendVeInvitation();
+                                            handleCloseInvitationDialog();
+                                        }}
+                                    >
+                                        <span>Absenden</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </Dialog>
+                        {successPopupOpen && <SuccessAlert message={'Einladung gesendet'} />}
                     </>
                 )}
             </div>

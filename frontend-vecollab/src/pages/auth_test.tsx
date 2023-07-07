@@ -1,7 +1,4 @@
-import { GetServerSidePropsContext } from "next"
-import { getToken } from "next-auth/jwt"
 import { signIn, useSession } from "next-auth/react"
-import { BACKEND_URL } from "@/constants"
 import { useEffect, useState } from "react"
 
 interface Props {
@@ -28,7 +25,7 @@ export default function AuthComponentTest(props: Props) {
                 "Authorization": "Bearer " + session.accessToken
             }
             try {
-                fetch(BACKEND_URL + "/profileinformation", {
+                fetch(process.env.NEXT_PUBLIC_BACKEND_URL + "/profileinformation", {
                     headers: headers
                 })
                 .then(res => res.json())

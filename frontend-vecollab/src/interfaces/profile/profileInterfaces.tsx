@@ -60,8 +60,8 @@ export interface UserSnippet {
 }
 
 export interface VEPlanSnippet {
-    id: string,
-    title: string
+    _id: string,
+    name: string
 }
 
 export interface VEWindowItem {

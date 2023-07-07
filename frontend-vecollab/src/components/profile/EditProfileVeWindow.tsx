@@ -1,4 +1,4 @@
-import { Dispatch, FormEvent, SetStateAction } from 'react';
+import { Dispatch, FormEvent, SetStateAction, useEffect, useState } from 'react';
 import EditProfileHeader from './EditProfileHeader';
 import EditProfileVerticalSpacer from './EditProfileVerticalSpacer';
 import EditProfileHeadline from './EditProfileHeadline';
@@ -6,7 +6,10 @@ import SlateBox from '../Layout/SlateBox';
 import EditProfilePlusMinusButtons from './EditProfilePlusMinusButtons';
 import EditProfileItemRow from './EditProfileItemRow';
 import Swapper from './Swapper';
-import { VEWindowItem } from '@/interfaces/profile/profileInterfaces';
+import { VEPlanSnippet, VEWindowItem } from '@/interfaces/profile/profileInterfaces';
+import { fetchGET } from '@/lib/backend';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/router';
 
 interface Props {
     items: VEWindowItem[];
@@ -23,7 +26,39 @@ export default function EditProfileVeWindow({
     orcid,
     importOrcidProfile,
 }: Props) {
-    // TODO request all personal plans for dropdown
+    const { data: session, status } = useSession();
+    const [loading, setLoading] = useState(false);
+    const router = useRouter();
+
+    const [myPublicPlans, setMyPublicPlans] = useState<VEPlanSnippet[]>([
+        {
+            _id: '',
+            name: '',
+        },
+    ]);
+
+    // request all personal public plans for dropdown
+    useEffect(() => {
+        // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
+        if (!router.isReady || status === 'loading') {
+            setLoading(true);
+            return;
+        }
+        // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
+        if (session) {
+            fetchGET(
+                `/planner/get_public_of_user?username=${session.user.preferred_username}`,
+                session?.accessToken
+            ).then((data) => {
+                setMyPublicPlans(
+                    data.plans.map((plan: any) => ({
+                        _id: plan._id,
+                        name: plan.name,
+                    }))
+                );
+            });
+        }
+    }, [session, status, router]);
 
     const modifyTitle = (index: number, value: string) => {
         let newItems = [...items];
@@ -34,6 +69,17 @@ export default function EditProfileVeWindow({
     const modifyDescription = (index: number, value: string) => {
         let newItems = [...items];
         newItems[index].description = value;
+        setItems(newItems);
+    };
+
+    const modifyChosenPlan = (index: number, value: string, name: string) => {
+        console.log(value);
+        console.log(name);
+        let newItems = [...items];
+        newItems[index].plan = {
+            _id: value,
+            name: name,
+        };
         setItems(newItems);
     };
 
@@ -64,8 +110,8 @@ export default function EditProfileVeWindow({
             ...items,
             {
                 plan: {
-                    id: '',
-                    title: '',
+                    _id: myPublicPlans[0]._id,
+                    name: myPublicPlans[0].name,
                 },
                 title: '',
                 description: '',
@@ -97,11 +143,20 @@ export default function EditProfileVeWindow({
                                     <select
                                         name="plan"
                                         className="w-2/3 border border-gray-500 rounded-lg h-12 p-2 bg-white"
+                                        value={item.plan._id}
+                                        onChange={(e) =>
+                                            modifyChosenPlan(
+                                                index,
+                                                e.target.value,
+                                                e.target.selectedOptions[0].text
+                                            )
+                                        }
                                     >
-                                        <option value="1">Lorem Ipsum Dolor Si Amet1</option>
-                                        <option value="2">Lorem Ipsum Dolor Si Amet2</option>
-                                        <option value="3">Lorem Ipsum Dolor Si Amet3</option>
-                                        <option value="4">Lorem Ipsum Dolor Si Amet4</option>
+                                        {myPublicPlans.map((plan, index) => (
+                                            <option key={`option_${index}`} value={plan._id}>
+                                                {plan.name}
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
                                 <EditProfileItemRow
