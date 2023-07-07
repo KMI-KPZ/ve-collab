@@ -187,10 +187,11 @@ class EtherpadResouce:
         all_sessions_of_user = json.loads(all_sessions_response.text)["data"]
 
         # delete all session of the user that are in that group (i.e. for that plan)
-        for key, session_obj in all_sessions_of_user.items():
-            if session_obj is not None:
-                if group_id == session_obj["groupID"]:
-                    self.revoke_session(key)
+        if all_sessions_of_user:
+            for key, session_obj in all_sessions_of_user.items():
+                if session_obj is not None:
+                    if group_id == session_obj["groupID"]:
+                        self.revoke_session(key)
 
     def initiate_etherpad_for_plan(self, plan_id: str | ObjectId) -> None:
         """
