@@ -1441,6 +1441,18 @@ class VEPlanHandler(BaseHandler):
         This function is invoked by the handler when the correspoding endpoint
         is requested. It just de-crowds the handler function and should therefore
         not be called manually anywhere else.
+
+        Execute all the `update_instructions` sequentially, not providing all-or-nothing
+        security (successfull queries pass, others might fail, but there is no rollback!).
+
+        This function works similar to `update_field_in_plan`, but grabs all the errors that
+        could occur there for a single update instructions and bundles them into a list in case
+        that some queries might fail.
+
+        Responses:
+            200 OK       --> all update instructions were successfull
+            409 Conflict --> atleast one failure, further information about each occured error 
+                             is contained in the "errors" list in the response
         """
 
         planner = VEPlanResource(db)
