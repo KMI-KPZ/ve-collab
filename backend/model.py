@@ -983,6 +983,7 @@ class VEPlan:
         "new_content": (bool, type(None)),
         "formalities": dict,
         "steps": list,
+        "progress": dict,
     }
 
     def __init__(
@@ -1006,6 +1007,7 @@ class VEPlan:
         new_content: bool = None,
         formalities: dict = {},
         steps: List[Step] = [],
+        progress: Dict = {},
     ) -> None:
         """
         Initialization of a `VEPlan` object.
@@ -1053,6 +1055,26 @@ class VEPlan:
         self.tools = tools
         self.new_content = new_content
         self.steps = steps
+        
+        if progress:
+            # TODO check every expected key is inside as well
+            self.progress = progress
+        else:
+            self.progress = {
+                "name": "not_started",
+                "institutions": "not_started",
+                "topic": "not_started",
+                "lectures": "not_started",
+                "audience": "not_started",
+                "languages": "not_started",
+                "involved_parties": "not_started",
+                "realization": "not_started",
+                "learning_env": "not_started",
+                "tools": "not_started",
+                "new_content": "not_started",
+                "formalities": "not_started",
+                "steps": "not_started",
+            }
 
         # ensure that steps have unique names
         if not self._check_unique_step_names(self.steps):
@@ -1148,6 +1170,7 @@ class VEPlan:
             "duration": self.duration.total_seconds() if self.duration else None,
             "workload": self.workload,
             "steps": [step.to_dict() for step in self.steps],
+            "progress": self.progress,
         }
 
     def __str__(self) -> str:
@@ -1289,6 +1312,21 @@ class VEPlan:
                         "custom_attributes": {},
                     }
                 ],
+                "progress": {
+                    "name": "<completed|uncompleted|not_started>",
+                    "institutions": "<completed|uncompleted|not_started>",
+                    "topic": "<completed|uncompleted|not_started>",
+                    "lectures": "<completed|uncompleted|not_started>",
+                    "audience": "<completed|uncompleted|not_started>",
+                    "languages": "<completed|uncompleted|not_started>",
+                    "involved_parties": "<completed|uncompleted|not_started>",
+                    "realization": "<completed|uncompleted|not_started>",
+                    "learning_env": "<completed|uncompleted|not_started>",
+                    "tools": "<completed|uncompleted|not_started>",
+                    "new_content": "<completed|uncompleted|not_started>",
+                    "formalities": "<completed|uncompleted|not_started>",
+                    "steps": "<completed|uncompleted|not_started>",
+                },
             }
         """
 

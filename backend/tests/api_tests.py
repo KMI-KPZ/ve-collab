@@ -6712,6 +6712,21 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "duration": self.step.duration.total_seconds(),
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
+            "progress": {
+                "name": "not_started",
+                "institutions": "not_started",
+                "topic": "not_started",
+                "lectures": "not_started",
+                "audience": "not_started",
+                "languages": "not_started",
+                "involved_parties": "not_started",
+                "realization": "not_started",
+                "learning_env": "not_started",
+                "tools": "not_started",
+                "new_content": "not_started",
+                "formalities": "not_started",
+                "steps": "not_started",
+            },
         }
         self.db.plans.insert_one(self.default_plan)
 
@@ -6780,6 +6795,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.duration, default_plan.duration)
         self.assertEqual(response_plan.workload, default_plan.workload)
         self.assertEqual(response_plan.steps, default_plan.steps)
+        self.assertEqual(response_plan.progress, default_plan.progress)
         self.assertIsNotNone(response_plan.creation_timestamp)
         self.assertIsNotNone(response_plan.last_modified)
 
@@ -6867,6 +6883,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.duration, default_plan.duration)
         self.assertEqual(response_plan.workload, default_plan.workload)
         self.assertEqual(response_plan.steps, default_plan.steps)
+        self.assertEqual(response_plan.progress, default_plan.progress)
         self.assertIsNotNone(response_plan.creation_timestamp)
         self.assertIsNotNone(response_plan.last_modified)
 
@@ -7571,6 +7588,84 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
 
+    def test_post_update_fields(self):
+        """
+        expect: successfully update multiple fields
+        """
+
+        payload = {
+            "update": [
+                {
+                    "plan_id": self.plan_id,
+                    "field_name": "realization",
+                    "value": "updated_realization",
+                },
+                {
+                    "plan_id": self.plan_id,
+                    "field_name": "topic",
+                    "value": "updated_topic",
+                },
+            ]
+        }
+
+        self.base_checks(
+            "POST",
+            "/planner/update_fields",
+            True,
+            200,
+            body=self.json_serialize(payload),
+        )
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["realization"], "updated_realization")
+        self.assertEqual(db_state["topic"], "updated_topic")
+        self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
+
+    def test_post_update_fields_errors(self):
+        """
+        expect: one query to be successfull and the other caused an error
+        """
+
+        payload = {
+            "update": [
+                {
+                    "plan_id": self.plan_id,
+                    "field_name": "realization",
+                    "value": "updated_realization",
+                },
+                {
+                    "plan_id": self.plan_id,
+                    "field_name": "topics",  # field name is wrong, should cause unexpected_attribute
+                    "value": "updated_topic",
+                },
+            ]
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/update_fields",
+            False,
+            409,
+            body=self.json_serialize(payload),
+        )
+
+        self.assertEqual(response["reason"], "operation_errors")
+        self.assertIn("errors", response)
+        self.assertEqual(1, len(response["errors"]))
+        error = response["errors"][0]
+        self.assertIn("update_instruction", error)
+        self.assertIn("error_status_code", error)
+        self.assertIn("error_reason", error)
+        self.assertEqual(error["error_status_code"], 400)
+        self.assertEqual(error["error_reason"], "unexpected_attribute")
+
+        # realization should be updated, but topic not
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["realization"], "updated_realization")
+        self.assertNotEqual(db_state["topic"], "updated_topic")
+
     def test_post_grant_read_permission(self):
         """
         expect: successfully set read permissions for the user
@@ -7642,7 +7737,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
             body=self.json_serialize(payload),
         )
         self.assertEqual(response["reason"], PLAN_DOESNT_EXIST_ERROR)
-
 
     def test_post_grant_write_permission(self):
         """
@@ -7747,7 +7841,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             200,
             body=self.json_serialize(payload),
         )
-        
+
         # expect the user not to be in the read_access nor write_access list
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
@@ -7800,7 +7894,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], PLAN_DOESNT_EXIST_ERROR)
 
-
     def test_post_revoke_write_permission(self):
         """
         expect: sucessfully revoke write permission, but not read
@@ -7831,7 +7924,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             200,
             body=self.json_serialize(payload),
         )
-        
+
         # expect the user not to be in the write_access, but still in the read_access list
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
