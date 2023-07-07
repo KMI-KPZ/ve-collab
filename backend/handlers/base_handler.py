@@ -7,6 +7,7 @@ from typing import Awaitable, Callable, Dict, List, Optional
 from bson import ObjectId
 from jose import jwt
 import jose.exceptions
+from keycloak import KeycloakGetError
 from keycloak.exceptions import KeycloakError
 from tornado.options import options
 import tornado.web
@@ -70,12 +71,17 @@ class BaseHandler(tornado.web.RequestHandler):
                     "Bearer ", ""
                 )
 
-                # in order to verify the JWT we need the public key from keycloak
-                KEYCLOAK_PUBLIC_KEY = (
-                    "-----BEGIN PUBLIC KEY-----\n"
-                    + global_vars.keycloak.public_key()
-                    + "\n-----END PUBLIC KEY-----"
-                )
+                try:
+                    # in order to verify the JWT we need the public key from keycloak
+                    KEYCLOAK_PUBLIC_KEY = (
+                        "-----BEGIN PUBLIC KEY-----\n"
+                        + global_vars.keycloak.public_key()
+                        + "\n-----END PUBLIC KEY-----"
+                    )
+                except KeycloakGetError:
+                    self.current_user = None
+                    self._access_token = None
+                    return
 
                 # decode the JWT, if any error is thrown, the token
                 # is definetly invalid and therefore no session is set
