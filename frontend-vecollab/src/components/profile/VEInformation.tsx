@@ -15,7 +15,7 @@ export default function VEInformation({
     preferredFormats,
 }: Props) {
     return (
-        <div className={'h-full mx-2 my-1 overflow-y-auto content-scrollbar'}>
+        <div className={'min-h-[30rem] mx-2 my-1 overflow-y-auto content-scrollbar'}>
             <BoxContentHeadline className={'my-1'} text={'VE-Themeninteressen'} />
             <VEInformationContentList items={veInterests} />
             <BoxContentHeadline className={'mt-6'} text={'VE-Zielsetzungen'} />

@@ -39,8 +39,7 @@ class Tabs extends Component<TabsProps, { activeTab: string }> {
                         );
                     })}
                 </ol>
-                <div className={'h-[30rem] mt-6'}>
-                    {' '}
+                <div className={'mt-6'}>
                     {/* tab content wrapper*/}
                     {children.map((child) => {
                         if (child.props.tabname !== activeTab) return undefined;
