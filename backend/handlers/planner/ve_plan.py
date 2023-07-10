@@ -828,7 +828,11 @@ class VEPlanHandler(BaseHandler):
                     http_body["write"] = True if http_body["write"] == "true" else False
 
                 self.grant_acces_right(
-                    db, http_body["plan_id"], http_body["username"], http_body["read"], http_body["write"]
+                    db,
+                    http_body["plan_id"],
+                    http_body["username"],
+                    http_body["read"],
+                    http_body["write"],
                 )
                 return
 
@@ -870,12 +874,18 @@ class VEPlanHandler(BaseHandler):
                     )
                     return
 
-                # assert bool type
-                read = True if http_body["read"] == "true" else False
-                write = True if http_body["write"] == "true" else False
+                # assert bool type in case the inputs are "true" and "false" strings
+                if not isinstance(http_body["read"], bool):
+                    http_body["read"] = True if http_body["read"] == "true" else False
+                if not isinstance(http_body["write"], bool):
+                    http_body["write"] = True if http_body["write"] == "true" else False
 
                 self.revoke_access_rights(
-                    db, http_body["plan_id"], http_body["username"], read, write
+                    db,
+                    http_body["plan_id"],
+                    http_body["username"],
+                    http_body["read"],
+                    http_body["write"],
                 )
                 return
 

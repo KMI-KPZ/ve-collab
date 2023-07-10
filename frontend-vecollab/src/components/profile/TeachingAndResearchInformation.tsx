@@ -14,7 +14,7 @@ interface Course {
 
 export default function TeachingAndResearchInformation({ researchInterests, courses }: Props) {
     return (
-        <div className={'h-full mx-2 my-1 overflow-y-auto content-scrollbar'}>
+        <div className={'min-h-[30rem] mx-2 my-1 overflow-y-auto content-scrollbar'}>
             <BoxContentHeadline className={'my-1'} text={'Forschungsschwerpunkte'} />
             <div className={'mb-4 py-2 font-bold text-slate-900 flex flex-wrap'}>
                 {researchInterests.map((text) => (
