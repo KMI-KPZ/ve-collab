@@ -40,6 +40,7 @@ from handlers.network.wordpress import WordpressCollectionHandler, WordpressPost
 from resources.network.acl import ACL
 from resources.network.profile import ProfileDoesntExistException, Profiles
 from resources.network.space import Spaces
+from handlers.planner.etherpad_integration import EtherpadIntegrationHandler
 from handlers.planner.ve_plan import VEPlanHandler
 
 
@@ -99,6 +100,7 @@ def make_app(cookie_secret: str, debug: bool = False):
             (r"/planner/(.+)", VEPlanHandler),
             (r"/orcid", OrcidProfileHandler),
             (r"/matching_exclusion_info", MatchingExclusionHandler),
+            (r"/etherpad_integration/(.+)", EtherpadIntegrationHandler),
             (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
             (r"/assets/(.*)", tornado.web.StaticFileHandler, {"path": "./assets/"}),
             (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./html/"}),
@@ -279,6 +281,8 @@ def set_global_vars(conf: dict) -> None:
         "mongodb_username",
         "mongodb_password",
         "mongodb_db_name",
+        "etherpad_base_url",
+        "etherpad_api_key"
     ]
 
     for key in expected_config_keys:
@@ -294,6 +298,8 @@ def set_global_vars(conf: dict) -> None:
     global_vars.mongodb_username = conf["mongodb_username"]
     global_vars.mongodb_password = conf["mongodb_password"]
     global_vars.mongodb_db_name = conf["mongodb_db_name"]
+    global_vars.etherpad_base_url = conf["etherpad_base_url"]
+    global_vars.etherpad_api_key = conf["etherpad_api_key"]
 
     if not (options.test_admin or options.test_user):
         global_vars.keycloak = KeycloakOpenID(

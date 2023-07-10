@@ -4,13 +4,13 @@ import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { HiOutlineShare, HiOutlineTrash } from 'react-icons/hi';
-import { format, parse } from 'date-fns';
+import { format } from 'date-fns';
 import { parseISO } from 'date-fns';
 import { de } from 'date-fns/locale';
 import Dialog from '@/components/profile/Dialog';
-import EditProfileSuccessAlert from '@/components/profile/EditProfileSuccessAlert';
+import SuccessAlert from '@/components/profile/SuccessAlert';
 import Tabs from '@/components/profile/Tabs';
-import { UserAccessSnippet, UserSnippet } from '@/interfaces/profile/profileInterfaces';
+import { UserAccessSnippet } from '@/interfaces/profile/profileInterfaces';
 import AuthenticatedImage from '@/components/profile/AuthenticatedImage';
 import BoxHeadline from '@/components/profile/BoxHeadline';
 import { RxTrash } from 'react-icons/rx';
@@ -517,7 +517,7 @@ export default function Overview() {
                     </div>
                 </div>
             </div>
-            {successPopupOpen && <EditProfileSuccessAlert message={'Plan freigegeben'} />}
+            {successPopupOpen && <SuccessAlert message={'Plan freigegeben'} />}
         </>
     );
 }

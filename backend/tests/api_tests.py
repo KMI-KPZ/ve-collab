@@ -93,6 +93,8 @@ def setUpModule():
     global_vars.mongodb_username = config["mongodb_username"]
     global_vars.mongodb_password = config["mongodb_password"]
     global_vars.mongodb_db_name = "test_db"
+    global_vars.etherpad_base_url = config["etherpad_base_url"]
+    global_vars.etherpad_api_key = config["etherpad_api_key"]
 
 
 def tearDownModule():
