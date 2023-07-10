@@ -10,7 +10,7 @@ interface Props {
 
 export default function CVInformation({ educations, workExperience }: Props) {
     return (
-        <div className={'h-full mx-2 my-1 flex'}>
+        <div className={'min-h-[30rem] mx-2 my-1 flex'}>
             {/* fixed height to enable scrolling instead of letting to box grow very large */}
             <div className={'w-1/2 overflow-y-auto content-scrollbar'}>
                 <BoxContentHeadline className={'text-center'} text={'Ausbildung'} />

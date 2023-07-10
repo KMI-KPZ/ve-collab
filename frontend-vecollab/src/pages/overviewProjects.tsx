@@ -9,11 +9,19 @@ import { parseISO } from 'date-fns';
 import { de } from 'date-fns/locale';
 import Dialog from '@/components/profile/Dialog';
 import EditProfileSuccessAlert from '@/components/profile/EditProfileSuccessAlert';
+import Tabs from '@/components/profile/Tabs';
+import { UserAccessSnippet, UserSnippet } from '@/interfaces/profile/profileInterfaces';
+import AuthenticatedImage from '@/components/profile/AuthenticatedImage';
+import BoxHeadline from '@/components/profile/BoxHeadline';
+import { RxTrash } from 'react-icons/rx';
+import LoadingAnimation from '@/components/LoadingAnimation';
 
 interface PlanPreview {
     _id: string;
     name: string;
     author: string;
+    read_access: string[];
+    write_access: string[];
     creation_timestamp: string;
     last_modified: string;
 }
@@ -30,10 +38,48 @@ export default function Overview() {
     const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
     const [shareUsername, setShareUsername] = useState('');
     const [shareAccessRight, setShareAccessRight] = useState('write');
-    const handleOpenShareDialog = () => {
+    const [userSnippetsLoading, setUserSnippetsLoading] = useState(false);
+    const [userSnippets, setUserSnippets] = useState<UserAccessSnippet[]>([]);
+    const [shareDialogCurrentPlanId, setShareDialogCurrentPlanId] = useState('');
+    const handleOpenShareDialog = (planId: string) => {
         setIsShareDialogOpen(true);
+        setShareDialogCurrentPlanId(planId);
+        setUserSnippetsLoading(true);
+
+        const plan = plans.filter((plan) => plan._id === planId)[0];
+        if (plan !== undefined) {
+            // merge read_access and write_access ist without duplicates and without the current user itself
+            const joinedUsernamesWithAccess = [
+                ...new Set([...plan.read_access, ...plan.write_access]),
+            ].filter((username) => username !== session?.user.preferred_username);
+            console.log(joinedUsernamesWithAccess);
+            // dont make a useless request if no other users have access
+            if (joinedUsernamesWithAccess.length > 0) {
+                fetchPOST(
+                    '/profile_snippets',
+                    { usernames: joinedUsernamesWithAccess },
+                    session?.accessToken
+                ).then((data) => {
+                    console.log(data);
+                    setUserSnippets(
+                        data.user_snippets.map((snippet: any) => ({
+                            name: snippet.first_name + ' ' + snippet.last_name,
+                            profilePicUrl: snippet.profile_pic,
+                            institution: snippet.institution,
+                            preferredUsername: snippet.username,
+                            access: plan.write_access.includes(snippet.username) ? 'write' : 'read',
+                        }))
+                    );
+                    setUserSnippetsLoading(false);
+                });
+            } else {
+                setUserSnippetsLoading(false);
+            }
+        }
+        console.log(plans);
     };
     const handleCloseShareDialog = () => {
+        setUserSnippets([]);
         setIsShareDialogOpen(false);
     };
 
@@ -71,6 +117,52 @@ export default function Overview() {
             setTimeout(() => {
                 setSuccessPopupOpen((successPopupOpen) => false);
             }, 2000);
+        });
+    };
+
+    const changeAccessSetting = (
+        index: number,
+        planId: string,
+        username: string,
+        access: string
+    ) => {
+        const payloadRevoke = {
+            plan_id: planId,
+            username: username,
+            read: true,
+            write: true,
+        };
+
+        // TODO backend needs to have some functionality to switch from one setting to another
+        // and not having to revoke first and re-grant new
+        fetchPOST('/planner/revoke_access', payloadRevoke, session?.accessToken).then(() => {
+            const payloadGrant = {
+                plan_id: planId,
+                username: username,
+                read: true,
+                write: access === 'write' ? true : false,
+            };
+            fetchPOST('/planner/grant_access', payloadGrant, session?.accessToken).then(() => {
+                const copy = [
+                    ...userSnippets.filter((val, count) => count < index),
+                    { ...userSnippets[index], access: access },
+                    ...userSnippets.filter((val, count) => count > index),
+                ];
+                setUserSnippets(copy);
+            });
+        });
+    };
+
+    const revokeAllAccess = (planId: string, username: string, index: number) => {
+        const payloadRevoke = {
+            plan_id: planId,
+            username: username,
+            read: true,
+            write: true,
+        };
+
+        fetchPOST('/planner/revoke_access', payloadRevoke, session?.accessToken).then(() => {
+            setUserSnippets([...userSnippets.filter((val, count) => count !== index)]);
         });
     };
 
@@ -160,92 +252,10 @@ export default function Overview() {
                                             <>
                                                 <button
                                                     className="p-2 flex justify-center items-center"
-                                                    onClick={handleOpenShareDialog}
+                                                    onClick={(e) => handleOpenShareDialog(plan._id)}
                                                 >
                                                     <HiOutlineShare />
                                                 </button>
-                                                <Dialog
-                                                    isOpen={isShareDialogOpen}
-                                                    title={`Teilen`}
-                                                    onClose={handleCloseShareDialog}
-                                                >
-                                                    <div className="w-[30rem] h-[28rem] overflow-y-auto content-scrollbar relative">
-                                                        <input
-                                                            type="text"
-                                                            className="border border-gray-500 rounded-lg w-full h-12 p-2"
-                                                            placeholder="Nutzernamen eingeben"
-                                                            value={shareUsername}
-                                                            onChange={(e) =>
-                                                                setShareUsername(e.target.value)
-                                                            }
-                                                        />
-                                                        <div className="flex justify-between my-8 mx-6">
-                                                            <div>
-                                                                <label className="mx-2">
-                                                                    <input
-                                                                        className="mx-2"
-                                                                        type="radio"
-                                                                        name="access"
-                                                                        id="readInput"
-                                                                        value="read"
-                                                                        defaultChecked={
-                                                                            shareAccessRight ===
-                                                                            'read'
-                                                                        }
-                                                                        onChange={(e) =>
-                                                                            setShareAccessRight(
-                                                                                e.target.value
-                                                                            )
-                                                                        }
-                                                                    />
-                                                                    Lesen
-                                                                </label>
-                                                            </div>
-                                                            <div>
-                                                                <label className="mx-2">
-                                                                    <input
-                                                                        className="mx-2"
-                                                                        type="radio"
-                                                                        name="access"
-                                                                        id="writeInput"
-                                                                        value={'write'}
-                                                                        defaultChecked={
-                                                                            shareAccessRight ===
-                                                                            'write'
-                                                                        }
-                                                                        onChange={(e) =>
-                                                                            setShareAccessRight(
-                                                                                e.target.value
-                                                                            )
-                                                                        }
-                                                                    />
-                                                                    Lesen & Schreiben
-                                                                </label>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex absolute bottom-0 w-full">
-                                                            <button
-                                                                className={
-                                                                    'bg-transparent border border-gray-500 py-3 px-6 mr-auto rounded-lg shadow-lg'
-                                                                }
-                                                                onClick={handleCloseShareDialog}
-                                                            >
-                                                                <span>Abbrechen</span>
-                                                            </button>
-                                                            <button
-                                                                className={
-                                                                    'bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
-                                                                }
-                                                                onClick={(e) => {
-                                                                    sharePlan(plan._id);
-                                                                    handleCloseShareDialog();
-                                                                }}
-                                                            >
-                                                                <span>Absenden</span>
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </Dialog>
                                             </>
                                         )}
                                         <button
@@ -280,6 +290,208 @@ export default function Overview() {
                                 </div>
                             </div>
                         ))}
+                        <Dialog
+                            isOpen={isShareDialogOpen}
+                            title={`Teilen`}
+                            onClose={handleCloseShareDialog}
+                        >
+                            <div className="w-[30rem] h-[30rem] overflow-y-auto content-scrollbar relative">
+                                <Tabs>
+                                    <div tabname="Neu">
+                                        <input
+                                            type="text"
+                                            className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                            placeholder="Nutzernamen eingeben"
+                                            value={shareUsername}
+                                            onChange={(e) => setShareUsername(e.target.value)}
+                                        />
+                                        <div className="flex justify-between my-8 mx-6">
+                                            <div>
+                                                <label className="mx-2">
+                                                    <input
+                                                        className="mx-2"
+                                                        type="radio"
+                                                        name="access"
+                                                        id="readInput"
+                                                        value="read"
+                                                        defaultChecked={shareAccessRight === 'read'}
+                                                        onChange={(e) =>
+                                                            setShareAccessRight(e.target.value)
+                                                        }
+                                                    />
+                                                    Lesen
+                                                </label>
+                                            </div>
+                                            <div>
+                                                <label className="mx-2">
+                                                    <input
+                                                        className="mx-2"
+                                                        type="radio"
+                                                        name="access"
+                                                        id="writeInput"
+                                                        value={'write'}
+                                                        defaultChecked={
+                                                            shareAccessRight === 'write'
+                                                        }
+                                                        onChange={(e) =>
+                                                            setShareAccessRight(e.target.value)
+                                                        }
+                                                    />
+                                                    Lesen & Schreiben
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div className="flex absolute bottom-0 w-full">
+                                            <button
+                                                className={
+                                                    'bg-transparent border border-gray-500 py-3 px-6 mr-auto rounded-lg shadow-lg'
+                                                }
+                                                onClick={handleCloseShareDialog}
+                                            >
+                                                <span>Abbrechen</span>
+                                            </button>
+                                            <button
+                                                className={
+                                                    'bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
+                                                }
+                                                onClick={(e) => {
+                                                    sharePlan(shareDialogCurrentPlanId);
+                                                    handleCloseShareDialog();
+                                                }}
+                                            >
+                                                <span>Absenden</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div tabname="Verwalten">
+                                        {userSnippetsLoading ? (
+                                            <div className="flex w-full h-full justify-center items-center">
+                                                <LoadingAnimation />
+                                            </div>
+                                        ) : (
+                                            <ul className="px-1 divide-y">
+                                                {userSnippets.length > 0 ? (
+                                                    <>
+                                                        {userSnippets.map((snippet, index) => (
+                                                            <li key={index} className="py-2">
+                                                                <div
+                                                                    className="flex cursor-pointer"
+                                                                    onClick={(e) => {
+                                                                        e.preventDefault();
+                                                                        router.push(
+                                                                            `/profile?username=${snippet.preferredUsername}`
+                                                                        );
+                                                                        handleCloseShareDialog();
+                                                                    }}
+                                                                >
+                                                                    <div>
+                                                                        <AuthenticatedImage
+                                                                            imageId={
+                                                                                snippet.profilePicUrl
+                                                                            }
+                                                                            alt={'Profilbild'}
+                                                                            width={60}
+                                                                            height={60}
+                                                                            className="rounded-full"
+                                                                        ></AuthenticatedImage>
+                                                                    </div>
+                                                                    <div>
+                                                                        <BoxHeadline
+                                                                            title={snippet.name}
+                                                                        />
+                                                                        <div className="mx-2 px-1 my-1 text-gray-600">
+                                                                            {snippet.institution}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex items-center my-2 mx-2 justify-between">
+                                                                    <div>
+                                                                        <label className="mx-2">
+                                                                            <input
+                                                                                className="mx-2"
+                                                                                type="radio"
+                                                                                name={
+                                                                                    'access' +
+                                                                                    snippet.preferredUsername
+                                                                                }
+                                                                                id="readInput"
+                                                                                value="read"
+                                                                                defaultChecked={
+                                                                                    snippet.access ===
+                                                                                    'read'
+                                                                                }
+                                                                                onChange={(e) =>
+                                                                                    changeAccessSetting(
+                                                                                        index,
+                                                                                        shareDialogCurrentPlanId,
+                                                                                        snippet.preferredUsername,
+                                                                                        //todo state from usersnippet
+                                                                                        e.target
+                                                                                            .value
+                                                                                    )
+                                                                                }
+                                                                            />
+                                                                            Lesen
+                                                                        </label>
+                                                                    </div>
+                                                                    <div>
+                                                                        <label className="mx-2">
+                                                                            <input
+                                                                                className="mx-2"
+                                                                                type="radio"
+                                                                                name={
+                                                                                    'access' +
+                                                                                    snippet.preferredUsername
+                                                                                }
+                                                                                id="writeInput"
+                                                                                value={'write'}
+                                                                                defaultChecked={
+                                                                                    snippet.access ===
+                                                                                    'write'
+                                                                                }
+                                                                                onChange={(e) =>
+                                                                                    changeAccessSetting(
+                                                                                        index,
+                                                                                        shareDialogCurrentPlanId,
+                                                                                        snippet.preferredUsername,
+                                                                                        e.target
+                                                                                            .value
+                                                                                    )
+                                                                                }
+                                                                            />
+                                                                            Lesen & Schreiben
+                                                                        </label>
+                                                                    </div>
+
+                                                                    <div className="flex items-center">
+                                                                        <RxTrash
+                                                                            size={20}
+                                                                            onClick={(e) => {
+                                                                                e.preventDefault();
+                                                                                revokeAllAccess(
+                                                                                    shareDialogCurrentPlanId,
+                                                                                    snippet.preferredUsername,
+                                                                                    index
+                                                                                );
+                                                                            }}
+                                                                            className="cursor-pointer"
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                            </li>
+                                                        ))}
+                                                    </>
+                                                ) : (
+                                                    <div className="flex items-center justify-center mt-10 text-gray-400 text-2xl">
+                                                        Niemand anderes hat Zugang
+                                                    </div>
+                                                )}
+                                            </ul>
+                                        )}
+                                    </div>
+                                </Tabs>
+                            </div>
+                        </Dialog>
                     </div>
                     <div className="flex justify-around w-full">
                         {session && (
