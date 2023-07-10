@@ -1,130 +1,98 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import completedImage from '@/images/icons/progressBar/completed.svg';
-import uncompletedImage from '@/images/icons/progressBar/uncompleted.svg';
 import notStartedImage from '@/images/icons/progressBar/notStarted.svg';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { ProgressState, SideMenuStep } from '@/interfaces/startingWizard/sideProgressBar';
-import { fetchGET } from '@/lib/backend';
-import { useSession } from 'next-auth/react';
+import {
+    ProgressState,
+    SideMenuStep,
+    ISideProgressBarStates,
+} from '@/interfaces/startingWizard/sideProgressBar';
 
 export const sideMenuSteps: SideMenuStep[] = [
     {
         text: 'Projektname',
         link: '/startingWizard/generalInformation/projectName',
-        state: ProgressState.completed,
     },
     {
         text: 'Partner',
         link: '/startingWizard/generalInformation/partners',
-        state: ProgressState.notStarted,
     },
     {
         text: 'Externe Beteiligte',
         link: '/startingWizard/generalInformation/externalParties',
-        state: ProgressState.notStarted,
     },
     {
         text: 'Institution',
         link: '/startingWizard/generalInformation/institutions',
-        state: ProgressState.notStarted,
     },
     {
         text: 'Lehrveranstaltungen',
         link: '/startingWizard/generalInformation/participatingCourses',
-        state: ProgressState.notStarted,
     },
     {
         text: 'Zielgruppen',
         link: '/startingWizard/generalInformation/targetGroups',
-        state: ProgressState.notStarted,
     },
     {
         text: 'Thema',
         link: '/startingWizard/generalInformation/veTopic',
-        state: ProgressState.notStarted,
     },
     {
         text: 'Sprachen',
         link: '/startingWizard/generalInformation/languages',
-        state: ProgressState.notStarted,
     },
     {
         text: 'neue Inhalte',
         link: '/startingWizard/generalInformation/questionNewContent',
-        state: ProgressState.notStarted,
     },
     {
         text: 'Digitale Umsetzung',
         link: '/startingWizard/generalInformation/courseFormat',
-        state: ProgressState.notStarted,
     },
     {
         text: 'Digitale Lernumgebung',
         link: '/startingWizard/generalInformation/learningPlatform',
-        state: ProgressState.notStarted,
     },
     {
         text: 'Tools',
         link: '/startingWizard/generalInformation/tools',
-        state: ProgressState.notStarted,
     },
     {
         text: 'formale Rahmenbedingungen',
         link: '/startingWizard/generalInformation/formalConditions',
-        state: ProgressState.notStarted,
     },
     {
         text: 'Etappenplanung',
         link: '/startingWizard/broadPlanner',
-        state: ProgressState.notStarted,
     },
     {
         text: 'didaktische Feinplanung',
         link: '/startingWizard/finePlanner',
-        state: ProgressState.notStarted,
     },
 ];
 
-export default function SideProgressBarSection() {
+interface SideProgressBarSectionProps {
+    progressState: ISideProgressBarStates;
+}
+
+export default function SideProgressBarSection({
+    progressState,
+}: SideProgressBarSectionProps): JSX.Element {
     const router = useRouter();
-    const { data: session, status } = useSession();
 
-    function calculateStepProgress(partners: any) {
-        console.log(partners);
-        if (partners.length > 0 && partners[0].name !== '') {
-            sideMenuSteps[1].state = ProgressState.completed;
-        } else {
-            sideMenuSteps[1].state = ProgressState.notStarted;
-        }
-    }
-
-    useEffect(() => {
-        if (session) {
-            fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
-                (data) => {
-                    if (data.plan.involved_parties.length !== 0) {
-                        console.log(data.plan.involved_parties);
-                        calculateStepProgress(data.plan.involved_parties);
-                        setSideMenuStepsData(sideMenuSteps);
-                    }
-                }
-            );
-        }
-    }, [router, session]);
-
-    const [sideMenuStepsData, setSideMenuStepsData] = useState<SideMenuStep[]>(sideMenuSteps);
+    const [sideMenuStepsData] = useState<SideMenuStep[]>(sideMenuSteps);
 
     function renderIcon(state: ProgressState) {
         switch (state) {
-            case 0:
+            case ProgressState.completed:
                 return completedImage;
-            case 1:
+            case ProgressState.notStarted:
                 return notStartedImage;
-            case 2:
+            case ProgressState.uncompleted:
             default:
-                return uncompletedImage;
+                return notStartedImage;
         }
     }
     function renderStageSteps(sideMenuStepsData: SideMenuStep[]): JSX.Element[] {

@@ -8,6 +8,11 @@ import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import { SubmitHandler, useForm, useFieldArray } from 'react-hook-form';
+import {
+    initialSideProgressBarStates,
+    ISideProgressBarStates,
+    ProgressState,
+} from '@/interfaces/startingWizard/sideProgressBar';
 
 interface FormValues {
     partners: Partner[];
@@ -21,6 +26,10 @@ export default function Partners() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+
+    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
+        initialSideProgressBarStates
+    );
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -64,6 +73,9 @@ export default function Partners() {
                     if (data.plan.involved_parties.length !== 0) {
                         setValue('partners', data.plan.involved_parties);
                     }
+                    if (data.plan.progress.length !== 0) {
+                        setSideMenuStepsProgress(data.plan.progress);
+                    }
                 }
             );
         }
@@ -76,14 +88,27 @@ export default function Partners() {
 
     const onSubmit: SubmitHandler<FormValues> = async () => {
         await fetchPOST(
-            '/planner/update_field',
+            '/planner/update_fields',
             {
-                plan_id: router.query.plannerId,
-                field_name: 'involved_parties',
-                value: watch('partners'),
+                update: [
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'involved_parties',
+                        value: watch('partners'),
+                    },
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'progress',
+                        value: {
+                            ...sideMenuStepsProgress,
+                            involved_parties: ProgressState.completed,
+                        },
+                    },
+                ],
             },
             session?.accessToken
         );
+
         await router.push({
             pathname: '/startingWizard/generalInformation/externalParties',
             query: { plannerId: router.query.plannerId },
@@ -177,7 +202,7 @@ export default function Partners() {
                         </div>
                     </form>
                 )}
-                <SideProgressBarSection />
+                <SideProgressBarSection progressState={sideMenuStepsProgress} />
             </div>
         </>
     );
