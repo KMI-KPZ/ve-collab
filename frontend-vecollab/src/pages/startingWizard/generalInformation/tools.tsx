@@ -8,6 +8,11 @@ import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
+import {
+    initialSideProgressBarStates,
+    ISideProgressBarStates,
+    ProgressState,
+} from '@/interfaces/startingWizard/sideProgressBar';
 
 interface FormValues {
     tools: Tool[];
@@ -21,6 +26,9 @@ export default function Tools() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
+        initialSideProgressBarStates
+    );
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -65,6 +73,9 @@ export default function Tools() {
                     if (data.plan.tools.length > 0) {
                         setValue('tools', data.plan.tools);
                     }
+                    if (data.plan.progress.length !== 0) {
+                        setSideMenuStepsProgress(data.plan.progress);
+                    }
                 }
             );
         }
@@ -77,11 +88,23 @@ export default function Tools() {
 
     const onSubmit: SubmitHandler<FormValues> = async () => {
         await fetchPOST(
-            '/planner/update_field',
+            '/planner/update_fields',
             {
-                plan_id: router.query.plannerId,
-                field_name: 'tools',
-                value: watch('tools'),
+                update: [
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'tools',
+                        value: watch('tools'),
+                    },
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'progress',
+                        value: {
+                            ...sideMenuStepsProgress,
+                            tools: ProgressState.completed,
+                        },
+                    },
+                ],
             },
             session?.accessToken
         );
@@ -171,7 +194,7 @@ export default function Tools() {
                         </div>
                     </form>
                 )}
-                <SideProgressBarSection />
+                <SideProgressBarSection progressState={sideMenuStepsProgress} />
             </div>
         </>
     );

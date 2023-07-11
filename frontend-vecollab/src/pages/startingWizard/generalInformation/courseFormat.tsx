@@ -7,6 +7,11 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import { SubmitHandler, useForm } from 'react-hook-form';
+import {
+    initialSideProgressBarStates,
+    ISideProgressBarStates,
+    ProgressState,
+} from '@/interfaces/startingWizard/sideProgressBar';
 
 interface FormValues {
     courseFormat: string;
@@ -16,6 +21,9 @@ export default function Realization() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
+        initialSideProgressBarStates
+    );
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -59,6 +67,9 @@ export default function Realization() {
                     if (data.plan.realization !== null) {
                         setValue('courseFormat', data.plan.realization);
                     }
+                    if (data.plan.progress.length !== 0) {
+                        setSideMenuStepsProgress(data.plan.progress);
+                    }
                 }
             );
         }
@@ -66,11 +77,23 @@ export default function Realization() {
 
     const onSubmit: SubmitHandler<FormValues> = async () => {
         await fetchPOST(
-            '/planner/update_field',
+            '/planner/update_fields',
             {
-                plan_id: router.query.plannerId,
-                field_name: 'realization',
-                value: watch('courseFormat'),
+                update: [
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'realization',
+                        value: watch('courseFormat'),
+                    },
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'progress',
+                        value: {
+                            ...sideMenuStepsProgress,
+                            realization: ProgressState.completed,
+                        },
+                    },
+                ],
             },
             session?.accessToken
         );
@@ -114,7 +137,8 @@ export default function Realization() {
                             <div>
                                 <Link
                                     href={{
-                                        pathname: '/startingWizard/generalInformation/questionNewContent',
+                                        pathname:
+                                            '/startingWizard/generalInformation/questionNewContent',
                                         query: { plannerId: router.query.plannerId },
                                     }}
                                 >
@@ -137,7 +161,7 @@ export default function Realization() {
                         </div>
                     </form>
                 )}
-                <SideProgressBarSection />
+                <SideProgressBarSection progressState={sideMenuStepsProgress} />
             </div>
         </>
     );

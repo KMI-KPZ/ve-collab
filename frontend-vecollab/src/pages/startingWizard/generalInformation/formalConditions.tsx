@@ -2,9 +2,17 @@ import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarS
 import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { useState } from 'react';
+import {
+    initialSideProgressBarStates,
+    ISideProgressBarStates,
+} from '@/interfaces/startingWizard/sideProgressBar';
 
 export default function Parameters() {
     const router = useRouter();
+    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
+        initialSideProgressBarStates
+    );
     return (
         <>
             <HeadProgressBarSection stage={0} />
@@ -98,7 +106,7 @@ export default function Parameters() {
                         </div>
                     </div>
                 </form>
-                <SideProgressBarSection />
+                <SideProgressBarSection progressState={sideMenuStepsProgress} />
             </div>
         </>
     );

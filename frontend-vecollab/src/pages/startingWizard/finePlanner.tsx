@@ -7,6 +7,10 @@ import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
 import Stage from '@/components/StartingWizard/FinePlanner/Stage';
+import {
+    initialSideProgressBarStates,
+    ISideProgressBarStates,
+} from '@/interfaces/startingWizard/sideProgressBar';
 
 export interface ITask {
     title: string;
@@ -48,6 +52,9 @@ export default function FinePlanner() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
+        initialSideProgressBarStates
+    );
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -141,6 +148,9 @@ export default function FinePlanner() {
                                 custom_attributes: { '': '' },
                             },
                         ]);
+                    }
+                    if (data.plan.progress.length !== 0) {
+                        setSideMenuStepsProgress(data.plan.progress);
                     }
                 }
             );
@@ -310,7 +320,7 @@ export default function FinePlanner() {
                         </div>
                     </form>
                 )}
-                <SideProgressBarSection />
+                <SideProgressBarSection progressState={sideMenuStepsProgress} />
             </div>
         </>
     );

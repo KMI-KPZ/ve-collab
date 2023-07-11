@@ -6,6 +6,11 @@ import { signIn, useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
+import {
+    initialSideProgressBarStates,
+    ISideProgressBarStates,
+    ProgressState,
+} from '@/interfaces/startingWizard/sideProgressBar';
 
 interface FormData {
     name: string;
@@ -13,57 +18,74 @@ interface FormData {
 
 export default function EssentialInformation() {
     const { data: session, status } = useSession();
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
+        initialSideProgressBarStates
+    );
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
-        if (status !== "loading") {
-            if (!session || session?.error === "RefreshAccessTokenError") {
-                console.log("forced new signIn")
-                signIn("keycloak");
+        if (status !== 'loading') {
+            if (!session || session?.error === 'RefreshAccessTokenError') {
+                console.log('forced new signIn');
+                signIn('keycloak');
             }
         }
     }, [session, status]);
-
 
     const {
         watch,
         register,
         handleSubmit,
         formState: { errors },
-        setValue
+        setValue,
     } = useForm<FormData>({ mode: 'onChange' });
 
     useEffect(() => {
         // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
-        if (!router.isReady || status === "loading") {
-            setLoading(true)
-            return
+        if (!router.isReady || status === 'loading') {
+            setLoading(true);
+            return;
         }
         // router is loaded, but still no plan ID in the query --> redirect to overview because we can't do anything without an ID
         if (!router.query.plannerId) {
             router.push('/overviewProjects');
-            return
+            return;
         }
         // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
         if (session) {
-            fetchGET(
-                `/planner/get?_id=${router.query.plannerId}`, session?.accessToken
-            ).then((data) => {
-                setLoading(false)
-                setValue("name", data.plan.name)
-            });
+            fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
+                (data) => {
+                    setLoading(false);
+                    setValue('name', data.plan.name);
+                    if (data.plan.progress.length !== 0) {
+                        setSideMenuStepsProgress(data.plan.progress);
+                    }
+                }
+            );
         }
-    }, [session, status, router, setValue])
+    }, [session, status, router, setValue]);
 
     const onSubmit: SubmitHandler<FormData> = async () => {
         await fetchPOST(
-            '/planner/update_field',
+            '/planner/update_fields',
             {
-                plan_id: router.query.plannerId,
-                field_name: 'name',
-                value: watch("name"),
+                update: [
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'name',
+                        value: watch('name'),
+                    },
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'progress',
+                        value: {
+                            ...sideMenuStepsProgress,
+                            name: ProgressState.completed,
+                        },
+                    },
+                ],
             },
             session?.accessToken
         );
@@ -72,7 +94,6 @@ export default function EssentialInformation() {
             query: { plannerId: router.query.plannerId },
         });
     };
-
 
     return (
         <>
@@ -132,7 +153,7 @@ export default function EssentialInformation() {
                         </div>
                     </form>
                 )}
-                <SideProgressBarSection />
+                <SideProgressBarSection progressState={sideMenuStepsProgress} />
             </div>
         </>
     );

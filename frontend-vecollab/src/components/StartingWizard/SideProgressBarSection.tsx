@@ -13,62 +13,77 @@ import {
 export const sideMenuSteps: SideMenuStep[] = [
     {
         text: 'Projektname',
+        id: 'name',
         link: '/startingWizard/generalInformation/projectName',
     },
     {
         text: 'Partner',
+        id: 'involved_parties',
         link: '/startingWizard/generalInformation/partners',
     },
     {
         text: 'Externe Beteiligte',
+        id: 'involved_parties',
         link: '/startingWizard/generalInformation/externalParties',
     },
     {
         text: 'Institution',
+        id: 'institutions',
         link: '/startingWizard/generalInformation/institutions',
     },
     {
         text: 'Lehrveranstaltungen',
+        id: 'lectures',
         link: '/startingWizard/generalInformation/participatingCourses',
     },
     {
         text: 'Zielgruppen',
+        id: 'audience',
         link: '/startingWizard/generalInformation/targetGroups',
     },
     {
         text: 'Thema',
+        id: 'topic',
         link: '/startingWizard/generalInformation/veTopic',
     },
     {
         text: 'Sprachen',
+        id: 'languages',
         link: '/startingWizard/generalInformation/languages',
     },
     {
         text: 'neue Inhalte',
+        id: 'new_content',
         link: '/startingWizard/generalInformation/questionNewContent',
     },
     {
         text: 'Digitale Umsetzung',
+        id: 'realization',
         link: '/startingWizard/generalInformation/courseFormat',
     },
     {
         text: 'Digitale Lernumgebung',
+        id: 'learning_env',
         link: '/startingWizard/generalInformation/learningPlatform',
     },
     {
         text: 'Tools',
+        id: 'tools',
         link: '/startingWizard/generalInformation/tools',
     },
     {
         text: 'formale Rahmenbedingungen',
+        id: 'formalities',
         link: '/startingWizard/generalInformation/formalConditions',
     },
     {
         text: 'Etappenplanung',
+        id: 'steps',
         link: '/startingWizard/broadPlanner',
     },
     {
         text: 'didaktische Feinplanung',
+        id: 'steps',
         link: '/startingWizard/finePlanner',
     },
 ];
@@ -95,6 +110,15 @@ export default function SideProgressBarSection({
                 return notStartedImage;
         }
     }
+
+    const getProgressState = (key: keyof ISideProgressBarStates) => {
+        if (progressState !== undefined) {
+            console.log(progressState[key]);
+            return progressState[key];
+        }
+        return ProgressState.notStarted;
+    };
+
     function renderStageSteps(sideMenuStepsData: SideMenuStep[]): JSX.Element[] {
         return sideMenuStepsData.map((sideMenuStep, index) => (
             <li key={index}>
@@ -105,7 +129,12 @@ export default function SideProgressBarSection({
                     }}
                     className={`flex bg-white p-2 w-full rounded-lg drop-shadow-lg`}
                 >
-                    <Image src={renderIcon(sideMenuStep.state)} alt="Ve Collab Logo"></Image>
+                    <Image
+                        src={renderIcon(
+                            getProgressState(sideMenuStep.id as keyof ISideProgressBarStates)
+                        )}
+                        alt="Ve Collab Logo"
+                    ></Image>
                     <p
                         className={`ml-3 font-konnect ${
                             router.pathname == sideMenuStep.link

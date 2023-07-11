@@ -7,6 +7,11 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import { SubmitHandler, useForm } from 'react-hook-form';
+import {
+    initialSideProgressBarStates,
+    ISideProgressBarStates,
+    ProgressState,
+} from '@/interfaces/startingWizard/sideProgressBar';
 
 interface FormValues {
     learningEnv: string;
@@ -16,6 +21,9 @@ export default function LearningEnvironment() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
+        initialSideProgressBarStates
+    );
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -59,6 +67,9 @@ export default function LearningEnvironment() {
                     if (data.plan.learning_env !== null) {
                         setValue('learningEnv', data.plan.learning_env);
                     }
+                    if (data.plan.progress.length !== 0) {
+                        setSideMenuStepsProgress(data.plan.progress);
+                    }
                 }
             );
         }
@@ -66,11 +77,23 @@ export default function LearningEnvironment() {
 
     const onSubmit: SubmitHandler<FormValues> = async () => {
         await fetchPOST(
-            '/planner/update_field',
+            '/planner/update_fields',
             {
-                plan_id: router.query.plannerId,
-                field_name: 'learning_env',
-                value: watch('learningEnv'),
+                update: [
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'learning_env',
+                        value: watch('learningEnv'),
+                    },
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'progress',
+                        value: {
+                            ...sideMenuStepsProgress,
+                            learning_env: ProgressState.completed,
+                        },
+                    },
+                ],
             },
             session?.accessToken
         );
@@ -143,7 +166,7 @@ export default function LearningEnvironment() {
                         </div>
                     </form>
                 )}
-                <SideProgressBarSection />
+                <SideProgressBarSection progressState={sideMenuStepsProgress} />
             </div>
         </>
     );

@@ -8,6 +8,11 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import { SubmitHandler, useForm } from 'react-hook-form';
+import {
+    initialSideProgressBarStates,
+    ISideProgressBarStates,
+    ProgressState,
+} from '@/interfaces/startingWizard/sideProgressBar';
 
 interface FormValues {
     newContent: string;
@@ -17,6 +22,9 @@ export default function NewContent() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
+        initialSideProgressBarStates
+    );
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -59,6 +67,9 @@ export default function NewContent() {
                     if (data.plan.new_content === true || data.plan.new_content === false) {
                         setValue('newContent', data.plan.new_content.toString());
                     }
+                    if (data.plan.progress.length !== 0) {
+                        setSideMenuStepsProgress(data.plan.progress);
+                    }
                 }
             );
         }
@@ -67,11 +78,23 @@ export default function NewContent() {
     const onSubmit: SubmitHandler<FormValues> = async () => {
         const typedValue = watch('newContent') == null ? null : watch('newContent') === 'true';
         await fetchPOST(
-            '/planner/update_field',
+            '/planner/update_fields',
             {
-                plan_id: router.query.plannerId,
-                field_name: 'new_content',
-                value: typedValue,
+                update: [
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'new_content',
+                        value: typedValue,
+                    },
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'progress',
+                        value: {
+                            ...sideMenuStepsProgress,
+                            new_content: ProgressState.completed,
+                        },
+                    },
+                ],
             },
             session?.accessToken
         );
@@ -162,7 +185,7 @@ export default function NewContent() {
                         </div>
                     </form>
                 )}
-                <SideProgressBarSection />
+                <SideProgressBarSection progressState={sideMenuStepsProgress} />
             </div>
         </>
     );

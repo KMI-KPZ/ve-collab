@@ -7,6 +7,11 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import LoadingAnimation from '@/components/LoadingAnimation';
+import {
+    initialSideProgressBarStates,
+    ISideProgressBarStates,
+    ProgressState,
+} from '@/interfaces/startingWizard/sideProgressBar';
 
 interface FormData {
     topic: string;
@@ -14,53 +19,71 @@ interface FormData {
 
 export default function Topic() {
     const { data: session, status } = useSession();
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
+        initialSideProgressBarStates
+    );
 
     const {
         watch,
         register,
         handleSubmit,
         formState: { errors },
-        setValue
+        setValue,
     } = useForm<FormData>({ mode: 'onChange' });
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
-        if (status !== "loading") {
-            if (!session || session?.error === "RefreshAccessTokenError") {
-                console.log("forced new signIn")
-                signIn("keycloak");
+        if (status !== 'loading') {
+            if (!session || session?.error === 'RefreshAccessTokenError') {
+                console.log('forced new signIn');
+                signIn('keycloak');
             }
         }
     }, [session, status]);
 
     useEffect(() => {
         // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
-        if (!router.isReady || status === "loading") {
-            setLoading(true)
-            return
+        if (!router.isReady || status === 'loading') {
+            setLoading(true);
+            return;
         }
         // router is loaded, but still no plan ID in the query --> redirect to overview because we can't do anything without an ID
         if (!router.query.plannerId) {
             router.push('/overviewProjects');
-            return
+            return;
         }
         // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
         if (session) {
-            fetchGET(
-                `/planner/get?_id=${router.query.plannerId}`, session?.accessToken
-            ).then((data) => {
-                setLoading(false)
-                setValue("topic", data.plan.topic)
-            });
+            fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
+                (data) => {
+                    setLoading(false);
+                    setValue('topic', data.plan.topic);
+                    if (data.plan.progress.length !== 0) {
+                        setSideMenuStepsProgress(data.plan.progress);
+                    }
+                }
+            );
         }
     }, [session, status, setValue, router]);
 
     const onSubmit: SubmitHandler<FormData> = async () => {
         await fetchPOST(
-            '/planner/update_field',
-            { plan_id: router.query.plannerId, field_name: 'topic', value: watch('topic') },
+            '/planner/update_fields',
+            {
+                update: [
+                    { plan_id: router.query.plannerId, field_name: 'topic', value: watch('topic') },
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'progress',
+                        value: {
+                            ...sideMenuStepsProgress,
+                            topic: ProgressState.completed,
+                        },
+                    },
+                ],
+            },
             session?.accessToken
         );
 
@@ -113,8 +136,7 @@ export default function Topic() {
                             <div>
                                 <Link
                                     href={{
-                                        pathname:
-                                            '/startingWizard/generalInformation/targetGroups',
+                                        pathname: '/startingWizard/generalInformation/targetGroups',
                                         query: { plannerId: router.query.plannerId },
                                     }}
                                 >
@@ -137,7 +159,7 @@ export default function Topic() {
                         </div>
                     </form>
                 )}
-                <SideProgressBarSection />
+                <SideProgressBarSection progressState={sideMenuStepsProgress} />
             </div>
         </>
     );

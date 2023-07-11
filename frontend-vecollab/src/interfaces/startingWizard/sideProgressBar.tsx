@@ -3,6 +3,7 @@ export interface SideProgressBar {
 }
 export interface SideMenuStep {
     readonly text: string;
+    readonly id: string;
     readonly link: string;
 }
 

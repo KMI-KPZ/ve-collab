@@ -10,6 +10,10 @@ import LoadingAnimation from '@/components/LoadingAnimation';
 import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import { IStep } from '@/pages/startingWizard/finePlanner';
+import {
+    initialSideProgressBarStates,
+    ISideProgressBarStates,
+} from '@/interfaces/startingWizard/sideProgressBar';
 
 interface BroadStep {
     from: string;
@@ -25,6 +29,9 @@ export default function BroadPlanner() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
+        initialSideProgressBarStates
+    );
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -81,6 +88,9 @@ export default function BroadPlanner() {
                             };
                         });
                         setValue('broadSteps', broadSteps);
+                    }
+                    if (data.plan.progress.length !== 0) {
+                        setSideMenuStepsProgress(data.plan.progress);
                     }
                 }
             );
@@ -225,7 +235,7 @@ export default function BroadPlanner() {
                         </div>
                     </form>
                 )}
-                <SideProgressBarSection />
+                <SideProgressBarSection progressState={sideMenuStepsProgress} />
             </div>
         </>
     );

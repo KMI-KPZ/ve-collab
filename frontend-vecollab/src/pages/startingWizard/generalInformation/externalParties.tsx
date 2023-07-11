@@ -4,11 +4,17 @@ import Link from 'next/link';
 import { FormEvent, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
+import {
+    initialSideProgressBarStates,
+    ISideProgressBarStates,
+} from '@/interfaces/startingWizard/sideProgressBar';
 
 export default function ExternalPersons() {
     const [externals, setExternals] = useState(['']);
-
     const router = useRouter();
+    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
+        initialSideProgressBarStates
+    );
 
     const handleSubmit = () => {
         console.log(externals);
@@ -100,7 +106,7 @@ export default function ExternalPersons() {
                         </div>
                     </div>
                 </form>
-                <SideProgressBarSection />
+                <SideProgressBarSection progressState={sideMenuStepsProgress} />
             </div>
         </>
     );
