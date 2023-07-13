@@ -27,7 +27,7 @@ export default function EditAccessList({
     useEffect(() => {
         setUserSnippetsLoading(true);
 
-        // merge read_access and write_access list without duplicates 
+        // merge read_access and write_access list without duplicates
         // and without the current user itself
         const joinedUsernamesWithAccess = [
             ...new Set([...plan.read_access, ...plan.write_access]),
@@ -76,10 +76,10 @@ export default function EditAccessList({
             };
             fetchPOST('/planner/grant_access', payloadGrant, session?.accessToken).then(() => {
                 const index = userSnippets.indexOf(
-                    userSnippets.filter((val, count) => val.preferredUsername === username)[0]
+                    userSnippets.find((val, count) => val.preferredUsername === username)!
                 );
                 const copy = [
-                    ...userSnippets.filter((val, count) => val.preferredUsername !== username),
+                    ...userSnippets.filter((val, count) => count !== index),
                     { ...userSnippets[index], access: access },
                 ];
                 setUserSnippets(copy);
