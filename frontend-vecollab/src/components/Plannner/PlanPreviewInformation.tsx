@@ -1,6 +1,6 @@
 import { useSession } from 'next-auth/react';
-import SmallGreyText from '../Layout/SmallGreyText';
-import SmallTimestamp from '../Layout/SmallTimestamp';
+import SmallGreyText from '@/components/SmallGreyText';
+import SmallTimestamp from '@/components/SmallTimestamp';
 import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 
 interface Props {

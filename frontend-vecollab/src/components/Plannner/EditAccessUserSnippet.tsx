@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
-import AuthenticatedImage from '../profile/AuthenticatedImage';
-import BoxHeadline from '../profile/BoxHeadline';
+import AuthenticatedImage from '@/components/AuthenticatedImage';
+import BoxHeadline from '@/components/BoxHeadline';
 import { RxTrash } from 'react-icons/rx';
 import { UserAccessSnippet } from '@/interfaces/profile/profileInterfaces';
 

@@ -1,15 +1,14 @@
-import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { HiOutlineShare, HiOutlineTrash } from 'react-icons/hi';
 import Dialog from '../profile/Dialog';
 import Tabs from '../profile/Tabs';
 import { useState } from 'react';
 import SharePlanForm from './SharePlanForm';
 import EditAccessList from './EditAccessList';
-import SuccessAlert from '../profile/SuccessAlert';
+import SuccessAlert from '@/components/SuccessAlert';
 import { RxArrowRight } from 'react-icons/rx';
 import PlanPreviewInformation from './PlanPreviewInformation';
 import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
+import PlanPreviewTopButtons from './PlanPreviewTopButtons';
 interface Props {
     plan: PlanPreview;
     deleteCallback: (planId: string) => Promise<void>;
@@ -17,15 +16,14 @@ interface Props {
 }
 
 export default function PlannerOverviewItem({ plan, deleteCallback, refetchPlansCallback }: Props) {
-    const { data: session } = useSession();
 
     // sub components will use these setters to trigger the success popup display
     // because it won't render if triggered within the Dialog for some reason
     const [successPopupOpen, setSuccessPopupOpen] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
-    
+
     const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
-    
+
     const handleOpenShareDialog = () => {
         setIsShareDialogOpen(true);
     };
@@ -39,26 +37,12 @@ export default function PlannerOverviewItem({ plan, deleteCallback, refetchPlans
         <>
             <div className="m-2">
                 <div className="rounded-lg shadow-md bg-gray-100 w-52 relative">
+                    <PlanPreviewTopButtons
+                        plan={plan}
+                        openShareDialogCallback={handleOpenShareDialog}
+                        deletePlanCallback={deleteCallback}
+                    />
                     <PlanPreviewInformation plan={plan} />
-                    <div className="absolute top-0 right-0 flex">
-                        {/* render share button only if user is the author */}
-                        {plan.author === session?.user.preferred_username && (
-                            <>
-                                <button
-                                    className="p-2 flex justify-center items-center"
-                                    onClick={(e) => handleOpenShareDialog()}
-                                >
-                                    <HiOutlineShare />
-                                </button>
-                            </>
-                        )}
-                        <button
-                            className="bg-gray-300 rounded-lg p-2 flex justify-center items-center"
-                            onClick={(e) => deleteCallback(plan._id)}
-                        >
-                            <HiOutlineTrash />
-                        </button>
-                    </div>
                     <Link
                         href={{
                             pathname: '/startingWizard/generalInformation/projectName',

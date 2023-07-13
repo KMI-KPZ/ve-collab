@@ -2,7 +2,7 @@ import { fetchDELETE, fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import SuccessAlert from '@/components/profile/SuccessAlert';
+import SuccessAlert from '@/components/SuccessAlert';
 import PlannerOverviewItem from '@/components/Plannner/PlannerOverviewItem';
 import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 

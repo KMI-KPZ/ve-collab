@@ -2,14 +2,14 @@ import Image from 'next/image';
 import blueBackground from '@/images/footer/KAVAQ_Footer_rounded.png';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import Dialog from './Dialog';
-import BoxHeadline from './BoxHeadline';
+import BoxHeadline from '@/components/BoxHeadline';
 import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
 import { RxTrash } from 'react-icons/rx';
 import { useSession, signIn } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '../LoadingAnimation';
 import { fetchDELETE, fetchPOST } from '@/lib/backend';
-import AuthenticatedImage from './AuthenticatedImage';
+import AuthenticatedImage from '@/components/AuthenticatedImage';
 import DialogUserList from './DialogUserList';
 
 interface Props {

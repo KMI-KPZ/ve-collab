@@ -55,7 +55,7 @@ export default function EditAccessList({
         } else {
             setUserSnippetsLoading(false);
         }
-    }, []);
+    }, [plan, session]);
 
     const changeAccessSetting = (username: string, access: string) => {
         const payloadRevoke = {
