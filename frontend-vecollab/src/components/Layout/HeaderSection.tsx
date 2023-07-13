@@ -26,11 +26,10 @@ export default function HeaderSection() {
                     <li>
                         <Link href="/overviewProjects">VE Designer</Link>
                     </li>
-                    {/* 
+
                     <li>
-                        <Link href="#">Mitteilungen</Link>
+                        <Link href="/notifications">Benachrichtigungen</Link>
                     </li>
-                    */}
                 </ul>
                 <ul className="flex items-center font-semibold space-x-8">
                     {!session && (
