@@ -13,6 +13,7 @@ import gridfs
 from keycloak import KeycloakOpenID, KeycloakAdmin
 import pymongo
 import pymongo.errors
+import socketio
 import tornado.httpserver
 import tornado.ioloop
 import tornado.locks
@@ -110,6 +111,7 @@ def make_app(cookie_secret: str, debug: bool = False):
                 {"path": "./javascripts/"},
             ),
             (r"/uploads/(.*)", GridFSStaticFileHandler, {"path": ""}),
+            (r"/socket.io/", socketio.get_tornado_handler(global_vars.socket_io)),
         ],
         cookie_secret=cookie_secret,
         template_path="html",
@@ -282,7 +284,7 @@ def set_global_vars(conf: dict) -> None:
         "mongodb_password",
         "mongodb_db_name",
         "etherpad_base_url",
-        "etherpad_api_key"
+        "etherpad_api_key",
     ]
 
     for key in expected_config_keys:
@@ -318,6 +320,16 @@ def set_global_vars(conf: dict) -> None:
         )
     global_vars.keycloak_client_id = conf["keycloak_client_id"]
     global_vars.keycloak_callback_url = conf["keycloak_callback_url"]
+
+    global_vars.socket_io = socketio.AsyncServer(
+        async_mode="tornado", cors_allowed_origins="*"
+    )
+    # imports have to be done lazily here, because otherwise the socket_io server in global
+    # vars would not be ready, causing the event handling to crash
+    # but in turn if they don't get imported at all, the handler functions would not be
+    # invoked.
+    # that's the price we gotta pay, but atleast the socket server is accessible from anywhere
+    from handlers.socket_io import connect, disconnect, authenticate, bla
 
 
 def init_default_pictures():
@@ -394,7 +406,7 @@ def hook_tornado_access_log():
     tornado_access_logger.addHandler(handler)
 
 
-async def main():
+def main():
     define(
         "config",
         default="config.json",
@@ -446,9 +458,8 @@ async def main():
     logger.info("Starting server on port: " + str(global_vars.port))
     server.listen(global_vars.port)
 
-    shutdown_event = tornado.locks.Event()
-    await shutdown_event.wait()
+    tornado.ioloop.IOLoop.current().start()
 
 
 if __name__ == "__main__":
-    tornado.ioloop.IOLoop.current().run_sync(main)
+    main()

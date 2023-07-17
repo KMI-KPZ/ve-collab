@@ -3,11 +3,20 @@ import Container from '@/components/Layout/container';
 import SmallTimestamp from '@/components/SmallTimestamp';
 import Dialog from '@/components/profile/Dialog';
 import Tabs from '@/components/profile/Tabs';
+import { DefaultEventsMap } from '@socket.io/component-emitter';
+import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { RxDotsVertical } from 'react-icons/rx';
+import { Socket } from 'socket.io-client';
 
-export default function Notifications() {
+interface Props {
+    socket: Socket<DefaultEventsMap, DefaultEventsMap>;
+}
+
+export default function Notifications({ socket }: Props) {
+    const { data: session, status } = useSession();
+
     const [isNotificationsDialogOpen, setIsNotificationsDialogOpen] = useState(false);
 
     const handleOpenNotificationsDialog = () => {
@@ -17,6 +26,26 @@ export default function Notifications() {
     const handleCloseNotificationsDialog = () => {
         setIsNotificationsDialogOpen(false);
     };
+
+    // check for session errors and trigger the login flow if necessary
+    useEffect(() => {
+        if (status !== 'loading') {
+            if (!session || session?.error === 'RefreshAccessTokenError') {
+                console.log('forced new signIn');
+                signIn('keycloak');
+            }
+        }
+    }, [session, status]);
+
+    useEffect(() => {
+        if (!session) {
+            return;
+        }
+        socket.emit('authenticate', session.accessToken);
+
+        socket.emit('bla', 'test');
+    }, [session, socket]);
+
     return (
         <Container>
             <div className="flex items-center justify-center">

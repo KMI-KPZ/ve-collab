@@ -1,6 +1,7 @@
 # do not change any of those values manually, they will be overridden on application startup
 
 from keycloak import KeycloakOpenID, KeycloakAdmin
+import socketio
 
 keycloak = KeycloakOpenID
 keycloak_admin = KeycloakAdmin
@@ -17,3 +18,4 @@ mongodb_password: str = ""
 mongodb_db_name: str = ""
 etherpad_base_url: str = ""
 etherpad_api_key: str = ""
+socket_io = socketio.AsyncServer
