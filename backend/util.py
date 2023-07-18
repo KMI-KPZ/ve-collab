@@ -1,12 +1,18 @@
 from contextlib import contextmanager
 from datetime import datetime, timedelta
-from typing import Optional
+import logging
+from typing import Dict, Optional
 
 from bson import ObjectId
 import dateutil.parser
+from jose import jwt
+import jose.exceptions
+from keycloak import KeycloakGetError
 from pymongo import MongoClient
 
 import global_vars
+
+logger = logging.getLogger(__name__)
 
 
 @contextmanager
@@ -79,3 +85,46 @@ def seconds_to_timedelta(seconds: float | int) -> timedelta:
             )
         )
     return timedelta(seconds=seconds)
+
+
+def construct_keycloak_public_key() -> str:
+    """
+    retrieve the public key from Keycloak itself and bring it into
+    the correct pem format.
+
+    Returns the public key.
+
+    Raises `KeycloakGetError` if unable to request the key.
+    """
+
+    return (
+        "-----BEGIN PUBLIC KEY-----\n"
+        + global_vars.keycloak.public_key()
+        + "\n-----END PUBLIC KEY-----"
+    )
+
+
+def validate_keycloak_jwt(jwt_token: str) -> Dict:
+    """
+    Decodes and validates the JWT access token issued by Keycloak.
+
+    Returns the decoded token info as a dict if it is valid, raises one of the following
+    errors otherwise:
+
+        - `keycloak.KeycloakGetError` : could not retrieve the public key of keycloak
+        - `jose.exceptions.JWTError` : token did not validate
+    """
+
+    try:
+        keycloak_public_key = construct_keycloak_public_key()
+    except KeycloakGetError:
+        raise
+
+    # try to decode the JWT, if any error is thrown, re-raise it to signal
+    # to the caller that the token is invalid
+    try:
+        token_info = jwt.decode(jwt_token, keycloak_public_key, audience="account")
+    except jose.exceptions.JWTError:
+        raise
+
+    return token_info

@@ -1,5 +1,6 @@
 # do not change any of those values manually, they will be overridden on application startup
 
+from typing import Dict
 from keycloak import KeycloakOpenID, KeycloakAdmin
 import socketio
 
@@ -19,3 +20,4 @@ mongodb_db_name: str = ""
 etherpad_base_url: str = ""
 etherpad_api_key: str = ""
 socket_io = socketio.AsyncServer
+username_sid_map: Dict[str, str] = {}

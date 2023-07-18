@@ -3,6 +3,7 @@ import Container from '@/components/Layout/container';
 import SmallTimestamp from '@/components/SmallTimestamp';
 import Dialog from '@/components/profile/Dialog';
 import Tabs from '@/components/profile/Tabs';
+import { SocketIOServerResponse } from '@/interfaces/socketio';
 import { DefaultEventsMap } from '@socket.io/component-emitter';
 import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
@@ -41,9 +42,23 @@ export default function Notifications({ socket }: Props) {
         if (!session) {
             return;
         }
-        socket.emit('authenticate', session.accessToken);
+        socket.emit(
+            'authenticate',
+            { token: session.accessToken },
+            (ack: SocketIOServerResponse) => {
+                if (ack.status !== 200) {
+                    // TODO error handling
+                    console.error(ack);
+                }
+            }
+        );
 
-        socket.emit('bla', 'test');
+        socket.emit('bla', 'test', (ack: SocketIOServerResponse) => {
+            if (ack.status !== 200) {
+                // TODO error handling
+                console.error(ack);
+            }
+        });
     }, [session, socket]);
 
     return (
