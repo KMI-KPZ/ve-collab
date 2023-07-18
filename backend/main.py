@@ -63,6 +63,17 @@ define(
 
 
 def make_app(cookie_secret: str, debug: bool = False):
+    # setup socketio server
+    global_vars.socket_io = socketio.AsyncServer(
+        async_mode="tornado", cors_allowed_origins="*"
+    )
+    # imports have to be done lazily here, because otherwise the socket_io server in global
+    # vars would not be ready, causing the event handling to crash
+    # but in turn if they don't get imported at all, the handler functions would not be
+    # invoked.
+    # that's the price we gotta pay, but atleast the socket server is accessible from anywhere
+    from handlers.socket_io import connect, disconnect, authenticate, bla
+
     return tornado.web.Application(
         [
             (r"/", MainRedirectHandler),
@@ -320,16 +331,6 @@ def set_global_vars(conf: dict) -> None:
         )
     global_vars.keycloak_client_id = conf["keycloak_client_id"]
     global_vars.keycloak_callback_url = conf["keycloak_callback_url"]
-
-    global_vars.socket_io = socketio.AsyncServer(
-        async_mode="tornado", cors_allowed_origins="*"
-    )
-    # imports have to be done lazily here, because otherwise the socket_io server in global
-    # vars would not be ready, causing the event handling to crash
-    # but in turn if they don't get imported at all, the handler functions would not be
-    # invoked.
-    # that's the price we gotta pay, but atleast the socket server is accessible from anywhere
-    from handlers.socket_io import connect, disconnect, authenticate, bla
 
 
 def init_default_pictures():
