@@ -1,3 +1,4 @@
+from bson import ObjectId
 import jose
 import keycloak
 
@@ -25,6 +26,17 @@ async def disconnect(sid):
         pass
 
 
+def acknowledge_notification(notification_id):
+    print("notification acknowledged")
+    print(notification_id)
+
+    with util.get_mongodb() as db:
+        db.notifications.update_one(
+            {"_id": ObjectId(notification_id)},
+            {"$set": {"receive_state": "acknowledged"}},
+        )
+
+
 @global_vars.socket_io.event
 async def authenticate(sid, data):
     """
@@ -41,6 +53,10 @@ async def authenticate(sid, data):
     again.
 
     The server emits the state of authentication as the event acknowledgment (see below).
+
+    Since this event can be treated as the "real" connect event, the server will emit
+    all notification events that have happened since the last time the user had a valid,
+    open socket connection, i.e. that last time the user was "online".
 
     Payload:
         {
@@ -89,6 +105,26 @@ async def authenticate(sid, data):
     # from outside the handlers to specific clients
     global_vars.username_sid_map[token_info["preferred_username"]] = sid
 
+    # get notifications that appeared while user was offline or were maybe send,
+    # but not acknowledged;
+    # dispatch them all to the user
+    with util.get_mongodb() as db:
+        new_notifications = db.notifications.find(
+            {
+                "to": token_info["preferred_username"],
+                "receive_state": {"$ne": "acknowledged"},
+            }
+        )
+        if new_notifications:
+            for notification in new_notifications:
+                notification["_id"] = str(notification["_id"])
+                await global_vars.socket_io.emit(
+                    "notification",
+                    notification,
+                    room=sid,
+                    callback=acknowledge_notification,
+                )
+
     return {"status": 200, "success": True}
 
 
@@ -97,7 +133,6 @@ async def bla(sid, data):
     token = await global_vars.socket_io.get_session(sid)
     if not token:
         return {"status": 401, "success": False, "reason": "unauthenticated"}
-    
 
     print("BLABLABLABALAALBALBALBABL")
     return {"status": 200, "success": True}

@@ -9,7 +9,7 @@ import LinkPreview from '@/components/metaTags/LinkPreview';
 import { socket } from '@/lib/socket';
 
 export default function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
-    const [fooEvents, setFooEvents] = useState<any[]>([]);
+    const [notificationEvents, setNotificationEvents] = useState<any[]>([]);
 
     // don't do anything else inside this hook, especially with deps, because it would always
     // re-init the socket when the effect triggers
@@ -28,16 +28,18 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
     // and dispatch only the list of events into the components, since we know
     // that his _app component is always mounted
     useEffect(() => {
-        function onFooEvent(value: any) {
-            setFooEvents([...fooEvents, value]);
+        function onNotifcationEvent(value: Record<string, any>, sendAcknowledgement: any) {
+            console.log(value);
+            setNotificationEvents([...notificationEvents, value]);
+            sendAcknowledgement(value._id);
         }
 
-        socket.on('foo', onFooEvent);
+        socket.on('notification', onNotifcationEvent);
 
         return () => {
-            socket.off('foo', onFooEvent);
+            socket.off('notification', onNotifcationEvent);
         };
-    }, [fooEvents]);
+    }, [notificationEvents]);
 
     return (
         <>
@@ -51,8 +53,8 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
                     <Component
                         {...pageProps}
                         socket={socket}
-                        fooEvents={fooEvents}
-                        setFooEvents={setFooEvents}
+                        notificationEvents={notificationEvents}
+                        setNotificationEvents={setNotificationEvents}
                     />
                 </LayoutSection>
             </SessionProvider>
