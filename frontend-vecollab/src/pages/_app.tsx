@@ -7,6 +7,7 @@ import { SessionProvider } from 'next-auth/react';
 import Favicon from '@/components/metaTags/Favicon';
 import LinkPreview from '@/components/metaTags/LinkPreview';
 import { socket } from '@/lib/socket';
+import SocketAuthenticationProvider from '@/components/SocketAuthenticationProvider';
 
 export default function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
     const [notificationEvents, setNotificationEvents] = useState<any[]>([]);
@@ -15,7 +16,9 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
     // re-init the socket when the effect triggers
     // we only want to create it once during mount of this parent component
     useEffect(() => {
-        socket.connect();
+        if (!socket.connected) {
+            socket.connect();
+        }
 
         return () => {
             socket.disconnect();
@@ -44,19 +47,21 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
     return (
         <>
             <SessionProvider session={session}>
-                <Head>
-                    <title>Ve Collab</title>
-                    <Favicon />
-                    <LinkPreview />
-                </Head>
-                <LayoutSection>
-                    <Component
-                        {...pageProps}
-                        socket={socket}
-                        notificationEvents={notificationEvents}
-                        setNotificationEvents={setNotificationEvents}
-                    />
-                </LayoutSection>
+                <SocketAuthenticationProvider>
+                    <Head>
+                        <title>Ve Collab</title>
+                        <Favicon />
+                        <LinkPreview />
+                    </Head>
+                    <LayoutSection>
+                        <Component
+                            {...pageProps}
+                            socket={socket}
+                            notificationEvents={notificationEvents}
+                            setNotificationEvents={setNotificationEvents}
+                        />
+                    </LayoutSection>
+                </SocketAuthenticationProvider>
             </SessionProvider>
         </>
     );

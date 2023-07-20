@@ -84,6 +84,9 @@ async def authenticate(sid, data):
 
     """
 
+    print("authenticate")
+    print(sid)
+
     if "token" not in data:
         return {"status": 400, "success": False, "reason": MISSING_KEY_SLUG + "token"}
 
