@@ -26,17 +26,6 @@ async def disconnect(sid):
         pass
 
 
-def acknowledge_notification(notification_id):
-    print("notification acknowledged")
-    print(notification_id)
-
-    with util.get_mongodb() as db:
-        db.notifications.update_one(
-            {"_id": ObjectId(notification_id)},
-            {"$set": {"receive_state": "acknowledged"}},
-        )
-
-
 @global_vars.socket_io.event
 async def authenticate(sid, data):
     """
@@ -121,14 +110,61 @@ async def authenticate(sid, data):
         if new_notifications:
             for notification in new_notifications:
                 notification["_id"] = str(notification["_id"])
+                notification["creation_timestamp"] = str(notification["creation_timestamp"])
                 await global_vars.socket_io.emit(
                     "notification",
                     notification,
                     room=sid,
-                    callback=acknowledge_notification,
                 )
+        # TODO set state of those notifications from "pending" to "sent" to signify that
+        # they have been atleast tried to be delivered to the client and are awaiting
+        # acknowledgement
 
     return {"status": 200, "success": True}
+
+
+@global_vars.socket_io.event
+def acknowledge_notification(sid, data):
+    """
+    Event: acknowledge_notification
+
+    A client acknowledges the notification, expecting it not be sent again
+    when it connects again.
+
+    Payload:
+        {
+            "notification_id": "<_id_of_notification>"
+        }
+
+    Returns:
+        Success:
+            - {"status": 200, "success": True}
+        Failure:
+            - {"status": 400, "success": False, "reason": "missing_key:notification_id"}
+              The payload is missing the notification_id
+    """
+    print("notification acknowledged")
+    print(data)
+
+    if "notification_id" not in data:
+        return {
+            "status": 400,
+            "success": False,
+            "reason": MISSING_KEY_SLUG + "notification_id",
+        }
+
+    notification_id = data["notification_id"]
+
+    # TODO authorization check: only allow acknowledgement if user is
+    # the recipient of the notification by checking the session
+
+    with util.get_mongodb() as db:
+        db.notifications.update_one(
+            {"_id": ObjectId(notification_id)},
+            {"$set": {"receive_state": "acknowledged"}},
+        )
+
+        return {"status": 200, "success": True}
 
 
 @global_vars.socket_io.event

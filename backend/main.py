@@ -26,6 +26,7 @@ from handlers.authentication import LoginHandler, LoginCallbackHandler, LogoutHa
 from handlers.db_static_files import GridFSStaticFileHandler
 from handlers.healthcheck import HealthCheckHandler
 from handlers.network.follow import FollowHandler
+from handlers.network.notifications import NotificationHandler
 from handlers.network.permissions import (
     GlobalACLHandler,
     RoleHandler,
@@ -115,6 +116,7 @@ def make_app(cookie_secret: str, debug: bool = False):
             (r"/matching_exclusion_info", MatchingExclusionHandler),
             (r"/etherpad_integration/(.+)", EtherpadIntegrationHandler),
             (r"/ve_invitation", VeInvitationHandler),
+            (r"/notifications", NotificationHandler),
             (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
             (r"/assets/(.*)", tornado.web.StaticFileHandler, {"path": "./assets/"}),
             (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./html/"}),

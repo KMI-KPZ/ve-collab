@@ -8,9 +8,10 @@ import Favicon from '@/components/metaTags/Favicon';
 import LinkPreview from '@/components/metaTags/LinkPreview';
 import { socket } from '@/lib/socket';
 import SocketAuthenticationProvider from '@/components/SocketAuthenticationProvider';
+import { VeInvitation } from '@/interfaces/socketio';
 
 export default function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
-    const [notificationEvents, setNotificationEvents] = useState<any[]>([]);
+    const [notificationEvents, setNotificationEvents] = useState<VeInvitation[]>([]);
 
     // don't do anything else inside this hook, especially with deps, because it would always
     // re-init the socket when the effect triggers
@@ -31,10 +32,16 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
     // and dispatch only the list of events into the components, since we know
     // that his _app component is always mounted
     useEffect(() => {
-        function onNotifcationEvent(value: Record<string, any>, sendAcknowledgement: any) {
-            console.log(value);
-            setNotificationEvents([...notificationEvents, value]);
-            sendAcknowledgement(value._id);
+        function onNotifcationEvent(value: VeInvitation) {
+            // nextjs always sends 2 requests in dev mode, prevent any notification from appearing twice
+            const alreadyExisting = notificationEvents.find(
+                (notification) => notification._id === value._id
+            );
+            if (alreadyExisting === undefined) {
+                console.log('new notification:');
+                console.log(value);
+                setNotificationEvents([value, ...notificationEvents]);
+            }
         }
 
         socket.on('notification', onNotifcationEvent);
@@ -53,7 +60,7 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
                         <Favicon />
                         <LinkPreview />
                     </Head>
-                    <LayoutSection>
+                    <LayoutSection notificationEvents={notificationEvents}>
                         <Component
                             {...pageProps}
                             socket={socket}
