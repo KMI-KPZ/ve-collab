@@ -1,7 +1,7 @@
 import { SocketIOServerResponse } from '@/interfaces/socketio';
 import { socket } from '@/lib/socket';
 import { useSession } from 'next-auth/react';
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 
 interface Props {
     children: React.ReactNode;
