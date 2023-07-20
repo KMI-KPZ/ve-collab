@@ -113,7 +113,6 @@ export default function SideProgressBarSection({
 
     const getProgressState = (key: keyof ISideProgressBarStates) => {
         if (progressState !== undefined) {
-            console.log(progressState[key]);
             return progressState[key];
         }
         return ProgressState.notStarted;

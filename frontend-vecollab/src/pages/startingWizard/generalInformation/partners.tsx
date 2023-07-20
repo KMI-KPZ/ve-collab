@@ -15,10 +15,10 @@ import {
 } from '@/interfaces/startingWizard/sideProgressBar';
 
 interface FormValues {
-    partners: Partner[];
+    partners: IPartner[];
 }
 
-interface Partner {
+interface IPartner {
     name: string;
 }
 
@@ -87,6 +87,7 @@ export default function Partners() {
     });
 
     const onSubmit: SubmitHandler<FormValues> = async () => {
+        console.log('helluuu');
         await fetchPOST(
             '/planner/update_fields',
             {
@@ -193,8 +194,16 @@ export default function Partners() {
                             </div>
                             <div>
                                 <button
-                                    type="submit"
+                                    type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    onClick={() => {
+                                        /*                                        router.push({
+                                            pathname:
+                                                '/startingWizard/generalInformation/externalParties',
+                                            query: { plannerId: router.query.plannerId },
+                                        });*/
+                                        handleSubmit(onSubmit)();
+                                    }}
                                 >
                                     Weiter
                                 </button>
