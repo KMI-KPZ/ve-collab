@@ -74,7 +74,7 @@ def make_app(cookie_secret: str, debug: bool = False):
     # but in turn if they don't get imported at all, the handler functions would not be
     # invoked.
     # that's the price we gotta pay, but atleast the socket server is accessible from anywhere
-    from handlers.socket_io import connect, disconnect, authenticate, bla
+    from handlers.socket_io import connect, disconnect, authenticate, acknowledge_notification
 
     return tornado.web.Application(
         [

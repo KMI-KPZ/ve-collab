@@ -9,12 +9,40 @@ import util
 
 @global_vars.socket_io.event
 async def connect(sid, environment, auth):
-    print("connected")
-    print(sid)
+    """
+    Event: connect
+
+    A new (a priori unauthenticated) socket connection is etablished.
+    To access protected data and events, an `authenticate` has to be fired
+    afterwards.
+
+    Payload:
+        None
+
+    Returns:
+        None
+    """
+
+    print("connected ", sid)
 
 
 @global_vars.socket_io.event
 async def disconnect(sid):
+    """
+    Event: disconnect
+
+    Close a socket connection and invalidate the corresponding user session
+    (if there was one initiated by an `authenticate` event).
+
+    This can be interpreted as a user "going offline" if desired.
+
+    Payload:
+        None
+
+    Returns:
+        None
+    """
+
     session = await global_vars.socket_io.get_session(sid)
     print("disconnect ", sid)
 
@@ -73,8 +101,7 @@ async def authenticate(sid, data):
 
     """
 
-    print("authenticate")
-    print(sid)
+    print("authenticate ", sid)
 
     if "token" not in data:
         return {"status": 400, "success": False, "reason": MISSING_KEY_SLUG + "token"}
@@ -110,26 +137,33 @@ async def authenticate(sid, data):
         if new_notifications:
             for notification in new_notifications:
                 notification["_id"] = str(notification["_id"])
-                notification["creation_timestamp"] = str(notification["creation_timestamp"])
+                notification["creation_timestamp"] = str(
+                    notification["creation_timestamp"]
+                )
                 await global_vars.socket_io.emit(
                     "notification",
                     notification,
                     room=sid,
                 )
-        # TODO set state of those notifications from "pending" to "sent" to signify that
-        # they have been atleast tried to be delivered to the client and are awaiting
-        # acknowledgement
+
+                # set the notifactions from "pending" to "sent" to signify that
+                # they have been atleast tried to be delivered to the client
+                # and are awaiting acknowledgement
+                db.notifications.update_one(
+                    {"_id": ObjectId(notification["_id"])},
+                    {"$set": {"receive_state": "sent"}},
+                )
 
     return {"status": 200, "success": True}
 
 
 @global_vars.socket_io.event
-def acknowledge_notification(sid, data):
+async def acknowledge_notification(sid, data):
     """
     Event: acknowledge_notification
 
     A client acknowledges the notification, expecting it not be sent again
-    when it connects again.
+    when the client connects again.
 
     Payload:
         {
@@ -142,9 +176,12 @@ def acknowledge_notification(sid, data):
         Failure:
             - {"status": 400, "success": False, "reason": "missing_key:notification_id"}
               The payload is missing the notification_id
+
+            - {"status": 401, "success": False, "reason": "unauthenticated"}
+              This socket connection is not authenticated (use `authenticate` event)
     """
-    print("notification acknowledged")
-    print(data)
+
+    print("acknowledge_notification ", sid)
 
     if "notification_id" not in data:
         return {
@@ -154,6 +191,11 @@ def acknowledge_notification(sid, data):
         }
 
     notification_id = data["notification_id"]
+
+    # authentication check
+    token = await global_vars.socket_io.get_session(sid)
+    if not token:
+        return {"status": 401, "success": False, "reason": "unauthenticated"}
 
     # TODO authorization check: only allow acknowledgement if user is
     # the recipient of the notification by checking the session
@@ -165,13 +207,3 @@ def acknowledge_notification(sid, data):
         )
 
         return {"status": 200, "success": True}
-
-
-@global_vars.socket_io.event
-async def bla(sid, data):
-    token = await global_vars.socket_io.get_session(sid)
-    if not token:
-        return {"status": 401, "success": False, "reason": "unauthenticated"}
-
-    print("BLABLABLABALAALBALBALBABL")
-    return {"status": 200, "success": True}
