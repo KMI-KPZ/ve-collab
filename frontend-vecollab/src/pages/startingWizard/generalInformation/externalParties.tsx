@@ -42,7 +42,7 @@ export default function ExternalPersons() {
 
     const {
         register,
-        formState: { errors },
+        formState: { errors, isValid },
         handleSubmit,
         control,
         watch,
@@ -202,7 +202,11 @@ export default function ExternalPersons() {
                         </div>
                     </form>
                 )}
-                <SideProgressBarSection progressState={sideMenuStepsProgress} />
+                <SideProgressBarSection
+                    progressState={sideMenuStepsProgress}
+                    handleValidation={handleSubmit(onSubmit)}
+                    isValid={isValid}
+                />
             </div>
         </>
     );

@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import completedImage from '@/images/icons/progressBar/completed.svg';
 import notStartedImage from '@/images/icons/progressBar/notStarted.svg';
 import Image from 'next/image';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import {
     ProgressState,
@@ -90,10 +89,14 @@ export const sideMenuSteps: SideMenuStep[] = [
 
 interface SideProgressBarSectionProps {
     progressState: ISideProgressBarStates;
+    handleValidation(): Promise<void>;
+    isValid: boolean;
 }
 
 export default function SideProgressBarSection({
     progressState,
+    handleValidation,
+    isValid,
 }: SideProgressBarSectionProps): JSX.Element {
     const router = useRouter();
 
@@ -121,10 +124,16 @@ export default function SideProgressBarSection({
     function renderStageSteps(sideMenuStepsData: SideMenuStep[]): JSX.Element[] {
         return sideMenuStepsData.map((sideMenuStep, index) => (
             <li key={index}>
-                <Link
-                    href={{
-                        pathname: sideMenuStep.link,
-                        query: { plannerId: router.query.plannerId },
+                <button
+                    type="button"
+                    onClick={async () => {
+                        await handleValidation();
+                        if (isValid) {
+                            await router.push({
+                                pathname: sideMenuStep.link,
+                                query: { plannerId: router.query.plannerId },
+                            });
+                        }
                     }}
                     className={`flex bg-white p-2 w-full rounded-lg drop-shadow-lg`}
                 >
@@ -143,7 +152,7 @@ export default function SideProgressBarSection({
                     >
                         {sideMenuStep.text}
                     </p>
-                </Link>
+                </button>
             </li>
         ));
     }

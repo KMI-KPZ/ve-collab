@@ -38,7 +38,7 @@ export default function EssentialInformation() {
         watch,
         register,
         handleSubmit,
-        formState: { errors },
+        formState: { errors, isValid },
         setValue,
     } = useForm<FormData>({ mode: 'onChange' });
 
@@ -89,10 +89,6 @@ export default function EssentialInformation() {
             },
             session?.accessToken
         );
-        await router.push({
-            pathname: '/startingWizard/generalInformation/partners',
-            query: { plannerId: router.query.plannerId },
-        });
     };
 
     return (
@@ -102,10 +98,7 @@ export default function EssentialInformation() {
                 {loading ? (
                     <LoadingAnimation />
                 ) : (
-                    <form
-                        onSubmit={handleSubmit(onSubmit)}
-                        className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
-                    >
+                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                         <div>
                             <div className={'text-center font-bold text-4xl mb-20'}>
                                 Gib deinem Projekt einen Namen
@@ -144,8 +137,18 @@ export default function EssentialInformation() {
                             </div>
                             <div>
                                 <button
-                                    type="submit"
+                                    type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    onClick={() => {
+                                        handleSubmit(onSubmit)();
+                                        if (isValid) {
+                                            router.push({
+                                                pathname:
+                                                    '/startingWizard/generalInformation/partners',
+                                                query: { plannerId: router.query.plannerId },
+                                            });
+                                        }
+                                    }}
                                 >
                                     Weiter
                                 </button>
@@ -153,7 +156,11 @@ export default function EssentialInformation() {
                         </div>
                     </form>
                 )}
-                <SideProgressBarSection progressState={sideMenuStepsProgress} />
+                <SideProgressBarSection
+                    progressState={sideMenuStepsProgress}
+                    handleValidation={handleSubmit(onSubmit)}
+                    isValid={isValid}
+                />
             </div>
         </>
     );

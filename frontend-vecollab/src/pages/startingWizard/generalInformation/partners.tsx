@@ -42,7 +42,7 @@ export default function Partners() {
 
     const {
         register,
-        formState: { errors },
+        formState: { errors, isValid },
         handleSubmit,
         control,
         watch,
@@ -87,7 +87,6 @@ export default function Partners() {
     });
 
     const onSubmit: SubmitHandler<FormValues> = async () => {
-        console.log('helluuu');
         await fetchPOST(
             '/planner/update_fields',
             {
@@ -109,11 +108,6 @@ export default function Partners() {
             },
             session?.accessToken
         );
-
-        await router.push({
-            pathname: '/startingWizard/generalInformation/externalParties',
-            query: { plannerId: router.query.plannerId },
-        });
     };
 
     const renderPartnersInputs = (): JSX.Element[] => {
@@ -148,10 +142,7 @@ export default function Partners() {
                 {loading ? (
                     <LoadingAnimation />
                 ) : (
-                    <form
-                        onSubmit={handleSubmit(onSubmit)}
-                        className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
-                    >
+                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                         <div>
                             <div className={'text-center font-bold text-4xl mb-2'}>
                                 Füge deine Partner hinzu
@@ -197,12 +188,14 @@ export default function Partners() {
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
                                     onClick={() => {
-                                        /*                                        router.push({
-                                            pathname:
-                                                '/startingWizard/generalInformation/externalParties',
-                                            query: { plannerId: router.query.plannerId },
-                                        });*/
                                         handleSubmit(onSubmit)();
+                                        if (isValid) {
+                                            router.push({
+                                                pathname:
+                                                    '/startingWizard/generalInformation/externalParties',
+                                                query: { plannerId: router.query.plannerId },
+                                            });
+                                        }
                                     }}
                                 >
                                     Weiter
@@ -211,7 +204,11 @@ export default function Partners() {
                         </div>
                     </form>
                 )}
-                <SideProgressBarSection progressState={sideMenuStepsProgress} />
+                <SideProgressBarSection
+                    progressState={sideMenuStepsProgress}
+                    handleValidation={handleSubmit(onSubmit)}
+                    isValid={isValid}
+                />
             </div>
         </>
     );
