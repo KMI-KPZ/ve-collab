@@ -27,7 +27,6 @@ export default function Partners() {
     const [loading, setLoading] = useState(false);
     const router = useRouter();
     const { validateAndRoute } = useValidation();
-
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );

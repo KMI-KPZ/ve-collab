@@ -8,6 +8,7 @@ import {
     SideMenuStep,
     ISideProgressBarStates,
 } from '@/interfaces/startingWizard/sideProgressBar';
+import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 
 export const sideMenuSteps: SideMenuStep[] = [
     {
@@ -99,8 +100,8 @@ export default function SideProgressBarSection({
     isValid,
 }: SideProgressBarSectionProps): JSX.Element {
     const router = useRouter();
-
     const [sideMenuStepsData] = useState<SideMenuStep[]>(sideMenuSteps);
+    const { validateAndRoute } = useValidation();
 
     function renderIcon(state: ProgressState) {
         switch (state) {
@@ -126,14 +127,13 @@ export default function SideProgressBarSection({
             <li key={index}>
                 <button
                     type="button"
-                    onClick={async () => {
-                        await handleValidation();
-                        if (isValid) {
-                            await router.push({
-                                pathname: sideMenuStep.link,
-                                query: { plannerId: router.query.plannerId },
-                            });
-                        }
+                    onClick={() => {
+                        validateAndRoute(
+                            sideMenuStep.link,
+                            router.query.plannerId,
+                            handleValidation,
+                            isValid
+                        );
                     }}
                     className={`flex bg-white p-2 w-full rounded-lg drop-shadow-lg`}
                 >

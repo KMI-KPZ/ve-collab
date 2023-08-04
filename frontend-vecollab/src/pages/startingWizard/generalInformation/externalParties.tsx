@@ -1,6 +1,5 @@
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
 import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
-import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
@@ -13,6 +12,7 @@ import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import LoadingAnimation from '@/components/LoadingAnimation';
+import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 
 interface FormValues {
     externalParties: IExternalParties[];
@@ -26,6 +26,7 @@ export default function ExternalPersons() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const { validateAndRoute } = useValidation();
 
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
@@ -108,11 +109,6 @@ export default function ExternalPersons() {
             },
             session?.accessToken
         );
-
-        await router.push({
-            pathname: '/startingWizard/generalInformation/institutions',
-            query: { plannerId: router.query.plannerId },
-        });
     };
 
     const renderExternalParties = (): JSX.Element[] => {
@@ -147,10 +143,7 @@ export default function ExternalPersons() {
                 {loading ? (
                     <LoadingAnimation />
                 ) : (
-                    <form
-                        onSubmit={handleSubmit(onSubmit)}
-                        className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
-                    >
+                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                         <div>
                             <div className={'text-center font-bold text-4xl mb-2'}>
                                 Gibt es externe Beteiligte?
@@ -177,24 +170,33 @@ export default function ExternalPersons() {
                         </div>
                         <div className="flex justify-around w-full">
                             <div>
-                                <Link
-                                    href={{
-                                        pathname: '/startingWizard/generalInformation/partners',
-                                        query: { plannerId: router.query.plannerId },
+                                <button
+                                    type="button"
+                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    onClick={() => {
+                                        validateAndRoute(
+                                            '/startingWizard/generalInformation/partners',
+                                            router.query.plannerId,
+                                            handleSubmit(onSubmit),
+                                            isValid
+                                        );
                                     }}
                                 >
-                                    <button
-                                        type="button"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    >
-                                        Zurück
-                                    </button>
-                                </Link>
+                                    Zurück
+                                </button>
                             </div>
                             <div>
                                 <button
-                                    type="submit"
+                                    type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    onClick={() => {
+                                        validateAndRoute(
+                                            '/startingWizard/generalInformation/institutions',
+                                            router.query.plannerId,
+                                            handleSubmit(onSubmit),
+                                            isValid
+                                        );
+                                    }}
                                 >
                                     Weiter
                                 </button>

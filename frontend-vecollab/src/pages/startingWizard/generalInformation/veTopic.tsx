@@ -2,7 +2,6 @@ import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarS
 import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
-import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useForm, SubmitHandler } from 'react-hook-form';
@@ -12,6 +11,7 @@ import {
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/startingWizard/sideProgressBar';
+import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 
 interface FormData {
     topic: string;
@@ -24,12 +24,13 @@ export default function Topic() {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
+    const { validateAndRoute } = useValidation();
 
     const {
         watch,
         register,
         handleSubmit,
-        formState: { errors },
+        formState: { errors, isValid },
         setValue,
     } = useForm<FormData>({ mode: 'onChange' });
 
@@ -86,11 +87,6 @@ export default function Topic() {
             },
             session?.accessToken
         );
-
-        await router.push({
-            pathname: '/startingWizard/generalInformation/languages',
-            query: { plannerId: router.query.plannerId },
-        });
     };
 
     return (
@@ -100,10 +96,7 @@ export default function Topic() {
                 {loading ? (
                     <LoadingAnimation />
                 ) : (
-                    <form
-                        onSubmit={handleSubmit(onSubmit)}
-                        className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
-                    >
+                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                         <div>
                             <div className={'text-center font-bold text-4xl mb-2'}>
                                 zu welchem Thema soll der VE stattfinden?
@@ -134,24 +127,33 @@ export default function Topic() {
                         </div>
                         <div className="flex justify-around w-full">
                             <div>
-                                <Link
-                                    href={{
-                                        pathname: '/startingWizard/generalInformation/targetGroups',
-                                        query: { plannerId: router.query.plannerId },
+                                <button
+                                    type="button"
+                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    onClick={() => {
+                                        validateAndRoute(
+                                            '/startingWizard/generalInformation/targetGroups',
+                                            router.query.plannerId,
+                                            handleSubmit(onSubmit),
+                                            isValid
+                                        );
                                     }}
                                 >
-                                    <button
-                                        type="button"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    >
-                                        Zurück
-                                    </button>
-                                </Link>
+                                    Zurück
+                                </button>
                             </div>
                             <div>
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    onClick={() => {
+                                        validateAndRoute(
+                                            '/startingWizard/generalInformation/languages',
+                                            router.query.plannerId,
+                                            handleSubmit(onSubmit),
+                                            isValid
+                                        );
+                                    }}
                                 >
                                     Weiter
                                 </button>
@@ -159,7 +161,11 @@ export default function Topic() {
                         </div>
                     </form>
                 )}
-                <SideProgressBarSection progressState={sideMenuStepsProgress} />
+                <SideProgressBarSection
+                    progressState={sideMenuStepsProgress}
+                    handleValidation={handleSubmit(onSubmit)}
+                    isValid={isValid}
+                />
             </div>
         </>
     );

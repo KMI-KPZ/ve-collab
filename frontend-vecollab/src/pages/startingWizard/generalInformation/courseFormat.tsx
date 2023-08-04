@@ -2,7 +2,6 @@ import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarS
 import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
-import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
@@ -12,6 +11,7 @@ import {
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/startingWizard/sideProgressBar';
+import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 
 interface FormValues {
     courseFormat: string;
@@ -24,6 +24,7 @@ export default function Realization() {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
+    const { validateAndRoute } = useValidation();
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -37,7 +38,7 @@ export default function Realization() {
 
     const {
         register,
-        formState: { errors },
+        formState: { errors, isValid },
         handleSubmit,
         watch,
         setValue,
@@ -97,10 +98,6 @@ export default function Realization() {
             },
             session?.accessToken
         );
-        await router.push({
-            pathname: '/startingWizard/generalInformation/learningPlatform',
-            query: { plannerId: router.query.plannerId },
-        });
     };
 
     return (
@@ -110,10 +107,7 @@ export default function Realization() {
                 {loading ? (
                     <LoadingAnimation />
                 ) : (
-                    <form
-                        onSubmit={handleSubmit(onSubmit)}
-                        className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
-                    >
+                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                         <div>
                             <div className={'text-center font-bold text-4xl mb-2'}>
                                 Wie wird der VE umgesetzt?
@@ -135,25 +129,33 @@ export default function Realization() {
                         </div>
                         <div className="flex justify-around w-full">
                             <div>
-                                <Link
-                                    href={{
-                                        pathname:
+                                <button
+                                    type="button"
+                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    onClick={() => {
+                                        validateAndRoute(
                                             '/startingWizard/generalInformation/questionNewContent',
-                                        query: { plannerId: router.query.plannerId },
+                                            router.query.plannerId,
+                                            handleSubmit(onSubmit),
+                                            isValid
+                                        );
                                     }}
                                 >
-                                    <button
-                                        type="button"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    >
-                                        Zurück
-                                    </button>
-                                </Link>
+                                    Zurück
+                                </button>
                             </div>
                             <div>
                                 <button
-                                    type="submit"
+                                    type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    onClick={() => {
+                                        validateAndRoute(
+                                            '/startingWizard/generalInformation/learningPlatform',
+                                            router.query.plannerId,
+                                            handleSubmit(onSubmit),
+                                            isValid
+                                        );
+                                    }}
                                 >
                                     Weiter
                                 </button>
@@ -161,7 +163,11 @@ export default function Realization() {
                         </div>
                     </form>
                 )}
-                <SideProgressBarSection progressState={sideMenuStepsProgress} />
+                <SideProgressBarSection
+                    progressState={sideMenuStepsProgress}
+                    handleValidation={handleSubmit(onSubmit)}
+                    isValid={isValid}
+                />
             </div>
         </>
     );

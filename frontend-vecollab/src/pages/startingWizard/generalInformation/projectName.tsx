@@ -11,6 +11,7 @@ import {
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/startingWizard/sideProgressBar';
+import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 
 interface FormData {
     name: string;
@@ -23,6 +24,7 @@ export default function EssentialInformation() {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
+    const { validateAndRoute } = useValidation();
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -140,14 +142,12 @@ export default function EssentialInformation() {
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
                                     onClick={() => {
-                                        handleSubmit(onSubmit)();
-                                        if (isValid) {
-                                            router.push({
-                                                pathname:
-                                                    '/startingWizard/generalInformation/partners',
-                                                query: { plannerId: router.query.plannerId },
-                                            });
-                                        }
+                                        validateAndRoute(
+                                            '/startingWizard/generalInformation/partners',
+                                            router.query.plannerId,
+                                            handleSubmit(onSubmit),
+                                            isValid
+                                        );
                                     }}
                                 >
                                     Weiter

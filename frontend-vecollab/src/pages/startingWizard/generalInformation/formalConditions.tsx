@@ -1,6 +1,5 @@
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
 import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import {
@@ -12,6 +11,7 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import LoadingAnimation from '@/components/LoadingAnimation';
+import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 
 interface FormValues {
     technology: boolean;
@@ -26,8 +26,13 @@ export default function FormalConditions() {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
+    const { validateAndRoute } = useValidation();
 
-    const { register, handleSubmit } = useForm<FormValues>({
+    const {
+        register,
+        handleSubmit,
+        formState: { isValid },
+    } = useForm<FormValues>({
         mode: 'onChange',
         defaultValues: {
             technology: undefined,
@@ -76,10 +81,6 @@ export default function FormalConditions() {
             },
             session?.accessToken
         );
-        await router.push({
-            pathname: '/startingWizard/broadPlanner',
-            query: { plannerId: router.query.plannerId },
-        });
     };
 
     return (
@@ -89,10 +90,7 @@ export default function FormalConditions() {
                 {loading ? (
                     <LoadingAnimation />
                 ) : (
-                    <form
-                        onSubmit={handleSubmit(onSubmit)}
-                        className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
-                    >
+                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                         <div>
                             <div className={'text-center font-bold text-4xl mb-2'}>
                                 Checkt die folgenden formalen Rahmenbedingungen
@@ -141,24 +139,33 @@ export default function FormalConditions() {
                         </div>
                         <div className="flex justify-around w-full">
                             <div>
-                                <Link
-                                    href={{
-                                        pathname: '/startingWizard/generalInformation/tools',
-                                        query: { plannerId: router.query.plannerId },
+                                <button
+                                    type="button"
+                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    onClick={() => {
+                                        validateAndRoute(
+                                            '/startingWizard/generalInformation/tools',
+                                            router.query.plannerId,
+                                            handleSubmit(onSubmit),
+                                            isValid
+                                        );
                                     }}
                                 >
-                                    <button
-                                        type="button"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    >
-                                        Zurück
-                                    </button>
-                                </Link>
+                                    Zurück
+                                </button>
                             </div>
                             <div>
                                 <button
-                                    type="submit"
+                                    type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    onClick={() => {
+                                        validateAndRoute(
+                                            '/startingWizard/broadPlanner',
+                                            router.query.plannerId,
+                                            handleSubmit(onSubmit),
+                                            isValid
+                                        );
+                                    }}
                                 >
                                     Weiter
                                 </button>
@@ -166,7 +173,11 @@ export default function FormalConditions() {
                         </div>
                     </form>
                 )}
-                <SideProgressBarSection progressState={sideMenuStepsProgress} />
+                <SideProgressBarSection
+                    progressState={sideMenuStepsProgress}
+                    handleValidation={handleSubmit(onSubmit)}
+                    isValid={isValid}
+                />
             </div>
         </>
     );
