@@ -320,7 +320,7 @@ export default function FinePlanner() {
                         </div>
                     </form>
                 )}
-                <SideProgressBarSection progressState={sideMenuStepsProgress} />
+                {/*<SideProgressBarSection progressState={sideMenuStepsProgress} />*/}
             </div>
         </>
     );

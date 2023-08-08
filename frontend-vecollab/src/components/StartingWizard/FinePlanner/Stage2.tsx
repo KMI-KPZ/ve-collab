@@ -3,28 +3,15 @@ import { RxMinus, RxPlus } from 'react-icons/rx';
 import WhiteBox from '@/components/Layout/WhiteBox';
 import React from 'react';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+import { useForm, FormProvider, useFormContext } from 'react-hook-form';
 
 interface Props {
     fineStep: IFineStep;
-    modifyTaskTool: (taskIndex: number, toolIndex: number, value: string) => void;
-    modifyTask: (taskIndex: number, valueName: string, value: string) => void;
-    modifyStep: <T>(valueName: string, value: T) => void;
-    removeToolInputField: (e: React.MouseEvent, taskIndex: number) => void;
-    addToolInputField: (e: React.MouseEvent, taskIndex: number) => void;
-    removeTask: (e: React.MouseEvent) => void;
-    addTask: (e: React.MouseEvent) => void;
 }
 
-export default function Stage2({
-    fineStep,
-    modifyTaskTool,
-    modifyTask,
-    modifyStep,
-    removeTask,
-    addTask,
-    removeToolInputField,
-    addToolInputField,
-}: Props) {
+export default function Stage2({ fineStep }: Props) {
+    const { register, setValue } = useFormContext();
+
     return (
         <WhiteBox>
             <div className="w-[60rem]">
@@ -43,9 +30,9 @@ export default function Stage2({
                     <div className="w-5/6">
                         <input
                             type="number"
-                            name="workload"
-                            value={fineStep.workload}
-                            onChange={(e) => modifyStep<number>('workload', Number(e.target.value))}
+                            {...register(`fineStep.workload`, {
+                                valueAsNumber: true,
+                            })}
                             placeholder="in Stunden"
                             className="border border-gray-500 rounded-lg w-full h-12 p-2"
                         />
@@ -60,9 +47,7 @@ export default function Stage2({
                     <div className="w-5/6">
                         <input
                             type="text"
-                            name="social_form"
-                            value={fineStep.social_form}
-                            onChange={(e) => modifyStep<string>('social_form', e.target.value)}
+                            {...register(`fineStep.social_form`)}
                             placeholder="wie arbeiten die Studierenden zusammen, z.B. Partner-/Gruppenarbeit, individuell"
                             className="border border-gray-500 rounded-lg w-full h-12 p-2"
                         />
@@ -77,9 +62,7 @@ export default function Stage2({
                     <div className="w-5/6">
                         <textarea
                             rows={5}
-                            name="learning_env"
-                            value={fineStep.learning_env}
-                            onChange={(e) => modifyStep<string>('learning_env', e.target.value)}
+                            {...register(`fineStep.learning_env`)}
                             placeholder="Struktur und Inhalte der ausgewählten Umgebung (LMS, social Media, kooperatives Dokument usw.)"
                             className="border border-gray-500 rounded-lg w-full p-2"
                         />
@@ -93,10 +76,7 @@ export default function Stage2({
                     </div>
                     <div className="w-5/6">
                         <input
-                            type="text"
-                            name="ve_approach"
-                            value={fineStep.ve_approach}
-                            onChange={(e) => modifyStep<string>('ve_approach', e.target.value)}
+                            {...register(`fineStep.ve_approach`)}
                             placeholder="Welche Ansätze werden verfolgt? (z. B. aufgabenorientierter Ansatz, kulturbezogenes Lernen)"
                             className="border border-gray-500 rounded-lg w-full h-12 p-2"
                         />
@@ -108,7 +88,7 @@ export default function Stage2({
                             Aufgabenstellungen
                         </label>
                     </div>
-                    <div className="w-5/6">
+                    {/*                    <div className="w-5/6">
                         {fineStep.tasks.map((task, taskIndex) => (
                             <Tasks2
                                 key={taskIndex}
@@ -120,15 +100,7 @@ export default function Stage2({
                                 taskIndex={taskIndex}
                             />
                         ))}
-                    </div>
-                </div>
-                <div className={'mx-7 flex justify-end'}>
-                    <button onClick={(e) => removeTask(e)}>
-                        <RxMinus size={20} />
-                    </button>
-                    <button onClick={(e) => addTask(e)}>
-                        <RxPlus size={20} />
-                    </button>
+                    </div>*/}
                 </div>
             </div>
         </WhiteBox>
