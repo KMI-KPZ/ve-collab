@@ -11,14 +11,17 @@ import util
 
 
 class VeInvitationHandler(BaseHandler):
+    def options(self, slug):
+        pass
+
     @auth_needed
     def get(self):
         pass
 
     @auth_needed
-    async def post(self):
+    async def post(self, slug):
         """
-        POST /ve_invitation
+        POST /ve_invitation/send
             Send a new VE invitation to a user.
 
             If the recipient is currently "online" (i.e. has an open and
@@ -69,87 +72,150 @@ class VeInvitationHandler(BaseHandler):
             self.write({"success": False, "reason": "json_parsing_error"})
             return
 
-        if "message" not in http_body:
-            self.set_status(400)
-            self.write(
-                {
-                    "success": False,
-                    "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "message",
-                }
-            )
-            return
-        if "plan_id" not in http_body:
-            self.set_status(400)
-            self.write(
-                {
-                    "success": False,
-                    "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "plan_id",
-                }
-            )
-            return
-        if "username" not in http_body:
-            self.set_status(400)
-            self.write(
-                {
-                    "success": False,
-                    "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "username",
-                }
-            )
-            return
-
-        with util.get_mongodb() as db:
-            # give user read access to plan
-            if http_body["plan_id"] is not None:
-                plan_manager = VEPlanResource(db)
-
-                # reject if the user is not the author of the plan --> cannot
-                # set read permissions
-                if not plan_manager._check_user_is_author(
-                    http_body["plan_id"], self.current_user.username
-                ):
-                    self.set_status(403)
-                    self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
-                    return
-
-                plan_manager.set_read_permissions(
-                    http_body["plan_id"], http_body["username"]
-                )
-
-            # if recipient of the invitation is currently "online" (i.e. connected via socket),
-            # emit the notification instantly
-            if http_body["username"] in global_vars.username_sid_map:
-                notification_payload = {
-                    "_id": ObjectId(),
-                    "type": "ve_invitation",
-                    "from": self.current_user.username,
-                    "to": http_body["username"],
-                    "message": http_body["message"],
-                    "plan_id": http_body["plan_id"],
-                    "receive_state": "sent",
-                    "creation_timestamp": datetime.datetime.now(),
-                }
-                await global_vars.socket_io.emit(
-                    "notification",
-                    self.json_serialize_response(notification_payload.copy()),
-                    room=global_vars.username_sid_map[http_body["username"]],
-                )
-
-                # store notification as "sent", which will be changed to "acknowledged"
-                # once the client sends the appropriate acknowledgement event
-                db.notifications.insert_one(notification_payload)
-            else:
-                # user is not currently connected via socket, save the event as "pending"
-                # will be dispatched automatically when the user connects next time
-                db.notifications.insert_one(
+        if slug == "send":
+            if "message" not in http_body:
+                self.set_status(400)
+                self.write(
                     {
+                        "success": False,
+                        "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "message",
+                    }
+                )
+                return
+            if "plan_id" not in http_body:
+                self.set_status(400)
+                self.write(
+                    {
+                        "success": False,
+                        "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "plan_id",
+                    }
+                )
+                return
+            if "username" not in http_body:
+                self.set_status(400)
+                self.write(
+                    {
+                        "success": False,
+                        "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "username",
+                    }
+                )
+                return
+
+            with util.get_mongodb() as db:
+                # give user read access to plan
+                if http_body["plan_id"] is not None:
+                    plan_manager = VEPlanResource(db)
+
+                    # reject if the user is not the author of the plan --> cannot
+                    # set read permissions
+                    if not plan_manager._check_user_is_author(
+                        http_body["plan_id"], self.current_user.username
+                    ):
+                        self.set_status(403)
+                        self.write(
+                            {"success": False, "reason": INSUFFICIENT_PERMISSIONS}
+                        )
+                        return
+
+                    plan_manager.set_read_permissions(
+                        http_body["plan_id"], http_body["username"]
+                    )
+
+                invitation_id = plan_manager.insert_plan_invitation(
+                    http_body["plan_id"],
+                    http_body["message"],
+                    self.current_user.username,
+                    http_body["username"],
+                )
+
+                # if recipient of the invitation is currently "online" (i.e. connected via socket),
+                # emit the notification instantly
+                if http_body["username"] in global_vars.username_sid_map:
+                    notification_payload = {
+                        "_id": ObjectId(),
                         "type": "ve_invitation",
                         "from": self.current_user.username,
                         "to": http_body["username"],
                         "message": http_body["message"],
                         "plan_id": http_body["plan_id"],
-                        "receive_state": "pending",
+                        "invitation_id": invitation_id,
+                        "receive_state": "sent",
                         "creation_timestamp": datetime.datetime.now(),
                     }
+                    await global_vars.socket_io.emit(
+                        "notification",
+                        self.json_serialize_response(notification_payload.copy()),
+                        room=global_vars.username_sid_map[http_body["username"]],
+                    )
+
+                    # store notification as "sent", which will be changed to "acknowledged"
+                    # once the client sends the appropriate acknowledgement event
+                    db.notifications.insert_one(notification_payload)
+                else:
+                    # user is not currently connected via socket, save the event as "pending"
+                    # will be dispatched automatically when the user connects next time
+                    db.notifications.insert_one(
+                        {
+                            "type": "ve_invitation",
+                            "from": self.current_user.username,
+                            "to": http_body["username"],
+                            "message": http_body["message"],
+                            "plan_id": http_body["plan_id"],
+                            "invitation_id": invitation_id,
+                            "receive_state": "pending",
+                            "creation_timestamp": datetime.datetime.now(),
+                        }
+                    )
+
+            self.write({"success": True})
+
+        elif slug == "reply":
+            print(http_body)
+
+            with util.get_mongodb() as db:
+                plan_manager = VEPlanResource(db)
+                plan_manager.set_invitation_reply(
+                    http_body["invitation_id"], http_body["accepted"]
                 )
 
-        self.write({"success": True})
+                # if recipient of the invitation is currently "online" (i.e. connected via socket),
+                # emit the notification instantly
+                if http_body["username"] in global_vars.username_sid_map:
+                    notification_payload = {
+                        "_id": ObjectId(),
+                        "type": "ve_invitation_reply",
+                        "from": self.current_user.username,
+                        "to": http_body["username"],
+                        "invitation_id": http_body["invitation_id"],
+                        "accepted": http_body["accepted"],
+                        "receive_state": "sent",
+                        "creation_timestamp": datetime.datetime.now(),
+                    }
+                    await global_vars.socket_io.emit(
+                        "notification",
+                        self.json_serialize_response(notification_payload.copy()),
+                        room=global_vars.username_sid_map[http_body["username"]],
+                    )
+
+                    # store notification as "sent", which will be changed to "acknowledged"
+                    # once the client sends the appropriate acknowledgement event
+                    db.notifications.insert_one(notification_payload)
+                else:
+                    # user is not currently connected via socket, save the event as "pending"
+                    # will be dispatched automatically when the user connects next time
+                    db.notifications.insert_one(
+                        {
+                            "_id": ObjectId(),
+                            "type": "ve_invitation_reply",
+                            "from": self.current_user.username,
+                            "to": http_body["username"],
+                            "invitation_id": http_body["invitation_id"],
+                            "accepted": http_body["accepted"],
+                            "receive_state": "pending",
+                            "creation_timestamp": datetime.datetime.now(),
+                        }
+                    )
+
+            self.write({"success": True})
+        else:
+            self.set_status(404)

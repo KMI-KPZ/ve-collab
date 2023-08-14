@@ -40,6 +40,14 @@ export default function VeInvitationNotification({
         socket.emit('acknowledge_notification', { notification_id: notification._id });
     };
 
+    const replyInvitation = (accept: boolean) => {
+        fetchPOST(
+            '/ve_invitation/reply',
+            { invitation_id: notification.invitation_id, accepted: accept, username: notification.from },
+            session?.accessToken
+        );
+    };
+
     useEffect(() => {
         fetchPOST(
             '/profile_snippets',
@@ -137,6 +145,7 @@ export default function VeInvitationNotification({
                             }
                             onClick={(e) => {
                                 removeNotificationCallback(notification._id);
+                                replyInvitation(false);
                                 handleCloseNotificationsDialog();
                             }}
                         >
@@ -148,6 +157,7 @@ export default function VeInvitationNotification({
                             }
                             onClick={(e) => {
                                 removeNotificationCallback(notification._id);
+                                replyInvitation(true);
                                 handleCloseNotificationsDialog();
                             }}
                         >

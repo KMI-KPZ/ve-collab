@@ -82,7 +82,7 @@ export default function ProfileHeader({
         };
 
         // TODO api call once finished
-        fetchPOST('/ve_invitation', payload, session?.accessToken).then((response) => {
+        fetchPOST('/ve_invitation/send', payload, session?.accessToken).then((response) => {
             console.log(response);
 
             // render success message that disappears after 2 seconds

@@ -115,7 +115,7 @@ def make_app(cookie_secret: str, debug: bool = False):
             (r"/orcid", OrcidProfileHandler),
             (r"/matching_exclusion_info", MatchingExclusionHandler),
             (r"/etherpad_integration/(.+)", EtherpadIntegrationHandler),
-            (r"/ve_invitation", VeInvitationHandler),
+            (r"/ve_invitation/(.+)", VeInvitationHandler),
             (r"/notifications", NotificationHandler),
             (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
             (r"/assets/(.*)", tornado.web.StaticFileHandler, {"path": "./assets/"}),

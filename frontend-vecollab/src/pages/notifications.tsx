@@ -50,12 +50,21 @@ export default function Notifications({
                             <div tabname="neu">
                                 <ul className="divide-y">
                                     {notificationEvents.map((notification, index) => (
-                                        <VeInvitationNotification
-                                            key={index}
-                                            socket={socket}
-                                            notification={notification}
-                                            removeNotificationCallback={removeNotificationFromList}
-                                        />
+                                        <div key={index}>
+                                            {notification.type === 've_invitation' && (
+                                                <VeInvitationNotification
+                                                    key={index}
+                                                    socket={socket}
+                                                    notification={notification}
+                                                    removeNotificationCallback={
+                                                        removeNotificationFromList
+                                                    }
+                                                />
+                                            )}
+                                            {notification.type === 've_invitation_reply' && (
+                                                <div key={index}>{JSON.stringify(notification)}</div>
+                                            )}
+                                        </div>
                                     ))}
                                 </ul>
                             </div>

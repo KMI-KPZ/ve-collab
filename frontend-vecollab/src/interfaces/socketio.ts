@@ -11,6 +11,7 @@ export interface VeInvitation {
     to: string;
     message: string;
     plan_id: string;
+    invitation_id: string;
     receive_state: string;
     creation_timestamp: string;
 }

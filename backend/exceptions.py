@@ -117,3 +117,9 @@ class NoWriteAccessError(Exception):
     """a user has no write access to a VEPlan"""
 
     pass
+
+
+class InvitationDoesntExistError(Exception):
+    """The requested ve invitation doesn't exist"""
+
+    pass
