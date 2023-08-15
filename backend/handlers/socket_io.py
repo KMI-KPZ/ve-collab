@@ -4,7 +4,8 @@ import jose
 import keycloak
 
 import global_vars
-from error_reasons import MISSING_KEY_SLUG
+from error_reasons import INSUFFICIENT_PERMISSIONS, MISSING_KEY_SLUG
+from resources.notifications import NotificationResource
 import util
 
 #######################################################################
@@ -146,32 +147,28 @@ async def authenticate(sid, data):
 
     # get notifications that appeared while user was offline or were maybe send,
     # but not acknowledged;
-    # dispatch them all to the user
+    # dispatch them all to the user and set their state to "sent"
     with util.get_mongodb() as db:
-        new_notifications = db.notifications.find(
-            {
-                "to": token_info["preferred_username"],
-                "receive_state": {"$ne": "acknowledged"},
-            }
+        notification_manager = NotificationResource(db)
+        new_notifications = (
+            notification_manager.get_unacknowledged_notifications_for_user(
+                token_info["preferred_username"]
+            )
         )
         if new_notifications:
+            new_notification_ids = []
             for notification in new_notifications:
+                # dispatch any new notifications
                 await emit_event(
                     "notification",
                     notification,
                     room=sid,
                 )
-
-                # set the notifactions from "pending" to "sent" to signify that
-                # they have been atleast tried to be delivered to the client
-                # and are awaiting acknowledgement
-                # TODO NotificationResource
-                # TODO performance enhancement: collect all notification _ids
-                # and do the update in one single db query
-                db.notifications.update_one(
-                    {"_id": ObjectId(notification["_id"])},
-                    {"$set": {"receive_state": "sent"}},
-                )
+                new_notification_ids.append(notification["_id"])
+            # set the notifactions from "pending" to "sent" to signify that
+            # they have been atleast tried to be delivered to the client
+            # and are awaiting acknowledgement
+            notification_manager.bulk_set_send_state(new_notification_ids)
 
     return {"status": 200, "success": True}
 
@@ -216,15 +213,17 @@ async def acknowledge_notification(sid, data):
     if not token:
         return {"status": 401, "success": False, "reason": "unauthenticated"}
 
-    # TODO authorization check: only allow acknowledgement if user is
-    # the recipient of the notification by checking the session
-
     with util.get_mongodb() as db:
-        # TODO NotificationResource
-        db.notifications.update_one(
-            {"_id": ObjectId(notification_id)},
-            {"$set": {"receive_state": "acknowledged"}},
-        )
+        notification_manager = NotificationResource(db)
+
+        # authorization check: only allow acknowledgement if user is
+        # the recipient of the notification by checking the session
+        if token[
+            "preferred_username"
+        ] != notification_manager.get_notification_recipient(notification_id):
+            return {"status": 403, "reason": INSUFFICIENT_PERMISSIONS}
+
+        notification_manager.acknowledge_notification(notification_id)
 
         return {"status": 200, "success": True}
 

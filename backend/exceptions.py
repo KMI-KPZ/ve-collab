@@ -123,3 +123,9 @@ class InvitationDoesntExistError(Exception):
     """The requested ve invitation doesn't exist"""
 
     pass
+
+
+class NotificationDoesntExistError(Exception):
+    """The requested notification doesn't exist"""
+
+    pass
