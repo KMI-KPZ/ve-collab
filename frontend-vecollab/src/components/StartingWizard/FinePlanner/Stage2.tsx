@@ -2,15 +2,23 @@ import Tasks2 from '@/components/StartingWizard/FinePlanner/Tasks2';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import WhiteBox from '@/components/Layout/WhiteBox';
 import React from 'react';
-import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
-import { useForm, FormProvider, useFormContext } from 'react-hook-form';
+import { IFormValuesFineSteps, IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+import { useForm, FormProvider, useFormContext, useFieldArray } from 'react-hook-form';
+import { ITask } from '@/pages/startingWizard/finePlanner';
+import Tools2 from '@/components/StartingWizard/FinePlanner/Tools2';
 
 interface Props {
     fineStep: IFineStep;
 }
 
 export default function Stage2({ fineStep }: Props) {
-    const { register, setValue } = useFormContext();
+    const { register, control } = useFormContext<IFormValuesFineSteps>();
+    const { fields, append, remove } = useFieldArray<IFormValuesFineSteps>({
+        name: 'fineStep.tasks',
+        control,
+    });
+    console.log('fields', fields);
+    console.log('finestep', fineStep);
 
     return (
         <WhiteBox>
@@ -88,19 +96,30 @@ export default function Stage2({ fineStep }: Props) {
                             Aufgabenstellungen
                         </label>
                     </div>
-                    {/*                    <div className="w-5/6">
-                        {fineStep.tasks.map((task, taskIndex) => (
-                            <Tasks2
-                                key={taskIndex}
-                                addToolInputField={addToolInputField}
-                                modifyTask={modifyTask}
-                                modifyTaskTool={modifyTaskTool}
-                                removeToolInputField={removeToolInputField}
-                                task={task}
-                                taskIndex={taskIndex}
-                            />
+                    <div className="w-5/6">
+                        {fields.map((task, taskIndex) => (
+                            <div key={taskIndex}>
+                                <Tasks2 taskIndex={taskIndex} />
+                                <div className={'mx-7 flex justify-end'}>
+                                    <button onClick={() => remove(taskIndex)}>
+                                        <RxMinus size={20} />
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            append({
+                                                title: '',
+                                                description: '',
+                                                learning_goal: '',
+                                                tools: ['', ''],
+                                            });
+                                        }}
+                                    >
+                                        <RxPlus size={20} />
+                                    </button>
+                                </div>
+                            </div>
                         ))}
-                    </div>*/}
+                    </div>
                 </div>
             </div>
         </WhiteBox>

@@ -1,5 +1,4 @@
 import { signIn, useSession } from 'next-auth/react';
-import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { fetchGET, fetchPOST } from '@/lib/backend';
@@ -7,13 +6,7 @@ import { IStep, ITask } from '@/pages/startingWizard/finePlanner';
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import Stage2 from '@/components/StartingWizard/FinePlanner/Stage2';
-import {
-    SubmitHandler,
-    useFieldArray,
-    useForm,
-    FormProvider,
-    useFormContext,
-} from 'react-hook-form';
+import { SubmitHandler, useForm, FormProvider } from 'react-hook-form';
 import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 
 export interface IFineStep {
@@ -31,9 +24,28 @@ export interface IFineStep {
     custom_attributes?: Record<string, string>;
 }
 
-interface FormValues {
+export interface IFormValuesFineSteps {
     fineStep: IFineStep;
 }
+
+export const defaultFormValueDataFineStep: IFineStep = {
+    timestamp_from: '',
+    timestamp_to: '',
+    name: '',
+    workload: 0,
+    social_form: '',
+    learning_env: '',
+    ve_approach: '',
+    evaluation_tools: ['', ''],
+    tasks: [
+        {
+            title: '',
+            description: '',
+            learning_goal: '',
+            tools: ['', ''],
+        },
+    ],
+};
 
 export default function FinePlanner() {
     const { data: session, status } = useSession();
@@ -41,54 +53,19 @@ export default function FinePlanner() {
     const router = useRouter();
     const { stepSlug } = router.query;
     const { validateAndRoute } = useValidation();
-    const methods = useForm({
+    const methods = useForm<IFormValuesFineSteps>({
         mode: 'all',
         defaultValues: {
-            fineStep: {
-                timestamp_from: '',
-                timestamp_to: '',
-                name: '',
-                workload: 1,
-                social_form: '',
-                learning_env: '',
-                ve_approach: '',
-                evaluation_tools: ['', ''],
-                tasks: [
-                    {
-                        title: '',
-                        description: '',
-                        learning_goal: '',
-                        tools: ['', ''],
-                    },
-                ],
-                attachments: [''],
-                custom_attributes: { '': '' },
-            },
+            fineStep: defaultFormValueDataFineStep,
         },
     });
 
     const [fineStep, setFineStep] = useState<IFineStep>({
-        timestamp_from: '',
-        timestamp_to: '',
-        name: '',
-        workload: 0,
-        social_form: '',
-        learning_env: '',
-        ve_approach: '',
-        evaluation_tools: [''],
-        tasks: [{ title: '', description: '', learning_goal: '', tools: [''] }],
+        ...defaultFormValueDataFineStep,
     });
     const [steps, setSteps] = useState<IStep[]>([
         {
-            timestamp_from: '',
-            timestamp_to: '',
-            name: '',
-            workload: 0,
-            social_form: '',
-            learning_env: '',
-            ve_approach: '',
-            evaluation_tools: [''],
-            tasks: [{ title: '', description: '', learning_goal: '', tools: [''] }],
+            ...defaultFormValueDataFineStep,
         },
     ]);
 
@@ -119,37 +96,25 @@ export default function FinePlanner() {
                 (data) => {
                     setLoading(false);
                     if (data.plan.steps?.length > 0) {
-                        console.log('requestStep', data.plan.steps);
                         setSteps(data.plan.steps);
                         const fineStepCopy: IFineStep | undefined = data.plan.steps.find(
                             (item: IStep) => item.name === stepSlug
                         );
                         if (fineStepCopy) {
                             setFineStep(fineStepCopy);
-                            setValue('fineStep', fineStepCopy);
-                            console.log(watch('fineStep'));
+                            methods.setValue('fineStep', fineStepCopy);
                         }
                     }
                 }
             );
         }
-    }, [session, status, router, stepSlug]);
+    }, [session, status, router, stepSlug, methods]);
 
-    const {
-        register,
-        formState: { errors, isValid },
-        handleSubmit,
-        control,
-        watch,
-        setValue,
-    } = useForm<FormValues>({
-        mode: 'onChange',
-    });
-
-    const onSubmit: SubmitHandler<FormValues> = async (data) => {
+    const onSubmit: SubmitHandler<IFormValuesFineSteps> = async (data) => {
         const stepsWithoutCurrent = steps.filter((item: IStep) => item.name !== stepSlug);
-        let stepCurrent = watch('fineStep');
+        let stepCurrent = methods.watch('fineStep');
         stepCurrent = { ...stepCurrent, workload: data.fineStep.workload };
+        console.log(data.fineStep.tasks);
         await fetchPOST(
             '/planner/update_field',
             {
@@ -162,6 +127,7 @@ export default function FinePlanner() {
                         social_form: data.fineStep.social_form,
                         learning_env: data.fineStep.learning_env,
                         ve_approach: data.fineStep.ve_approach,
+                        tasks: data.fineStep.tasks,
                     },
                     ...stepsWithoutCurrent,
                 ],
@@ -198,7 +164,7 @@ export default function FinePlanner() {
                                                 '/startingWizard/broadPlanner',
                                                 router.query.plannerId,
                                                 methods.handleSubmit(onSubmit),
-                                                isValid
+                                                methods.formState.isValid
                                             );
                                         }}
                                     >
@@ -214,7 +180,7 @@ export default function FinePlanner() {
                                                 '/startingWizard/finish',
                                                 router.query.plannerId,
                                                 methods.handleSubmit(onSubmit),
-                                                isValid
+                                                methods.formState.isValid
                                             );
                                         }}
                                     >

@@ -1,25 +1,20 @@
 import React from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import Tools2 from '@/components/StartingWizard/FinePlanner/Tools2';
-import { ITask } from '@/pages/startingWizard/finePlanner';
+import { useFieldArray, useFormContext } from 'react-hook-form';
+import { IFormValuesFineSteps } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 
 interface Props {
-    task: ITask;
     taskIndex: number;
-    modifyTask: (taskIndex: number, valueName: string, value: string) => void;
-    modifyTaskTool: (taskIndex: number, toolIndex: number, value: string) => void;
-    removeToolInputField: (e: React.MouseEvent, taskIndex: number) => void;
-    addToolInputField: (e: React.MouseEvent, taskIndex: number) => void;
 }
 
-export default function Tasks2({
-    task,
-    taskIndex,
-    modifyTask,
-    modifyTaskTool,
-    removeToolInputField,
-    addToolInputField,
-}: Props) {
+export default function Tasks2({ taskIndex }: Props) {
+    const { register, control } = useFormContext<IFormValuesFineSteps>();
+    /*        const { fields, append, remove } = useFieldArray({
+        name: 'fineStep.tasks.${taskIndex}.tools',
+        control,
+    });*/
+
     return (
         <div className={'p-4 my-4 mx-2 bg-slate-200 rounded-3xl shadow-2xl'}>
             <div className="mt-2 flex">
@@ -31,9 +26,7 @@ export default function Tasks2({
                 <div className="w-5/6">
                     <input
                         type="text"
-                        name="title"
-                        value={task.title}
-                        onChange={(e) => modifyTask(taskIndex, 'title', e.target.value)}
+                        {...register(`fineStep.tasks.${taskIndex}.title`)}
                         placeholder="Aufgabentitel"
                         className="border border-gray-500 rounded-lg w-full h-12 p-2"
                     />
@@ -48,9 +41,7 @@ export default function Tasks2({
                 <div className="w-5/6">
                     <textarea
                         rows={5}
-                        name="description"
-                        value={task.description}
-                        onChange={(e) => modifyTask(taskIndex, 'description', e.target.value)}
+                        {...register(`fineStep.tasks.${taskIndex}.description`)}
                         placeholder="Beschreibe die Aufgabe detailierter"
                         className="border border-gray-500 rounded-lg w-full p-2"
                     />
@@ -65,9 +56,7 @@ export default function Tasks2({
                 <div className="w-5/6">
                     <textarea
                         rows={5}
-                        name="learning_goal"
-                        value={task.learning_goal}
-                        onChange={(e) => modifyTask(taskIndex, 'learning_goal', e.target.value)}
+                        {...register(`fineStep.tasks.${taskIndex}.learning_goal`)}
                         placeholder="Welche Lernziele werden mit der Aufgabe verfolgt?"
                         className="border border-gray-500 rounded-lg w-full p-2"
                     />
@@ -81,26 +70,11 @@ export default function Tasks2({
                         </label>
                     </div>
                     <div className="w-5/6">
-                        {task.tools.map((tool, toolIndex) => (
-                            <Tools2
-                                // nur state mitgeben
-                                key={toolIndex}
-                                taskIndex={taskIndex}
-                                toolIndex={toolIndex}
-                                tool={tool}
-                                modifyTaskTool={modifyTaskTool}
-                            />
-                        ))}
+                        {/*                        {fields.map((tool, toolIndex) => (
+                            <Tools2 key={toolIndex} taskIndex={taskIndex} toolIndex={toolIndex} />
+                        ))}*/}
                     </div>
                 </div>
-            </div>
-            <div className={'mx-7 flex justify-end'}>
-                <button onClick={(e) => removeToolInputField(e, taskIndex)}>
-                    <RxMinus size={20} />
-                </button>
-                <button onClick={(e) => addToolInputField(e, taskIndex)}>
-                    <RxPlus size={20} />
-                </button>
             </div>
         </div>
     );

@@ -114,7 +114,14 @@ export default function BroadPlanner() {
                 social_form: null,
                 learning_env: null,
                 ve_approach: null,
-                tasks: [],
+                tasks: [
+                    {
+                        title: '',
+                        description: '',
+                        learning_goal: '',
+                        tools: ['', ''],
+                    },
+                ],
                 evaluation_tools: [],
                 attachments: [],
                 custom_attributes: {},
