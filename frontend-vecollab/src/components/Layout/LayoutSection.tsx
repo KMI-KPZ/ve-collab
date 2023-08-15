@@ -4,11 +4,11 @@ import FooterSection from '@/components/Layout/FooterSection';
 import { useSession } from 'next-auth/react';
 import ExcludedFromMatchingBanner from '../profile/ExcludedFromMatchingBanner';
 import { fetchGET } from '@/lib/backend';
-import { VeInvitation } from '@/interfaces/socketio';
+import { Notification } from '@/interfaces/socketio';
 
 interface Props {
     children: React.ReactNode;
-    notificationEvents: VeInvitation[];
+    notificationEvents: Notification[];
 }
 export default function LayoutSection({ children, notificationEvents }: Props): JSX.Element {
     const { data: session, status } = useSession();

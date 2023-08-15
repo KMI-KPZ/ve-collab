@@ -102,9 +102,10 @@ class VeInvitationHandler(BaseHandler):
                 return
 
             with util.get_mongodb() as db:
+                plan_manager = VEPlanResource(db)
+                
                 # give user read access to plan
                 if http_body["plan_id"] is not None:
-                    plan_manager = VEPlanResource(db)
 
                     # reject if the user is not the author of the plan --> cannot
                     # set read permissions
@@ -134,13 +135,15 @@ class VeInvitationHandler(BaseHandler):
                     notification_payload = {
                         "_id": ObjectId(),
                         "type": "ve_invitation",
-                        "from": self.current_user.username,
                         "to": http_body["username"],
-                        "message": http_body["message"],
-                        "plan_id": http_body["plan_id"],
-                        "invitation_id": invitation_id,
                         "receive_state": "sent",
                         "creation_timestamp": datetime.datetime.now(),
+                        "payload": {
+                            "from": self.current_user.username,
+                            "message": http_body["message"],
+                            "plan_id": http_body["plan_id"],
+                            "invitation_id": invitation_id,
+                        },
                     }
                     await global_vars.socket_io.emit(
                         "notification",
@@ -156,14 +159,17 @@ class VeInvitationHandler(BaseHandler):
                     # will be dispatched automatically when the user connects next time
                     db.notifications.insert_one(
                         {
+                            "_id": ObjectId(),
                             "type": "ve_invitation",
-                            "from": self.current_user.username,
                             "to": http_body["username"],
-                            "message": http_body["message"],
-                            "plan_id": http_body["plan_id"],
-                            "invitation_id": invitation_id,
                             "receive_state": "pending",
                             "creation_timestamp": datetime.datetime.now(),
+                            "payload": {
+                                "from": self.current_user.username,
+                                "message": http_body["message"],
+                                "plan_id": http_body["plan_id"],
+                                "invitation_id": invitation_id,
+                            },
                         }
                     )
 
@@ -184,12 +190,14 @@ class VeInvitationHandler(BaseHandler):
                     notification_payload = {
                         "_id": ObjectId(),
                         "type": "ve_invitation_reply",
-                        "from": self.current_user.username,
                         "to": http_body["username"],
-                        "invitation_id": http_body["invitation_id"],
-                        "accepted": http_body["accepted"],
                         "receive_state": "sent",
                         "creation_timestamp": datetime.datetime.now(),
+                        "payload": {
+                            "from": self.current_user.username,
+                            "invitation_id": http_body["invitation_id"],
+                            "accepted": http_body["accepted"],
+                        },
                     }
                     await global_vars.socket_io.emit(
                         "notification",
@@ -207,12 +215,14 @@ class VeInvitationHandler(BaseHandler):
                         {
                             "_id": ObjectId(),
                             "type": "ve_invitation_reply",
-                            "from": self.current_user.username,
                             "to": http_body["username"],
-                            "invitation_id": http_body["invitation_id"],
-                            "accepted": http_body["accepted"],
                             "receive_state": "pending",
                             "creation_timestamp": datetime.datetime.now(),
+                            "payload": {
+                                "from": self.current_user.username,
+                                "invitation_id": http_body["invitation_id"],
+                                "accepted": http_body["accepted"],
+                            },
                         }
                     )
 

@@ -15,3 +15,12 @@ export interface VeInvitation {
     receive_state: string;
     creation_timestamp: string;
 }
+
+export interface Notification {
+    _id: string;
+    type: string;
+    to: string;
+    receive_state: string;
+    creation_timestamp: string;
+    payload: Record<string, any>;
+}

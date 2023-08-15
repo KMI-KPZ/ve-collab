@@ -746,11 +746,11 @@ class VEPlanResource:
             except InvalidId:
                 raise PlanDoesntExistError()
 
-        # if no plan with the given _id exists, raise PlanDoesntExistError
-        try:
-            self.get_plan(plan_id)
-        except:
-            raise
+            # if no plan with the given _id exists, raise PlanDoesntExistError
+            try:
+                self.get_plan(plan_id)
+            except:
+                raise
 
         result = self.db.invitations.insert_one(
             {

@@ -136,10 +136,7 @@ async def authenticate(sid, data):
         )
         if new_notifications:
             for notification in new_notifications:
-                notification["_id"] = str(notification["_id"])
-                notification["creation_timestamp"] = str(
-                    notification["creation_timestamp"]
-                )
+                notification = util.json_serialize_response(notification)
                 await global_vars.socket_io.emit(
                     "notification",
                     notification,

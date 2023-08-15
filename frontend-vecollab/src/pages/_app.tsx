@@ -8,10 +8,10 @@ import Favicon from '@/components/metaTags/Favicon';
 import LinkPreview from '@/components/metaTags/LinkPreview';
 import { socket } from '@/lib/socket';
 import SocketAuthenticationProvider from '@/components/SocketAuthenticationProvider';
-import { VeInvitation } from '@/interfaces/socketio';
+import { Notification } from '@/interfaces/socketio';
 
 export default function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
-    const [notificationEvents, setNotificationEvents] = useState<VeInvitation[]>([]);
+    const [notificationEvents, setNotificationEvents] = useState<Notification[]>([]);
 
     // don't do anything else inside this hook, especially with deps, because it would always
     // re-init the socket when the effect triggers
@@ -32,7 +32,7 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
     // and dispatch only the list of events into the components, since we know
     // that this _app component is always mounted
     useEffect(() => {
-        function onNotifcationEvent(value: VeInvitation) {
+        function onNotifcationEvent(value: Notification) {
             // nextjs always sends 2 requests in dev mode, prevent any notification from appearing twice
             const alreadyExisting = notificationEvents.find(
                 (notification) => notification._id === value._id

@@ -3,10 +3,10 @@ import Image from 'next/image';
 import veCollabLogo from '@/images/veCollabLogo.png';
 import Link from 'next/link';
 import { useSession, signIn, signOut } from 'next-auth/react';
-import { VeInvitation } from '@/interfaces/socketio';
+import { Notification } from '@/interfaces/socketio';
 
 interface Props {
-    notificationEvents: VeInvitation[];
+    notificationEvents: Notification[];
 }
 
 export default function HeaderSection({ notificationEvents }: Props) {

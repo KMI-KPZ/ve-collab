@@ -1,4 +1,4 @@
-import { VeInvitation } from '@/interfaces/socketio';
+import { Notification } from '@/interfaces/socketio';
 import { fetchGET } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
@@ -11,7 +11,7 @@ interface Props {
 
 export default function AllNotifications({ socket }: Props) {
     const { data: session, status } = useSession();
-    const [notifications, setNotifications] = useState<VeInvitation[]>([]);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
 
     useEffect(() => {
         fetchGET('/notifications', session?.accessToken).then((data: { notifications: any[] }) => {
@@ -32,12 +32,26 @@ export default function AllNotifications({ socket }: Props) {
             {notifications !== undefined && (
                 <>
                     {notifications.map((notification, index) => (
-                        <VeInvitationNotification
-                            key={index}
-                            socket={socket}
-                            notification={notification}
-                            removeNotificationCallback={function (notificationId: string): void {}}
-                        />
+                        <div key={index}>
+                            {notification.type === 've_invitation' && (
+                                <VeInvitationNotification
+                                    key={index}
+                                    socket={socket}
+                                    notification={notification}
+                                    removeNotificationCallback={function (
+                                        notificationId: string
+                                    ): void {}}
+                                />
+                            )}
+                            {notification.type === 've_invitation_reply' && (
+                                <div>
+                                    {notification.payload.from} hat deine VE-Einladung{' '}
+                                    {notification.payload.accepted === true
+                                        ? 'akzeptiert'
+                                        : 'abgelehnt'}
+                                </div>
+                            )}
+                        </div>
                     ))}
                 </>
             )}

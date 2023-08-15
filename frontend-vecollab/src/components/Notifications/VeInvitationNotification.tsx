@@ -1,7 +1,7 @@
 import { RxDotsVertical } from 'react-icons/rx';
 import SmallTimestamp from '../SmallTimestamp';
 import { Socket } from 'socket.io-client';
-import { VeInvitation } from '@/interfaces/socketio';
+import { Notification } from '@/interfaces/socketio';
 import { useEffect, useState } from 'react';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
@@ -12,7 +12,7 @@ import Link from 'next/link';
 
 interface Props {
     socket: Socket;
-    notification: VeInvitation;
+    notification: Notification;
     removeNotificationCallback: (notificationId: string) => void;
 }
 
@@ -43,7 +43,7 @@ export default function VeInvitationNotification({
     const replyInvitation = (accept: boolean) => {
         fetchPOST(
             '/ve_invitation/reply',
-            { invitation_id: notification.invitation_id, accepted: accept, username: notification.from },
+            { invitation_id: notification.payload.invitation_id, accepted: accept, username: notification.payload.from },
             session?.accessToken
         );
     };
@@ -51,7 +51,7 @@ export default function VeInvitationNotification({
     useEffect(() => {
         fetchPOST(
             '/profile_snippets',
-            { usernames: [notification.from] },
+            { usernames: [notification.payload.from] },
             session?.accessToken
         ).then((data) => {
             setInvitedFromUser({
@@ -61,8 +61,8 @@ export default function VeInvitationNotification({
                 institution: data.user_snippets[0].institution,
             });
         });
-        if (notification.plan_id !== null) {
-            fetchGET(`/planner/get?_id=${notification.plan_id}`, session?.accessToken).then(
+        if (notification.payload.plan_id !== null) {
+            fetchGET(`/planner/get?_id=${notification.payload.plan_id}`, session?.accessToken).then(
                 (data) => {
                     setInvitedVePlan(data.plan);
                 }
@@ -117,7 +117,7 @@ export default function VeInvitationNotification({
                         </p>
                     </div>
                     <div className="my-4 p-2 border-2 rounded-xl max-h-[15rem] overflow-y-auto">
-                        <p className="text-slate-700">{notification.message}</p>
+                        <p className="text-slate-700">{notification.payload.message}</p>
                     </div>
                     {invitedVePlan !== undefined && (
                         <div>
@@ -131,7 +131,7 @@ export default function VeInvitationNotification({
                                 {/* todo this should link to a read-only view of the plan*/}
                                 <Link
                                     target="_blank"
-                                    href={`/startingWizard/generalInformation/projectName?plannerId=${notification.plan_id}`}
+                                    href={`/startingWizard/generalInformation/projectName?plannerId=${notification.payload.plan_id}`}
                                 >
                                     {invitedVePlan?.name}
                                 </Link>
