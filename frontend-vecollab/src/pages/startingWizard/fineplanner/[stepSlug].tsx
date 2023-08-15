@@ -24,10 +24,6 @@ export interface IFineStep {
     custom_attributes?: Record<string, string>;
 }
 
-export interface IFormValuesFineSteps {
-    fineStep: IFineStep;
-}
-
 export const defaultFormValueDataFineStep: IFineStep = {
     timestamp_from: '',
     timestamp_to: '',
@@ -53,10 +49,10 @@ export default function FinePlanner() {
     const router = useRouter();
     const { stepSlug } = router.query;
     const { validateAndRoute } = useValidation();
-    const methods = useForm<IFormValuesFineSteps>({
+    const methods = useForm<IFineStep>({
         mode: 'all',
         defaultValues: {
-            fineStep: defaultFormValueDataFineStep,
+            ...defaultFormValueDataFineStep,
         },
     });
 
@@ -86,10 +82,10 @@ export default function FinePlanner() {
             return;
         }
         // router is loaded, but still no plan ID in the query --> redirect to overview because we can't do anything without an ID
-        if (!router.query.plannerId) {
+        /*        if (!router.query.plannerId) {
             router.push('/overviewProjects');
             return;
-        }
+        }*/
 
         if (session) {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
@@ -102,7 +98,8 @@ export default function FinePlanner() {
                         );
                         if (fineStepCopy) {
                             setFineStep(fineStepCopy);
-                            methods.setValue('fineStep', fineStepCopy);
+                            /*methods.setValue('fineStep', { ...fineStepCopy });*/
+                            methods.reset({ ...fineStepCopy });
                         }
                     }
                 }
@@ -110,11 +107,10 @@ export default function FinePlanner() {
         }
     }, [session, status, router, stepSlug, methods]);
 
-    const onSubmit: SubmitHandler<IFormValuesFineSteps> = async (data) => {
+    const onSubmit: SubmitHandler<IFineStep> = async (data) => {
         const stepsWithoutCurrent = steps.filter((item: IStep) => item.name !== stepSlug);
-        let stepCurrent = methods.watch('fineStep');
-        stepCurrent = { ...stepCurrent, workload: data.fineStep.workload };
-        console.log(data.fineStep.tasks);
+        let stepCurrent: IFineStep = methods.getValues();
+        console.log(data.tasks);
         await fetchPOST(
             '/planner/update_field',
             {
@@ -123,11 +119,11 @@ export default function FinePlanner() {
                 value: [
                     {
                         ...stepCurrent,
-                        workload: data.fineStep.workload,
-                        social_form: data.fineStep.social_form,
-                        learning_env: data.fineStep.learning_env,
-                        ve_approach: data.fineStep.ve_approach,
-                        tasks: data.fineStep.tasks,
+                        workload: data.workload,
+                        social_form: data.social_form,
+                        learning_env: data.learning_env,
+                        ve_approach: data.ve_approach,
+                        tasks: data.tasks,
                     },
                     ...stepsWithoutCurrent,
                 ],

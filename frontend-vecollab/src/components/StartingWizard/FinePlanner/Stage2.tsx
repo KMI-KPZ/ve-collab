@@ -2,19 +2,17 @@ import Tasks2 from '@/components/StartingWizard/FinePlanner/Tasks2';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import WhiteBox from '@/components/Layout/WhiteBox';
 import React from 'react';
-import { IFormValuesFineSteps, IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
-import { useForm, FormProvider, useFormContext, useFieldArray } from 'react-hook-form';
-import { ITask } from '@/pages/startingWizard/finePlanner';
-import Tools2 from '@/components/StartingWizard/FinePlanner/Tools2';
+import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+import { useFormContext, useFieldArray } from 'react-hook-form';
 
 interface Props {
     fineStep: IFineStep;
 }
 
 export default function Stage2({ fineStep }: Props) {
-    const { register, control } = useFormContext<IFormValuesFineSteps>();
-    const { fields, append, remove } = useFieldArray<IFormValuesFineSteps>({
-        name: 'fineStep.tasks',
+    const { register, control } = useFormContext<IFineStep>();
+    const { fields, append, remove } = useFieldArray<IFineStep>({
+        name: 'tasks',
         control,
     });
     console.log('fields', fields);
@@ -38,7 +36,7 @@ export default function Stage2({ fineStep }: Props) {
                     <div className="w-5/6">
                         <input
                             type="number"
-                            {...register(`fineStep.workload`, {
+                            {...register(`workload`, {
                                 valueAsNumber: true,
                             })}
                             placeholder="in Stunden"
@@ -55,7 +53,7 @@ export default function Stage2({ fineStep }: Props) {
                     <div className="w-5/6">
                         <input
                             type="text"
-                            {...register(`fineStep.social_form`)}
+                            {...register(`social_form`)}
                             placeholder="wie arbeiten die Studierenden zusammen, z.B. Partner-/Gruppenarbeit, individuell"
                             className="border border-gray-500 rounded-lg w-full h-12 p-2"
                         />
@@ -70,7 +68,7 @@ export default function Stage2({ fineStep }: Props) {
                     <div className="w-5/6">
                         <textarea
                             rows={5}
-                            {...register(`fineStep.learning_env`)}
+                            {...register(`learning_env`)}
                             placeholder="Struktur und Inhalte der ausgewählten Umgebung (LMS, social Media, kooperatives Dokument usw.)"
                             className="border border-gray-500 rounded-lg w-full p-2"
                         />
@@ -84,7 +82,7 @@ export default function Stage2({ fineStep }: Props) {
                     </div>
                     <div className="w-5/6">
                         <input
-                            {...register(`fineStep.ve_approach`)}
+                            {...register(`ve_approach`)}
                             placeholder="Welche Ansätze werden verfolgt? (z. B. aufgabenorientierter Ansatz, kulturbezogenes Lernen)"
                             className="border border-gray-500 rounded-lg w-full h-12 p-2"
                         />
@@ -104,21 +102,21 @@ export default function Stage2({ fineStep }: Props) {
                                     <button onClick={() => remove(taskIndex)}>
                                         <RxMinus size={20} />
                                     </button>
-                                    <button
-                                        onClick={() => {
-                                            append({
-                                                title: '',
-                                                description: '',
-                                                learning_goal: '',
-                                                tools: ['', ''],
-                                            });
-                                        }}
-                                    >
-                                        <RxPlus size={20} />
-                                    </button>
                                 </div>
                             </div>
                         ))}
+                        <button
+                            onClick={() => {
+                                append({
+                                    title: 'x',
+                                    description: 'xx',
+                                    learning_goal: 'xxx',
+                                    tools: ['x', 'b'],
+                                });
+                            }}
+                        >
+                            <RxPlus size={20} />
+                        </button>
                     </div>
                 </div>
             </div>

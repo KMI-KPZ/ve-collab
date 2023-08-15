@@ -1,15 +1,13 @@
 import React from 'react';
-import { RxMinus, RxPlus } from 'react-icons/rx';
-import Tools2 from '@/components/StartingWizard/FinePlanner/Tools2';
-import { useFieldArray, useFormContext } from 'react-hook-form';
-import { IFormValuesFineSteps } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+import { useFormContext } from 'react-hook-form';
+import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 
 interface Props {
     taskIndex: number;
 }
 
 export default function Tasks2({ taskIndex }: Props) {
-    const { register, control } = useFormContext<IFormValuesFineSteps>();
+    const { register, control } = useFormContext<IFineStep>();
     /*        const { fields, append, remove } = useFieldArray({
         name: 'fineStep.tasks.${taskIndex}.tools',
         control,
@@ -26,7 +24,7 @@ export default function Tasks2({ taskIndex }: Props) {
                 <div className="w-5/6">
                     <input
                         type="text"
-                        {...register(`fineStep.tasks.${taskIndex}.title`)}
+                        {...register(`tasks.${taskIndex}.title`)}
                         placeholder="Aufgabentitel"
                         className="border border-gray-500 rounded-lg w-full h-12 p-2"
                     />
@@ -41,7 +39,7 @@ export default function Tasks2({ taskIndex }: Props) {
                 <div className="w-5/6">
                     <textarea
                         rows={5}
-                        {...register(`fineStep.tasks.${taskIndex}.description`)}
+                        {...register(`tasks.${taskIndex}.description`)}
                         placeholder="Beschreibe die Aufgabe detailierter"
                         className="border border-gray-500 rounded-lg w-full p-2"
                     />
@@ -56,7 +54,7 @@ export default function Tasks2({ taskIndex }: Props) {
                 <div className="w-5/6">
                     <textarea
                         rows={5}
-                        {...register(`fineStep.tasks.${taskIndex}.learning_goal`)}
+                        {...register(`tasks.${taskIndex}.learning_goal`)}
                         placeholder="Welche Lernziele werden mit der Aufgabe verfolgt?"
                         className="border border-gray-500 rounded-lg w-full p-2"
                     />
