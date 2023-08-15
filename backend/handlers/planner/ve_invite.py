@@ -3,9 +3,15 @@ import json
 
 from bson import ObjectId
 
-from error_reasons import INSUFFICIENT_PERMISSIONS, MISSING_KEY_IN_HTTP_BODY_SLUG
+from error_reasons import (
+    INSUFFICIENT_PERMISSIONS,
+    MISSING_KEY_IN_HTTP_BODY_SLUG,
+    INVITATION_DOESNT_EXIST,
+)
+from exceptions import InvitationDoesntExistError
 import global_vars
 from handlers.base_handler import BaseHandler, auth_needed
+from resources.notifications import NotificationResource
 from resources.planner.ve_plan import VEPlanResource
 import util
 
@@ -64,6 +70,52 @@ class VeInvitationHandler(BaseHandler):
                 (you are not the author of the attached plan)
                 {"success": False,
                  "reason": "insufficient_permissions"}
+
+        POST /ve_invitation/reply
+            Reply to a received VE Invitation by either accepting or
+            declining it.
+
+            If the invitation is declined, the previously granted read
+            access right will be revoked.
+
+            The user who originally sent the VE invitation will receive
+            a notification about the decision made.
+
+            HTTP Body:
+                {
+                    "invitation_id": "<id_of_invitation>",
+                    "accepted": <true|false>,
+                }
+
+            returns:
+                200 OK
+                {"success": True}
+
+                400 Bad Request
+                (the http body does not contain valid json)
+                {"success": False,
+                 "reason": "json_parsing_error"}
+
+                400 Bad Request
+                (the http body misses a required key, either message, plan_id or
+                 username)
+                {"success": False,
+                 "reason": "missing_key_in_http_body:<missing_key>"}
+
+                401 Unauthorized
+                (access token is not valid)
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                (you are not the recipient of the invitation)
+                {"success": False,
+                 "reason": "insufficient_permissions"}
+
+                409 Conflict
+                (invitiation id does not exist)
+                {"success": False,
+                 "reason": "invitation_doesnt_exist"}
         """
         try:
             http_body = json.loads(self.request.body)
@@ -101,131 +153,163 @@ class VeInvitationHandler(BaseHandler):
                 )
                 return
 
-            with util.get_mongodb() as db:
-                plan_manager = VEPlanResource(db)
-                
-                # give user read access to plan
-                if http_body["plan_id"] is not None:
-
-                    # reject if the user is not the author of the plan --> cannot
-                    # set read permissions
-                    if not plan_manager._check_user_is_author(
-                        http_body["plan_id"], self.current_user.username
-                    ):
-                        self.set_status(403)
-                        self.write(
-                            {"success": False, "reason": INSUFFICIENT_PERMISSIONS}
-                        )
-                        return
-
-                    plan_manager.set_read_permissions(
-                        http_body["plan_id"], http_body["username"]
-                    )
-
-                invitation_id = plan_manager.insert_plan_invitation(
-                    http_body["plan_id"],
-                    http_body["message"],
-                    self.current_user.username,
-                    http_body["username"],
-                )
-
-                # if recipient of the invitation is currently "online" (i.e. connected via socket),
-                # emit the notification instantly
-                if http_body["username"] in global_vars.username_sid_map:
-                    notification_payload = {
-                        "_id": ObjectId(),
-                        "type": "ve_invitation",
-                        "to": http_body["username"],
-                        "receive_state": "sent",
-                        "creation_timestamp": datetime.datetime.now(),
-                        "payload": {
-                            "from": self.current_user.username,
-                            "message": http_body["message"],
-                            "plan_id": http_body["plan_id"],
-                            "invitation_id": invitation_id,
-                        },
-                    }
-                    await global_vars.socket_io.emit(
-                        "notification",
-                        self.json_serialize_response(notification_payload.copy()),
-                        room=global_vars.username_sid_map[http_body["username"]],
-                    )
-
-                    # store notification as "sent", which will be changed to "acknowledged"
-                    # once the client sends the appropriate acknowledgement event
-                    db.notifications.insert_one(notification_payload)
-                else:
-                    # user is not currently connected via socket, save the event as "pending"
-                    # will be dispatched automatically when the user connects next time
-                    db.notifications.insert_one(
-                        {
-                            "_id": ObjectId(),
-                            "type": "ve_invitation",
-                            "to": http_body["username"],
-                            "receive_state": "pending",
-                            "creation_timestamp": datetime.datetime.now(),
-                            "payload": {
-                                "from": self.current_user.username,
-                                "message": http_body["message"],
-                                "plan_id": http_body["plan_id"],
-                                "invitation_id": invitation_id,
-                            },
-                        }
-                    )
-
-            self.write({"success": True})
+            await self.send_ve_invitation(
+                http_body["plan_id"], http_body["username"], http_body["message"]
+            )
+            return
 
         elif slug == "reply":
-            print(http_body)
-
-            with util.get_mongodb() as db:
-                plan_manager = VEPlanResource(db)
-                plan_manager.set_invitation_reply(
-                    http_body["invitation_id"], http_body["accepted"]
-                )
-
-                # if recipient of the invitation is currently "online" (i.e. connected via socket),
-                # emit the notification instantly
-                if http_body["username"] in global_vars.username_sid_map:
-                    notification_payload = {
-                        "_id": ObjectId(),
-                        "type": "ve_invitation_reply",
-                        "to": http_body["username"],
-                        "receive_state": "sent",
-                        "creation_timestamp": datetime.datetime.now(),
-                        "payload": {
-                            "from": self.current_user.username,
-                            "invitation_id": http_body["invitation_id"],
-                            "accepted": http_body["accepted"],
-                        },
+            if "accepted" not in http_body:
+                self.set_status(400)
+                self.write(
+                    {
+                        "success": False,
+                        "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "accepted",
                     }
-                    await global_vars.socket_io.emit(
-                        "notification",
-                        self.json_serialize_response(notification_payload.copy()),
-                        room=global_vars.username_sid_map[http_body["username"]],
-                    )
+                )
+                return
+            if "invitation_id" not in http_body:
+                self.set_status(400)
+                self.write(
+                    {
+                        "success": False,
+                        "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "invitation_id",
+                    }
+                )
+                return
+            if "username" not in http_body:
+                self.set_status(400)
+                self.write(
+                    {
+                        "success": False,
+                        "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "username",
+                    }
+                )
+                return
 
-                    # store notification as "sent", which will be changed to "acknowledged"
-                    # once the client sends the appropriate acknowledgement event
-                    db.notifications.insert_one(notification_payload)
-                else:
-                    # user is not currently connected via socket, save the event as "pending"
-                    # will be dispatched automatically when the user connects next time
-                    db.notifications.insert_one(
-                        {
-                            "_id": ObjectId(),
-                            "type": "ve_invitation_reply",
-                            "to": http_body["username"],
-                            "receive_state": "pending",
-                            "creation_timestamp": datetime.datetime.now(),
-                            "payload": {
-                                "from": self.current_user.username,
-                                "invitation_id": http_body["invitation_id"],
-                                "accepted": http_body["accepted"],
-                            },
-                        }
-                    )
-
-            self.write({"success": True})
+            await self.reply_to_ve_invitation(
+                http_body["invitation_id"], http_body["accepted"], http_body["username"]
+            )
+            return
         else:
             self.set_status(404)
+
+    async def send_ve_invitation(
+        self, plan_id: str | None, username: str, message: str
+    ):
+        """
+        This function is invoked by the handler when the correspoding endpoint
+        is requested. It just de-crowds the handler function and should therefore
+        not be called manually anywhere else.
+
+        Send a VE Invitation to another user which includes a message and optionally
+        and already created plan. If a plan is included in the invitation, the recipient
+        receives read access to this plan.
+
+        The invited user receives a notification about the invitation.
+
+        Responses:
+            200 OK --> invitation send
+            403 Forbidden --> inviting user is not the author of the appended
+                              plan, therefore no read access can be granted to
+                              the recipient, no invitation is sent.
+        """
+
+        with util.get_mongodb() as db:
+            plan_manager = VEPlanResource(db)
+
+            # grant user read access to plan if one was appended to the invitation
+            if plan_id is not None:
+                # reject if the user is not the author of the plan --> cannot
+                # set read permissions
+                if not plan_manager._check_user_is_author(
+                    plan_id, self.current_user.username
+                ):
+                    self.set_status(403)
+                    self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
+                    return
+
+                plan_manager.set_read_permissions(plan_id, username)
+
+            # save plan invitation in db
+            invitation_id = plan_manager.insert_plan_invitation(
+                plan_id,
+                message,
+                self.current_user.username,
+                username,
+            )
+
+            # trigger notification dispatch
+            notification_payload = {
+                "from": self.current_user.username,
+                "message": message,
+                "plan_id": plan_id,
+                "invitation_id": invitation_id,
+            }
+            notification_manager = NotificationResource(db)
+            await notification_manager.send_notification(
+                username, "ve_invitation", notification_payload
+            )
+
+        self.write({"success": True})
+
+    async def reply_to_ve_invitation(
+        self, invitation_id: str, accepted: bool, invited_by_username: str
+    ):
+        """
+        This function is invoked by the handler when the correspoding endpoint
+        is requested. It just de-crowds the handler function and should therefore
+        not be called manually anywhere else.
+
+        Reply to a received VE invitation by either accepting or declining it.
+
+        If the invitation is declined, the granted read access rights will be
+        revoked.
+
+        The user who originally sent the invitation will receive a notification
+        about the users decision.
+
+        Responses:
+            200 OK --> reply saved, notification to user sent
+            403 Forbidden --> current user is not recipient of the invitation
+            409 Conflict --> this invitation_id does not exist, therefore
+                             no notification is sent
+        """
+
+        with util.get_mongodb() as db:
+            plan_manager = VEPlanResource(db)
+            try:
+                plan_manager.set_invitation_reply(invitation_id, accepted)
+            except InvitationDoesntExistError:
+                self.set_status(409)
+                self.write({"success": False, "reason": INVITATION_DOESNT_EXIST})
+                return
+
+            # reject if current user is not the recipient of invitation, i.e. it wasn't
+            # even sent to him
+            invitation = plan_manager.get_plan_invitation(invitation_id)
+            if self.current_user.username != invitation["recipient"]:
+                self.set_status(403)
+                self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
+                return
+
+            # if invitation is declined (accepted == False) revoke read access rights again
+            if accepted is False:
+                plan_manager.revoke_read_permissions(
+                    invitation["plan_id"], self.current_user.username
+                )
+
+            # trigger notification to the original ve invitation sender
+            # to notify him/her about the decision that the invited user
+            # took
+            notification_payload = {
+                "from": self.current_user.username,
+                "invitation_id": invitation_id,
+                "accepted": accepted,
+            }
+            notification_manager = NotificationResource(db)
+            await notification_manager.send_notification(
+                invited_by_username, "ve_invitation_reply", notification_payload
+            )
+
+        self.write({"success": True})

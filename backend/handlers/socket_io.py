@@ -1,3 +1,4 @@
+from typing import Dict, List, Optional
 from bson import ObjectId
 import jose
 import keycloak
@@ -5,6 +6,25 @@ import keycloak
 import global_vars
 from error_reasons import MISSING_KEY_SLUG
 import util
+
+#######################################################################
+# do not top-of-file-import functions from these files, it will crash #
+# the socketio server for whatever reason, import the functions       #
+# whenever needed in your functions directly                          #
+#######################################################################
+
+
+async def emit_event(event_name: str, payload: Dict, room: str | List[str] | None):
+    """
+    Wrapper around `socketio.AsyncServer.emit()` that json
+    serializes the dict payload.
+    """
+
+    await global_vars.socket_io.emit(
+        event_name,
+        util.json_serialize_response(payload.copy()),
+        room=room,
+    )
 
 
 @global_vars.socket_io.event
@@ -136,8 +156,7 @@ async def authenticate(sid, data):
         )
         if new_notifications:
             for notification in new_notifications:
-                notification = util.json_serialize_response(notification)
-                await global_vars.socket_io.emit(
+                await emit_event(
                     "notification",
                     notification,
                     room=sid,
@@ -146,6 +165,9 @@ async def authenticate(sid, data):
                 # set the notifactions from "pending" to "sent" to signify that
                 # they have been atleast tried to be delivered to the client
                 # and are awaiting acknowledgement
+                # TODO NotificationResource
+                # TODO performance enhancement: collect all notification _ids
+                # and do the update in one single db query
                 db.notifications.update_one(
                     {"_id": ObjectId(notification["_id"])},
                     {"$set": {"receive_state": "sent"}},
@@ -198,9 +220,32 @@ async def acknowledge_notification(sid, data):
     # the recipient of the notification by checking the session
 
     with util.get_mongodb() as db:
+        # TODO NotificationResource
         db.notifications.update_one(
             {"_id": ObjectId(notification_id)},
             {"$set": {"receive_state": "acknowledged"}},
         )
 
         return {"status": 200, "success": True}
+
+
+def recipient_online(recipient: str) -> bool:
+    """
+    Returns True, if the `recipient` username is currently
+    online, i.e. has an open and authenticated socketio connection,
+    or False otherwise.
+    """
+
+    return recipient in global_vars.username_sid_map
+
+
+def get_sid_of_user(username: str) -> Optional[str]:
+    """
+    Returns the user's socketio sid if the user is currently online,
+    or None otherwise.
+    """
+
+    try:
+        return global_vars.username_sid_map[username]
+    except KeyError:
+        return None

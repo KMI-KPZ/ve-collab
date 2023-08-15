@@ -5,7 +5,7 @@ from bson import ObjectId
 from bson.errors import InvalidId
 from pymongo.database import Database
 from pymongo.errors import DuplicateKeyError
-from typing import Any, List
+from typing import Any, Dict, List
 
 from exceptions import (
     InvitationDoesntExistError,
@@ -763,6 +763,29 @@ class VEPlanResource:
         )
 
         return result.inserted_id
+
+    def get_plan_invitation(self, _id: str | ObjectId) -> Dict:
+        """ 
+        Request a VE invitation record by specifying it's _id in 
+        either a `str` or `ObjectId` representation.
+
+        Returns the VE invitation as a dict.
+
+        Raise `InvitationDoesntExistError` if no invitation with
+        such a _id exists.
+        """
+
+        try:
+            _id = util.parse_object_id(_id)
+        except InvalidId:
+            raise InvitationDoesntExistError()
+
+        result = self.db.invitations.find_one({"_id": _id})
+
+        if not result:
+            raise InvitationDoesntExistError()
+
+        return result
 
     def set_invitation_reply(
         self, invitation_id: str | ObjectId, accepted: bool
