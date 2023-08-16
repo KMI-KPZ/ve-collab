@@ -27,6 +27,10 @@ export default function Notifications({
         );
     };
 
+    const acknowledgeNotification = (notification: Notification) => {
+        socket.emit('acknowledge_notification', { notification_id: notification._id });
+    };
+
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
         if (status !== 'loading') {
@@ -62,7 +66,14 @@ export default function Notifications({
                                                 />
                                             )}
                                             {notification.type === 've_invitation_reply' && (
-                                                <div>
+                                                <div
+                                                    onClick={(e) => {
+                                                        acknowledgeNotification(notification);
+                                                        removeNotificationFromList(
+                                                            notification._id
+                                                        );
+                                                    }}
+                                                >
                                                     {/* TODO layout, styling, Dialog, profile snippet, ...*/}
                                                     {notification.payload.from} hat deine
                                                     VE-Einladung{' '}
