@@ -65,7 +65,7 @@ export default function ExternalPersons() {
                     if (data.plan.involved_parties.length !== 0) {
                         setValue(
                             'externalParties',
-                            data.plan.involved_parties.map((element: any) => ({
+                            data.plan.involved_parties.map((element: string) => ({
                                 externalParty: element,
                             }))
                         );

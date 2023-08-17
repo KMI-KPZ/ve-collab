@@ -65,7 +65,7 @@ export default function Languages() {
                     if (data.plan.languages.length !== 0) {
                         setValue(
                             'languages',
-                            data.plan.languages.map((element: any) => ({ language: element }))
+                            data.plan.languages.map((element: string) => ({ language: element }))
                         );
                     }
                 }
