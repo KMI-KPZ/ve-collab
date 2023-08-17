@@ -6695,6 +6695,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "creation_timestamp": datetime.now(),
             "last_modified": datetime.now(),
             "name": "test",
+            "partners": [CURRENT_USER.username],
             "institutions": [self.institution.to_dict()],
             "topic": "test",
             "lectures": [self.lecture.to_dict()],
@@ -6766,6 +6767,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan._id, default_plan._id)
         self.assertEqual(response_plan.author, default_plan.author)
         self.assertEqual(response_plan.name, default_plan.name)
+        self.assertEqual(response_plan.partners, default_plan.partners)
         self.assertEqual(response_plan.institutions, default_plan.institutions)
         self.assertEqual(response_plan.topic, default_plan.topic)
         self.assertEqual(response_plan.lectures, default_plan.lectures)
@@ -6853,6 +6855,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan._id, default_plan._id)
         self.assertEqual(response_plan.author, default_plan.author)
         self.assertEqual(response_plan.name, default_plan.name)
+        self.assertEqual(response_plan.partners, default_plan.partners)
         self.assertEqual(response_plan.institutions, default_plan.institutions)
         self.assertEqual(response_plan.topic, default_plan.topic)
         self.assertEqual(response_plan.lectures, default_plan.lectures)
