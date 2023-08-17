@@ -2,6 +2,7 @@ import WhiteBox from '@/components/Layout/WhiteBox';
 import Container from '@/components/Layout/container';
 import AllNotifications from '@/components/Notifications/AllNotifications';
 import VeInvitationNotification from '@/components/Notifications/VeInvitationNotification';
+import VeInvitationReplyNotification from '@/components/Notifications/VeInvitationReplyNotification';
 import Tabs from '@/components/profile/Tabs';
 import { Notification } from '@/interfaces/socketio';
 import { signIn, useSession } from 'next-auth/react';
@@ -66,21 +67,13 @@ export default function Notifications({
                                                 />
                                             )}
                                             {notification.type === 've_invitation_reply' && (
-                                                <div
-                                                    onClick={(e) => {
-                                                        acknowledgeNotification(notification);
-                                                        removeNotificationFromList(
-                                                            notification._id
-                                                        );
-                                                    }}
-                                                >
-                                                    {/* TODO layout, styling, Dialog, profile snippet, ...*/}
-                                                    {notification.payload.from} hat deine
-                                                    VE-Einladung{' '}
-                                                    {notification.payload.accepted === true
-                                                        ? 'akzeptiert'
-                                                        : 'abgelehnt'}
-                                                </div>
+                                                <VeInvitationReplyNotification
+                                                    socket={socket}
+                                                    notification={notification}
+                                                    removeNotificationCallback={
+                                                        removeNotificationFromList
+                                                    }
+                                                />
                                             )}
                                         </div>
                                     ))}

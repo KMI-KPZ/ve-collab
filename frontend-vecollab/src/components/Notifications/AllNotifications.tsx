@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import VeInvitationNotification from './VeInvitationNotification';
 import { Socket } from 'socket.io-client';
+import VeInvitationReplyNotification from './VeInvitationReplyNotification';
 
 interface Props {
     socket: Socket;
@@ -27,6 +28,10 @@ export default function AllNotifications({ socket }: Props) {
 
     // TODO probably dont need socket and also not the remove callback here, refactor component structure
     // or create a new one
+
+    // TODO for increased performance: profile snippets should be retrieved from api here in bulk instead
+    // of each time in the notification component, saves many api calls in case notifications contain
+    // the same persons
     return (
         <>
             {notifications !== undefined && (
@@ -44,12 +49,14 @@ export default function AllNotifications({ socket }: Props) {
                                 />
                             )}
                             {notification.type === 've_invitation_reply' && (
-                                <div>
-                                    {notification.payload.from} hat deine VE-Einladung{' '}
-                                    {notification.payload.accepted === true
-                                        ? 'akzeptiert'
-                                        : 'abgelehnt'}
-                                </div>
+                                <VeInvitationReplyNotification
+                                    key={index}
+                                    socket={socket}
+                                    notification={notification}
+                                    removeNotificationCallback={function (
+                                        notificationId: string
+                                    ): void {}}
+                                />
                             )}
                         </div>
                     ))}
