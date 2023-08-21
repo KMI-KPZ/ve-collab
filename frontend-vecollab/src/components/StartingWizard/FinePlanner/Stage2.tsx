@@ -15,8 +15,6 @@ export default function Stage2({ fineStep }: Props) {
         name: 'tasks',
         control,
     });
-    console.log('fields', fields);
-    console.log('finestep', fineStep);
 
     return (
         <WhiteBox>
@@ -94,29 +92,32 @@ export default function Stage2({ fineStep }: Props) {
                             Aufgabenstellungen
                         </label>
                     </div>
-                    <div className="w-5/6">
+                    <div className="flex flex-col w-5/6">
                         {fields.map((task, taskIndex) => (
-                            <div key={taskIndex}>
+                            <div className="relative" key={taskIndex}>
                                 <Tasks2 taskIndex={taskIndex} />
-                                <div className={'mx-7 flex justify-end'}>
-                                    <button onClick={() => remove(taskIndex)}>
+                                <div className="absolute left-10 bottom-7">
+                                    <button type="button" onClick={() => remove(taskIndex)}>
                                         <RxMinus size={20} />
                                     </button>
                                 </div>
                             </div>
                         ))}
-                        <button
-                            onClick={() => {
-                                append({
-                                    title: 'x',
-                                    description: 'xx',
-                                    learning_goal: 'xxx',
-                                    tools: ['x', 'b'],
-                                });
-                            }}
-                        >
-                            <RxPlus size={20} />
-                        </button>
+                        <div className="w-full flex items-center justify-center">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    append({
+                                        title: '',
+                                        description: '',
+                                        learning_goal: '',
+                                        tools: ['', ''],
+                                    });
+                                }}
+                            >
+                                <RxPlus size={20} />
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

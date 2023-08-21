@@ -1,17 +1,16 @@
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+import Tools2 from '@/components/StartingWizard/FinePlanner/Tools2';
+import { RxPlus } from 'react-icons/rx';
 
 interface Props {
     taskIndex: number;
 }
 
 export default function Tasks2({ taskIndex }: Props) {
-    const { register, control } = useFormContext<IFineStep>();
-    /*        const { fields, append, remove } = useFieldArray({
-        name: 'fineStep.tasks.${taskIndex}.tools',
-        control,
-    });*/
+    const { register, watch, setValue } = useFormContext<IFineStep>();
+    const tools: string[] = watch(`tasks.${taskIndex}.tools`);
 
     return (
         <div className={'p-4 my-4 mx-2 bg-slate-200 rounded-3xl shadow-2xl'}>
@@ -62,15 +61,25 @@ export default function Tasks2({ taskIndex }: Props) {
             </div>
             <div className="mt-2">
                 <div className="flex">
-                    <div className="w-1/6 flex items-center">
+                    <div className="w-1/6 flex items-start">
                         <label htmlFor="tools" className="px-2 py-2">
                             Tools & Medien
                         </label>
                     </div>
-                    <div className="w-5/6">
-                        {/*                        {fields.map((tool, toolIndex) => (
+                    <div className="w-full flex flex-col gap-2">
+                        {tools.map((tool, toolIndex) => (
                             <Tools2 key={toolIndex} taskIndex={taskIndex} toolIndex={toolIndex} />
-                        ))}*/}
+                        ))}
+                        <div className="w-full flex items-center justify-center">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setValue(`tasks.${taskIndex}.tools`, [...tools, '']);
+                                }}
+                            >
+                                <RxPlus size={20} />
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

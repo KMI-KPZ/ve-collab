@@ -82,10 +82,10 @@ export default function FinePlanner() {
             return;
         }
         // router is loaded, but still no plan ID in the query --> redirect to overview because we can't do anything without an ID
-        /*        if (!router.query.plannerId) {
+        if (!router.query.plannerId) {
             router.push('/overviewProjects');
             return;
-        }*/
+        }
 
         if (session) {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
@@ -98,7 +98,10 @@ export default function FinePlanner() {
                         );
                         if (fineStepCopy) {
                             setFineStep(fineStepCopy);
-                            /*methods.setValue('fineStep', { ...fineStepCopy });*/
+                            Object.entries(fineStepCopy).forEach(([name, value]: any) =>
+                                methods.setValue(name, value)
+                            );
+                            console.log(fineStepCopy);
                             methods.reset({ ...fineStepCopy });
                         }
                     }
