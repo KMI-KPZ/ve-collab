@@ -80,14 +80,16 @@ export default function ProfileHeader({
             plan: chosenPlanId === '' ? null : chosenPlanId,
         };
 
-        // TODO api call once finished
-        console.log(payload);
+        fetchPOST('/ve_invitation/send', payload, session?.accessToken).then((response) => {
+            console.log(response);
 
-        // render success message that disappears after 2 seconds
-        setSuccessPopupOpen(true);
-        setTimeout(() => {
-            setSuccessPopupOpen((successPopupOpen) => false);
-        }, 2000);
+            // render success message that disappears after 2 seconds
+            setSuccessPopupOpen(true);
+            setTimeout(() => {
+                setSuccessPopupOpen((successPopupOpen) => false);
+            }, 2000);
+        });
+        
     };
 
     return (
