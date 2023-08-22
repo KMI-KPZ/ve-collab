@@ -77,7 +77,8 @@ export default function ProfileHeader({
     const sendVeInvitation = () => {
         const payload = {
             message: veInvitationMessage,
-            plan: chosenPlanId === '' ? null : chosenPlanId,
+            plan_id: chosenPlanId === '' ? null : chosenPlanId,
+            username: usernameOfProfileOwner,
         };
 
         fetchPOST('/ve_invitation/send', payload, session?.accessToken).then((response) => {
@@ -89,7 +90,6 @@ export default function ProfileHeader({
                 setSuccessPopupOpen((successPopupOpen) => false);
             }, 2000);
         });
-        
     };
 
     return (
@@ -223,8 +223,8 @@ export default function ProfileHeader({
                                             setChosenPlanId={setChosenPlanId}
                                         />
                                         <p className="my-2 text-gray-400">
-                                            es werden automatisch Leserechte an eingeladene
-                                            Personen vergeben!
+                                            es werden automatisch Leserechte an eingeladene Personen
+                                            vergeben!
                                         </p>
                                     </>
                                 )}

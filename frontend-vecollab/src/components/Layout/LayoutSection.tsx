@@ -4,11 +4,13 @@ import FooterSection from '@/components/Layout/FooterSection';
 import { useSession } from 'next-auth/react';
 import ExcludedFromMatchingBanner from '../profile/ExcludedFromMatchingBanner';
 import { fetchGET } from '@/lib/backend';
+import { Notification } from '@/interfaces/socketio';
 
 interface Props {
     children: React.ReactNode;
+    notificationEvents: Notification[];
 }
-export default function LayoutSection({ children }: Props): JSX.Element {
+export default function LayoutSection({ children, notificationEvents }: Props): JSX.Element {
     const { data: session, status } = useSession();
     const [excludedFromMatching, setExcludedFromMatching] = useState(false);
 
@@ -27,7 +29,7 @@ export default function LayoutSection({ children }: Props): JSX.Element {
 
     return (
         <>
-            <HeaderSection />
+            <HeaderSection notificationEvents={notificationEvents}/>
             <main>
                 {excludedFromMatching && <ExcludedFromMatchingBanner />}
                 <>{children}</>
