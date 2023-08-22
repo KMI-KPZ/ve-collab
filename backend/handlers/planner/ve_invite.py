@@ -177,18 +177,9 @@ class VeInvitationHandler(BaseHandler):
                     }
                 )
                 return
-            if "username" not in http_body:
-                self.set_status(400)
-                self.write(
-                    {
-                        "success": False,
-                        "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "username",
-                    }
-                )
-                return
 
             await self.reply_to_ve_invitation(
-                http_body["invitation_id"], http_body["accepted"], http_body["username"]
+                http_body["invitation_id"], http_body["accepted"]
             )
             return
         else:
@@ -253,9 +244,7 @@ class VeInvitationHandler(BaseHandler):
 
         self.write({"success": True})
 
-    async def reply_to_ve_invitation(
-        self, invitation_id: str, accepted: bool, invited_by_username: str
-    ):
+    async def reply_to_ve_invitation(self, invitation_id: str, accepted: bool):
         """
         This function is invoked by the handler when the correspoding endpoint
         is requested. It just de-crowds the handler function and should therefore
@@ -312,7 +301,7 @@ class VeInvitationHandler(BaseHandler):
             }
             notification_manager = NotificationResource(db)
             await notification_manager.send_notification(
-                invited_by_username, "ve_invitation_reply", notification_payload
+                invitation["sender"], "ve_invitation_reply", notification_payload
             )
 
         self.write({"success": True})
