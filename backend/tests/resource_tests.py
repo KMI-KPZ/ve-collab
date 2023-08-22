@@ -7,6 +7,7 @@ from bson import ObjectId
 import pymongo
 from tornado.options import options
 from exceptions import (
+    InvitationDoesntExistError,
     MissingKeyError,
     NoReadAccessError,
     NoWriteAccessError,
@@ -1332,3 +1333,138 @@ class PlanResourceTest(BaseResourceTestCase):
         # expect step to still be there
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertEqual(len(db_state["steps"]), 1)
+
+    def test_insert_plan_invitation(self):
+        """
+        expect: successfully insert a plan invitation
+        """
+
+        inserted_id = self.planner.insert_plan_invitation(
+            self.plan_id, "invitation", "test_admin", "test_user"
+        )
+
+        # expect invitation to be in the plan
+        db_state = self.db.invitations.find_one({"_id": inserted_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["plan_id"], self.plan_id)
+        self.assertEqual(db_state["message"], "invitation")
+        self.assertEqual(db_state["sender"], "test_admin")
+        self.assertEqual(db_state["recipient"], "test_user")
+        self.assertEqual(db_state["accepted"], None)
+
+    def test_insert_plan_invitation_error_plan_doesnt_exist(self):
+        """
+        expect: PlanDoesntExistError is raised because no plan with this _id exists
+        """
+
+        self.assertRaises(
+            PlanDoesntExistError,
+            self.planner.insert_plan_invitation,
+            ObjectId(),
+            "invitation",
+            "test_admin",
+            "test_user",
+        )
+
+    def test_get_plan_invitation(self):
+        """
+        expect: successfully get a plan invitation
+        """
+        invitation_id = ObjectId()
+
+        self.db.invitations.insert_one(
+            {
+                "_id": invitation_id,
+                "plan_id": self.plan_id,
+                "message": "invitation",
+                "sender": "test_admin",
+                "recipient": "test_user",
+                "accepted": None,
+            }
+        )
+
+        invitation = self.planner.get_plan_invitation(invitation_id)
+
+        # expect invitation to be in the db
+        self.assertIsNotNone(invitation)
+        self.assertEqual(invitation["plan_id"], self.plan_id)
+        self.assertEqual(invitation["message"], "invitation")
+        self.assertEqual(invitation["sender"], "test_admin")
+        self.assertEqual(invitation["recipient"], "test_user")
+        self.assertEqual(invitation["accepted"], None)
+
+        # try again, but this time with a string id
+        invitation = self.planner.get_plan_invitation(str(invitation_id))
+        self.assertIsNotNone(invitation)
+        self.assertEqual(invitation["plan_id"], self.plan_id)
+        self.assertEqual(invitation["message"], "invitation")
+        self.assertEqual(invitation["sender"], "test_admin")
+        self.assertEqual(invitation["recipient"], "test_user")
+        self.assertEqual(invitation["accepted"], None)
+
+    def test_get_plan_invitation_error_invitation_doesnt_exist(self):
+        """
+        expect: PlanDoesntExistError is raised because no invitation
+        with this _id exists
+        """
+
+        self.assertRaises(
+            InvitationDoesntExistError, self.planner.get_plan_invitation, ObjectId()
+        )
+
+    def test_set_invitation_reply(self):
+        """
+        expect: successfully set the reply of an invitation
+        """
+
+        invitation_id = ObjectId()
+
+        self.db.invitations.insert_one(
+            {
+                "_id": invitation_id,
+                "plan_id": self.plan_id,
+                "message": "invitation",
+                "sender": "test_admin",
+                "recipient": "test_user",
+                "accepted": None,
+            }
+        )
+
+        self.planner.set_invitation_reply(invitation_id, True)
+
+        # expect invitation's accepted state to be True
+        db_state = self.db.invitations.find_one({"_id": invitation_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["accepted"], True)
+
+        # try again, but this time with a string id and False accept state
+        self.planner.set_invitation_reply(str(invitation_id), False)
+        db_state = self.db.invitations.find_one({"_id": invitation_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["accepted"], False)
+
+    def test_set_invitation_reply_error_invitation_doesnt_exist(self):
+        """
+        expect: InvitationDoesntExistError is raised because no invitation
+        with this _id exists
+        """
+
+        self.assertRaises(
+            InvitationDoesntExistError,
+            self.planner.set_invitation_reply,
+            ObjectId(),
+            True,
+        )
+
+    def test_set_invitation_reply_error_invalid_id(self):
+        """
+        expect: InvitationDoesntExistError is raised because the provided 
+        id is not a valid ObjectId
+        """
+
+        self.assertRaises(
+            InvitationDoesntExistError,
+            self.planner.set_invitation_reply,
+            "invalid_id",
+            True,
+        )
