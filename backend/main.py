@@ -13,6 +13,7 @@ import gridfs
 from keycloak import KeycloakOpenID, KeycloakAdmin
 import pymongo
 import pymongo.errors
+import socketio
 import tornado.httpserver
 import tornado.ioloop
 import tornado.locks
@@ -25,6 +26,7 @@ from handlers.authentication import LoginHandler, LoginCallbackHandler, LogoutHa
 from handlers.db_static_files import GridFSStaticFileHandler
 from handlers.healthcheck import HealthCheckHandler
 from handlers.network.follow import FollowHandler
+from handlers.network.notifications import NotificationHandler
 from handlers.network.permissions import (
     GlobalACLHandler,
     RoleHandler,
@@ -42,6 +44,7 @@ from resources.network.profile import ProfileDoesntExistException, Profiles
 from resources.network.space import Spaces
 from handlers.planner.etherpad_integration import EtherpadIntegrationHandler
 from handlers.planner.ve_plan import VEPlanHandler
+from handlers.planner.ve_invite import VeInvitationHandler
 
 
 logger = logging.getLogger(__name__)
@@ -62,6 +65,17 @@ define(
 
 
 def make_app(cookie_secret: str, debug: bool = False):
+    # setup socketio server
+    global_vars.socket_io = socketio.AsyncServer(
+        async_mode="tornado", cors_allowed_origins="*"
+    )
+    # imports have to be done lazily here, because otherwise the socket_io server in global
+    # vars would not be ready, causing the event handling to crash
+    # but in turn if they don't get imported at all, the handler functions would not be
+    # invoked.
+    # that's the price we gotta pay, but atleast the socket server is accessible from anywhere
+    from handlers.socket_io import connect, disconnect, authenticate, acknowledge_notification
+
     return tornado.web.Application(
         [
             (r"/", MainRedirectHandler),
@@ -101,6 +115,8 @@ def make_app(cookie_secret: str, debug: bool = False):
             (r"/orcid", OrcidProfileHandler),
             (r"/matching_exclusion_info", MatchingExclusionHandler),
             (r"/etherpad_integration/(.+)", EtherpadIntegrationHandler),
+            (r"/ve_invitation/(.+)", VeInvitationHandler),
+            (r"/notifications", NotificationHandler),
             (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
             (r"/assets/(.*)", tornado.web.StaticFileHandler, {"path": "./assets/"}),
             (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./html/"}),
@@ -110,6 +126,7 @@ def make_app(cookie_secret: str, debug: bool = False):
                 {"path": "./javascripts/"},
             ),
             (r"/uploads/(.*)", GridFSStaticFileHandler, {"path": ""}),
+            (r"/socket.io/", socketio.get_tornado_handler(global_vars.socket_io)),
         ],
         cookie_secret=cookie_secret,
         template_path="html",
@@ -282,7 +299,7 @@ def set_global_vars(conf: dict) -> None:
         "mongodb_password",
         "mongodb_db_name",
         "etherpad_base_url",
-        "etherpad_api_key"
+        "etherpad_api_key",
     ]
 
     for key in expected_config_keys:
@@ -394,7 +411,7 @@ def hook_tornado_access_log():
     tornado_access_logger.addHandler(handler)
 
 
-async def main():
+def main():
     define(
         "config",
         default="config.json",
@@ -446,9 +463,8 @@ async def main():
     logger.info("Starting server on port: " + str(global_vars.port))
     server.listen(global_vars.port)
 
-    shutdown_event = tornado.locks.Event()
-    await shutdown_event.wait()
+    tornado.ioloop.IOLoop.current().start()
 
 
 if __name__ == "__main__":
-    tornado.ioloop.IOLoop.current().run_sync(main)
+    main()
