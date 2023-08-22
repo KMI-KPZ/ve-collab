@@ -63,7 +63,10 @@ export default function Languages() {
                 (data) => {
                     setLoading(false);
                     if (data.plan.languages.length !== 0) {
-                        setValue('languages', data.plan.languages);
+                        setValue(
+                            'languages',
+                            data.plan.languages.map((element: string) => ({ language: element }))
+                        );
                     }
                 }
             );
@@ -81,7 +84,7 @@ export default function Languages() {
             {
                 plan_id: router.query.plannerId,
                 field_name: 'languages',
-                value: watch('languages'),
+                value: watch('languages').map((element) => element.language),
             },
             session?.accessToken
         );

@@ -166,6 +166,7 @@ class VEPlanHandler(BaseHandler):
                 Example:
                     {
                         "name": "test",
+                        "partners": ["username1", "username2"],
                         "institutions": [
                             {
                                 "_id": "<object_id_str>",
@@ -339,6 +340,7 @@ class VEPlanHandler(BaseHandler):
                     {
                         "_id": "<object_id_str>",
                         "name": "test",
+                        "partners": ["username1", "username2"],
                         "institutions": [
                             {
                                 "_id": "<object_id_str>",

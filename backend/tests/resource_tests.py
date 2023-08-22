@@ -167,6 +167,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "creation_timestamp": datetime.now(),
             "last_modified": datetime.now(),
             "name": "test",
+            "partners": ["test_admin"],
             "institutions": [self.institution.to_dict()],
             "topic": "test",
             "lectures": [self.lecture.to_dict()],
@@ -211,6 +212,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 self.assertEqual(plan._id, self.default_plan["_id"])
                 self.assertEqual(plan.author, self.default_plan["author"])
                 self.assertEqual(plan.name, self.default_plan["name"])
+                self.assertEqual(plan.partners, self.default_plan["partners"])
                 self.assertEqual(
                     [institution.to_dict() for institution in plan.institutions],
                     self.default_plan["institutions"],
@@ -257,6 +259,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 self.assertEqual(plan._id, self.default_plan["_id"])
                 self.assertEqual(plan.author, self.default_plan["author"])
                 self.assertEqual(plan.name, self.default_plan["name"])
+                self.assertEqual(plan.partners, self.default_plan["partners"])
                 self.assertEqual(
                     [institution.to_dict() for institution in plan.institutions],
                     self.default_plan["institutions"],
@@ -339,6 +342,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(plan._id, self.default_plan["_id"])
         self.assertEqual(plan.author, self.default_plan["author"])
         self.assertEqual(plan.name, self.default_plan["name"])
+        self.assertEqual(plan.partners, self.default_plan["partners"])
         self.assertEqual(
             [institution.to_dict() for institution in plan.institutions],
             self.default_plan["institutions"],
@@ -383,6 +387,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "creation_timestamp": datetime.now(),
                 "last_modified": datetime.now(),
                 "name": "admin",
+                "partners": ["test_user"],
                 "institutions": [self.institution.to_dict()],
                 "topic": "test",
                 "lectures": [self.lecture.to_dict()],
@@ -408,6 +413,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "creation_timestamp": datetime.now(),
                 "last_modified": datetime.now(),
                 "name": "user",
+                "partners": [],
                 "institutions": [self.institution.to_dict()],
                 "topic": "test",
                 "lectures": [self.lecture.to_dict()],
@@ -449,6 +455,7 @@ class PlanResourceTest(BaseResourceTestCase):
         # don't supply a _id, letting the system create a fresh one
         plan = {
             "name": "new plan",
+            "partners": ["test_admin"],
             "author": "test_user",
             "read_access": ["test_user"],
             "write_access": ["test_user"],
@@ -494,6 +501,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "read_access": ["test_user"],
             "write_access": ["test_user"],
             "name": "new plan",
+            "partners": ["test_admin"],
             "institutions": [self.institution.to_dict()],
             "topic": "test",
             "lectures": [self.lecture.to_dict()],
