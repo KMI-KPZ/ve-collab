@@ -9,6 +9,7 @@ import SmallTimestamp from '../SmallTimestamp';
 import Dialog from '../profile/Dialog';
 import { fetchPOST, fetchGET } from '@/lib/backend';
 import { Notification } from '@/interfaces/socketio';
+import SuccessAlert from '../SuccessAlert';
 
 interface Props {
     socket: Socket;
@@ -24,9 +25,9 @@ export default function VeInvitationReplyNotification({
     const { data: session } = useSession();
 
     const [invitedUser, setInvitedUser] = useState<UserSnippet>();
-    const [invitedVePlan, setInvitedVePlan] = useState<PlanPreview>();
 
     const [isNotificationsDialogOpen, setIsNotificationsDialogOpen] = useState(false);
+    const [successPopupOpen, setSuccessPopupOpen] = useState(false);
 
     const handleOpenNotificationsDialog = () => {
         setIsNotificationsDialogOpen(true);
@@ -38,6 +39,24 @@ export default function VeInvitationReplyNotification({
 
     const acknowledgeNotification = () => {
         socket.emit('acknowledge_notification', { notification_id: notification._id });
+    };
+
+    const grantWritePermission = () => {
+        const payload = {
+            plan_id: notification.payload.plan_id,
+            username: notification.payload.from,
+            read: true,
+            write: true,
+        };
+        fetchPOST('/planner/grant_access', payload, session?.accessToken).then((response) => {
+            if (response.success === true) {
+                // render success message that disappears after 2 seconds
+                setSuccessPopupOpen(true);
+                setTimeout(() => {
+                    setSuccessPopupOpen((successPopupOpen) => false);
+                }, 2000);
+            }
+        });
     };
 
     useEffect(() => {
@@ -54,6 +73,8 @@ export default function VeInvitationReplyNotification({
             });
         });
     }, [notification, session]);
+
+    console.log(notification);
 
     return (
         <>
@@ -86,16 +107,15 @@ export default function VeInvitationReplyNotification({
             </li>
             <Dialog
                 isOpen={isNotificationsDialogOpen}
-                title={'deine VE-Einladung'}
+                title={notification.payload.accepted === true ? 'Gute Neuigkeiten' : 'Schade!'}
                 onClose={() => {
                     removeNotificationCallback(notification._id);
                     handleCloseNotificationsDialog();
                 }}
             >
-                <div className="w-[30rem] h-[30rem] overflow-y-auto content-scrollbar relative">
+                <div className="w-[30rem] h-[30rem] relative">
                     {notification.payload.accepted === true ? (
-                        <>
-                            <div className="text-xl font-bold mb-4">Gute Neuigkeiten</div>
+                        <div className="w-full h-[26rem] overflow-y-auto content-scrollbar relative">
                             <div className="my-2 h-4/5">
                                 <Link
                                     href={`/profile?username=${invitedUser?.preferredUsername}`}
@@ -103,7 +123,10 @@ export default function VeInvitationReplyNotification({
                                 >
                                     {invitedUser?.name}
                                 </Link>{' '}
-                                hat deine Anfrage angenommen!
+                                hat deine folgende Anfrage angenommen:
+                                <div className="my-4 p-2 border-2 rounded-xl max-h-[15rem] overflow-y-auto">
+                                    <p className="text-slate-700">{notification.payload.message}</p>
+                                </div>
                                 <div className="my-2">
                                     Ihr könnt jetzt gemeinsam euren VE planen!
                                 </div>
@@ -113,33 +136,54 @@ export default function VeInvitationReplyNotification({
                                     entsprechenden Features findet ihr direkt im
                                     Planungsassistenten!
                                 </div>
-                                <div className="my-8">
-                                    <span className="font-bold">Tipp:</span> Falls{' '}
-                                    {invitedUser?.name} auch Änderungen an der Planung machen können
-                                    soll, vergib direkt hier noch Schreibrechte:
-                                    <div className="flex justify-center my-4">
-                                        <button
-                                            className={
-                                                'bg-transparent border border-gray-500 py-3 px-6 rounded-lg shadow-lg'
-                                            }
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                console.log('TODO');
-                                                // TODO need plan _id to set these rights, add to notification payload
-                                                // TODO success popup
-                                            }}
-                                        >
-                                            <span>
-                                                Schreibrechte für {invitedUser?.name} setzen
-                                            </span>
-                                        </button>
+                                {notification.payload.plan_id !== null && (
+                                    <div className="my-8">
+                                        <span className="font-bold">Tipp:</span> Du hast bereits
+                                        eine Planung begonnen und der Einladung hinzugefügt gehabt,
+                                        falls {invitedUser?.name} auch Änderungen an der Planung
+                                        machen können soll, vergib direkt hier noch Schreibrechte:
+                                        <div className="flex justify-center my-4">
+                                            <button
+                                                className={
+                                                    'bg-transparent border border-gray-500 py-3 px-6 rounded-lg shadow-lg'
+                                                }
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    grantWritePermission();
+                                                }}
+                                            >
+                                                <span>
+                                                    Schreibrechte für {invitedUser?.name} setzen
+                                                </span>
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
                             </div>
-                        </>
+                        </div>
                     ) : (
                         <>
-                            <div>Schade, beim nächsten mal klappt es bestimmt!</div>
+                            <p>
+                                Leider hat{' '}
+                                <Link
+                                    href={`/profile?username=${invitedUser?.preferredUsername}`}
+                                    className="font-bold my-2"
+                                >
+                                    {invitedUser?.name}
+                                </Link>{' '}
+                                hat deine folgende Anfrage abgelehnt:
+                            </p>
+                            <div className="my-4 p-2 border-2 rounded-xl max-h-[15rem] overflow-y-auto">
+                                <p className="text-slate-700">{notification.payload.message}</p>
+                            </div>
+                            <p>Beim nächsten Mal klappt es bestimmt!</p>
+                            <div className="my-8">
+                                <p>
+                                    <span className="font-bold">Tipp:</span> Versuche Personen für
+                                    deinen VE zu finden, deren Lehre und Forschung thematisch zu dir
+                                    passt.
+                                </p>
+                            </div>
                         </>
                     )}
                     <div className="flex absolute bottom-0 w-full justify-center">
@@ -157,6 +201,7 @@ export default function VeInvitationReplyNotification({
                     </div>
                 </div>
             </Dialog>
+            {successPopupOpen && <SuccessAlert message={'Schreibrechte gesetzt'} />}
         </>
     );
 }

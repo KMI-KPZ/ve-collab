@@ -295,9 +295,10 @@ class VeInvitationHandler(BaseHandler):
 
             # if invitation is declined (accepted == False) revoke read access rights again
             if accepted is False:
-                plan_manager.revoke_read_permissions(
-                    invitation["plan_id"], self.current_user.username
-                )
+                if invitation["plan_id"] is not None:
+                    plan_manager.revoke_read_permissions(
+                        invitation["plan_id"], self.current_user.username
+                    )
 
             # trigger notification to the original ve invitation sender
             # to notify him/her about the decision that the invited user
@@ -306,6 +307,8 @@ class VeInvitationHandler(BaseHandler):
                 "from": self.current_user.username,
                 "invitation_id": invitation_id,
                 "accepted": accepted,
+                "plan_id": invitation["plan_id"],
+                "message": invitation["message"],
             }
             notification_manager = NotificationResource(db)
             await notification_manager.send_notification(
