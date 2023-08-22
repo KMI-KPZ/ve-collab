@@ -81,7 +81,6 @@ export default function ProfileHeader({
             username: usernameOfProfileOwner,
         };
 
-        // TODO api call once finished
         fetchPOST('/ve_invitation/send', payload, session?.accessToken).then((response) => {
             console.log(response);
 
