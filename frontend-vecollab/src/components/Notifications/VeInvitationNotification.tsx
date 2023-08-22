@@ -43,7 +43,7 @@ export default function VeInvitationNotification({
     const replyInvitation = (accept: boolean) => {
         fetchPOST(
             '/ve_invitation/reply',
-            { invitation_id: notification.payload.invitation_id, accepted: accept, username: notification.payload.from },
+            { invitation_id: notification.payload.invitation_id, accepted: accept },
             session?.accessToken
         );
     };
