@@ -5,6 +5,7 @@ import logging.handlers
 import os
 import sys
 
+
 sys.path.append(os.path.dirname(__file__))
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
@@ -25,6 +26,7 @@ import global_vars
 from handlers.authentication import LoginHandler, LoginCallbackHandler, LogoutHandler
 from handlers.db_static_files import GridFSStaticFileHandler
 from handlers.healthcheck import HealthCheckHandler
+from handlers.import_personas import ImportDummyPersonasHandler
 from handlers.network.follow import FollowHandler
 from handlers.network.notifications import NotificationHandler
 from handlers.network.permissions import (
@@ -117,6 +119,7 @@ def make_app(cookie_secret: str, debug: bool = False):
             (r"/etherpad_integration/(.+)", EtherpadIntegrationHandler),
             (r"/ve_invitation/(.+)", VeInvitationHandler),
             (r"/notifications", NotificationHandler),
+            (r"/import_personas", ImportDummyPersonasHandler),
             (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
             (r"/assets/(.*)", tornado.web.StaticFileHandler, {"path": "./assets/"}),
             (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./html/"}),
