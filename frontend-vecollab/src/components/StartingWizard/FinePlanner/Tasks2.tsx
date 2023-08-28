@@ -1,6 +1,6 @@
 import React from 'react';
 import { useFieldArray, useFormContext } from 'react-hook-form';
-import { IFineStepFrontend } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+import { IFineStepFrontend, IToolsFrontend } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import Tools2 from '@/components/StartingWizard/FinePlanner/Tools2';
 import { RxPlus } from 'react-icons/rx';
 
@@ -8,12 +8,22 @@ interface Props {
     taskIndex: number;
 }
 
+const defaultValueTools: IToolsFrontend = { name: '' };
+
 export default function Tasks2({ taskIndex }: Props) {
     const { register, formState, control } = useFormContext<IFineStepFrontend>();
-    const { fields, append, remove } = useFieldArray<IFineStepFrontend>({
+    const { fields, append, remove, update } = useFieldArray<IFineStepFrontend>({
         name: `tasks.${taskIndex}.tools`,
         control,
     });
+
+    const handleDelete = (index: number): void => {
+        if (fields.length > 1) {
+            remove(index);
+        } else {
+            update(index, defaultValueTools);
+        }
+    };
 
     return (
         <div className={'p-4 my-4 mx-2 bg-slate-200 rounded-3xl shadow-2xl'}>
@@ -99,19 +109,14 @@ export default function Tasks2({ taskIndex }: Props) {
                                 key={tool.id}
                                 taskIndex={taskIndex}
                                 toolIndex={toolIndex}
-                                removeItem={remove}
+                                removeItem={handleDelete}
                             />
                         ))}
                         <div className="w-full flex items-center justify-center">
                             <button
                                 type="button"
                                 onClick={() => {
-                                    append({
-                                        title: '',
-                                        description: '',
-                                        learning_goal: '',
-                                        tools: [{ name: '' }, { name: '' }],
-                                    });
+                                    append(defaultValueTools);
                                 }}
                             >
                                 <RxPlus size={20} />

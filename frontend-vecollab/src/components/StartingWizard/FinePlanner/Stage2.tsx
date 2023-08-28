@@ -1,28 +1,61 @@
 import Tasks2 from '@/components/StartingWizard/FinePlanner/Tasks2';
-import { RxMinus, RxPlus } from 'react-icons/rx';
 import WhiteBox from '@/components/Layout/WhiteBox';
 import React from 'react';
-import { IFineStepFrontend } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+import { IFineStepFrontend, ITaskFrontend } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import { useFormContext, useFieldArray } from 'react-hook-form';
+import Image from 'next/image';
+import imageTrashcan from '@/images/icons/startingWizard/trash.png';
 
 interface Props {
     fineStep: IFineStepFrontend;
 }
 
+export const defaultValueTask: ITaskFrontend = {
+    title: '',
+    description: '',
+    learning_goal: '',
+    tools: [{ name: '' }, { name: '' }],
+};
+
 export default function Stage2({ fineStep }: Props) {
     const { register, control, formState } = useFormContext<IFineStepFrontend>();
-    const { fields, append, remove } = useFieldArray<IFineStepFrontend>({
+    const { fields, append, remove, update } = useFieldArray<IFineStepFrontend>({
         name: 'tasks',
         control,
+        rules: { minLength: 1 },
     });
+    let dateFrom = new Date(fineStep.timestamp_from).toLocaleString('de-DE', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+    });
+    let dateTo = new Date(fineStep.timestamp_to).toLocaleString('de-DE', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+    });
+
+    const handleDelete = (index: number): void => {
+        if (fields.length > 1) {
+            remove(index);
+        } else {
+            update(index, defaultValueTask);
+        }
+    };
 
     return (
         <WhiteBox>
             <div className="w-[60rem]">
-                <div className="flex justify-center items-center">
-                    <div className="mx-2">Etappe: {fineStep.name}</div>
-                    <div className="mx-2">
-                        {fineStep.timestamp_from} - {fineStep.timestamp_to}
+                <div className="flex justify-center items-center space-x-10">
+                    <div className="flex">
+                        <div className="font-bold text-xl mx-2">Etappe:</div>
+                        <div className="font-bold text-xl">{fineStep.name}</div>
+                    </div>
+                    <div className="flex">
+                        <div className="font-bold mx-2">Zeitspanne:</div>
+                        <div className="mx-2">
+                            {dateFrom} - {dateTo}
+                        </div>
                     </div>
                 </div>
                 <div className="mt-4 flex">
@@ -126,8 +159,13 @@ export default function Stage2({ fineStep }: Props) {
                             <div className="relative" key={task.id}>
                                 <Tasks2 taskIndex={taskIndex} />
                                 <div className="absolute left-10 bottom-7">
-                                    <button type="button" onClick={() => remove(taskIndex)}>
-                                        <RxMinus size={20} />
+                                    <button type="button" onClick={() => handleDelete(taskIndex)}>
+                                        <Image
+                                            src={imageTrashcan}
+                                            width={20}
+                                            height={20}
+                                            alt="trashcan"
+                                        ></Image>
                                     </button>
                                 </div>
                             </div>
@@ -135,16 +173,12 @@ export default function Stage2({ fineStep }: Props) {
                         <div className="w-full flex items-center justify-center">
                             <button
                                 type="button"
+                                className="rounded-2xl bg-slate-200 px-4 py-2 flex items-center space-x-2"
                                 onClick={() => {
-                                    append({
-                                        title: '',
-                                        description: '',
-                                        learning_goal: '',
-                                        tools: [{ name: '' }, { name: '' }],
-                                    });
+                                    append(defaultValueTask);
                                 }}
                             >
-                                <RxPlus size={20} />
+                                neue Aufgabe hinzufügen
                             </button>
                         </div>
                     </div>

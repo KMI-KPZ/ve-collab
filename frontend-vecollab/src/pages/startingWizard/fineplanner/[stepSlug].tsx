@@ -20,7 +20,10 @@ export interface ITaskFrontend {
     title: string;
     description: string;
     learning_goal: string;
-    tools: { name: string }[];
+    tools: IToolsFrontend[];
+}
+export interface IToolsFrontend {
+    name: string;
 }
 
 export interface IFineStepFrontend {
