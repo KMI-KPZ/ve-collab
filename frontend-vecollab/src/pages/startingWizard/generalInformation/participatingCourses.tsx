@@ -221,7 +221,7 @@ export default function Lectures() {
                         </div>
                         <div className="w-1/2">
                             <input
-                                type="text"
+                                type="number"
                                 {...register(`lectures.${index}.participants_amount`, {
                                     maxLength: {
                                         value: 4,
@@ -231,6 +231,7 @@ export default function Lectures() {
                                         value: /^\d+$/,
                                         message: 'Bitte nur ganze postive Zahlen',
                                     },
+                                    setValueAs: (v) => parseInt(v),
                                 })}
                                 placeholder="Anzahl eingeben"
                                 className="border border-gray-500 rounded-lg w-full h-12 p-2"

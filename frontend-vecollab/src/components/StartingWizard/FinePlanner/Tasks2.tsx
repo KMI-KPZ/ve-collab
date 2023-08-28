@@ -1,6 +1,6 @@
 import React from 'react';
-import { useFormContext } from 'react-hook-form';
-import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+import { useFieldArray, useFormContext } from 'react-hook-form';
+import { IFineStepFrontend } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import Tools2 from '@/components/StartingWizard/FinePlanner/Tools2';
 import { RxPlus } from 'react-icons/rx';
 
@@ -9,8 +9,11 @@ interface Props {
 }
 
 export default function Tasks2({ taskIndex }: Props) {
-    const { register, watch, setValue } = useFormContext<IFineStep>();
-    const tools: string[] = watch(`tasks.${taskIndex}.tools`);
+    const { register, formState, control } = useFormContext<IFineStepFrontend>();
+    const { fields, append, remove } = useFieldArray<IFineStepFrontend>({
+        name: `tasks.${taskIndex}.tools`,
+        control,
+    });
 
     return (
         <div className={'p-4 my-4 mx-2 bg-slate-200 rounded-3xl shadow-2xl'}>
@@ -23,10 +26,18 @@ export default function Tasks2({ taskIndex }: Props) {
                 <div className="w-5/6">
                     <input
                         type="text"
-                        {...register(`tasks.${taskIndex}.title`)}
+                        {...register(`tasks.${taskIndex}.title`, {
+                            maxLength: {
+                                value: 100,
+                                message: 'Bitte nicht mehr als 100 Zeichen.',
+                            },
+                        })}
                         placeholder="Aufgabentitel"
                         className="border border-gray-500 rounded-lg w-full h-12 p-2"
                     />
+                    <p className="text-red-600 pt-2">
+                        {formState.errors?.tasks?.[taskIndex]?.title?.message}
+                    </p>
                 </div>
             </div>
             <div className="mt-2 flex">
@@ -38,10 +49,18 @@ export default function Tasks2({ taskIndex }: Props) {
                 <div className="w-5/6">
                     <textarea
                         rows={5}
-                        {...register(`tasks.${taskIndex}.description`)}
+                        {...register(`tasks.${taskIndex}.description`, {
+                            maxLength: {
+                                value: 500,
+                                message: 'Bitte nicht mehr als 500 Zeichen.',
+                            },
+                        })}
                         placeholder="Beschreibe die Aufgabe detailierter"
                         className="border border-gray-500 rounded-lg w-full p-2"
                     />
+                    <p className="text-red-600 pt-2">
+                        {formState.errors?.tasks?.[taskIndex]?.description?.message}
+                    </p>
                 </div>
             </div>
             <div className="mt-2 flex">
@@ -53,10 +72,18 @@ export default function Tasks2({ taskIndex }: Props) {
                 <div className="w-5/6">
                     <textarea
                         rows={5}
-                        {...register(`tasks.${taskIndex}.learning_goal`)}
+                        {...register(`tasks.${taskIndex}.learning_goal`, {
+                            maxLength: {
+                                value: 500,
+                                message: 'Bitte nicht mehr als 500 Zeichen.',
+                            },
+                        })}
                         placeholder="Welche Lernziele werden mit der Aufgabe verfolgt?"
                         className="border border-gray-500 rounded-lg w-full p-2"
                     />
+                    <p className="text-red-600 pt-2">
+                        {formState.errors?.tasks?.[taskIndex]?.learning_goal?.message}
+                    </p>
                 </div>
             </div>
             <div className="mt-2">
@@ -67,14 +94,24 @@ export default function Tasks2({ taskIndex }: Props) {
                         </label>
                     </div>
                     <div className="w-full flex flex-col gap-2">
-                        {tools.map((tool, toolIndex) => (
-                            <Tools2 key={toolIndex} taskIndex={taskIndex} toolIndex={toolIndex} />
+                        {fields.map((tool, toolIndex) => (
+                            <Tools2
+                                key={tool.id}
+                                taskIndex={taskIndex}
+                                toolIndex={toolIndex}
+                                removeItem={remove}
+                            />
                         ))}
                         <div className="w-full flex items-center justify-center">
                             <button
                                 type="button"
                                 onClick={() => {
-                                    setValue(`tasks.${taskIndex}.tools`, [...tools, '']);
+                                    append({
+                                        title: '',
+                                        description: '',
+                                        learning_goal: '',
+                                        tools: [{ name: '' }, { name: '' }],
+                                    });
                                 }}
                             >
                                 <RxPlus size={20} />

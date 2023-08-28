@@ -2,16 +2,16 @@ import Tasks2 from '@/components/StartingWizard/FinePlanner/Tasks2';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import WhiteBox from '@/components/Layout/WhiteBox';
 import React from 'react';
-import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+import { IFineStepFrontend } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import { useFormContext, useFieldArray } from 'react-hook-form';
 
 interface Props {
-    fineStep: IFineStep;
+    fineStep: IFineStepFrontend;
 }
 
 export default function Stage2({ fineStep }: Props) {
-    const { register, control } = useFormContext<IFineStep>();
-    const { fields, append, remove } = useFieldArray<IFineStep>({
+    const { register, control, formState } = useFormContext<IFineStepFrontend>();
+    const { fields, append, remove } = useFieldArray<IFineStepFrontend>({
         name: 'tasks',
         control,
     });
@@ -35,11 +35,16 @@ export default function Stage2({ fineStep }: Props) {
                         <input
                             type="number"
                             {...register(`workload`, {
+                                max: {
+                                    value: 9999,
+                                    message: 'Geben Sie bitte einen realistischen Workload an.',
+                                },
                                 valueAsNumber: true,
                             })}
                             placeholder="in Stunden"
                             className="border border-gray-500 rounded-lg w-full h-12 p-2"
                         />
+                        <p className="text-red-600 pt-2">{formState.errors?.workload?.message}</p>
                     </div>
                 </div>
                 <div className="mt-4 flex">
@@ -51,10 +56,18 @@ export default function Stage2({ fineStep }: Props) {
                     <div className="w-5/6">
                         <input
                             type="text"
-                            {...register(`social_form`)}
+                            {...register(`social_form`, {
+                                maxLength: {
+                                    value: 100,
+                                    message: 'Bitte nicht mehr als 100 Zeichen.',
+                                },
+                            })}
                             placeholder="wie arbeiten die Studierenden zusammen, z.B. Partner-/Gruppenarbeit, individuell"
                             className="border border-gray-500 rounded-lg w-full h-12 p-2"
                         />
+                        <p className="text-red-600 pt-2">
+                            {formState.errors?.social_form?.message}
+                        </p>
                     </div>
                 </div>
                 <div className="mt-4 flex">
@@ -66,10 +79,18 @@ export default function Stage2({ fineStep }: Props) {
                     <div className="w-5/6">
                         <textarea
                             rows={5}
-                            {...register(`learning_env`)}
+                            {...register(`learning_env`, {
+                                maxLength: {
+                                    value: 500,
+                                    message: 'Bitte nicht mehr als 500 Zeichen.',
+                                },
+                            })}
                             placeholder="Struktur und Inhalte der ausgewählten Umgebung (LMS, social Media, kooperatives Dokument usw.)"
                             className="border border-gray-500 rounded-lg w-full p-2"
                         />
+                        <p className="text-red-600 pt-2">
+                            {formState.errors?.learning_env?.message}
+                        </p>
                     </div>
                 </div>
                 <div className="mt-4 flex">
@@ -80,10 +101,18 @@ export default function Stage2({ fineStep }: Props) {
                     </div>
                     <div className="w-5/6">
                         <input
-                            {...register(`ve_approach`)}
+                            {...register(`ve_approach`, {
+                                maxLength: {
+                                    value: 100,
+                                    message: 'Bitte nicht mehr als 100 Zeichen.',
+                                },
+                            })}
                             placeholder="Welche Ansätze werden verfolgt? (z. B. aufgabenorientierter Ansatz, kulturbezogenes Lernen)"
                             className="border border-gray-500 rounded-lg w-full h-12 p-2"
                         />
+                        <p className="text-red-600 pt-2">
+                            {formState.errors?.ve_approach?.message}
+                        </p>
                     </div>
                 </div>
                 <div className="mt-4 flex">
@@ -94,7 +123,7 @@ export default function Stage2({ fineStep }: Props) {
                     </div>
                     <div className="flex flex-col w-5/6">
                         {fields.map((task, taskIndex) => (
-                            <div className="relative" key={taskIndex}>
+                            <div className="relative" key={task.id}>
                                 <Tasks2 taskIndex={taskIndex} />
                                 <div className="absolute left-10 bottom-7">
                                     <button type="button" onClick={() => remove(taskIndex)}>
@@ -111,7 +140,7 @@ export default function Stage2({ fineStep }: Props) {
                                         title: '',
                                         description: '',
                                         learning_goal: '',
-                                        tools: ['', ''],
+                                        tools: [{ name: '' }, { name: '' }],
                                     });
                                 }}
                             >

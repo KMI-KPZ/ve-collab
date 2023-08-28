@@ -11,13 +11,7 @@ import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
 } from '@/interfaces/startingWizard/sideProgressBar';
-
-export interface ITask {
-    title: string;
-    description: string;
-    learning_goal: string;
-    tools: string[];
-}
+import { ITask } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 
 export interface IStep {
     _id?: string;

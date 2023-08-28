@@ -2,12 +2,41 @@ import { signIn, useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { fetchGET, fetchPOST } from '@/lib/backend';
-import { IStep, ITask } from '@/pages/startingWizard/finePlanner';
+import { IStep } from '@/pages/startingWizard/finePlanner';
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import Stage2 from '@/components/StartingWizard/FinePlanner/Stage2';
 import { SubmitHandler, useForm, FormProvider } from 'react-hook-form';
 import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
+
+export interface ITask {
+    title: string;
+    description: string;
+    learning_goal: string;
+    tools: string[];
+}
+
+export interface ITaskFrontend {
+    title: string;
+    description: string;
+    learning_goal: string;
+    tools: { name: string }[];
+}
+
+export interface IFineStepFrontend {
+    _id?: string;
+    timestamp_from: string;
+    timestamp_to: string;
+    name: string;
+    workload: number;
+    social_form: string;
+    learning_env: string;
+    ve_approach: string;
+    tasks: ITaskFrontend[];
+    evaluation_tools: string[];
+    attachments?: string[];
+    custom_attributes?: Record<string, string>;
+}
 
 export interface IFineStep {
     _id?: string;
@@ -24,7 +53,7 @@ export interface IFineStep {
     custom_attributes?: Record<string, string>;
 }
 
-export const defaultFormValueDataFineStep: IFineStep = {
+export const defaultFormValueDataFineStepFrontend: IFineStepFrontend = {
     timestamp_from: '',
     timestamp_to: '',
     name: '',
@@ -38,7 +67,7 @@ export const defaultFormValueDataFineStep: IFineStep = {
             title: '',
             description: '',
             learning_goal: '',
-            tools: ['', ''],
+            tools: [{ name: '' }, { name: '' }],
         },
     ],
 };
@@ -49,21 +78,18 @@ export default function FinePlanner() {
     const router = useRouter();
     const { stepSlug } = router.query;
     const { validateAndRoute } = useValidation();
-    const methods = useForm<IFineStep>({
-        mode: 'all',
+    const methods = useForm<IFineStepFrontend>({
+        mode: 'onChange',
         defaultValues: {
-            ...defaultFormValueDataFineStep,
+            ...defaultFormValueDataFineStepFrontend,
         },
     });
 
-    const [fineStep, setFineStep] = useState<IFineStep>({
-        ...defaultFormValueDataFineStep,
+    const [currentFineStep, setCurrentFineStep] = useState<IFineStepFrontend>({
+        ...defaultFormValueDataFineStepFrontend,
     });
-    const [steps, setSteps] = useState<IStep[]>([
-        {
-            ...defaultFormValueDataFineStep,
-        },
-    ]);
+
+    const [steps, setSteps] = useState<IFineStep[]>([]);
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -93,16 +119,26 @@ export default function FinePlanner() {
                     setLoading(false);
                     if (data.plan.steps?.length > 0) {
                         setSteps(data.plan.steps);
-                        const fineStepCopy: IFineStep | undefined = data.plan.steps.find(
+                        const currentFineStepCopy: IFineStep | undefined = data.plan.steps.find(
                             (item: IStep) => item.name === stepSlug
                         );
-                        if (fineStepCopy) {
-                            setFineStep(fineStepCopy);
-                            Object.entries(fineStepCopy).forEach(([name, value]: any) =>
-                                methods.setValue(name, value)
+                        if (currentFineStepCopy) {
+                            const transformedTools: ITaskFrontend[] = currentFineStepCopy.tasks.map(
+                                (task: ITask) => {
+                                    return {
+                                        ...task,
+                                        tools: task.tools.map((tool) => ({
+                                            name: tool,
+                                        })),
+                                    };
+                                }
                             );
-                            console.log(fineStepCopy);
-                            methods.reset({ ...fineStepCopy });
+                            const fineStepCopyTransformedTools: IFineStepFrontend = {
+                                ...currentFineStepCopy,
+                                tasks: transformedTools,
+                            };
+                            setCurrentFineStep(fineStepCopyTransformedTools);
+                            methods.reset({ ...fineStepCopyTransformedTools });
                         }
                     }
                 }
@@ -110,26 +146,29 @@ export default function FinePlanner() {
         }
     }, [session, status, router, stepSlug, methods]);
 
-    const onSubmit: SubmitHandler<IFineStep> = async (data) => {
+    const onSubmit: SubmitHandler<IFineStepFrontend> = async (data: IFineStepFrontend) => {
         const stepsWithoutCurrent = steps.filter((item: IStep) => item.name !== stepSlug);
-        let stepCurrent: IFineStep = methods.getValues();
-        console.log(data.tasks);
+        const currentStepTransformBackTools: ITask[] = data.tasks.map((task: ITaskFrontend) => {
+            return {
+                ...task,
+                tools: task.tools.map((tool) => tool.name),
+            };
+        });
+
+        const stepCurrent: IFineStep = {
+            ...data,
+            workload: data.workload,
+            social_form: data.social_form,
+            learning_env: data.learning_env,
+            ve_approach: data.ve_approach,
+            tasks: currentStepTransformBackTools,
+        };
         await fetchPOST(
             '/planner/update_field',
             {
                 plan_id: router.query.plannerId,
                 field_name: 'steps',
-                value: [
-                    {
-                        ...stepCurrent,
-                        workload: data.workload,
-                        social_form: data.social_form,
-                        learning_env: data.learning_env,
-                        ve_approach: data.ve_approach,
-                        tasks: data.tasks,
-                    },
-                    ...stepsWithoutCurrent,
-                ],
+                value: [stepCurrent, ...stepsWithoutCurrent],
             },
             session?.accessToken
         );
@@ -151,7 +190,7 @@ export default function FinePlanner() {
                                 <div className={'text-center mb-20'}>
                                     erweitere die Informationen zu jeder Etappe
                                 </div>
-                                <Stage2 fineStep={fineStep} />
+                                <Stage2 fineStep={currentFineStep} />
                             </div>
                             <div className="flex justify-around w-full">
                                 <div>
