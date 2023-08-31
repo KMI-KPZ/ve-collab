@@ -20,6 +20,7 @@
             "@/pages/*": ["./src/pages/*"],
             "@/lib/*": ["./src/lib/*"],
             "@/interfaces/*": ["./src/interfaces/*"],
+            "@/data/*": ["./src/data/*"],
             "@/images/*": ["./public/images/*"],
             "@/styles/*": ["./public/styles/*"],
             "@/interfaces": ["./src/interfaces"],

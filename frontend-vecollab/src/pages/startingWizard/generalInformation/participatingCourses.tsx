@@ -14,6 +14,7 @@ import {
     ProgressState,
 } from '@/interfaces/startingWizard/sideProgressBar';
 import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
+import { sideMenuStepsData } from '@/data/sideMenuSteps';
 
 interface Lecture {
     name: string;
@@ -320,6 +321,7 @@ export default function Lectures() {
                     progressState={sideMenuStepsProgress}
                     handleValidation={handleSubmit(onSubmit)}
                     isValid={isValid}
+                    sideMenuStepsData={sideMenuStepsData}
                 />
             </div>
         </>

@@ -13,6 +13,7 @@ import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
+import { sideMenuStepsData } from '@/data/sideMenuSteps';
 
 interface FormValues {
     externalParties: IExternalParties[];
@@ -208,6 +209,7 @@ export default function ExternalPersons() {
                     progressState={sideMenuStepsProgress}
                     handleValidation={handleSubmit(onSubmit)}
                     isValid={isValid}
+                    sideMenuStepsData={sideMenuStepsData}
                 />
             </div>
         </>

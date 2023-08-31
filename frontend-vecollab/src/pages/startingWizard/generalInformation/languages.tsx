@@ -13,6 +13,7 @@ import {
     ProgressState,
 } from '@/interfaces/startingWizard/sideProgressBar';
 import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
+import { sideMenuStepsData } from '@/data/sideMenuSteps';
 
 interface Language {
     language: string;
@@ -204,6 +205,7 @@ export default function Languages() {
                     progressState={sideMenuStepsProgress}
                     handleValidation={handleSubmit(onSubmit)}
                     isValid={isValid}
+                    sideMenuStepsData={sideMenuStepsData}
                 />
             </div>
         </>

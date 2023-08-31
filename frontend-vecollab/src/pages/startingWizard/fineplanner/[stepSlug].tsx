@@ -8,6 +8,8 @@ import LoadingAnimation from '@/components/LoadingAnimation';
 import Stage2 from '@/components/StartingWizard/FinePlanner/Stage2';
 import { SubmitHandler, useForm, FormProvider } from 'react-hook-form';
 import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
+import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
+import { SideMenuStep } from '@/interfaces/startingWizard/sideProgressBar';
 
 export interface ITask {
     title: string;
@@ -93,6 +95,7 @@ export default function FinePlanner() {
     });
 
     const [steps, setSteps] = useState<IFineStep[]>([]);
+    const [sideMenuStepsData, setSideMenuStepsData] = useState<SideMenuStep[]>([]);
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -125,8 +128,9 @@ export default function FinePlanner() {
                         const currentFineStepCopy: IFineStep | undefined = data.plan.steps.find(
                             (item: IStep) => item.name === stepSlug
                         );
+
                         if (currentFineStepCopy) {
-                            const transformedTools: ITaskFrontend[] = currentFineStepCopy.tasks.map(
+                            const transformedTasks: ITaskFrontend[] = currentFineStepCopy.tasks.map(
                                 (task: ITask) => {
                                     return {
                                         ...task,
@@ -138,10 +142,18 @@ export default function FinePlanner() {
                             );
                             const fineStepCopyTransformedTools: IFineStepFrontend = {
                                 ...currentFineStepCopy,
-                                tasks: transformedTools,
+                                tasks: transformedTasks,
                             };
                             setCurrentFineStep(fineStepCopyTransformedTools);
                             methods.reset({ ...fineStepCopyTransformedTools });
+
+                            setSideMenuStepsData(
+                                generateSideMenuStepsData(
+                                    data.plan.steps.map((step: IStep) => {
+                                        return step.name;
+                                    })
+                                )
+                            );
                         }
                     }
                 }
@@ -175,6 +187,16 @@ export default function FinePlanner() {
             },
             session?.accessToken
         );
+    };
+
+    const generateSideMenuStepsData = (stepsNames: string[]): SideMenuStep[] => {
+        return stepsNames.map((stepName: string) => {
+            return {
+                id: stepName,
+                text: stepName,
+                link: `/startingWizard/fineplanner/${stepName}`,
+            };
+        });
     };
 
     return (
@@ -232,7 +254,11 @@ export default function FinePlanner() {
                         </form>
                     </FormProvider>
                 )}
-                {/*<SideProgressBarSection progressState={sideMenuStepsProgress} />*/}
+                <SideProgressBarSection
+                    handleValidation={methods.handleSubmit(onSubmit)}
+                    isValid={methods.formState.isValid}
+                    sideMenuStepsData={sideMenuStepsData}
+                />
             </div>
         </>
     );

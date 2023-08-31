@@ -12,6 +12,7 @@ import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
+import { sideMenuStepsData } from '@/data/sideMenuSteps';
 
 interface FormValues {
     technology: boolean;
@@ -177,6 +178,7 @@ export default function FormalConditions() {
                     progressState={sideMenuStepsProgress}
                     handleValidation={handleSubmit(onSubmit)}
                     isValid={isValid}
+                    sideMenuStepsData={sideMenuStepsData}
                 />
             </div>
         </>

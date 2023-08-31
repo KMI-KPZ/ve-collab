@@ -14,6 +14,7 @@ import {
     ProgressState,
 } from '@/interfaces/startingWizard/sideProgressBar';
 import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
+import { sideMenuStepsData } from '@/data/sideMenuSteps';
 
 export interface TargetGroup {
     name: string;
@@ -440,6 +441,7 @@ export default function TargetGroups() {
                     progressState={sideMenuStepsProgress}
                     handleValidation={handleSubmit(onSubmit)}
                     isValid={isValid}
+                    sideMenuStepsData={sideMenuStepsData}
                 />
             </div>
         </>
