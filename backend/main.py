@@ -74,7 +74,12 @@ def make_app(cookie_secret: str, debug: bool = False):
     # but in turn if they don't get imported at all, the handler functions would not be
     # invoked.
     # that's the price we gotta pay, but atleast the socket server is accessible from anywhere
-    from handlers.socket_io import connect, disconnect, authenticate, acknowledge_notification
+    from handlers.socket_io import (
+        connect,
+        disconnect,
+        authenticate,
+        acknowledge_notification,
+    )
 
     return tornado.web.Application(
         [
@@ -410,6 +415,11 @@ def hook_tornado_access_log():
     handler.setFormatter(tornado.log.LogFormatter(color=False))
     tornado_access_logger.addHandler(handler)
 
+    # prevent propagation to top level logger that prints to stdout/stderr
+    # if the flag is set
+    if options.supress_stdout_access_log is True:
+        tornado_access_logger.propagate = False
+
 
 def main():
     define(
@@ -435,6 +445,12 @@ def main():
         default="admin",
         type=str,
         help="Create an initial admin user with this username in the ACL",
+    )
+    define(
+        "supress_stdout_access_log",
+        default=False,
+        type=bool,
+        help="Prevent the tornado access logger from logging to stdout, only log file instead",
     )
 
     parse_command_line()
