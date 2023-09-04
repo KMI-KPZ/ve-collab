@@ -16,5 +16,8 @@
   "mongodb_password": "<mongo_password>",
   "mongodb_db_name": "lionet_kavaq",
   "etherpad_base_url": "http://host:port",
-  "etherpad_api_key": "<your_etherpad_api_key>"
+  "etherpad_api_key": "<your_etherpad_api_key>",
+  "elasticsearch_base_url": "http://host:port",
+  "elasticsearch_username": "<elastic_username>",
+  "elasticsearch_password": "<elastic_password>"
 }

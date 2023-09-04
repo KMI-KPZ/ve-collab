@@ -2,7 +2,8 @@ from typing import Dict, List, Optional
 from bson import ObjectId
 
 import gridfs
-from pymongo import MongoClient
+from pymongo import MongoClient, ReturnDocument
+from elasticsearch_integration import ElasticsearchConnector
 
 from exceptions import (
     AlreadyFollowedException,
@@ -113,7 +114,11 @@ class Profiles:
             "work_experience": [],
             "ve_window": [],
         }
-        self.db.profiles.insert_one(profile)
+        result = self.db.profiles.insert_one(profile)
+
+        # replicate the insert to elasticsearch
+        ElasticsearchConnector().on_insert(result.inserted_id, "profiles", profile)
+
         return profile
 
     def insert_default_admin_profile(self, username: str) -> Dict:
@@ -151,7 +156,11 @@ class Profiles:
             "work_experience": [],
             "ve_window": [],
         }
-        self.db.profiles.insert_one(profile)
+        result = self.db.profiles.insert_one(profile)
+
+        # replicate the insert to elasticsearch
+        ElasticsearchConnector().on_insert(result.inserted_id, "profiles", profile)
+
         return profile
 
     def ensure_profile_exists(
@@ -416,7 +425,7 @@ class Profiles:
             )
             updated_profile["profile_pic"] = _id
 
-        self.db.profiles.update_one(
+        result = self.db.profiles.find_one_and_update(
             {"username": username},
             {
                 "$set": updated_profile,
@@ -424,7 +433,12 @@ class Profiles:
                 "$setOnInsert": {"username": username, "role": "guest", "follows": []},
             },
             upsert=True,
+            return_document=ReturnDocument.AFTER,
+            projection={"_id": True},
         )
+
+        # replicate the update to elasticsearch
+        ElasticsearchConnector().on_update(result["_id"], "profiles", updated_profile)
 
         return (
             updated_profile["profile_pic"] if "profile_pic" in updated_profile else None

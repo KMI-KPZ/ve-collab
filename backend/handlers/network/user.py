@@ -972,3 +972,34 @@ class MatchingExclusionHandler(BaseHandler):
                 return
 
             self.write({"success": True, "excluded_from_matching": excluded})
+
+class MatchingHandler(BaseHandler):
+
+    @auth_needed
+    def get(self):
+        self._weights = {
+            "bio": 1,
+            "institution": 1,
+            "first_name": 1,
+            "last_name": 1,
+            "gender": 1,
+            "address": 1,
+            "birthday": 1,
+            "experience": 1,
+            "expertise": 1,
+            "languages": 1,
+            "ve_ready": 1,
+            "excluded_from_matching": 1,
+            "ve_interests": 1,
+            "ve_goals": 1,
+            "preferred_formats": 1,
+            "research_tags": 1,
+            "courses": 1,
+            "educations": 1,
+            "work_experience": 1,
+            "ve_window": 1,
+        }
+    
+    @auth_needed
+    def post(self):
+        pass

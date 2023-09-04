@@ -76,7 +76,12 @@ def make_app(cookie_secret: str, debug: bool = False):
     # but in turn if they don't get imported at all, the handler functions would not be
     # invoked.
     # that's the price we gotta pay, but atleast the socket server is accessible from anywhere
-    from handlers.socket_io import connect, disconnect, authenticate, acknowledge_notification
+    from handlers.socket_io import (
+        connect,
+        disconnect,
+        authenticate,
+        acknowledge_notification,
+    )
 
     return tornado.web.Application(
         [
@@ -116,6 +121,7 @@ def make_app(cookie_secret: str, debug: bool = False):
             (r"/planner/(.+)", VEPlanHandler),
             (r"/orcid", OrcidProfileHandler),
             (r"/matching_exclusion_info", MatchingExclusionHandler),
+            (r"/matching", MatchingHandler),
             (r"/etherpad_integration/(.+)", EtherpadIntegrationHandler),
             (r"/ve_invitation/(.+)", VeInvitationHandler),
             (r"/notifications", NotificationHandler),
@@ -303,6 +309,9 @@ def set_global_vars(conf: dict) -> None:
         "mongodb_db_name",
         "etherpad_base_url",
         "etherpad_api_key",
+        "elasticsearch_base_url",
+        "elasticsearch_username",
+        "elasticsearch_password",
     ]
 
     for key in expected_config_keys:
@@ -320,6 +329,9 @@ def set_global_vars(conf: dict) -> None:
     global_vars.mongodb_db_name = conf["mongodb_db_name"]
     global_vars.etherpad_base_url = conf["etherpad_base_url"]
     global_vars.etherpad_api_key = conf["etherpad_api_key"]
+    global_vars.elasticsearch_base_url = conf["elasticsearch_base_url"]
+    global_vars.elasticsearch_username = conf["elasticsearch_username"]
+    global_vars.elasticsearch_password = conf["elasticsearch_password"]
 
     if not (options.test_admin or options.test_user):
         global_vars.keycloak = KeycloakOpenID(
