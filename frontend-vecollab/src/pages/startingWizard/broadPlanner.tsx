@@ -15,6 +15,7 @@ import {
 } from '@/interfaces/startingWizard/sideProgressBar';
 import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 import { sideMenuStepsData } from '@/data/sideMenuSteps';
+import { IFineStep, IFineStepFrontend } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 
 interface BroadStep {
     from: string;
@@ -34,6 +35,7 @@ export default function BroadPlanner() {
         initialSideProgressBarStates
     );
     const { validateAndRoute } = useValidation();
+    const [steps, setSteps] = useState<IFineStep[]>([]);
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -52,6 +54,7 @@ export default function BroadPlanner() {
         control,
         watch,
         setValue,
+        getValues,
     } = useForm<FormValues>({
         mode: 'onChange',
     });
@@ -72,6 +75,7 @@ export default function BroadPlanner() {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
                     setLoading(false);
+                    setSteps(data.plan.steps);
                     setValue('broadSteps', [
                         {
                             from: '',
@@ -104,14 +108,14 @@ export default function BroadPlanner() {
         control,
     });
 
-    const onSubmit: SubmitHandler<FormValues> = async () => {
-        let broadSteps: BroadStep[] = watch('broadSteps');
-        for (const step of broadSteps) {
+    const onSubmit: SubmitHandler<FormValues> = async (data) => {
+        console.log(data);
+        for (const broadStep of data.broadSteps) {
             let payload = {
-                name: step.name,
+                name: broadStep.name,
                 workload: 0,
-                timestamp_from: step.from,
-                timestamp_to: step.to,
+                timestamp_from: broadStep.from,
+                timestamp_to: broadStep.to,
                 social_form: null,
                 learning_env: null,
                 ve_approach: null,
@@ -231,7 +235,9 @@ export default function BroadPlanner() {
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
                                     onClick={() => {
                                         validateAndRoute(
-                                            '/startingWizard/finePlanner',
+                                            `/startingWizard/fineplanner/${encodeURIComponent(
+                                                watch('broadSteps.0.name')
+                                            )}`,
                                             router.query.plannerId,
                                             handleSubmit(onSubmit),
                                             isValid

@@ -71,9 +71,4 @@ export const sideMenuStepsData: SideMenuStep[] = [
         id: 'steps',
         link: '/startingWizard/broadPlanner',
     },
-    {
-        text: 'didaktische Feinplanung',
-        id: 'steps',
-        link: '/startingWizard/finePlanner',
-    },
 ];

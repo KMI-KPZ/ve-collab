@@ -146,18 +146,7 @@ export default function FinePlanner() {
                             };
                             setCurrentFineStep(fineStepCopyTransformedTools);
                             methods.reset({ ...fineStepCopyTransformedTools });
-
-                            setSideMenuStepsData(
-                                generateSideMenuStepsData(
-                                    data.plan.steps
-                                        .sort((a: IFineStep, b: IFineStep) =>
-                                            a.timestamp_from > b.timestamp_from ? 1 : -1
-                                        )
-                                        .map((step: IStep) => {
-                                            return step.name;
-                                        })
-                                )
-                            );
+                            setSideMenuStepsData(generateSideMenuStepsData(data.plan.steps));
                         }
                     }
                 }
@@ -193,17 +182,34 @@ export default function FinePlanner() {
         );
     };
 
-    const generateSideMenuStepsData = (stepsNames: string[]): SideMenuStep[] => {
-        const a = stepsNames.map((stepName: string) => {
-            const stepNameEncoded = encodeURIComponent(stepName);
-            return {
-                id: encodeURIComponent(stepName),
-                text: stepName,
-                link: `/startingWizard/fineplanner/${stepNameEncoded}`,
-            };
-        });
-        console.log(a);
-        return a;
+    const generateSideMenuStepsData = (steps: IFineStep[]): SideMenuStep[] => {
+        return steps
+            .sort((a: IFineStep, b: IFineStep) => (a.timestamp_from > b.timestamp_from ? 1 : -1))
+            .map((step: IStep) => ({
+                id: encodeURIComponent(step.name),
+                text: step.name,
+                link: `/startingWizard/fineplanner/${encodeURIComponent(step.name)}`,
+            }));
+    };
+
+    const getNextFineStepUrl = (): string => {
+        const nextFineStep =
+            sideMenuStepsData.findIndex((item: SideMenuStep) => item.id === stepSlug) + 1;
+        if (sideMenuStepsData[nextFineStep]?.link !== undefined) {
+            return sideMenuStepsData[nextFineStep]?.link;
+        } else {
+            return '/startingWizard/finish';
+        }
+    };
+
+    const getPreviousFineStepUrl = (): string => {
+        const nextFineStep =
+            sideMenuStepsData.findIndex((item: SideMenuStep) => item.id === stepSlug) - 1;
+        if (sideMenuStepsData[nextFineStep]?.link !== undefined) {
+            return sideMenuStepsData[nextFineStep]?.link;
+        } else {
+            return '/startingWizard/broadPlanner';
+        }
     };
 
     return (
@@ -231,7 +237,7 @@ export default function FinePlanner() {
                                         className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
                                         onClick={() => {
                                             validateAndRoute(
-                                                '/startingWizard/broadPlanner',
+                                                getPreviousFineStepUrl(),
                                                 router.query.plannerId,
                                                 methods.handleSubmit(onSubmit),
                                                 methods.formState.isValid
@@ -247,7 +253,7 @@ export default function FinePlanner() {
                                         className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
                                         onClick={() => {
                                             validateAndRoute(
-                                                '/startingWizard/finish',
+                                                getNextFineStepUrl(),
                                                 router.query.plannerId,
                                                 methods.handleSubmit(onSubmit),
                                                 methods.formState.isValid
