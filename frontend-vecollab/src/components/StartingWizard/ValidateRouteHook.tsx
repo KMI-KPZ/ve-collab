@@ -18,7 +18,6 @@ export const useValidation = (): IValidationReturnProps => {
         handleValidation: () => void,
         isValid: boolean
     ): void => {
-        console.log(isValid);
         handleValidation();
         if (isValid) {
             router.push({

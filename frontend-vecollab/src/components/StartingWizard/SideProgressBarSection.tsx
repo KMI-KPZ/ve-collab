@@ -47,7 +47,7 @@ export default function SideProgressBarSection({
 
     function renderStageSteps(sideMenuStepsData: SideMenuStep[]): JSX.Element[] {
         return sideMenuStepsData.map((sideMenuStep, index) => {
-            const isCurrentPage = router.pathname == sideMenuStep.link;
+            const isCurrentPage = router.asPath.split('?')[0] == sideMenuStep.link;
             return (
                 <li key={index}>
                     <button
