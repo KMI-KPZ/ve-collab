@@ -191,10 +191,11 @@ export default function FinePlanner() {
 
     const generateSideMenuStepsData = (stepsNames: string[]): SideMenuStep[] => {
         return stepsNames.map((stepName: string) => {
+            const stepNameEncoded = encodeURIComponent(stepName);
             return {
-                id: stepName,
+                id: encodeURIComponent(stepName),
                 text: stepName,
-                link: `/startingWizard/fineplanner/${stepName}`,
+                link: `/startingWizard/fineplanner/${stepNameEncoded}`,
             };
         });
     };

@@ -1,6 +1,3 @@
-export interface SideProgressBar {
-    sideMenuSteps: SideMenuStep[];
-}
 export interface SideMenuStep {
     readonly text: string;
     readonly id: string;
@@ -18,19 +15,7 @@ export enum ProgressState {
 }
 
 export interface ISideProgressBarStates {
-    name: ProgressState;
-    institutions: ProgressState;
-    topic: ProgressState;
-    lectures: ProgressState;
-    audience: ProgressState;
-    languages: ProgressState;
-    involved_parties: ProgressState;
-    realization: ProgressState;
-    learning_env: ProgressState;
-    tools: ProgressState;
-    new_content: ProgressState;
-    formalities: ProgressState;
-    steps: ProgressState;
+    [key: string]: ProgressState;
 }
 
 export const initialSideProgressBarStates: ISideProgressBarStates = {

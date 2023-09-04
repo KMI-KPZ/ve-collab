@@ -46,39 +46,41 @@ export default function SideProgressBarSection({
     };
 
     function renderStageSteps(sideMenuStepsData: SideMenuStep[]): JSX.Element[] {
-        return sideMenuStepsData.map((sideMenuStep, index) => (
-            <li key={index}>
-                <button
-                    type="button"
-                    onClick={() => {
-                        validateAndRoute(
-                            sideMenuStep.link,
-                            router.query.plannerId,
-                            handleValidation,
-                            isValid
-                        );
-                    }}
-                    className={`flex bg-white p-2 w-full rounded-lg drop-shadow-lg`}
-                >
-                    <Image
-                        src={renderIcon(
-                            getProgressState(sideMenuStep.id as keyof ISideProgressBarStates)
-                        )}
-                        alt="Ve Collab Logo"
-                    ></Image>
-                    <p
-                        className={`ml-3 font-konnect ${
-                            router.pathname == sideMenuStep.link
-                                ? 'text-ve-collab-blue font-bold'
-                                : ''
-                        }`}
+        return sideMenuStepsData.map((sideMenuStep, index) => {
+            const isCurrentPage = router.pathname == sideMenuStep.link;
+            return (
+                <li key={index}>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            validateAndRoute(
+                                sideMenuStep.link,
+                                router.query.plannerId,
+                                handleValidation,
+                                isValid
+                            );
+                        }}
+                        className={`flex bg-white p-2 w-full rounded-lg drop-shadow-lg`}
                     >
-                        {sideMenuStep.text}
-                    </p>
-                </button>
-            </li>
-        ));
+                        <Image
+                            src={renderIcon(
+                                getProgressState(sideMenuStep.id as keyof ISideProgressBarStates)
+                            )}
+                            alt="Ve Collab Logo"
+                        ></Image>
+                        <p
+                            className={`ml-3 font-konnect ${
+                                isCurrentPage ? 'text-ve-collab-blue font-extrabold' : ''
+                            }`}
+                        >
+                            {sideMenuStep.text}
+                        </p>
+                    </button>
+                </li>
+            );
+        });
     }
+
     return (
         <nav className="flex flex-col text-center w-80 shadow-inner mt-3 mb-3 bg-white rounded-xl">
             <div className="shadow-sm mb-3 rounded">
