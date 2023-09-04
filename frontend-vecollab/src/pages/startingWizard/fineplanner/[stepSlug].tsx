@@ -149,9 +149,13 @@ export default function FinePlanner() {
 
                             setSideMenuStepsData(
                                 generateSideMenuStepsData(
-                                    data.plan.steps.map((step: IStep) => {
-                                        return step.name;
-                                    })
+                                    data.plan.steps
+                                        .sort((a: IFineStep, b: IFineStep) =>
+                                            a.timestamp_from > b.timestamp_from ? 1 : -1
+                                        )
+                                        .map((step: IStep) => {
+                                            return step.name;
+                                        })
                                 )
                             );
                         }
@@ -190,7 +194,7 @@ export default function FinePlanner() {
     };
 
     const generateSideMenuStepsData = (stepsNames: string[]): SideMenuStep[] => {
-        return stepsNames.map((stepName: string) => {
+        const a = stepsNames.map((stepName: string) => {
             const stepNameEncoded = encodeURIComponent(stepName);
             return {
                 id: encodeURIComponent(stepName),
@@ -198,6 +202,8 @@ export default function FinePlanner() {
                 link: `/startingWizard/fineplanner/${stepNameEncoded}`,
             };
         });
+        console.log(a);
+        return a;
     };
 
     return (
