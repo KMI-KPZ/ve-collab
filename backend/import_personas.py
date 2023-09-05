@@ -82,7 +82,7 @@ class Persona:
         ve_goals: List[str],
         experience: List[str],
         preferred_formats: List[str],
-        resarch_tags: List[str],
+        research_tags: List[str],
         courses: List[Course],
         educations: List[Education],
         work_experience: List[WorkExperience],
@@ -99,7 +99,7 @@ class Persona:
         self.ve_goals = ve_goals
         self.experience = experience
         self.preferred_formats = preferred_formats
-        self.resarch_tags = resarch_tags
+        self.research_tags = research_tags
         self.courses = courses
         self.educations = educations
         self.work_experience = work_experience

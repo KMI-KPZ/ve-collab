@@ -5,6 +5,7 @@ from keycloak import KeycloakGetError
 import requests
 
 import tornado.web
+from elasticsearch_integration import ElasticsearchConnector
 from error_reasons import USER_DOESNT_EXIST
 from exceptions import ProfileDoesntExistException
 
@@ -973,33 +974,31 @@ class MatchingExclusionHandler(BaseHandler):
 
             self.write({"success": True, "excluded_from_matching": excluded})
 
-class MatchingHandler(BaseHandler):
 
+class MatchingHandler(BaseHandler):
     @auth_needed
     def get(self):
-        self._weights = {
-            "bio": 1,
-            "institution": 1,
-            "first_name": 1,
-            "last_name": 1,
-            "gender": 1,
-            "address": 1,
-            "birthday": 1,
-            "experience": 1,
-            "expertise": 1,
-            "languages": 1,
-            "ve_ready": 1,
-            "excluded_from_matching": 1,
-            "ve_interests": 1,
-            "ve_goals": 1,
-            "preferred_formats": 1,
-            "research_tags": 1,
-            "courses": 1,
-            "educations": 1,
-            "work_experience": 1,
-            "ve_window": 1,
-        }
-    
+        with Profiles() as profile_manager:
+            current_user_profile = profile_manager.ensure_profile_exists(
+                self.current_user.username
+            )
+
+            matching_users = ElasticsearchConnector().search_profile_match(
+                current_user_profile
+            )
+
+            # get profile snippets of matched users and add the score to the snippet
+            username_score_map = {
+                user["_source"]["username"]: user["_score"] for user in matching_users
+            }
+            profile_snippets = profile_manager.get_profile_snippets(
+                list(username_score_map.keys())
+            )
+            for profile in profile_snippets:
+                profile["score"] = username_score_map[profile["username"]]
+
+        self.write({"success": True, "matching_hits": profile_snippets})
+
     @auth_needed
     def post(self):
         pass

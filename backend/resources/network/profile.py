@@ -438,6 +438,7 @@ class Profiles:
         )
 
         # replicate the update to elasticsearch
+        updated_profile["username"] = username
         ElasticsearchConnector().on_update(result["_id"], "profiles", updated_profile)
 
         return (
