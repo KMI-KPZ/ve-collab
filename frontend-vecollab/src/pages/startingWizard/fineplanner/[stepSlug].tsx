@@ -10,6 +10,7 @@ import { SubmitHandler, useForm, FormProvider } from 'react-hook-form';
 import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
 import { SideMenuStep } from '@/interfaces/startingWizard/sideProgressBar';
+import { generateFineStepLinkTopMenu } from '@/pages/startingWizard/generalInformation/courseFormat';
 
 export interface ITask {
     title: string;
@@ -96,6 +97,9 @@ export default function FinePlanner() {
 
     const [steps, setSteps] = useState<IFineStep[]>([]);
     const [sideMenuStepsData, setSideMenuStepsData] = useState<SideMenuStep[]>([]);
+    const [linkFineStepTopMenu, setLinkFineStepTopMenu] = useState<string>(
+        '/startingWizard/finePlanner'
+    );
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -147,6 +151,7 @@ export default function FinePlanner() {
                             setCurrentFineStep(fineStepCopyTransformedTools);
                             methods.reset({ ...fineStepCopyTransformedTools });
                             setSideMenuStepsData(generateSideMenuStepsData(data.plan.steps));
+                            setLinkFineStepTopMenu(generateFineStepLinkTopMenu(data.plan.steps));
                         }
                     }
                 }
@@ -214,7 +219,7 @@ export default function FinePlanner() {
 
     return (
         <>
-            <HeadProgressBarSection stage={2} />
+            <HeadProgressBarSection stage={2} linkFineStep={linkFineStepTopMenu} />
             <div className="flex justify-center bg-pattern-left-blue-small bg-no-repeat">
                 {loading ? (
                     <LoadingAnimation />
