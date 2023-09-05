@@ -15,9 +15,10 @@ export interface HeadMenuProgressStep {
 
 interface HeadProgressBar {
     stage: number;
+    linkFineStep: string;
 }
 
-export default function HeadProgressBarSection({ stage }: HeadProgressBar) {
+export default function HeadProgressBarSection({ stage, linkFineStep }: HeadProgressBar) {
     const router = useRouter();
 
     const headMenuProgressSteps: HeadMenuProgressStep[] = [
@@ -33,7 +34,7 @@ export default function HeadProgressBarSection({ stage }: HeadProgressBar) {
         },
         {
             description: 'Feinplanner',
-            link: '/startingWizard/finePlanner',
+            link: linkFineStep,
             image: imageFinePlanner,
         },
         {
@@ -92,8 +93,8 @@ export default function HeadProgressBarSection({ stage }: HeadProgressBar) {
     return (
         <>
             <nav className="flex w-full justify-center py-6">
-                    {renderHeadProgressBar(headMenuProgressSteps)}
-                </nav>
+                {renderHeadProgressBar(headMenuProgressSteps)}
+            </nav>
             <div className="flex justify-center">
                 <Link href={`/etherpad?padID=${router.query.plannerId}`} target="_blank">
                     <button

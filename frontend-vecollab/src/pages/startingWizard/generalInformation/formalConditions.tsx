@@ -13,6 +13,7 @@ import { useSession } from 'next-auth/react';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 import { sideMenuStepsData } from '@/data/sideMenuSteps';
+import { generateFineStepLinkTopMenu } from '@/pages/startingWizard/generalInformation/courseFormat';
 
 interface FormValues {
     technology: boolean;
@@ -28,6 +29,9 @@ export default function FormalConditions() {
         initialSideProgressBarStates
     );
     const { validateAndRoute } = useValidation();
+    const [linkFineStepTopMenu, setLinkFineStepTopMenu] = useState<string>(
+        '/startingWizard/finePlanner'
+    );
 
     const {
         register,
@@ -60,6 +64,7 @@ export default function FormalConditions() {
                     if (data.plan.progress.length !== 0) {
                         setSideMenuStepsProgress(data.plan.progress);
                     }
+                    setLinkFineStepTopMenu(generateFineStepLinkTopMenu(data.plan.steps));
                 }
             );
         }
@@ -86,7 +91,7 @@ export default function FormalConditions() {
 
     return (
         <>
-            <HeadProgressBarSection stage={0} />
+            <HeadProgressBarSection stage={0} linkFineStep={linkFineStepTopMenu} />
             <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
                 {loading ? (
                     <LoadingAnimation />

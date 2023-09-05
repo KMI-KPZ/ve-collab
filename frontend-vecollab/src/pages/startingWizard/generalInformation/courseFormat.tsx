@@ -13,9 +13,20 @@ import {
 } from '@/interfaces/startingWizard/sideProgressBar';
 import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 import { sideMenuStepsData } from '@/data/sideMenuSteps';
+import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 
 interface FormValues {
     courseFormat: string;
+}
+
+export function generateFineStepLinkTopMenu(fineSteps: IFineStep[]): string {
+    if (fineSteps.length > 0) {
+        fineSteps.sort((a: IFineStep, b: IFineStep) =>
+            a.timestamp_from > b.timestamp_from ? 1 : -1
+        );
+        return `/startingWizard/fineplanner/${encodeURIComponent(fineSteps[0].name)}`;
+    }
+    return '/startingWizard/finePlanner';
 }
 
 export default function Realization() {
@@ -24,6 +35,9 @@ export default function Realization() {
     const router = useRouter();
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
+    );
+    const [linkFineStepTopMenu, setLinkFineStepTopMenu] = useState<string>(
+        '/startingWizard/finePlanner'
     );
     const { validateAndRoute } = useValidation();
 
@@ -69,6 +83,9 @@ export default function Realization() {
                     if (data.plan.realization !== null) {
                         setValue('courseFormat', data.plan.realization);
                     }
+
+                    setLinkFineStepTopMenu(generateFineStepLinkTopMenu(data.plan.steps));
+
                     if (data.plan.progress.length !== 0) {
                         setSideMenuStepsProgress(data.plan.progress);
                     }
@@ -103,7 +120,7 @@ export default function Realization() {
 
     return (
         <>
-            <HeadProgressBarSection stage={0} />
+            <HeadProgressBarSection stage={0} linkFineStep={linkFineStepTopMenu} />
             <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
                 {loading ? (
                     <LoadingAnimation />

@@ -12,6 +12,7 @@ import {
     ISideProgressBarStates,
 } from '@/interfaces/startingWizard/sideProgressBar';
 import { IFineStep, ITask } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+import { generateFineStepLinkTopMenu } from '@/pages/startingWizard/generalInformation/courseFormat';
 
 export interface IStep {
     _id?: string;
@@ -36,6 +37,9 @@ export default function FinePlanner() {
         initialSideProgressBarStates
     );
     const [steps, setSteps] = useState<IFineStep[]>([]);
+    const [linkFineStepTopMenu, setLinkFineStepTopMenu] = useState<string>(
+        '/startingWizard/finePlanner'
+    );
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -66,6 +70,7 @@ export default function FinePlanner() {
                     if (data.plan.steps?.length > 0) {
                         setSteps(data.plan.steps);
                     }
+                    setLinkFineStepTopMenu(generateFineStepLinkTopMenu(data.plan.steps));
                 }
             );
         }
@@ -73,26 +78,34 @@ export default function FinePlanner() {
 
     return (
         <>
-            <HeadProgressBarSection stage={2} />
+            <HeadProgressBarSection stage={2} linkFineStep={linkFineStepTopMenu} />
             <div className="flex justify-center bg-pattern-left-blue-small bg-no-repeat">
                 {loading ? (
                     <LoadingAnimation />
                 ) : (
                     <div>
-                        {steps.map((step: IFineStep) => (
-                            <div key={step._id}>
-                                <Link
-                                    href={{
-                                        pathname: `/startingWizard/fineplanner/${encodeURIComponent(
-                                            step.name
-                                        )}`,
-                                        query: { plannerId: router.query.plannerId },
-                                    }}
-                                >
-                                    {step.name}{' '}
-                                </Link>
-                            </div>
-                        ))}
+                        <div className=" flex justify-center font-bold text-xl mt-32 mb-20">
+                            Bitte legen Sie zuerst grobe Schritte fest bevor Sie mit der Feinplanung
+                            fortsetzen.
+                        </div>
+                        <Link
+                            className="flex justify-center font-bold text-xl m-2 bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                            href={{
+                                pathname: '/startingWizard/broadPlanner',
+                                query: { plannerId: router.query.plannerId },
+                            }}
+                        >
+                            Etappenplaner
+                        </Link>
+                        <Link
+                            className="flex justify-center font-bold text-xl m-2 bg-gray-400 text-white py-3 px-5 rounded-lg"
+                            href={{
+                                pathname: '/startingWizard/finish',
+                                query: { plannerId: router.query.plannerId },
+                            }}
+                        >
+                            Ohne Etappen Fortfahren
+                        </Link>
                     </div>
                 )}
             </div>

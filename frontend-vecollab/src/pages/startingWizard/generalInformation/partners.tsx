@@ -14,6 +14,7 @@ import {
 } from '@/interfaces/startingWizard/sideProgressBar';
 import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 import { sideMenuStepsData } from '@/data/sideMenuSteps';
+import { generateFineStepLinkTopMenu } from '@/pages/startingWizard/generalInformation/courseFormat';
 
 interface FormValues {
     partners: IPartner[];
@@ -30,6 +31,9 @@ export default function Partners() {
     const { validateAndRoute } = useValidation();
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
+    );
+    const [linkFineStepTopMenu, setLinkFineStepTopMenu] = useState<string>(
+        '/startingWizard/finePlanner'
     );
 
     // check for session errors and trigger the login flow if necessary
@@ -77,6 +81,7 @@ export default function Partners() {
                     if (data.plan.progress.length !== 0) {
                         setSideMenuStepsProgress(data.plan.progress);
                     }
+                    setLinkFineStepTopMenu(generateFineStepLinkTopMenu(data.plan.steps));
                 }
             );
         }
@@ -138,7 +143,7 @@ export default function Partners() {
 
     return (
         <>
-            <HeadProgressBarSection stage={0} />
+            <HeadProgressBarSection stage={0} linkFineStep={linkFineStepTopMenu} />
             <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
                 {loading ? (
                     <LoadingAnimation />

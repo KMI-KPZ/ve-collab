@@ -16,6 +16,7 @@ import {
 import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { IFineStep, IFineStepFrontend } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+import { generateFineStepLinkTopMenu } from '@/pages/startingWizard/generalInformation/courseFormat';
 
 interface BroadStep {
     from: string;
@@ -36,6 +37,9 @@ export default function BroadPlanner() {
     );
     const { validateAndRoute } = useValidation();
     const [steps, setSteps] = useState<IFineStep[]>([]);
+    const [linkFineStepTopMenu, setLinkFineStepTopMenu] = useState<string>(
+        '/startingWizard/finePlanner'
+    );
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -98,6 +102,7 @@ export default function BroadPlanner() {
                     if (data.plan.progress.length !== 0) {
                         setSideMenuStepsProgress(data.plan.progress);
                     }
+                    setLinkFineStepTopMenu(generateFineStepLinkTopMenu(data.plan.steps));
                 }
             );
         }
@@ -109,7 +114,6 @@ export default function BroadPlanner() {
     });
 
     const onSubmit: SubmitHandler<FormValues> = async (data) => {
-        console.log(data);
         for (const broadStep of data.broadSteps) {
             let payload = {
                 name: broadStep.name,
@@ -179,7 +183,7 @@ export default function BroadPlanner() {
 
     return (
         <>
-            <HeadProgressBarSection stage={1} />
+            <HeadProgressBarSection stage={1} linkFineStep={linkFineStepTopMenu} />
             <div className="flex justify-center bg-pattern-left-blue-small bg-no-repeat">
                 {loading ? (
                     <LoadingAnimation />
