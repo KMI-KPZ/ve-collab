@@ -97,6 +97,9 @@ def setUpModule():
     global_vars.mongodb_db_name = "test_db"
     global_vars.etherpad_base_url = config["etherpad_base_url"]
     global_vars.etherpad_api_key = config["etherpad_api_key"]
+    global_vars.elasticsearch_base_url = config["elasticsearch_base_url"]
+    global_vars.elasticsearch_username = config["elasticsearch_username"]
+    global_vars.elasticsearch_password = config["elasticsearch_password"]
 
 
 def tearDownModule():

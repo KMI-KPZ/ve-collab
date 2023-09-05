@@ -2,7 +2,10 @@ from bson import ObjectId
 import json
 import requests
 
+from tornado.options import options
+
 import global_vars
+import util
 
 
 class ElasticsearchConnector:
@@ -83,16 +86,23 @@ class ElasticsearchConnector:
         for key, value in document.items():
             if isinstance(value, (dict, list)):
                 document[key] = self._dict_or_list_values_to_str(value)
-        print(document)
-
-        requests.put(
-            "{}/{}/_doc/{}".format(global_vars.elasticsearch_base_url, collection, _id),
-            json=document,
-            auth=(
-                global_vars.elasticsearch_username,
-                global_vars.elasticsearch_password,
-            ),
-        )
+        try:
+            requests.put(
+                "{}/{}/_doc/{}".format(
+                    global_vars.elasticsearch_base_url, collection, _id
+                ),
+                json=util.json_serialize_response(document),
+                auth=(
+                    global_vars.elasticsearch_username,
+                    global_vars.elasticsearch_password,
+                ),
+            )
+        except Exception as e:
+            # exception is alright here if we are in test mode because elasticsearch is not running
+            if options.test_admin or options.test_user:
+                pass
+            else:
+                raise e
 
     def on_update(
         self,
@@ -217,4 +227,3 @@ class ElasticsearchConnector:
         pprint.pprint(response.json())
 
         return response.json()["hits"]["hits"]
-

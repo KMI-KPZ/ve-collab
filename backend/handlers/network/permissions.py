@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 
 
 class RoleHandler(BaseHandler):
-
     @auth_needed
     async def get(self, slug):
         """
@@ -25,14 +24,12 @@ class RoleHandler(BaseHandler):
                 try:
                     role_result = db_manager.get_role(self.current_user.username)
                     self.set_status(200)
-                    self.write(
-                        self.json_serialize_response(
-                            {
-                                "success": True,
-                                "username": self.current_user.username,
-                                "role": role_result,
-                            }
-                        )
+                    self.serialize_and_write(
+                        {
+                            "success": True,
+                            "username": self.current_user.username,
+                            "role": role_result,
+                        }
                     )
                     return
                 except ProfileDoesntExistException:
@@ -465,7 +462,6 @@ class SpaceACLHandler(BaseHandler):
             return
 
         if slug == "get":
-
             # if there is a role specified, query for this role
             # instead of the current_user's one. but in that case,
             # we need to be either global or space admin

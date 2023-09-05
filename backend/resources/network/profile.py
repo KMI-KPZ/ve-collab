@@ -117,7 +117,7 @@ class Profiles:
         result = self.db.profiles.insert_one(profile)
 
         # replicate the insert to elasticsearch
-        ElasticsearchConnector().on_insert(result.inserted_id, "profiles", profile)
+        ElasticsearchConnector().on_insert(result.inserted_id, profile, "profiles")
 
         return profile
 
@@ -488,7 +488,7 @@ class Profiles:
 
     def get_matching_exclusion(self, username: str) -> bool:
         """
-        Retrieve the information from the profile if a user given by its username 
+        Retrieve the information from the profile if a user given by its username
         is currently excluded from matching.
 
         Returns a boolean indication if the user is excluded or not.
