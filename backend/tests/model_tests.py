@@ -1298,7 +1298,7 @@ class VEPlanModelTest(TestCase):
             "tools": "not_started",
             "new_content": "not_started",
             "formalities": "not_started",
-            "steps": "not_started",
+            "steps": [],
         }
         return super().setUp()
 
@@ -1611,6 +1611,8 @@ class VEPlanModelTest(TestCase):
         )
         institution = self.create_institution()
         lecture = self.create_lecture()
+        expected_progress = self.default_progress
+        expected_progress["steps"] = [{"step_id": step._id, "progress": "not_started"}]
         plan_dict = VEPlan(
             steps=[step], institutions=[institution], lectures=[lecture]
         ).to_dict()
@@ -1658,7 +1660,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan_dict["workload"], 10)
         self.assertEqual(plan_dict["duration"], None)
         self.assertEqual(plan_dict["steps"], [step.to_dict()])
-        self.assertEqual(plan_dict["progress"], self.default_progress)
+        self.assertEqual(plan_dict["progress"], expected_progress)
 
     def test_from_dict(self):
         """

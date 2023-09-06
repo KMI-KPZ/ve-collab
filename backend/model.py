@@ -1055,7 +1055,7 @@ class VEPlan:
         self.tools = tools
         self.new_content = new_content
         self.steps = steps
-        
+
         if progress:
             # TODO check every expected key is inside as well
             self.progress = progress
@@ -1073,7 +1073,10 @@ class VEPlan:
                 "tools": "not_started",
                 "new_content": "not_started",
                 "formalities": "not_started",
-                "steps": "not_started",
+                "steps": [
+                    {"step_id": step._id, "progress": "not_started"}
+                    for step in self.steps
+                ],
             }
 
         # ensure that steps have unique names
