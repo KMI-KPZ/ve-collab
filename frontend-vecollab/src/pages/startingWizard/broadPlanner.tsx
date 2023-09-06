@@ -15,7 +15,7 @@ import {
 } from '@/interfaces/startingWizard/sideProgressBar';
 import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 import { sideMenuStepsData } from '@/data/sideMenuSteps';
-import { IFineStep, IFineStepFrontend } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import { generateFineStepLinkTopMenu } from '@/pages/startingWizard/generalInformation/courseFormat';
 
 interface BroadStep {
@@ -28,6 +28,27 @@ interface FormValues {
     broadSteps: BroadStep[];
 }
 
+export const defaultFineStepData: IFineStep = {
+    name: '',
+    workload: 0,
+    timestamp_from: '',
+    timestamp_to: '',
+    social_form: '',
+    learning_env: '',
+    ve_approach: '',
+    tasks: [
+        {
+            title: '',
+            description: '',
+            learning_goal: '',
+            tools: ['', ''],
+        },
+    ],
+    evaluation_tools: [],
+    attachments: [],
+    custom_attributes: {},
+};
+
 export default function BroadPlanner() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
@@ -36,7 +57,7 @@ export default function BroadPlanner() {
         initialSideProgressBarStates
     );
     const { validateAndRoute } = useValidation();
-    const [steps, setSteps] = useState<IFineStep[]>([]);
+    const [allSteps, setAllSteps] = useState<IFineStep[]>([defaultFineStepData]);
     const [linkFineStepTopMenu, setLinkFineStepTopMenu] = useState<string>(
         '/startingWizard/finePlanner'
     );
@@ -58,7 +79,6 @@ export default function BroadPlanner() {
         control,
         watch,
         setValue,
-        getValues,
     } = useForm<FormValues>({
         mode: 'onChange',
     });
@@ -79,7 +99,7 @@ export default function BroadPlanner() {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
                     setLoading(false);
-                    setSteps(data.plan.steps);
+                    setAllSteps(data.plan.steps);
                     setValue('broadSteps', [
                         {
                             from: '',
@@ -114,33 +134,30 @@ export default function BroadPlanner() {
     });
 
     const onSubmit: SubmitHandler<FormValues> = async (data) => {
-        for (const broadStep of data.broadSteps) {
-            let payload = {
+        let payload: IFineStep = {
+            ...defaultFineStepData,
+        };
+        const broadsteps = data.broadSteps.map((broadStep) => {
+            const fineStepBackend = allSteps.find((fineStep) => fineStep.name === broadStep.name);
+            if (fineStepBackend !== undefined) {
+                payload = fineStepBackend;
+            }
+            return {
+                ...payload,
                 name: broadStep.name,
-                workload: 0,
                 timestamp_from: broadStep.from,
                 timestamp_to: broadStep.to,
-                social_form: null,
-                learning_env: null,
-                ve_approach: null,
-                tasks: [
-                    {
-                        title: '',
-                        description: '',
-                        learning_goal: '',
-                        tools: ['', ''],
-                    },
-                ],
-                evaluation_tools: [],
-                attachments: [],
-                custom_attributes: {},
             };
-            await fetchPOST(
-                '/planner/append_step',
-                { plan_id: router.query.plannerId, step: payload },
-                session?.accessToken
-            );
-        }
+        });
+        await fetchPOST(
+            '/planner/update_field',
+            {
+                plan_id: router.query.plannerId,
+                field_name: 'steps',
+                value: broadsteps,
+            },
+            session?.accessToken
+        );
     };
 
     const renderBroadStepsInputs = (): JSX.Element[] => {
