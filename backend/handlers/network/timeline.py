@@ -180,7 +180,8 @@ class SpaceTimelineHandler(BaseTimelineHandler):
         time_from, time_to = self.parse_timeframe_args()
 
         # reject if user is not member of the space
-        with Spaces() as space_manager:
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
             try:
                 if not space_manager.check_user_is_member(
                     space_name, self.current_user.username

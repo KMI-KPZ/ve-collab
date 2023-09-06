@@ -167,14 +167,12 @@ class SearchHandler(BaseHandler):
 
         reduced = []
         with util.get_mongodb() as db:
-            with Spaces() as space_manager:
-                profile_manager = Profiles(db)
-                spaces_of_user = space_manager.get_spaces_of_user(
-                    self.current_user.username
-                )
-                follows_of_user = profile_manager.get_follows(
-                    self.current_user.username
-                )
+            space_manager = Spaces(db)
+            profile_manager = Profiles(db)
+            spaces_of_user = space_manager.get_spaces_of_user(
+                self.current_user.username
+            )
+            follows_of_user = profile_manager.get_follows(self.current_user.username)
 
         # iterate matched posts and sort out those that user is not allowed to see
         for post in posts:

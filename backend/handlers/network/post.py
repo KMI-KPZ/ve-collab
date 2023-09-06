@@ -13,7 +13,12 @@ from resources.network.post import (
     Posts,
     PostNotExistingException,
 )
-from resources.network.space import FileAlreadyInRepoError, Spaces, SpaceDoesntExistError
+from resources.network.space import (
+    FileAlreadyInRepoError,
+    Spaces,
+    SpaceDoesntExistError,
+)
+import util
 
 logger = logging.getLogger(__name__)
 
@@ -91,8 +96,9 @@ class PostHandler(BaseHandler):
 
             # check if space exists, if not, end with 400 Bad Request
             if space is not None:
-                with Spaces() as db_manager:
-                    if not db_manager.check_space_exists(space):
+                with util.get_mongodb() as db:
+                    space_manager = Spaces(db)
+                    if not space_manager.check_space_exists(space):
                         self.set_status(400)
                         self.write(
                             {
@@ -121,7 +127,6 @@ class PostHandler(BaseHandler):
                         return
 
             with Posts() as post_manager:
-
                 # handle files
                 file_amount = self.get_body_argument("file_amount", None)
                 files = []
@@ -142,7 +147,8 @@ class PostHandler(BaseHandler):
                         # if the post was in a space, also store the file in the repo,
                         # indicating it is part of a post by setting manually_uploaded to False
                         if space:
-                            with Spaces() as space_manager:
+                            with util.get_mongodb() as db:
+                                space_manager = Spaces(db)
                                 try:
                                     space_manager.add_new_post_file(
                                         space,
@@ -307,7 +313,8 @@ class PostHandler(BaseHandler):
             if post_to_delete["space"]:
                 if self.current_user.username != post_to_delete["author"]:
                     if not self.is_current_user_lionet_admin():
-                        with Spaces() as space_manager:
+                        with util.get_mongodb() as db:
+                            space_manager = Spaces(db)
                             if not space_manager.check_user_is_space_admin(
                                 post_to_delete["space"], self.current_user.username
                             ):
@@ -570,7 +577,8 @@ class CommentHandler(BaseHandler):
             if post["space"]:
                 if self.current_user.username != comment_author:
                     if not self.is_current_user_lionet_admin():
-                        with Spaces() as space_manager:
+                        with util.get_mongodb() as db:
+                            space_manager = Spaces(db)
                             if not space_manager.check_user_is_space_admin(
                                 post["space"], self.current_user.username
                             ):
@@ -626,7 +634,6 @@ class CommentHandler(BaseHandler):
 
 
 class LikePostHandler(BaseHandler):
-
     @auth_needed
     def post(self):
         """
@@ -777,7 +784,6 @@ class LikePostHandler(BaseHandler):
 
 
 class RepostHandler(BaseHandler):
-
     @auth_needed
     def post(self):
         """
@@ -917,7 +923,8 @@ class RepostHandler(BaseHandler):
                 # user requested to post into space
                 # --> check if space exists
                 if space_name is not None:
-                    with Spaces() as space_manager:
+                    with util.get_mongodb() as db:
+                        space_manager = Spaces(db)
                         if not space_manager.check_space_exists(space_name):
                             self.set_status(409)
                             self.write(
@@ -1042,10 +1049,11 @@ class PinHandler(BaseHandler):
         :raises: ValueError, if space doesnt exist
         """
 
-        with Spaces() as db_manager:
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
             try:
                 if (
-                    db_manager.check_user_is_space_admin(
+                    space_manager.check_user_is_space_admin(
                         space_name, self.current_user.username
                     )
                 ) or (self.get_current_user_role() == "admin"):

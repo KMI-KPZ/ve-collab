@@ -477,7 +477,8 @@ class SpaceACLHandler(BaseHandler):
             optional_role = self.get_argument("role", None)
             if optional_role:
                 try:
-                    with Spaces() as space_manager:
+                    with util.get_mongodb() as db:
+                        space_manager = Spaces(db)
                         if not (
                             self.is_current_user_lionet_admin()
                             or space_manager.check_user_is_space_admin(
@@ -537,7 +538,8 @@ class SpaceACLHandler(BaseHandler):
         elif slug == "get_all":
             # check if the user is either global admin or space admin, if not return
             try:
-                with Spaces() as space_manager:
+                with util.get_mongodb() as db:
+                    space_manager = Spaces(db)
                     if not (
                         self.is_current_user_lionet_admin()
                         or space_manager.check_user_is_space_admin(
@@ -639,7 +641,8 @@ class SpaceACLHandler(BaseHandler):
                             )
                             return
 
-                with Spaces() as space_manager:
+                with util.get_mongodb() as db:
+                    space_manager = Spaces(db)
                     space = space_manager.get_space(
                         http_body["space"], projection={"_id": False, "admins": True}
                     )

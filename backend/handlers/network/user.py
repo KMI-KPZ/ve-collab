@@ -148,8 +148,8 @@ class ProfileInformationHandler(BaseHandler):
             user_information_response["follows"] = follows
             user_information_response["profile"] = profile
 
-        # grab and add spaces
-        with Spaces() as space_manager:
+            # grab and add spaces
+            space_manager = Spaces(db)
             spaces = space_manager.get_spaces_of_user(username)
             user_information_response["spaces"] = spaces
 

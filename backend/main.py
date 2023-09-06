@@ -270,11 +270,13 @@ def create_initial_admin(username: str) -> None:
         profile_manager.insert_default_admin_profile(username)
 
         # also insert admin acl rules
-        with ACL() as acl, Spaces() as space_manager:
-            acl.global_acl.insert_admin()
+        with util.get_mongodb() as db:
+            with ACL() as acl:
+                space_manager = Spaces(db)
+                acl.global_acl.insert_admin()
 
-            for space in space_manager.get_space_names():
-                acl.space_acl.insert_admin(space)
+                for space in space_manager.get_space_names():
+                    acl.space_acl.insert_admin(space)
 
         logger.info(
             "inserted admin user '{}' and corresponding ACL rules".format(username)

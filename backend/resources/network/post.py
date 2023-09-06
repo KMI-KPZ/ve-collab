@@ -12,6 +12,7 @@ from exceptions import (
 )
 import global_vars
 from resources.network.space import FileDoesntExistError, SpaceDoesntExistError, Spaces
+import util
 
 
 class Posts:
@@ -202,7 +203,8 @@ class Posts:
             for file_id in post["files"]:
                 fs.delete(file_id)
             if post["space"]:
-                with Spaces() as space_manager:
+                with util.get_mongodb() as db:
+                    space_manager = Spaces(db)
                     for file_id in post["files"]:
                         try:
                             space_manager.remove_post_file(post["space"], file_id)

@@ -7,6 +7,7 @@ from tornado.ioloop import PeriodicCallback
 from tornado.options import options
 
 import global_vars
+import util
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ class ACL:
 
     def ensure_acl_entries(self, role: str) -> None:
         """
-        ensure that acl entries exist for the current role, 
+        ensure that acl entries exist for the current role,
         i.e. the role is present in both global acl and the space acl of all spaces.
         if any one does not exist, create it
         """
@@ -54,7 +55,8 @@ class ACL:
             self.global_acl.insert_default(role)
 
         # insert into space acl of all spaces
-        with Spaces() as space_manager:
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
             spaces = space_manager.get_space_names()
             for space in spaces:
                 if not self.space_acl.get(role, space):
@@ -67,7 +69,7 @@ class ACL:
         """
 
         logger.info("Running ACL cleanup")
-        
+
         # initiate new mongo connection, because old objects might have been GC'ed
         self.__init__()
         with self:
