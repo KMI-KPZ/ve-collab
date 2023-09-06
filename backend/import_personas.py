@@ -20,6 +20,9 @@ class Course(dict):
     def __repr__(self):
         return str(self)
 
+    def to_dict(self):
+        return self.__dict__
+
 
 class Education(dict):
     def __init__(
@@ -27,15 +30,15 @@ class Education(dict):
         institution: str,
         degree: str,
         department: str,
-        start_date: str,
-        end_date: str,
+        timestamp_from: str,
+        timestamp_to: str,
         additional_info: str,
     ):
         self.institution = institution
         self.degree = degree
         self.department = department
-        self.start_date = start_date
-        self.end_date = end_date
+        self.timestamp_from = timestamp_from
+        self.timestamp_to = timestamp_to
         self.additional_info = additional_info
 
     def __str__(self):
@@ -44,6 +47,9 @@ class Education(dict):
     def __repr__(self):
         return str(self)
 
+    def to_dict(self):
+        return self.__dict__
+
 
 class WorkExperience(dict):
     def __init__(
@@ -51,8 +57,8 @@ class WorkExperience(dict):
         position: str,
         institution: str,
         department: str,
-        start_date: str,
-        end_date: str,
+        timestamp_from: str,
+        timestamp_to: str,
         city: str,
         country: str,
         additional_info: str,
@@ -60,8 +66,8 @@ class WorkExperience(dict):
         self.position = position
         self.institution = institution
         self.department = department
-        self.start_date = start_date
-        self.end_date = end_date
+        self.timestamp_from = timestamp_from
+        self.timestamp_to = timestamp_to
         self.city = city
         self.country = country
         self.additional_info = additional_info
@@ -71,6 +77,9 @@ class WorkExperience(dict):
 
     def __repr__(self):
         return str(self)
+
+    def to_dict(self):
+        return self.__dict__
 
 
 class Persona:
@@ -114,6 +123,18 @@ class Persona:
 
     def __repr__(self):
         return str(self)
+
+    def to_dict(self):
+        ret_dict = self.__dict__.copy()
+        ret_dict["courses"] = [course.to_dict() for course in ret_dict["courses"]]
+        ret_dict["educations"] = [
+            education.to_dict() for education in ret_dict["educations"]
+        ]
+        ret_dict["work_experience"] = [
+            work_experience.to_dict() for work_experience in ret_dict["work_experience"]
+        ]
+
+        return ret_dict
 
 
 def load_csv(
@@ -189,7 +210,7 @@ def aggregate_persona_profile(persona: Persona) -> None:
     that was extracted from the CSV file and stored inside the persona object.
     """
 
-    persona_dict_copy_without_username = persona.__dict__.copy()
+    persona_dict_copy_without_username = persona.to_dict()
     del persona_dict_copy_without_username["username"]
     with Profiles() as profile_manager:
         profile_manager.update_profile_information(
@@ -214,6 +235,7 @@ def add_keycloak_user(persona: Persona) -> None:
         )
     except KeycloakPostError:
         pass
+
 
 def parse_first_name(persona: List[str]) -> str:
     return persona[0].strip()
