@@ -1,5 +1,10 @@
 import csv
 from typing import List
+import uuid
+
+from keycloak.exceptions import KeycloakPostError
+
+import global_vars
 from resources.network.profile import Profiles
 
 
@@ -192,6 +197,24 @@ def aggregate_persona_profile(persona: Persona) -> None:
         )
 
 
+def add_keycloak_user(persona: Persona) -> None:
+    """
+    create the user in Keycloak via the Keycloak Admin API
+    """
+    try:
+        global_vars.keycloak_admin.create_user(
+            {
+                "email": "{}@example.com".format(uuid.uuid4()),
+                "username": persona.username,
+                "firstName": persona.first_name,
+                "lastName": persona.last_name,
+                "enabled": True,
+            },
+            exist_ok=True,
+        )
+    except KeycloakPostError:
+        pass
+
 def parse_first_name(persona: List[str]) -> str:
     return persona[0].strip()
 
@@ -265,6 +288,7 @@ def parse_work_experiences(persona: List[str]) -> List[WorkExperience]:
         if work_experience:
             work_experiences.append(WorkExperience(*work_experience.split(";")))
     return work_experiences
+
 
 if __name__ == "__main__":
     pass

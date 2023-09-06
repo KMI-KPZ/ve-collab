@@ -1,5 +1,6 @@
 from error_reasons import USER_NOT_ADMIN
 from import_personas import (
+    add_keycloak_user,
     aggregate_persona_profile,
     ensure_persona_profle_exists,
     parse_personas,
@@ -24,5 +25,6 @@ class ImportDummyPersonasHandler(BaseHandler):
         for persona in personas:
             ensure_persona_profle_exists(persona)
             aggregate_persona_profile(persona)
+            add_keycloak_user(persona)
 
         self.write({"success": True})
