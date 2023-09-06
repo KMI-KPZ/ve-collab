@@ -3,36 +3,29 @@ from typing import Dict, List, Optional
 
 from bson.objectid import ObjectId
 import gridfs
-from pymongo import MongoClient
+from pymongo.database import Database
 
 from exceptions import (
     AlreadyLikerException,
     NotLikerException,
     PostNotExistingException,
 )
-import global_vars
+
 from resources.network.space import FileDoesntExistError, SpaceDoesntExistError, Spaces
-import util
 
 
 class Posts:
     """
-    implementation of Posts in the DB as a context manager, usage::
+    to use this class, acquire a mongodb connection first via::
 
-        with Posts() as db_manager:
-            db_manager.get_posts()
+        with util.get_mongodb() as db:
+            post_manager = Posts(db)
             ...
 
     """
 
-    def __init__(self):
-        self.client = MongoClient(
-            global_vars.mongodb_host,
-            global_vars.mongodb_port,
-            username=global_vars.mongodb_username,
-            password=global_vars.mongodb_password,
-        )
-        self.db = self.client[global_vars.mongodb_db_name]
+    def __init__(self, db: Database):
+        self.db = db
 
         self.post_attributes = [
             "author",
@@ -60,12 +53,6 @@ class Posts:
             "text",
             "pinned",
         ]
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, exc_traceback):
-        self.client.close()
 
     def _parse_object_id(self, obj_id: str | ObjectId) -> ObjectId:
         """
@@ -203,15 +190,14 @@ class Posts:
             for file_id in post["files"]:
                 fs.delete(file_id)
             if post["space"]:
-                with util.get_mongodb() as db:
-                    space_manager = Spaces(db)
-                    for file_id in post["files"]:
-                        try:
-                            space_manager.remove_post_file(post["space"], file_id)
-                        except SpaceDoesntExistError:
-                            pass
-                        except FileDoesntExistError:
-                            pass
+                space_manager = Spaces(self.db)
+                for file_id in post["files"]:
+                    try:
+                        space_manager.remove_post_file(post["space"], file_id)
+                    except SpaceDoesntExistError:
+                        pass
+                    except FileDoesntExistError:
+                        pass
 
         # finally delete the post itself
         delete_result = self.db.posts.delete_one({"_id": post_id})

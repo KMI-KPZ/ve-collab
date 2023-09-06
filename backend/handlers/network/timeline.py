@@ -135,7 +135,8 @@ class TimelineHandler(BaseTimelineHandler):
 
         time_from, time_to = self.parse_timeframe_args()
 
-        with Posts() as post_manager:
+        with util.get_mongodb() as db:
+            post_manager = Posts(db)
             result = post_manager.get_full_timeline(time_from, time_to)
 
         # serialize post objects to dicts and enhance author information
@@ -194,17 +195,17 @@ class SpaceTimelineHandler(BaseTimelineHandler):
                 self.write({"success": False, "reason": "space_doesnt_exist"})
                 return
 
-        # ask for permission to read timeline
-        with ACL() as acl:
-            if not acl.space_acl.ask(
-                self.get_current_user_role(), space_name, "read_timeline"
-            ):
-                self.set_status(403)
-                self.write({"success": False, "reason": "insufficient_permission"})
-                return
+            # ask for permission to read timeline
+            with ACL() as acl:
+                if not acl.space_acl.ask(
+                    self.get_current_user_role(), space_name, "read_timeline"
+                ):
+                    self.set_status(403)
+                    self.write({"success": False, "reason": "insufficient_permission"})
+                    return
 
-        # query space timeline
-        with Posts() as post_manager:
+            # query space timeline
+            post_manager = Posts(db)
             result = post_manager.get_space_timeline(space_name, time_from, time_to)
 
         # postprocessing
@@ -238,7 +239,8 @@ class UserTimelineHandler(BaseTimelineHandler):
         time_from, time_to = self.parse_timeframe_args()
 
         # query user timeline
-        with Posts() as post_manager:
+        with util.get_mongodb() as db:
+            post_manager = Posts(db)
             result = post_manager.get_user_timeline(author, time_from, time_to)
 
         posts = self.add_profile_pic_to_author(result)
@@ -272,7 +274,8 @@ class PersonalTimelineHandler(BaseTimelineHandler):
         time_from, time_to = self.parse_timeframe_args()
 
         # query personal timeline
-        with Posts() as post_manager:
+        with util.get_mongodb() as db:
+            post_manager = Posts(db)
             result = post_manager.get_personal_timeline(
                 self.current_user.username, time_from, time_to
             )
@@ -303,7 +306,8 @@ class NewPostsSinceTimestampHandler(BaseHandler):
         )
         timestamp = dateutil.parser.parse(timestamp)
 
-        with Posts() as post_manager:
+        with util.get_mongodb() as db:
+            post_manager = Posts(db)
             if post_manager.check_new_posts_since_timestamp(timestamp):
                 # new posts since timestamp, user should query the timeline handlers
                 self.set_status(200)

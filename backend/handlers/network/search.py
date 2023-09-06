@@ -128,7 +128,8 @@ class SearchHandler(BaseHandler):
         """
 
         # tags is an exact match query, therefore explicitely search without using index
-        with Posts() as post_manager:
+        with util.get_mongodb() as db:
+            post_manager = Posts(db)
             matched_posts = post_manager.get_posts_by_tags(tags)
 
         if matched_posts:
@@ -146,7 +147,8 @@ class SearchHandler(BaseHandler):
         """
 
         # full text search
-        with Posts() as post_manager:
+        with util.get_mongodb() as db:
+            post_manager = Posts(db)
             matched_posts = post_manager.fulltext_search(query)
 
         if matched_posts:

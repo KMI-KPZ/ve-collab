@@ -16,8 +16,7 @@ from exceptions import (
     UserNotAdminError,
     UserNotMemberError,
 )
-
-import global_vars
+import util
 
 
 class Spaces:
@@ -216,9 +215,11 @@ class Spaces:
         from resources.network.post import Posts
         from resources.network.acl import ACL
 
-        with Posts() as post_manager, ACL() as acl:
-            post_manager.delete_post_by_space(space_name)
-            acl.space_acl.delete(space=space_name)
+        with util.get_mongodb() as db:
+            with ACL() as acl:
+                post_manager = Posts(db)
+                post_manager.delete_post_by_space(space_name)
+                acl.space_acl.delete(space=space_name)
 
     def is_space_directly_joinable(self, space_name: str) -> bool:
         """
