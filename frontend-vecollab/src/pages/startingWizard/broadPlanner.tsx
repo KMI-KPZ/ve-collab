@@ -11,6 +11,8 @@ import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
+    ISideProgressBarStateSteps,
+    ProgressState,
 } from '@/interfaces/startingWizard/sideProgressBar';
 import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 import { sideMenuStepsData } from '@/data/sideMenuSteps';
@@ -122,6 +124,7 @@ export default function BroadPlanner() {
                         setSideMenuStepsProgress(data.plan.progress);
                     }
                     setLinkFineStepTopMenu(generateFineStepLinkTopMenu(data.plan.steps));
+                    data.plan.progress;
                 }
             );
         }
@@ -133,10 +136,11 @@ export default function BroadPlanner() {
     });
 
     const onSubmit: SubmitHandler<FormValues> = async (data) => {
+        const broadsteps: BroadStep[] = data.broadSteps;
         let payload: IFineStep = {
             ...defaultFineStepData,
         };
-        const broadsteps = data.broadSteps.map((broadStep) => {
+        const broadstepsData = broadsteps.map((broadStep) => {
             const fineStepBackend = allSteps.find((fineStep) => fineStep.name === broadStep.name);
             if (fineStepBackend !== undefined) {
                 payload = fineStepBackend;
@@ -153,7 +157,24 @@ export default function BroadPlanner() {
             {
                 plan_id: router.query.plannerId,
                 field_name: 'steps',
-                value: broadsteps,
+                value: broadstepsData,
+            },
+            session?.accessToken
+        );
+
+        const sideMenuStateSteps: ISideProgressBarStateSteps[] = broadsteps.map((broadStep) => {
+            return { [broadStep.name]: ProgressState.notStarted };
+        });
+        const sideMenuStates: ISideProgressBarStates = {
+            ...sideMenuStepsProgress,
+            steps: sideMenuStateSteps,
+        };
+        await fetchPOST(
+            '/planner/update_field',
+            {
+                plan_id: router.query.plannerId,
+                field_name: 'progress',
+                value: sideMenuStates,
             },
             session?.accessToken
         );

@@ -15,7 +15,23 @@ export enum ProgressState {
 }
 
 export interface ISideProgressBarStates {
-    [key: string]: ProgressState;
+    name: ProgressState.notStarted;
+    institutions: ProgressState.notStarted;
+    topic: ProgressState.notStarted;
+    lectures: ProgressState.notStarted;
+    audience: ProgressState.notStarted;
+    languages: ProgressState.notStarted;
+    involved_parties: ProgressState.notStarted;
+    realization: ProgressState.notStarted;
+    learning_env: ProgressState.notStarted;
+    tools: ProgressState.notStarted;
+    new_content: ProgressState.notStarted;
+    formalities: ProgressState.notStarted;
+    steps: ISideProgressBarStateSteps[];
+}
+
+export interface ISideProgressBarStateSteps {
+    [key: string]: ProgressState.notStarted;
 }
 
 export const initialSideProgressBarStates: ISideProgressBarStates = {
@@ -31,5 +47,5 @@ export const initialSideProgressBarStates: ISideProgressBarStates = {
     tools: ProgressState.notStarted,
     new_content: ProgressState.notStarted,
     formalities: ProgressState.notStarted,
-    steps: ProgressState.notStarted,
+    steps: [],
 };
