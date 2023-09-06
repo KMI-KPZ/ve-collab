@@ -19,5 +19,6 @@
   "etherpad_api_key": "<your_etherpad_api_key>",
   "elasticsearch_base_url": "http://host:port",
   "elasticsearch_username": "<elastic_username>",
-  "elasticsearch_password": "<elastic_password>"
+  "elasticsearch_password": "<elastic_password>",
+  "dummy_personas_passcode": "<random_string>"
 }

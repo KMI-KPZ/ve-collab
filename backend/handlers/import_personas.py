@@ -5,6 +5,7 @@ from import_personas import (
     ensure_persona_profle_exists,
     parse_personas,
 )
+import global_vars
 from handlers.base_handler import BaseHandler
 
 
@@ -14,7 +15,7 @@ class ImportDummyPersonasHandler(BaseHandler):
         # TODO only for development, restrict to admin users via frontend
         # proxy to the request with access_token
         passcode = self.get_argument("passcode", None)
-        if passcode != "aQuhoih230!.asd":
+        if passcode != global_vars.dummy_personas_passcode:
             self.set_status(403)
             self.write({"success": False, "reason": USER_NOT_ADMIN})
             return

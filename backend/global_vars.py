@@ -22,5 +22,6 @@ etherpad_api_key: str = ""
 elasticsearch_base_url: str = ""
 elasticsearch_username: str = ""
 elasticsearch_password: str = ""
+dummy_personas_passcode: str = ""
 socket_io = socketio.AsyncServer
 username_sid_map: Dict[str, str] = {}

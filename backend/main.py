@@ -312,6 +312,7 @@ def set_global_vars(conf: dict) -> None:
         "elasticsearch_base_url",
         "elasticsearch_username",
         "elasticsearch_password",
+        "dummy_personas_passcode",
     ]
 
     for key in expected_config_keys:
@@ -332,6 +333,7 @@ def set_global_vars(conf: dict) -> None:
     global_vars.elasticsearch_base_url = conf["elasticsearch_base_url"]
     global_vars.elasticsearch_username = conf["elasticsearch_username"]
     global_vars.elasticsearch_password = conf["elasticsearch_password"]
+    global_vars.dummy_personas_passcode = conf["dummy_personas_passcode"]
 
     if not (options.test_admin or options.test_user):
         global_vars.keycloak = KeycloakOpenID(
