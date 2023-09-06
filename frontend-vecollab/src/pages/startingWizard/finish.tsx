@@ -3,14 +3,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { fetchGET } from '@/lib/backend';
-import { IStep } from '@/pages/startingWizard/finePlanner';
 import { generateFineStepLinkTopMenu } from '@/pages/startingWizard/generalInformation/courseFormat';
 import { signIn, useSession } from 'next-auth/react';
 
 export default function Finished() {
     const router = useRouter();
     const { data: session, status } = useSession();
-    const [loading, setLoading] = useState(false);
+    const [, setLoading] = useState(false);
     const [linkFineStepTopMenu, setLinkFineStepTopMenu] = useState<string>(
         '/startingWizard/finePlanner'
     );

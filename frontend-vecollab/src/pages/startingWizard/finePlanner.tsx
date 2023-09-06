@@ -1,42 +1,16 @@
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
-import { fetchGET, fetchPOST } from '@/lib/backend';
+import { fetchGET } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
-import React, { FormEvent, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
-import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
-import Stage from '@/components/StartingWizard/FinePlanner/Stage';
-import {
-    initialSideProgressBarStates,
-    ISideProgressBarStates,
-} from '@/interfaces/startingWizard/sideProgressBar';
-import { IFineStep, ITask } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import { generateFineStepLinkTopMenu } from '@/pages/startingWizard/generalInformation/courseFormat';
-
-export interface IStep {
-    _id?: string;
-    timestamp_from: string;
-    timestamp_to: string;
-    name: string;
-    workload: number;
-    social_form: string;
-    learning_env: string;
-    ve_approach: string;
-    tasks: ITask[];
-    evaluation_tools: string[];
-    attachments?: string[];
-    custom_attributes?: Record<string, string>;
-}
 
 export default function FinePlanner() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
-    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
-        initialSideProgressBarStates
-    );
-    const [steps, setSteps] = useState<IFineStep[]>([]);
     const [linkFineStepTopMenu, setLinkFineStepTopMenu] = useState<string>(
         '/startingWizard/finePlanner'
     );
@@ -67,9 +41,6 @@ export default function FinePlanner() {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
                     setLoading(false);
-                    if (data.plan.steps?.length > 0) {
-                        setSteps(data.plan.steps);
-                    }
                     setLinkFineStepTopMenu(generateFineStepLinkTopMenu(data.plan.steps));
                 }
             );

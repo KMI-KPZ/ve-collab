@@ -8,7 +8,6 @@ import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
-import { IStep } from '@/pages/startingWizard/finePlanner';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
@@ -108,7 +107,7 @@ export default function BroadPlanner() {
                         },
                     ]);
                     if (data.plan.steps?.length > 0) {
-                        const steps: IStep[] = data.plan.steps;
+                        const steps: IFineStep[] = data.plan.steps;
                         const broadSteps: BroadStep[] = steps.map((step) => {
                             const { timestamp_from, timestamp_to, name } = step;
                             return {

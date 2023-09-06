@@ -2,10 +2,9 @@ import { signIn, useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { fetchGET, fetchPOST } from '@/lib/backend';
-import { IStep } from '@/pages/startingWizard/finePlanner';
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
 import LoadingAnimation from '@/components/LoadingAnimation';
-import Stage2 from '@/components/StartingWizard/FinePlanner/Stage2';
+import Stage from '@/components/StartingWizard/FinePlanner/Stage';
 import { SubmitHandler, useForm, FormProvider } from 'react-hook-form';
 import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
@@ -130,7 +129,7 @@ export default function FinePlanner() {
                     if (data.plan.steps?.length > 0) {
                         setSteps(data.plan.steps);
                         const currentFineStepCopy: IFineStep | undefined = data.plan.steps.find(
-                            (item: IStep) => item.name === stepSlug
+                            (item: IFineStep) => item.name === stepSlug
                         );
 
                         if (currentFineStepCopy) {
@@ -160,7 +159,7 @@ export default function FinePlanner() {
     }, [session, status, router, stepSlug, methods]);
 
     const onSubmit: SubmitHandler<IFineStepFrontend> = async (data: IFineStepFrontend) => {
-        const stepsWithoutCurrent = steps.filter((item: IStep) => item.name !== stepSlug);
+        const stepsWithoutCurrent = steps.filter((item: IFineStep) => item.name !== stepSlug);
         const currentStepTransformBackTools: ITask[] = data.tasks.map((task: ITaskFrontend) => {
             return {
                 ...task,
@@ -190,7 +189,7 @@ export default function FinePlanner() {
     const generateSideMenuStepsData = (steps: IFineStep[]): SideMenuStep[] => {
         return steps
             .sort((a: IFineStep, b: IFineStep) => (a.timestamp_from > b.timestamp_from ? 1 : -1))
-            .map((step: IStep) => ({
+            .map((step: IFineStep) => ({
                 id: encodeURIComponent(step.name),
                 text: step.name,
                 link: `/startingWizard/fineplanner/${encodeURIComponent(step.name)}`,
@@ -233,7 +232,7 @@ export default function FinePlanner() {
                                 <div className={'text-center mb-20'}>
                                     erweitere die Informationen zu jeder Etappe
                                 </div>
-                                <Stage2 fineStep={currentFineStep} />
+                                <Stage fineStep={currentFineStep} />
                             </div>
                             <div className="flex justify-around w-full">
                                 <div>
