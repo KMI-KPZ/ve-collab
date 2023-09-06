@@ -18,6 +18,7 @@ from resources.network.space import (
     UserNotMemberError,
 )
 from resources.network.wordpress import Wordpress
+import util
 
 logger = logging.getLogger(__name__)
 
@@ -1104,56 +1105,57 @@ class SpaceHandler(BaseHandler):
         create a new space if it does not already exist and if the
         current user has sufficient permissions
         """
+        with util.get_mongodb() as db:
+            with (Spaces() as space_manager, ACL() as acl):
+                profile_manager = Profiles(db)
+                # check if the user has permission
+                if not acl.global_acl.ask(self.get_current_user_role(), "create_space"):
+                    self.set_status(403)
+                    self.write(
+                        {
+                            "success": False,
+                            "reason": "insufficient_permission",
+                        }
+                    )
+                    return
 
-        with (Spaces() as space_manager, Profiles() as profile_manager, ACL() as acl):
-            # check if the user has permission
-            if not acl.global_acl.ask(self.get_current_user_role(), "create_space"):
-                self.set_status(403)
-                self.write(
-                    {
-                        "success": False,
-                        "reason": "insufficient_permission",
-                    }
-                )
-                return
+                space = {
+                    "name": space_name,
+                    "invisible": is_invisible,
+                    "joinable": is_joinable,
+                    "members": [self.current_user.username],
+                    "admins": [self.current_user.username],
+                    "invites": [],
+                    "requests": [],
+                    "files": [],
+                }
 
-            space = {
-                "name": space_name,
-                "invisible": is_invisible,
-                "joinable": is_joinable,
-                "members": [self.current_user.username],
-                "admins": [self.current_user.username],
-                "invites": [],
-                "requests": [],
-                "files": [],
-            }
+                try:
+                    # create the space
+                    space_manager.create_space(space)
+                except ValueError:
+                    self.set_status(500)
+                    self.write(
+                        {
+                            "success": False,
+                            "reason": "unexpectedly_missing_required_attribute",
+                        }
+                    )
+                    return
+                except TypeError:
+                    self.set_status(500)
+                    self.write({"success": False, "reason": "unexpected_type_mismatch"})
+                    return
+                except SpaceAlreadyExistsError:
+                    self.set_status(409)
+                    self.write({"success": False, "reason": "space_name_already_exists"})
+                    return
 
-            try:
-                # create the space
-                space_manager.create_space(space)
-            except ValueError:
-                self.set_status(500)
-                self.write(
-                    {
-                        "success": False,
-                        "reason": "unexpectedly_missing_required_attribute",
-                    }
-                )
-                return
-            except TypeError:
-                self.set_status(500)
-                self.write({"success": False, "reason": "unexpected_type_mismatch"})
-                return
-            except SpaceAlreadyExistsError:
-                self.set_status(409)
-                self.write({"success": False, "reason": "space_name_already_exists"})
-                return
-
-            # also create default acl entry for all different roles
-            acl.space_acl.insert_admin(space_name)
-            for role in profile_manager.get_distinct_roles():
-                if role != "admin":
-                    acl.space_acl.insert_default(role, space_name)
+                # also create default acl entry for all different roles
+                acl.space_acl.insert_admin(space_name)
+                for role in profile_manager.get_distinct_roles():
+                    if role != "admin":
+                        acl.space_acl.insert_default(role, space_name)
 
         self.set_status(200)
         self.write({"success": True})
@@ -1503,12 +1505,14 @@ class SpaceHandler(BaseHandler):
                 wp_post, self.current_user.username
             )
 
-        with (ACL() as acl, Profiles() as profile_manager):
-            for role in profile_manager.get_distinct_roles():
-                if role == "admin":
-                    acl.space_acl.insert_admin(space_name)
-                else:
-                    acl.space_acl.insert_default_discussion(role, space_name)
+        with util.get_mongodb() as db:
+            with ACL() as acl:
+                profile_manager = Profiles(db)
+                for role in profile_manager.get_distinct_roles():
+                    if role == "admin":
+                        acl.space_acl.insert_admin(space_name)
+                    else:
+                        acl.space_acl.insert_default_discussion(role, space_name)
 
         return space_name
 

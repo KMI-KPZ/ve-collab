@@ -9,6 +9,7 @@ from resources.network.acl import ACL
 from resources.network.post import Posts
 from resources.network.profile import Profiles
 from resources.network.space import SpaceDoesntExistError, Spaces
+import util
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +47,8 @@ class BaseTimelineHandler(BaseHandler):
 
         pic_cache = {}
 
-        with Profiles() as profile_manager:
+        with util.get_mongodb() as db:
+            profile_manager = Profiles(db)
             for post in posts:
                 author_name = post["author"]
                 # if we have already requested the picture in this loop,
@@ -278,6 +280,7 @@ class PersonalTimelineHandler(BaseTimelineHandler):
 
         self.set_status(200)
         self.write(self.json_serialize_response({"success": True, "posts": posts}))
+
 
 class NewPostsSinceTimestampHandler(BaseHandler):
     """

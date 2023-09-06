@@ -7,13 +7,13 @@ from handlers.base_handler import BaseHandler, auth_needed
 from resources.network.acl import ACL
 from resources.network.profile import Profiles, ProfileDoesntExistException
 from resources.network.space import Spaces, SpaceDoesntExistError
+import util
 
 
 logger = logging.getLogger(__name__)
 
 
 class RoleHandler(BaseHandler):
-
     @auth_needed
     async def get(self, slug):
         """
@@ -21,9 +21,10 @@ class RoleHandler(BaseHandler):
             request the role of the current user
         """
         if slug == "my":
-            with Profiles() as db_manager:
+            with util.get_mongodb() as db:
+                profile_manager = Profiles(db)
                 try:
-                    role_result = db_manager.get_role(self.current_user.username)
+                    role_result = profile_manager.get_role(self.current_user.username)
                     self.set_status(200)
                     self.write(
                         self.json_serialize_response(
@@ -37,7 +38,7 @@ class RoleHandler(BaseHandler):
                     return
                 except ProfileDoesntExistException:
                     # if user has no profile, ensure to create one (as "guest" role)
-                    db_manager.ensure_profile_exists(self.current_user.username)
+                    profile_manager.ensure_profile_exists(self.current_user.username)
                     self.set_status(200)
                     self.write(
                         {
@@ -54,8 +55,9 @@ class RoleHandler(BaseHandler):
                 ret_list = []
                 user_list_kc = self.get_keycloak_user_list()
 
-                with Profiles() as db_manager:
-                    ret_list = db_manager.get_all_roles(user_list_kc)
+                with util.get_mongodb() as db:
+                    profile_manager = Profiles(db)
+                    ret_list = profile_manager.get_all_roles(user_list_kc)
 
                 self.set_status(200)
                 self.write(
@@ -69,8 +71,9 @@ class RoleHandler(BaseHandler):
 
         elif slug == "distinct":
             if self.is_current_user_lionet_admin():
-                with Profiles() as db_manager:
-                    roles = db_manager.get_distinct_roles()
+                with util.get_mongodb() as db:
+                    profile_manager = Profiles(db)
+                    roles = profile_manager.get_distinct_roles()
                 self.set_status(200)
                 self.write(
                     self.json_serialize_response(
@@ -160,8 +163,9 @@ class RoleHandler(BaseHandler):
                     )
                     return
 
-                with Profiles() as db_manager:
-                    db_manager.set_role(http_body["username"], http_body["role"])
+                with util.get_mongodb() as db:
+                    profile_manager = Profiles(db)
+                    profile_manager.set_role(http_body["username"], http_body["role"])
 
                 with ACL() as acl_manager:
                     acl_manager.ensure_acl_entries(http_body["role"])
@@ -266,7 +270,8 @@ class GlobalACLHandler(BaseHandler):
                 entries = []
                 with ACL() as acl:
                     # solve inconsistency problem of role existing but no acl_entry: whenever there is a role that has no acl_entry, create a default one
-                    with Profiles() as profile_manager:
+                    with util.get_mongodb() as db:
+                        profile_manager = Profiles(db)
                         distinct_roles = profile_manager.get_distinct_roles()
                     for role in distinct_roles:
                         if role not in [
@@ -363,7 +368,8 @@ class GlobalACLHandler(BaseHandler):
                         return
 
                     # reject setting an entry of a role that does not exist to prevent dangling entries
-                    with Profiles() as profile_manager:
+                    with util.get_mongodb() as db:
+                        profile_manager = Profiles(db)
                         if not profile_manager.check_role_exists(http_body["role"]):
                             self.set_status(409)
                             self.write(
@@ -465,7 +471,6 @@ class SpaceACLHandler(BaseHandler):
             return
 
         if slug == "get":
-
             # if there is a role specified, query for this role
             # instead of the current_user's one. but in that case,
             # we need to be either global or space admin
@@ -667,7 +672,8 @@ class SpaceACLHandler(BaseHandler):
                         return
 
                 # reject setting an entry of a role that does not exist to prevent dangling entries
-                with Profiles() as profile_manager:
+                with util.get_mongodb() as db:
+                    profile_manager = Profiles(db)
                     if not profile_manager.check_role_exists(http_body["role"]):
                         self.set_status(409)
                         self.write(

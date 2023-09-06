@@ -11,6 +11,7 @@ from exceptions import ProfileDoesntExistException
 from handlers.base_handler import BaseHandler, auth_needed
 from resources.network.profile import Profiles
 from resources.network.space import Spaces
+import util
 
 
 class ProfileInformationHandler(BaseHandler):
@@ -126,7 +127,8 @@ class ProfileInformationHandler(BaseHandler):
             "email": keycloak_info["email"],
         }
 
-        with Profiles() as profile_manager:
+        with util.get_mongodb() as db:
+            profile_manager = Profiles(db)
             # grab and add profile details, putting role and follows out of
             # the nested profile dict
             profile = {}
@@ -250,7 +252,8 @@ class ProfileInformationHandler(BaseHandler):
 
         updated_attribute_dict = json.loads(self.request.body)
 
-        with Profiles() as profile_manager:
+        with util.get_mongodb() as db:
+            profile_manager = Profiles(db)
             # handle profile pic
             if "profile_pic" in updated_attribute_dict:
                 profile_pic_obj = {
@@ -345,7 +348,8 @@ class BulkProfileSnippets(BaseHandler):
             self.write({"success": False, "reason": "missing_key_in_http_body"})
             return
 
-        with Profiles() as profile_manager:
+        with util.get_mongodb() as db:
+            profile_manager = Profiles(db)
             profiles = profile_manager.get_profile_snippets(http_body["usernames"])
 
             self.set_status(200)
@@ -868,7 +872,8 @@ class UserHandler(BaseHandler):
                 "email": keycloak_info["email"],
             }
 
-            with Profiles() as profile_manager:
+            with util.get_mongodb() as db:
+                profile_manager = Profiles(db)
                 # add full profile data to response, moving role and follows out of
                 # the nested profile dict
                 profile = profile_manager.ensure_profile_exists(username)
@@ -893,7 +898,8 @@ class UserHandler(BaseHandler):
             # for the full user list, we dont include the full profile,
             # but only role, follows, followers and profile_pic
             user_list_response = {}
-            with Profiles() as profile_manager:
+            with util.get_mongodb() as db:
+                profile_manager = Profiles(db)
                 for user in user_list_kc:
                     profile_obj = profile_manager.ensure_profile_exists(
                         user["username"],
@@ -963,7 +969,8 @@ class MatchingExclusionHandler(BaseHandler):
         if not username:
             username = self.current_user.username
 
-        with Profiles() as profile_manager:
+        with util.get_mongodb() as db:
+            profile_manager = Profiles(db)
             try:
                 excluded = profile_manager.get_matching_exclusion(username)
             except ProfileDoesntExistException:

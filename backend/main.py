@@ -45,7 +45,7 @@ from resources.network.space import Spaces
 from handlers.planner.etherpad_integration import EtherpadIntegrationHandler
 from handlers.planner.ve_plan import VEPlanHandler
 from handlers.planner.ve_invite import VeInvitationHandler
-
+import util
 
 logger = logging.getLogger(__name__)
 
@@ -246,7 +246,8 @@ def create_initial_admin(username: str) -> None:
     create an initial admin with the given username
     """
 
-    with Profiles() as profile_manager:
+    with util.get_mongodb() as db:
+        profile_manager = Profiles(db)
         # check if the user already has a non-admin role and issue a warning
         # about elevated permissions if so
         try:
