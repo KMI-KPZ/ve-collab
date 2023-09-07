@@ -143,6 +143,7 @@ class ElasticsearchConnector:
                 profile[key] = self._dict_or_list_values_to_str(value)
 
         query = {
+            "size": 5,
             "query": {
                 "bool": {
                     # exclude the user itself from the search results
@@ -162,7 +163,10 @@ class ElasticsearchConnector:
                         },
                         {
                             "match": {
-                                "expertise": {"query": profile["expertise"]},
+                                "expertise": {
+                                    "query": profile["expertise"],
+                                    "boost": 1.5,
+                                },
                             }
                         },
                         {
@@ -172,12 +176,15 @@ class ElasticsearchConnector:
                         },
                         {
                             "match": {
-                                "ve_interests": {"query": profile["ve_interests"]},
+                                "ve_interests": {
+                                    "query": profile["ve_interests"],
+                                    "boost": 2,
+                                },
                             }
                         },
                         {
                             "match": {
-                                "ve_goals": {"query": profile["ve_goals"]},
+                                "ve_goals": {"query": profile["ve_goals"], "boost": 2},
                             }
                         },
                         {
@@ -199,7 +206,7 @@ class ElasticsearchConnector:
                         },
                     ],
                 }
-            }
+            },
         }
 
         response = requests.post(
