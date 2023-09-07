@@ -34,40 +34,29 @@ class ElasticsearchConnector:
         """
 
         result_str = ""
+        # for the recursion base case: str remains as str
         if isinstance(doc, str):
             result_str = doc
-        if isinstance(doc, list):
+        # lists get flattened, if values are str, they remain str,
+        # dicts or nested lists get flattened recursively
+        elif isinstance(doc, list):
             for elem in doc:
                 result_str = " ".join(
                     [result_str, self._dict_or_list_values_to_str(elem)]
                 )
-        if isinstance(doc, dict):
+        # dicts get flattened, i.e. only values of base entries are kept and
+        # concatenated into the single string, keys are lost.
+        # if dict values are lists or nested dicts, the are flattened recursively
+        elif isinstance(doc, dict):
             for value in doc.values():
-                if isinstance(value, list):
-                    for elem in value:
-                        if isinstance(elem, dict):
-                            result_str = " ".join(
-                                [result_str, self._dict_or_list_values_to_str(elem)]
-                            )
-                        elif isinstance(elem, str):
-                            result_str = " ".join([result_str, str(elem)])
-                        elif isinstance(elem, object):
-                            result_str = " ".join(
-                                [
-                                    result_str,
-                                    self._dict_or_list_values_to_str(elem.__dict__),
-                                ]
-                            )
-                elif isinstance(value, dict):
-                    result_str = " ".join(
-                        [result_str, self._dict_or_list_values_to_str(value)]
-                    )
-                elif isinstance(value, str):
-                    result_str = " ".join([result_str, str(value)])
-                elif isinstance(value, object):
-                    result_str = " ".join(
-                        [result_str, self._dict_or_list_values_to_str(value.__dict__)]
-                    )
+                result_str = " ".join(
+                    [result_str, self._dict_or_list_values_to_str(value)]
+                )
+        # last fallback, any object gets flattened according to its __dict__
+        elif isinstance(doc, object):
+            result_str = " ".join(
+                [result_str, self._dict_or_list_values_to_str(doc.__dict__)]
+            )
 
         return result_str.strip()
 
