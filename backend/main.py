@@ -149,14 +149,7 @@ def init_indexes(force_rebuild: bool) -> None:
     :param force_rebuild: boolean switch to trigger a forced rebuild of the text indexes
     """
 
-    with pymongo.MongoClient(
-        global_vars.mongodb_host,
-        global_vars.mongodb_port,
-        username=global_vars.mongodb_username,
-        password=global_vars.mongodb_password,
-    ) as client:
-        db = client[global_vars.mongodb_db_name]
-
+    with util.get_mongodb() as db:
         # full text search index on posts
         if "posts" not in db.posts.index_information() or force_rebuild:
             try:
@@ -270,14 +263,13 @@ def create_initial_admin(username: str) -> None:
         profile_manager.insert_default_admin_profile(username)
 
         # also insert admin acl rules
-        with util.get_mongodb() as db:
-            acl = ACL(db)
-            space_manager = Spaces(db)
+        acl = ACL(db)
+        space_manager = Spaces(db)
 
-            acl.global_acl.insert_admin()
+        acl.global_acl.insert_admin()
 
-            for space in space_manager.get_space_names():
-                acl.space_acl.insert_admin(space)
+        for space in space_manager.get_space_names():
+            acl.space_acl.insert_admin(space)
 
         logger.info(
             "inserted admin user '{}' and corresponding ACL rules".format(username)
