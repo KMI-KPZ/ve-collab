@@ -111,20 +111,20 @@ class PostHandler(BaseHandler):
 
                     # space exists, now determine if user has permission
                     # to post into that space, if not end with 403 insufficient permission
-                    with ACL() as acl:
-                        user_can_post = acl.space_acl.ask(
-                            self.get_current_user_role(), space, "post"
+                    acl = ACL(db)
+                    user_can_post = acl.space_acl.ask(
+                        self.get_current_user_role(), space, "post"
+                    )
+                    if not user_can_post:
+                        self.set_status(403)
+                        self.write(
+                            {
+                                "status": 403,
+                                "success": False,
+                                "reason": "insufficient_permission",
+                            }
                         )
-                        if not user_can_post:
-                            self.set_status(403)
-                            self.write(
-                                {
-                                    "status": 403,
-                                    "success": False,
-                                    "reason": "insufficient_permission",
-                                }
-                            )
-                            return
+                        return
 
                 post_manager = Posts(db)
                 # handle files
@@ -205,11 +205,11 @@ class PostHandler(BaseHandler):
 
                 # if the post is in a space, enforce write permission
                 if post["space"]:
+                    acl = ACL(db)
                     user_can_post = False
-                    with ACL() as acl:
-                        user_can_post = acl.space_acl.ask(
-                            self.get_current_user_role(), post["space"], "post"
-                        )
+                    user_can_post = acl.space_acl.ask(
+                        self.get_current_user_role(), post["space"], "post"
+                    )
                     if not user_can_post:
                         self.set_status(403)
                         self.write(
@@ -448,19 +448,19 @@ class CommentHandler(BaseHandler):
 
             # if post is in a space, we have to check the permissions to comment
             if post["space"]:
-                with ACL() as acl:
-                    if not acl.space_acl.ask(
-                        self.get_current_user_role(), post["space"], "comment"
-                    ):
-                        self.set_status(403)
-                        self.write(
-                            {
-                                "status": 403,
-                                "success": False,
-                                "reason": "insufficient_permission",
-                            }
-                        )
-                        return
+                acl = ACL(db)
+                if not acl.space_acl.ask(
+                    self.get_current_user_role(), post["space"], "comment"
+                ):
+                    self.set_status(403)
+                    self.write(
+                        {
+                            "status": 403,
+                            "success": False,
+                            "reason": "insufficient_permission",
+                        }
+                    )
+                    return
 
             # create and store the comment
             comment = {
@@ -941,11 +941,11 @@ class RepostHandler(BaseHandler):
 
                     # space exists, but also determine if user has permission
                     # to post into that space
+                    acl = ACL(db)
                     user_can_post = False
-                    with ACL() as acl:
-                        user_can_post = acl.space_acl.ask(
-                            self.get_current_user_role(), space_name, "post"
-                        )
+                    user_can_post = acl.space_acl.ask(
+                        self.get_current_user_role(), space_name, "post"
+                    )
                     if not user_can_post:
                         self.set_status(403)
                         self.write(
@@ -1012,11 +1012,11 @@ class RepostHandler(BaseHandler):
 
                 # if repost is in a space, reject if the user has no posting permission
                 if repost["space"]:
+                    acl = ACL(db)
                     user_can_post = False
-                    with ACL() as acl:
-                        user_can_post = acl.space_acl.ask(
-                            self.get_current_user_role(), repost["space"], "post"
-                        )
+                    user_can_post = acl.space_acl.ask(
+                        self.get_current_user_role(), repost["space"], "post"
+                    )
                     if not user_can_post:
                         self.set_status(403)
                         self.write(

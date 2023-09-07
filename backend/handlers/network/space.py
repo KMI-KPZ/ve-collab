@@ -1077,37 +1077,34 @@ class SpaceHandler(BaseHandler):
         /uploads/<space_name>/<filename>
         """
         with util.get_mongodb() as db:
-            with ACL() as acl:
-                space_manager = Spaces(db)
-                # reject if user is not a member or space doesnt exist at all
-                try:
-                    if not space_manager.check_user_is_member(
-                        space_name, self.current_user.username
-                    ):
-                        self.set_status(409)
-                        self.write(
-                            {"success": False, "reason": "user_not_member_of_space"}
-                        )
-                        return
-                except SpaceDoesntExistError:
-                    self.set_status(409)
-                    self.write({"success": False, "reason": "space_doesnt_exist"})
-                    return
+            space_manager = Spaces(db)
+            acl = ACL(db)
 
-                # reject if user is not allowed to view files
-                if not acl.space_acl.ask(
-                    self.get_current_user_role(), space_name, "read_files"
+            # reject if user is not a member or space doesnt exist at all
+            try:
+                if not space_manager.check_user_is_member(
+                    space_name, self.current_user.username
                 ):
-                    self.set_status(403)
-                    self.write({"success": False, "reason": "insufficient_permission"})
+                    self.set_status(409)
+                    self.write({"success": False, "reason": "user_not_member_of_space"})
                     return
+            except SpaceDoesntExistError:
+                self.set_status(409)
+                self.write({"success": False, "reason": "space_doesnt_exist"})
+                return
 
-                files = space_manager.get_files(space_name)
+            # reject if user is not allowed to view files
+            if not acl.space_acl.ask(
+                self.get_current_user_role(), space_name, "read_files"
+            ):
+                self.set_status(403)
+                self.write({"success": False, "reason": "insufficient_permission"})
+                return
 
-                self.set_status(200)
-                self.write(
-                    self.json_serialize_response({"success": True, "files": files})
-                )
+            files = space_manager.get_files(space_name)
+
+            self.set_status(200)
+            self.write(self.json_serialize_response({"success": True, "files": files}))
 
     def create_space(
         self, space_name: str, is_invisible: bool, is_joinable: bool
@@ -1117,59 +1114,58 @@ class SpaceHandler(BaseHandler):
         current user has sufficient permissions
         """
         with util.get_mongodb() as db:
-            with ACL() as acl:
-                profile_manager = Profiles(db)
-                space_manager = Spaces(db)
-                # check if the user has permission
-                if not acl.global_acl.ask(self.get_current_user_role(), "create_space"):
-                    self.set_status(403)
-                    self.write(
-                        {
-                            "success": False,
-                            "reason": "insufficient_permission",
-                        }
-                    )
-                    return
+            profile_manager = Profiles(db)
+            space_manager = Spaces(db)
+            acl = ACL(db)
 
-                space = {
-                    "name": space_name,
-                    "invisible": is_invisible,
-                    "joinable": is_joinable,
-                    "members": [self.current_user.username],
-                    "admins": [self.current_user.username],
-                    "invites": [],
-                    "requests": [],
-                    "files": [],
-                }
+            # check if the user has permission
+            if not acl.global_acl.ask(self.get_current_user_role(), "create_space"):
+                self.set_status(403)
+                self.write(
+                    {
+                        "success": False,
+                        "reason": "insufficient_permission",
+                    }
+                )
+                return
 
-                try:
-                    # create the space
-                    space_manager.create_space(space)
-                except ValueError:
-                    self.set_status(500)
-                    self.write(
-                        {
-                            "success": False,
-                            "reason": "unexpectedly_missing_required_attribute",
-                        }
-                    )
-                    return
-                except TypeError:
-                    self.set_status(500)
-                    self.write({"success": False, "reason": "unexpected_type_mismatch"})
-                    return
-                except SpaceAlreadyExistsError:
-                    self.set_status(409)
-                    self.write(
-                        {"success": False, "reason": "space_name_already_exists"}
-                    )
-                    return
+            space = {
+                "name": space_name,
+                "invisible": is_invisible,
+                "joinable": is_joinable,
+                "members": [self.current_user.username],
+                "admins": [self.current_user.username],
+                "invites": [],
+                "requests": [],
+                "files": [],
+            }
 
-                # also create default acl entry for all different roles
-                acl.space_acl.insert_admin(space_name)
-                for role in profile_manager.get_distinct_roles():
-                    if role != "admin":
-                        acl.space_acl.insert_default(role, space_name)
+            try:
+                # create the space
+                space_manager.create_space(space)
+            except ValueError:
+                self.set_status(500)
+                self.write(
+                    {
+                        "success": False,
+                        "reason": "unexpectedly_missing_required_attribute",
+                    }
+                )
+                return
+            except TypeError:
+                self.set_status(500)
+                self.write({"success": False, "reason": "unexpected_type_mismatch"})
+                return
+            except SpaceAlreadyExistsError:
+                self.set_status(409)
+                self.write({"success": False, "reason": "space_name_already_exists"})
+                return
+
+            # also create default acl entry for all different roles
+            acl.space_acl.insert_admin(space_name)
+            for role in profile_manager.get_distinct_roles():
+                if role != "admin":
+                    acl.space_acl.insert_default(role, space_name)
 
         self.set_status(200)
         self.write({"success": True})
@@ -1179,42 +1175,44 @@ class SpaceHandler(BaseHandler):
         let current user join the space, if he has sufficient permissions
         if not, let him send a join request instead
         """
+
         with util.get_mongodb() as db:
-            with ACL() as acl:
-                space_manager = Spaces(db)
-                try:
-                    # reject if the user is already a space member
-                    if space_manager.check_user_is_member(
-                        space_name, self.current_user.username
-                    ):
-                        self.set_status(409)
-                        self.write({"success": False, "reason": "user_already_member"})
-                        return
-                except SpaceDoesntExistError:
+            space_manager = Spaces(db)
+            acl = ACL(db)
+
+            try:
+                # reject if the user is already a space member
+                if space_manager.check_user_is_member(
+                    space_name, self.current_user.username
+                ):
                     self.set_status(409)
-                    self.write({"success": False, "reason": "space_doesnt_exist"})
+                    self.write({"success": False, "reason": "user_already_member"})
+                    return
+            except SpaceDoesntExistError:
+                self.set_status(409)
+                self.write({"success": False, "reason": "space_doesnt_exist"})
+                return
+
+            # if user is not allowed to join spaces directly,
+            # or user doesnt have elevated permissions to join any space,
+            # send join request instead of joining directly
+            if not space_manager.is_space_directly_joinable(space_name):
+                if not acl.space_acl.ask(
+                    self.get_current_user_role(), space_name, "join_space"
+                ):
+                    space_manager.join_space_request(
+                        space_name, self.current_user.username
+                    )
+
+                    self.set_status(200)
+                    self.write({"success": True, "join_type": "requested_join"})
                     return
 
-                # if user is not allowed to join spaces directly,
-                # or user doesnt have elevated permissions to join any space,
-                # send join request instead of joining directly
-                if not space_manager.is_space_directly_joinable(space_name):
-                    if not acl.space_acl.ask(
-                        self.get_current_user_role(), space_name, "join_space"
-                    ):
-                        space_manager.join_space_request(
-                            space_name, self.current_user.username
-                        )
+            # user has permission to join spaces, directly add him as member
+            space_manager.join_space(space_name, self.current_user.username)
 
-                        self.set_status(200)
-                        self.write({"success": True, "join_type": "requested_join"})
-                        return
-
-                # user has permission to join spaces, directly add him as member
-                space_manager.join_space(space_name, self.current_user.username)
-
-                self.set_status(200)
-                self.write({"success": True, "join_type": "joined"})
+        self.set_status(200)
+        self.write({"success": True, "join_type": "joined"})
 
     def add_admin_to_space(self, space_name: str, username: str) -> None:
         """
@@ -1528,17 +1526,17 @@ class SpaceHandler(BaseHandler):
         with util.get_mongodb() as db:
             space_manager = Spaces(db)
             profile_manager = Profiles(db)
+            acl = ACL(db)
 
             space_name = space_manager.create_or_join_discussion_space(
                 wp_post, self.current_user.username
             )
 
-            with ACL() as acl:
-                for role in profile_manager.get_distinct_roles():
-                    if role == "admin":
-                        acl.space_acl.insert_admin(space_name)
-                    else:
-                        acl.space_acl.insert_default_discussion(role, space_name)
+            for role in profile_manager.get_distinct_roles():
+                if role == "admin":
+                    acl.space_acl.insert_admin(space_name)
+                else:
+                    acl.space_acl.insert_default_discussion(role, space_name)
 
         return space_name
 
@@ -1596,41 +1594,40 @@ class SpaceHandler(BaseHandler):
         :param file_content: the body of the file as raw bytes
         """
         with util.get_mongodb() as db:
-            with ACL() as acl:
-                space_manager = Spaces(db)
-                # reject if user is not a member or space doesnt exist at all
-                try:
-                    if not space_manager.check_user_is_member(
-                        space_name, self.current_user.username
-                    ):
-                        self.set_status(409)
-                        self.write(
-                            {"success": False, "reason": "user_not_member_of_space"}
-                        )
-                        return
-                except SpaceDoesntExistError:
-                    self.set_status(409)
-                    self.write({"success": False, "reason": "space_doesnt_exist"})
-                    return
+            space_manager = Spaces(db)
+            acl = ACL(db)
 
-                # reject if user is not allowed to add files
-                if not acl.space_acl.ask(
-                    self.get_current_user_role(), space_name, "write_files"
+            # reject if user is not a member or space doesnt exist at all
+            try:
+                if not space_manager.check_user_is_member(
+                    space_name, self.current_user.username
                 ):
-                    self.set_status(403)
-                    self.write({"success": False, "reason": "insufficient_permission"})
+                    self.set_status(409)
+                    self.write({"success": False, "reason": "user_not_member_of_space"})
                     return
+            except SpaceDoesntExistError:
+                self.set_status(409)
+                self.write({"success": False, "reason": "space_doesnt_exist"})
+                return
 
-                space_manager.add_new_repo_file(
-                    space_name,
-                    file_name,
-                    file_content,
-                    content_type,
-                    self.current_user.username,
-                )
+            # reject if user is not allowed to add files
+            if not acl.space_acl.ask(
+                self.get_current_user_role(), space_name, "write_files"
+            ):
+                self.set_status(403)
+                self.write({"success": False, "reason": "insufficient_permission"})
+                return
 
-                self.set_status(200)
-                self.write({"success": True})
+            space_manager.add_new_repo_file(
+                space_name,
+                file_name,
+                file_content,
+                content_type,
+                self.current_user.username,
+            )
+
+        self.set_status(200)
+        self.write({"success": True})
 
     def user_leave(self, space_name: str) -> None:
         """

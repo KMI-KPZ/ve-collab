@@ -216,10 +216,11 @@ class Spaces:
         from resources.network.acl import ACL
 
         with util.get_mongodb() as db:
-            with ACL() as acl:
-                post_manager = Posts(db)
-                post_manager.delete_post_by_space(space_name)
-                acl.space_acl.delete(space=space_name)
+            post_manager = Posts(db)
+            acl = ACL(db)
+
+            post_manager.delete_post_by_space(space_name)
+            acl.space_acl.delete(space=space_name)
 
     def is_space_directly_joinable(self, space_name: str) -> bool:
         """

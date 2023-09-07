@@ -39,7 +39,7 @@ from handlers.network.space import SpaceHandler
 from handlers.network.timeline import *
 from handlers.network.user import *
 from handlers.network.wordpress import WordpressCollectionHandler, WordpressPostHandler
-from resources.network.acl import ACL
+from resources.network.acl import ACL, cleanup_unused_rules
 from resources.network.profile import ProfileDoesntExistException, Profiles
 from resources.network.space import Spaces
 from handlers.planner.etherpad_integration import EtherpadIntegrationHandler
@@ -271,12 +271,13 @@ def create_initial_admin(username: str) -> None:
 
         # also insert admin acl rules
         with util.get_mongodb() as db:
-            with ACL() as acl:
-                space_manager = Spaces(db)
-                acl.global_acl.insert_admin()
+            acl = ACL(db)
+            space_manager = Spaces(db)
 
-                for space in space_manager.get_space_names():
-                    acl.space_acl.insert_admin(space)
+            acl.global_acl.insert_admin()
+
+            for space in space_manager.get_space_names():
+                acl.space_acl.insert_admin(space)
 
         logger.info(
             "inserted admin user '{}' and corresponding ACL rules".format(username)
@@ -474,6 +475,10 @@ def main():
 
     # write tornado access log to separate logfile
     hook_tornado_access_log()
+
+    # periodically schedule acl entry cleanup
+    # cleanup happens every  3,600,000 ms = 1 hour
+    tornado.ioloop.PeriodicCallback(cleanup_unused_rules, 3_600_000).start()
 
     # build and start server
     cookie_secret = conf["cookie_secret"]

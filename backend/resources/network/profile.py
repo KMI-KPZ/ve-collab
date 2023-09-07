@@ -9,6 +9,7 @@ from exceptions import (
     NotFollowedException,
     ProfileDoesntExistException,
 )
+import util
 
 
 class Profiles:
@@ -168,7 +169,8 @@ class Profiles:
             # check if the guest role exists, since we might do this for the very first time
             from resources.network.acl import ACL
 
-            with ACL() as acl_manager:
+            with util.get_mongodb() as db:
+                acl_manager = ACL(db)
                 acl_manager.ensure_acl_entries("guest")
 
         return profile
@@ -315,7 +317,8 @@ class Profiles:
             if not checked_guest_role_present:
                 from resources.network.acl import ACL
 
-                with ACL() as acl_manager:
+                with util.get_mongodb() as db:
+                    acl_manager = ACL(db)
                     acl_manager.ensure_acl_entries("guest")
                 checked_guest_role_present = True
 
@@ -460,7 +463,7 @@ class Profiles:
 
     def get_matching_exclusion(self, username: str) -> bool:
         """
-        Retrieve the information from the profile if a user given by its username 
+        Retrieve the information from the profile if a user given by its username
         is currently excluded from matching.
 
         Returns a boolean indication if the user is excluded or not.
