@@ -3,7 +3,7 @@ from bson import ObjectId
 
 import gridfs
 from pymongo import MongoClient, ReturnDocument
-from elasticsearch_integration import ElasticsearchConnector
+from resources.elasticsearch_integration import ElasticsearchConnector
 
 from exceptions import (
     AlreadyFollowedException,

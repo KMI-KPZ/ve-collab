@@ -5,7 +5,7 @@ from keycloak import KeycloakGetError
 import requests
 
 import tornado.web
-from elasticsearch_integration import ElasticsearchConnector
+from resources.elasticsearch_integration import ElasticsearchConnector
 from error_reasons import USER_DOESNT_EXIST
 from exceptions import ProfileDoesntExistException
 
