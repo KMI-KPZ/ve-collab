@@ -39,13 +39,13 @@ from handlers.network.space import SpaceHandler
 from handlers.network.timeline import *
 from handlers.network.user import *
 from handlers.network.wordpress import WordpressCollectionHandler, WordpressPostHandler
-from resources.network.acl import ACL
+from resources.network.acl import ACL, cleanup_unused_rules
 from resources.network.profile import ProfileDoesntExistException, Profiles
 from resources.network.space import Spaces
 from handlers.planner.etherpad_integration import EtherpadIntegrationHandler
 from handlers.planner.ve_plan import VEPlanHandler
 from handlers.planner.ve_invite import VeInvitationHandler
-
+import util
 
 logger = logging.getLogger(__name__)
 
@@ -149,14 +149,7 @@ def init_indexes(force_rebuild: bool) -> None:
     :param force_rebuild: boolean switch to trigger a forced rebuild of the text indexes
     """
 
-    with pymongo.MongoClient(
-        global_vars.mongodb_host,
-        global_vars.mongodb_port,
-        username=global_vars.mongodb_username,
-        password=global_vars.mongodb_password,
-    ) as client:
-        db = client[global_vars.mongodb_db_name]
-
+    with util.get_mongodb() as db:
         # full text search index on posts
         if "posts" not in db.posts.index_information() or force_rebuild:
             try:
@@ -246,7 +239,8 @@ def create_initial_admin(username: str) -> None:
     create an initial admin with the given username
     """
 
-    with Profiles() as profile_manager:
+    with util.get_mongodb() as db:
+        profile_manager = Profiles(db)
         # check if the user already has a non-admin role and issue a warning
         # about elevated permissions if so
         try:
@@ -269,11 +263,13 @@ def create_initial_admin(username: str) -> None:
         profile_manager.insert_default_admin_profile(username)
 
         # also insert admin acl rules
-        with ACL() as acl, Spaces() as space_manager:
-            acl.global_acl.insert_admin()
+        acl = ACL(db)
+        space_manager = Spaces(db)
 
-            for space in space_manager.get_space_names():
-                acl.space_acl.insert_admin(space)
+        acl.global_acl.insert_admin()
+
+        for space in space_manager.get_space_names():
+            acl.space_acl.insert_admin(space)
 
         logger.info(
             "inserted admin user '{}' and corresponding ACL rules".format(username)
@@ -471,6 +467,10 @@ def main():
 
     # write tornado access log to separate logfile
     hook_tornado_access_log()
+
+    # periodically schedule acl entry cleanup
+    # cleanup happens every  3,600,000 ms = 1 hour
+    tornado.ioloop.PeriodicCallback(cleanup_unused_rules, 3_600_000).start()
 
     # build and start server
     cookie_secret = conf["cookie_secret"]

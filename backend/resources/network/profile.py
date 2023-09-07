@@ -2,34 +2,28 @@ from typing import Dict, List, Optional
 from bson import ObjectId
 
 import gridfs
-from pymongo import MongoClient
+from pymongo.database import Database
 
 from exceptions import (
     AlreadyFollowedException,
     NotFollowedException,
     ProfileDoesntExistException,
 )
-import global_vars
+import util
 
 
 class Profiles:
     """
-    implementation of Profiles in the DB as a context manager, usage::
+    to use this class, acquire a mongodb connection first via::
 
-        with Profiles() as db_manager:
-            db_manager.get_profiles()
+        with util.get_mongodb() as db:
+            profile_manager = Profiles(db)
             ...
 
     """
 
-    def __init__(self):
-        self.client = MongoClient(
-            global_vars.mongodb_host,
-            global_vars.mongodb_port,
-            username=global_vars.mongodb_username,
-            password=global_vars.mongodb_password,
-        )
-        self.db = self.client[global_vars.mongodb_db_name]
+    def __init__(self, db: Database):
+        self.db = db
 
         self.profile_attributes = {
             "bio": (str, type(None)),
@@ -54,12 +48,6 @@ class Profiles:
             "ve_window": list,
         }
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, exc_traceback):
-        self.client.close()
-
     def get_profile(self, username: str, projection: dict = None) -> Optional[Dict]:
         """
         get the profile data of the given user. optionally specify a projection
@@ -78,7 +66,7 @@ class Profiles:
         return list(self.db.profiles.find(projection=projection))
 
     def insert_default_profile(
-        self, username: str, first_name: str = None, last_name: str = None
+        self, username: str, first_name: str = "", last_name: str = ""
     ) -> Dict:
         """
         insert a default profile into the db, initializing the role as 'guest' and the
@@ -94,8 +82,8 @@ class Profiles:
             "bio": "",
             "institution": "",
             "profile_pic": "default_profile_pic.jpg",
-            "first_name": "",
-            "last_name": "",
+            "first_name": first_name,
+            "last_name": last_name,
             "gender": "",
             "address": "",
             "birthday": "",
@@ -181,7 +169,8 @@ class Profiles:
             # check if the guest role exists, since we might do this for the very first time
             from resources.network.acl import ACL
 
-            with ACL() as acl_manager:
+            with util.get_mongodb() as db:
+                acl_manager = ACL(db)
                 acl_manager.ensure_acl_entries("guest")
 
         return profile
@@ -328,7 +317,8 @@ class Profiles:
             if not checked_guest_role_present:
                 from resources.network.acl import ACL
 
-                with ACL() as acl_manager:
+                with util.get_mongodb() as db:
+                    acl_manager = ACL(db)
                     acl_manager.ensure_acl_entries("guest")
                 checked_guest_role_present = True
 
@@ -473,7 +463,7 @@ class Profiles:
 
     def get_matching_exclusion(self, username: str) -> bool:
         """
-        Retrieve the information from the profile if a user given by its username 
+        Retrieve the information from the profile if a user given by its username
         is currently excluded from matching.
 
         Returns a boolean indication if the user is excluded or not.

@@ -35,7 +35,7 @@ def auth_needed(
         if not self.current_user:
             self.set_status(401)
             self.write({"status": 401, "reason": "no_logged_in_user"})
-            #self.redirect("/login")
+            # self.redirect("/login")
             return
         return method(self, *args, **kwargs)
 
@@ -104,7 +104,7 @@ class BaseHandler(tornado.web.RequestHandler):
                     token_info["email"],
                 )
 
-                # if the user was authenticated via ORCiD, 
+                # if the user was authenticated via ORCiD,
                 # or atleast has their ORCiD account linked,
                 # set their id for use within the handlers
                 if "orcid" in token_info:
@@ -112,7 +112,7 @@ class BaseHandler(tornado.web.RequestHandler):
 
                 self._access_token = bearer_token
                 return
-            
+
             # Authorization Header was not in the request
             # so we cannot authentication any user
             self.current_user = None
@@ -166,8 +166,12 @@ class BaseHandler(tornado.web.RequestHandler):
 
     def set_default_headers(self):
         self.set_header("Access-Control-Allow-Origin", "*")
-        self.set_header("Access-Control-Allow-Headers", "x-requested-with, Authorization")
-        self.set_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        self.set_header(
+            "Access-Control-Allow-Headers", "x-requested-with, Authorization"
+        )
+        self.set_header(
+            "Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS"
+        )
 
     def options(self):
         # no body
@@ -189,7 +193,8 @@ class BaseHandler(tornado.web.RequestHandler):
         if not self.current_user:
             return None  # TODO could also raise exception?
 
-        with Profiles() as profile_manager:
+        with util.get_mongodb() as db:
+            profile_manager = Profiles(db)
             try:
                 return profile_manager.get_role(self.current_user.username)
             except ProfileDoesntExistException:
