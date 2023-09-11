@@ -3528,7 +3528,7 @@ class SearchHandlerTest(BaseApiTestCase):
             True,
             200,
         )
-        
+        print("combined:")
         print(response)
 
         self.assertIn("users", response)

@@ -87,11 +87,7 @@ class ElasticsearchConnector:
                 ),
             )
         except Exception as e:
-            # exception is alright here if we are in test mode because elasticsearch is not running
-            if options.test_admin or options.test_user:
-                pass
-            else:
-                raise e
+            raise e
 
     def on_update(
         self,
