@@ -3383,6 +3383,9 @@ class SearchHandlerTest(BaseApiTestCase):
         }
         # replicate to ES
         ElasticsearchConnector().on_insert(str(ObjectId()), cls.profile, "profiles")
+        import time
+        time.sleep(2)
+        
 
     def setUp(self) -> None:
         super().setUp()
