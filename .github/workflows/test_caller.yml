@@ -34,11 +34,6 @@ jobs:
       # now decode it and create the config file again
       run: |
         echo -n '${{ secrets.CONFIG }}' | base64 --decode > config.json
-    - name: setup and start MongoDB
-      uses: supercharge/mongodb-github-action@1.8.0
-      with:
-        mongodb-username: ${{ secrets.MONGODB_USERNAME }}
-        mongodb-password: ${{ secrets.MONGODB_PASSWORD }}
     - name: setup and start elasticsearch
       uses: getong/elasticsearch-action@v1.2
       with:
@@ -48,6 +43,11 @@ jobs:
         host node port: 9300
         node port: 9300
         discovery type: 'single-node'
+    - name: setup and start MongoDB
+      uses: supercharge/mongodb-github-action@1.8.0
+      with:
+        mongodb-username: ${{ secrets.MONGODB_USERNAME }}
+        mongodb-password: ${{ secrets.MONGODB_PASSWORD }}
     - name: Run tests
       run: |
         python run_tests.py
