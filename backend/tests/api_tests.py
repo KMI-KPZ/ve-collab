@@ -3383,6 +3383,11 @@ class SearchHandlerTest(BaseApiTestCase):
         }
         # replicate to ES
         ElasticsearchConnector().on_insert(str(ObjectId()), cls.profile, "profiles")
+
+        # there seems to be a problem over at ES, because when the insert request
+        # finishes, the data is not yet available for search, so tests would fail.
+        # there is no real solution i can think of other than just wait a little bit
+        # for ES to finish analyzing and indexing
         import time
         time.sleep(2)
         
@@ -3448,8 +3453,6 @@ class SearchHandlerTest(BaseApiTestCase):
             True,
             200,
         )
-
-        print(response)
 
         self.assertIn("users", response)
         self.assertIn("posts", response)
@@ -3530,8 +3533,6 @@ class SearchHandlerTest(BaseApiTestCase):
             True,
             200,
         )
-        print("combined:")
-        print(response)
 
         self.assertIn("users", response)
         self.assertIn("posts", response)
