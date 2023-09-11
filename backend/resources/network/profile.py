@@ -78,6 +78,22 @@ class Profiles:
 
         return list(self.db.profiles.find(projection=projection))
 
+    def get_bulk_profiles(
+        self, usernames: List[str], projection: dict = None
+    ) -> List[Dict]:
+        """
+        get the profiles of all the users specified in the `usernames` list.
+        If any of the usernames in this list does not exist, it is skipped,
+        meaning the length of the response list and the given list of usernames
+        can differ.
+        """
+
+        return list(
+            self.db.profiles.find(
+                {"username": {"$in": usernames}}, projection=projection
+            )
+        )
+
     def insert_default_profile(
         self, username: str, first_name: str = None, last_name: str = None
     ) -> Dict:
@@ -350,15 +366,6 @@ class Profiles:
 
         return self.db.profiles.distinct("role")
 
-    def fulltext_search(self, query: str) -> List[Dict]:
-        """
-        do a fulltext search on the profile text index and return the matching profiles.
-        :param query: the full text search query
-        :return: List of profiles (as dicts) matching the query
-        """
-
-        return list(self.db.profiles.find({"$text": {"$search": query}}))
-
     def get_profile_pic(self, username: str) -> str:
         """
         get the profile pic of the given user, or the default value, if he has not set
@@ -465,9 +472,10 @@ class Profiles:
         if not usernames:
             return []
 
-        profiles = self.db.profiles.find(
-            {"username": {"$in": usernames}},
+        profiles = self.get_bulk_profiles(
+            usernames,
             projection={
+                "_id": False,
                 "username": True,
                 "first_name": True,
                 "last_name": True,
@@ -475,16 +483,7 @@ class Profiles:
                 "profile_pic": True,
             },
         )
-        return [
-            {
-                "username": profile["username"],
-                "first_name": profile["first_name"],
-                "last_name": profile["last_name"],
-                "institution": profile["institution"],
-                "profile_pic": profile["profile_pic"],
-            }
-            for profile in profiles
-        ]
+        return profiles
 
     def get_matching_exclusion(self, username: str) -> bool:
         """

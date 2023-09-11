@@ -13,6 +13,7 @@ from requests_toolbelt import MultipartEncoder
 from tornado.options import options
 from tornado.testing import AsyncHTTPTestCase
 
+from resources.elasticsearch_integration import ElasticsearchConnector
 from resources.network.acl import ACL
 import global_vars
 from main import make_app
@@ -3368,47 +3369,33 @@ class SearchHandlerTest(BaseApiTestCase):
             [("text", pymongo.TEXT), ("tags", pymongo.TEXT), ("files", pymongo.TEXT)],
             name="posts",
         )
-        self.db.profiles.create_index(
-            [
-                ("bio", pymongo.TEXT),
-                ("institution", pymongo.TEXT),
-                ("projects", pymongo.TEXT),
-                ("first_name", pymongo.TEXT),
-                ("last_name", pymongo.TEXT),
-                ("gender", pymongo.TEXT),
-                ("address", pymongo.TEXT),
-                ("birthday", pymongo.TEXT),
-                ("experience", pymongo.TEXT),
-                ("education", pymongo.TEXT),
-                ("username", pymongo.TEXT),
-            ],
-            name="profiles",
-        )
 
         # setup basic environment of permissions
         self.base_permission_environment_setUp()
 
-        self.db.profiles.update_one(
+        self.profile = {
+            "username": CURRENT_ADMIN.username,
+            "role": "admin",
+            "follows": [],
+            "bio": "test",
+            "institution": "test",
+            "projects": "test",
+            "profile_pic": "test",
+            "first_name": "test",
+            "last_name": "test",
+            "gender": "test",
+            "address": "test",
+            "birthday": "test",
+            "experience": "test",
+            "education": "test",
+        }
+        response = self.db.profiles.find_one_and_update(
             {"username": CURRENT_ADMIN.username},
-            {
-                "$set": {
-                    "username": CURRENT_ADMIN.username,
-                    "role": "admin",
-                    "follows": [],
-                    "bio": "test",
-                    "institution": "test",
-                    "projects": "test",
-                    "profile_pic": "test",
-                    "first_name": "test",
-                    "last_name": "test",
-                    "gender": "test",
-                    "address": "test",
-                    "birthday": "test",
-                    "experience": "test",
-                    "education": "test",
-                }
-            },
+            {"$set": self.profile},
+            return_document=pymongo.ReturnDocument.AFTER,
         )
+        # replicate to ES
+        ElasticsearchConnector().on_insert(response["_id"], self.profile, "profiles")
 
         self.post_oid = ObjectId()
         self.comment_oid = ObjectId()

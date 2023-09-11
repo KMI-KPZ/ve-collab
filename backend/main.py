@@ -161,7 +161,7 @@ def init_indexes(force_rebuild: bool) -> None:
     ) as client:
         db = client[global_vars.mongodb_db_name]
 
-        # full text search index on posts
+        # full text search index on posts, TODO redo with elasticsearch
         if "posts" not in db.posts.index_information() or force_rebuild:
             try:
                 db.posts.drop_index("posts")
@@ -189,34 +189,6 @@ def init_indexes(force_rebuild: bool) -> None:
             logger.info(
                 "Built index named {} on collection {}".format(
                     "posts_creation_date", "posts"
-                )
-            )
-
-        # full text search index on profiles
-        if "profiles" not in db.profiles.index_information() or force_rebuild:
-            try:
-                db.profiles.drop_index("profiles")
-            except pymongo.errors.OperationFailure:
-                pass
-            db.profiles.create_index(
-                [
-                    ("bio", pymongo.TEXT),
-                    ("institution", pymongo.TEXT),
-                    ("projects", pymongo.TEXT),
-                    ("first_name", pymongo.TEXT),
-                    ("last_name", pymongo.TEXT),
-                    ("gender", pymongo.TEXT),
-                    ("address", pymongo.TEXT),
-                    ("birthday", pymongo.TEXT),
-                    ("experience", pymongo.TEXT),
-                    ("education", pymongo.TEXT),
-                    ("username", pymongo.TEXT),
-                ],
-                name="profiles",
-            )
-            logger.info(
-                "Built text index named {} on collection {}".format(
-                    "profiles", "profiles"
                 )
             )
 

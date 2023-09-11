@@ -19,6 +19,12 @@ jobs:
       run:
         working-directory: backend
     steps:
+    - name: Configure sysctl limits needed for elasticsearch
+      run: |
+        sudo swapoff -a
+        sudo sysctl -w vm.swappiness=1
+        sudo sysctl -w fs.file-max=262144
+        sudo sysctl -w vm.max_map_count=262144
     - uses: actions/checkout@v3
     - name: Set up Python 3.10.7
       uses: actions/setup-python@v4
@@ -39,6 +45,15 @@ jobs:
       with:
         mongodb-username: ${{ secrets.MONGODB_USERNAME }}
         mongodb-password: ${{ secrets.MONGODB_PASSWORD }}
+    - name: setup and start elasticsearch
+      uses: getong/elasticsearch-action@v1.2
+      with:
+        elasticsearch version: '8.8.0'
+        host port: 9200
+        container port: 9200
+        host node port: 9300
+        node port: 9300
+        discovery type: 'single-node'
     - name: Run tests
       run: |
         python run_tests.py
