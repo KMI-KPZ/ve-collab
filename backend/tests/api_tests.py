@@ -3447,6 +3447,8 @@ class SearchHandlerTest(BaseApiTestCase):
             200,
         )
 
+        print(response)
+
         self.assertIn("users", response)
         self.assertIn("posts", response)
         self.assertIn("tags", response)
