@@ -5,7 +5,6 @@ import logging
 from typing import List
 
 from bson import ObjectId
-import dateutil
 import gridfs
 import pymongo
 import pymongo.errors
@@ -1203,8 +1202,9 @@ class RoleACLIntegrationTest(BaseApiTestCase):
 
         self.db.profiles.delete_many({})
 
-        with ACL() as acl_manager:
-            acl_manager._cleanup_unused_rules()
+        from resources.network.acl import cleanup_unused_rules
+
+        cleanup_unused_rules()
 
         # expect an empty global acl
         global_acl_db_state = list(self.db.global_acl.find())

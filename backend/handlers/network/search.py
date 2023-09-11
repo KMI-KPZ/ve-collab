@@ -8,6 +8,7 @@ from handlers.base_handler import BaseHandler, auth_needed
 from resources.network.post import Posts
 from resources.network.profile import Profiles
 from resources.network.space import Spaces
+import util
 
 
 class SearchHandler(BaseHandler):
@@ -183,7 +184,8 @@ class SearchHandler(BaseHandler):
             elem["_source"]["username"] for elem in response.json()["hits"]["hits"]
         ]
 
-        with Profiles() as profile_manager:
+        with util.get_mongodb() as db:
+            profile_manager = Profiles(db)
             return profile_manager.get_bulk_profiles(usernames)
 
     def _search_tags(self, tags: List[str]) -> List[Dict]:
@@ -197,7 +199,8 @@ class SearchHandler(BaseHandler):
         """
 
         # tags is an exact match query, therefore explicitely search without using index
-        with Posts() as post_manager:
+        with util.get_mongodb() as db:
+            post_manager = Posts(db)
             matched_posts = post_manager.get_posts_by_tags(tags)
 
         if matched_posts:
@@ -215,7 +218,8 @@ class SearchHandler(BaseHandler):
         """
 
         # full text search
-        with Posts() as post_manager:
+        with util.get_mongodb() as db:
+            post_manager = Posts(db)
             matched_posts = post_manager.fulltext_search(query)
 
         if matched_posts:
@@ -235,7 +239,9 @@ class SearchHandler(BaseHandler):
         """
 
         reduced = []
-        with Spaces() as space_manager, Profiles() as profile_manager:
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
+            profile_manager = Profiles(db)
             spaces_of_user = space_manager.get_spaces_of_user(
                 self.current_user.username
             )

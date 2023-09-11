@@ -2,49 +2,32 @@ from __future__ import annotations
 import logging
 from typing import Optional, Dict, List
 
-from pymongo import MongoClient
-from tornado.ioloop import PeriodicCallback
-from tornado.options import options
+from pymongo.database import Database
 
 import global_vars
+import util
 
 logger = logging.getLogger(__name__)
 
 
 class ACL:
     """
-    implementation of ACL as a context manager, usage::
+    to use this class, acquire a mongodb connection first via::
 
-        with ACL() as acl_manager:
-            acl_manager.global_acl.get_all()
+        with util.get_mongodb() as db:
+            acl_manager = ACL(db)
             ...
 
     """
 
-    def __init__(self):
-        self.client = MongoClient(
-            global_vars.mongodb_host,
-            global_vars.mongodb_port,
-            username=global_vars.mongodb_username,
-            password=global_vars.mongodb_password,
-        )
-        self.global_acl = _GlobalACL(self.client)
-        self.space_acl = _SpaceACL(self.client)
-
-        # periodically schedule acl entry cleanup if we are not in test mode
-        if not (options.test_admin or options.test_user):
-            # cleanup happens every  3,600,000 ms = 1 hour
-            PeriodicCallback(self._cleanup_unused_rules, 3_600_000).start()
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, exc_traceback):
-        self.client.close()
+    def __init__(self, db: Database):
+        self.db = db
+        self.global_acl = _GlobalACL(self.db)
+        self.space_acl = _SpaceACL(self.db)
 
     def ensure_acl_entries(self, role: str) -> None:
         """
-        ensure that acl entries exist for the current role, 
+        ensure that acl entries exist for the current role,
         i.e. the role is present in both global acl and the space acl of all spaces.
         if any one does not exist, create it
         """
@@ -54,11 +37,11 @@ class ACL:
             self.global_acl.insert_default(role)
 
         # insert into space acl of all spaces
-        with Spaces() as space_manager:
-            spaces = space_manager.get_space_names()
-            for space in spaces:
-                if not self.space_acl.get(role, space):
-                    self.space_acl.insert_default(role, space)
+        space_manager = Spaces(self.db)
+        spaces = space_manager.get_space_names()
+        for space in spaces:
+            if not self.space_acl.get(role, space):
+                self.space_acl.insert_default(role, space)
 
     def _cleanup_unused_rules(self):
         """
@@ -67,7 +50,7 @@ class ACL:
         """
 
         logger.info("Running ACL cleanup")
-        
+
         # initiate new mongo connection, because old objects might have been GC'ed
         self.__init__()
         with self:
@@ -95,9 +78,8 @@ class _GlobalACL:
     This subgroup of the ACL System is for Network-wide permission, e.g. allowing a role to create spaces
     """
 
-    def __init__(self, mongo_client: MongoClient) -> None:
-        self.client = mongo_client
-        self.db = self.client[global_vars.mongodb_db_name]
+    def __init__(self, db: Database) -> None:
+        self.db = db
         self._EXISTING_KEYS = ["role", "create_space"]
 
     def get_existing_keys(self):
@@ -233,9 +215,8 @@ class _SpaceACL:
     the full access rights for a space admin is given implicitely, no matter his network-wide role.
     """
 
-    def __init__(self, mongo_client: MongoClient) -> None:
-        self.client = mongo_client
-        self.db = self.client[global_vars.mongodb_db_name]
+    def __init__(self, db: Database) -> None:
+        self.db = db
         self._EXISTING_KEYS = [
             "role",
             "space",
@@ -454,6 +435,37 @@ class _SpaceACL:
         """
 
         self.db.space_acl.delete_many({"$or": [{"role": role}, {"space": space}]})
+
+
+def cleanup_unused_rules() -> None:
+    """
+    Delete all ACL entries whose role (or space) does no longer exist,
+    because those entries are orphans.
+    This function is periodically scheduled (every 1 hour) from `main.py`,
+    but may also be manually called if desired.
+    """
+
+    logger.info("Running ACL cleanup")
+
+    # initiate new mongo connection, because old objects might have been GC'ed
+    with util.get_mongodb() as db:
+        acl_manager = ACL(db)
+        currently_existing_roles = db.profiles.distinct("role")
+        currently_existing_spaces = db.spaces.distinct("name")
+
+        # clean global acl (roles no longer exists)
+        for global_acl_rule in acl_manager.global_acl.get_all():
+            if global_acl_rule["role"] not in currently_existing_roles:
+                acl_manager.global_acl.delete(global_acl_rule["role"])
+
+        # clean space acl (role or space no longer exist)
+        for space_acl_rule in acl_manager.space_acl.get_full_list():
+            if (space_acl_rule["role"] not in currently_existing_roles) or (
+                space_acl_rule["space"] not in currently_existing_spaces
+            ):
+                acl_manager.space_acl.delete(
+                    space_acl_rule["role"], space_acl_rule["space"]
+                )
 
 
 if __name__ == "__main__":

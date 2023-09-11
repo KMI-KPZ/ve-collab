@@ -6,7 +6,7 @@ from keycloak.exceptions import KeycloakPostError
 
 import global_vars
 from resources.network.profile import Profiles
-
+import util
 
 class Course(dict):
     def __init__(self, title: str, academic_course: str, semester: str):
@@ -196,7 +196,8 @@ def ensure_persona_profle_exists(persona: Persona) -> None:
     all necessary and expected keys. If not, the default profile is created in the db
     """
 
-    with Profiles() as profile_manager:
+    with util.get_mongodb() as db:
+        profile_manager = Profiles(db)
         profile_manager.ensure_profile_exists(
             persona.username,
             persona.first_name,
@@ -212,7 +213,8 @@ def aggregate_persona_profile(persona: Persona) -> None:
 
     persona_dict_copy_without_username = persona.to_dict()
     del persona_dict_copy_without_username["username"]
-    with Profiles() as profile_manager:
+    with util.get_mongodb() as db:
+        profile_manager = Profiles(db)
         profile_manager.update_profile_information(
             persona.username, persona_dict_copy_without_username
         )

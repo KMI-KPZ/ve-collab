@@ -2,8 +2,6 @@ from bson import ObjectId
 import json
 import requests
 
-from tornado.options import options
-
 import global_vars
 import util
 
@@ -87,7 +85,7 @@ class ElasticsearchConnector:
                 ),
             )
         except Exception as e:
-            raise e
+            print(e)
 
     def on_update(
         self,
