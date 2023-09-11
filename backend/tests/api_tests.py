@@ -3361,19 +3361,11 @@ class PinHandlerTest(BaseApiTestCase):
 
 
 class SearchHandlerTest(BaseApiTestCase):
-    def setUp(self) -> None:
-        super().setUp()
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
 
-        # build search indices
-        self.db.posts.create_index(
-            [("text", pymongo.TEXT), ("tags", pymongo.TEXT), ("files", pymongo.TEXT)],
-            name="posts",
-        )
-
-        # setup basic environment of permissions
-        self.base_permission_environment_setUp()
-
-        self.profile = {
+        cls.profile = {
             "username": CURRENT_ADMIN.username,
             "role": "admin",
             "follows": [],
@@ -3389,13 +3381,20 @@ class SearchHandlerTest(BaseApiTestCase):
             "experience": "test",
             "education": "test",
         }
-        response = self.db.profiles.find_one_and_update(
-            {"username": CURRENT_ADMIN.username},
-            {"$set": self.profile},
-            return_document=pymongo.ReturnDocument.AFTER,
-        )
         # replicate to ES
-        ElasticsearchConnector().on_insert(response["_id"], self.profile, "profiles")
+        ElasticsearchConnector().on_insert(str(ObjectId()), cls.profile, "profiles")
+
+    def setUp(self) -> None:
+        super().setUp()
+
+        # build search indices
+        self.db.posts.create_index(
+            [("text", pymongo.TEXT), ("tags", pymongo.TEXT), ("files", pymongo.TEXT)],
+            name="posts",
+        )
+
+        # setup basic environment of permissions
+        self.base_permission_environment_setUp()
 
         self.post_oid = ObjectId()
         self.comment_oid = ObjectId()
