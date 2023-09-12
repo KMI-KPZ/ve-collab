@@ -74,6 +74,28 @@ class Space(dict):
         self,
         params: Dict[str, Any] = {},
     ) -> None:
+        
+        # init default values
+        setattr(self, "_id", ObjectId())
+        super().__setitem__("_id", ObjectId())
+        setattr(self, "name", None)
+        super().__setitem__("name", None)
+        setattr(self, "invisible", False)
+        super().__setitem__("invisible", False)
+        setattr(self, "joinable", True)
+        super().__setitem__("joinable", True)
+        setattr(self, "members", [])
+        super().__setitem__("members", [])
+        setattr(self, "admins", [])
+        super().__setitem__("admins", [])
+        setattr(self, "invites", [])
+        super().__setitem__("invites", [])
+        setattr(self, "requests", [])
+        super().__setitem__("requests", [])
+        setattr(self, "files", [])
+        super().__setitem__("files", [])
+
+
         # delete any keys from params that are not expected to avoid having
         # any other additional attributes that might cause trouble
         # (e.g. on serialization)

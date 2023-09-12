@@ -11,6 +11,7 @@ from exceptions import (
 from model import (
     Institution,
     Lecture,
+    Space,
     Step,
     TargetGroup,
     Task,
@@ -90,6 +91,75 @@ class SpaceModelTest(TestCase):
 
     def tearDown(self) -> None:
         return super().tearDown()
+
+    def test_init_default(self):
+        space = Space({})
+        self.assertEqual(space.name, None)
+        self.assertEqual(space.invisible, False)
+        self.assertEqual(space.joinable, True)
+        self.assertEqual(space.members, [])
+        self.assertEqual(space.admins, [])
+        self.assertEqual(space.invites, [])
+        self.assertEqual(space.requests, [])
+        self.assertEqual(space.files, [])
+
+        self.assertEqual(space["name"], None)
+        self.assertEqual(space["invisible"], False)
+        self.assertEqual(space["joinable"], True)
+        self.assertEqual(space["members"], [])
+        self.assertEqual(space["admins"], [])
+        self.assertEqual(space["invites"], [])
+        self.assertEqual(space["requests"], [])
+        self.assertEqual(space["files"], [])
+
+    def test_init(self):
+        space = Space({
+            "name": "test",
+            "invisible": False,
+            "joinable": True,
+            "members": ["test"],
+            "admins": ["test"],
+            "invites": ["test"],
+            "requests": ["test"],
+            "files": ["test"],
+        })
+
+        self.assertEqual(space.name, "test")
+        self.assertEqual(space.invisible, False)
+        self.assertEqual(space.joinable, True)
+        self.assertEqual(space.members, ["test"])
+        self.assertEqual(space.admins, ["test"])
+        self.assertEqual(space.invites, ["test"])
+        self.assertEqual(space.requests, ["test"])
+        self.assertEqual(space.files, ["test"])
+
+        self.assertEqual(space["name"], "test")
+        self.assertEqual(space["invisible"], False)
+        self.assertEqual(space["joinable"], True)
+        self.assertEqual(space["members"], ["test"])
+        self.assertEqual(space["admins"], ["test"])
+        self.assertEqual(space["invites"], ["test"])
+        self.assertEqual(space["requests"], ["test"])
+        self.assertEqual(space["files"], ["test"])
+
+
+        # again, but omit some values to let them be default created
+        space2 = Space({
+            "name": "test",
+            "invisible": False,
+            "joinable": True,
+            "admins": ["test"],
+            "invites": ["test"],
+            "requests": ["test"],
+            "files": ["test"],
+        })
+
+        self.assertEqual(space2.name, "test")
+        self.assertEqual(space2.invisible, False)
+        self.assertEqual(space2.joinable, True)
+        self.assertEqual(space2.members, [])
+
+
 
 
 class TaskModelTest(TestCase):
