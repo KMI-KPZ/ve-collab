@@ -84,6 +84,14 @@ class UserModelTest(TestCase):
         orcid = "0000-0000-0000-0000"
 
 
+class SpaceModelTest(TestCase):
+    def setUp(self) -> None:
+        return super().setUp()
+
+    def tearDown(self) -> None:
+        return super().tearDown()
+
+
 class TaskModelTest(TestCase):
     def setUp(self) -> None:
         return super().setUp()

@@ -14,6 +14,7 @@ from exceptions import (
     NonUniqueTasksError,
     PlanAlreadyExistsError,
     PlanDoesntExistError,
+    SpaceDoesntExistError,
 )
 
 import global_vars
@@ -23,10 +24,20 @@ from model import (
     Step,
     TargetGroup,
     Task,
+    User,
     VEPlan,
 )
+from resources.network.space import Spaces
 from resources.planner.ve_plan import VEPlanResource
 import util
+
+# don't change, these values match with the ones in BaseHandler
+CURRENT_ADMIN = User(
+    "test_admin", "aaaaaaaa-bbbb-0000-cccc-dddddddddddd", "test_admin@mail.de"
+)
+CURRENT_USER = User(
+    "test_user", "aaaaaaaa-bbbb-0000-cccc-dddddddddddd", "test_user@mail.de"
+)
 
 
 def setUpModule():
@@ -147,6 +158,299 @@ class BaseResourceTestCase(TestCase):
             lecture_type="test",
             participants_amount=10,
         )
+
+
+class ACLResourceTest(BaseResourceTestCase):
+    pass
+
+
+class PostResourceTest(BaseResourceTestCase):
+    pass
+
+
+class ProfileResourceTest(BaseResourceTestCase):
+    pass
+
+
+class SpaceResourceTest(BaseResourceTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+
+        self.space_id = ObjectId()
+        self.space_name = "test"
+        self.default_space = {
+            "_id": self.space_id,
+            "name": self.space_name,
+            "invisible": False,
+            "joinable": True,
+            "members": [CURRENT_ADMIN.username],
+            "admins": [CURRENT_ADMIN.username],
+            "invites": [],
+            "requests": [],
+            "files": [],
+        }
+
+        self.db.spaces.insert_one(self.default_space)
+
+    def tearDown(self) -> None:
+        super().tearDown()
+
+        self.db.spaces.delete_many({})
+
+    def test_check_space_exists_success(self):
+        """
+        expect: True because space exists
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertTrue(space_manager.check_space_exists(self.space_name))
+
+    def test_check_space_exists_failure(self):
+        """
+        expect: False because either space doesn't exist or name is None
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertFalse(space_manager.check_space_exists("non_existing_space"))
+        self.assertFalse(space_manager.check_space_exists(None))
+
+    def test_check_user_is_space_admin(self):
+        """
+        expect: True because user is admin in the space
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertTrue(
+            space_manager.check_user_is_space_admin(
+                self.space_name, CURRENT_ADMIN.username
+            )
+        )
+
+    def test_check_user_is_space_admin_failure(self):
+        """
+        expect: False because user is not admin in the space
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertFalse(
+            space_manager.check_user_is_space_admin(
+                self.space_name, CURRENT_USER.username
+            )
+        )
+
+    def test_check_user_is_space_admin_error(self):
+        """
+        expect: SpaceDoesntExistError is raised because space name doesnt exist
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            SpaceDoesntExistError,
+            space_manager.check_user_is_space_admin,
+            "non_existing_space",
+            CURRENT_ADMIN.username,
+        )
+
+    def test_check_user_is_member(self):
+        """
+        expect: True because user is member
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertTrue(
+            space_manager.check_user_is_member(self.space_name, CURRENT_ADMIN.username)
+        )
+
+    def test_check_user_is_member_failure(self):
+        """
+        expect: False because user is not member
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertFalse(
+            space_manager.check_user_is_member(self.space_name, CURRENT_USER.username)
+        )
+
+    def test_check_user_is_member_error(self):
+        """
+        expect: SpaceDoesntExistError is raised because space name doesnt exist
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            SpaceDoesntExistError,
+            space_manager.check_user_is_member,
+            "non_existing_space",
+            CURRENT_ADMIN.username,
+        )
+
+    def test_get_space(self):
+        """
+        expect: successfully get space
+        """
+
+        space_manager = Spaces(self.db)
+        space = space_manager.get_space(self.space_name)
+        self.assertIsNotNone(space)
+        self.assertEqual(space._id, self.default_space["_id"])
+        self.assertEqual(space.invisible, self.default_space["invisible"])
+        self.assertEqual(space.joinable, self.default_space["joinable"])
+        self.assertEqual(space.members, self.default_space["members"])
+        self.assertEqual(space.admins, self.default_space["admins"])
+        self.assertEqual(space.invites, self.default_space["invites"])
+        self.assertEqual(space.requests, self.default_space["requests"])
+        self.assertEqual(space.files, self.default_space["files"])
+
+    def test_get_space_failure(self):
+        """
+        expect: None returned because no space with this name was found
+        """
+
+        space_manager = Spaces(self.db)
+        space = space_manager.get_space("non_existing_space")
+        self.assertIsNone(space)
+
+    def test_get_all_spaces(self):
+        """
+        expect: successfully get a list of all spaces
+        """
+
+        # add one more space
+        additional_space = {
+            "_id": ObjectId(),
+            "name": "test2",
+            "invisible": False,
+            "joinable": True,
+            "members": [CURRENT_ADMIN.username],
+            "admins": [CURRENT_ADMIN.username],
+            "invites": [],
+            "requests": [],
+            "files": [],
+        }
+        self.db.spaces.insert_one(additional_space)
+
+        space_manager = Spaces(self.db)
+        spaces = space_manager.get_all_spaces()
+        self.assertEqual(len(spaces), 2)
+
+    def test_get_all_spaces_visible_to_user(self):
+        """
+        expect: successfully get all spaces that are not invisible or where
+        the user is a member
+        """
+
+        # add 3 more spaces
+        additional_spaces = [
+            # user can see this one because it is not invisible
+            {
+                "_id": ObjectId(),
+                "name": "test2",
+                "invisible": False,
+                "joinable": True,
+                "members": [],
+                "admins": [],
+                "invites": [],
+                "requests": [],
+                "files": [],
+            },
+            # user can see this one because it is invisible, but he is a member
+            {
+                "_id": ObjectId(),
+                "name": "test3",
+                "invisible": True,
+                "joinable": True,
+                "members": [CURRENT_ADMIN.username],
+                "admins": [CURRENT_ADMIN.username],
+                "invites": [],
+                "requests": [],
+                "files": [],
+            },
+            # user cannot see this one
+            {
+                "_id": ObjectId(),
+                "name": "test4",
+                "invisible": True,
+                "joinable": True,
+                "members": [],
+                "admins": [],
+                "invites": [],
+                "requests": [],
+                "files": [],
+            },
+        ]
+        self.db.spaces.insert_many(additional_spaces)
+
+        space_manager = Spaces(self.db)
+        spaces = space_manager.get_all_spaces_visible_to_user(CURRENT_ADMIN.username)
+        self.assertEqual(len(spaces), 3)
+        space_names = [space.name for space in spaces]
+        self.assertIn("test", space_names)
+        self.assertIn("test2", space_names)
+        self.assertIn("test3", space_names)
+        self.assertNotIn("test4", space_names)
+
+    def test_get_space_names(self):
+        """
+        expect: successfully get a list of all space names
+        """
+
+        # add one more space
+        additional_space = {
+            "_id": ObjectId(),
+            "name": "test2",
+            "invisible": False,
+            "joinable": True,
+            "members": [CURRENT_ADMIN.username],
+            "admins": [CURRENT_ADMIN.username],
+            "invites": [],
+            "requests": [],
+            "files": [],
+        }
+        self.db.spaces.insert_one(additional_space)
+
+        space_manager = Spaces(self.db)
+        space_names = space_manager.get_space_names()
+        self.assertEqual(len(space_names), 2)
+        self.assertIn("test", space_names)
+        self.assertIn("test2", space_names)
+
+    def test_get_spaces_of_user(self):
+        """
+        expect: successfully get a list of all spaces the user is a member of
+        """
+
+        # add 2 more space
+        additional_spaces = [
+            {
+            "_id": ObjectId(),
+            "name": "test2",
+            "invisible": False,
+            "joinable": True,
+            "members": [CURRENT_ADMIN.username],
+            "admins": [CURRENT_ADMIN.username],
+            "invites": [],
+            "requests": [],
+            "files": [],
+        },
+        {
+            "_id": ObjectId(),
+            "name": "test3",
+            "invisible": False,
+            "joinable": True,
+            "members": [],
+            "admins": [],
+            "invites": [],
+            "requests": [],
+            "files": [],
+        }]
+
+        self.db.spaces.insert_many(additional_spaces)
+
+        space_manager = Spaces(self.db)
+        spaces = space_manager.get_spaces_of_user(CURRENT_ADMIN.username)
+        self.assertEqual(len(spaces), 2)
+        self.assertIn("test", spaces)
+        self.assertIn("test2", spaces)
 
 
 class PlanResourceTest(BaseResourceTestCase):
@@ -1466,7 +1770,7 @@ class PlanResourceTest(BaseResourceTestCase):
 
     def test_set_invitation_reply_error_invalid_id(self):
         """
-        expect: InvitationDoesntExistError is raised because the provided 
+        expect: InvitationDoesntExistError is raised because the provided
         id is not a valid ObjectId
         """
 
@@ -1476,3 +1780,11 @@ class PlanResourceTest(BaseResourceTestCase):
             "invalid_id",
             True,
         )
+
+
+class ElasticsearchIntegrationTest(BaseResourceTestCase):
+    pass
+
+
+class NotificationIntegrationTest(BaseResourceTestCase):
+    pass

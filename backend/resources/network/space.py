@@ -16,6 +16,7 @@ from exceptions import (
     UserNotAdminError,
     UserNotMemberError,
 )
+from model import Space
 import util
 
 
@@ -78,7 +79,6 @@ class Spaces:
         """
 
         space = self.get_space(space_name, projection={"_id": False, "members": True})
-
         if not space:
             raise SpaceDoesntExistError()
 
@@ -87,14 +87,15 @@ class Spaces:
         else:
             return False
 
-    def get_space(self, space_name: str, projection: dict = {}) -> Optional[dict]:
+    def get_space(self, space_name: str, projection: dict = {}) -> Optional[Space]:
         """
         get the space data of the space given by its name. optionally specify a projection
         to reduce query to the necessary fields (increases performance)
         :return: the space data as a dict or None, if the space doesnt exist
         """
 
-        return self.db.spaces.find_one({"name": space_name}, projection=projection)
+        result = self.db.spaces.find_one({"name": space_name}, projection=projection)
+        return Space(result) if result is not None else None
 
     def get_all_spaces(self, projection: dict = {}) -> List[dict]:
         """
@@ -103,7 +104,10 @@ class Spaces:
         :return: the space data of all spaces as dicts, combined into a list
         """
 
-        return list(self.db.spaces.find(projection=projection))
+        spaces = []
+        for space in self.db.spaces.find(projection=projection):
+            spaces.append(Space(space))
+        return spaces
 
     def get_all_spaces_visible_to_user(
         self, username: str, projection: dict = {}
@@ -117,18 +121,19 @@ class Spaces:
         :return: the space data of all allowed spaces as dicts, combined into a list
         """
 
-        return list(
-            self.db.spaces.find(
-                {
-                    "$or": [
-                        {"invisible": False},
-                        {"invisible": {"$exists": False}},
-                        {"members": username},
-                    ]
-                },
-                projection=projection,
-            )
-        )
+        spaces = []
+        for space in self.db.spaces.find(
+            {
+                "$or": [
+                    {"invisible": False},
+                    {"invisible": {"$exists": False}},
+                    {"members": username},
+                ]
+            },
+            projection=projection,
+        ):
+            spaces.append(Space(space))
+        return spaces
 
     def get_space_names(self) -> List[str]:
         """
@@ -279,20 +284,6 @@ class Spaces:
         # because a set doesnt allow duplicates, meaning his name is already in it
         if update_result.modified_count != 1:
             raise AlreadyRequestedJoinError()
-
-    def check_user_is_member(self, space_name: str, username: str) -> bool:
-        """
-        check if the give user is a member of the given space
-        :return: True if the user is a member of the space, False otherwise
-        """
-        space = self.get_space(space_name, projection={"_id": False, "members": True})
-        if not space:
-            raise SpaceDoesntExistError()
-
-        if username in space["members"]:
-            return True
-        else:
-            return False
 
     def add_space_admin(self, space_name: str, username: str) -> None:
         """
