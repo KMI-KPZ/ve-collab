@@ -34,6 +34,15 @@ jobs:
       # now decode it and create the config file again
       run: |
         echo -n '${{ secrets.CONFIG }}' | base64 --decode > config.json
+    - name: setup and start elasticsearch
+      uses: getong/elasticsearch-action@v1.2
+      with:
+        elasticsearch version: '8.8.0'
+        host port: 9200
+        container port: 9200
+        host node port: 9300
+        node port: 9300
+        discovery type: 'single-node'
     - name: setup and start MongoDB
       uses: supercharge/mongodb-github-action@1.8.0
       with:

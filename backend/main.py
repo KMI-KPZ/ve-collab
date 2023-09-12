@@ -5,6 +5,7 @@ import logging.handlers
 import os
 import sys
 
+
 sys.path.append(os.path.dirname(__file__))
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
@@ -25,6 +26,7 @@ import global_vars
 from handlers.authentication import LoginHandler, LoginCallbackHandler, LogoutHandler
 from handlers.db_static_files import GridFSStaticFileHandler
 from handlers.healthcheck import HealthCheckHandler
+from handlers.import_personas import ImportDummyPersonasHandler
 from handlers.network.follow import FollowHandler
 from handlers.network.notifications import NotificationHandler
 from handlers.network.permissions import (
@@ -119,9 +121,11 @@ def make_app(cookie_secret: str, debug: bool = False):
             (r"/planner/(.+)", VEPlanHandler),
             (r"/orcid", OrcidProfileHandler),
             (r"/matching_exclusion_info", MatchingExclusionHandler),
+            (r"/matching", MatchingHandler),
             (r"/etherpad_integration/(.+)", EtherpadIntegrationHandler),
             (r"/ve_invitation/(.+)", VeInvitationHandler),
             (r"/notifications", NotificationHandler),
+            (r"/import_personas", ImportDummyPersonasHandler),
             (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
             (r"/assets/(.*)", tornado.web.StaticFileHandler, {"path": "./assets/"}),
             (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./html/"}),
@@ -178,34 +182,6 @@ def init_indexes(force_rebuild: bool) -> None:
             logger.info(
                 "Built index named {} on collection {}".format(
                     "posts_creation_date", "posts"
-                )
-            )
-
-        # full text search index on profiles
-        if "profiles" not in db.profiles.index_information() or force_rebuild:
-            try:
-                db.profiles.drop_index("profiles")
-            except pymongo.errors.OperationFailure:
-                pass
-            db.profiles.create_index(
-                [
-                    ("bio", pymongo.TEXT),
-                    ("institution", pymongo.TEXT),
-                    ("projects", pymongo.TEXT),
-                    ("first_name", pymongo.TEXT),
-                    ("last_name", pymongo.TEXT),
-                    ("gender", pymongo.TEXT),
-                    ("address", pymongo.TEXT),
-                    ("birthday", pymongo.TEXT),
-                    ("experience", pymongo.TEXT),
-                    ("education", pymongo.TEXT),
-                    ("username", pymongo.TEXT),
-                ],
-                name="profiles",
-            )
-            logger.info(
-                "Built text index named {} on collection {}".format(
-                    "profiles", "profiles"
                 )
             )
 
@@ -301,6 +277,10 @@ def set_global_vars(conf: dict) -> None:
         "mongodb_db_name",
         "etherpad_base_url",
         "etherpad_api_key",
+        "elasticsearch_base_url",
+        "elasticsearch_username",
+        "elasticsearch_password",
+        "dummy_personas_passcode",
     ]
 
     for key in expected_config_keys:
@@ -318,6 +298,10 @@ def set_global_vars(conf: dict) -> None:
     global_vars.mongodb_db_name = conf["mongodb_db_name"]
     global_vars.etherpad_base_url = conf["etherpad_base_url"]
     global_vars.etherpad_api_key = conf["etherpad_api_key"]
+    global_vars.elasticsearch_base_url = conf["elasticsearch_base_url"]
+    global_vars.elasticsearch_username = conf["elasticsearch_username"]
+    global_vars.elasticsearch_password = conf["elasticsearch_password"]
+    global_vars.dummy_personas_passcode = conf["dummy_personas_passcode"]
 
     if not (options.test_admin or options.test_user):
         global_vars.keycloak = KeycloakOpenID(

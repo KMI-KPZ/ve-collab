@@ -5,6 +5,7 @@ from keycloak import KeycloakGetError
 import requests
 
 import tornado.web
+from resources.elasticsearch_integration import ElasticsearchConnector
 from error_reasons import USER_DOESNT_EXIST
 from exceptions import ProfileDoesntExistException
 
@@ -979,3 +980,33 @@ class MatchingExclusionHandler(BaseHandler):
                 return
 
             self.write({"success": True, "excluded_from_matching": excluded})
+
+
+class MatchingHandler(BaseHandler):
+    @auth_needed
+    def get(self):
+        with util.get_mongodb() as db:
+            profile_manager = Profiles(db)
+            current_user_profile = profile_manager.ensure_profile_exists(
+                self.current_user.username
+            )
+
+            matching_users = ElasticsearchConnector().search_profile_match(
+                current_user_profile
+            )
+
+            # get profile snippets of matched users and add the score to the snippet
+            username_score_map = {
+                user["_source"]["username"]: user["_score"] for user in matching_users
+            }
+            profile_snippets = profile_manager.get_profile_snippets(
+                list(username_score_map.keys())
+            )
+            for profile in profile_snippets:
+                profile["score"] = username_score_map[profile["username"]]
+
+        self.write({"success": True, "matching_hits": profile_snippets})
+
+    @auth_needed
+    def post(self):
+        pass

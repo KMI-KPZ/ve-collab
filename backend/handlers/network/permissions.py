@@ -26,14 +26,12 @@ class RoleHandler(BaseHandler):
                 try:
                     role_result = profile_manager.get_role(self.current_user.username)
                     self.set_status(200)
-                    self.write(
-                        self.json_serialize_response(
-                            {
-                                "success": True,
-                                "username": self.current_user.username,
-                                "role": role_result,
-                            }
-                        )
+                    self.serialize_and_write(
+                        {
+                            "success": True,
+                            "username": self.current_user.username,
+                            "role": role_result,
+                        }
                     )
                     return
                 except ProfileDoesntExistException:

@@ -1,7 +1,9 @@
 from typing import Dict, List
 
+import requests
 import tornado.web
 
+import global_vars
 from handlers.base_handler import BaseHandler, auth_needed
 from resources.network.post import Posts
 from resources.network.profile import Profiles
@@ -106,16 +108,85 @@ class SearchHandler(BaseHandler):
 
     def _search_users(self, query: str) -> List[Dict]:
         """
-        full text search on user profiles
+        suggestion search on user profiles based on names
+        (i.e. first_name, last_name, username)
         :param query: search query
         :return: any users matching the query
         """
 
-        # TODO decide if user search should be limited to name, because like this it searches for anything on the profile
+        # the prefix queries allow for autocompletion,
+        # while fuzzy matches allow for typos, but only if the query
+        # is fully typed out
+        # TODO ideally prefix and fuzziness is combined somehow
+        query = {
+            "size": 5,
+            "query": {
+                "bool": {
+                    "should": [
+                        {
+                            "prefix": {
+                                "first_name": {"value": query, "case_insensitive": True}
+                            }
+                        },
+                        {
+                            "fuzzy": {
+                                "first_name": {
+                                    "value": query,
+                                    "fuzziness": 1,
+                                    "prefix_length": 1,
+                                }
+                            }
+                        },
+                        {
+                            "prefix": {
+                                "last_name": {"value": query, "case_insensitive": True}
+                            }
+                        },
+                        {
+                            "fuzzy": {
+                                "last_name": {
+                                    "value": query,
+                                    "fuzziness": 1,
+                                    "prefix_length": 1,
+                                }
+                            }
+                        },
+                        {
+                            "prefix": {
+                                "username": {"value": query, "case_insensitive": True}
+                            }
+                        },
+                        {
+                            "fuzzy": {
+                                "username": {
+                                    "value": query,
+                                    "fuzziness": 1,
+                                    "prefix_length": 1,
+                                }
+                            }
+                        },
+                    ],
+                }
+            },
+        }
+
+        response = requests.post(
+            "{}/{}/_search?".format(global_vars.elasticsearch_base_url, "profiles"),
+            auth=(
+                global_vars.elasticsearch_username,
+                global_vars.elasticsearch_password,
+            ),
+            json=query,
+        )
+
+        # map usernames to exchange them for full profiles
+        usernames = [
+            elem["_source"]["username"] for elem in response.json()["hits"]["hits"]
+        ]
 
         with util.get_mongodb() as db:
             profile_manager = Profiles(db)
-            return profile_manager.fulltext_search(query)
+            return profile_manager.get_bulk_profiles(usernames)
 
     def _search_tags(self, tags: List[str]) -> List[Dict]:
         """

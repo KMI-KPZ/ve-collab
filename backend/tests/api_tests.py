@@ -12,6 +12,8 @@ from requests_toolbelt import MultipartEncoder
 from tornado.options import options
 from tornado.testing import AsyncHTTPTestCase
 
+from resources.elasticsearch_integration import ElasticsearchConnector
+from resources.network.acl import ACL
 import global_vars
 from main import make_app
 from model import (
@@ -95,6 +97,9 @@ def setUpModule():
     global_vars.mongodb_db_name = "test_db"
     global_vars.etherpad_base_url = config["etherpad_base_url"]
     global_vars.etherpad_api_key = config["etherpad_api_key"]
+    global_vars.elasticsearch_base_url = config["elasticsearch_base_url"]
+    global_vars.elasticsearch_username = config["elasticsearch_username"]
+    global_vars.elasticsearch_password = config["elasticsearch_password"]
 
 
 def tearDownModule():
@@ -3356,6 +3361,37 @@ class PinHandlerTest(BaseApiTestCase):
 
 
 class SearchHandlerTest(BaseApiTestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+
+        cls.profile = {
+            "username": CURRENT_ADMIN.username,
+            "role": "admin",
+            "follows": [],
+            "bio": "test",
+            "institution": "test",
+            "projects": "test",
+            "profile_pic": "test",
+            "first_name": "test",
+            "last_name": "test",
+            "gender": "test",
+            "address": "test",
+            "birthday": "test",
+            "experience": "test",
+            "education": "test",
+        }
+        # replicate to ES
+        ElasticsearchConnector().on_insert(str(ObjectId()), cls.profile, "profiles")
+
+        # there seems to be a problem over at ES, because when the insert request
+        # finishes, the data is not yet available for search, so tests would fail.
+        # there is no real solution i can think of other than just wait a little bit
+        # for ES to finish analyzing and indexing
+        import time
+        time.sleep(2)
+        
+
     def setUp(self) -> None:
         super().setUp()
 
@@ -3364,47 +3400,9 @@ class SearchHandlerTest(BaseApiTestCase):
             [("text", pymongo.TEXT), ("tags", pymongo.TEXT), ("files", pymongo.TEXT)],
             name="posts",
         )
-        self.db.profiles.create_index(
-            [
-                ("bio", pymongo.TEXT),
-                ("institution", pymongo.TEXT),
-                ("projects", pymongo.TEXT),
-                ("first_name", pymongo.TEXT),
-                ("last_name", pymongo.TEXT),
-                ("gender", pymongo.TEXT),
-                ("address", pymongo.TEXT),
-                ("birthday", pymongo.TEXT),
-                ("experience", pymongo.TEXT),
-                ("education", pymongo.TEXT),
-                ("username", pymongo.TEXT),
-            ],
-            name="profiles",
-        )
 
         # setup basic environment of permissions
         self.base_permission_environment_setUp()
-
-        self.db.profiles.update_one(
-            {"username": CURRENT_ADMIN.username},
-            {
-                "$set": {
-                    "username": CURRENT_ADMIN.username,
-                    "role": "admin",
-                    "follows": [],
-                    "bio": "test",
-                    "institution": "test",
-                    "projects": "test",
-                    "profile_pic": "test",
-                    "first_name": "test",
-                    "last_name": "test",
-                    "gender": "test",
-                    "address": "test",
-                    "birthday": "test",
-                    "experience": "test",
-                    "education": "test",
-                }
-            },
-        )
 
         self.post_oid = ObjectId()
         self.comment_oid = ObjectId()

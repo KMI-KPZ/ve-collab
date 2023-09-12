@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import SuccessAlert from '@/components/SuccessAlert';
 import PlannerOverviewItem from '@/components/Plannner/PlannerOverviewItem';
 import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
+import Link from 'next/link';
 
 export default function Overview() {
     const [plans, setPlans] = useState<PlanPreview[]>([]);
@@ -109,6 +110,22 @@ export default function Overview() {
                                 </button>
                             </div>
                         )}
+                    </div>
+                    <div className="flex justify-around w-full mt-4">
+                        <div>
+                            Noch auf der Suche nach neuen Partner:innen für den nächsten VE?
+                            <div className="flex justify-center my-2">
+                                <Link href={'/matching'}>
+                                    <button
+                                        className={
+                                            'mx-4 py-2 px-5 border border-ve-collab-orange rounded-lg'
+                                        }
+                                    >
+                                        Nimm hier am Matching teil!
+                                    </button>
+                                </Link>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
