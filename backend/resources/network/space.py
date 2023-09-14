@@ -9,11 +9,13 @@ from exceptions import (
     AlreadyRequestedJoinError,
     FileAlreadyInRepoError,
     FileDoesntExistError,
+    NotRequestedJoinError,
     OnlyAdminError,
     PostFileNotDeleteableError,
     SpaceAlreadyExistsError,
     SpaceDoesntExistError,
     UserNotAdminError,
+    UserNotInvitedError,
     UserNotMemberError,
 )
 from model import Space
@@ -174,8 +176,9 @@ class Spaces:
     def create_space(self, space: dict) -> None:
         """
         create a new space, validating the existence of the necessary attributes
-        beforehand. mandatory attributes are: name (str), invisible (bool), members (list<str>),
-        admins (list<str>), invites (list<str>), requests (list<str>)
+        beforehand. mandatory attributes are: name (str), invisible (bool),
+        joinable (bool), members (list<str>), admins (list<str>), invites (list<str>),
+        requests (list<str>), files (list<ObjectId>)
         """
 
         # verify space has all the necessary attributes
@@ -291,7 +294,8 @@ class Spaces:
         """
 
         update_result = self.db.spaces.update_one(
-            {"name": space_name}, {"$addToSet": {"admins": username}}
+            {"name": space_name},
+            {"$addToSet": {"admins": username, "members": username}},
         )
 
         # the filter didnt match any document, so the space doesnt exist
@@ -372,18 +376,24 @@ class Spaces:
         :param username: the user who accepts his invite
         """
 
+        space_invites = self.get_space(
+            space_name, projection={"_id": False, "invites": True}
+        )
+
+        if not space_invites:
+            raise SpaceDoesntExistError()
+
+        if username not in space_invites["invites"]:
+            raise UserNotInvitedError()
+
         # pull user from invites and add him to members
-        update_result = self.db.spaces.update_one(
+        self.db.spaces.update_one(
             {"name": space_name},
             {
                 "$addToSet": {"members": username},
                 "$pull": {"invites": username},
             },
         )
-
-        # the filter didnt match any document, so the space doesnt exist
-        if update_result.matched_count != 1:
-            raise SpaceDoesntExistError()
 
     def decline_space_invite(self, space_name: str, username: str) -> None:
         """
@@ -411,15 +421,20 @@ class Spaces:
         :param username: the user whose request is accepted
         """
 
+        space_requests = self.get_space(
+            space_name, projection={"_id": False, "requests": True}
+        )
+        if not space_requests:
+            raise SpaceDoesntExistError()
+        
+        if username not in space_requests["requests"]:
+            raise NotRequestedJoinError()
+
         # add user to members and pull them from pending requests
-        update_result = self.db.spaces.update_one(
+        self.db.spaces.update_one(
             {"name": space_name},
             {"$addToSet": {"members": username}, "$pull": {"requests": username}},
         )
-
-        # the filter didnt match any document, so the space doesnt exist
-        if update_result.matched_count != 1:
-            raise SpaceDoesntExistError()
 
     def reject_join_request(self, space_name: str, username: str) -> None:
         """

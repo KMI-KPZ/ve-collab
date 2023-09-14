@@ -93,6 +93,11 @@ class SpaceModelTest(TestCase):
         return super().tearDown()
 
     def test_init_default(self):
+        """
+        expect: object-like and dict-like access to default
+        attributes
+        """
+
         space = Space({})
         self.assertEqual(space.name, None)
         self.assertEqual(space.invisible, False)
@@ -113,6 +118,11 @@ class SpaceModelTest(TestCase):
         self.assertEqual(space["files"], [])
 
     def test_init(self):
+        """
+        expect: object-like and dict-like access to non-default
+        attributes
+        """
+
         space = Space({
             "name": "test",
             "invisible": False,

@@ -3,18 +3,26 @@ import json
 import time
 from unittest import TestCase
 from bson import ObjectId
+import gridfs
 
 import pymongo
 from tornado.options import options
 from exceptions import (
+    AlreadyAdminError,
+    AlreadyMemberError,
+    AlreadyRequestedJoinError,
     InvitationDoesntExistError,
     MissingKeyError,
     NoReadAccessError,
     NoWriteAccessError,
     NonUniqueTasksError,
+    NotRequestedJoinError,
+    OnlyAdminError,
     PlanAlreadyExistsError,
     PlanDoesntExistError,
+    SpaceAlreadyExistsError,
     SpaceDoesntExistError,
+    UserNotInvitedError,
 )
 
 import global_vars
@@ -196,6 +204,11 @@ class SpaceResourceTest(BaseResourceTestCase):
         super().tearDown()
 
         self.db.spaces.delete_many({})
+
+        # delete all created files in gridfs
+        fs = gridfs.GridFS(self.db)
+        for fs_file in fs.find():
+            fs.delete(fs_file._id)
 
     def test_check_space_exists_success(self):
         """
@@ -422,27 +435,28 @@ class SpaceResourceTest(BaseResourceTestCase):
         # add 2 more space
         additional_spaces = [
             {
-            "_id": ObjectId(),
-            "name": "test2",
-            "invisible": False,
-            "joinable": True,
-            "members": [CURRENT_ADMIN.username],
-            "admins": [CURRENT_ADMIN.username],
-            "invites": [],
-            "requests": [],
-            "files": [],
-        },
-        {
-            "_id": ObjectId(),
-            "name": "test3",
-            "invisible": False,
-            "joinable": True,
-            "members": [],
-            "admins": [],
-            "invites": [],
-            "requests": [],
-            "files": [],
-        }]
+                "_id": ObjectId(),
+                "name": "test2",
+                "invisible": False,
+                "joinable": True,
+                "members": [CURRENT_ADMIN.username],
+                "admins": [CURRENT_ADMIN.username],
+                "invites": [],
+                "requests": [],
+                "files": [],
+            },
+            {
+                "_id": ObjectId(),
+                "name": "test3",
+                "invisible": False,
+                "joinable": True,
+                "members": [],
+                "admins": [],
+                "invites": [],
+                "requests": [],
+                "files": [],
+            },
+        ]
 
         self.db.spaces.insert_many(additional_spaces)
 
@@ -451,6 +465,622 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertEqual(len(spaces), 2)
         self.assertIn("test", spaces)
         self.assertIn("test2", spaces)
+
+    def test_get_space_invites_of_user(self):
+        """
+        expect: successfully get a list of all pending invites that the user has
+        """
+
+        space_manager = Spaces(self.db)
+
+        # as default, there should be no invites right now
+        invites = space_manager.get_space_invites_of_user(CURRENT_ADMIN.username)
+        self.assertEqual(invites, [])
+
+        # add a space and set the user as invited
+        additional_space = {
+            "_id": ObjectId(),
+            "name": "test2",
+            "invisible": False,
+            "joinable": True,
+            "members": [],
+            "admins": [],
+            "invites": [CURRENT_ADMIN.username],
+            "requests": [],
+            "files": [],
+        }
+        self.db.spaces.insert_one(additional_space)
+
+        invites = space_manager.get_space_invites_of_user(CURRENT_ADMIN.username)
+        self.assertEqual(invites, ["test2"])
+
+    def test_create_space(self):
+        """
+        expect: successfully create new space
+        """
+
+        new_space = {
+            "name": "new_space",
+            "invisible": False,
+            "joinable": True,
+            "members": [CURRENT_ADMIN.username],
+            "admins": [CURRENT_ADMIN.username],
+            "invites": [],
+            "requests": [],
+            "files": [],
+        }
+
+        space_manager = Spaces(self.db)
+        space_manager.create_space(new_space)
+
+        # check if space was created
+        space = self.db.spaces.find_one({"name": "new_space"})
+        self.assertIsNotNone(space)
+        self.assertIsInstance(space["_id"], ObjectId)
+        self.assertEqual(space["name"], new_space["name"])
+        self.assertEqual(space["invisible"], new_space["invisible"])
+        self.assertEqual(space["joinable"], new_space["joinable"])
+        self.assertEqual(space["members"], new_space["members"])
+        self.assertEqual(space["admins"], new_space["admins"])
+        self.assertEqual(space["invites"], new_space["invites"])
+        self.assertEqual(space["requests"], new_space["requests"])
+        self.assertEqual(space["files"], new_space["files"])
+
+    def test_create_space_failure_space_already_exists(self):
+        """
+        expect: SpaceAlreadyExistsError is raised because space with this name already exists
+        """
+
+        new_space = {
+            "name": self.space_name,
+            "invisible": False,
+            "joinable": True,
+            "members": [CURRENT_ADMIN.username],
+            "admins": [CURRENT_ADMIN.username],
+            "invites": [],
+            "requests": [],
+            "files": [],
+        }
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            SpaceAlreadyExistsError, space_manager.create_space, new_space
+        )
+
+    def test_create_space_failure_invalid_attributes(self):
+        """
+        expect: a) ValueError is raised because space is missing an attribute,
+        and b) TypeError is raised because an attribute has the wrong type
+        """
+
+        new_space = {
+            "name": "new_space",
+            "joinable": True,
+            "members": [CURRENT_ADMIN.username],
+            "admins": [CURRENT_ADMIN.username],
+            "invites": [],
+            "requests": [],
+            "files": [],
+        }
+
+        # invisible is missing
+        space_manager = Spaces(self.db)
+        self.assertRaises(ValueError, space_manager.create_space, new_space)
+
+        # invisible has wrong type
+        new_space["invisible"] = "test"
+        self.assertRaises(TypeError, space_manager.create_space, new_space)
+
+    def test_delete_space(self):
+        """
+        expect: successfully delete space
+        """
+
+        space_manager = Spaces(self.db)
+        space_manager.delete_space(self.space_name)
+
+        # check if space was deleted
+        space = self.db.spaces.find_one({"name": self.space_name})
+        self.assertIsNone(space)
+
+    def test_delete_space_error_space_doesnt_exist(self):
+        """
+        expect: SpaceDoesntExistError is raised because no
+        space with this name exists
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            SpaceDoesntExistError, space_manager.delete_space, "non_existing_space"
+        )
+
+    def test_is_space_directly_joinable(self):
+        """
+        expect: successfully retrieve joinable attribute of space
+        """
+
+        space_manager = Spaces(self.db)
+        joinable = space_manager.is_space_directly_joinable(self.space_name)
+        self.assertEqual(joinable, self.default_space["joinable"])
+
+    def test_is_space_directly_joinable_error_space_doesnt_exist(self):
+        """
+        expect: SpaceDoesntExistError is raised because no
+        space with this name exists
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            SpaceDoesntExistError,
+            space_manager.is_space_directly_joinable,
+            "non_existing_space",
+        )
+
+    def test_join_space(self):
+        """
+        expect: successfully add user to the space members list
+        """
+
+        space_manager = Spaces(self.db)
+        space_manager.join_space(self.space_name, CURRENT_USER.username)
+
+        # check if user was added to members list
+        space = self.db.spaces.find_one({"name": self.space_name})
+        self.assertIn(CURRENT_USER.username, space["members"])
+
+    def test_join_space_error_space_doesnt_exist(self):
+        """
+        expect: SpaceDoesntExistError is raised because no
+        space with this name exists
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            SpaceDoesntExistError,
+            space_manager.join_space,
+            "non_existing_space",
+            CURRENT_USER.username,
+        )
+
+    def test_join_space_error_already_member(self):
+        """
+        expect: AlreadyMemberError is raised because is already a member of
+        the space
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            AlreadyMemberError,
+            space_manager.join_space,
+            self.space_name,
+            CURRENT_ADMIN.username,
+        )
+
+    def test_join_space_request(self):
+        """
+        expect: successfully add the user to the space requests list
+        """
+
+        space_manager = Spaces(self.db)
+        space_manager.join_space_request(self.space_name, CURRENT_USER.username)
+
+        # check if user was added to requests list
+        space = self.db.spaces.find_one({"name": self.space_name})
+        self.assertIn(CURRENT_USER.username, space["requests"])
+
+    def test_join_space_request_error_space_doesnt_exist(self):
+        """
+        expect: SpaceDoesntExistError is raised because no
+        space with this name exists
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            SpaceDoesntExistError,
+            space_manager.join_space_request,
+            "non_existing_space",
+            CURRENT_USER.username,
+        )
+
+    def test_join_space_request_error_already_requested_join(self):
+        """
+        expect: AlreadyRequestJoinError is raised because user already requested
+        to join the space previously
+        """
+
+        # manually add user to requests list
+        self.db.spaces.update_one(
+            {"name": self.space_name},
+            {"$push": {"requests": CURRENT_USER.username}},
+        )
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            AlreadyRequestedJoinError,
+            space_manager.join_space_request,
+            self.space_name,
+            CURRENT_USER.username,
+        )
+
+    def test_add_space_admin(self):
+        """
+        expect: successfully set user as space admin
+        """
+
+        space_manager = Spaces(self.db)
+        space_manager.add_space_admin(self.space_name, CURRENT_USER.username)
+
+        # check if user was added to admins list, which includes being in the members list
+        space = self.db.spaces.find_one({"name": self.space_name})
+        self.assertIn(CURRENT_USER.username, space["admins"])
+        self.assertIn(CURRENT_USER.username, space["members"])
+
+    def test_add_space_admin_error_space_doesnt_exist(self):
+        """
+        expect: SpaceDoesntExistError is raised because no
+        space with this name exists
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            SpaceDoesntExistError,
+            space_manager.add_space_admin,
+            "non_existing_space",
+            CURRENT_USER.username,
+        )
+
+    def test_add_space_admin_error_already_admin(self):
+        """
+        expect: AlreadyAdminError is raised because user is already an admin in this space
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            AlreadyAdminError,
+            space_manager.add_space_admin,
+            self.space_name,
+            CURRENT_ADMIN.username,
+        )
+
+    def test_set_space_picture(self):
+        """
+        expect: successfully set picture of space with dummy bytes string
+        """
+
+        space_manager = Spaces(self.db)
+        space_manager.set_space_picture(
+            self.space_name, "test_pic", b"test", "image/jpg"
+        )
+
+        space = self.db.spaces.find_one({"name": self.space_name})
+        space_pic_id = space["space_pic"]
+
+        fs = gridfs.GridFS(self.db)
+        space_pic = fs.get(space_pic_id)
+        self.assertEqual(space_pic.read(), b"test")
+
+    def test_set_space_picture_error_space_doesnt_exist(self):
+        """
+        expect: SpaceDoesntExistError is raised because no
+        space with this name exists
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            SpaceDoesntExistError,
+            space_manager.set_space_picture,
+            "non_existing_space",
+            "test_pic",
+            b"test",
+            "image/jpg",
+        )
+
+    def test_set_space_description(self):
+        """
+        expect: successfully set space description
+        """
+
+        space_manager = Spaces(self.db)
+        space_manager.set_space_description(self.space_name, "test_description")
+
+        space = self.db.spaces.find_one({"name": self.space_name})
+        self.assertEqual(space["space_description"], "test_description")
+
+    def test_set_space_description_error_space_doesnt_exist(self):
+        """
+        expect: SpaceDoesntExistError is raised because no
+        space with this name exists
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            SpaceDoesntExistError,
+            space_manager.set_space_description,
+            "non_existing_space",
+            "test_description",
+        )
+
+    def test_invite_user(self):
+        """
+        expect: successfully add user to invites list
+        """
+
+        space_manager = Spaces(self.db)
+        space_manager.invite_user(self.space_name, CURRENT_USER.username)
+
+        space = self.db.spaces.find_one({"name": self.space_name})
+        self.assertIn(CURRENT_USER.username, space["invites"])
+
+    def test_invite_user_error_space_doesnt_exist(self):
+        """
+        expect: SpaceDoesntExistError is raised because no
+        space with this name exists
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            SpaceDoesntExistError,
+            space_manager.invite_user,
+            "non_existing_space",
+            CURRENT_USER.username,
+        )
+
+    def test_accept_space_invite(self):
+        """
+        expect: successfully remove user from invites list and
+        add him to members list
+        """
+
+        # manually add user to invites list
+        self.db.spaces.update_one(
+            {"name": self.space_name},
+            {"$push": {"invites": CURRENT_USER.username}},
+        )
+
+        space_manager = Spaces(self.db)
+        space_manager.accept_space_invite(self.space_name, CURRENT_USER.username)
+
+        space = self.db.spaces.find_one({"name": self.space_name})
+        self.assertNotIn(CURRENT_USER.username, space["invites"])
+        self.assertIn(CURRENT_USER.username, space["members"])
+
+    def test_accept_space_invite_error_user_not_invited(self):
+        """
+        expect: UserNotInvitedError is raised because user is not invited to the space
+        and can therefore not gain entry by fake-accepting a request
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            UserNotInvitedError,
+            space_manager.accept_space_invite,
+            self.space_name,
+            CURRENT_USER.username,
+        )
+
+    def test_accept_space_invite_error_space_doesnt_exist(self):
+        """
+        expect: SpaceDoesntExistError is raised because no
+        space with this name exists
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            SpaceDoesntExistError,
+            space_manager.accept_space_invite,
+            "non_existing_space",
+            CURRENT_USER.username,
+        )
+
+    def test_decline_space_invite(self):
+        """
+        expect: successfully decline invite to a space, i.e. not get added to members list
+        """
+
+        # manually add user to invites list
+        self.db.spaces.update_one(
+            {"name": self.space_name},
+            {"$push": {"invites": CURRENT_USER.username}},
+        )
+
+        space_manager = Spaces(self.db)
+        space_manager.decline_space_invite(self.space_name, CURRENT_USER.username)
+
+        space = self.db.spaces.find_one({"name": self.space_name})
+        self.assertNotIn(CURRENT_USER.username, space["invites"])
+        self.assertNotIn(CURRENT_USER.username, space["members"])
+
+    def test_decline_space_invite_error_space_doesnt_exist(self):
+        """
+        expect: SpaceDoesntExistError is raised because no
+        space with this name exists
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            SpaceDoesntExistError,
+            space_manager.decline_space_invite,
+            "non_existing_space",
+            CURRENT_USER.username,
+        )
+
+    def test_accept_join_request(self):
+        """
+        expect: successfully accept join request, i.e. get added to members list
+        """
+
+        # manually add user to requests list
+        self.db.spaces.update_one(
+            {"name": self.space_name},
+            {"$push": {"requests": CURRENT_USER.username}},
+        )
+
+        space_manager = Spaces(self.db)
+        space_manager.accept_join_request(self.space_name, CURRENT_USER.username)
+
+        space = self.db.spaces.find_one({"name": self.space_name})
+        self.assertNotIn(CURRENT_USER.username, space["requests"])
+        self.assertIn(CURRENT_USER.username, space["members"])
+
+    def test_accept_join_request_error_space_doesnt_exist(self):
+        """
+        expect: SpaceDoesntExistError is raised because no
+        space with this name exists
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            SpaceDoesntExistError,
+            space_manager.accept_join_request,
+            "non_existing_space",
+            CURRENT_USER.username,
+        )
+
+    def test_accept_join_request_error_not_request_to_join(self):
+        """
+        expect: NotRequestedJoinError is raised because user didnt request
+        to join in the first place, so cannot be accepted
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            NotRequestedJoinError,
+            space_manager.accept_join_request,
+            self.space_name,
+            CURRENT_USER.username,
+        )
+
+    def test_reject_join_request(self):
+        """
+        expect: successfully reject join request, i.e. not get added to members list
+        """
+
+        # manually add user to requests list
+        self.db.spaces.update_one(
+            {"name": self.space_name},
+            {"$push": {"requests": CURRENT_USER.username}},
+        )
+
+        space_manager = Spaces(self.db)
+        space_manager.reject_join_request(self.space_name, CURRENT_USER.username)
+
+        space = self.db.spaces.find_one({"name": self.space_name})
+        self.assertNotIn(CURRENT_USER.username, space["requests"])
+        self.assertNotIn(CURRENT_USER.username, space["members"])
+
+    def test_reject_join_request_error_space_doesnt_exist(self):
+        """
+        expect: SpaceDoesntExistError is raised because no
+        space with this name exists
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            SpaceDoesntExistError,
+            space_manager.reject_join_request,
+            "non_existing_space",
+            CURRENT_USER.username,
+        )
+
+    def test_toggle_visibility(self):
+        """
+        expect: set visibility attribute to True if it was False and False if it was True
+        """
+
+        current_visibility = self.default_space["invisible"]
+        space_manager = Spaces(self.db)
+        space_manager.toggle_visibility(self.space_name)
+
+        space = self.db.spaces.find_one({"name": self.space_name})
+        self.assertEqual(space["invisible"], not current_visibility)
+
+        # try again backwards
+        space_manager.toggle_visibility(self.space_name)
+        space = self.db.spaces.find_one({"name": self.space_name})
+        self.assertEqual(space["invisible"], current_visibility)
+
+    def test_leave_space_member(self):
+        """
+        expect: successfully leave space as member
+        """
+
+        # manually add other user to space first
+        self.db.spaces.update_one(
+            {"name": self.space_name},
+            {"$push": {"members": CURRENT_USER.username}},
+        )
+
+        space_manager = Spaces(self.db)
+        space_manager.leave_space(self.space_name, CURRENT_USER.username)
+
+        space = self.db.spaces.find_one({"name": self.space_name})
+        self.assertNotIn(CURRENT_USER.username, space["members"])
+
+    def test_leave_space_admin(self):
+        """
+        expect: successfully leave space as admin
+        """
+
+        # manually add another admin first, becuase otherwise OnylAdminError should raise
+        self.db.spaces.update_one(
+            {"name": self.space_name},
+            {
+                "$push": {
+                    "admins": CURRENT_USER.username,
+                    "members": CURRENT_USER.username,
+                }
+            },
+        )
+
+        space_manager = Spaces(self.db)
+        space_manager.leave_space(self.space_name, CURRENT_USER.username)
+
+        space = self.db.spaces.find_one({"name": self.space_name})
+        self.assertNotIn(CURRENT_USER.username, space["admins"])
+        self.assertNotIn(CURRENT_USER.username, space["members"])
+
+    def test_leave_space_error_only_admin(self):
+        """
+        expect: OnlyAdminError is raised because user is the only admin of the space,
+        and therefore cannot leave without giving admin rights to somebody else before
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            OnlyAdminError,
+            space_manager.leave_space,
+            self.space_name,
+            CURRENT_ADMIN.username,
+        )
+
+    def test_leave_space_error_space_doesnt_exist(self):
+        """
+        expect: SpaceDoesntExistError is raised because no space with this name exists
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            SpaceDoesntExistError,
+            space_manager.leave_space,
+            "non_existing_space",
+            CURRENT_USER.username,
+        )
+
+
+class PostSpaceACLResourceIntegrationTest(BaseResourceTestCase):
+    def setUp(self) -> None:
+        return super().setUp()
+
+    def tearDown(self) -> None:
+        return super().tearDown()
+
+    def test_delete_space_side_effects(self):
+        """
+        expect: when deleting a space, all posts and corresponding ACL
+        entries get deleted as well
+        """
+
+        # TODO
 
 
 class PlanResourceTest(BaseResourceTestCase):

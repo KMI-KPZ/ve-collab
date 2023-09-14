@@ -103,6 +103,7 @@ class Space(dict):
             if key not in [*self.EXPECTED_DICT_ENTRIES.keys(), *["_id"]]:
                 del params[key]
 
+        # override default attributes from params
         for k, v in params.items():
             setattr(self, k, v)
             super().__setitem__(k, v)

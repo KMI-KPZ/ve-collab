@@ -46,7 +46,15 @@ class AlreadyRequestedJoinError(Exception):
     pass
 
 
+class NotRequestedJoinError(Exception):
+    pass
+
+
 class UserNotMemberError(Exception):
+    pass
+
+
+class UserNotInvitedError(Exception):
     pass
 
 
