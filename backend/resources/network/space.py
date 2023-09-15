@@ -525,18 +525,23 @@ class Spaces:
         :param username: the user whose permissions will be revoked
         """
 
+        space_admins = self.get_space(
+            space_name, projection={"_id": False, "admins": True}
+        )
+        if not space_admins:
+            raise SpaceDoesntExistError()
+        
+        if username not in space_admins["admins"]:
+            raise UserNotAdminError()
+        
+        # if the user is the only admin left, he cannot be degraded
+        if len(space_admins["admins"]) == 1:
+            raise OnlyAdminError()
+
         # remove user from spaces admins list
-        update_result = self.db.spaces.update_one(
+        self.db.spaces.update_one(
             {"name": space_name}, {"$pull": {"admins": username}}
         )
-
-        # the filter didnt match any document, so the space doesnt exist
-        if update_result.matched_count != 1:
-            raise SpaceDoesntExistError()
-
-        # if no documents were modified, we know that the user was no admin
-        if update_result.modified_count != 1:
-            raise UserNotAdminError()
 
     def create_or_join_discussion_space(self, wp_post: dict, username: str) -> str:
         """

@@ -11,6 +11,8 @@ from exceptions import (
     AlreadyAdminError,
     AlreadyMemberError,
     AlreadyRequestedJoinError,
+    FileAlreadyInRepoError,
+    FileDoesntExistError,
     InvitationDoesntExistError,
     MissingKeyError,
     NoReadAccessError,
@@ -20,9 +22,12 @@ from exceptions import (
     OnlyAdminError,
     PlanAlreadyExistsError,
     PlanDoesntExistError,
+    PostFileNotDeleteableError,
     SpaceAlreadyExistsError,
     SpaceDoesntExistError,
+    UserNotAdminError,
     UserNotInvitedError,
+    UserNotMemberError,
 )
 
 import global_vars
@@ -1064,6 +1069,387 @@ class SpaceResourceTest(BaseResourceTestCase):
             space_manager.leave_space,
             "non_existing_space",
             CURRENT_USER.username,
+        )
+
+    def test_kick_user(self):
+        """
+        expect: successfully kick user from space
+        """
+
+        # manually add user to space first
+        self.db.spaces.update_one(
+            {"name": self.space_name},
+            {"$push": {"members": CURRENT_USER.username}},
+        )
+
+        space_manager = Spaces(self.db)
+        space_manager.kick_user(self.space_name, CURRENT_USER.username)
+
+        space = self.db.spaces.find_one({"name": self.space_name})
+        self.assertNotIn(CURRENT_USER.username, space["members"])
+
+    def test_kick_user_error_space_doesnt_exist(self):
+        """
+        expect: SpaceDoesntExistError is raised because no space with this name exists
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            SpaceDoesntExistError,
+            space_manager.kick_user,
+            "non_existing_space",
+            CURRENT_USER.username,
+        )
+
+    def test_kick_user_error_user_not_member(self):
+        """
+        expect: UserNotMemberError is raised because user is not a member of the space
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            UserNotMemberError,
+            space_manager.kick_user,
+            self.space_name,
+            CURRENT_USER.username,
+        )
+
+    def test_revoke_space_admin_privilege(self):
+        """
+        expect: successfully remove user from admins list
+        """
+
+        # manually add user to admins list first
+        self.db.spaces.update_one(
+            {"name": self.space_name},
+            {
+                "$push": {
+                    "admins": CURRENT_USER.username,
+                    "members": CURRENT_USER.username,
+                }
+            },
+        )
+
+        space_manager = Spaces(self.db)
+        space_manager.revoke_space_admin_privilege(
+            self.space_name, CURRENT_USER.username
+        )
+
+        space = self.db.spaces.find_one({"name": self.space_name})
+        self.assertNotIn(CURRENT_USER.username, space["admins"])
+        self.assertIn(CURRENT_USER.username, space["members"])
+
+    def test_revoke_space_admin_privileges_error_space_doesnt_exist(self):
+        """
+        expect: SpaceDoesntExistError is raised because no space with this name exists
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            SpaceDoesntExistError,
+            space_manager.revoke_space_admin_privilege,
+            "non_existing_space",
+            CURRENT_USER.username,
+        )
+
+    def test_revoke_space_admin_privileges_error_user_not_admin(self):
+        """
+        expect: UserNotAdminError is raised because user is not an admin of the space
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            UserNotAdminError,
+            space_manager.revoke_space_admin_privilege,
+            self.space_name,
+            CURRENT_USER.username,
+        )
+
+    def test_revoke_space_admin_privileges_error_only_admin(self):
+        """
+        expect: OnlyAdminError is raised because the to-be-degraded user is
+        the only admin of the space
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            OnlyAdminError,
+            space_manager.revoke_space_admin_privilege,
+            self.space_name,
+            CURRENT_ADMIN.username,
+        )
+
+    def test_get_files(self):
+        """
+        expect: successfully get all files metadata of the space
+        """
+
+        space_manager = Spaces(self.db)
+
+        # default case
+        files = space_manager.get_files(self.space_name)
+        self.assertEqual(files, self.default_space["files"])
+
+        # add file metadata to space
+        additional_file = {
+            "author": CURRENT_USER.username,
+            "file_id": ObjectId(),
+            "manually_uploaded": True,
+        }
+        self.db.spaces.update_one(
+            {"name": self.space_name},
+            {"$push": {"files": additional_file}},
+        )
+        files = space_manager.get_files(self.space_name)
+        self.assertEqual(files, [additional_file])
+
+    def test_get_files_error_space_doesnt_exist(self):
+        """
+        expect: SpaceDoesntExistError is raised because no space with this name exists
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            SpaceDoesntExistError, space_manager.get_files, "non_existing_space"
+        )
+
+    def test_add_new_post_file(self):
+        """
+        expect: successfully add new file that was originally added from a post,
+        therefore only metadata are inserted
+        """
+
+        file_id = ObjectId()
+        space_manager = Spaces(self.db)
+        space_manager.add_new_post_file(
+            self.space_name,
+            CURRENT_USER.username,
+            file_id,
+        )
+
+        space = self.db.spaces.find_one({"name": self.space_name})
+        self.assertEqual(
+            space["files"],
+            [
+                {
+                    "author": CURRENT_USER.username,
+                    "file_id": file_id,
+                    "manually_uploaded": False,
+                }
+            ],
+        )
+
+    def test_add_new_post_file_error_space_doesnt_exist(self):
+        """
+        expect: SpaceDoesntExistError is raised because no space with this name exists
+        """
+
+        file_id = ObjectId()
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            SpaceDoesntExistError,
+            space_manager.add_new_post_file,
+            "non_existing_space",
+            CURRENT_USER.username,
+            file_id,
+        )
+
+    def test_add_new_post_file_error_file_already_in_repo(self):
+        """
+        expect: FileAlreadyInRepoError is raised because the same file already exists
+        """
+
+        # manually add post file
+        file_obj = {
+            "author": CURRENT_USER.username,
+            "file_id": ObjectId(),
+            "manually_uploaded": False,
+        }
+        self.db.spaces.update_one(
+            {"name": self.space_name},
+            {"$push": {"files": file_obj}},
+        )
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            FileAlreadyInRepoError,
+            space_manager.add_new_post_file,
+            self.space_name,
+            CURRENT_USER.username,
+            file_obj["file_id"],
+        )
+
+    def test_add_new_repo_file(self):
+        """
+        expect: successfully add new file to the space repo
+        """
+
+        space_manager = Spaces(self.db)
+        _id = space_manager.add_new_repo_file(
+            self.space_name,
+            "test_file",
+            b"test",
+            "image/jpg",
+            CURRENT_ADMIN.username,
+        )
+
+        space = self.db.spaces.find_one({"name": self.space_name})
+        self.assertEqual(
+            space["files"],
+            [
+                {
+                    "author": CURRENT_ADMIN.username,
+                    "file_id": _id,
+                    "manually_uploaded": True,
+                }
+            ],
+        )
+        fs = gridfs.GridFS(self.db)
+        self.assertEqual(fs.get(_id).read(), b"test")
+
+    def test_add_new_repo_file_error_space_doesnt_exist(self):
+        """
+        expect: SpaceDoesntExistError is raised because no space with this name exists
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            SpaceDoesntExistError,
+            space_manager.add_new_repo_file,
+            "non_existing_space",
+            "test_file",
+            b"test",
+            "image/jpg",
+            CURRENT_ADMIN.username,
+        )
+
+    def test_remove_file(self):
+        """
+        expect: successfully remove file from space repo
+        """
+
+        # manually add file to space repo
+        file_id = gridfs.GridFS(self.db).put(b"test")
+        file_obj = {
+            "author": CURRENT_ADMIN.username,
+            "file_id": file_id,
+            "manually_uploaded": True,
+        }
+        self.db.spaces.update_one(
+            {"name": self.space_name},
+            {"$push": {"files": file_obj}},
+        )
+
+        space_manager = Spaces(self.db)
+        space_manager.remove_file(self.space_name, file_id)
+
+        space = self.db.spaces.find_one({"name": self.space_name})
+        self.assertEqual(space["files"], [])
+        self.assertFalse(gridfs.GridFS(self.db).exists(file_id))
+
+    def test_remove_file_error_space_doesnt_exist(self):
+        """
+        expect: SpaceDoesntExistError is raised because no space with this name exists
+        """
+
+        file_id = ObjectId()
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            SpaceDoesntExistError,
+            space_manager.remove_file,
+            "non_existing_space",
+            file_id,
+        )
+
+    def test_remove_file_error_post_file_not_deletable(self):
+        """
+        expect: PostFileNotDeleteableError is raised because the file was originally
+        added from a post and therefore cannot be deleted manually, only by
+        deleting the corresponding post
+        """
+
+        # manually add post file metadata
+        file_id = ObjectId()
+        file_obj = {
+            "author": CURRENT_ADMIN.username,
+            "file_id": file_id,
+            "manually_uploaded": False,
+        }
+        self.db.spaces.update_one(
+            {"name": self.space_name},
+            {"$push": {"files": file_obj}},
+        )
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            PostFileNotDeleteableError,
+            space_manager.remove_file,
+            self.space_name,
+            file_id,
+        )
+
+    def test_remove_file_error_file_doesnt_exist(self):
+        """
+        expect: FileDoesntExistError is raised because no file with this id exists
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            FileDoesntExistError,
+            space_manager.remove_file,
+            self.space_name,
+            ObjectId(),
+        )
+
+    def test_remove_post_file(self):
+        """
+        expect: successfully remove file, even if it has manually_uploaded=False,
+        should only be called in conjunction with deleting the corresponding post
+        """
+
+        # manually add post file metadata
+        file_id = ObjectId()
+        file_obj = {
+            "author": CURRENT_ADMIN.username,
+            "file_id": file_id,
+            "manually_uploaded": False,
+        }
+        self.db.spaces.update_one(
+            {"name": self.space_name},
+            {"$push": {"files": file_obj}},
+        )
+
+        space_manager = Spaces(self.db)
+        space_manager.remove_post_file(self.space_name, file_id)
+
+        space = self.db.spaces.find_one({"name": self.space_name})
+        self.assertEqual(space["files"], [])
+
+    def test_remove_post_file_error_space_doesnt_exist(self):
+        """
+        expect: SpaceDoesntExistError is raised because no space with this name exists
+        """
+
+        file_id = ObjectId()
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            SpaceDoesntExistError,
+            space_manager.remove_post_file,
+            "non_existing_space",
+            file_id,
+        )
+
+    def test_remove_post_file_error_file_doesnt_exist(self):
+        """
+        expect: FileDoesntExistError is raised because no file with this id exists
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            FileDoesntExistError,
+            space_manager.remove_post_file,
+            self.space_name,
+            ObjectId(),
         )
 
 
