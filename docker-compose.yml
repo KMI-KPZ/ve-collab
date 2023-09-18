@@ -7,7 +7,8 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: admin123
     volumes:
       - mongodb_data:/data/db
-    network_mode: host
+    ports:
+      - 27017:27017
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
       interval: 10s
@@ -24,7 +25,8 @@ services:
     build:
       context: backend
       dockerfile: Dockerfile
-    network_mode: host
+    ports:
+      - 8888:8888
     depends_on:
       mongodb:
         condition: service_healthy
@@ -38,7 +40,8 @@ services:
     build:
       context: frontend-vecollab
       dockerfile: Dockerfile
-    network_mode: host
+    ports:
+      - 3000:3000
     logging:
       driver: "json-file"
       options:
