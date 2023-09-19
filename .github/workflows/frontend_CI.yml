@@ -41,7 +41,7 @@ jobs:
         
       - name: Create env file
         run: |
-          echo "${{ secrets.FRONTEND_ENV }}" > .env.local
+          echo "${{ secrets.FRONTEND_ENV }}" > .env
 
       - name: Build React app
         run: npm run build

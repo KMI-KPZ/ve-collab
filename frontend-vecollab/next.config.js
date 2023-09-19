@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 if (!process.env.WORDPRESS_API_URL) {
     throw new Error(`
       Please provide a valid URL to your Wordpress GraphQL endpoint in .env.local .

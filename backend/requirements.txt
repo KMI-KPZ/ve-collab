@@ -14,6 +14,7 @@ pyasn1==0.4.8
 pycodestyle==2.9.1
 pymongo==4.2.0
 python-dateutil==2.8.2
+python-dotenv==1.0.0
 python-engineio==4.5.1
 python-jose==3.3.0
 python-keycloak==2.6.0

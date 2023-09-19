@@ -29,6 +29,17 @@ COPY . .
 
 #RUN yarn build
 
+ARG WORDPRESS_API_URL
+ENV WORDPRESS_API_URL $WORDPRESS_API_URL
+ARG NEXT_PUBLIC_KEYCLOAK_ID
+ENV NEXT_PUBLIC_KEYCLOAK_ID $NEXT_PUBLIC_KEYCLOAK_ID
+ARG KEYCLOAK_SECRET
+ENV KEYCLOAK_SECRET $KEYCLOAK_SECRET
+ARG NEXT_PUBLIC_KEYCLOAK_ISSUER
+ENV NEXT_PUBLIC_KEYCLOAK_ISSUER $NEXT_PUBLIC_KEYCLOAK_ISSUER
+ARG NEXT_PUBLIC_BACKEND_URL
+ENV NEXT_PUBLIC_BACKEND_URL $NEXT_PUBLIC_BACKEND_URL
+
 # If using npm comment out above and use below instead
 RUN npm run build
 
@@ -37,9 +48,9 @@ FROM base AS runner
 WORKDIR /app
 
 # since NODE_ENV cannot use local, we simply copy our only env files into .env.production
-COPY .env.local .env.production
+#COPY .env.local .env.production
 
-ENV NODE_ENV production
+#ENV NODE_ENV production
 # Uncomment the following line in case you want to disable telemetry during runtime.
 # ENV NEXT_TELEMETRY_DISABLED 1
 

@@ -2,9 +2,11 @@ from datetime import datetime, timedelta
 import io
 import json
 import logging
+import os
 from typing import List
 
 from bson import ObjectId
+from dotenv import load_dotenv
 import gridfs
 import pymongo
 import pymongo.errors
@@ -25,6 +27,9 @@ from model import (
     User,
     VEPlan,
 )
+
+# load environment variables
+load_dotenv()
 
 # hack all loggers to not produce too much irrelevant (info) output here
 for logger_name in logging.root.manager.loggerDict:
@@ -82,24 +87,26 @@ def setUpModule():
     unittest will call this method itself.
     """
 
-    with open(options.config) as json_file:
-        config = json.load(json_file)
-
-    global_vars.keycloak_callback_url = config["keycloak_callback_url"]
-    global_vars.domain = config["domain"]
-    global_vars.keycloak_client_id = config["keycloak_client_id"]
-    global_vars.cookie_secret = config["cookie_secret"]
-
-    global_vars.mongodb_host = config["mongodb_host"]
-    global_vars.mongodb_port = config["mongodb_port"]
-    global_vars.mongodb_username = config["mongodb_username"]
-    global_vars.mongodb_password = config["mongodb_password"]
-    global_vars.mongodb_db_name = "test_db"
-    global_vars.etherpad_base_url = config["etherpad_base_url"]
-    global_vars.etherpad_api_key = config["etherpad_api_key"]
-    global_vars.elasticsearch_base_url = config["elasticsearch_base_url"]
-    global_vars.elasticsearch_username = config["elasticsearch_username"]
-    global_vars.elasticsearch_password = config["elasticsearch_password"]
+    global_vars.port = int(os.getenv("PORT"))
+    global_vars.cookie_secret = os.getenv("COOKIE_SECRET")
+    global_vars.wordpress_url = os.getenv("WORDPRESS_URL")
+    global_vars.mongodb_host = os.getenv("MONGODB_HOST")
+    global_vars.mongodb_port = int(os.getenv("MONGODB_PORT"))
+    global_vars.mongodb_username = os.getenv("MONGODB_USERNAME")
+    global_vars.mongodb_password = os.getenv("MONGODB_PASSWORD")
+    global_vars.mongodb_db_name = os.getenv("MONGODB_DB_NAME")
+    global_vars.etherpad_base_url = os.getenv("ETHERPAD_BASE_URL")
+    global_vars.etherpad_api_key = os.getenv("ETHERPAD_API_KEY")
+    global_vars.elasticsearch_base_url = os.getenv("ELASTICSEARCH_BASE_URL")
+    global_vars.elasticsearch_username = os.getenv("ELASTICSEARCH_USERNAME")
+    global_vars.elasticsearch_password = os.getenv("ELASTICSEARCH_PASSWORD")
+    global_vars.dummy_personas_passcode = os.getenv("DUMMY_PERSONAS_PASSCODE")
+    global_vars.keycloak_base_url = os.getenv("KEYCLOAK_BASE_URL")
+    global_vars.keycloak_realm = os.getenv("KEYCLOAK_REALM")
+    global_vars.keycloak_client_id = os.getenv("KEYCLOAK_CLIENT_ID")
+    global_vars.keycloak_client_secret = os.getenv("KEYCLOAK_CLIENT_SECRET")
+    global_vars.keycloak_admin_username = os.getenv("KEYCLOAK_ADMIN_USERNAME")
+    global_vars.keycloak_admin_password = os.getenv("KEYCLOAK_ADMIN_PASSWORD")
 
 
 def tearDownModule():

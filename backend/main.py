@@ -1,15 +1,9 @@
-import asyncio
 import json
 import logging
 import logging.handlers
 import os
-import sys
 
-
-sys.path.append(os.path.dirname(__file__))
-if sys.platform == "win32":
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-
+from dotenv import load_dotenv
 import gridfs
 from keycloak import KeycloakOpenID, KeycloakAdmin
 import pymongo
@@ -64,6 +58,9 @@ define(
     type=bool,
     help="start application in test mode (bypass authentication) as a user. never run the app in this mode, it is purely for unit tests!",
 )
+
+# load environment variables from .env file
+load_dotenv()
 
 
 def make_app(cookie_secret: str, debug: bool = False):
@@ -252,74 +249,76 @@ def create_initial_admin(username: str) -> None:
         )
 
 
-def set_global_vars(conf: dict) -> None:
+def set_global_vars() -> None:
     """
-    setup global_vars from config properties
+    setup global_vars from env properties
     """
 
     # assure config contains expected keys
-    expected_config_keys = [
-        "port",
-        "domain",
-        "wordpress_url",
-        "cookie_secret",
-        "keycloak_base_url",
-        "keycloak_realm",
-        "keycloak_client_id",
-        "keycloak_client_secret",
-        "keycloak_admin_username",
-        "keycloak_admin_password",
-        "keycloak_callback_url",
-        "mongodb_host",
-        "mongodb_port",
-        "mongodb_username",
-        "mongodb_password",
-        "mongodb_db_name",
-        "etherpad_base_url",
-        "etherpad_api_key",
-        "elasticsearch_base_url",
-        "elasticsearch_username",
-        "elasticsearch_password",
-        "dummy_personas_passcode",
+    expected_env_keys = [
+        "PORT",
+        "WORDPRESS_URL",
+        "COOKIE_SECRET",
+        "KEYCLOAK_BASE_URL",
+        "KEYCLOAK_REALM",
+        "KEYCLOAK_CLIENT_ID",
+        "KEYCLOAK_CLIENT_SECRET",
+        "KEYCLOAK_ADMIN_USERNAME",
+        "KEYCLOAK_ADMIN_PASSWORD",
+        "MONGODB_HOST",
+        "MONGODB_PORT",
+        "MONGODB_USERNAME",
+        "MONGODB_PASSWORD",
+        "MONGODB_DB_NAME",
+        "ETHERPAD_BASE_URL",
+        "ETHERPAD_API_KEY",
+        "ELASTICSEARCH_BASE_URL",
+        "ELASTICSEARCH_USERNAME",
+        "ELASTICSEARCH_PASSWORD",
+        "DUMMY_PERSONAS_PASSCODE",
     ]
 
-    for key in expected_config_keys:
-        if key not in conf:
-            raise RuntimeError("config misses {}".format(key))
+    for key in expected_env_keys:
+        if os.getenv(key) is None:
+            raise RuntimeError("environment misses variable {}".format(key))
 
     # set global vars from config
-    global_vars.port = conf["port"]
-    global_vars.domain = conf["domain"]
-    global_vars.wordpress_url = conf["wordpress_url"]
-    global_vars.mongodb_host = conf["mongodb_host"]
-    global_vars.mongodb_port = conf["mongodb_port"]
-    global_vars.mongodb_username = conf["mongodb_username"]
-    global_vars.mongodb_password = conf["mongodb_password"]
-    global_vars.mongodb_db_name = conf["mongodb_db_name"]
-    global_vars.etherpad_base_url = conf["etherpad_base_url"]
-    global_vars.etherpad_api_key = conf["etherpad_api_key"]
-    global_vars.elasticsearch_base_url = conf["elasticsearch_base_url"]
-    global_vars.elasticsearch_username = conf["elasticsearch_username"]
-    global_vars.elasticsearch_password = conf["elasticsearch_password"]
-    global_vars.dummy_personas_passcode = conf["dummy_personas_passcode"]
+    global_vars.port = int(os.getenv("PORT"))
+    global_vars.cookie_secret = os.getenv("COOKIE_SECRET")
+    global_vars.wordpress_url = os.getenv("WORDPRESS_URL")
+    global_vars.mongodb_host = os.getenv("MONGODB_HOST")
+    global_vars.mongodb_port = int(os.getenv("MONGODB_PORT"))
+    global_vars.mongodb_username = os.getenv("MONGODB_USERNAME")
+    global_vars.mongodb_password = os.getenv("MONGODB_PASSWORD")
+    global_vars.mongodb_db_name = os.getenv("MONGODB_DB_NAME")
+    global_vars.etherpad_base_url = os.getenv("ETHERPAD_BASE_URL")
+    global_vars.etherpad_api_key = os.getenv("ETHERPAD_API_KEY")
+    global_vars.elasticsearch_base_url = os.getenv("ELASTICSEARCH_BASE_URL")
+    global_vars.elasticsearch_username = os.getenv("ELASTICSEARCH_USERNAME")
+    global_vars.elasticsearch_password = os.getenv("ELASTICSEARCH_PASSWORD")
+    global_vars.dummy_personas_passcode = os.getenv("DUMMY_PERSONAS_PASSCODE")
+    global_vars.keycloak_base_url = os.getenv("KEYCLOAK_BASE_URL")
+    global_vars.keycloak_realm = os.getenv("KEYCLOAK_REALM")
+    global_vars.keycloak_client_id = os.getenv("KEYCLOAK_CLIENT_ID")
+    global_vars.keycloak_client_secret = os.getenv("KEYCLOAK_CLIENT_SECRET")
+    global_vars.keycloak_admin_username = os.getenv("KEYCLOAK_ADMIN_USERNAME")
+    global_vars.keycloak_admin_password = os.getenv("KEYCLOAK_ADMIN_PASSWORD")
 
     if not (options.test_admin or options.test_user):
         global_vars.keycloak = KeycloakOpenID(
-            conf["keycloak_base_url"],
-            realm_name=conf["keycloak_realm"],
-            client_id=conf["keycloak_client_id"],
-            client_secret_key=conf["keycloak_client_secret"],
+            global_vars.keycloak_base_url,
+            realm_name=global_vars.keycloak_realm,
+            client_id=global_vars.keycloak_client_id,
+            client_secret_key=global_vars.keycloak_client_secret,
         )
         global_vars.keycloak_admin = KeycloakAdmin(
-            conf["keycloak_base_url"],
-            realm_name=conf["keycloak_realm"],
-            username=conf["keycloak_admin_username"],
-            password=conf["keycloak_admin_password"],
+            global_vars.keycloak_base_url,
+            realm_name=global_vars.keycloak_realm,
+            username=global_vars.keycloak_admin_username,
+            password=global_vars.keycloak_admin_password,
             verify=True,
             auto_refresh_token=["get", "put", "post", "delete"],
         )
-    global_vars.keycloak_client_id = conf["keycloak_client_id"]
-    global_vars.keycloak_callback_url = conf["keycloak_callback_url"]
 
 
 def init_default_pictures():
@@ -403,12 +402,6 @@ def hook_tornado_access_log():
 
 def main():
     define(
-        "config",
-        default="config.json",
-        type=str,
-        help="path to config file, defaults to config.json",
-    )
-    define(
         "debug",
         default=False,
         type=bool,
@@ -435,10 +428,8 @@ def main():
 
     parse_command_line()
 
-    # setup global vars from config
-    with open(options.config, "r") as fp:
-        conf = json.load(fp)
-        set_global_vars(conf)
+    # setup global vars from env
+    set_global_vars()
 
     # insert default admin role and acl templates
     create_initial_admin(options.create_admin)
@@ -457,8 +448,7 @@ def main():
     tornado.ioloop.PeriodicCallback(cleanup_unused_rules, 3_600_000).start()
 
     # build and start server
-    cookie_secret = conf["cookie_secret"]
-    app = make_app(cookie_secret, options.debug)
+    app = make_app(global_vars.cookie_secret, options.debug)
     server = tornado.httpserver.HTTPServer(app)
     logger.info("Starting server on port: " + str(global_vars.port))
     server.listen(global_vars.port)
