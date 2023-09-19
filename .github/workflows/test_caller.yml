@@ -29,8 +29,8 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     - name: Create env file
-        run: |
-          echo "${{ secrets.BACKEND_ENV }}" > .env
+      run: |
+        echo "${{ secrets.BACKEND_ENV }}" > .env
     - name: setup and start elasticsearch
       uses: getong/elasticsearch-action@v1.2
       with:
