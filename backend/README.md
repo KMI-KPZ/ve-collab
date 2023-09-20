@@ -24,14 +24,15 @@ Disclaimer: Features are in a very early Alpha stage and might change drasticall
 
 ## Running the social network
 
-- copy the ```example_config.json``` into ```config.json``` and fill in the values according to your Keycloak, MongoDB settings and setups
+- copy the ```.env.example``` into ```.env``` and fill in the values according to your Keycloak, MongoDB settings and setups
 - run the following command to start the network (parameters in square brackets are optional, read explanation below):
   ```sh
-  $ python3 main.py [--config=/path/to/config.json] [--build_indexes] [--create_admin=<username>]
+  $ python3 main.py [--build_indexes] [--create_admin=<username>] [--supress_stdout_access_log]
   ```
   - if you desire to store your config file anywhere else than in the main directory, you can use the ```--config=path/to/config/file``` flag
   - on your very first run, it is highly recommended to create an admin user, because otherwise ACL permissions will most certainly not be granted right. Use the ```--create_admin=<username>``` flag. Make sure this username also exists in Keycloak to actually be able to log into this account.
   - The application uses multiple indexes for query optimization and faster reads. They are built automatically if they don't exist. However you can force to rebuild those indexes using the ```--build_indexes``` flag
+  - Tornado will log all requests to stdout. To prevent this access log, use the ```--supress_stdout_access_log``` flag
 
 
 ## Features

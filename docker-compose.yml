@@ -26,7 +26,7 @@ services:
       context: backend
       dockerfile: Dockerfile
     environment:
-      PORT:
+      PORT: ${BACKEND_PORT}
       COOKIE_SECRET:
       WORDPRESS_URL:
       KEYCLOAK_BASE_URL:
@@ -61,28 +61,17 @@ services:
       context: frontend-vecollab
       dockerfile: Dockerfile
       args:
-        WORDPRESS_API_URL:
-        NEXTAUTH_URL:
+        PORT: ${FRONTEND_PORT}
+        WORDPRESS_GRAPHQL_API_URL:
+        NEXTAUTH_URL: "http://localhost:${FRONTEND_PORT}"
         NEXTAUTH_SECRET:
-        NEXT_PUBLIC_KEYCLOAK_ID: ${KEYCLOAK_CLIENT_ID}
-        KEYCLOAK_ID: ${KEYCLOAK_CLIENT_ID}
-        KEYCLOAK_SECRET: ${KEYCLOAK_CLIENT_SECRET}
-        NEXT_PUBLIC_KEYCLOAK_ISSUER: "${KEYCLOAK_BASE_URL}realms/${KEYCLOAK_REALM}"
-        KEYCLOAK_ISSUER: "${KEYCLOAK_BASE_URL}realms/${KEYCLOAK_REALM}"
-        NEXT_PUBLIC_BACKEND_URL: "http://localhost:${PORT}"
-        NEXT_PUBLIC_ETHERPAD_URL: "http://localhost:${ETHERPAD_PORT}"
+        NEXT_PUBLIC_KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID}
+        KEYCLOAK_CLIENT_SECRET:
+        NEXT_PUBLIC_KEYCLOAK_BASE_URL: ${KEYCLOAK_BASE_URL}
+        NEXT_PUBLIC_KEYCLOAK_REALM: ${KEYCLOAK_REALM}
+        NEXT_PUBLIC_BACKEND_BASE_URL: "http://localhost:${BACKEND_PORT}"
+        NEXT_PUBLIC_ETHERPAD_BASE_URL: "http://localhost:${ETHERPAD_PORT}"
     network_mode: host
-    environment:
-      WORDPRESS_API_URL:
-      NEXTAUTH_URL:
-      NEXTAUTH_SECRET:
-      NEXT_PUBLIC_KEYCLOAK_ID: ${KEYCLOAK_CLIENT_ID}
-      KEYCLOAK_ID: ${KEYCLOAK_CLIENT_ID}
-      KEYCLOAK_SECRET: ${KEYCLOAK_CLIENT_SECRET}
-      NEXT_PUBLIC_KEYCLOAK_ISSUER: "${KEYCLOAK_BASE_URL}realms/${KEYCLOAK_REALM}"
-      KEYCLOAK_ISSUER: "${KEYCLOAK_BASE_URL}realms/${KEYCLOAK_REALM}"
-      NEXT_PUBLIC_BACKEND_URL: "http://localhost:${PORT}"
-      NEXT_PUBLIC_ETHERPAD_URL: "http://localhost:${ETHERPAD_PORT}"
     logging:
       driver: "json-file"
       options:

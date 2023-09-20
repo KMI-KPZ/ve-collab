@@ -22,37 +22,35 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Next.js collects completely anonymous telemetry data about general usage.
-# Learn more here: https://nextjs.org/telemetry
-# Uncomment the following line in case you want to disable telemetry during the build.
-# ENV NEXT_TELEMETRY_DISABLED 1
+# disable telemetry
+ENV NEXT_TELEMETRY_DISABLED 1
 
-#RUN yarn build
+# pass env variables to build from docker_compose
+ARG WORDPRESS_GRAPHQL_API_URL
+ENV WORDPRESS_GRAPHQL_API_URL $WORDPRESS_GRAPHQL_API_URL
+ARG NEXTAUTH_URL
+ENV NEXTAUTH_URL $NEXTAUTH_URL
+ARG NEXTAUTH_SECRET
+ENV NEXTAUTH_SECRET $NEXTAUTH_SECRET
+ARG NEXT_PUBLIC_KEYCLOAK_CLIENT_ID
+ENV NEXT_PUBLIC_KEYCLOAK_CLIENT_ID $NEXT_PUBLIC_KEYCLOAK_CLIENT_ID
+ARG KEYCLOAK_CLIENT_SECRET
+ENV KEYCLOAK_CLIENT_SECRET $KEYCLOAK_CLIENT_SECRET
+ARG NEXT_PUBLIC_KEYCLOAK_BASE_URL
+ENV NEXT_PUBLIC_KEYCLOAK_BASE_URL $NEXT_PUBLIC_KEYCLOAK_BASE_URL
+ARG NEXT_PUBLIC_KEYCLOAK_REALM
+ENV NEXT_PUBLIC_KEYCLOAK_REALM $NEXT_PUBLIC_KEYCLOAK_REALM
+ARG NEXT_PUBLIC_BACKEND_BASE_URL
+ENV NEXT_PUBLIC_BACKEND_BASE_URL $NEXT_PUBLIC_BACKEND_BASE_URL
+ARG NEXT_PUBLIC_ETHERPAD_BASE_URL
+ENV NEXT_PUBLIC_ETHERPAD_BASE_URL $NEXT_PUBLIC_ETHERPAD_BASE_URL
 
-ARG WORDPRESS_API_URL
-ENV WORDPRESS_API_URL $WORDPRESS_API_URL
-ARG NEXT_PUBLIC_KEYCLOAK_ID
-ENV NEXT_PUBLIC_KEYCLOAK_ID $NEXT_PUBLIC_KEYCLOAK_ID
-ARG KEYCLOAK_SECRET
-ENV KEYCLOAK_SECRET $KEYCLOAK_SECRET
-ARG NEXT_PUBLIC_KEYCLOAK_ISSUER
-ENV NEXT_PUBLIC_KEYCLOAK_ISSUER $NEXT_PUBLIC_KEYCLOAK_ISSUER
-ARG NEXT_PUBLIC_BACKEND_URL
-ENV NEXT_PUBLIC_BACKEND_URL $NEXT_PUBLIC_BACKEND_URL
-
-# If using npm comment out above and use below instead
+# run build
 RUN npm run build
 
 # Production image, copy all the files and run next
 FROM base AS runner
 WORKDIR /app
-
-# since NODE_ENV cannot use local, we simply copy our only env files into .env.production
-#COPY .env.local .env.production
-
-#ENV NODE_ENV production
-# Uncomment the following line in case you want to disable telemetry during runtime.
-# ENV NEXT_TELEMETRY_DISABLED 1
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
@@ -66,8 +64,16 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 USER nextjs
 
-EXPOSE 3000
+# i dont understand why, but setting the nextauth env variables
+# before building does not preserve them at runtime like the others
+# for that reason we have to set them again here after the build
+ARG NEXTAUTH_URL
+ENV NEXTAUTH_URL $NEXTAUTH_URL
+ARG NEXTAUTH_SECRET
+ENV NEXTAUTH_SECRET $NEXTAUTH_SECRET
 
-ENV PORT 3000
+ARG PORT
+ENV PORT $PORT
+EXPOSE $PORT
 
 CMD ["node", "server.js"]
