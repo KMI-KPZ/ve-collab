@@ -254,26 +254,21 @@ def set_global_vars() -> None:
     setup global_vars from env properties
     """
 
-    # assure config contains expected keys
+    # assure config contains expected keys that do not have a default value
     expected_env_keys = [
-        "PORT",
-        "WORDPRESS_URL",
         "COOKIE_SECRET",
+        "WORDPRESS_URL",
         "KEYCLOAK_BASE_URL",
         "KEYCLOAK_REALM",
         "KEYCLOAK_CLIENT_ID",
         "KEYCLOAK_CLIENT_SECRET",
         "KEYCLOAK_ADMIN_USERNAME",
         "KEYCLOAK_ADMIN_PASSWORD",
-        "MONGODB_HOST",
-        "MONGODB_PORT",
         "MONGODB_USERNAME",
         "MONGODB_PASSWORD",
-        "MONGODB_DB_NAME",
         "ETHERPAD_BASE_URL",
         "ETHERPAD_API_KEY",
         "ELASTICSEARCH_BASE_URL",
-        "ELASTICSEARCH_USERNAME",
         "ELASTICSEARCH_PASSWORD",
         "DUMMY_PERSONAS_PASSCODE",
     ]
@@ -283,18 +278,18 @@ def set_global_vars() -> None:
             raise RuntimeError("environment misses variable {}".format(key))
 
     # set global vars from config
-    global_vars.port = int(os.getenv("PORT"))
+    global_vars.port = int(os.getenv("PORT", "8888"))
     global_vars.cookie_secret = os.getenv("COOKIE_SECRET")
     global_vars.wordpress_url = os.getenv("WORDPRESS_URL")
-    global_vars.mongodb_host = os.getenv("MONGODB_HOST")
-    global_vars.mongodb_port = int(os.getenv("MONGODB_PORT"))
+    global_vars.mongodb_host = os.getenv("MONGODB_HOST", "localhost")
+    global_vars.mongodb_port = int(os.getenv("MONGODB_PORT", "27017"))
     global_vars.mongodb_username = os.getenv("MONGODB_USERNAME")
     global_vars.mongodb_password = os.getenv("MONGODB_PASSWORD")
-    global_vars.mongodb_db_name = os.getenv("MONGODB_DB_NAME")
+    global_vars.mongodb_db_name = os.getenv("MONGODB_DB_NAME", "ve_collab")
     global_vars.etherpad_base_url = os.getenv("ETHERPAD_BASE_URL")
     global_vars.etherpad_api_key = os.getenv("ETHERPAD_API_KEY")
     global_vars.elasticsearch_base_url = os.getenv("ELASTICSEARCH_BASE_URL")
-    global_vars.elasticsearch_username = os.getenv("ELASTICSEARCH_USERNAME")
+    global_vars.elasticsearch_username = os.getenv("ELASTICSEARCH_USERNAME", "elastic")
     global_vars.elasticsearch_password = os.getenv("ELASTICSEARCH_PASSWORD")
     global_vars.dummy_personas_passcode = os.getenv("DUMMY_PERSONAS_PASSCODE")
     global_vars.keycloak_base_url = os.getenv("KEYCLOAK_BASE_URL")

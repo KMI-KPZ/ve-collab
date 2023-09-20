@@ -29,6 +29,7 @@ from model import (
 from resources.planner.ve_plan import VEPlanResource
 import util
 
+load_dotenv()
 
 def setUpModule():
     """
@@ -36,8 +37,8 @@ def setUpModule():
     unittest will call this method itself.
     """
 
-    global_vars.mongodb_host = os.getenv("MONGODB_HOST")
-    global_vars.mongodb_port = int(os.getenv("MONGODB_PORT"))
+    global_vars.mongodb_host = os.getenv("MONGODB_HOST", "localhost")
+    global_vars.mongodb_port = int(os.getenv("MONGODB_PORT", "27017"))
     global_vars.mongodb_username = os.getenv("MONGODB_USERNAME")
     global_vars.mongodb_password = os.getenv("MONGODB_PASSWORD")
     global_vars.mongodb_db_name = "test_db"

@@ -87,18 +87,18 @@ def setUpModule():
     unittest will call this method itself.
     """
 
-    global_vars.port = int(os.getenv("PORT"))
+    global_vars.port = int(os.getenv("PORT", "8888"))
     global_vars.cookie_secret = os.getenv("COOKIE_SECRET")
     global_vars.wordpress_url = os.getenv("WORDPRESS_URL")
-    global_vars.mongodb_host = os.getenv("MONGODB_HOST")
-    global_vars.mongodb_port = int(os.getenv("MONGODB_PORT"))
+    global_vars.mongodb_host = os.getenv("MONGODB_HOST", "localhost")
+    global_vars.mongodb_port = int(os.getenv("MONGODB_PORT", "27017"))
     global_vars.mongodb_username = os.getenv("MONGODB_USERNAME")
     global_vars.mongodb_password = os.getenv("MONGODB_PASSWORD")
-    global_vars.mongodb_db_name = os.getenv("MONGODB_DB_NAME")
+    global_vars.mongodb_db_name = os.getenv("MONGODB_DB_NAME", "ve_collab")
     global_vars.etherpad_base_url = os.getenv("ETHERPAD_BASE_URL")
     global_vars.etherpad_api_key = os.getenv("ETHERPAD_API_KEY")
     global_vars.elasticsearch_base_url = os.getenv("ELASTICSEARCH_BASE_URL")
-    global_vars.elasticsearch_username = os.getenv("ELASTICSEARCH_USERNAME")
+    global_vars.elasticsearch_username = os.getenv("ELASTICSEARCH_USERNAME", "elastic")
     global_vars.elasticsearch_password = os.getenv("ELASTICSEARCH_PASSWORD")
     global_vars.dummy_personas_passcode = os.getenv("DUMMY_PERSONAS_PASSCODE")
     global_vars.keycloak_base_url = os.getenv("KEYCLOAK_BASE_URL")
