@@ -54,41 +54,53 @@ class Posts:
             "pinned",
         ]
 
-    def get_post(self, post_id: str, projection: dict = {}) -> Optional[Dict]:
+    def get_post(self, post_id: str, projection: dict = {}) -> Dict:
         """
         query a post from the database given its _id
+
+        Raises `PostNotExistingException` if no post with the given _id exists.
+
         :param post_id: str-representation of the post's _id (ObjectId)
         :param projection: optionally specify a projection to only return
                            a subset of the document's fields (limit your query
                            to only the necessary fields to increase performance)
-        :return: the post as a dictionary, or None, if no post matched
-                 the given id
+        :return: the post as a dictionary
         """
 
         post_id = util.parse_object_id(post_id)
 
-        return self.db.posts.find_one({"_id": post_id}, projection=projection)
+        post = self.db.posts.find_one({"_id": post_id}, projection=projection)
+        if not post:
+            raise PostNotExistingException()
+        
+        return post
 
     def get_post_by_comment_id(
         self, comment_id: str, projection: dict = {}
-    ) -> Optional[Dict]:
+    ) -> Dict:
         """
         query a post from the database given any of its comment's _id's.
         Since this operation does a full collection scan, it might be very slow
         and thus should be used sparingly.
+
+        Raises `PostNotExistingException` if no post with the given _id exists.
+
         :param comment_id: the _id of any of the comments belonging to the post
         :param projection: optionally specify a projection to only return
                            a subset of the document's fields (limit your query
                            to only the necessary fields to increase performance)
-        :return: the post as a dictionary, or None, if no comments of any post
-                 matched the given id
+        :return: the post as a dictionary
         """
 
         comment_id = util.parse_object_id(comment_id)
 
-        return self.db.posts.find_one(
+        post = self.db.posts.find_one(
             {"comments._id": comment_id}, projection=projection
         )
+        if not post:
+            raise PostNotExistingException()
+        
+        return post
 
     def get_posts_by_tags(self, tags: List[str], projection: dict = {}) -> List[Dict]:
         """
@@ -108,6 +120,8 @@ class Posts:
         :param query: the full text search query
         :return: List of posts (as dicts) matching the query
         """
+
+        # TODO deprecate and use elasticsearch instead
 
         return list(self.db.posts.find({"$text": {"$search": query}}))
 
@@ -154,9 +168,10 @@ class Posts:
 
         post_id = util.parse_object_id(post_id)
 
-        post = self.get_post(post_id, projection={"space": True, "files": True})
-        if not post:
-            raise PostNotExistingException()
+        try:
+            post = self.get_post(post_id, projection={"space": True, "files": True})
+        except PostNotExistingException:
+            raise
 
         # delete files from gridfs and - if post was in a space,
         # from the space's repository
@@ -175,12 +190,7 @@ class Posts:
                         pass
 
         # finally delete the post itself
-        delete_result = self.db.posts.delete_one({"_id": post_id})
-
-        # if no documents have been removed by the delete
-        # we know that there was no post with the given _id
-        if delete_result.deleted_count != 1:
-            raise PostNotExistingException()
+        self.db.posts.delete_one({"_id": post_id})
 
     def delete_post_by_space(self, space_name: str) -> None:
         """
@@ -201,9 +211,10 @@ class Posts:
         # this time we cannot use the modified_count of the update_result to check
         # existence of the post, because since we will add to a set, the user might
         # already be a liker, so nothing would change, even though the post does exist
-        post = self.get_post(post_id, projection={"_id": True})
-        if not post:
-            raise PostNotExistingException()
+        try:
+            self.get_post(post_id, projection={"_id": True})
+        except PostNotExistingException:
+            raise
 
         update_result = self.db.posts.update_one(
             {"_id": post_id},
@@ -227,9 +238,10 @@ class Posts:
         # this time we cannot use the modified_count of the update_result to check
         # existence of the post, because since we will add to a set, the user might
         # already be a liker, so nothing would change, even though the post does exist
-        post = self.get_post(post_id, projection={"_id": True})
-        if not post:
-            raise PostNotExistingException()
+        try:
+            self.get_post(post_id, projection={"_id": True})
+        except PostNotExistingException:
+            raise
 
         update_result = self.db.posts.update_one(
             {"_id": post_id},

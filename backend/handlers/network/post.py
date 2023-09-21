@@ -185,10 +185,11 @@ class PostHandler(BaseHandler):
 
             with util.get_mongodb() as db:
                 post_manager = Posts(db)
-                post = post_manager.get_post(_id)
 
                 # reject update if the post doesnt exist
-                if not post:
+                try:
+                    post = post_manager.get_post(_id)
+                except PostNotExistingException:
                     self.set_status(409)
                     self.write(
                         {"status": 409, "success": False, "reason": "post_doesnt_exist"}
@@ -296,9 +297,10 @@ class PostHandler(BaseHandler):
 
         with util.get_mongodb() as db:
             post_manager = Posts(db)
-            post_to_delete = post_manager.get_post(http_body["post_id"])
 
-            if not post_to_delete:
+            try:
+                post_to_delete = post_manager.get_post(http_body["post_id"])
+            except PostNotExistingException:
                 self.set_status(409)
                 self.write(
                     {"status": 409, "success": False, "reason": "post_doesnt_exist"}
@@ -436,10 +438,11 @@ class CommentHandler(BaseHandler):
 
         with util.get_mongodb() as db:
             post_manager = Posts(db)
-            post = post_manager.get_post(http_body["post_id"])
 
             # abort if post doesnt exist at all
-            if not post:
+            try:
+                post = post_manager.get_post(http_body["post_id"])
+            except PostNotExistingException:
                 self.set_status(409)
                 self.write(
                     {"status": 409, "success": False, "reason": "post_doesnt_exist"}
@@ -550,12 +553,12 @@ class CommentHandler(BaseHandler):
             post_manager = Posts(db)
             comment_id = ObjectId(http_body["comment_id"])
 
-            post = post_manager.get_post_by_comment_id(
-                comment_id, projection={"comments": True, "space": True}
-            )
-
             # reject if the post doesnt exist
-            if not post:
+            try:
+                post = post_manager.get_post_by_comment_id(
+                    comment_id, projection={"comments": True, "space": True}
+                )
+            except PostNotExistingException:
                 self.set_status(409)
                 self.write(
                     {"status": 409, "success": False, "reason": "post_doesnt_exist"}
@@ -913,10 +916,11 @@ class RepostHandler(BaseHandler):
 
             with util.get_mongodb() as db:
                 post_manager = Posts(db)
-                post = post_manager.get_post(http_body["post_id"])
 
                 # reject if original post doesnt exist
-                if not post:
+                try:
+                    post = post_manager.get_post(http_body["post_id"])
+                except PostNotExistingException:
                     self.set_status(409)
                     self.write(
                         {"status": 409, "success": False, "reason": "post_doesnt_exist"}
@@ -978,12 +982,13 @@ class RepostHandler(BaseHandler):
         else:
             with util.get_mongodb() as db:
                 post_manager = Posts(db)
-                repost = post_manager.get_post(
-                    http_body["_id"],
-                    projection={"isRepost": True, "repostAuthor": True, "space": True},
-                )
 
-                if not repost:
+                try:
+                    repost = post_manager.get_post(
+                        http_body["_id"],
+                        projection={"isRepost": True, "repostAuthor": True, "space": True},
+                    )
+                except PostNotExistingException:
                     self.set_status(409)
                     self.write(
                         {"status": 409, "success": False, "reason": "post_doesnt_exist"}
@@ -1163,11 +1168,12 @@ class PinHandler(BaseHandler):
         if http_body["pin_type"] == "post":
             with util.get_mongodb() as db:
                 post_manager = Posts(db)
-                post = post_manager.get_post(
-                    http_body["id"], projection={"space": True}
-                )
-
-                if not post:
+                
+                try:
+                    post = post_manager.get_post(
+                        http_body["id"], projection={"space": True}
+                    )
+                except PostNotExistingException:
                     self.set_status(409)
                     self.write(
                         {"status": 409, "success": False, "reason": "post_doesnt_exist"}
@@ -1227,11 +1233,12 @@ class PinHandler(BaseHandler):
         elif http_body["pin_type"] == "comment":
             with util.get_mongodb() as db:
                 post_manager = Posts(db)
-                post = post_manager.get_post_by_comment_id(
-                    http_body["id"], projection={"space": True, "author": True}
-                )
-
-                if not post:
+                
+                try:
+                    post = post_manager.get_post_by_comment_id(
+                        http_body["id"], projection={"space": True, "author": True}
+                    )
+                except PostNotExistingException:
                     self.set_status(409)
                     self.write(
                         {"status": 409, "success": False, "reason": "post_doesnt_exist"}
@@ -1431,12 +1438,13 @@ class PinHandler(BaseHandler):
         if http_body["pin_type"] == "post":
             with util.get_mongodb() as db:
                 post_manager = Posts(db)
-                post = post_manager.get_post(
-                    http_body["id"], projection={"space": True}
-                )
 
                 # reject if post doesnt exist
-                if not post:
+                try:
+                    post = post_manager.get_post(
+                        http_body["id"], projection={"space": True}
+                    )
+                except PostNotExistingException:
                     self.set_status(409)
                     self.write(
                         {"status": 409, "success": False, "reason": "post_doesnt_exist"}
@@ -1494,11 +1502,12 @@ class PinHandler(BaseHandler):
         elif http_body["pin_type"] == "comment":
             with util.get_mongodb() as db:
                 post_manager = Posts(db)
-                post = post_manager.get_post_by_comment_id(
-                    http_body["id"], projection={"space": True, "author": True}
-                )
 
-                if not post:
+                try:
+                    post = post_manager.get_post_by_comment_id(
+                        http_body["id"], projection={"space": True, "author": True}
+                    )
+                except PostNotExistingException:
                     self.set_status(409)
                     self.write(
                         {"status": 409, "success": False, "reason": "post_doesnt_exist"}

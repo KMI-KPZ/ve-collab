@@ -25,6 +25,7 @@ from exceptions import (
     PlanAlreadyExistsError,
     PlanDoesntExistError,
     PostFileNotDeleteableError,
+    PostNotExistingException,
     SpaceAlreadyExistsError,
     SpaceDoesntExistError,
     UserNotAdminError,
@@ -43,6 +44,7 @@ from model import (
     VEPlan,
 )
 from resources.network.space import Spaces
+from resources.network.post import Posts
 from resources.planner.ve_plan import VEPlanResource
 import util
 
@@ -179,7 +181,444 @@ class ACLResourceTest(BaseResourceTestCase):
 
 
 class PostResourceTest(BaseResourceTestCase):
-    pass
+    def setUp(self) -> None:
+        super().setUp()
+
+        self.post_id = ObjectId()
+        self.comment_id = ObjectId()
+        self.default_comment = {
+            "_id": self.comment_id,
+            "author": CURRENT_USER.username,
+            "creation_date": datetime(2023, 1, 1, 9, 5, 0),
+            "text": "test_comment",
+            "pinned": False,
+        }
+        self.default_post = {
+            "_id": self.post_id,
+            "author": CURRENT_ADMIN.username,
+            "creation_date": datetime(2023, 1, 1, 9, 0, 0),
+            "text": "test",
+            "space": None,
+            "pinned": False,
+            "isRepost": False,
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "files": [],
+            "comments": [self.default_comment],
+            "likers": [],
+        }
+        self.db.posts.insert_one(self.default_post)
+
+    def tearDown(self) -> None:
+        super().tearDown()
+
+        self.db.posts.delete_many({})
+
+    def test_get_post(self):
+        """
+        expect: successfully get post
+        """
+
+        post_manager = Posts(self.db)
+        post = post_manager.get_post(self.post_id)
+        self.assertIsNotNone(post)
+        self.assertEqual(post["_id"], self.default_post["_id"])
+        self.assertEqual(post["author"], self.default_post["author"])
+        self.assertEqual(post["creation_date"], self.default_post["creation_date"])
+        self.assertEqual(post["text"], self.default_post["text"])
+        self.assertEqual(post["space"], self.default_post["space"])
+        self.assertEqual(post["pinned"], self.default_post["pinned"])
+        self.assertEqual(post["isRepost"], self.default_post["isRepost"])
+        self.assertEqual(
+            post["wordpress_post_id"], self.default_post["wordpress_post_id"]
+        )
+        self.assertEqual(post["tags"], self.default_post["tags"])
+        self.assertEqual(post["files"], self.default_post["files"])
+        self.assertEqual(post["comments"], self.default_post["comments"])
+        self.assertEqual(post["likers"], self.default_post["likers"])
+
+        # again with supplying _id as str
+        post = post_manager.get_post(str(self.post_id))
+        self.assertIsNotNone(post)
+        self.assertEqual(post["_id"], self.default_post["_id"])
+        self.assertEqual(post["author"], self.default_post["author"])
+        self.assertEqual(post["creation_date"], self.default_post["creation_date"])
+        self.assertEqual(post["text"], self.default_post["text"])
+        self.assertEqual(post["space"], self.default_post["space"])
+        self.assertEqual(post["pinned"], self.default_post["pinned"])
+        self.assertEqual(post["isRepost"], self.default_post["isRepost"])
+        self.assertEqual(
+            post["wordpress_post_id"], self.default_post["wordpress_post_id"]
+        )
+        self.assertEqual(post["tags"], self.default_post["tags"])
+        self.assertEqual(post["files"], self.default_post["files"])
+        self.assertEqual(post["comments"], self.default_post["comments"])
+        self.assertEqual(post["likers"], self.default_post["likers"])
+
+        # again with projection to only get _id, text, tags and author
+        post = post_manager.get_post(
+            self.post_id, {"text": True, "tags": True, "author": True}
+        )
+        self.assertEqual(post["_id"], self.default_post["_id"])
+        self.assertEqual(post["author"], self.default_post["author"])
+        self.assertEqual(post["tags"], self.default_post["tags"])
+        self.assertEqual(post["text"], self.default_post["text"])
+        self.assertNotIn("creation_date", post)
+
+    def test_get_post_by_comment_id(self):
+        """
+        expect: successfully get post by comment id
+        """
+
+        post_manager = Posts(self.db)
+        post = post_manager.get_post_by_comment_id(self.comment_id)
+        self.assertIsNotNone(post)
+        self.assertEqual(post["_id"], self.default_post["_id"])
+        self.assertEqual(post["author"], self.default_post["author"])
+        self.assertEqual(post["creation_date"], self.default_post["creation_date"])
+        self.assertEqual(post["text"], self.default_post["text"])
+        self.assertEqual(post["space"], self.default_post["space"])
+        self.assertEqual(post["pinned"], self.default_post["pinned"])
+        self.assertEqual(post["isRepost"], self.default_post["isRepost"])
+        self.assertEqual(
+            post["wordpress_post_id"], self.default_post["wordpress_post_id"]
+        )
+        self.assertEqual(post["tags"], self.default_post["tags"])
+        self.assertEqual(post["files"], self.default_post["files"])
+        self.assertEqual(post["comments"], self.default_post["comments"])
+        self.assertEqual(post["likers"], self.default_post["likers"])
+
+        # again with _id as str
+        post = post_manager.get_post_by_comment_id(str(self.comment_id))
+        self.assertIsNotNone(post)
+        self.assertEqual(post["_id"], self.default_post["_id"])
+        self.assertEqual(post["author"], self.default_post["author"])
+        self.assertEqual(post["creation_date"], self.default_post["creation_date"])
+        self.assertEqual(post["text"], self.default_post["text"])
+        self.assertEqual(post["space"], self.default_post["space"])
+        self.assertEqual(post["pinned"], self.default_post["pinned"])
+        self.assertEqual(post["isRepost"], self.default_post["isRepost"])
+        self.assertEqual(
+            post["wordpress_post_id"], self.default_post["wordpress_post_id"]
+        )
+        self.assertEqual(post["tags"], self.default_post["tags"])
+        self.assertEqual(post["files"], self.default_post["files"])
+        self.assertEqual(post["comments"], self.default_post["comments"])
+        self.assertEqual(post["likers"], self.default_post["likers"])
+
+    def test_get_posts_by_tags(self):
+        """
+        expect: successfully get posts that have all of the supplied tags
+        """
+
+        # add more posts,
+        additional_posts = [
+            # this one should be included in the result
+            {
+                "_id": ObjectId(),
+                "author": CURRENT_ADMIN.username,
+                "creation_date": datetime(2023, 1, 1, 9, 0, 0),
+                "text": "test",
+                "space": None,
+                "pinned": False,
+                "isRepost": False,
+                "wordpress_post_id": None,
+                "tags": ["test", "test2"],
+                "files": [],
+                "comments": [],
+                "likers": [],
+            },
+            # this one not
+            {
+                "_id": ObjectId(),
+                "author": CURRENT_ADMIN.username,
+                "creation_date": datetime(2023, 1, 1, 9, 0, 0),
+                "text": "test",
+                "space": None,
+                "pinned": False,
+                "isRepost": False,
+                "wordpress_post_id": None,
+                "tags": ["test2", "test3"],
+                "files": [],
+                "comments": [],
+                "likers": [],
+            },
+        ]
+
+        self.db.posts.insert_many(additional_posts)
+
+        post_manamger = Posts(self.db)
+        posts = post_manamger.get_posts_by_tags(["test"])
+        self.assertEqual(len(posts), 2)
+        _ids = [post["_id"] for post in posts]
+        self.assertIn(self.default_post["_id"], _ids)
+        self.assertIn(additional_posts[0]["_id"], _ids)
+
+        # test again, searching for two tags
+        posts = post_manamger.get_posts_by_tags(["test", "test2"])
+        self.assertEqual(len(posts), 1)
+        self.assertEqual(posts[0]["_id"], additional_posts[0]["_id"])
+
+    def test_insert_post(self):
+        """
+        expect: successfully insert new post
+        """
+
+        new_post = {
+            "author": CURRENT_ADMIN.username,
+            "creation_date": datetime(2023, 1, 1, 9, 0, 0),
+            "text": "new_test",
+            "space": None,
+            "pinned": False,
+            "isRepost": False,
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "files": [],
+            "comments": [],
+            "likers": [],
+        }
+
+        post_manager = Posts(self.db)
+        post_manager.insert_post(new_post)
+
+        # check if post was inserted
+        post = self.db.posts.find_one({"text": "new_test"})
+        self.assertIsNotNone(post)
+        self.assertIsInstance(post["_id"], ObjectId)
+        self.assertEqual(post["author"], new_post["author"])
+        self.assertEqual(post["creation_date"], new_post["creation_date"])
+        self.assertEqual(post["text"], new_post["text"])
+        self.assertEqual(post["space"], new_post["space"])
+        self.assertEqual(post["pinned"], new_post["pinned"])
+        self.assertEqual(post["isRepost"], new_post["isRepost"])
+        self.assertEqual(post["wordpress_post_id"], new_post["wordpress_post_id"])
+        self.assertEqual(post["tags"], new_post["tags"])
+        self.assertEqual(post["files"], new_post["files"])
+        self.assertEqual(post["comments"], new_post["comments"])
+        self.assertEqual(post["likers"], new_post["likers"])
+
+    def test_insert_post_error_missing_attributes(self):
+        """
+        expect: ValueError is raised because post dict is missing an attribute
+        """
+
+        # text is missing
+        new_post = {
+            "author": CURRENT_ADMIN.username,
+            "creation_date": datetime(2023, 1, 1, 9, 0, 0),
+            "space": None,
+            "pinned": False,
+            "isRepost": False,
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "files": [],
+            "comments": [],
+            "likers": [],
+        }
+
+        post_manager = Posts(self.db)
+        self.assertRaises(ValueError, post_manager.insert_post, new_post)
+
+    def test_insert_post_update_instead(self):
+        """
+        expect: since new post dict contains an _id, update the existing post instead,
+        but only the text is updateable
+        """
+
+        new_post = {
+            "_id": self.post_id,
+            "author": CURRENT_ADMIN.username,
+            "creation_date": datetime(2023, 1, 1, 9, 0, 0),
+            "text": "updated_test",
+            "space": None,
+            "pinned": True,  # change this too, expecting it to not be updated
+            "isRepost": False,
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "files": [],
+            "comments": [],  # change this too, expecting it to not be updated
+            "likers": [],
+        }
+
+        post_manager = Posts(self.db)
+        post_manager.insert_post(new_post)
+
+        # check if post was updated
+        post = self.db.posts.find_one({"_id": self.post_id})
+        self.assertIsNotNone(post)
+        self.assertEqual(post["_id"], self.post_id)
+        self.assertEqual(post["text"], new_post["text"])
+        self.assertNotEqual(post["pinned"], new_post["pinned"])
+        self.assertNotEqual(post["comments"], new_post["comments"])
+        # rest is just pure sanity checks
+        self.assertEqual(post["author"], new_post["author"])
+        self.assertEqual(post["creation_date"], new_post["creation_date"])
+        self.assertEqual(post["space"], new_post["space"])
+        self.assertEqual(post["isRepost"], new_post["isRepost"])
+        self.assertEqual(post["wordpress_post_id"], new_post["wordpress_post_id"])
+        self.assertEqual(post["tags"], new_post["tags"])
+        self.assertEqual(post["files"], new_post["files"])
+        self.assertEqual(post["likers"], new_post["likers"])
+
+    def test_insert_post_update_instead_error_missing_attribute(self):
+        """
+        expect: ValueError is raised because post dict that contains an _id and therefore
+        triggers the post text update misses the text attribute
+        """
+
+        new_post = {
+            "_id": self.post_id,
+            "author": CURRENT_ADMIN.username,
+            "creation_date": datetime(2023, 1, 1, 9, 0, 0),
+            "space": None,
+            "pinned": True,
+            "isRepost": False,
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "files": [],
+            "comments": [],
+            "likers": [],
+        }
+
+        post_manager = Posts(self.db)
+        self.assertRaises(ValueError, post_manager.insert_post, new_post)
+
+    def test_update_post_text(self):
+        """
+        expect: successfully update post text
+        """
+
+        post_manager = Posts(self.db)
+        post_manager.update_post_text(self.post_id, "updated_test")
+
+        # check if post was updated
+        post = self.db.posts.find_one({"_id": self.post_id})
+        self.assertIsNotNone(post)
+        self.assertEqual(post["_id"], self.post_id)
+        self.assertEqual(post["text"], "updated_test")
+
+    def test_update_post_text_error_post_doesnt_exist(self):
+        """
+        expect: PostNotExistingException is raised because post doesn't exist
+        """
+
+        post_manager = Posts(self.db)
+        self.assertRaises(
+            PostNotExistingException, post_manager.update_post_text, ObjectId(), "test"
+        )
+
+    def test_delete_post(self):
+        """
+        expect: successfully delete post
+        """
+
+        post_manager = Posts(self.db)
+        post_manager.delete_post(self.post_id)
+
+        # check if post was deleted
+        post = self.db.posts.find_one({"_id": self.post_id})
+        self.assertIsNone(post)
+
+    def test_delete_post_file(self):
+        """
+        expect: successfully delete post and corresponding files from gridfs
+        """
+
+        # first add new post with file
+        fs = gridfs.GridFS(self.db)
+        file_id = fs.put(b"test", filename="test.txt")
+        new_post = {
+            "author": CURRENT_ADMIN.username,
+            "creation_date": datetime(2023, 1, 1, 9, 0, 0),
+            "text": "new_test",
+            "space": None,
+            "pinned": False,
+            "isRepost": False,
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "files": [file_id],
+            "comments": [],
+            "likers": [],
+        }
+        self.db.posts.insert_one(new_post)
+
+        post_manager = Posts(self.db)
+        post_manager.delete_post(new_post["_id"])
+
+        # check if post was deleted
+        post = self.db.posts.find_one({"_id": new_post["_id"]})
+        self.assertIsNone(post)
+
+        # check if file was deleted
+        self.assertIsNone(fs.find_one({"_id": file_id}))
+
+    def test_delete_post_file_space(self):
+        """
+        expect: successfully delete post and corresponding files from gridfs and the space's
+        repository
+        """
+
+        # first add new file
+        fs = gridfs.GridFS(self.db)
+        file_id = fs.put(b"test", filename="test.txt")
+
+        # create a space
+        space_id = ObjectId()
+        space_name = "test"
+        space = {
+            "_id": space_id,
+            "name": space_name,
+            "invisible": False,
+            "joinable": True,
+            "members": [CURRENT_ADMIN.username],
+            "admins": [CURRENT_ADMIN.username],
+            "invites": [],
+            "requests": [],
+            "files": [{"file_id": file_id, "author": CURRENT_ADMIN.username, "manually_uploaded": True}],
+        }
+        self.db.spaces.insert_one(space)
+
+        # create a post in the space
+        post_id = ObjectId()
+        post = {
+            "_id": post_id,
+            "author": CURRENT_ADMIN.username,
+            "creation_date": datetime(2023, 1, 1, 9, 0, 0),
+            "text": "new_test",
+            "space": space_name,
+            "pinned": False,
+            "isRepost": False,
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "files": [file_id],
+            "comments": [],
+            "likers": [],
+        }
+        self.db.posts.insert_one(post)
+
+        post_manager = Posts(self.db)
+        post_manager.delete_post(post_id)
+
+        # check if post was deleted
+        post = self.db.posts.find_one({"_id": post_id})
+        self.assertIsNone(post)
+
+        # check if file was deleted
+        self.assertIsNone(fs.find_one({"_id": file_id}))
+
+        # check if file was deleted from space's repository
+        space = self.db.spaces.find_one({"_id": space_id})
+        self.assertEqual(space["files"], [])
+
+    def test_delete_post_error_post_doesnt_exist(self):
+        """
+        expect: PostNotExistingException is raised because post doesn't exist
+        """
+
+        post_manager = Posts(self.db)
+        self.assertRaises(
+            PostNotExistingException, post_manager.delete_post, ObjectId()
+        )
 
 
 class ProfileResourceTest(BaseResourceTestCase):
