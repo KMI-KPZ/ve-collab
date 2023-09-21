@@ -12,7 +12,7 @@ from exceptions import (
 )
 
 from resources.network.space import FileDoesntExistError, SpaceDoesntExistError, Spaces
-
+import util
 
 class Posts:
     """
@@ -54,31 +54,6 @@ class Posts:
             "pinned",
         ]
 
-    def _parse_object_id(self, obj_id: str | ObjectId) -> ObjectId:
-        """
-        parse a str-representation of a mongodb objectid into an
-        actual ObjectId-object. If the input id is already an ObjectId,
-        it is returned unchanged.
-        :param obj_id: the id to be transformed into a bson.ObjectId-object
-        :return: the id as a bson.ObjectId
-        """
-
-        if obj_id is None:
-            raise TypeError("_id cannot be None")
-        elif isinstance(obj_id, str):
-            return ObjectId(obj_id)
-        elif isinstance(obj_id, ObjectId):
-            return obj_id
-        else:
-            raise TypeError(
-                """invalid object_id type, 
-                can either be 'str' or 'bson.ObjectId', 
-                got: '{}'
-                """.format(
-                    type(obj_id)
-                )
-            )
-
     def get_post(self, post_id: str, projection: dict = {}) -> Optional[Dict]:
         """
         query a post from the database given its _id
@@ -90,7 +65,7 @@ class Posts:
                  the given id
         """
 
-        post_id = self._parse_object_id(post_id)
+        post_id = util.parse_object_id(post_id)
 
         return self.db.posts.find_one({"_id": post_id}, projection=projection)
 
@@ -109,7 +84,7 @@ class Posts:
                  matched the given id
         """
 
-        comment_id = self._parse_object_id(comment_id)
+        comment_id = util.parse_object_id(comment_id)
 
         return self.db.posts.find_one(
             {"comments._id": comment_id}, projection=projection
@@ -160,7 +135,7 @@ class Posts:
         update the text of an existing post
         """
 
-        post_id = self._parse_object_id(post_id)
+        post_id = util.parse_object_id(post_id)
 
         # try to do the update
         update_result = self.db.posts.update_one(
@@ -177,7 +152,7 @@ class Posts:
         delete a post by specifying its id
         """
 
-        post_id = self._parse_object_id(post_id)
+        post_id = util.parse_object_id(post_id)
 
         post = self.get_post(post_id, projection={"space": True, "files": True})
         if not post:
@@ -221,7 +196,7 @@ class Posts:
         :param username: the username of the user
         """
 
-        post_id = self._parse_object_id(post_id)
+        post_id = util.parse_object_id(post_id)
 
         # this time we cannot use the modified_count of the update_result to check
         # existence of the post, because since we will add to a set, the user might
@@ -247,7 +222,7 @@ class Posts:
         :param username: the username of the user
         """
 
-        post_id = self._parse_object_id(post_id)
+        post_id = util.parse_object_id(post_id)
 
         # this time we cannot use the modified_count of the update_result to check
         # existence of the post, because since we will add to a set, the user might
@@ -271,7 +246,7 @@ class Posts:
         add the given comment to the post, validating the attributes beforehand
         """
 
-        post_id = self._parse_object_id(post_id)
+        post_id = util.parse_object_id(post_id)
 
         # verify comment has all the necessary attributes
         if not all(attr in comment for attr in self.comment_attributes):
@@ -301,11 +276,11 @@ class Posts:
                         to speed up the query
         """
 
-        comment_id = self._parse_object_id(comment_id)
+        comment_id = util.parse_object_id(comment_id)
 
         # use a faster query if the post_id is supplied, because it uses an index
         if post_id is not None:
-            post_id = self._parse_object_id(post_id)
+            post_id = util.parse_object_id(post_id)
             update_result = self.db.posts.update_one(
                 {"_id": post_id}, {"$pull": {"comments": {"_id": comment_id}}}
             )
@@ -349,7 +324,7 @@ class Posts:
         update the text of an existing repost
         """
 
-        repost_id = self._parse_object_id(repost_id)
+        repost_id = util.parse_object_id(repost_id)
 
         # do the update
         update_result = self.db.posts.update_one(
@@ -367,7 +342,7 @@ class Posts:
         :param post_id: the id of the post
         """
 
-        post_id = self._parse_object_id(post_id)
+        post_id = util.parse_object_id(post_id)
 
         update_result = self.db.posts.update_one(
             {"_id": post_id}, {"$set": {"pinned": True}}
@@ -384,7 +359,7 @@ class Posts:
         :param post_id: the id of the post
         """
 
-        post_id = self._parse_object_id(post_id)
+        post_id = util.parse_object_id(post_id)
 
         update_result = self.db.posts.update_one(
             {"_id": post_id}, {"$set": {"pinned": False}}
@@ -401,7 +376,7 @@ class Posts:
         :param comment_id: the id of the comment
         """
 
-        comment_id = self._parse_object_id(comment_id)
+        comment_id = util.parse_object_id(comment_id)
 
         update_result = self.db.posts.update_one(
             {"comments._id": comment_id}, {"$set": {"comments.$.pinned": True}}
@@ -418,7 +393,7 @@ class Posts:
         :param comment_id: the id of the comment
         """
 
-        comment_id = self._parse_object_id(comment_id)
+        comment_id = util.parse_object_id(comment_id)
 
         update_result = self.db.posts.update_one(
             {"comments._id": comment_id}, {"$set": {"comments.$.pinned": False}}
