@@ -3,11 +3,12 @@ services:
   mongodb:
     image: mongo:latest
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: admin123
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
     volumes:
       - mongodb_data:/data/db
-    network_mode: host
+    ports:
+      - ${MONGODB_PORT}:27017
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
       interval: 10s
@@ -24,6 +25,27 @@ services:
     build:
       context: backend
       dockerfile: Dockerfile
+    environment:
+      PORT: ${BACKEND_PORT}
+      COOKIE_SECRET:
+      WORDPRESS_URL:
+      KEYCLOAK_BASE_URL:
+      KEYCLOAK_REALM:
+      KEYCLOAK_CLIENT_ID:
+      KEYCLOAK_CLIENT_SECRET:
+      KEYCLOAK_ADMIN_USERNAME:
+      KEYCLOAK_ADMIN_PASSWORD:
+      MONGODB_HOST: localhost
+      MONGODB_PORT:
+      MONGODB_USERNAME:
+      MONGODB_PASSWORD:
+      MONGODB_DB_NAME:
+      ETHERPAD_BASE_URL: http://localhost:${ETHERPAD_PORT}
+      ETHERPAD_API_KEY:
+      ELASTICSEARCH_BASE_URL: http://localhost:${ELASTICSEARCH_PORT}
+      ELASTICSEARCH_USERNAME:
+      ELASTICSEARCH_PASSWORD:
+      DUMMY_PERSONAS_PASSCODE:
     network_mode: host
     depends_on:
       mongodb:
@@ -38,6 +60,17 @@ services:
     build:
       context: frontend-vecollab
       dockerfile: Dockerfile
+      args:
+        PORT: ${FRONTEND_PORT}
+        WORDPRESS_GRAPHQL_API_URL:
+        NEXTAUTH_URL: "http://localhost:${FRONTEND_PORT}"
+        NEXTAUTH_SECRET:
+        NEXT_PUBLIC_KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID}
+        KEYCLOAK_CLIENT_SECRET:
+        NEXT_PUBLIC_KEYCLOAK_BASE_URL: ${KEYCLOAK_BASE_URL}
+        NEXT_PUBLIC_KEYCLOAK_REALM: ${KEYCLOAK_REALM}
+        NEXT_PUBLIC_BACKEND_BASE_URL: "http://localhost:${BACKEND_PORT}"
+        NEXT_PUBLIC_ETHERPAD_BASE_URL: "http://localhost:${ETHERPAD_PORT}"
     network_mode: host
     logging:
       driver: "json-file"
@@ -56,7 +89,7 @@ services:
       - EDIT_ONLY=true
       - REQUIRE_AUTHENTICATION=true
     ports:
-      - "9001:9001"
+      - ${ETHERPAD_PORT}:9001
     volumes:
       - ./APIKEY.txt:/opt/etherpad-lite/APIKEY.txt # unfortunately the api key cannot be supplied via config (why?!!!!!), so we have to inject it into the container to be able to use it in the rest of the application
       - ./etherpad_config.json:/opt/etherpad-lite/settings.json # because we use the openid connect plugin, which requires configuration in settings.json that is not achieveable via env variables, we have to inject a full etherpad configuration into the container
@@ -69,15 +102,14 @@ services:
   elasticsearch:
     image: elasticsearch:8.8.0
     ports:
-      - 9200:9200
-      - 9300:9300
+      - ${ELASTICSEARCH_PORT}:9200
     volumes:
       - elasticsearch:/usr/share/elasticsearch/data:Z
     environment:
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
       - discovery.type=single-node
       - xpack.security.enabled=true
-      - ELASTIC_PASSWORD=CHANGEME
+      - ELASTIC_PASSWORD=${ELASTICSEARCH_PASSWORD}
     logging:
       driver: "json-file"
       options:

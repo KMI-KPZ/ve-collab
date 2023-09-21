@@ -39,7 +39,7 @@ export default function Etherpad({
         <>
             {error === null ? (
                 <iframe
-                    src={`${process.env.NEXT_PUBLIC_ETHERPAD_URL}/p/${padID}`}
+                    src={`${process.env.NEXT_PUBLIC_ETHERPAD_BASE_URL}/p/${padID}`}
                     width={600}
                     height={400}
                 ></iframe>

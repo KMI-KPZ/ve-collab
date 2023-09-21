@@ -1,10 +1,12 @@
+from bson import ObjectId
 from datetime import datetime
-import json
+import os
 import time
 from unittest import TestCase
 from bson import ObjectId
 import gridfs
 
+from dotenv import load_dotenv
 import pymongo
 from tornado.options import options
 from exceptions import (
@@ -52,6 +54,8 @@ CURRENT_USER = User(
     "test_user", "aaaaaaaa-bbbb-0000-cccc-dddddddddddd", "test_user@mail.de"
 )
 
+load_dotenv()
+
 
 def setUpModule():
     """
@@ -59,13 +63,10 @@ def setUpModule():
     unittest will call this method itself.
     """
 
-    with open(options.config) as json_file:
-        config = json.load(json_file)
-
-    global_vars.mongodb_host = config["mongodb_host"]
-    global_vars.mongodb_port = config["mongodb_port"]
-    global_vars.mongodb_username = config["mongodb_username"]
-    global_vars.mongodb_password = config["mongodb_password"]
+    global_vars.mongodb_host = os.getenv("MONGODB_HOST", "localhost")
+    global_vars.mongodb_port = int(os.getenv("MONGODB_PORT", "27017"))
+    global_vars.mongodb_username = os.getenv("MONGODB_USERNAME")
+    global_vars.mongodb_password = os.getenv("MONGODB_PASSWORD")
     global_vars.mongodb_db_name = "test_db"
 
 
