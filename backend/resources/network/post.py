@@ -14,6 +14,7 @@ from exceptions import (
 from resources.network.space import FileDoesntExistError, SpaceDoesntExistError, Spaces
 import util
 
+
 class Posts:
     """
     to use this class, acquire a mongodb connection first via::
@@ -72,12 +73,10 @@ class Posts:
         post = self.db.posts.find_one({"_id": post_id}, projection=projection)
         if not post:
             raise PostNotExistingException()
-        
+
         return post
 
-    def get_post_by_comment_id(
-        self, comment_id: str, projection: dict = {}
-    ) -> Dict:
+    def get_post_by_comment_id(self, comment_id: str, projection: dict = {}) -> Dict:
         """
         query a post from the database given any of its comment's _id's.
         Since this operation does a full collection scan, it might be very slow
@@ -99,7 +98,7 @@ class Posts:
         )
         if not post:
             raise PostNotExistingException()
-        
+
         return post
 
     def get_posts_by_tags(self, tags: List[str], projection: dict = {}) -> List[Dict]:
@@ -208,20 +207,16 @@ class Posts:
 
         post_id = util.parse_object_id(post_id)
 
-        # this time we cannot use the modified_count of the update_result to check
-        # existence of the post, because since we will add to a set, the user might
-        # already be a liker, so nothing would change, even though the post does exist
-        try:
-            self.get_post(post_id, projection={"_id": True})
-        except PostNotExistingException:
-            raise
-
         update_result = self.db.posts.update_one(
             {"_id": post_id},
             {"$addToSet": {"likers": username}},
         )
 
-        # we know that the post existed, so if this time no document was updated
+        # no match was found --> post doesnt exist
+        if update_result.matched_count != 1:
+            raise PostNotExistingException()
+
+        # we know that the post existed, so if no document was updated
         # the user already had liked the post before
         if update_result.modified_count != 1:
             raise AlreadyLikerException()
@@ -235,18 +230,14 @@ class Posts:
 
         post_id = util.parse_object_id(post_id)
 
-        # this time we cannot use the modified_count of the update_result to check
-        # existence of the post, because since we will add to a set, the user might
-        # already be a liker, so nothing would change, even though the post does exist
-        try:
-            self.get_post(post_id, projection={"_id": True})
-        except PostNotExistingException:
-            raise
-
         update_result = self.db.posts.update_one(
             {"_id": post_id},
             {"$pull": {"likers": username}},
         )
+
+        # no match was found --> post doesnt exist
+        if update_result.matched_count != 1:
+            raise PostNotExistingException()
 
         # we know that the post existed, so if no document was updated, the user hadn't
         # liked the post before
@@ -271,9 +262,9 @@ class Posts:
             {"_id": post_id}, {"$push": {"comments": comment}}
         )
 
-        # if no documents have been modified by the update
+        # if no documents have been matched by the update
         # we know that there was no post with the given post_id
-        if update_result.modified_count != 1:
+        if update_result.matched_count != 1:
             raise PostNotExistingException()
 
     def delete_comment(

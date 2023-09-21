@@ -11,6 +11,7 @@ import pymongo
 from tornado.options import options
 from exceptions import (
     AlreadyAdminError,
+    AlreadyLikerException,
     AlreadyMemberError,
     AlreadyRequestedJoinError,
     FileAlreadyInRepoError,
@@ -20,6 +21,7 @@ from exceptions import (
     NoReadAccessError,
     NoWriteAccessError,
     NonUniqueTasksError,
+    NotLikerException,
     NotRequestedJoinError,
     OnlyAdminError,
     PlanAlreadyExistsError,
@@ -574,7 +576,13 @@ class PostResourceTest(BaseResourceTestCase):
             "admins": [CURRENT_ADMIN.username],
             "invites": [],
             "requests": [],
-            "files": [{"file_id": file_id, "author": CURRENT_ADMIN.username, "manually_uploaded": True}],
+            "files": [
+                {
+                    "file_id": file_id,
+                    "author": CURRENT_ADMIN.username,
+                    "manually_uploaded": True,
+                }
+            ],
         }
         self.db.spaces.insert_one(space)
 
@@ -618,6 +626,197 @@ class PostResourceTest(BaseResourceTestCase):
         post_manager = Posts(self.db)
         self.assertRaises(
             PostNotExistingException, post_manager.delete_post, ObjectId()
+        )
+
+    def test_delete_post_by_space(self):
+        """
+        expect: successfully delete all posts in the space
+        """
+
+        # add 2 more space posts
+        additional_posts = [
+            {
+                "_id": ObjectId(),
+                "author": CURRENT_ADMIN.username,
+                "creation_date": datetime(2023, 1, 1, 9, 0, 0),
+                "text": "test",
+                "space": "test_space",
+                "pinned": False,
+                "isRepost": False,
+                "wordpress_post_id": None,
+                "tags": ["test"],
+                "files": [],
+                "comments": [],
+                "likers": [],
+            },
+            {
+                "_id": ObjectId(),
+                "author": CURRENT_ADMIN.username,
+                "creation_date": datetime(2023, 1, 1, 9, 0, 0),
+                "text": "test",
+                "space": "test_space",
+                "pinned": False,
+                "isRepost": False,
+                "wordpress_post_id": None,
+                "tags": ["test"],
+                "files": [],
+                "comments": [],
+                "likers": [],
+            },
+        ]
+        self.db.posts.insert_many(additional_posts)
+
+        post_manager = Posts(self.db)
+        post_manager.delete_post_by_space("test_space")
+
+        # check if posts were deleted
+        posts = list(self.db.posts.find({"space": "test_space"}))
+        self.assertEqual(len(posts), 0)
+
+        # check that default post is still there
+        post = self.db.posts.find_one({"_id": self.post_id})
+        self.assertIsNotNone(post)
+
+    def test_like_post(self):
+        """
+        expect: successfully like post
+        """
+
+        post_manager = Posts(self.db)
+        post_manager.like_post(self.post_id, CURRENT_USER.username)
+
+        # check if post was liked
+        post = self.db.posts.find_one({"_id": self.post_id})
+        self.assertIsNotNone(post)
+        self.assertIn(CURRENT_USER.username, post["likers"])
+
+    def test_like_post_error_post_doesnt_exist(self):
+        """
+        expect: PostNotExistingException is raised because no post with this _id
+        exists
+        """
+
+        post_manager = Posts(self.db)
+        self.assertRaises(
+            PostNotExistingException, post_manager.like_post, ObjectId(), "test"
+        )
+
+    def test_like_post_error_already_liker(self):
+        """
+        expect: AlreadyLikerException is raised because user has already liked this post
+        """
+
+        # manually set liker
+        self.db.posts.update_one(
+            {"_id": self.post_id}, {"$set": {"likers": [CURRENT_ADMIN.username]}}
+        )
+
+        post_manager = Posts(self.db)
+        self.assertRaises(
+            AlreadyLikerException,
+            post_manager.like_post,
+            self.post_id,
+            CURRENT_ADMIN.username,
+        )
+
+    def test_unlike_post(self):
+        """
+        expect: successfully remove like from post
+        """
+
+        # manually set liker
+        self.db.posts.update_one(
+            {"_id": self.post_id}, {"$set": {"likers": [CURRENT_ADMIN.username]}}
+        )
+
+        post_manager = Posts(self.db)
+        post_manager.unlike_post(self.post_id, CURRENT_ADMIN.username)
+
+        # check if post was unliked
+        post = self.db.posts.find_one({"_id": self.post_id})
+        self.assertIsNotNone(post)
+        self.assertNotIn(CURRENT_ADMIN.username, post["likers"])
+
+    def test_unlike_post_error_post_doesnt_exist(self):
+        """
+        expect: PostNotExistingException is raised because no post with this _id
+        exists
+        """
+
+        post_manager = Posts(self.db)
+        self.assertRaises(
+            PostNotExistingException, post_manager.unlike_post, ObjectId(), "test"
+        )
+
+    def test_unlike_post_error_not_liker(self):
+        """
+        expect: NotLikerException is raised because the user has not previoulsy
+        liked thist post
+        """
+
+        post_manager = Posts(self.db)
+        self.assertRaises(
+            NotLikerException,
+            post_manager.unlike_post,
+            self.post_id,
+            CURRENT_ADMIN.username,
+        )
+
+    def test_add_comment(self):
+        """
+        expect: successfully add comment to the post
+        """
+
+        comment = {
+            "author": CURRENT_ADMIN.username,
+            "creation_date": datetime(2023, 1, 1, 9, 5, 0),
+            "text": "new_comment",
+            "pinned": False,
+        }
+
+        post_manager = Posts(self.db)
+        post_manager.add_comment(self.post_id, comment)
+
+        # check if comment was added
+        post = self.db.posts.find_one({"_id": self.post_id})
+        self.assertIsNotNone(post)
+        self.assertEqual(len(post["comments"]), 2)
+        comment_text = [comment["text"] for comment in post["comments"]]
+        self.assertIn(comment["text"], comment_text)
+
+    def test_add_comment_error_post_doesnt_exist(self):
+        """
+        expect: PostNotExistingException is raised because no post with this _id
+        exists
+        """
+
+        comment = {
+            "author": CURRENT_ADMIN.username,
+            "creation_date": datetime(2023, 1, 1, 9, 5, 0),
+            "text": "new_comment",
+            "pinned": False,
+        }
+
+        post_manager = Posts(self.db)
+        self.assertRaises(
+            PostNotExistingException, post_manager.add_comment, ObjectId(), comment
+        )
+
+    def test_add_comment_error_missing_attributes(self):
+        """
+        expect: ValueError is raised because comment dict is missing an attribute
+        """
+
+        # text is missing
+        comment = {
+            "author": CURRENT_ADMIN.username,
+            "creation_date": datetime(2023, 1, 1, 9, 5, 0),
+            "pinned": False,
+        }
+
+        post_manager = Posts(self.db)
+        self.assertRaises(
+            ValueError, post_manager.add_comment, self.post_id, comment
         )
 
 
