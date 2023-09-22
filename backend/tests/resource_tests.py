@@ -1,5 +1,5 @@
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 import time
 from unittest import TestCase
@@ -211,10 +211,46 @@ class PostResourceTest(BaseResourceTestCase):
         }
         self.db.posts.insert_one(self.default_post)
 
+        # insert a default profile for CURRENT_ADMIN (needed for timeline)
+        self.db.profiles.insert_one(
+            {
+                "username": CURRENT_ADMIN.username,
+                "role": "admin",
+                "follows": [],
+                "bio": "",
+                "institution": "",
+                "profile_pic": "default_profile_pic.jpg",
+                "first_name": "",
+                "last_name": "",
+                "gender": "",
+                "address": "",
+                "birthday": "",
+                "experience": [""],
+                "expertise": "",
+                "languages": [],
+                "ve_ready": True,
+                "excluded_from_matching": False,
+                "ve_interests": [""],
+                "ve_goals": [""],
+                "preferred_formats": [""],
+                "research_tags": [],
+                "courses": [],
+                "educations": [],
+                "work_experience": [],
+                "ve_window": [],
+            }
+        )
+
     def tearDown(self) -> None:
         super().tearDown()
 
         self.db.posts.delete_many({})
+        self.db.profiles.delete_many({})
+
+        # delete all created files in gridfs
+        fs = gridfs.GridFS(self.db)
+        for fs_file in fs.find():
+            fs.delete(fs_file._id)
 
     def test_get_post(self):
         """
@@ -815,8 +851,595 @@ class PostResourceTest(BaseResourceTestCase):
         }
 
         post_manager = Posts(self.db)
+        self.assertRaises(ValueError, post_manager.add_comment, self.post_id, comment)
+
+    def test_delete_comment(self):
+        """
+        expect: successfully delete a comment
+        """
+
+        post_manager = Posts(self.db)
+        post_manager.delete_comment(self.comment_id, self.post_id)
+
+        # check if comment was deleted
+        post = self.db.posts.find_one({"_id": self.post_id})
+        self.assertIsNotNone(post)
+        self.assertEqual(len(post["comments"]), 0)
+
+    def test_delete_comment_no_post_id(self):
+        """
+        expect: successfully delete a comment without supplying the corresponding
+        post id
+        """
+
+        post_manager = Posts(self.db)
+        post_manager.delete_comment(self.comment_id)
+
+        # check if comment was deleted
+        post = self.db.posts.find_one({"_id": self.post_id})
+        self.assertIsNotNone(post)
+        self.assertEqual(len(post["comments"]), 0)
+
+    def test_delet_comment_error_post_doesnt_exist(self):
+        """
+        expect: PostNotExistingException is raised because no post with this _id
+        exists
+        """
+
+        post_manager = Posts(self.db)
         self.assertRaises(
-            ValueError, post_manager.add_comment, self.post_id, comment
+            PostNotExistingException,
+            post_manager.delete_comment,
+            self.comment_id,
+            ObjectId(),
+        )
+
+        self.assertRaises(
+            PostNotExistingException, post_manager.delete_comment, ObjectId()
+        )
+
+    def test_insert_repost(self):
+        """
+        expect: successuflly insert new repost
+        """
+
+        repost = {
+            "author": CURRENT_ADMIN.username,
+            "creation_date": datetime(2023, 1, 2, 9, 0, 0),
+            "text": "test",
+            "space": "test_space",
+            "pinned": False,
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "files": [],
+            "comments": [],
+            "likers": [],
+            "isRepost": True,
+            "repostAuthor": CURRENT_USER.username,
+            "originalCreationDate": datetime(2023, 1, 1, 9, 0, 0),
+            "repostText": "test_repost",
+        }
+
+        post_manager = Posts(self.db)
+        post_manager.insert_repost(repost)
+
+        # check if repost was added
+        post = self.db.posts.find_one({"repostText": "test_repost"})
+        self.assertIsNotNone(post)
+        self.assertEqual(post["author"], repost["author"])
+        self.assertEqual(post["creation_date"], repost["creation_date"])
+        self.assertEqual(post["text"], repost["text"])
+        self.assertEqual(post["space"], repost["space"])
+        self.assertEqual(post["pinned"], repost["pinned"])
+        self.assertEqual(post["wordpress_post_id"], repost["wordpress_post_id"])
+        self.assertEqual(post["tags"], repost["tags"])
+        self.assertEqual(post["files"], repost["files"])
+        self.assertEqual(post["comments"], repost["comments"])
+        self.assertEqual(post["likers"], repost["likers"])
+        self.assertEqual(post["isRepost"], repost["isRepost"])
+        self.assertEqual(post["repostAuthor"], repost["repostAuthor"])
+        self.assertEqual(post["originalCreationDate"], repost["originalCreationDate"])
+        self.assertEqual(post["repostText"], repost["repostText"])
+
+    def test_insert_repost_update_instead(self):
+        """
+        expect: since new repost dict contains an _id, update the existing repost instead
+        """
+
+        # insert a repost into the db
+        repost = {
+            "_id": ObjectId(),
+            "author": CURRENT_ADMIN.username,
+            "creation_date": datetime(2023, 1, 2, 9, 0, 0),
+            "text": "test",
+            "space": "test_space",
+            "pinned": False,
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "files": [],
+            "comments": [],
+            "likers": [],
+            "isRepost": True,
+            "repostAuthor": CURRENT_USER.username,
+            "originalCreationDate": datetime(2023, 1, 1, 9, 0, 0),
+            "repostText": "test_repost",
+        }
+        self.db.posts.insert_one(repost)
+
+        repost = {
+            "_id": repost["_id"],
+            "author": CURRENT_ADMIN.username,
+            "creation_date": datetime(
+                2023, 1, 3, 9, 0, 0
+            ),  # changed, but shouldnt be updated
+            "text": "test",
+            "space": "test_space",
+            "pinned": True,  # changed, but shouldnt be updated
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "files": [],
+            "comments": [],
+            "likers": [],
+            "isRepost": True,
+            "repostAuthor": CURRENT_USER.username,
+            "originalCreationDate": datetime(2023, 1, 1, 9, 0, 0),
+            "repostText": "updated_test_repost",
+        }
+        post_manager = Posts(self.db)
+        post_manager.insert_repost(repost)
+
+        # check if repost was updated, but only the repostText is updateable
+        post = self.db.posts.find_one({"_id": repost["_id"]})
+        self.assertIsNotNone(post)
+        self.assertEqual(post["_id"], repost["_id"])
+        self.assertEqual(post["author"], repost["author"])
+        self.assertNotEqual(post["creation_date"], repost["creation_date"])
+        self.assertEqual(post["text"], repost["text"])
+        self.assertEqual(post["space"], repost["space"])
+        self.assertNotEqual(post["pinned"], repost["pinned"])
+        self.assertEqual(post["wordpress_post_id"], repost["wordpress_post_id"])
+        self.assertEqual(post["tags"], repost["tags"])
+        self.assertEqual(post["files"], repost["files"])
+        self.assertEqual(post["comments"], repost["comments"])
+        self.assertEqual(post["likers"], repost["likers"])
+        self.assertEqual(post["isRepost"], repost["isRepost"])
+        self.assertEqual(post["repostAuthor"], repost["repostAuthor"])
+        self.assertEqual(post["originalCreationDate"], repost["originalCreationDate"])
+        self.assertEqual(post["repostText"], repost["repostText"])
+
+    def test_insert_repost_error_missing_attributes(self):
+        """
+        expect: ValueError is raised because repost dict is missing an attribute
+        """
+
+        # first, a normal post attribute is missing: text
+        repost = {
+            "author": CURRENT_ADMIN.username,
+            "creation_date": datetime(2023, 1, 2, 9, 0, 0),
+            "space": "test_space",
+            "pinned": False,
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "files": [],
+            "comments": [],
+            "likers": [],
+            "isRepost": False,
+            "repostAuthor": CURRENT_USER.username,
+            "originalCreationDate": datetime(2023, 1, 1, 9, 0, 0),
+            "repostText": "test_repost",
+        }
+
+        post_manager = Posts(self.db)
+        self.assertRaises(ValueError, post_manager.insert_repost, repost)
+
+        # now, a repost attribute is missing: repostText
+        repost = {
+            "author": CURRENT_ADMIN.username,
+            "creation_date": datetime(2023, 1, 2, 9, 0, 0),
+            "text": "test",
+            "space": "test_space",
+            "pinned": False,
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "files": [],
+            "comments": [],
+            "likers": [],
+            "isRepost": False,
+            "repostAuthor": CURRENT_USER.username,
+            "originalCreationDate": datetime(2023, 1, 1, 9, 0, 0),
+        }
+
+        post_manager = Posts(self.db)
+        self.assertRaises(ValueError, post_manager.insert_repost, repost)
+
+    def test_update_repost_text(self):
+        """
+        expect: successfully update repost text
+        """
+
+        # insert a repost into the db
+        repost = {
+            "_id": ObjectId(),
+            "author": CURRENT_ADMIN.username,
+            "creation_date": datetime(2023, 1, 2, 9, 0, 0),
+            "text": "test",
+            "space": "test_space",
+            "pinned": False,
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "files": [],
+            "comments": [],
+            "likers": [],
+            "isRepost": True,
+            "repostAuthor": CURRENT_USER.username,
+            "originalCreationDate": datetime(2023, 1, 1, 9, 0, 0),
+            "repostText": "test_repost",
+        }
+        self.db.posts.insert_one(repost)
+
+        post_manager = Posts(self.db)
+        post_manager.update_repost_text(repost["_id"], "updated_test_repost")
+
+        # check if repost was updated
+        post = self.db.posts.find_one({"_id": repost["_id"]})
+        self.assertIsNotNone(post)
+        self.assertEqual(post["_id"], repost["_id"])
+        self.assertEqual(post["repostText"], "updated_test_repost")
+
+    def test_update_repost_text_error_post_doesnt_exist(self):
+        """
+        expect: PostNotExistingException is raised because no post with this _id
+        exists
+        """
+
+        post_manager = Posts(self.db)
+        self.assertRaises(
+            PostNotExistingException,
+            post_manager.update_repost_text,
+            ObjectId(),
+            "test",
+        )
+
+    def test_pin_post(self):
+        """
+        expect: successfully set pinned attribute of post to True
+        """
+
+        post_manager = Posts(self.db)
+        post_manager.pin_post(self.post_id)
+
+        # check if post was pinned
+        post = self.db.posts.find_one({"_id": self.post_id})
+        self.assertIsNotNone(post)
+        self.assertTrue(post["pinned"])
+
+    def test_pin_post_error_post_doesnt_exist(self):
+        """
+        expect: PostNotExistingException is raised because no post with this _id
+        exists
+        """
+
+        post_manager = Posts(self.db)
+        self.assertRaises(PostNotExistingException, post_manager.pin_post, ObjectId())
+
+    def test_unpin_post(self):
+        """
+        expect: successfully set pinned attribute of post to False
+        """
+
+        # manually set pinned to True
+        self.db.posts.update_one({"_id": self.post_id}, {"$set": {"pinned": True}})
+
+        post_manager = Posts(self.db)
+        post_manager.unpin_post(self.post_id)
+
+        # check if post was unpinned
+        post = self.db.posts.find_one({"_id": self.post_id})
+        self.assertIsNotNone(post)
+        self.assertFalse(post["pinned"])
+
+    def test_unpin_post_error_post_doesnt_exist(self):
+        """
+        expect: PostNotExistingException is raised because no post with this _id
+        exists
+        """
+
+        post_manager = Posts(self.db)
+        self.assertRaises(PostNotExistingException, post_manager.unpin_post, ObjectId())
+
+    def test_pin_comment(self):
+        """
+        expect: successfully set pinned attribute of comment to True
+        """
+
+        post_manager = Posts(self.db)
+        post_manager.pin_comment(self.comment_id)
+
+        # check if comment was pinned
+        post = self.db.posts.find_one({"_id": self.post_id})
+        self.assertIsNotNone(post)
+        self.assertTrue(post["comments"][0]["pinned"])
+
+    def test_pin_comment_error_post_doesnt_exist(self):
+        """
+        expect: PostNotExistingException is raised because no post with this _id
+        exists
+        """
+
+        post_manager = Posts(self.db)
+        self.assertRaises(
+            PostNotExistingException, post_manager.pin_comment, ObjectId()
+        )
+
+    def test_unpin_comment(self):
+        """
+        expect: successfully set pinned attribute of comment to False
+        """
+
+        # manually set pinned to True
+        self.db.posts.update_one(
+            {"_id": self.post_id}, {"$set": {"comments.0.pinned": True}}
+        )
+
+        post_manager = Posts(self.db)
+        post_manager.unpin_comment(self.comment_id)
+
+        # check if comment was unpinned
+        post = self.db.posts.find_one({"_id": self.post_id})
+        self.assertIsNotNone(post)
+        self.assertFalse(post["comments"][0]["pinned"])
+
+    def test_unpin_comment_error_post_doesnt_exist(self):
+        """
+        expect: PostNotExistingException is raised because no post with this _id
+        exists
+        """
+
+        post_manager = Posts(self.db)
+        self.assertRaises(
+            PostNotExistingException, post_manager.unpin_comment, ObjectId()
+        )
+
+    def test_add_new_post_file(self):
+        """
+        expect: successfully store new file in gridfs
+        """
+
+        post_manager = Posts(self.db)
+        file_id = post_manager.add_new_post_file(
+            "test.txt", b"test", "text/plain", CURRENT_ADMIN.username
+        )
+
+        # check if file was stored in gridfs
+        fs = gridfs.GridFS(self.db)
+        self.assertIsNotNone(fs.find_one({"_id": file_id}))
+
+    def test_get_full_timeline(self):
+        """
+        expect: successfully get all posts within the time frame
+        """
+
+        # add 5 posts with creation date now
+        for i in range(5):
+            post = {
+                "author": CURRENT_ADMIN.username,
+                "creation_date": datetime.now(),
+                "text": "test",
+                "space": None,
+                "pinned": False,
+                "isRepost": False,
+                "wordpress_post_id": None,
+                "tags": ["test"],
+                "files": [],
+                "comments": [],
+                "likers": [],
+            }
+            self.db.posts.insert_one(post)
+
+        post_manager = Posts(self.db)
+        # this should include the 5 posts, but not the default one because its creation date is
+        # in the past
+        posts = post_manager.get_full_timeline(
+            datetime.now() - timedelta(days=1), datetime.now()
+        )
+        self.assertEqual(len(posts), 5)
+
+    def test_get_space_timeline(self):
+        """
+        expect: successfully get all posts within the time frame and in a space
+        """
+
+        # add 5 posts, 3 of them in the space
+        for i in range(5):
+            post = {
+                "author": CURRENT_ADMIN.username,
+                "creation_date": datetime.now(),
+                "text": "test",
+                "space": None,
+                "pinned": False,
+                "isRepost": False,
+                "wordpress_post_id": None,
+                "tags": ["test"],
+                "files": [],
+                "comments": [],
+                "likers": [],
+            }
+            if i % 2 == 0:
+                post["space"] = "test_space"
+            self.db.posts.insert_one(post)
+
+        post_manager = Posts(self.db)
+        # this should include only the 3 posts in the space
+        posts = post_manager.get_space_timeline(
+            "test_space", datetime.now() - timedelta(days=1), datetime.now()
+        )
+        self.assertEqual(len(posts), 3)
+
+    def test_get_user_timeline(self):
+        """
+        expect: successfully get all posts within the time frame and of a user
+        """
+
+        # add 5 posts, 3 of them by the user
+        for i in range(5):
+            post = {
+                "author": CURRENT_ADMIN.username,
+                "creation_date": datetime.now(),
+                "text": "test",
+                "space": None,
+                "pinned": False,
+                "isRepost": False,
+                "wordpress_post_id": None,
+                "tags": ["test"],
+                "files": [],
+                "comments": [],
+                "likers": [],
+            }
+            if i % 2 == 0:
+                post["author"] = CURRENT_USER.username
+            self.db.posts.insert_one(post)
+
+        post_manager = Posts(self.db)
+        # this should include only the 3 posts by the user
+        posts = post_manager.get_user_timeline(
+            CURRENT_USER.username, datetime.now() - timedelta(days=1), datetime.now()
+        )
+        self.assertEqual(len(posts), 3)
+
+    def test_get_personal_timeline(self):
+        """
+        expect: successfully get all posts that are in the time frame and match the criteria (OR match):
+        - from people that the user follows,
+        - in spaces that the user is a member of
+        - the users own posts
+        """
+
+        # follow CURRENT_USER.username
+        self.db.profiles.update_one(
+            {"username": CURRENT_ADMIN.username},
+            {"$push": {"follows": CURRENT_USER.username}},
+        )
+
+        # add one post of CURRENT_USER.username and one of a different username
+        post1 = {
+            "_id": ObjectId(),
+            "author": CURRENT_USER.username,
+            "creation_date": datetime.now(),
+            "text": "test",
+            "space": None,
+            "pinned": False,
+            "isRepost": False,
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "files": [],
+            "comments": [],
+            "likers": [],
+        }
+        post2 = {
+            "_id": ObjectId(),
+            "author": "non_following_user",
+            "creation_date": datetime.now(),
+            "text": "test",
+            "space": None,
+            "pinned": False,
+            "isRepost": False,
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "files": [],
+            "comments": [],
+            "likers": [],
+        }
+
+        # create space test_space
+        space = {
+            "_id": ObjectId(),
+            "name": "test_space",
+            "invisible": False,
+            "joinable": True,
+            "members": [CURRENT_ADMIN.username],
+            "admins": [CURRENT_ADMIN.username],
+            "invites": [],
+            "requests": [],
+            "files": [],
+        }
+        self.db.spaces.insert_one(space)
+
+        # add one post in a space that CURRENT_USER.username is a member of and one in a space that
+        # he is not a member of
+        post3 = {
+            "_id": ObjectId(),
+            "author": "doesnt_matter",
+            "creation_date": datetime.now(),
+            "text": "test",
+            "space": "test_space",
+            "pinned": False,
+            "isRepost": False,
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "files": [],
+            "comments": [],
+            "likers": [],
+        }
+        post4 = {
+            "_id": ObjectId(),
+            "author": "doesnt_matter",
+            "creation_date": datetime.now(),
+            "text": "test",
+            "space": "non_member_space",
+            "pinned": False,
+            "isRepost": False,
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "files": [],
+            "comments": [],
+            "likers": [],
+        }
+
+        # add one post by the user himself
+        post5 = {
+            "_id": ObjectId(),
+            "author": CURRENT_ADMIN.username,
+            "creation_date": datetime.now(),
+            "text": "test",
+            "space": None,
+            "pinned": False,
+            "isRepost": False,
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "files": [],
+            "comments": [],
+            "likers": [],
+        }
+
+        self.db.posts.insert_many([post1, post2, post3, post4, post5])
+
+        post_manager = Posts(self.db)
+        # this should include post1 because it is from a user that the user follows,
+        # post3 because it is from a space that the user is a member of,
+        # and post5 because it is the users own post
+        # but not the default post because it is out of time frame
+        posts = post_manager.get_personal_timeline(
+            CURRENT_ADMIN.username, datetime.now() - timedelta(days=1), datetime.now()
+        )
+        self.assertEqual(len(posts), 3)
+        post_ids = [post["_id"] for post in posts]
+        self.assertIn(post1["_id"], post_ids)
+        self.assertIn(post3["_id"], post_ids)
+        self.assertIn(post5["_id"], post_ids)
+
+    def test_check_new_posts_since_timestamp(self):
+        """
+        expect: successfully query for new posts within a timeframe
+        """
+
+        post_manager = Posts(self.db)
+        # this timeframe should return True (default post after that)
+        self.assertTrue(
+            post_manager.check_new_posts_since_timestamp(datetime(2022, 12, 31))
+        )
+        # this timeframe should return False (default post before that)
+        self.assertFalse(
+            post_manager.check_new_posts_since_timestamp(datetime(2023, 1, 2))
         )
 
 

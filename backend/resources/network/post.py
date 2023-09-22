@@ -297,7 +297,7 @@ class Posts:
 
         # if no documents have been removed by the delete
         # we know that there was no post with the given _id
-        if update_result.modified_count != 1:
+        if update_result.matched_count != 1:
             raise PostNotExistingException()
 
     def insert_repost(self, repost: dict) -> None:
@@ -353,7 +353,7 @@ class Posts:
 
         # if no documents have been modified by the update
         # we know that there was no post with the given _id
-        if update_result.modified_count != 1:
+        if update_result.matched_count != 1:
             raise PostNotExistingException()
 
     def unpin_post(self, post_id: str | ObjectId) -> None:
@@ -370,7 +370,7 @@ class Posts:
 
         # if no documents have been modified by the update
         # we know that there was no post with the given _id
-        if update_result.modified_count != 1:
+        if update_result.matched_count != 1:
             raise PostNotExistingException()
 
     def pin_comment(self, comment_id: str | ObjectId) -> None:
@@ -387,7 +387,10 @@ class Posts:
 
         # if no documents have been modified by the update
         # we know that there was no post with the given _id
-        if update_result.modified_count != 1:
+        # TODO actually this only tells us that the comment_id doesnt exist,
+        # but the post might still exist, either raise CommentNotExistingException
+        # or check for the post itself
+        if update_result.matched_count != 1:
             raise PostNotExistingException()
 
     def unpin_comment(self, comment_id: str | ObjectId) -> None:
@@ -404,7 +407,10 @@ class Posts:
 
         # if no documents have been modified by the update
         # we know that there was no post with the given _id
-        if update_result.modified_count != 1:
+        # TODO actually this only tells us that the comment_id doesnt exist,
+        # but the post might still exist, either raise CommentNotExistingException
+        # or check for the post itself
+        if update_result.matched_count != 1:
             raise PostNotExistingException()
 
     def add_new_post_file(
