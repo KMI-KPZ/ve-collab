@@ -6,9 +6,12 @@ import socketio
 
 keycloak = KeycloakOpenID
 keycloak_admin = KeycloakAdmin
+keycloak_base_url: str = ""
+keycloak_realm: str = ""
 keycloak_client_id: str = ""
-keycloak_callback_url: str = ""
-domain: str = ""
+keycloak_client_secret: str = ""
+keycloak_admin_username: str = ""
+keycloak_admin_password: str = ""
 port: int = 0
 cookie_secret: str = ""
 wordpress_url: str = ""

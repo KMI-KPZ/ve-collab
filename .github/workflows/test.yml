@@ -13,7 +13,7 @@ jobs:
   backend_test:
     uses: ./.github/workflows/test_caller.yml
     secrets:
-      CONFIG: ${{ secrets.CONFIG }}
+      BACKEND_ENV: ${{ secrets.BACKEND_ENV }}
       MONGODB_USERNAME: ${{ secrets.MONGODB_USERNAME }}
       MONGODB_PASSWORD: ${{ secrets.MONGODB_PASSWORD }}
   frontend_test:

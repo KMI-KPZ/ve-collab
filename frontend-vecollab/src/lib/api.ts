@@ -1,7 +1,7 @@
 import { Categories, Post, PostPreview } from "@/interfaces";
 
-let API_URL_STR = process.env.WORDPRESS_API_URL
-// fallback to localhost if WORDPRESS_API_URL is not defined in .env.local
+let API_URL_STR = process.env.WORDPRESS_GRAPHQL_API_URL
+// fallback to localhost if WORDPRESS_GRAPHQL_API_URL is not defined in env
 if (API_URL_STR === undefined) {
   API_URL_STR = "http://localhost"
 }
