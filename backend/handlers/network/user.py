@@ -978,6 +978,11 @@ class MatchingExclusionHandler(BaseHandler):
                 self.set_status(409)
                 self.write({"success": False, "reason": USER_DOESNT_EXIST})
                 return
+            # on key error the user has not EXPLICITELY excluded him/herself from matching
+            # so the answer is false
+            except KeyError:
+                self.write({"success": True, "excluded_from_matching": False})
+                return
 
             self.write({"success": True, "excluded_from_matching": excluded})
 
