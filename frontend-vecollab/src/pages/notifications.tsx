@@ -5,7 +5,6 @@ import VeInvitationNotification from '@/components/Notifications/VeInvitationNot
 import VeInvitationReplyNotification from '@/components/Notifications/VeInvitationReplyNotification';
 import Tabs from '@/components/profile/Tabs';
 import { Notification } from '@/interfaces/socketio';
-import { signIn, useSession } from 'next-auth/react';
 import { Dispatch, SetStateAction, useEffect } from 'react';
 import { Socket } from 'socket.io-client';
 
@@ -15,13 +14,12 @@ interface Props {
     setNotificationEvents: Dispatch<SetStateAction<Notification[]>>;
 }
 
+Notifications.auth = true;
 export default function Notifications({
     socket,
     notificationEvents,
     setNotificationEvents,
 }: Props) {
-    const { data: session, status } = useSession();
-
     const removeNotificationFromList = (notificationId: string) => {
         setNotificationEvents(
             notificationEvents.filter((notification) => notification._id !== notificationId)
@@ -31,16 +29,6 @@ export default function Notifications({
     const acknowledgeNotification = (notification: Notification) => {
         socket.emit('acknowledge_notification', { notification_id: notification._id });
     };
-
-    // check for session errors and trigger the login flow if necessary
-    useEffect(() => {
-        if (status !== 'loading') {
-            if (!session || session?.error === 'RefreshAccessTokenError') {
-                console.log('forced new signIn');
-                signIn('keycloak');
-            }
-        }
-    }, [session, status]);
 
     useEffect(() => {
         console.log(notificationEvents);

@@ -7,6 +7,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 
+Matching.auth = true;
 export default function Matching() {
     const { data: session } = useSession();
     const router = useRouter();

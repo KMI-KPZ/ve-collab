@@ -1,4 +1,6 @@
+import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import { signIn } from 'next-auth/react';
+import useSWR, { KeyedMutator} from 'swr';
 
 if (!process.env.NEXT_PUBLIC_BACKEND_BASE_URL) {
     throw new Error(`
@@ -6,6 +8,30 @@ if (!process.env.NEXT_PUBLIC_BACKEND_BASE_URL) {
     `);
 }
 let BACKEND_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
+
+export const GETfetcher = (relativeUrl: string, accessToken?: string) =>
+    fetch(BACKEND_BASE_URL + relativeUrl, {
+        headers: { Authorization: 'Bearer ' + accessToken },
+    }).then((res) => res.json());
+
+export function useGetAvailablePlans(accessToken: string): {
+    plans: PlanPreview[];
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        ['/planner/get_available', accessToken],
+        ([url, token]) => GETfetcher(url, token)
+    );
+
+    return {
+        plans: isLoading || error ? [] : data.plans,
+        isLoading,
+        error,
+        mutate, 
+    };
+}
 
 export async function fetchGET(relativeUrl: string, accessToken?: string) {
     const headers: { Authorization?: string } = {};
@@ -18,9 +44,9 @@ export async function fetchGET(relativeUrl: string, accessToken?: string) {
         let backendResponse = await fetch(BACKEND_BASE_URL + relativeUrl, {
             headers: headers,
         });
-        if(backendResponse.status === 401){
-            console.log("forced new signIn by api call");
-            signIn("keycloak");
+        if (backendResponse.status === 401) {
+            console.log('forced new signIn by api call');
+            signIn('keycloak');
         }
         return await backendResponse.json();
     } catch (e) {
@@ -46,9 +72,9 @@ export async function fetchPOST(
             headers: headers,
             body: JSON.stringify(payload),
         });
-        if(backendResponse.status === 401){
-            console.log("forced new signIn by api call");
-            signIn("keycloak");
+        if (backendResponse.status === 401) {
+            console.log('forced new signIn by api call');
+            signIn('keycloak');
         }
         return await backendResponse.json();
     } catch (e) {
@@ -74,9 +100,9 @@ export async function fetchDELETE(
             headers: headers,
             body: JSON.stringify(payload),
         });
-        if(backendResponse.status === 401){
-            console.log("forced new signIn by api call");
-            signIn("keycloak");
+        if (backendResponse.status === 401) {
+            console.log('forced new signIn by api call');
+            signIn('keycloak');
         }
         return await backendResponse.json();
     } catch (e) {
@@ -96,9 +122,9 @@ export async function fetchImage(relativeUrl: string, accessToken?: string): Pro
         let backendResponse = await fetch(BACKEND_BASE_URL + relativeUrl, {
             headers: headers,
         });
-        if(backendResponse.status === 401){
-            console.log("forced new signIn by api call");
-            signIn("keycloak");
+        if (backendResponse.status === 401) {
+            console.log('forced new signIn by api call');
+            signIn('keycloak');
         }
         return backendResponse.blob();
     } catch (e) {
