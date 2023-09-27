@@ -16,9 +16,9 @@ export default function Overview() {
 
     const [successPopupOpen, setSuccessPopupOpen] = useState(false);
 
-    // since using swr plans is the new state based on the backend, which
+    // since using swr, plans is the new state based on the backend, which
     // can be refetched by calling mutate()
-    const { plans, isLoading, error, mutate } = useGetAvailablePlans(session!.accessToken);
+    const { data: plans, isLoading, error, mutate } = useGetAvailablePlans(session!.accessToken);
 
     const createAndForwardNewPlanner = async () => {
         const newPlanner = await fetchPOST('/planner/insert_empty', {}, session?.accessToken);

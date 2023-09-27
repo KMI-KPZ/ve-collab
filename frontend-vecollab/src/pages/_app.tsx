@@ -10,6 +10,7 @@ import { socket } from '@/lib/socket';
 import SocketAuthenticationProvider from '@/components/SocketAuthenticationProvider';
 import { Notification } from '@/interfaces/socketio';
 import { NextComponentType, NextPageContext } from 'next';
+import LoadingAnimation from '@/components/LoadingAnimation';
 
 declare type ComponentWithAuth = NextComponentType<NextPageContext, any, any> & {
     auth?: boolean;
@@ -17,16 +18,15 @@ declare type ComponentWithAuth = NextComponentType<NextPageContext, any, any> & 
 declare type AppPropsWithAuth = AppProps & {
     Component: ComponentWithAuth;
 };
-
 // any component that defines Component.auth = true will be wrapped inside this component,
 // which triggers a relogin flow if the session does not validate
 // meaning that inside a component no session check is required, one can
-// be assured that the component is onyl rendered if the session is valid. 
+// be assured that the component is onyl rendered if the session is valid.
 function Auth({ children }: { children: JSX.Element }): JSX.Element {
     const { data: session, status } = useSession();
 
     if (status === 'loading') {
-        return <div> Loading... </div>; // TODO style that a little bit nice with our spinner
+        return <LoadingAnimation />;
     } else {
         if (!session || session?.error === 'RefreshAccessTokenError') {
             console.log('forced new signIn');

@@ -1,15 +1,10 @@
 import Image from 'next/image';
 import blueBackground from '@/images/footer/KAVAQ_Footer_rounded.png';
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useState } from 'react';
 import Dialog from './Dialog';
-import BoxHeadline from '@/components/BoxHeadline';
 import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
-import { RxTrash } from 'react-icons/rx';
-import { useSession, signIn } from 'next-auth/react';
-import { useRouter } from 'next/router';
-import LoadingAnimation from '../LoadingAnimation';
+import { useSession } from 'next-auth/react';
 import { fetchDELETE, fetchPOST } from '@/lib/backend';
-import AuthenticatedImage from '@/components/AuthenticatedImage';
 import DialogUserList from './DialogUserList';
 
 interface Props {
@@ -20,6 +15,7 @@ interface Props {
     username: string;
 }
 
+ProfileBanner.auth = true;
 export default function ProfileBanner({
     follows,
     setFollows,
@@ -29,7 +25,6 @@ export default function ProfileBanner({
 }: Props) {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
-    const router = useRouter();
 
     const [isFollowingDialogOpen, setIsFollowingDialogOpen] = useState(false);
     const [followingSnippets, setFollowingSnippets] = useState<UserSnippet[]>([
@@ -92,16 +87,6 @@ export default function ProfileBanner({
             setFollows(removedUser.map((user) => user.preferredUsername));
         });
     };
-
-    // check for session errors and trigger the login flow if necessary
-    useEffect(() => {
-        if (status !== 'loading') {
-            if (!session || session?.error === 'RefreshAccessTokenError') {
-                console.log('forced new signIn');
-                signIn('keycloak');
-            }
-        }
-    }, [session, status]);
 
     return (
         <>

@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { RxDotFilled, RxDotsVertical } from 'react-icons/rx';
 import { fetchDELETE, fetchPOST } from '@/lib/backend';
-import { signIn, useSession } from 'next-auth/react';
-import { SetStateAction, useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { useState } from 'react';
 import { useRouter } from 'next/router';
 import AuthenticatedImage from '@/components/AuthenticatedImage';
 import Dialog from './Dialog';
@@ -18,6 +18,7 @@ interface Props {
     veReady: boolean;
 }
 
+ProfileHeader.auth = true;
 export default function ProfileHeader({
     name,
     institution,
@@ -30,16 +31,6 @@ export default function ProfileHeader({
     const { data: session, status } = useSession();
 
     const [successPopupOpen, setSuccessPopupOpen] = useState(false);
-
-    // check for session errors and trigger the login flow if necessary
-    useEffect(() => {
-        if (status !== 'loading') {
-            if (!session || session?.error === 'RefreshAccessTokenError') {
-                console.log('forced new signIn');
-                signIn('keycloak');
-            }
-        }
-    }, [session, status]);
 
     const [isInvitationDialogOpen, setIsInvitationDialogOpen] = useState(false);
     const handleOpenInvitationDialog = () => {

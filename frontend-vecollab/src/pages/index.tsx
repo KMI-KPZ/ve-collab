@@ -8,6 +8,7 @@ import { signIn, useSession } from 'next-auth/react';
 export default function Home() {
     const router = useRouter();
     const { data: session } = useSession();
+
     const createAndForwardNewPlanner = async () => {
         const newPlanner = await fetchPOST('/planner/insert_empty', {}, session?.accessToken);
         await router.push({
