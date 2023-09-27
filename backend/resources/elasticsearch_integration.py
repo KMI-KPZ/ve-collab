@@ -73,6 +73,11 @@ class ElasticsearchConnector:
         for key, value in document.items():
             if isinstance(value, (dict, list)):
                 document[key] = self._dict_or_list_values_to_str(value)
+
+        # elasticsearch has pain with meta fields being inside documents
+        if "_id" in document:
+            del document["_id"]
+
         try:
             requests.put(
                 "{}/{}/_doc/{}".format(

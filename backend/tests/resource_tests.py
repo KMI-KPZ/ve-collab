@@ -8,6 +8,7 @@ import gridfs
 
 from dotenv import load_dotenv
 import pymongo
+import requests
 from tornado.options import options
 from exceptions import (
     AlreadyAdminError,
@@ -28,6 +29,7 @@ from exceptions import (
     PlanDoesntExistError,
     PostFileNotDeleteableError,
     PostNotExistingException,
+    ProfileDoesntExistException,
     SpaceAlreadyExistsError,
     SpaceDoesntExistError,
     UserNotAdminError,
@@ -47,6 +49,7 @@ from model import (
 )
 from resources.network.space import Spaces
 from resources.network.post import Posts
+from resources.network.profile import Profiles
 from resources.planner.ve_plan import VEPlanResource
 import util
 
@@ -72,6 +75,11 @@ def setUpModule():
     global_vars.mongodb_username = os.getenv("MONGODB_USERNAME")
     global_vars.mongodb_password = os.getenv("MONGODB_PASSWORD")
     global_vars.mongodb_db_name = "test_db"
+    global_vars.elasticsearch_base_url = os.getenv(
+        "ELASTICSEARCH_BASE_URL", "http://localhost:9200"
+    )
+    global_vars.elasticsearch_username = os.getenv("ELASTICSEARCH_USERNAME", "elastic")
+    global_vars.elasticsearch_password = os.getenv("ELASTICSEARCH_PASSWORD")
 
 
 def tearDownModule():
@@ -1444,7 +1452,389 @@ class PostResourceTest(BaseResourceTestCase):
 
 
 class ProfileResourceTest(BaseResourceTestCase):
-    pass
+    def setUp(self) -> None:
+        super().setUp()
+
+        self.profile_id = ObjectId()
+        self.default_profile = self.create_profile(
+            CURRENT_ADMIN.username, self.profile_id
+        )
+        self.default_profile["follows"] = [CURRENT_USER.username]
+        self.db.profiles.insert_one(self.default_profile)
+
+    def tearDown(self) -> None:
+        super().tearDown()
+
+        self.db.profiles.delete_many({})
+        self.db.global_acl.delete_many({})
+        self.db.space_acl.delete_many({})
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        super().tearDownClass()
+
+        # clear out elastisearch index, only once after all tests
+        # because otherwise there would be too many http requests
+        response = requests.delete(
+            "{}/test".format(global_vars.elasticsearch_base_url),
+            auth=(
+                global_vars.elasticsearch_username,
+                global_vars.elasticsearch_password,
+            ),
+        )
+        if response.status_code != 200:
+            print(response.content)
+
+    def create_profile(self, username: str, user_id: ObjectId) -> dict:
+        return {
+            "_id": user_id,
+            "username": username,
+            "role": "guest",
+            "follows": [],
+            "bio": "test",
+            "institution": "test",
+            "profile_pic": "default_profile_pic.jpg",
+            "first_name": "Test",
+            "last_name": "Admin",
+            "gender": "male",
+            "address": "test",
+            "birthday": "2023-01-01",
+            "experience": ["test", "test"],
+            "expertise": "test",
+            "languages": ["german", "english"],
+            "ve_ready": True,
+            "excluded_from_matching": False,
+            "ve_interests": ["test", "test"],
+            "ve_goals": ["test", "test"],
+            "preferred_formats": ["test"],
+            "research_tags": ["test"],
+            "courses": [
+                {"title": "test", "academic_course": "test", "semester": "test"}
+            ],
+            "educations": [
+                {
+                    "institution": "test",
+                    "degree": "test",
+                    "department": "test",
+                    "timestamp_from": "2023-01-01",
+                    "timestamp_to": "2023-02-01",
+                    "additional_info": "test",
+                }
+            ],
+            "work_experience": [
+                {
+                    "position": "test",
+                    "institution": "test",
+                    "department": "test",
+                    "timestamp_from": "2023-01-01",
+                    "timestamp_to": "2023-02-01",
+                    "city": "test",
+                    "country": "test",
+                    "additional_info": "test",
+                }
+            ],
+            "ve_window": [
+                {
+                    "plan_id": ObjectId(),
+                    "title": "test",
+                    "description": "test",
+                }
+            ],
+        }
+
+    def test_get_profile(self):
+        """
+        expect: successfully request profile
+        """
+
+        profile_manager = Profiles(self.db)
+        profile = profile_manager.get_profile(CURRENT_ADMIN.username)
+        self.assertIsNotNone(profile)
+        self.assertEqual(profile["username"], self.default_profile["username"])
+        self.assertEqual(profile["role"], self.default_profile["role"])
+        self.assertEqual(profile["follows"], self.default_profile["follows"])
+        self.assertEqual(profile["bio"], self.default_profile["bio"])
+        self.assertEqual(profile["institution"], self.default_profile["institution"])
+        self.assertEqual(profile["profile_pic"], self.default_profile["profile_pic"])
+        self.assertEqual(profile["first_name"], self.default_profile["first_name"])
+        self.assertEqual(profile["last_name"], self.default_profile["last_name"])
+        self.assertEqual(profile["gender"], self.default_profile["gender"])
+        self.assertEqual(profile["address"], self.default_profile["address"])
+        self.assertEqual(profile["birthday"], self.default_profile["birthday"])
+        self.assertEqual(profile["experience"], self.default_profile["experience"])
+        self.assertEqual(profile["expertise"], self.default_profile["expertise"])
+        self.assertEqual(profile["languages"], self.default_profile["languages"])
+        self.assertEqual(profile["ve_ready"], self.default_profile["ve_ready"])
+        self.assertEqual(
+            profile["excluded_from_matching"],
+            self.default_profile["excluded_from_matching"],
+        )
+        self.assertEqual(profile["ve_interests"], self.default_profile["ve_interests"])
+        self.assertEqual(profile["ve_goals"], self.default_profile["ve_goals"])
+        self.assertEqual(
+            profile["preferred_formats"], self.default_profile["preferred_formats"]
+        )
+        self.assertEqual(
+            profile["research_tags"], self.default_profile["research_tags"]
+        )
+        self.assertEqual(profile["courses"], self.default_profile["courses"])
+        self.assertEqual(profile["educations"], self.default_profile["educations"])
+        self.assertEqual(
+            profile["work_experience"], self.default_profile["work_experience"]
+        )
+        self.assertEqual(profile["ve_window"], self.default_profile["ve_window"])
+
+        # test again, but specify a projection of only first_name, last_name and expertise
+        profile = profile_manager.get_profile(
+            CURRENT_ADMIN.username,
+            projection={"first_name": True, "last_name": True, "expertise": True},
+        )
+        self.assertIsNotNone(profile)
+        self.assertIn("first_name", profile)
+        self.assertIn("last_name", profile)
+        self.assertIn("expertise", profile)
+        self.assertNotIn("username", profile)
+        self.assertNotIn("role", profile)
+        self.assertNotIn("follows", profile)
+        self.assertNotIn("bio", profile)
+        self.assertNotIn("institution", profile)
+        self.assertNotIn("profile_pic", profile)
+        self.assertNotIn("gender", profile)
+        self.assertNotIn("address", profile)
+        self.assertNotIn("birthday", profile)
+        self.assertNotIn("experience", profile)
+        self.assertNotIn("languages", profile)
+        self.assertNotIn("ve_ready", profile)
+        self.assertNotIn("excluded_from_matching", profile)
+        self.assertNotIn("ve_interests", profile)
+        self.assertNotIn("ve_goals", profile)
+        self.assertNotIn("preferred_formats", profile)
+        self.assertNotIn("research_tags", profile)
+        self.assertNotIn("courses", profile)
+        self.assertNotIn("educations", profile)
+        self.assertNotIn("work_experience", profile)
+        self.assertNotIn("ve_window", profile)
+        self.assertEqual(profile["first_name"], self.default_profile["first_name"])
+        self.assertEqual(profile["last_name"], self.default_profile["last_name"])
+        self.assertEqual(profile["expertise"], self.default_profile["expertise"])
+
+    def test_get_profile_error_profile_doesnt_exist(self):
+        """
+        expect: ProfileDoesntExistException is raised because no profile with this username exists
+        """
+
+        profile_manager = Profiles(self.db)
+        self.assertRaises(
+            ProfileDoesntExistException, profile_manager.get_profile, "non_existing"
+        )
+
+    def test_get_all_profiles(self):
+        """
+        expect: successfully request all profiles
+        """
+
+        # add 2 more profiles
+        profile1 = self.create_profile("test1", ObjectId())
+        profile2 = self.create_profile("test2", ObjectId())
+        self.db.profiles.insert_many([profile1, profile2])
+
+        profile_manager = Profiles(self.db)
+        profiles = profile_manager.get_all_profiles()
+        self.assertEqual(len(profiles), 3)
+        self.assertIn(self.default_profile, profiles)
+        self.assertIn(profile1, profiles)
+        self.assertIn(profile2, profiles)
+
+    def test_get_bulk_profiles(self):
+        """
+        expect: successfully request some profiles
+        """
+
+        # add 2 more profiles
+        profile1 = self.create_profile("test1", ObjectId())
+        profile2 = self.create_profile("test2", ObjectId())
+        self.db.profiles.insert_many([profile1, profile2])
+
+        # request profiles of CURRENT_ADMIN.username and test1
+        profile_manager = Profiles(self.db)
+        profiles = profile_manager.get_bulk_profiles([CURRENT_ADMIN.username, "test1"])
+        self.assertEqual(len(profiles), 2)
+        self.assertIn(self.default_profile, profiles)
+        self.assertIn(profile1, profiles)
+        self.assertNotIn(profile2, profiles)
+
+        # request profiles where one of them doesnt exist, so it should be skipped
+        profiles = profile_manager.get_bulk_profiles(
+            [CURRENT_ADMIN.username, "test1", "non_existing"]
+        )
+        self.assertEqual(len(profiles), 2)
+        self.assertIn(self.default_profile, profiles)
+        self.assertIn(profile1, profiles)
+        self.assertNotIn(profile2, profiles)
+
+    def test_insert_default_profile(self):
+        """
+        expect: successfully create a default profile
+        """
+
+        profile_manager = Profiles(self.db)
+        result = profile_manager.insert_default_profile(
+            CURRENT_USER.username, "Test", "User", "test"
+        )
+
+        # check if profile was created
+        profile = self.db.profiles.find_one({"_id": result["_id"]})
+        self.assertIsNotNone(profile)
+        self.assertEqual(profile["username"], CURRENT_USER.username)
+        self.assertEqual(profile["role"], "guest")
+        self.assertEqual(profile["follows"], [])
+        self.assertEqual(profile["bio"], "")
+        self.assertEqual(profile["institution"], "")
+        self.assertEqual(profile["profile_pic"], "default_profile_pic.jpg")
+        self.assertEqual(profile["first_name"], "Test")
+        self.assertEqual(profile["last_name"], "User")
+        self.assertEqual(profile["gender"], "")
+        self.assertEqual(profile["address"], "")
+        self.assertEqual(profile["birthday"], "")
+        self.assertEqual(profile["experience"], [""])
+        self.assertEqual(profile["expertise"], "")
+        self.assertEqual(profile["languages"], [])
+        self.assertEqual(profile["ve_ready"], True)
+        self.assertEqual(profile["excluded_from_matching"], False)
+        self.assertEqual(profile["ve_interests"], [""])
+        self.assertEqual(profile["ve_goals"], [""])
+        self.assertEqual(profile["preferred_formats"], [""])
+        self.assertEqual(profile["research_tags"], [])
+        self.assertEqual(profile["courses"], [])
+        self.assertEqual(profile["educations"], [])
+        self.assertEqual(profile["work_experience"], [])
+        self.assertEqual(profile["ve_window"], [])
+
+        # check that the profile was also replicated to elasticsearch
+        response = requests.get(
+            "{}/{}/_doc/{}".format(
+                global_vars.elasticsearch_base_url, "test", result["_id"]
+            ),
+            auth=(
+                global_vars.elasticsearch_username,
+                global_vars.elasticsearch_password,
+            ),
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_insert_default_admin_profile(self):
+        """
+        expect: successfully create profile that has role "admin"
+        """
+
+        profile_manager = Profiles(self.db)
+        result = profile_manager.insert_default_admin_profile(
+            "test_admin2", "Test", "Admin2", "test"
+        )
+
+        # check if profile was created
+        profile = self.db.profiles.find_one({"_id": result["_id"]})
+        self.assertIsNotNone(profile)
+        self.assertEqual(profile["username"], "test_admin2")
+        self.assertEqual(profile["role"], "admin")
+        self.assertEqual(profile["follows"], [])
+        self.assertEqual(profile["bio"], "")
+        self.assertEqual(profile["institution"], "")
+        self.assertEqual(profile["profile_pic"], "default_profile_pic.jpg")
+        self.assertEqual(profile["first_name"], "Test")
+        self.assertEqual(profile["last_name"], "Admin2")
+        self.assertEqual(profile["gender"], "")
+        self.assertEqual(profile["address"], "")
+        self.assertEqual(profile["birthday"], "")
+        self.assertEqual(profile["experience"], [""])
+        self.assertEqual(profile["expertise"], "")
+        self.assertEqual(profile["languages"], [])
+        self.assertEqual(profile["ve_ready"], True)
+        self.assertEqual(profile["excluded_from_matching"], False)
+        self.assertEqual(profile["ve_interests"], [""])
+        self.assertEqual(profile["ve_goals"], [""])
+        self.assertEqual(profile["preferred_formats"], [""])
+        self.assertEqual(profile["research_tags"], [])
+        self.assertEqual(profile["courses"], [])
+        self.assertEqual(profile["educations"], [])
+        self.assertEqual(profile["work_experience"], [])
+        self.assertEqual(profile["ve_window"], [])
+
+        # check that the profile was also replicated to elasticsearch
+        response = requests.get(
+            "{}/{}/_doc/{}".format(
+                global_vars.elasticsearch_base_url, "test", result["_id"]
+            ),
+            auth=(
+                global_vars.elasticsearch_username,
+                global_vars.elasticsearch_password,
+            ),
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_ensure_profile_exists(self):
+        """
+        expect: successfully create a default profile if it doesnt exist
+        """
+
+        # test with already existing profile
+        profile_manager = Profiles(self.db)
+        result = profile_manager.ensure_profile_exists(CURRENT_ADMIN.username)
+        self.assertEqual(result["_id"], self.default_profile["_id"])
+
+        # test with non existing username
+        result = profile_manager.ensure_profile_exists("non_existing_user")
+        self.assertIsNotNone(result)
+        self.assertEqual(result["username"], "non_existing_user")
+        self.assertEqual(result["role"], "guest")
+        self.assertEqual(result["follows"], [])
+        self.assertEqual(result["bio"], "")
+        self.assertEqual(result["institution"], "")
+        self.assertEqual(result["profile_pic"], "default_profile_pic.jpg")
+        self.assertEqual(result["first_name"], "")
+        self.assertEqual(result["last_name"], "")
+        self.assertEqual(result["gender"], "")
+        self.assertEqual(result["address"], "")
+        self.assertEqual(result["birthday"], "")
+        self.assertEqual(result["experience"], [""])
+        self.assertEqual(result["expertise"], "")
+        self.assertEqual(result["languages"], [])
+        self.assertEqual(result["ve_ready"], True)
+        self.assertEqual(result["excluded_from_matching"], False)
+        self.assertEqual(result["ve_interests"], [""])
+        self.assertEqual(result["ve_goals"], [""])
+        self.assertEqual(result["preferred_formats"], [""])
+        self.assertEqual(result["research_tags"], [])
+        self.assertEqual(result["courses"], [])
+        self.assertEqual(result["educations"], [])
+        self.assertEqual(result["work_experience"], [])
+        self.assertEqual(result["ve_window"], [])
+
+        # also test that in this case an acl entry for "guest" was created if it not
+        # already existed
+        # only global acl tested here because we have no spaces
+        global_acl = self.db.global_acl.find_one({"role": "guest"})
+        self.assertIsNotNone(global_acl)
+
+    def test_get_follows(self):
+        """
+        expect: successfully get follows
+        """
+
+        profile_manager = Profiles(self.db)
+        follows = profile_manager.get_follows(CURRENT_ADMIN.username)
+        self.assertEqual(len(follows), 1)
+        self.assertEqual(follows[0], CURRENT_USER.username)
+
+    def test_get_follow_error_profile_doesnt_exist(self):
+        """
+        expect: ProfileDoesntExistException is raised because no profile with this username exists
+        """
+
+        profile_manager = Profiles(self.db)
+        self.assertRaises(
+            ProfileDoesntExistException, profile_manager.get_follows, "non_existing"
+        )
 
 
 class SpaceResourceTest(BaseResourceTestCase):
