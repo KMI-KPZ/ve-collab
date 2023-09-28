@@ -12,6 +12,7 @@ import requests
 from tornado.options import options
 from exceptions import (
     AlreadyAdminError,
+    AlreadyFollowedException,
     AlreadyLikerException,
     AlreadyMemberError,
     AlreadyRequestedJoinError,
@@ -22,6 +23,7 @@ from exceptions import (
     NoReadAccessError,
     NoWriteAccessError,
     NonUniqueTasksError,
+    NotFollowedException,
     NotLikerException,
     NotRequestedJoinError,
     OnlyAdminError,
@@ -1469,6 +1471,11 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.db.global_acl.delete_many({})
         self.db.space_acl.delete_many({})
 
+        # delete all created files in gridfs
+        fs = gridfs.GridFS(self.db)
+        for fs_file in fs.find():
+            fs.delete(fs_file._id)
+
     @classmethod
     def tearDownClass(cls) -> None:
         super().tearDownClass()
@@ -1834,6 +1841,440 @@ class ProfileResourceTest(BaseResourceTestCase):
         profile_manager = Profiles(self.db)
         self.assertRaises(
             ProfileDoesntExistException, profile_manager.get_follows, "non_existing"
+        )
+
+    def test_add_follows(self):
+        """
+        expect: successfully follow the user
+        """
+
+        profile_manager = Profiles(self.db)
+        profile_manager.add_follows(CURRENT_ADMIN.username, "another_test_user")
+
+        # check if the user is now followed
+        follows = profile_manager.get_follows(CURRENT_ADMIN.username)
+        self.assertIn("another_test_user", follows)
+
+    def test_add_follows_error_profile_doesnt_exist(self):
+        """
+        expect: ProfileDoesntExistException is raised because no profile with this username exists
+        """
+
+        profile_manager = Profiles(self.db)
+        self.assertRaises(
+            ProfileDoesntExistException,
+            profile_manager.add_follows,
+            "non_existing",
+            "another_test_user",
+        )
+
+    def test_add_follows_error_already_followed(self):
+        """
+        expect: AlreadyFollowedException is raised because the user already follows this user
+        """
+
+        profile_manager = Profiles(self.db)
+        self.assertRaises(
+            AlreadyFollowedException,
+            profile_manager.add_follows,
+            CURRENT_ADMIN.username,
+            CURRENT_USER.username,
+        )
+
+    def test_remove_follows(self):
+        """
+        expect: successfully unfollow the user
+        """
+
+        profile_manager = Profiles(self.db)
+        profile_manager.remove_follows(CURRENT_ADMIN.username, CURRENT_USER.username)
+
+        # check if the user is now unfollowed
+        follows = profile_manager.get_follows(CURRENT_ADMIN.username)
+        self.assertNotIn(CURRENT_USER.username, follows)
+
+    def test_remove_follows_error_profile_doesnt_exist(self):
+        """
+        expect: ProfileDoesntExistException is raised because no profile with this username exists
+        """
+
+        profile_manager = Profiles(self.db)
+        self.assertRaises(
+            ProfileDoesntExistException,
+            profile_manager.remove_follows,
+            "non_existing",
+            CURRENT_USER.username,
+        )
+
+    def test_remove_follows_error_not_followed(self):
+        """
+        expect: NotFollowedException is raised because the user doesnt follow this user
+        """
+
+        profile_manager = Profiles(self.db)
+        self.assertRaises(
+            NotFollowedException,
+            profile_manager.remove_follows,
+            CURRENT_ADMIN.username,
+            "another_test_user",
+        )
+
+    def test_get_followers(self):
+        """
+        expect: successfully list of users that follow this user
+        """
+
+        profile_manager = Profiles(self.db)
+        followers = profile_manager.get_followers(CURRENT_USER.username)
+        self.assertEqual(len(followers), 1)
+        self.assertEqual(followers[0], CURRENT_ADMIN.username)
+
+    def test_get_role(self):
+        """
+        expect: successfully get role
+        """
+
+        profile_manager = Profiles(self.db)
+        role = profile_manager.get_role(CURRENT_ADMIN.username)
+        self.assertEqual(role, self.default_profile["role"])
+
+    def test_get_role_error_profile_doesnt_exist(self):
+        """
+        expect: ProfileDoesntExistException is raised because no profile with this username exists
+        """
+
+        profile_manager = Profiles(self.db)
+        self.assertRaises(
+            ProfileDoesntExistException, profile_manager.get_role, "non_existing"
+        )
+
+    def test_set_role(self):
+        """
+        expect: successfully set role of the user
+        """
+
+        profile_manager = Profiles(self.db)
+        profile_manager.set_role(CURRENT_ADMIN.username, "a_different_role")
+
+        # check if the role was set
+        result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(result["role"], "a_different_role")
+
+    def test_set_role_error_profile_doesnt_exist(self):
+        """
+        expect: ProfileDoesntExistException is raised because no profile with this username exists
+        """
+
+        profile_manager = Profiles(self.db)
+        self.assertRaises(
+            ProfileDoesntExistException,
+            profile_manager.set_role,
+            "non_existing",
+            "a_different_role",
+        )
+
+    def test_check_role_exists(self):
+        """
+        expect: successfully check if a role exists or not
+        """
+
+        profile_manager = Profiles(self.db)
+        self.assertTrue(profile_manager.check_role_exists(self.default_profile["role"]))
+        self.assertFalse(profile_manager.check_role_exists("non_existing_role"))
+
+    def test_get_all_roles(self):
+        """
+        expect: successfully retrieve a list of all username <-> role mappings
+        """
+
+        # add another user with a different role
+        profile = self.create_profile("test1", ObjectId())
+        profile["role"] = "a_different_role"
+        self.db.profiles.insert_one(profile)
+
+        profile_manager = Profiles(self.db)
+        roles = profile_manager.get_all_roles(
+            [{"username": i} for i in [CURRENT_ADMIN.username, "test1"]]
+        )
+        self.assertEqual(len(roles), 2)
+        self.assertIn(
+            {"username": CURRENT_ADMIN.username, "role": self.default_profile["role"]},
+            roles,
+        )
+        self.assertIn({"username": "test1", "role": "a_different_role"}, roles)
+
+    def test_get_all_roles_auto_create(self):
+        """
+        expect: since the supplied keycloak user list contains users that
+        are not yet in mongodb, they get automatically created with default profiles
+        """
+
+        profile_manager = Profiles(self.db)
+        roles = profile_manager.get_all_roles(
+            [{"username": i} for i in [CURRENT_ADMIN.username, "test1"]], "test"
+        )
+        self.assertEqual(len(roles), 2)
+        self.assertIn(
+            {"username": CURRENT_ADMIN.username, "role": self.default_profile["role"]},
+            roles,
+        )
+        self.assertIn({"username": "test1", "role": "guest"}, roles)
+
+        # check that the "test1" profile was also created
+        profile = self.db.profiles.find_one({"username": "test1"})
+        self.assertIsNotNone(profile)
+        self.assertEqual(profile["username"], "test1")
+        self.assertEqual(profile["role"], "guest")
+        self.assertEqual(profile["follows"], [])
+        self.assertEqual(profile["bio"], "")
+        self.assertEqual(profile["institution"], "")
+        self.assertEqual(profile["profile_pic"], "default_profile_pic.jpg")
+        self.assertEqual(profile["first_name"], "")
+        self.assertEqual(profile["last_name"], "")
+        self.assertEqual(profile["gender"], "")
+        self.assertEqual(profile["address"], "")
+        self.assertEqual(profile["birthday"], "")
+        self.assertEqual(profile["experience"], [""])
+        self.assertEqual(profile["expertise"], "")
+        self.assertEqual(profile["languages"], [])
+        self.assertEqual(profile["ve_ready"], True)
+        self.assertEqual(profile["excluded_from_matching"], False)
+        self.assertEqual(profile["ve_interests"], [""])
+        self.assertEqual(profile["ve_goals"], [""])
+        self.assertEqual(profile["preferred_formats"], [""])
+        self.assertEqual(profile["research_tags"], [])
+        self.assertEqual(profile["courses"], [])
+        self.assertEqual(profile["educations"], [])
+        self.assertEqual(profile["work_experience"], [])
+        self.assertEqual(profile["ve_window"], [])
+
+        # also check that the "test1" profile was replicated to elasticsearch
+        response = requests.get(
+            "{}/{}/_doc/{}".format(
+                global_vars.elasticsearch_base_url, "test", profile["_id"]
+            ),
+            auth=(
+                global_vars.elasticsearch_username,
+                global_vars.elasticsearch_password,
+            ),
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_distinct_roles(self):
+        """
+        expect: successfully retrieve a list of all distinct roles
+        """
+
+        # add another user with a different role
+        profile = self.create_profile("test1", ObjectId())
+        profile["role"] = "a_different_role"
+        self.db.profiles.insert_one(profile)
+
+        profile_manager = Profiles(self.db)
+        roles = profile_manager.get_distinct_roles()
+        self.assertEqual(len(roles), 2)
+        self.assertIn(self.default_profile["role"], roles)
+        self.assertIn("a_different_role", roles)
+
+    def test_get_profile_pic(self):
+        """
+        expect: successfully get profile pic attribute
+        """
+
+        profile_manager = Profiles(self.db)
+        profile_pic = profile_manager.get_profile_pic(CURRENT_ADMIN.username)
+        self.assertEqual(profile_pic, self.default_profile["profile_pic"])
+
+    def test_get_profile_pic_error_profile_doesnt_exist(self):
+        """
+        expect: ProfileDoesntExistException is raised because no profile with this username exists
+        """
+
+        profile_manager = Profiles(self.db)
+        self.assertRaises(
+            ProfileDoesntExistException,
+            profile_manager.get_profile_pic,
+            "non_existing",
+        )
+
+    def test_update_profile_information(self):
+        """
+        expect: successfully update profile information
+        """
+
+        profile_manager = Profiles(self.db)
+        profile_manager.update_profile_information(
+            self.default_profile["username"],
+            {"bio": "new_bio"},
+            elasticsearch_collection="test",
+        )
+
+        # check if the profile was updated
+        result = self.db.profiles.find_one(
+            {"username": self.default_profile["username"]}
+        )
+        self.assertEqual(result["bio"], "new_bio")
+
+        # check that the update was also replicated to elasticsearch
+        response = requests.get(
+            "{}/{}/_doc/{}".format(
+                global_vars.elasticsearch_base_url, "test", result["_id"]
+            ),
+            auth=(
+                global_vars.elasticsearch_username,
+                global_vars.elasticsearch_password,
+            ),
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["_source"]["bio"], "new_bio")
+
+        # try again with updating the profile pic
+        profile_pic_id = profile_manager.update_profile_information(
+            CURRENT_ADMIN.username,
+            {"profile_pic": "new_profile_pic.jpg", "bio": "newbio2"},
+            b"test",
+            "image/jpg",
+            "test",
+        )
+        profile_pic_id = ObjectId(profile_pic_id)
+
+        # check if the profile was updated
+        result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(result["bio"], "newbio2")
+        self.assertEqual(result["profile_pic"], profile_pic_id)
+
+        # check that the profile pic was also replicated to gridfs
+        fs = gridfs.GridFS(self.db)
+        fs_file = fs.get(profile_pic_id)
+        self.assertIsNotNone(fs_file)
+
+    def test_update_profile_information_upsert(self):
+        """
+        expect: successfully upsert if no profile exists yet
+        """
+
+        profile_manager = Profiles(self.db)
+        profile_manager.update_profile_information(
+            "non_existing", {"bio": "new_bio"}, elasticsearch_collection="test"
+        )
+
+        # check if the profile was created
+        result = self.db.profiles.find_one({"username": "non_existing"})
+        self.assertIsNotNone(result)
+        self.assertEqual(result["bio"], "new_bio")
+
+        # check that the update was also replicated to elasticsearch
+        response = requests.get(
+            "{}/{}/_doc/{}".format(
+                global_vars.elasticsearch_base_url, "test", result["_id"]
+            ),
+            auth=(
+                global_vars.elasticsearch_username,
+                global_vars.elasticsearch_password,
+            ),
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["_source"]["bio"], "new_bio")
+
+    def test_update_profile_information_error_type_error(self):
+        """
+        expect: TypeError is raised because some of the updated profile attributes
+        have a wrong value
+        """
+
+        profile_manager = Profiles(self.db)
+        self.assertRaises(
+            TypeError,
+            profile_manager.update_profile_information,
+            self.default_profile["username"],
+            {"bio": 123},
+        )
+
+    def test_get_profile_snippets(self):
+        """
+        expect: successfully get snippets
+        (username, first_name, last_name, institution, profile_pic)
+        of the supplied users
+        """
+
+        # add one more profile
+        profile1 = self.create_profile("test1", ObjectId())
+        self.db.profiles.insert_one(profile1)
+
+        profile_manager = Profiles(self.db)
+        snippets = profile_manager.get_profile_snippets(
+            [self.default_profile["username"], "test1"]
+        )
+        self.assertEqual(len(snippets), 2)
+        self.assertIn(
+            {
+                "username": self.default_profile["username"],
+                "first_name": self.default_profile["first_name"],
+                "last_name": self.default_profile["last_name"],
+                "institution": self.default_profile["institution"],
+                "profile_pic": self.default_profile["profile_pic"],
+            },
+            snippets,
+        )
+        self.assertIn(
+            {
+                "username": profile1["username"],
+                "first_name": profile1["first_name"],
+                "last_name": profile1["last_name"],
+                "institution": profile1["institution"],
+                "profile_pic": profile1["profile_pic"],
+            },
+            snippets,
+        )
+
+        # try again, but this time request a user that doesnt exist, expecting it
+        # to be skipped
+        snippets = profile_manager.get_profile_snippets(
+            [self.default_profile["username"], "non_existing"]
+        )
+        self.assertEqual(len(snippets), 1)
+        self.assertIn(
+            {
+                "username": self.default_profile["username"],
+                "first_name": self.default_profile["first_name"],
+                "last_name": self.default_profile["last_name"],
+                "institution": self.default_profile["institution"],
+                "profile_pic": self.default_profile["profile_pic"],
+            },
+            snippets,
+        )
+
+    def test_get_profile_snippets_error_type_error(self):
+        """
+        expect: TypeError is raised because supplied usernames is not a list
+        """
+
+        profile_manager = Profiles(self.db)
+        self.assertRaises(TypeError, profile_manager.get_profile_snippets, "test")
+
+    def test_get_matching_exclusion(self):
+        """
+        expect: successfully retrieve excluded_from_matching attribute
+        """
+
+        profile_manager = Profiles(self.db)
+        excluded_from_matching = profile_manager.get_matching_exclusion(
+            CURRENT_ADMIN.username
+        )
+        self.assertEqual(
+            excluded_from_matching, self.default_profile["excluded_from_matching"]
+        )
+
+    def test_get_matching_exclusion_erro_profile_doesnt_exist(self):
+        """
+        expect: ProfileDoesntExistException is raised because no profile with this username exists
+        """
+
+        profile_manager = Profiles(self.db)
+        self.assertRaises(
+            ProfileDoesntExistException,
+            profile_manager.get_matching_exclusion,
+            "non_existing",
         )
 
 

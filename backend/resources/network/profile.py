@@ -346,14 +346,21 @@ class Profiles:
         else:
             return False
 
-    def get_all_roles(self, keycloak_user_list: List[Dict]) -> List[dict]:
+    def get_all_roles(
+        self,
+        keycloak_user_list: List[Dict],
+        auto_create_elastic_collection: str = "profiles",
+    ) -> List[dict]:
         """
         produce a list of dicts containing the following information:
         {"username": <username>, "role": <role>}
         by joining a list of keycloak user with our profile database on the username.
         This extra step is needed, because users are only recognized in our database
         when they first log in, but they should be referencable by other users before that.
-        To achieve that, we create a profile for them if it does not already exist
+        To achieve that, we create a profile for them if it does not already exist.
+        In this case, by setting `auto_create_elastic_collection` you can control in which
+        elasticsearch index the freshly created profile gets replicated. The default is
+        "profiles" just as in the mongodb.
         """
 
         existing_users_and_roles = self.get_all_profiles(
@@ -374,7 +381,9 @@ class Profiles:
                 continue
 
             # if the user does not already exist, add him with guest role
-            self.insert_default_profile(platform_user["username"])
+            self.insert_default_profile(
+                platform_user["username"], elasticsearch_collection=auto_create_elastic_collection
+            )
             # manually create return entry
             # because otherwise non-json-serializable ObjectId is in payload
             ret_list.append(
@@ -432,13 +441,14 @@ class Profiles:
         updated_profile: Dict,
         profile_pic: bytes = None,
         profile_pic_content_type: str = None,
+        elasticsearch_collection: str = "profiles",
     ) -> Optional[ObjectId]:
         """
         update the profile information including (optionally) the profile picture.
         The following keys are necessary in the `updated_profile` dict:
         see `self.profile_attributes` of class `Profiles`
         The following keys are optional:
-        profile_pic
+        profile_pic, profile_pic_content_type, elasticsearch_collection.
 
         If a profile_pic was updated, its inserted _id is returned, otherwise (regular
         update of profile data) None is returned.
@@ -490,12 +500,11 @@ class Profiles:
             },
             upsert=True,
             return_document=ReturnDocument.AFTER,
-            projection={"_id": True},
         )
 
         # replicate the update to elasticsearch
         updated_profile["username"] = username
-        ElasticsearchConnector().on_update(result["_id"], "profiles", updated_profile)
+        ElasticsearchConnector().on_update(result["_id"], elasticsearch_collection, result)
 
         return (
             updated_profile["profile_pic"] if "profile_pic" in updated_profile else None
