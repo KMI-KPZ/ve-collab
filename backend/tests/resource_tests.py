@@ -49,9 +49,10 @@ from model import (
     User,
     VEPlan,
 )
-from resources.network.space import Spaces
+from resources.network.acl import ACL
 from resources.network.post import Posts
 from resources.network.profile import Profiles
+from resources.network.space import Spaces
 from resources.planner.ve_plan import VEPlanResource
 import util
 
@@ -188,8 +189,808 @@ class BaseResourceTestCase(TestCase):
         )
 
 
+class GlobalACLRessourceTest(BaseResourceTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+
+        self.default_acl_entry = {"role": "guest", "create_space": True}
+        self.db.global_acl.insert_one(self.default_acl_entry.copy())
+
+    def tearDown(self) -> None:
+        super().tearDown()
+
+        self.db.global_acl.delete_many({})
+
+    def test_get_existing_keys(self):
+        """
+        expect: successfully get expected keys for each acl entry
+        """
+
+        acl_manager = ACL(self.db)
+        keys = acl_manager.global_acl.get_existing_keys()
+        self.assertEqual(["role", "create_space"], keys)
+
+    def test_insert_default(self):
+        """
+        expect: successfully insert default rule for given role
+        """
+
+        acl_manager = ACL(self.db)
+        acl_manager.global_acl.insert_default("another_role")
+
+        # check if default rule was inserted
+        acl_entry = self.db.global_acl.find_one({"role": "another_role"})
+        self.assertIsNotNone(acl_entry)
+        self.assertEqual(acl_entry["role"], "another_role")
+        self.assertEqual(acl_entry["create_space"], False)
+
+    def test_insert_admin(self):
+        """
+        expect: successfully insert an admin rule
+        """
+
+        acl_manager = ACL(self.db)
+        acl_manager.global_acl.insert_admin()
+
+        # check if admin rule was inserted
+        acl_entry = self.db.global_acl.find_one({"role": "admin"})
+        self.assertIsNotNone(acl_entry)
+        self.assertEqual(acl_entry["role"], "admin")
+        self.assertEqual(acl_entry["create_space"], True)
+
+    def test_ask(self):
+        """
+        expect: successfully ask the acl for a given rolen and permission key
+        """
+
+        acl_manager = ACL(self.db)
+        self.assertTrue(acl_manager.global_acl.ask("guest", "create_space"))
+
+    def test_ask_error_key_doesnt_exist(self):
+        """
+        expect: KeyError is raised because the supplied permission key doesn't exist
+        """
+
+        acl_manager = ACL(self.db)
+        self.assertRaises(KeyError, acl_manager.global_acl.ask, "guest", "test")
+
+    def test_ask_error_role_doesnt_exist(self):
+        """
+        expect: Value is raised because the supplied role doesn't exist
+        """
+
+        acl_manager = ACL(self.db)
+        self.assertRaises(
+            ValueError, acl_manager.global_acl.ask, "test", "create_space"
+        )
+
+    def test_get(self):
+        """
+        expect: successfully get acl entry for given role
+        """
+
+        acl_manager = ACL(self.db)
+        acl_entry = acl_manager.global_acl.get("guest")
+        self.assertEqual(acl_entry["role"], "guest")
+        self.assertEqual(acl_entry["create_space"], True)
+
+    def test_get_error_role_doesnt_exist(self):
+        """
+        expect: None is returned because the supplied role doesn't exist
+        """
+
+        acl_manager = ACL(self.db)
+        acl_entry = acl_manager.global_acl.get("test")
+        self.assertIsNone(acl_entry)
+
+    def test_get_all(self):
+        """
+        expect: successfully get all acl rules
+        """
+
+        # add one more rule
+        test_rule = {"role": "test", "create_space": False}
+        self.db.global_acl.insert_one(test_rule.copy())
+
+        acl_manager = ACL(self.db)
+        acl_entries = acl_manager.global_acl.get_all()
+        self.assertEqual(len(acl_entries), 2)
+        self.assertIn(self.default_acl_entry, acl_entries)
+        self.assertIn(test_rule, acl_entries)
+
+    def test_set(self):
+        """
+        expect: successfully set a single permission key value for a given role
+        """
+
+        acl_manager = ACL(self.db)
+        acl_manager.global_acl.set("guest", "create_space", False)
+
+        # check if value was set
+        acl_entry = self.db.global_acl.find_one({"role": "guest"})
+        self.assertIsNotNone(acl_entry)
+        self.assertEqual(acl_entry["role"], "guest")
+        self.assertEqual(acl_entry["create_space"], False)
+
+    def test_set_upsert(self):
+        """
+        expect: using set, successfully insert a new role with permission key value
+        that didn't exist before
+        """
+
+        acl_manager = ACL(self.db)
+        acl_manager.global_acl.set("test", "create_space", True)
+
+        # check if value was set
+        acl_entry = self.db.global_acl.find_one({"role": "test"})
+        self.assertIsNotNone(acl_entry)
+        self.assertEqual(acl_entry["role"], "test")
+        self.assertEqual(acl_entry["create_space"], True)
+
+    def test_set_error_key_doesnt_exist(self):
+        """
+        expect: KeyError is raised because the supplied permission key doesn't exist
+        """
+
+        acl_manager = ACL(self.db)
+        self.assertRaises(KeyError, acl_manager.global_acl.set, "guest", "test", True)
+
+    def test_set_all(self):
+        """
+        expect: successfully set all permission keys with values for a given role
+        (not incredibly effective for global acl tho, as there is currently only one key)
+        """
+
+        acl_manager = ACL(self.db)
+        acl_manager.global_acl.set_all({"role": "guest", "create_space": False})
+
+        # check if value was set
+        acl_entry = self.db.global_acl.find_one({"role": "guest"})
+        self.assertIsNotNone(acl_entry)
+        self.assertEqual(acl_entry["role"], "guest")
+        self.assertEqual(acl_entry["create_space"], False)
+
+    def test_set_all_upsert(self):
+        """
+        expect: using set_all, successfully insert a new role with permission key values
+        that didn't exist before
+        """
+
+        acl_manager = ACL(self.db)
+        acl_manager.global_acl.set_all({"role": "test", "create_space": True})
+
+        # check if value was set
+        acl_entry = self.db.global_acl.find_one({"role": "test"})
+        self.assertIsNotNone(acl_entry)
+        self.assertEqual(acl_entry["role"], "test")
+        self.assertEqual(acl_entry["create_space"], True)
+
+    def test_set_all_error_missing_role(self):
+        """
+        expect: KeyError is raised because "role" attribute is missing from the dict
+        """
+
+        acl_manager = ACL(self.db)
+        self.assertRaises(KeyError, acl_manager.global_acl.set_all, {"test": True})
+
+    def test_set_all_error_wrong_key(self):
+        """
+        expect: KeyError is raised because atleast one of the supplied
+        permission keys doesn't exist
+        """
+
+        acl_manager = ACL(self.db)
+        self.assertRaises(
+            KeyError, acl_manager.global_acl.set_all, {"role": "guest", "test": True}
+        )
+
+    def test_delete(self):
+        """
+        expect: successfully delete acl entry for given role
+        """
+
+        acl_manager = ACL(self.db)
+        acl_manager.global_acl.delete("guest")
+
+        # check if entry was deleted
+        acl_entry = self.db.global_acl.find_one({"role": "guest"})
+        self.assertIsNone(acl_entry)
+
+
+class SpaceACLResourceTest(BaseResourceTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+
+        # create default space:
+        self.space_id = ObjectId()
+        self.space_name = "test"
+        self.default_space = {
+            "_id": self.space_id,
+            "name": self.space_name,
+            "invisible": False,
+            "joinable": True,
+            "members": [CURRENT_ADMIN.username],
+            "admins": [CURRENT_ADMIN.username],
+            "invites": [],
+            "requests": [],
+            "files": [],
+        }
+        self.db.spaces.insert_one(self.default_space)
+
+        self.default_acl_entry = {
+            "role": "guest",
+            "space": self.space_name,
+            "join_space": True,
+            "read_timeline": True,
+            "post": True,
+            "comment": True,
+            "read_wiki": True,
+            "write_wiki": True,
+            "read_files": True,
+            "write_files": True,
+        }
+        self.db.space_acl.insert_one(self.default_acl_entry.copy())
+
+    def tearDown(self) -> None:
+        super().tearDown()
+
+        self.db.spaces.delete_many({})
+        self.db.space_acl.delete_many({})
+
+    def test_get_existing_keys(self):
+        """
+        expect: successfully get expected keys for each acl entry
+        """
+
+        acl_manager = ACL(self.db)
+        keys = acl_manager.space_acl.get_existing_keys()
+        self.assertEqual(
+            [
+                "role",
+                "space",
+                "join_space",
+                "read_timeline",
+                "post",
+                "comment",
+                "read_wiki",
+                "write_wiki",
+                "read_files",
+                "write_files",
+            ],
+            keys,
+        )
+
+    def test_insert_default(self):
+        """
+        expect: successfully insert default rule (everything except read_timeline False)
+        for the given role in the given space
+        """
+
+        acl_manager = ACL(self.db)
+        acl_manager.space_acl.insert_default("another_role", self.space_name)
+
+        # check if default rule was inserted
+        acl_entry = self.db.space_acl.find_one(
+            {"role": "another_role", "space": self.space_name}
+        )
+        self.assertIsNotNone(acl_entry)
+        self.assertEqual(acl_entry["role"], "another_role")
+        self.assertEqual(acl_entry["space"], self.space_name)
+        self.assertEqual(acl_entry["join_space"], False)
+        self.assertEqual(acl_entry["read_timeline"], True)
+        self.assertEqual(acl_entry["post"], False)
+        self.assertEqual(acl_entry["comment"], False)
+        self.assertEqual(acl_entry["read_wiki"], False)
+        self.assertEqual(acl_entry["write_wiki"], False)
+        self.assertEqual(acl_entry["read_files"], False)
+        self.assertEqual(acl_entry["write_files"], False)
+
+    def test_insert_admin(self):
+        """
+        expect: successfully insert admin rule (everything True) for the given space
+        """
+
+        acl_manager = ACL(self.db)
+        acl_manager.space_acl.insert_admin(self.space_name)
+
+        # check if admin rule was inserted
+        acl_entry = self.db.space_acl.find_one(
+            {"role": "admin", "space": self.space_name}
+        )
+        self.assertIsNotNone(acl_entry)
+        self.assertEqual(acl_entry["role"], "admin")
+        self.assertEqual(acl_entry["space"], self.space_name)
+        self.assertEqual(acl_entry["join_space"], True)
+        self.assertEqual(acl_entry["read_timeline"], True)
+        self.assertEqual(acl_entry["post"], True)
+        self.assertEqual(acl_entry["comment"], True)
+        self.assertEqual(acl_entry["read_wiki"], True)
+        self.assertEqual(acl_entry["write_wiki"], True)
+        self.assertEqual(acl_entry["read_files"], True)
+        self.assertEqual(acl_entry["write_files"], True)
+
+    def test_insert_default_discussion(self):
+        """
+        expect: successfully insert default rule (everything except write_wiki True) for given
+        role and given discussion space name
+        """
+
+        acl_manager = ACL(self.db)
+        acl_manager.space_acl.insert_default_discussion("another_role", self.space_name)
+
+        # check if default rule was inserted
+        acl_entry = self.db.space_acl.find_one(
+            {"role": "another_role", "space": self.space_name}
+        )
+        self.assertIsNotNone(acl_entry)
+        self.assertEqual(acl_entry["role"], "another_role")
+        self.assertEqual(acl_entry["space"], self.space_name)
+        self.assertEqual(acl_entry["join_space"], True)
+        self.assertEqual(acl_entry["read_timeline"], True)
+        self.assertEqual(acl_entry["post"], True)
+        self.assertEqual(acl_entry["comment"], True)
+        self.assertEqual(acl_entry["read_wiki"], True)
+        self.assertEqual(acl_entry["write_wiki"], False)
+        self.assertEqual(acl_entry["read_files"], True)
+        self.assertEqual(acl_entry["write_files"], True)
+
+    def test_ask(self):
+        """
+        expect: successfully ask the acl for a given role/space and permission key
+        """
+
+        acl_manager = ACL(self.db)
+        self.assertTrue(
+            acl_manager.space_acl.ask(
+                self.default_acl_entry["role"], self.space_name, "join_space"
+            )
+        )
+        self.assertTrue(
+            acl_manager.space_acl.ask(
+                self.default_acl_entry["role"], self.space_name, "read_timeline"
+            )
+        )
+        self.assertTrue(
+            acl_manager.space_acl.ask(
+                self.default_acl_entry["role"], self.space_name, "post"
+            )
+        )
+        self.assertTrue(
+            acl_manager.space_acl.ask(
+                self.default_acl_entry["role"], self.space_name, "comment"
+            )
+        )
+        self.assertTrue(
+            acl_manager.space_acl.ask(
+                self.default_acl_entry["role"], self.space_name, "read_wiki"
+            )
+        )
+        self.assertTrue(
+            acl_manager.space_acl.ask(
+                self.default_acl_entry["role"], self.space_name, "write_wiki"
+            )
+        )
+        self.assertTrue(
+            acl_manager.space_acl.ask(
+                self.default_acl_entry["role"], self.space_name, "read_files"
+            )
+        )
+        self.assertTrue(
+            acl_manager.space_acl.ask(
+                self.default_acl_entry["role"], self.space_name, "write_files"
+            )
+        )
+
+    def test_ask_error_key_doesnt_exist(self):
+        """
+        expect: KeyError is raised because the supplied permission key doesn't exist
+        """
+
+        acl_manager = ACL(self.db)
+        self.assertRaises(
+            KeyError,
+            acl_manager.space_acl.ask,
+            self.default_acl_entry["role"],
+            self.space_name,
+            "test",
+        )
+
+    def test_ask_error_role_doesnt_exist(self):
+        """
+        expect: ValueError is raised because the supplied role doesn't exist
+        """
+
+        acl_manager = ACL(self.db)
+        self.assertRaises(
+            ValueError,
+            acl_manager.space_acl.ask,
+            "test",
+            self.space_name,
+            "join_space",
+        )
+
+    def test_get(self):
+        """
+        expect: successfully get acl entry for given role/space
+        """
+
+        acl_manager = ACL(self.db)
+        acl_entry = acl_manager.space_acl.get(
+            self.default_acl_entry["role"], self.space_name
+        )
+        self.assertEqual(acl_entry["role"], self.default_acl_entry["role"])
+        self.assertEqual(acl_entry["space"], self.space_name)
+        self.assertEqual(acl_entry["join_space"], True)
+        self.assertEqual(acl_entry["read_timeline"], True)
+        self.assertEqual(acl_entry["post"], True)
+        self.assertEqual(acl_entry["comment"], True)
+        self.assertEqual(acl_entry["read_wiki"], True)
+        self.assertEqual(acl_entry["write_wiki"], True)
+        self.assertEqual(acl_entry["read_files"], True)
+        self.assertEqual(acl_entry["write_files"], True)
+
+    def test_get_error_role_doesnt_exist(self):
+        """
+        expect: None is returned because the supplied role doesn't exist
+        """
+
+        acl_manager = ACL(self.db)
+        acl_entry = acl_manager.space_acl.get("test", self.space_name)
+        self.assertIsNone(acl_entry)
+
+    def test_get_all(self):
+        """
+        expect: successfully get all acl rules of a space
+        """
+
+        # add one more rule for another space
+        test_rule = {
+            "role": "test",
+            "space": "another_test",
+            "join_space": False,
+            "read_timeline": False,
+            "post": False,
+            "comment": False,
+            "read_wiki": False,
+            "write_wiki": False,
+            "read_files": False,
+            "write_files": False,
+        }
+        self.db.space_acl.insert_one(test_rule.copy())
+
+        acl_manager = ACL(self.db)
+        acl_entries = acl_manager.space_acl.get_all("another_test")
+        # default rule should not be in, because it is in another space
+        self.assertEqual(len(acl_entries), 1)
+        self.assertIn(test_rule, acl_entries)
+
+    def test_get_full_list(self):
+        """
+        expect: successfully get all acl rules of all spaces
+        """
+
+        # add one more rule for another space
+        test_rule = {
+            "role": "test",
+            "space": "another_test",
+            "join_space": False,
+            "read_timeline": False,
+            "post": False,
+            "comment": False,
+            "read_wiki": False,
+            "write_wiki": False,
+            "read_files": False,
+            "write_files": False,
+        }
+        self.db.space_acl.insert_one(test_rule.copy())
+
+        acl_manager = ACL(self.db)
+        acl_entries = acl_manager.space_acl.get_full_list()
+        self.assertEqual(len(acl_entries), 2)
+        self.assertIn(self.default_acl_entry, acl_entries)
+        self.assertIn(test_rule, acl_entries)
+
+    def test_set(self):
+        """
+        expect: successfully set a single permission key value for a given role/space
+        """
+
+        acl_manager = ACL(self.db)
+        acl_manager.space_acl.set(
+            self.default_acl_entry["role"], self.space_name, "join_space", False
+        )
+
+        # check if value was set
+        acl_entry = self.db.space_acl.find_one(
+            {"role": self.default_acl_entry["role"], "space": self.space_name}
+        )
+        self.assertIsNotNone(acl_entry)
+        self.assertEqual(acl_entry["role"], self.default_acl_entry["role"])
+        self.assertEqual(acl_entry["space"], self.space_name)
+        self.assertEqual(acl_entry["join_space"], False)
+        self.assertEqual(acl_entry["read_timeline"], True)
+        self.assertEqual(acl_entry["post"], True)
+        self.assertEqual(acl_entry["comment"], True)
+        self.assertEqual(acl_entry["read_wiki"], True)
+        self.assertEqual(acl_entry["write_wiki"], True)
+        self.assertEqual(acl_entry["read_files"], True)
+        self.assertEqual(acl_entry["write_files"], True)
+
+    def test_set_upsert(self):
+        """
+        expect: using set, successfully insert a new role with permission key value
+        that didn't exist before
+        """
+
+        acl_manager = ACL(self.db)
+        acl_manager.space_acl.set("test", self.space_name, "join_space", False)
+
+        # check if value was set
+        acl_entry = self.db.space_acl.find_one(
+            {"role": "test", "space": self.space_name}
+        )
+        self.assertIsNotNone(acl_entry)
+        self.assertEqual(acl_entry["role"], "test")
+        self.assertEqual(acl_entry["space"], self.space_name)
+        self.assertEqual(acl_entry["join_space"], False)
+
+    def test_set_error_key_doesnt_exist(self):
+        """
+        expect: KeyError is raised because the supplied permission key doesn't exist
+        """
+
+        acl_manager = ACL(self.db)
+        self.assertRaises(
+            KeyError,
+            acl_manager.space_acl.set,
+            self.default_acl_entry["role"],
+            self.space_name,
+            "test",
+            True,
+        )
+
+    def test_set_all(self):
+        """
+        expect: successfully set all permission keys with values for a given role/space
+        """
+
+        acl_manager = ACL(self.db)
+        acl_manager.space_acl.set_all(
+            {
+                "role": self.default_acl_entry["role"],
+                "space": self.space_name,
+                "join_space": False,
+                "read_timeline": False,
+                "post": False,
+                "comment": False,
+                "read_wiki": False,
+                "write_wiki": False,
+                "read_files": False,
+                "write_files": False,
+            },
+        )
+
+        # check if values were set
+        acl_entry = self.db.space_acl.find_one(
+            {"role": self.default_acl_entry["role"], "space": self.space_name}
+        )
+        self.assertIsNotNone(acl_entry)
+        self.assertEqual(acl_entry["role"], self.default_acl_entry["role"])
+        self.assertEqual(acl_entry["space"], self.space_name)
+        self.assertEqual(acl_entry["join_space"], False)
+        self.assertEqual(acl_entry["read_timeline"], False)
+        self.assertEqual(acl_entry["post"], False)
+        self.assertEqual(acl_entry["comment"], False)
+        self.assertEqual(acl_entry["read_wiki"], False)
+        self.assertEqual(acl_entry["write_wiki"], False)
+        self.assertEqual(acl_entry["read_files"], False)
+        self.assertEqual(acl_entry["write_files"], False)
+
+    def test_set_all_upsert(self):
+        """
+        expect: using set_all, successfully insert a new role/space with permission key values
+        that didn't exist before
+        """
+
+        acl_manager = ACL(self.db)
+        acl_manager.space_acl.set_all(
+            {
+                "role": "test",
+                "space": self.space_name,
+                "join_space": False,
+                "read_timeline": False,
+                "post": False,
+                "comment": False,
+                "read_wiki": False,
+                "write_wiki": False,
+                "read_files": False,
+                "write_files": False,
+            },
+        )
+
+        # check if values were set
+        acl_entry = self.db.space_acl.find_one(
+            {"role": "test", "space": self.space_name}
+        )
+        self.assertIsNotNone(acl_entry)
+        self.assertEqual(acl_entry["role"], "test")
+        self.assertEqual(acl_entry["space"], self.space_name)
+        self.assertEqual(acl_entry["join_space"], False)
+        self.assertEqual(acl_entry["read_timeline"], False)
+        self.assertEqual(acl_entry["post"], False)
+        self.assertEqual(acl_entry["comment"], False)
+        self.assertEqual(acl_entry["read_wiki"], False)
+        self.assertEqual(acl_entry["write_wiki"], False)
+        self.assertEqual(acl_entry["read_files"], False)
+        self.assertEqual(acl_entry["write_files"], False)
+
+    def test_set_all_error_missing_role(self):
+        """
+        expect: KeyError is raised because "role" attribute is missing from the dict
+        """
+
+        acl_manager = ACL(self.db)
+        self.assertRaises(
+            KeyError,
+            acl_manager.space_acl.set_all,
+            {
+                "space": self.space_name,
+                "join_space": False,
+                "read_timeline": False,
+                "post": False,
+                "comment": False,
+                "read_wiki": False,
+                "write_wiki": False,
+                "read_files": False,
+                "write_files": False,
+            },
+        )
+
+    def test_set_all_error_missing_space(self):
+        """
+        expect: KeyError is raised because "space" attribute is missing from the dict
+        """
+
+        acl_manager = ACL(self.db)
+        self.assertRaises(
+            KeyError,
+            acl_manager.space_acl.set_all,
+            {
+                "role": self.default_acl_entry["role"],
+                "join_space": False,
+                "read_timeline": False,
+                "post": False,
+                "comment": False,
+                "read_wiki": False,
+                "write_wiki": False,
+                "read_files": False,
+                "write_files": False,
+            },
+        )
+
+    def test_set_all_error_wrong_key(self):
+        """
+        expect: KeyError is raised because atleast one of the supplied
+        permission keys doesn't exist
+        """
+
+        acl_manager = ACL(self.db)
+        self.assertRaises(
+            KeyError,
+            acl_manager.space_acl.set_all,
+            {
+                "role": self.default_acl_entry["role"],
+                "space": self.space_name,
+                "test": True,
+            },
+        )
+
+    def test_delete(self):
+        """
+        expect: successfully delete acl entries either by role or by space
+        """
+
+        acl_manager = ACL(self.db)
+        acl_manager.space_acl.delete(self.default_acl_entry["role"], self.space_name)
+
+        # check if entry was deleted
+        acl_entry = self.db.space_acl.find_one(
+            {"role": self.default_acl_entry["role"], "space": self.space_name}
+        )
+        self.assertIsNone(acl_entry)
+
+
 class ACLResourceTest(BaseResourceTestCase):
-    pass
+    def setUp(self) -> None:
+        super().setUp()
+
+        # create default space:
+        self.space_id = ObjectId()
+        self.space_name = "test"
+        self.default_space = {
+            "_id": self.space_id,
+            "name": self.space_name,
+            "invisible": False,
+            "joinable": True,
+            "members": [CURRENT_ADMIN.username],
+            "admins": [CURRENT_ADMIN.username],
+            "invites": [],
+            "requests": [],
+            "files": [],
+        }
+        self.db.spaces.insert_one(self.default_space)
+
+    def tearDown(self) -> None:
+        super().tearDown()
+
+        self.db.global_acl.delete_many({})
+        self.db.space_acl.delete_many({})
+        self.db.spaces.delete_many({})
+
+    def test_ensure_acl_entries(self):
+        """
+        expect: successfully ensure that all acl entries exist for the given role,
+        both for global_acl and for all spaces in space_acl
+        """
+
+        # first, create a second space
+        new_space = {
+            "_id": ObjectId(),
+            "name": "new_test_space",
+            "invisible": False,
+            "joinable": True,
+            "members": [CURRENT_ADMIN.username],
+            "admins": [CURRENT_ADMIN.username],
+            "invites": [],
+            "requests": [],
+            "files": [],
+        }
+        self.db.spaces.insert_one(new_space)
+
+        acl_manager = ACL(self.db)
+        acl_manager.ensure_acl_entries("guest")
+
+        # check if the default global acl entry was created
+        acl_entry = self.db.global_acl.find_one({"role": "guest"})
+        self.assertIsNotNone(acl_entry)
+        self.assertEqual(acl_entry["role"], "guest")
+        self.assertEqual(acl_entry["create_space"], False)
+
+        # check if the default space acl entry was created for all spaces
+        acl_entries = list(
+            self.db.space_acl.find({"role": "guest"}, projection={"_id": False})
+        )
+        self.assertEqual(len(acl_entries), 2)
+        self.assertIn(
+            {
+                "role": "guest",
+                "space": self.space_name,
+                "join_space": False,
+                "read_timeline": True,
+                "post": False,
+                "comment": False,
+                "read_wiki": False,
+                "write_wiki": False,
+                "read_files": False,
+                "write_files": False,
+            },
+            acl_entries,
+        )
+        self.assertIn(
+            {
+                "role": "guest",
+                "space": "new_test_space",
+                "join_space": False,
+                "read_timeline": True,
+                "post": False,
+                "comment": False,
+                "read_wiki": False,
+                "write_wiki": False,
+                "read_files": False,
+                "write_files": False,
+            },
+            acl_entries,
+        )
 
 
 class PostResourceTest(BaseResourceTestCase):
