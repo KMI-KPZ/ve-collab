@@ -8,7 +8,12 @@ import Stage from '@/components/StartingWizard/FinePlanner/Stage';
 import { SubmitHandler, useForm, FormProvider } from 'react-hook-form';
 import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
-import { SideMenuStep } from '@/interfaces/startingWizard/sideProgressBar';
+import {
+    initialSideProgressBarStates,
+    ISideProgressBarStates,
+    ProgressState,
+    SideMenuStep,
+} from '@/interfaces/startingWizard/sideProgressBar';
 import { generateFineStepLinkTopMenu } from '@/pages/startingWizard/generalInformation/courseFormat';
 
 export interface ITask {
@@ -99,6 +104,9 @@ export default function FinePlanner() {
     const [linkFineStepTopMenu, setLinkFineStepTopMenu] = useState<string>(
         '/startingWizard/finePlanner'
     );
+    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
+        initialSideProgressBarStates
+    );
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -151,6 +159,7 @@ export default function FinePlanner() {
                             methods.reset({ ...fineStepCopyTransformedTools });
                             setSideMenuStepsData(generateSideMenuStepsData(data.plan.steps));
                             setLinkFineStepTopMenu(generateFineStepLinkTopMenu(data.plan.steps));
+                            setSideMenuStepsProgress(data.plan.progress);
                         }
                     }
                 }
@@ -175,12 +184,31 @@ export default function FinePlanner() {
             ve_approach: data.ve_approach,
             tasks: currentStepTransformBackTools,
         };
+        const stepSlugDecoded = decodeURI(stepSlug as string);
+        const stepsWithoutCurrentProgressState = sideMenuStepsProgress.steps.filter(
+            (step) => step[stepSlugDecoded] == undefined
+        );
         await fetchPOST(
-            '/planner/update_field',
+            '/planner/update_fields',
             {
-                plan_id: router.query.plannerId,
-                field_name: 'steps',
-                value: [stepCurrent, ...stepsWithoutCurrent],
+                update: [
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'steps',
+                        value: [stepCurrent, ...stepsWithoutCurrent],
+                    },
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'progress',
+                        value: {
+                            ...sideMenuStepsProgress,
+                            steps: [
+                                ...stepsWithoutCurrentProgressState,
+                                { [stepSlugDecoded]: ProgressState.completed },
+                            ],
+                        },
+                    },
+                ],
             },
             session?.accessToken
         );
@@ -197,8 +225,11 @@ export default function FinePlanner() {
     };
 
     const getNextFineStepUrl = (): string => {
+        //
         const nextFineStep =
             sideMenuStepsData.findIndex((item: SideMenuStep) => item.id === stepSlug) + 1;
+        console.log('slug', stepSlug);
+        console.log('next', nextFineStep);
         if (sideMenuStepsData[nextFineStep]?.link !== undefined) {
             return sideMenuStepsData[nextFineStep]?.link;
         } else {
@@ -256,6 +287,7 @@ export default function FinePlanner() {
                                         type="button"
                                         className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
                                         onClick={() => {
+                                            console.log(getNextFineStepUrl());
                                             validateAndRoute(
                                                 getNextFineStepUrl(),
                                                 router.query.plannerId,
@@ -272,6 +304,7 @@ export default function FinePlanner() {
                     </FormProvider>
                 )}
                 <SideProgressBarSection
+                    progressState={sideMenuStepsProgress}
                     handleValidation={methods.handleSubmit(onSubmit)}
                     isValid={methods.formState.isValid}
                     sideMenuStepsData={sideMenuStepsData}

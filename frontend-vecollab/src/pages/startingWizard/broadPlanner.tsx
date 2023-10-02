@@ -152,16 +152,6 @@ export default function BroadPlanner() {
                 timestamp_to: broadStep.to,
             };
         });
-        await fetchPOST(
-            '/planner/update_field',
-            {
-                plan_id: router.query.plannerId,
-                field_name: 'steps',
-                value: broadstepsData,
-            },
-            session?.accessToken
-        );
-
         const sideMenuStateSteps: ISideProgressBarStateSteps[] = broadsteps.map((broadStep) => {
             return { [broadStep.name]: ProgressState.notStarted };
         });
@@ -170,11 +160,20 @@ export default function BroadPlanner() {
             steps: sideMenuStateSteps,
         };
         await fetchPOST(
-            '/planner/update_field',
+            '/planner/update_fields',
             {
-                plan_id: router.query.plannerId,
-                field_name: 'progress',
-                value: sideMenuStates,
+                update: [
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'steps',
+                        value: broadstepsData,
+                    },
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'progress',
+                        value: sideMenuStates,
+                    },
+                ],
             },
             session?.accessToken
         );

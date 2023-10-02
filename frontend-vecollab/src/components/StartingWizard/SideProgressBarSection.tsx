@@ -38,9 +38,19 @@ export default function SideProgressBarSection({
         }
     }
 
-    const getProgressState = (key: keyof ISideProgressBarStates) => {
+    const getProgressState = (id: string): any => {
+        const idDecrypted: string = decodeURI(id);
         if (progressState !== undefined) {
-            return progressState[key];
+            if (progressState[id as keyof ISideProgressBarStates] !== undefined) {
+                return progressState[id as keyof ISideProgressBarStates];
+            } else {
+                const currentProgressStateObject = progressState.steps.find(
+                    (step) => step[idDecrypted] !== undefined
+                );
+                if (currentProgressStateObject !== undefined) {
+                    return currentProgressStateObject[idDecrypted];
+                }
+            }
         }
         return ProgressState.notStarted;
     };
@@ -63,9 +73,7 @@ export default function SideProgressBarSection({
                         className={`flex bg-white p-2 w-full rounded-lg drop-shadow-lg`}
                     >
                         <Image
-                            src={renderIcon(
-                                getProgressState(sideMenuStep.id as keyof ISideProgressBarStates)
-                            )}
+                            src={renderIcon(getProgressState(sideMenuStep.id))}
                             alt="Ve Collab Logo"
                         ></Image>
                         <p
