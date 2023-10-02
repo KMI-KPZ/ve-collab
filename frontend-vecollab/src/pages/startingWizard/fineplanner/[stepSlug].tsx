@@ -225,11 +225,8 @@ export default function FinePlanner() {
     };
 
     const getNextFineStepUrl = (): string => {
-        //
         const nextFineStep =
             sideMenuStepsData.findIndex((item: SideMenuStep) => item.id === stepSlug) + 1;
-        console.log('slug', stepSlug);
-        console.log('next', nextFineStep);
         if (sideMenuStepsData[nextFineStep]?.link !== undefined) {
             return sideMenuStepsData[nextFineStep]?.link;
         } else {
@@ -287,7 +284,6 @@ export default function FinePlanner() {
                                         type="button"
                                         className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
                                         onClick={() => {
-                                            console.log(getNextFineStepUrl());
                                             validateAndRoute(
                                                 getNextFineStepUrl(),
                                                 router.query.plannerId,
