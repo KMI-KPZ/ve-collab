@@ -226,8 +226,11 @@ export default function FinePlanner() {
 
     const getNextFineStepUrl = (): string => {
         const nextFineStep =
-            sideMenuStepsData.findIndex((item: SideMenuStep) => item.id === stepSlug) + 1;
-        if (sideMenuStepsData[nextFineStep]?.link !== undefined) {
+            sideMenuStepsData.findIndex((item: SideMenuStep) => item.text === stepSlug) + 1;
+        if (
+            sideMenuStepsData[nextFineStep]?.link !== undefined &&
+            nextFineStep <= sideMenuStepsData.length - 1
+        ) {
             return sideMenuStepsData[nextFineStep]?.link;
         } else {
             return '/startingWizard/finish';
