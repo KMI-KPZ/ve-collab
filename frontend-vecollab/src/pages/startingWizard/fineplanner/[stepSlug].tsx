@@ -225,13 +225,14 @@ export default function FinePlanner() {
     };
 
     const getNextFineStepUrl = (): string => {
-        const nextFineStep =
+        const nextFineStepIndex =
             sideMenuStepsData.findIndex((item: SideMenuStep) => item.text === stepSlug) + 1;
         if (
-            sideMenuStepsData[nextFineStep]?.link !== undefined &&
-            nextFineStep <= sideMenuStepsData.length - 1
+            sideMenuStepsData[nextFineStepIndex]?.link !== undefined &&
+            nextFineStepIndex <= sideMenuStepsData.length - 1 &&
+            nextFineStepIndex !== 0
         ) {
-            return sideMenuStepsData[nextFineStep]?.link;
+            return sideMenuStepsData[nextFineStepIndex]?.link;
         } else {
             return '/startingWizard/finish';
         }
