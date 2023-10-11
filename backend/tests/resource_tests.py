@@ -49,6 +49,7 @@ from model import (
     User,
     VEPlan,
 )
+from resources.elasticsearch_integration import ElasticsearchConnector
 from resources.network.acl import ACL
 from resources.network.post import Posts
 from resources.network.profile import Profiles
@@ -5693,7 +5694,298 @@ class PlanResourceTest(BaseResourceTestCase):
 
 
 class ElasticsearchIntegrationTest(BaseResourceTestCase):
-    pass
+    def setUp(self) -> None:
+        return super().setUp()
+
+    def tearDown(self) -> None:
+        super().tearDown()
+
+        # clean elasticsearch index, if there is one
+        response = requests.delete(
+            "{}/test?ignore_unavailable=true".format(
+                global_vars.elasticsearch_base_url
+            ),
+            auth=(
+                global_vars.elasticsearch_username,
+                global_vars.elasticsearch_password,
+            ),
+        )
+        if response.status_code != 200:
+            print(response.content)
+
+    def test_dict_or_list_values_to_str(self):
+        """
+        expect: successfully flatten out dict or list values into a single str,
+        effectively removing dict keys.
+        """
+        es = ElasticsearchConnector()
+
+        # dict
+        d = {"key1": "value1", "key2": "value2"}
+        self.assertEqual(es._dict_or_list_values_to_str(d), "value1 value2")
+
+        # list
+        l = ["value1", "value2"]
+        self.assertEqual(es._dict_or_list_values_to_str(l), "value1 value2")
+
+        # mixed
+        l = ["value1", {"key1": "value1", "key2": "value2"}]
+        self.assertEqual(es._dict_or_list_values_to_str(l), "value1 value1 value2")
+
+    def test_on_insert(self):
+        """
+        expect: successfully replicate profile document to elasticsearch
+        """
+
+        user_id = ObjectId()
+        test_profile = {
+            "_id": user_id,
+            "username": "test_admin",
+            "role": "guest",
+            "follows": [],
+            "bio": "test",
+            "institution": "test",
+            "profile_pic": "default_profile_pic.jpg",
+            "first_name": "Test",
+            "last_name": "Admin",
+            "gender": "male",
+            "address": "test",
+            "birthday": "2023-01-01",
+            "experience": ["test", "test"],
+            "expertise": "test",
+            "languages": ["german", "english"],
+            "ve_ready": True,
+            "excluded_from_matching": False,
+            "ve_interests": ["test", "test"],
+            "ve_goals": ["test", "test"],
+            "preferred_formats": ["test"],
+            "research_tags": ["test"],
+            "courses": [
+                {"title": "test", "academic_course": "test", "semester": "test"}
+            ],
+            "educations": [
+                {
+                    "institution": "test",
+                    "degree": "test",
+                    "department": "test",
+                    "timestamp_from": "2023-01-01",
+                    "timestamp_to": "2023-02-01",
+                    "additional_info": "test",
+                }
+            ],
+            "work_experience": [
+                {
+                    "position": "test",
+                    "institution": "test",
+                    "department": "test",
+                    "timestamp_from": "2023-01-01",
+                    "timestamp_to": "2023-02-01",
+                    "city": "test",
+                    "country": "test",
+                    "additional_info": "test",
+                }
+            ],
+            "ve_window": [
+                {
+                    "plan_id": ObjectId(),
+                    "title": "test",
+                    "description": "test",
+                }
+            ],
+        }
+
+        es = ElasticsearchConnector()
+        es.on_insert(user_id, test_profile, "test")
+
+        # check that the elastic document exists
+        response = requests.get(
+            "{}/{}/_doc/{}".format(global_vars.elasticsearch_base_url, "test", user_id),
+            auth=(
+                global_vars.elasticsearch_username,
+                global_vars.elasticsearch_password,
+            ),
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_on_update(self):
+        """
+        expect: successfully update the record of a profile document in elasticsearch
+        by overriding it
+        """
+
+        # create a profile first
+        user_id = ObjectId()
+        test_profile = {
+            "_id": user_id,
+            "username": "test_admin",
+            "role": "guest",
+            "follows": [],
+            "bio": "test",
+            "institution": "test",
+            "profile_pic": "default_profile_pic.jpg",
+            "first_name": "Test",
+            "last_name": "Admin",
+            "gender": "male",
+            "address": "test",
+            "birthday": "2023-01-01",
+            "experience": ["test", "test"],
+            "expertise": "test",
+            "languages": ["german", "english"],
+            "ve_ready": True,
+            "excluded_from_matching": False,
+            "ve_interests": ["test", "test"],
+            "ve_goals": ["test", "test"],
+            "preferred_formats": ["test"],
+            "research_tags": ["test"],
+            "courses": [
+                {"title": "test", "academic_course": "test", "semester": "test"}
+            ],
+            "educations": [
+                {
+                    "institution": "test",
+                    "degree": "test",
+                    "department": "test",
+                    "timestamp_from": "2023-01-01",
+                    "timestamp_to": "2023-02-01",
+                    "additional_info": "test",
+                }
+            ],
+            "work_experience": [
+                {
+                    "position": "test",
+                    "institution": "test",
+                    "department": "test",
+                    "timestamp_from": "2023-01-01",
+                    "timestamp_to": "2023-02-01",
+                    "city": "test",
+                    "country": "test",
+                    "additional_info": "test",
+                }
+            ],
+            "ve_window": [
+                {
+                    "plan_id": ObjectId(),
+                    "title": "test",
+                    "description": "test",
+                }
+            ],
+        }
+        es = ElasticsearchConnector()
+        requests.put(
+            "{}/{}/_doc/{}".format(
+                global_vars.elasticsearch_base_url, "test", str(user_id)
+            ),
+            json=util.json_serialize_response(test_profile),
+            auth=(
+                global_vars.elasticsearch_username,
+                global_vars.elasticsearch_password,
+            ),
+        )
+
+        # now update the profile
+        test_profile["username"] = "updated"
+        es.on_update(user_id, "test", test_profile)
+
+        # check that the elastic document exists and the username was updated
+        response = requests.get(
+            "{}/{}/_doc/{}".format(global_vars.elasticsearch_base_url, "test", user_id),
+            auth=(
+                global_vars.elasticsearch_username,
+                global_vars.elasticsearch_password,
+            ),
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["_source"]["username"], "updated")
+
+    def test_on_delete(self):
+        """
+        expect: successfully remove a profile from the elasticsearch index
+        """
+
+        # create a profile first
+        user_id = ObjectId()
+        test_profile = {
+            "_id": user_id,
+            "username": "test_admin",
+            "role": "guest",
+            "follows": [],
+            "bio": "test",
+            "institution": "test",
+            "profile_pic": "default_profile_pic.jpg",
+            "first_name": "Test",
+            "last_name": "Admin",
+            "gender": "male",
+            "address": "test",
+            "birthday": "2023-01-01",
+            "experience": ["test", "test"],
+            "expertise": "test",
+            "languages": ["german", "english"],
+            "ve_ready": True,
+            "excluded_from_matching": False,
+            "ve_interests": ["test", "test"],
+            "ve_goals": ["test", "test"],
+            "preferred_formats": ["test"],
+            "research_tags": ["test"],
+            "courses": [
+                {"title": "test", "academic_course": "test", "semester": "test"}
+            ],
+            "educations": [
+                {
+                    "institution": "test",
+                    "degree": "test",
+                    "department": "test",
+                    "timestamp_from": "2023-01-01",
+                    "timestamp_to": "2023-02-01",
+                    "additional_info": "test",
+                }
+            ],
+            "work_experience": [
+                {
+                    "position": "test",
+                    "institution": "test",
+                    "department": "test",
+                    "timestamp_from": "2023-01-01",
+                    "timestamp_to": "2023-02-01",
+                    "city": "test",
+                    "country": "test",
+                    "additional_info": "test",
+                }
+            ],
+            "ve_window": [
+                {
+                    "plan_id": ObjectId(),
+                    "title": "test",
+                    "description": "test",
+                }
+            ],
+        }
+        es = ElasticsearchConnector()
+        requests.put(
+            "{}/{}/_doc/{}".format(
+                global_vars.elasticsearch_base_url, "test", str(user_id)
+            ),
+            json=util.json_serialize_response(test_profile),
+            auth=(
+                global_vars.elasticsearch_username,
+                global_vars.elasticsearch_password,
+            ),
+        )
+
+        # now delete the profile
+        es.on_delete(user_id, "test")
+
+        # check that no elastic document with this id exists
+        response = requests.get(
+            "{}/{}/_doc/{}".format(global_vars.elasticsearch_base_url, "test", user_id),
+            auth=(
+                global_vars.elasticsearch_username,
+                global_vars.elasticsearch_password,
+            ),
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_search_profile_match(self):
+        pass
 
 
 class NotificationIntegrationTest(BaseResourceTestCase):
