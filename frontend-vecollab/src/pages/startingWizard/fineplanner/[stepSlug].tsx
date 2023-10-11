@@ -157,7 +157,9 @@ export default function FinePlanner() {
                             };
                             setCurrentFineStep(fineStepCopyTransformedTools);
                             methods.reset({ ...fineStepCopyTransformedTools });
-                            setSideMenuStepsData(generateSideMenuStepsData(data.plan.steps));
+                            setSideMenuStepsData(
+                                generateSideMenuStepsDateSortedData(data.plan.steps)
+                            );
                             setLinkFineStepTopMenu(generateFineStepLinkTopMenu(data.plan.steps));
                             setSideMenuStepsProgress(data.plan.progress);
                         }
@@ -214,7 +216,7 @@ export default function FinePlanner() {
         );
     };
 
-    const generateSideMenuStepsData = (steps: IFineStep[]): SideMenuStep[] => {
+    const generateSideMenuStepsDateSortedData = (steps: IFineStep[]): SideMenuStep[] => {
         return steps
             .sort((a: IFineStep, b: IFineStep) => (a.timestamp_from > b.timestamp_from ? 1 : -1))
             .map((step: IFineStep) => ({

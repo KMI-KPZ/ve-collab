@@ -78,8 +78,8 @@ export default function BroadPlanner() {
         formState: { errors, isValid },
         handleSubmit,
         control,
-        watch,
         setValue,
+        watch,
     } = useForm<FormValues>({
         mode: 'onChange',
     });
@@ -124,7 +124,6 @@ export default function BroadPlanner() {
                         setSideMenuStepsProgress(data.plan.progress);
                     }
                     setLinkFineStepTopMenu(generateFineStepLinkTopMenu(data.plan.steps));
-                    data.plan.progress;
                 }
             );
         }
@@ -136,11 +135,11 @@ export default function BroadPlanner() {
     });
 
     const onSubmit: SubmitHandler<FormValues> = async (data) => {
-        const broadsteps: BroadStep[] = data.broadSteps;
+        const broadSteps: BroadStep[] = data.broadSteps;
         let payload: IFineStep = {
             ...defaultFineStepData,
         };
-        const broadstepsData = broadsteps.map((broadStep) => {
+        const broadStepsData = broadSteps.map((broadStep) => {
             const fineStepBackend = allSteps.find((fineStep) => fineStep.name === broadStep.name);
             if (fineStepBackend !== undefined) {
                 payload = fineStepBackend;
@@ -152,7 +151,7 @@ export default function BroadPlanner() {
                 timestamp_to: broadStep.to,
             };
         });
-        const sideMenuStateSteps: ISideProgressBarStateSteps[] = broadsteps.map((broadStep) => {
+        const sideMenuStateSteps: ISideProgressBarStateSteps[] = broadSteps.map((broadStep) => {
             return { [broadStep.name]: ProgressState.notStarted };
         });
         const sideMenuStates: ISideProgressBarStates = {
@@ -166,7 +165,7 @@ export default function BroadPlanner() {
                     {
                         plan_id: router.query.plannerId,
                         field_name: 'steps',
-                        value: broadstepsData,
+                        value: broadStepsData,
                     },
                     {
                         plan_id: router.query.plannerId,
@@ -179,37 +178,71 @@ export default function BroadPlanner() {
         );
     };
 
+    const getEarliestSideMenuStepLink = (): string => {
+        const broadSteps: BroadStep[] = watch('broadSteps');
+        if (broadSteps === undefined || broadSteps.length === 0) {
+            return '/startingWizard/broadPlanner';
+        }
+        const sortedBroadSteps = broadSteps
+            .sort((a: BroadStep, b: BroadStep) => (a.from > b.from ? 1 : -1))
+            .map((step: BroadStep) => ({
+                id: encodeURIComponent(step.name),
+                text: step.name,
+                link: `/startingWizard/fineplanner/${encodeURIComponent(step.name)}`,
+            }));
+        return sortedBroadSteps[0].link;
+    };
+
     const renderBroadStepsInputs = (): JSX.Element[] => {
         return fields.map((step, index) => (
             <WhiteBox key={index}>
-                <div className="flex justify-center items-center">
-                    <label htmlFor="from" className="">
-                        von:
-                    </label>
-                    <input
-                        type="date"
-                        {...register(`broadSteps.${index}.from`)}
-                        className="border border-gray-500 rounded-lg h-12 p-2 mx-2"
-                    />
-                    <p className="text-red-600 pt-2">
+                <div>
+                    <div className="flex justify-center items-center">
+                        <label htmlFor="from" className="">
+                            von:
+                        </label>
+                        <input
+                            type="date"
+                            {...register(`broadSteps.${index}.from`, {
+                                required: {
+                                    value: true,
+                                    message: 'Bitte fülle das Felde "von" aus',
+                                },
+                            })}
+                            className="border border-gray-500 rounded-lg h-12 p-2 mx-2"
+                        />
+                        <label htmlFor="to" className="">
+                            bis:
+                        </label>
+                        <input
+                            type="date"
+                            {...register(`broadSteps.${index}.to`, {
+                                required: {
+                                    value: true,
+                                    message: 'Bitte fülle das Felde "bis" aus',
+                                },
+                            })}
+                            className="border border-gray-500 rounded-lg h-12 p-2 mx-2"
+                        />
+                        <input
+                            type="text"
+                            {...register(`broadSteps.${index}.name`, {
+                                required: {
+                                    value: true,
+                                    message: 'Bitte fülle das Felde "Name" aus',
+                                },
+                            })}
+                            placeholder="Name, z.B. Kennenlernphase"
+                            className="border border-gray-500 rounded-lg h-12 p-2 mx-2"
+                        />
+                    </div>
+                    <p className="text-red-600 pt-2 flex justify-center">
                         {errors?.broadSteps?.[index]?.from?.message}
                     </p>
-                    <label htmlFor="to" className="">
-                        bis:
-                    </label>
-                    <input
-                        type="date"
-                        {...register(`broadSteps.${index}.to`)}
-                        className="border border-gray-500 rounded-lg h-12 p-2 mx-2"
-                    />
-                    <p className="text-red-600 pt-2">{errors?.broadSteps?.[index]?.to?.message}</p>
-                    <input
-                        type="text"
-                        {...register(`broadSteps.${index}.name`)}
-                        placeholder="Name, z.B. Kennenlernphase"
-                        className="border border-gray-500 rounded-lg h-12 p-2 mx-2"
-                    />
-                    <p className="text-red-600 pt-2">
+                    <p className="text-red-600 pt-2 flex justify-center">
+                        {errors?.broadSteps?.[index]?.to?.message}
+                    </p>
+                    <p className="text-red-600 pt-2 flex justify-center">
                         {errors?.broadSteps?.[index]?.name?.message}
                     </p>
                 </div>
@@ -275,9 +308,7 @@ export default function BroadPlanner() {
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
                                     onClick={() => {
                                         validateAndRoute(
-                                            `/startingWizard/fineplanner/${encodeURIComponent(
-                                                watch('broadSteps.0.name')
-                                            )}`,
+                                            getEarliestSideMenuStepLink(),
                                             router.query.plannerId,
                                             handleSubmit(onSubmit),
                                             isValid
