@@ -241,10 +241,14 @@ export default function FinePlanner() {
     };
 
     const getPreviousFineStepUrl = (): string => {
-        const nextFineStep =
-            sideMenuStepsData.findIndex((item: SideMenuStep) => item.id === stepSlug) - 1;
-        if (sideMenuStepsData[nextFineStep]?.link !== undefined) {
-            return sideMenuStepsData[nextFineStep]?.link;
+        const nextFineStepIndex =
+            sideMenuStepsData.findIndex((item: SideMenuStep) => item.text === stepSlug) - 1;
+        if (
+            sideMenuStepsData[nextFineStepIndex]?.link !== undefined &&
+            nextFineStepIndex <= sideMenuStepsData.length - 1 &&
+            nextFineStepIndex > -1
+        ) {
+            return sideMenuStepsData[nextFineStepIndex]?.link;
         } else {
             return '/startingWizard/broadPlanner';
         }
