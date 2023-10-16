@@ -45,6 +45,7 @@ services:
       ELASTICSEARCH_BASE_URL: http://localhost:${ELASTICSEARCH_PORT}
       ELASTICSEARCH_USERNAME:
       ELASTICSEARCH_PASSWORD:
+      INITIAL_ADMIN_USERNAME:
       DUMMY_PERSONAS_PASSCODE:
     network_mode: host
     depends_on:
