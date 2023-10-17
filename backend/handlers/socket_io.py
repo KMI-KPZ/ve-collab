@@ -170,6 +170,8 @@ async def authenticate(sid, data):
             # and are awaiting acknowledgement
             notification_manager.bulk_set_send_state(new_notification_ids)
 
+    # TODO emit messages that appeared while this user was offline and set their state to "sent"
+
     return {"status": 200, "success": True}
 
 
@@ -226,6 +228,35 @@ async def acknowledge_notification(sid, data):
         notification_manager.acknowledge_notification(notification_id)
 
         return {"status": 200, "success": True}
+
+
+@global_vars.socket_io.event
+async def acknowledge_message(sid, data):
+    """ 
+    TODO:
+    - check if user is recipient of to-be-acknowledged message
+        - yes: set message state to "acknowledged"
+        - no: insufficient permission error
+    """
+
+    pass
+
+
+@global_vars.socket_io.event
+async def message(sid, data):
+    """
+    TODO:
+
+    - read message
+    - determine if combination of sender and recipients already have a "room" (has to be kinda efficient, probably index?)
+        - yes: store message in this room,
+        - no: create new room, store room and message in this room
+    - dispatch message to all recipients (do each):
+        - currently online: via socketio, set message state for corresponding recipient to "sent"
+        - currently offline: set message state for corresponding recipient to "pending"
+    """
+
+    pass
 
 
 def recipient_online(recipient: str) -> bool:
