@@ -6,6 +6,7 @@ import tornado.web
 import global_vars
 from handlers.base_handler import BaseHandler
 from resources.network.profile import Profiles
+import util
 
 
 class LoginHandler(tornado.web.RequestHandler, metaclass=ABCMeta):
@@ -48,7 +49,8 @@ class LoginCallbackHandler(BaseHandler, metaclass=ABCMeta):
 
         # ensure that a profile exists for the user
         # if not, create one
-        with Profiles() as profile_manager:
+        with util.get_mongodb() as db:
+            profile_manager = Profiles(db)
             profile_manager.ensure_profile_exists(
                 token_info["preferred_username"],
                 token_info["given_name"],

@@ -1,12 +1,14 @@
+from bson import ObjectId
 from datetime import datetime
-import json
+import os
 import time
 from unittest import TestCase
-from bson import ObjectId
 
+from dotenv import load_dotenv
 import pymongo
 from tornado.options import options
 from exceptions import (
+    InvitationDoesntExistError,
     MissingKeyError,
     NoReadAccessError,
     NoWriteAccessError,
@@ -27,6 +29,7 @@ from model import (
 from resources.planner.ve_plan import VEPlanResource
 import util
 
+load_dotenv()
 
 def setUpModule():
     """
@@ -34,13 +37,10 @@ def setUpModule():
     unittest will call this method itself.
     """
 
-    with open(options.config) as json_file:
-        config = json.load(json_file)
-
-    global_vars.mongodb_host = config["mongodb_host"]
-    global_vars.mongodb_port = config["mongodb_port"]
-    global_vars.mongodb_username = config["mongodb_username"]
-    global_vars.mongodb_password = config["mongodb_password"]
+    global_vars.mongodb_host = os.getenv("MONGODB_HOST", "localhost")
+    global_vars.mongodb_port = int(os.getenv("MONGODB_PORT", "27017"))
+    global_vars.mongodb_username = os.getenv("MONGODB_USERNAME")
+    global_vars.mongodb_password = os.getenv("MONGODB_PASSWORD")
     global_vars.mongodb_db_name = "test_db"
 
 
@@ -166,6 +166,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "creation_timestamp": datetime.now(),
             "last_modified": datetime.now(),
             "name": "test",
+            "partners": ["test_admin"],
             "institutions": [self.institution.to_dict()],
             "topic": "test",
             "lectures": [self.lecture.to_dict()],
@@ -225,6 +226,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 self.assertEqual(plan._id, self.default_plan["_id"])
                 self.assertEqual(plan.author, self.default_plan["author"])
                 self.assertEqual(plan.name, self.default_plan["name"])
+                self.assertEqual(plan.partners, self.default_plan["partners"])
                 self.assertEqual(
                     [institution.to_dict() for institution in plan.institutions],
                     self.default_plan["institutions"],
@@ -272,6 +274,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 self.assertEqual(plan._id, self.default_plan["_id"])
                 self.assertEqual(plan.author, self.default_plan["author"])
                 self.assertEqual(plan.name, self.default_plan["name"])
+                self.assertEqual(plan.partners, self.default_plan["partners"])
                 self.assertEqual(
                     [institution.to_dict() for institution in plan.institutions],
                     self.default_plan["institutions"],
@@ -355,6 +358,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(plan._id, self.default_plan["_id"])
         self.assertEqual(plan.author, self.default_plan["author"])
         self.assertEqual(plan.name, self.default_plan["name"])
+        self.assertEqual(plan.partners, self.default_plan["partners"])
         self.assertEqual(
             [institution.to_dict() for institution in plan.institutions],
             self.default_plan["institutions"],
@@ -400,6 +404,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "creation_timestamp": datetime.now(),
                 "last_modified": datetime.now(),
                 "name": "admin",
+                "partners": ["test_user"],
                 "institutions": [self.institution.to_dict()],
                 "topic": "test",
                 "lectures": [self.lecture.to_dict()],
@@ -440,6 +445,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "creation_timestamp": datetime.now(),
                 "last_modified": datetime.now(),
                 "name": "user",
+                "partners": [],
                 "institutions": [self.institution.to_dict()],
                 "topic": "test",
                 "lectures": [self.lecture.to_dict()],
@@ -496,6 +502,7 @@ class PlanResourceTest(BaseResourceTestCase):
         # don't supply a _id, letting the system create a fresh one
         plan = {
             "name": "new plan",
+            "partners": ["test_admin"],
             "author": "test_user",
             "read_access": ["test_user"],
             "write_access": ["test_user"],
@@ -556,6 +563,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "read_access": ["test_user"],
             "write_access": ["test_user"],
             "name": "new plan",
+            "partners": ["test_admin"],
             "institutions": [self.institution.to_dict()],
             "topic": "test",
             "lectures": [self.lecture.to_dict()],
@@ -1442,3 +1450,138 @@ class PlanResourceTest(BaseResourceTestCase):
         # expect step to still be there
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertEqual(len(db_state["steps"]), 1)
+
+    def test_insert_plan_invitation(self):
+        """
+        expect: successfully insert a plan invitation
+        """
+
+        inserted_id = self.planner.insert_plan_invitation(
+            self.plan_id, "invitation", "test_admin", "test_user"
+        )
+
+        # expect invitation to be in the plan
+        db_state = self.db.invitations.find_one({"_id": inserted_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["plan_id"], self.plan_id)
+        self.assertEqual(db_state["message"], "invitation")
+        self.assertEqual(db_state["sender"], "test_admin")
+        self.assertEqual(db_state["recipient"], "test_user")
+        self.assertEqual(db_state["accepted"], None)
+
+    def test_insert_plan_invitation_error_plan_doesnt_exist(self):
+        """
+        expect: PlanDoesntExistError is raised because no plan with this _id exists
+        """
+
+        self.assertRaises(
+            PlanDoesntExistError,
+            self.planner.insert_plan_invitation,
+            ObjectId(),
+            "invitation",
+            "test_admin",
+            "test_user",
+        )
+
+    def test_get_plan_invitation(self):
+        """
+        expect: successfully get a plan invitation
+        """
+        invitation_id = ObjectId()
+
+        self.db.invitations.insert_one(
+            {
+                "_id": invitation_id,
+                "plan_id": self.plan_id,
+                "message": "invitation",
+                "sender": "test_admin",
+                "recipient": "test_user",
+                "accepted": None,
+            }
+        )
+
+        invitation = self.planner.get_plan_invitation(invitation_id)
+
+        # expect invitation to be in the db
+        self.assertIsNotNone(invitation)
+        self.assertEqual(invitation["plan_id"], self.plan_id)
+        self.assertEqual(invitation["message"], "invitation")
+        self.assertEqual(invitation["sender"], "test_admin")
+        self.assertEqual(invitation["recipient"], "test_user")
+        self.assertEqual(invitation["accepted"], None)
+
+        # try again, but this time with a string id
+        invitation = self.planner.get_plan_invitation(str(invitation_id))
+        self.assertIsNotNone(invitation)
+        self.assertEqual(invitation["plan_id"], self.plan_id)
+        self.assertEqual(invitation["message"], "invitation")
+        self.assertEqual(invitation["sender"], "test_admin")
+        self.assertEqual(invitation["recipient"], "test_user")
+        self.assertEqual(invitation["accepted"], None)
+
+    def test_get_plan_invitation_error_invitation_doesnt_exist(self):
+        """
+        expect: PlanDoesntExistError is raised because no invitation
+        with this _id exists
+        """
+
+        self.assertRaises(
+            InvitationDoesntExistError, self.planner.get_plan_invitation, ObjectId()
+        )
+
+    def test_set_invitation_reply(self):
+        """
+        expect: successfully set the reply of an invitation
+        """
+
+        invitation_id = ObjectId()
+
+        self.db.invitations.insert_one(
+            {
+                "_id": invitation_id,
+                "plan_id": self.plan_id,
+                "message": "invitation",
+                "sender": "test_admin",
+                "recipient": "test_user",
+                "accepted": None,
+            }
+        )
+
+        self.planner.set_invitation_reply(invitation_id, True)
+
+        # expect invitation's accepted state to be True
+        db_state = self.db.invitations.find_one({"_id": invitation_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["accepted"], True)
+
+        # try again, but this time with a string id and False accept state
+        self.planner.set_invitation_reply(str(invitation_id), False)
+        db_state = self.db.invitations.find_one({"_id": invitation_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["accepted"], False)
+
+    def test_set_invitation_reply_error_invitation_doesnt_exist(self):
+        """
+        expect: InvitationDoesntExistError is raised because no invitation
+        with this _id exists
+        """
+
+        self.assertRaises(
+            InvitationDoesntExistError,
+            self.planner.set_invitation_reply,
+            ObjectId(),
+            True,
+        )
+
+    def test_set_invitation_reply_error_invalid_id(self):
+        """
+        expect: InvitationDoesntExistError is raised because the provided 
+        id is not a valid ObjectId
+        """
+
+        self.assertRaises(
+            InvitationDoesntExistError,
+            self.planner.set_invitation_reply,
+            "invalid_id",
+            True,
+        )

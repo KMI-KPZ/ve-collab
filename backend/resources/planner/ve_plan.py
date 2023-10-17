@@ -5,9 +5,10 @@ from bson import ObjectId
 from bson.errors import InvalidId
 from pymongo.database import Database
 from pymongo.errors import DuplicateKeyError
-from typing import Any, List
+from typing import Any, Dict, List
 
 from exceptions import (
+    InvitationDoesntExistError,
     MissingKeyError,
     NoReadAccessError,
     NoWriteAccessError,
@@ -147,7 +148,7 @@ class VEPlanResource:
 
         return result.inserted_id
 
-    def _check_write_access(self, plan_id: ObjectId, username: str) -> bool:
+    def _check_write_access(self, plan_id: str | ObjectId, username: str) -> bool:
         """
         Determine if the user given by his `username` has write access to the plan
         given by its _id, i.e. check if the username is within the write_access list.
@@ -157,6 +158,11 @@ class VEPlanResource:
         Raises `PlanDoesntExistError`if no such plan with the given `plan_id` is found in
         the db.
         """
+
+        try:
+            plan_id = util.parse_object_id(plan_id)
+        except InvalidId:
+            raise PlanDoesntExistError()
 
         result = self.db.plans.find_one({"_id": plan_id}, {"write_access": True})
 
@@ -566,7 +572,7 @@ class VEPlanResource:
 
         if update_result.matched_count != 1:
             raise PlanDoesntExistError()
-        
+
     def revoke_write_permissions(self, plan_id: str | ObjectId, username: str) -> None:
         """
         Revoke write permissions for the user given by `username` for the plan with the
@@ -713,3 +719,94 @@ class VEPlanResource:
 
         if result.matched_count != 1:
             raise PlanDoesntExistError()
+
+    def insert_plan_invitation(
+        self,
+        plan_id: str | ObjectId | None,
+        message: str,
+        inviter_username: str,
+        invited_username: str,
+    ) -> ObjectId:
+        """
+        Store a new VE Invitation in the database, which is interpreted as `inviter_username`
+        sends `invited_username` an invitation to participate in a VE, includes a `message` in
+        the invitation and optionally, an already existing `plan_id` as a reference to an already
+        existing plan.
+
+        Returns the _id of the freshly inserted invitation.
+
+        Raises `PlanDoesntExistError` if a `plan_id` is supplied, but no such plan actually exists.
+        """
+
+        # if supplied _id is no valid ObjectId, we can also raise the PlanDoesntExistError,
+        # since there logically can't be any matching plan
+        if plan_id is not None:
+            try:
+                plan_id = util.parse_object_id(plan_id)
+            except InvalidId:
+                raise PlanDoesntExistError()
+
+            # if no plan with the given _id exists, raise PlanDoesntExistError
+            try:
+                self.get_plan(plan_id)
+            except:
+                raise
+
+        result = self.db.invitations.insert_one(
+            {
+                "plan_id": plan_id,
+                "message": message,
+                "sender": inviter_username,
+                "recipient": invited_username,
+                "accepted": None,
+            }
+        )
+
+        return result.inserted_id
+
+    def get_plan_invitation(self, _id: str | ObjectId) -> Dict:
+        """ 
+        Request a VE invitation record by specifying it's _id in 
+        either a `str` or `ObjectId` representation.
+
+        Returns the VE invitation as a dict.
+
+        Raise `InvitationDoesntExistError` if no invitation with
+        such a _id exists.
+        """
+
+        try:
+            _id = util.parse_object_id(_id)
+        except InvalidId:
+            raise InvitationDoesntExistError()
+
+        result = self.db.invitations.find_one({"_id": _id})
+
+        if not result:
+            raise InvitationDoesntExistError()
+
+        return result
+
+    def set_invitation_reply(
+        self, invitation_id: str | ObjectId, accepted: bool
+    ) -> None:
+        """
+        update the already sent invitation with a reply from the recipient user, i.e. setting
+        the `accepted` attribute to True or False depending on the user's choice.
+
+        Returns nothing.
+
+        Raises `InvitationDoesntExistError` if no ve invitation with that _id exists.
+        """
+
+        try:
+            invitation_id = util.parse_object_id(invitation_id)
+        except InvalidId:
+            raise InvitationDoesntExistError()
+
+        update_result = self.db.invitations.update_one(
+            {"_id": invitation_id}, {"$set": {"accepted": accepted}}
+        )
+
+        if update_result.matched_count == 0:
+            raise InvitationDoesntExistError()

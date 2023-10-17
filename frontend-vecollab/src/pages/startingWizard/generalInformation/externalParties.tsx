@@ -1,46 +1,32 @@
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
 import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
-import {
-    initialSideProgressBarStates,
-    ISideProgressBarStates,
-    ProgressState,
-} from '@/interfaces/startingWizard/sideProgressBar';
+import { signIn, useSession } from 'next-auth/react';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import { fetchGET, fetchPOST } from '@/lib/backend';
-import { signIn, useSession } from 'next-auth/react';
 import LoadingAnimation from '@/components/LoadingAnimation';
-import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
-import { sideMenuStepsData } from '@/data/sideMenuSteps';
-import { generateFineStepLinkTopMenu } from '@/pages/startingWizard/generalInformation/courseFormat';
 
-interface FormValues {
-    externalParties: IExternalParties[];
+interface ExternalParty {
+    externalParty: string;
 }
 
-interface IExternalParties {
-    name: string;
+interface FormValues {
+    externalParties: ExternalParty[];
 }
 
 export default function ExternalPersons() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
-    const { validateAndRoute } = useValidation();
-    const [linkFineStepTopMenu, setLinkFineStepTopMenu] = useState<string>(
-        '/startingWizard/finePlanner'
-    );
-
-    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
-        initialSideProgressBarStates
-    );
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
         if (status !== 'loading') {
             if (!session || session?.error === 'RefreshAccessTokenError') {
+                console.log('forced new signIn');
                 signIn('keycloak');
             }
         }
@@ -48,7 +34,7 @@ export default function ExternalPersons() {
 
     const {
         register,
-        formState: { errors, isValid },
+        formState: { errors },
         handleSubmit,
         control,
         watch,
@@ -56,7 +42,7 @@ export default function ExternalPersons() {
     } = useForm<FormValues>({
         mode: 'onChange',
         defaultValues: {
-            externalParties: [{ name: '' }],
+            externalParties: [{ externalParty: '' }],
         },
     });
 
@@ -77,12 +63,13 @@ export default function ExternalPersons() {
                 (data) => {
                     setLoading(false);
                     if (data.plan.involved_parties.length !== 0) {
-                        setValue('externalParties', data.plan.involved_parties);
+                        setValue(
+                            'externalParties',
+                            data.plan.involved_parties.map((element: string) => ({
+                                externalParty: element,
+                            }))
+                        );
                     }
-                    if (data.plan.progress.length !== 0) {
-                        setSideMenuStepsProgress(data.plan.progress);
-                    }
-                    setLinkFineStepTopMenu(generateFineStepLinkTopMenu(data.plan.steps));
                 }
             );
         }
@@ -95,48 +82,40 @@ export default function ExternalPersons() {
 
     const onSubmit: SubmitHandler<FormValues> = async () => {
         await fetchPOST(
-            '/planner/update_fields',
+            '/planner/update_field',
             {
-                update: [
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'external_parties',
-                        value: watch('externalParties'),
-                    },
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'progress',
-                        value: {
-                            ...sideMenuStepsProgress,
-                            involved_parties: ProgressState.completed,
-                        },
-                    },
-                ],
+                plan_id: router.query.plannerId,
+                field_name: 'involved_parties',
+                value: watch('externalParties').map((element) => element.externalParty),
             },
             session?.accessToken
         );
+        await router.push({
+            pathname: '/startingWizard/generalInformation/institutions',
+            query: { plannerId: router.query.plannerId },
+        });
     };
 
-    const renderExternalParties = (): JSX.Element[] => {
-        return fields.map((externalParties, index) => (
-            <div key={index} className="mt-4 flex justify-center">
+    const renderExternalPartiesInputs = (): JSX.Element[] => {
+        return fields.map((externalParty, index) => (
+            <div key={externalParty.id} className="mx-7 mt-7 flex flex-col justify-center">
                 <input
                     type="text"
-                    {...register(`externalParties.${index}.name`, {
+                    placeholder="Externen eingeben"
+                    className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
+                    {...register(`externalParties.${index}.externalParty`, {
                         maxLength: {
                             value: 50,
                             message: 'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
                         },
                         pattern: {
                             value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
-                            message: 'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?-',
+                            message: 'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
                         },
                     })}
-                    placeholder="Name eingeben"
-                    className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
                 />
                 <p className="text-red-600 pt-2">
-                    {errors?.externalParties?.[index]?.name?.message}
+                    {errors?.externalParties?.[index]?.externalParty?.message}
                 </p>
             </div>
         ));
@@ -149,7 +128,10 @@ export default function ExternalPersons() {
                 {loading ? (
                     <LoadingAnimation />
                 ) : (
-                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
+                    <form
+                        onSubmit={handleSubmit(onSubmit)}
+                        className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
+                    >
                         <div>
                             <div className={'text-center font-bold text-4xl mb-2'}>
                                 Gibt es externe Beteiligte?
@@ -157,8 +139,8 @@ export default function ExternalPersons() {
                             <div className={'text-center mb-20'}>
                                 optional, falls ja, benenne diese, ansonsten einfach weiter
                             </div>
-                            {renderExternalParties()}
-                            <div className={'mx-2 flex justify-end mr-14 mt-2'}>
+                            {renderExternalPartiesInputs()}
+                            <div className={'w-3/4 mx-7 mt-3 flex justify-end'}>
                                 <button type="button" onClick={() => remove(fields.length - 1)}>
                                     <RxMinus size={20} />
                                 </button>
@@ -166,7 +148,7 @@ export default function ExternalPersons() {
                                     type="button"
                                     onClick={() => {
                                         append({
-                                            name: '',
+                                            externalParty: '',
                                         });
                                     }}
                                 >
@@ -176,33 +158,24 @@ export default function ExternalPersons() {
                         </div>
                         <div className="flex justify-around w-full">
                             <div>
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={() => {
-                                        validateAndRoute(
-                                            '/startingWizard/generalInformation/partners',
-                                            router.query.plannerId,
-                                            handleSubmit(onSubmit),
-                                            isValid
-                                        );
+                                <Link
+                                    href={{
+                                        pathname: '/startingWizard/generalInformation/partners',
+                                        query: { plannerId: router.query.plannerId },
                                     }}
                                 >
-                                    Zurück
-                                </button>
+                                    <button
+                                        type="button"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    >
+                                        Zurück
+                                    </button>
+                                </Link>
                             </div>
                             <div>
                                 <button
-                                    type="button"
+                                    type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={() => {
-                                        validateAndRoute(
-                                            '/startingWizard/generalInformation/institutions',
-                                            router.query.plannerId,
-                                            handleSubmit(onSubmit),
-                                            isValid
-                                        );
-                                    }}
                                 >
                                     Weiter
                                 </button>
@@ -210,12 +183,7 @@ export default function ExternalPersons() {
                         </div>
                     </form>
                 )}
-                <SideProgressBarSection
-                    progressState={sideMenuStepsProgress}
-                    handleValidation={handleSubmit(onSubmit)}
-                    isValid={isValid}
-                    sideMenuStepsData={sideMenuStepsData}
-                />
+                <SideProgressBarSection />
             </div>
         </>
     );

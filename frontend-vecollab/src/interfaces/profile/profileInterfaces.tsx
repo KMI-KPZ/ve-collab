@@ -59,13 +59,21 @@ export interface UserSnippet {
     institution: string;
 }
 
+export interface UserAccessSnippet {
+    profilePicUrl: string;
+    name: string;
+    preferredUsername: string;
+    institution: string;
+    access: string;
+}
+
 export interface VEPlanSnippet {
-    _id: string,
-    name: string
+    _id: string;
+    name: string;
 }
 
 export interface VEWindowItem {
-    plan: VEPlanSnippet
+    plan: VEPlanSnippet;
     title: string;
     description: string;
 }

@@ -96,7 +96,7 @@ export default function HeadProgressBarSection({ stage, linkFineStep }: HeadProg
                 {renderHeadProgressBar(headMenuProgressSteps)}
             </nav>
             <div className="flex justify-center">
-                <Link href={`/etherpad?padID=${router.query.plannerId}`} target="_blank">
+                <Link href={`/etherpad?planID=${router.query.plannerId}`} target="_blank" className='mx-2'>
                     <button
                         type="submit"
                         className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
@@ -104,7 +104,7 @@ export default function HeadProgressBarSection({ stage, linkFineStep }: HeadProg
                         kollaboratives Pad öffnen
                     </button>
                 </Link>
-                <Link href={`/meeting?meetingId=${router.query.plannerId}`} target="_blank">
+                <Link href={`/meeting?meetingId=${router.query.plannerId}`} target="_blank" className='mx-2'>
                     <button
                         type="submit"
                         className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"

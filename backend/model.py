@@ -971,6 +971,7 @@ class VEPlan:
 
     EXPECTED_DICT_ENTRIES = {
         "name": (str, type(None)),
+        "partners": list,
         "institutions": list,
         "topic": (str, type(None)),
         "lectures": list,
@@ -995,6 +996,7 @@ class VEPlan:
         creation_timestamp: str | datetime = None,
         last_modified: str | datetime = None,
         name: str = None,
+        partners: List[str] = [],
         institutions: List[Institution] = [],
         topic: str = None,
         lectures: List[Lecture] = [],
@@ -1044,6 +1046,7 @@ class VEPlan:
         self.last_modified = util.parse_datetime(last_modified)
 
         self.name = name
+        self.partners = partners
         self.institutions = institutions
         self.topic = topic
         self.lectures = lectures
@@ -1155,6 +1158,7 @@ class VEPlan:
             "creation_timestamp": self.creation_timestamp,
             "last_modified": self.last_modified,
             "name": self.name,
+            "partners": self.partners,
             "institutions": [
                 institution.to_dict() for institution in self.institutions
             ],
@@ -1248,6 +1252,7 @@ class VEPlan:
             params = {
                 "_id": "object_id_str",
                 "name": None,
+                "partners": [],
                 "institutions": [
                     {
                         "_id": "object_id_str",

@@ -2,8 +2,8 @@ import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
 import { useRouter } from 'next/router';
 import { RxTrash } from 'react-icons/rx';
 import LoadingAnimation from '../LoadingAnimation';
-import AuthenticatedImage from './AuthenticatedImage';
-import BoxHeadline from './BoxHeadline';
+import AuthenticatedImage from '@/components/AuthenticatedImage';
+import BoxHeadline from '@/components/BoxHeadline';
 
 interface Props {
     loading: boolean;

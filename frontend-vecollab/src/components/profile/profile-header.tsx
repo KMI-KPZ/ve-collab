@@ -4,10 +4,10 @@ import { fetchDELETE, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import { SetStateAction, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import AuthenticatedImage from './AuthenticatedImage';
+import AuthenticatedImage from '@/components/AuthenticatedImage';
 import Dialog from './Dialog';
 import PublicPlansSelect from './PublicPlansSelect';
-import SuccessAlert from './SuccessAlert';
+import SuccessAlert from '@/components/SuccessAlert';
 
 interface Props {
     name: string;
@@ -77,17 +77,19 @@ export default function ProfileHeader({
     const sendVeInvitation = () => {
         const payload = {
             message: veInvitationMessage,
-            plan: chosenPlanId === '' ? null : chosenPlanId,
+            plan_id: chosenPlanId === '' ? null : chosenPlanId,
+            username: usernameOfProfileOwner,
         };
 
-        // TODO api call once finished
-        console.log(payload);
+        fetchPOST('/ve_invitation/send', payload, session?.accessToken).then((response) => {
+            console.log(response);
 
-        // render success message that disappears after 2 seconds
-        setSuccessPopupOpen(true);
-        setTimeout(() => {
-            setSuccessPopupOpen((successPopupOpen) => false);
-        }, 2000);
+            // render success message that disappears after 2 seconds
+            setSuccessPopupOpen(true);
+            setTimeout(() => {
+                setSuccessPopupOpen((successPopupOpen) => false);
+            }, 2000);
+        });
     };
 
     return (
@@ -221,8 +223,8 @@ export default function ProfileHeader({
                                             setChosenPlanId={setChosenPlanId}
                                         />
                                         <p className="my-2 text-gray-400">
-                                            es werden automatisch Leserechte an eingeladene
-                                            Personen vergeben!
+                                            es werden automatisch Leserechte an eingeladene Personen
+                                            vergeben!
                                         </p>
                                     </>
                                 )}

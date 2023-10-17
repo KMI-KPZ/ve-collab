@@ -26,6 +26,7 @@ from exceptions import (
 )
 from handlers.base_handler import auth_needed, BaseHandler
 from model import Step, VEPlan
+from resources.planner.etherpad_integration import EtherpadResouce
 from resources.planner.ve_plan import VEPlanResource
 import util
 
@@ -165,6 +166,7 @@ class VEPlanHandler(BaseHandler):
                 Example:
                     {
                         "name": "test",
+                        "partners": ["username1", "username2"],
                         "institutions": [
                             {
                                 "_id": "<object_id_str>",
@@ -353,6 +355,7 @@ class VEPlanHandler(BaseHandler):
                     {
                         "_id": "<object_id_str>",
                         "name": "test",
+                        "partners": ["username1", "username2"],
                         "institutions": [
                             {
                                 "_id": "<object_id_str>",
@@ -1050,12 +1053,18 @@ class VEPlanHandler(BaseHandler):
                     )
                     return
 
-                # assert bool type
-                read = True if http_body["read"] == "true" else False
-                write = True if http_body["write"] == "true" else False
+                # assert bool type in case the inputs are "true" and "false" strings
+                if not isinstance(http_body["read"], bool):
+                    http_body["read"] = True if http_body["read"] == "true" else False
+                if not isinstance(http_body["write"], bool):
+                    http_body["write"] = True if http_body["write"] == "true" else False
 
                 self.revoke_access_rights(
-                    db, http_body["plan_id"], http_body["username"], read, write
+                    db,
+                    http_body["plan_id"],
+                    http_body["username"],
+                    http_body["read"],
+                    http_body["write"],
                 )
                 return
 
@@ -1318,6 +1327,9 @@ class VEPlanHandler(BaseHandler):
             self.set_status(409)
             self.write({"success": False, "reason": PLAN_ALREADY_EXISTS})
             return
+        
+        er = EtherpadResouce(db)
+        er.initiate_etherpad_for_plan(_id)
 
         self.serialize_and_write({"success": True, "inserted_id": _id})
 
@@ -1356,6 +1368,10 @@ class VEPlanHandler(BaseHandler):
             self.set_status(403)
             self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
             return
+        
+        if upsert is True:
+            er = EtherpadResouce(db)
+            er.initiate_etherpad_for_plan(_id)
 
         self.serialize_and_write({"success": True, "updated_id": _id})
 
@@ -1434,6 +1450,10 @@ class VEPlanHandler(BaseHandler):
         if error_reason:
             self.write({"success": False, "reason": error_reason})
         else:
+            if upsert is True:
+                er = EtherpadResouce(db)
+                er.initiate_etherpad_for_plan(_id)
+
             self.serialize_and_write({"success": True, "updated_id": _id})
 
     def bulk_update_fields_in_plan(self, db: Database, update_instructions: List[Dict]):

@@ -1380,6 +1380,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.read_access, [])
         self.assertEqual(plan.write_access, [])
         self.assertIsNone(plan.name)
+        self.assertEqual(plan.partners, [])
         self.assertEqual(plan.institutions, [])
         self.assertIsNone(plan.topic)
         self.assertEqual(plan.lectures, [])
@@ -1436,6 +1437,7 @@ class VEPlanModelTest(TestCase):
             read_access=["test"],
             write_access=["test"],
             name="test",
+            partners=["test"],
             institutions=institutions,
             topic="test",
             lectures=lectures,
@@ -1470,6 +1472,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.read_access, ["test"])
         self.assertEqual(plan.write_access, ["test"])
         self.assertEqual(plan.name, "test")
+        self.assertEqual(plan.partners, ["test"])
         self.assertEqual(plan.institutions, institutions)
         self.assertEqual(plan.topic, "test")
         self.assertEqual(plan.lectures, lectures)
@@ -1499,6 +1502,7 @@ class VEPlanModelTest(TestCase):
         ]
         plan = VEPlan(
             name="test",
+            partners=["test"],
             institutions=institutions,
             topic="test",
             lectures=lectures,
@@ -1528,6 +1532,7 @@ class VEPlanModelTest(TestCase):
         )
         self.assertIsInstance(plan._id, ObjectId)
         self.assertEqual(plan.name, "test")
+        self.assertEqual(plan.partners, ["test"])
         self.assertEqual(plan.institutions, institutions)
         self.assertEqual(plan.topic, "test")
         self.assertEqual(plan.lectures, lectures)
@@ -1622,6 +1627,7 @@ class VEPlanModelTest(TestCase):
         self.assertIn("read_access", plan_dict)
         self.assertIn("write_access", plan_dict),
         self.assertIn("name", plan_dict)
+        self.assertIn("partners", plan_dict)
         self.assertIn("institutions", plan_dict)
         self.assertIn("topic", plan_dict)
         self.assertIn("lectures", plan_dict)
@@ -1644,6 +1650,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan_dict["read_access"], [])
         self.assertEqual(plan_dict["write_access"], [])
         self.assertIsNone(plan_dict["name"])
+        self.assertEqual(plan_dict["partners"], [])
         self.assertEqual(plan_dict["institutions"], [institution.to_dict()])
         self.assertIsNone(plan_dict["topic"])
         self.assertEqual(plan_dict["lectures"], [lecture.to_dict()])
@@ -1677,6 +1684,7 @@ class VEPlanModelTest(TestCase):
         plan_dict = {
             "_id": _id,
             "name": None,
+            "partners": [],
             "institutions": [
                 {
                     "_id": institution._id,
@@ -1756,6 +1764,7 @@ class VEPlanModelTest(TestCase):
         plan = VEPlan.from_dict(plan_dict)
 
         self.assertIsNone(plan.name)
+        self.assertEqual(plan.partners, [])
         self.assertIsNone(plan.author)
         self.assertEqual(plan.read_access, [])
         self.assertEqual(plan.write_access, [])
@@ -1785,6 +1794,7 @@ class VEPlanModelTest(TestCase):
             "author": "test",
             "read_access": ["test"],
             "name": None,
+            "partners": [],
             "institutions": [
                 {
                     "name": institution.name,
@@ -1863,6 +1873,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.read_access, ["test"])
         self.assertEqual(plan.write_access, [])
         self.assertIsNone(plan.name)
+        self.assertEqual(plan.partners, [])
         self.assertEqual(len(plan.institutions), 1)
         self.assertIsInstance(plan.institutions[0], Institution)
         self.assertIsNone(plan.topic)
@@ -1906,6 +1917,7 @@ class VEPlanModelTest(TestCase):
         plan_dict = {
             "_id": ObjectId(),
             "name": None,
+            "partners": [],
             "institutions": [],
             "topic": None,
             "lectures": [],
@@ -1947,6 +1959,7 @@ class VEPlanModelTest(TestCase):
         plan_dict = {
             "_id": ObjectId(),
             "name": None,
+            "partners": [],
             "institutions": [],
             "topic": None,
             "lectures": [],
@@ -1987,6 +2000,10 @@ class VEPlanModelTest(TestCase):
         plan_dict["name"] = 1
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
         plan_dict["name"] = None
+
+        plan_dict["partners"] = 1
+        self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
+        plan_dict["partners"] = []
 
         plan_dict["institutions"] = 123
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
@@ -2049,6 +2066,7 @@ class VEPlanModelTest(TestCase):
         plan_dict = {
             "_id": ObjectId(),
             "name": None,
+            "partners": [],
             "institutions": [],
             "topic": None,
             "lectures": [],
