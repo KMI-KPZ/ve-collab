@@ -45,7 +45,6 @@ export default function LearningEnvironment() {
         register,
         formState: { errors, isValid },
         handleSubmit,
-        watch,
         setValue,
     } = useForm<FormValues>({
         mode: 'onChange',
@@ -82,7 +81,7 @@ export default function LearningEnvironment() {
         }
     }, [session, status, router, setValue]);
 
-    const onSubmit: SubmitHandler<FormValues> = async () => {
+    const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         await fetchPOST(
             '/planner/update_fields',
             {
@@ -90,7 +89,7 @@ export default function LearningEnvironment() {
                     {
                         plan_id: router.query.plannerId,
                         field_name: 'learning_env',
-                        value: watch('learningEnv'),
+                        value: data.learningEnv,
                     },
                     {
                         plan_id: router.query.plannerId,

@@ -51,7 +51,6 @@ export default function Languages() {
         formState: { errors, isValid },
         handleSubmit,
         control,
-        watch,
         setValue,
     } = useForm<FormValues>({
         mode: 'onChange',
@@ -96,7 +95,8 @@ export default function Languages() {
         control,
     });
 
-    const onSubmit: SubmitHandler<FormValues> = async () => {
+    const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
+        console.log(data.languages);
         await fetchPOST(
             '/planner/update_fields',
             {
@@ -104,7 +104,7 @@ export default function Languages() {
                     {
                         plan_id: router.query.plannerId,
                         field_name: 'languages',
-                        value: watch('languages').map((element) => element.language),
+                        value: data.languages.map((element) => element.language),
                     },
                     {
                         plan_id: router.query.plannerId,

@@ -51,7 +51,6 @@ export default function Tools() {
         control,
         formState: { errors, isValid },
         handleSubmit,
-        watch,
         setValue,
     } = useForm<FormValues>({
         mode: 'onChange',
@@ -93,7 +92,7 @@ export default function Tools() {
         control,
     });
 
-    const onSubmit: SubmitHandler<FormValues> = async () => {
+    const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         await fetchPOST(
             '/planner/update_fields',
             {
@@ -101,7 +100,7 @@ export default function Tools() {
                     {
                         plan_id: router.query.plannerId,
                         field_name: 'tools',
-                        value: watch('tools'),
+                        value: data.tools,
                     },
                     {
                         plan_id: router.query.plannerId,

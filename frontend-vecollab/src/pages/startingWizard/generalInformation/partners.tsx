@@ -2,6 +2,7 @@ import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarS
 import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
+import Link from 'next/link';
 import { FormEvent, useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
@@ -12,23 +13,29 @@ import {
     BackendSearchResponse,
     BackendUserSnippet,
 } from '@/interfaces/api/apiInterfaces';
+import { generateFineStepLinkTopMenu } from '@/pages/startingWizard/generalInformation/courseFormat';
+import {
+    initialSideProgressBarStates,
+    ISideProgressBarStates,
+    ProgressState,
+} from '@/interfaces/startingWizard/sideProgressBar';
+import { sideMenuStepsData } from '@/data/sideMenuSteps';
 
 export default function Partners() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
-    const { validateAndRoute } = useValidation();
-    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
-        initialSideProgressBarStates
-    );
-    const [linkFineStepTopMenu, setLinkFineStepTopMenu] = useState<string>(
-        '/startingWizard/finePlanner'
-    );
 
     const [partners, setPartners] = useState(['']);
     const [partnerProfileSnippets, setPartnerProfileSnippets] = useState<{
         [Key: string]: BackendUserSnippet;
     }>({});
+    const [linkFineStepTopMenu, setLinkFineStepTopMenu] = useState<string>(
+        '/startingWizard/finePlanner'
+    );
+    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
+        initialSideProgressBarStates
+    );
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -38,20 +45,6 @@ export default function Partners() {
             }
         }
     }, [session, status]);
-
-    const {
-        register,
-        formState: { errors, isValid },
-        handleSubmit,
-        control,
-        watch,
-        setValue,
-    } = useForm<FormValues>({
-        mode: 'onChange',
-        defaultValues: {
-            partners: [{ name: '' }],
-        },
-    });
 
     useEffect(() => {
         // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
@@ -113,16 +106,25 @@ export default function Partners() {
         setPartners(copy);
     };
 
-    const onSubmit = async (e: FormEvent) => {
-        e.preventDefault();
-        console.log(partners);
-
+    const onSubmit = async () => {
         await fetchPOST(
             '/planner/update_fields',
             {
-                plan_id: router.query.plannerId,
-                field_name: 'partners',
-                value: partners,
+                update: [
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'partners',
+                        value: partners,
+                    },
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'progress',
+                        value: {
+                            ...sideMenuStepsProgress,
+                            partners: ProgressState.completed,
+                        },
+                    },
+                ],
             },
             session?.accessToken
         );
@@ -160,7 +162,10 @@ export default function Partners() {
                 {loading ? (
                     <LoadingAnimation />
                 ) : (
-                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
+                    <form
+                        onSubmit={onSubmit}
+                        className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
+                    >
                         <div>
                             <div className={'text-center font-bold text-4xl mb-2'}>
                                 Füge deine Partner hinzu
@@ -219,33 +224,25 @@ export default function Partners() {
                         </div>
                         <div className="flex justify-around w-full">
                             <div>
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={() => {
-                                        validateAndRoute(
-                                            '/startingWizard/generalInformation/projectName',
-                                            router.query.plannerId,
-                                            handleSubmit(onSubmit),
-                                            isValid
-                                        );
+                                <Link
+                                    href={{
+                                        pathname: '/startingWizard/generalInformation/projectName',
+                                        query: { plannerId: router.query.plannerId },
                                     }}
                                 >
-                                    Zurück
-                                </button>
+                                    <button
+                                        type="button"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    >
+                                        Zurück
+                                    </button>
+                                </Link>
                             </div>
                             <div>
                                 <button
                                     type="button"
+                                    onClick={onSubmit}
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={() => {
-                                        validateAndRoute(
-                                            '/startingWizard/generalInformation/externalParties',
-                                            router.query.plannerId,
-                                            handleSubmit(onSubmit),
-                                            isValid
-                                        );
-                                    }}
                                 >
                                     Weiter
                                 </button>
@@ -255,8 +252,8 @@ export default function Partners() {
                 )}
                 <SideProgressBarSection
                     progressState={sideMenuStepsProgress}
-                    handleValidation={handleSubmit(onSubmit)}
-                    isValid={isValid}
+                    handleValidation={() => {}}
+                    isValid={true}
                     sideMenuStepsData={sideMenuStepsData}
                 />
             </div>

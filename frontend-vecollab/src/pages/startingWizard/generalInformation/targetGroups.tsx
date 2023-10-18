@@ -59,7 +59,6 @@ export default function TargetGroups() {
         formState: { errors, isValid },
         handleSubmit,
         control,
-        watch,
         setValue,
     } = useForm<FormValues>({
         mode: 'onChange',
@@ -112,7 +111,7 @@ export default function TargetGroups() {
         control,
     });
 
-    const onSubmit: SubmitHandler<FormValues> = async () => {
+    const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         await fetchPOST(
             '/planner/update_fields',
             {
@@ -120,7 +119,7 @@ export default function TargetGroups() {
                     {
                         plan_id: router.query.plannerId,
                         field_name: 'audience',
-                        value: watch('targetGroups'),
+                        value: data.targetGroups,
                     },
                     {
                         plan_id: router.query.plannerId,

@@ -55,7 +55,6 @@ export default function Institutions() {
         formState: { errors, isValid },
         handleSubmit,
         control,
-        watch,
         setValue,
     } = useForm<FormValues>({
         mode: 'onChange',
@@ -105,7 +104,7 @@ export default function Institutions() {
         control,
     });
 
-    const onSubmit: SubmitHandler<FormValues> = async () => {
+    const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         await fetchPOST(
             '/planner/update_fields',
             {
@@ -113,7 +112,7 @@ export default function Institutions() {
                     {
                         plan_id: router.query.plannerId,
                         field_name: 'institutions',
-                        value: watch('institutions'),
+                        value: data.institutions,
                     },
                     {
                         plan_id: router.query.plannerId,

@@ -46,7 +46,6 @@ export default function NewContent() {
         register,
         formState: { errors, isValid },
         handleSubmit,
-        watch,
         setValue,
     } = useForm<FormValues>({
         mode: 'onChange',
@@ -82,8 +81,8 @@ export default function NewContent() {
         }
     }, [session, status, router, setValue]);
 
-    const onSubmit: SubmitHandler<FormValues> = async () => {
-        const typedValue = watch('newContent') == null ? null : watch('newContent') === 'true';
+    const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
+        const typedValue = data.newContent == null ? null : data.newContent === 'true';
         await fetchPOST(
             '/planner/update_fields',
             {

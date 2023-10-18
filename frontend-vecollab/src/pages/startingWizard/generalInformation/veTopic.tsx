@@ -32,7 +32,6 @@ export default function Topic() {
     );
 
     const {
-        watch,
         register,
         handleSubmit,
         formState: { errors, isValid },
@@ -75,12 +74,12 @@ export default function Topic() {
         }
     }, [session, status, setValue, router]);
 
-    const onSubmit: SubmitHandler<FormData> = async () => {
+    const onSubmit: SubmitHandler<FormData> = async (data: FormData) => {
         await fetchPOST(
             '/planner/update_fields',
             {
                 update: [
-                    { plan_id: router.query.plannerId, field_name: 'topic', value: watch('topic') },
+                    { plan_id: router.query.plannerId, field_name: 'topic', value: data.topic },
                     {
                         plan_id: router.query.plannerId,
                         field_name: 'progress',
@@ -150,7 +149,7 @@ export default function Topic() {
                             </div>
                             <div>
                                 <button
-                                    type="submit"
+                                    type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
                                     onClick={() => {
                                         validateAndRoute(

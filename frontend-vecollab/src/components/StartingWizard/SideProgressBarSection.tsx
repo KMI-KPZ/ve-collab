@@ -12,7 +12,7 @@ import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 
 interface SideProgressBarSectionProps {
     progressState?: ISideProgressBarStates;
-    handleValidation(): Promise<void>;
+    handleValidation(): Promise<void> | void;
     isValid: boolean;
     sideMenuStepsData: SideMenuStep[];
 }

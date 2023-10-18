@@ -42,7 +42,6 @@ export default function EssentialInformation() {
     }, [session, status]);
 
     const {
-        watch,
         register,
         handleSubmit,
         formState: { errors, isValid },
@@ -75,7 +74,7 @@ export default function EssentialInformation() {
         }
     }, [session, status, router, setValue]);
 
-    const onSubmit: SubmitHandler<FormData> = async () => {
+    const onSubmit: SubmitHandler<FormData> = async (data: FormData) => {
         await fetchPOST(
             '/planner/update_fields',
             {
@@ -83,7 +82,7 @@ export default function EssentialInformation() {
                     {
                         plan_id: router.query.plannerId,
                         field_name: 'name',
-                        value: watch('name'),
+                        value: data.name,
                     },
                     {
                         plan_id: router.query.plannerId,
@@ -118,6 +117,10 @@ export default function EssentialInformation() {
                                         placeholder="Name eingeben"
                                         className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
                                         {...register('name', {
+                                            required: {
+                                                value: true,
+                                                message: 'Bitte gebe deiner VE einen Namen.',
+                                            },
                                             maxLength: {
                                                 value: 50,
                                                 message:

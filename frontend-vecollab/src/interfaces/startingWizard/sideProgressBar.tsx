@@ -16,6 +16,7 @@ export enum ProgressState {
 
 export interface ISideProgressBarStates {
     name: ProgressState;
+    partners: ProgressState;
     institutions: ProgressState;
     topic: ProgressState;
     lectures: ProgressState;
@@ -36,6 +37,7 @@ export interface ISideProgressBarStateSteps {
 
 export const initialSideProgressBarStates: ISideProgressBarStates = {
     name: ProgressState.notStarted,
+    partners: ProgressState.notStarted,
     institutions: ProgressState.notStarted,
     topic: ProgressState.notStarted,
     lectures: ProgressState.notStarted,

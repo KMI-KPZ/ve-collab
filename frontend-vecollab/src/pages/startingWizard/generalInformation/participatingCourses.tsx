@@ -55,7 +55,6 @@ export default function Lectures() {
         formState: { errors, isValid },
         handleSubmit,
         control,
-        watch,
         setValue,
     } = useForm<FormValues>({
         mode: 'onChange',
@@ -104,7 +103,7 @@ export default function Lectures() {
         control,
     });
 
-    const onSubmit: SubmitHandler<FormValues> = async () => {
+    const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         await fetchPOST(
             '/planner/update_fields',
             {
@@ -112,7 +111,7 @@ export default function Lectures() {
                     {
                         plan_id: router.query.plannerId,
                         field_name: 'lectures',
-                        value: watch('lectures'),
+                        value: data.lectures,
                     },
                     {
                         plan_id: router.query.plannerId,

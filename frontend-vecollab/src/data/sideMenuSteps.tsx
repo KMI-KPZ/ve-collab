@@ -8,7 +8,7 @@ export const sideMenuStepsData: SideMenuStep[] = [
     },
     {
         text: 'Partner',
-        id: 'involved_parties',
+        id: 'partners',
         link: '/startingWizard/generalInformation/partners',
     },
     {

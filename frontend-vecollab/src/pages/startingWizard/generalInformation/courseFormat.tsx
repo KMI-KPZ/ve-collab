@@ -55,7 +55,6 @@ export default function Realization() {
         register,
         formState: { errors, isValid },
         handleSubmit,
-        watch,
         setValue,
     } = useForm<FormValues>({
         mode: 'onChange',
@@ -94,7 +93,7 @@ export default function Realization() {
         }
     }, [session, status, router, setValue]);
 
-    const onSubmit: SubmitHandler<FormValues> = async () => {
+    const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         await fetchPOST(
             '/planner/update_fields',
             {
@@ -102,7 +101,7 @@ export default function Realization() {
                     {
                         plan_id: router.query.plannerId,
                         field_name: 'realization',
-                        value: watch('courseFormat'),
+                        value: data.courseFormat,
                     },
                     {
                         plan_id: router.query.plannerId,

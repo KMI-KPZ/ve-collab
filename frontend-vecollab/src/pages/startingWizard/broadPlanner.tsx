@@ -80,6 +80,7 @@ export default function BroadPlanner() {
         control,
         setValue,
         watch,
+        getValues,
     } = useForm<FormValues>({
         mode: 'onChange',
     });
@@ -134,7 +135,12 @@ export default function BroadPlanner() {
         control,
     });
 
-    const onSubmit: SubmitHandler<FormValues> = async (data) => {
+    const checkIfNamesAreUnique = (broadSteps: BroadStep[]): boolean => {
+        const broadStepNames = broadSteps.map((broadStep) => broadStep.name);
+        return new Set(broadStepNames).size !== broadSteps.length;
+    };
+
+    const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         const broadSteps: BroadStep[] = data.broadSteps;
         let payload: IFineStep = {
             ...defaultFineStepData,
@@ -230,6 +236,14 @@ export default function BroadPlanner() {
                                 required: {
                                     value: true,
                                     message: 'Bitte fülle das Felde "Name" aus',
+                                },
+                                validate: {
+                                    unique: () => {
+                                        return (
+                                            !checkIfNamesAreUnique(getValues('broadSteps')) ||
+                                            'Bitte wähle einen einzigartigen Namen'
+                                        );
+                                    },
                                 },
                             })}
                             placeholder="Name, z.B. Kennenlernphase"
