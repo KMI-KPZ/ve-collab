@@ -90,13 +90,9 @@ services:
       - EDIT_ONLY=true
       - REQUIRE_AUTHENTICATION=true
       - DB_TYPE=mongodb
-      - DB_HOST=${MONGODB_HOST}
-      - DB_PORT=${MONGODB_PORT}
       - DB_NAME=etherpad
-      - DB_USER=${MONGODB_USERNAME}
-      - DB_PASS=${MONGODB_PASSWORD}
       - DB_COLLECTION=etherpad
-      - DB_URL=mongodb://${MONGODB_USERNAME}:${MONGODB_PASSWORD}@mongodb:${MONGODB_PORT}/etherpad?authSource=admin
+      - DB_URL=mongodb://${MONGODB_USERNAME}:${MONGODB_PASSWORD}@mongodb:${MONGODB_PORT}/admin
     ports:
       - ${ETHERPAD_PORT}:9001
     depends_on:
