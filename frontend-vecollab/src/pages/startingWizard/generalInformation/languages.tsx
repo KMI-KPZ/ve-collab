@@ -96,7 +96,6 @@ export default function Languages() {
     });
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        console.log(data.languages);
         await fetchPOST(
             '/planner/update_fields',
             {
