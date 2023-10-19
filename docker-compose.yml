@@ -100,7 +100,7 @@ services:
         condition: service_healthy
     volumes:
       - ./APIKEY.txt:/opt/etherpad-lite/APIKEY.txt # unfortunately the api key cannot be supplied via config (why?!!!!!), so we have to inject it into the container to be able to use it in the rest of the application
-      - ./etherpad_config.json:/opt/etherpad-lite/settings.json # because we use the openid connect plugin, which requires configuration in settings.json that is not achieveable via env variables, we have to inject a full etherpad configuration into the container
+      - ./etherpad_config.json:/opt/etherpad-lite/settings.json # because we use the openid connect plugin, which requires configuration in settings.json that is not achieveable via .env variables, we have to inject a full etherpad configuration into the container
     logging:
       driver: "json-file"
       options:

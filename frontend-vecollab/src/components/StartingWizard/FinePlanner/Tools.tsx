@@ -1,22 +1,41 @@
 import React from 'react';
+import { useFormContext } from 'react-hook-form';
+import { RxMinus } from 'react-icons/rx';
+import { IFineStepFrontend } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 
 interface Props {
-    stepIndex: number;
     taskIndex: number;
     toolIndex: number;
-    tool: string;
-    modifyTaskTool: (index: number, taskIndex: number, toolIndex: number, value: string) => void;
+    removeItem: (index: number) => void;
 }
 
-export default function Tools({ stepIndex, taskIndex, toolIndex, tool, modifyTaskTool }: Props) {
+export default function Tools({ toolIndex, taskIndex, removeItem }: Props) {
+    const { register, formState } = useFormContext<IFineStepFrontend>();
     return (
-        <input
-            type="text"
-            name="tools"
-            value={tool}
-            onChange={(e) => modifyTaskTool(stepIndex, taskIndex, toolIndex, e.target.value)}
-            placeholder="Welche Tools können verwendet werden?"
-            className="border border-gray-500 rounded-lg w-full h-12 p-2 my-1"
-        />
+        <div className="w-full flex flex-row gap-5">
+            <input
+                type="text"
+                {...register(`tasks.${taskIndex}.tools.${toolIndex}.name`, {
+                    maxLength: {
+                        value: 100,
+                        message: 'Bitte nicht mehr als 100 Zeichen.',
+                    },
+                })}
+                placeholder="Welche Tools können verwendet werden?"
+                className="w-full border border-gray-500 rounded-lg h-12 p-2 my-1"
+            />
+            <button
+                type="button"
+                className=""
+                onClick={() => {
+                    removeItem(toolIndex);
+                }}
+            >
+                <RxMinus size={20} />
+            </button>
+            <p className="text-red-600 pt-2">
+                {formState.errors?.tasks?.[taskIndex]?.tools?.[toolIndex]?.message}
+            </p>
+        </div>
     );
 }

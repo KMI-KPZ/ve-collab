@@ -186,6 +186,21 @@ class PlanResourceTest(BaseResourceTestCase):
             "duration": self.step.duration.total_seconds(),
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
+            "progress": {
+                "name": "not_started",
+                "institutions": "not_started",
+                "topic": "not_started",
+                "lectures": "not_started",
+                "audience": "not_started",
+                "languages": "not_started",
+                "involved_parties": "not_started",
+                "realization": "not_started",
+                "learning_env": "not_started",
+                "tools": "not_started",
+                "new_content": "not_started",
+                "formalities": "not_started",
+                "steps": "not_started",
+            },
         }
         self.db.plans.insert_one(self.default_plan)
 
@@ -241,6 +256,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 self.assertEqual(plan.timestamp_to, self.step.timestamp_to)
                 self.assertEqual(plan.workload, self.step.workload)
                 self.assertEqual(plan.duration, self.step.duration)
+                self.assertEqual(plan.progress, self.default_plan["progress"])
                 self.assertIsNotNone(plan.creation_timestamp)
                 self.assertIsNotNone(plan.last_modified)
 
@@ -284,6 +300,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 self.assertEqual(
                     [step.to_dict() for step in plan.steps], self.default_plan["steps"]
                 )
+                self.assertEqual(plan.progress, self.default_plan["progress"])
                 self.assertEqual(plan.timestamp_from, self.step.timestamp_from)
                 self.assertEqual(plan.timestamp_to, self.step.timestamp_to)
                 self.assertEqual(plan.workload, self.step.workload)
@@ -365,6 +382,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(
             [step.to_dict() for step in plan.steps], self.default_plan["steps"]
         )
+        self.assertEqual(plan.progress, self.default_plan["progress"])
         self.assertEqual(plan.timestamp_from, self.step.timestamp_from)
         self.assertEqual(plan.timestamp_to, self.step.timestamp_to)
         self.assertEqual(plan.workload, self.step.workload)
@@ -406,6 +424,21 @@ class PlanResourceTest(BaseResourceTestCase):
                 "duration": self.step.duration.total_seconds(),
                 "workload": self.step.workload,
                 "steps": [self.step.to_dict()],
+                "progress": {
+                    "name": "not_started",
+                    "institutions": "not_started",
+                    "topic": "not_started",
+                    "lectures": "not_started",
+                    "audience": "not_started",
+                    "languages": "not_started",
+                    "involved_parties": "not_started",
+                    "realization": "not_started",
+                    "learning_env": "not_started",
+                    "tools": "not_started",
+                    "new_content": "not_started",
+                    "formalities": "not_started",
+                    "steps": "not_started",
+                },
             },
             {
                 "_id": ObjectId(),
@@ -432,6 +465,21 @@ class PlanResourceTest(BaseResourceTestCase):
                 "duration": self.step.duration.total_seconds(),
                 "workload": self.step.workload,
                 "steps": [self.step.to_dict()],
+                "progress": {
+                    "name": "not_started",
+                    "institutions": "not_started",
+                    "topic": "not_started",
+                    "lectures": "not_started",
+                    "audience": "not_started",
+                    "languages": "not_started",
+                    "involved_parties": "not_started",
+                    "realization": "not_started",
+                    "learning_env": "not_started",
+                    "tools": "not_started",
+                    "new_content": "not_started",
+                    "formalities": "not_started",
+                    "steps": "not_started",
+                },
             },
         ]
         self.db.plans.insert_many(additional_plans)
@@ -477,6 +525,21 @@ class PlanResourceTest(BaseResourceTestCase):
             "duration": self.step.duration.total_seconds(),
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
+            "progress": {
+                "name": "not_started",
+                "institutions": "not_started",
+                "topic": "not_started",
+                "lectures": "not_started",
+                "audience": "not_started",
+                "languages": "not_started",
+                "involved_parties": "not_started",
+                "realization": "not_started",
+                "learning_env": "not_started",
+                "tools": "not_started",
+                "new_content": "not_started",
+                "formalities": "not_started",
+                "steps": "not_started",
+            },
         }
 
         # expect the _id of the freshly inserted plan as a response
@@ -520,6 +583,21 @@ class PlanResourceTest(BaseResourceTestCase):
             "duration": self.step.duration.total_seconds(),
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
+            "progress": {
+                "name": "not_started",
+                "institutions": "not_started",
+                "topic": "not_started",
+                "lectures": "not_started",
+                "audience": "not_started",
+                "languages": "not_started",
+                "involved_parties": "not_started",
+                "realization": "not_started",
+                "learning_env": "not_started",
+                "tools": "not_started",
+                "new_content": "not_started",
+                "formalities": "not_started",
+                "steps": "not_started",
+            }
         }
 
         # expect an "inserted" response
@@ -687,6 +765,21 @@ class PlanResourceTest(BaseResourceTestCase):
         self.planner.update_field(
             self.plan_id, "formalities", {"technology": True, "exam_regulations": True}
         )
+        self.planner.update_field(self.plan_id, "progress", {
+                "name": "completed",
+                "institutions": "not_started",
+                "topic": "not_started",
+                "lectures": "not_started",
+                "audience": "not_started",
+                "languages": "not_started",
+                "involved_parties": "not_started",
+                "realization": "not_started",
+                "learning_env": "not_started",
+                "tools": "not_started",
+                "new_content": "not_started",
+                "formalities": "not_started",
+                "steps": "not_started",
+            })
 
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
@@ -699,6 +792,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(
             db_state["formalities"], {"technology": True, "exam_regulations": True}
         )
+        self.assertEqual(db_state["progress"]["name"], "completed")
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
     def test_update_field_with_user(self):
@@ -742,6 +836,21 @@ class PlanResourceTest(BaseResourceTestCase):
             {"technology": True, "exam_regulations": True},
             requesting_username="test_user",
         )
+        self.planner.update_field(self.plan_id, "progress", {
+                "name": "completed",
+                "institutions": "not_started",
+                "topic": "not_started",
+                "lectures": "not_started",
+                "audience": "not_started",
+                "languages": "not_started",
+                "involved_parties": "not_started",
+                "realization": "not_started",
+                "learning_env": "not_started",
+                "tools": "not_started",
+                "new_content": "not_started",
+                "formalities": "not_started",
+                "steps": "not_started",
+            }, requesting_username="test_user")
 
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
@@ -754,6 +863,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(
             db_state["formalities"], {"technology": True, "exam_regulations": True}
         )
+        self.assertEqual(db_state["progress"]["name"], "completed")
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
     def test_update_field_object(self):

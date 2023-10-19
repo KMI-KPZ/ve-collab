@@ -3,12 +3,19 @@ import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarS
 import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
-import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
+import {
+    initialSideProgressBarStates,
+    ISideProgressBarStates,
+    ProgressState,
+} from '@/interfaces/startingWizard/sideProgressBar';
+import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
+import { sideMenuStepsData } from '@/data/sideMenuSteps';
+import { generateFineStepLinkTopMenu } from '@/pages/startingWizard/generalInformation/courseFormat';
 
 export interface TargetGroup {
     name: string;
@@ -29,6 +36,13 @@ export default function TargetGroups() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
+        initialSideProgressBarStates
+    );
+    const { validateAndRoute } = useValidation();
+    const [linkFineStepTopMenu, setLinkFineStepTopMenu] = useState<string>(
+        '/startingWizard/finePlanner'
+    );
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -42,10 +56,9 @@ export default function TargetGroups() {
 
     const {
         register,
-        formState: { errors },
+        formState: { errors, isValid },
         handleSubmit,
         control,
-        watch,
         setValue,
     } = useForm<FormValues>({
         mode: 'onChange',
@@ -84,6 +97,10 @@ export default function TargetGroups() {
                     if (data.plan.audience.length !== 0) {
                         setValue('targetGroups', data.plan.audience);
                     }
+                    if (data.plan.progress.length !== 0) {
+                        setSideMenuStepsProgress(data.plan.progress);
+                    }
+                    setLinkFineStepTopMenu(generateFineStepLinkTopMenu(data.plan.steps));
                 }
             );
         }
@@ -94,20 +111,28 @@ export default function TargetGroups() {
         control,
     });
 
-    const onSubmit: SubmitHandler<FormValues> = async () => {
+    const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         await fetchPOST(
-            '/planner/update_field',
+            '/planner/update_fields',
             {
-                plan_id: router.query.plannerId,
-                field_name: 'audience',
-                value: watch('targetGroups'),
+                update: [
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'audience',
+                        value: data.targetGroups,
+                    },
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'progress',
+                        value: {
+                            ...sideMenuStepsProgress,
+                            audience: ProgressState.completed,
+                        },
+                    },
+                ],
             },
             session?.accessToken
         );
-        await router.push({
-            pathname: '/startingWizard/generalInformation/veTopic',
-            query: { plannerId: router.query.plannerId },
-        });
     };
 
     const rendertargetGroupsInputs = (): JSX.Element[] => {
@@ -343,15 +368,12 @@ export default function TargetGroups() {
     };
     return (
         <>
-            <HeadProgressBarSection stage={0} />
+            <HeadProgressBarSection stage={0} linkFineStep={linkFineStepTopMenu} />
             <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
                 {loading ? (
                     <LoadingAnimation />
                 ) : (
-                    <form
-                        onSubmit={handleSubmit(onSubmit)}
-                        className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
-                    >
+                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                         <div>
                             <div className={'text-center font-bold text-4xl mb-2'}>
                                 Beschreibe alle Zielgruppen
@@ -385,25 +407,33 @@ export default function TargetGroups() {
                         </div>
                         <div className="flex justify-around w-full">
                             <div>
-                                <Link
-                                    href={{
-                                        pathname:
+                                <button
+                                    type="button"
+                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    onClick={() => {
+                                        validateAndRoute(
                                             '/startingWizard/generalInformation/participatingCourses',
-                                        query: { plannerId: router.query.plannerId },
+                                            router.query.plannerId,
+                                            handleSubmit(onSubmit),
+                                            isValid
+                                        );
                                     }}
                                 >
-                                    <button
-                                        type="button"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    >
-                                        Zurück
-                                    </button>
-                                </Link>
+                                    Zurück
+                                </button>
                             </div>
                             <div>
                                 <button
-                                    type="submit"
+                                    type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    onClick={() => {
+                                        validateAndRoute(
+                                            '/startingWizard/generalInformation/veTopic',
+                                            router.query.plannerId,
+                                            handleSubmit(onSubmit),
+                                            isValid
+                                        );
+                                    }}
                                 >
                                     Weiter
                                 </button>
@@ -411,7 +441,12 @@ export default function TargetGroups() {
                         </div>
                     </form>
                 )}
-                <SideProgressBarSection />
+                <SideProgressBarSection
+                    progressState={sideMenuStepsProgress}
+                    handleValidation={handleSubmit(onSubmit)}
+                    isValid={isValid}
+                    sideMenuStepsData={sideMenuStepsData}
+                />
             </div>
         </>
     );
