@@ -64,7 +64,7 @@ export default function EssentialInformation() {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
                     setLoading(false);
-                    setValue('name', data.plan.name);
+                    setValue('name', data.plan.name, { shouldValidate: true });
                     if (data.plan.progress.length !== 0) {
                         setSideMenuStepsProgress(data.plan.progress);
                     }
