@@ -21,6 +21,7 @@
         "next-auth": "^4.20.1",
         "next-transpile-modules": "^10.0.0",
         "react": "18.2.0",
+        "react-cookie": "^6.1.1",
         "react-dom": "18.2.0",
         "react-hook-form": "^7.43.9",
         "react-icons": "^4.8.0",
