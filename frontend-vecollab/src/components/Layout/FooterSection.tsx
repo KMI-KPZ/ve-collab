@@ -4,6 +4,7 @@ import bmbfLogo from '@/images/footer/bmbf_logo.svg';
 import euFundingLogo from '@/images/footer/eu_funding.png';
 import Image from 'next/image';
 import Link from 'next/link';
+import Disclaimer from '../Disclaimer';
 
 export default function FooterSection() {
     return (
@@ -48,6 +49,7 @@ export default function FooterSection() {
             </div>
             <hr className="w-8/12 mx-auto mb-4 border-gray-400/50 border-0.5" />
             <p className="text-white flex justify-center">© 2023 VE-Collab. All rights reserved.</p>
+            <Disclaimer />
         </footer>
     );
 }

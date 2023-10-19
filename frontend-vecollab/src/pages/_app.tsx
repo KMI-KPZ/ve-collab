@@ -9,6 +9,8 @@ import LinkPreview from '@/components/metaTags/LinkPreview';
 import { socket } from '@/lib/socket';
 import SocketAuthenticationProvider from '@/components/SocketAuthenticationProvider';
 import { Notification } from '@/interfaces/socketio';
+import { CookiesProvider } from 'react-cookie';
+
 
 export default function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
     const [notificationEvents, setNotificationEvents] = useState<Notification[]>([]);
@@ -55,19 +57,21 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
         <>
             <SessionProvider session={session}>
                 <SocketAuthenticationProvider>
-                    <Head>
-                        <title>Ve Collab</title>
-                        <Favicon />
-                        <LinkPreview />
-                    </Head>
-                    <LayoutSection notificationEvents={notificationEvents}>
-                        <Component
-                            {...pageProps}
-                            socket={socket}
-                            notificationEvents={notificationEvents}
-                            setNotificationEvents={setNotificationEvents}
-                        />
-                    </LayoutSection>
+                    <CookiesProvider defaultSetOptions={{ path: '/'}}>
+                        <Head>
+                            <title>Ve Collab</title>
+                            <Favicon />
+                            <LinkPreview />
+                        </Head>
+                        <LayoutSection notificationEvents={notificationEvents}>
+                            <Component
+                                {...pageProps}
+                                socket={socket}
+                                notificationEvents={notificationEvents}
+                                setNotificationEvents={setNotificationEvents}
+                            />
+                        </LayoutSection>
+                    </CookiesProvider>
                 </SocketAuthenticationProvider>
             </SessionProvider>
         </>
