@@ -31,7 +31,9 @@ export default function HeaderSection({ notificationEvents }: Props) {
                     <li>
                         <Link href="/overviewProjects">VE Designer</Link>
                     </li>
-
+                    <li>
+                        <Link href="/messages">Chat</Link>
+                    </li>
                     <li className="relative">
                         <Link href="/notifications">Benachrichtigungen</Link>
                         {notificationEvents.length > 0 && (
@@ -46,7 +48,7 @@ export default function HeaderSection({ notificationEvents }: Props) {
                         <>
                             <li
                                 onClick={() => signIn('keycloak')}
-                                className="bg-ve-collab-orange text-white py-3 px-5 rounded-lg cursor-pointer"
+                                className="bg-ve-collab-orange hover:bg-ve-collab-orange/70 text-white py-3 px-5 rounded-lg cursor-pointer"
                             >
                                 <button onClick={() => signIn('keycloak')}>Login</button>
                             </li>
