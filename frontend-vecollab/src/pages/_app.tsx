@@ -3,16 +3,42 @@ import '@/styles/globals.css';
 import type { AppProps } from 'next/app';
 import LayoutSection from '@/components/Layout/LayoutSection';
 import Head from 'next/head';
-import { SessionProvider } from 'next-auth/react';
+import { SessionProvider, signIn, useSession } from 'next-auth/react';
 import Favicon from '@/components/metaTags/Favicon';
 import LinkPreview from '@/components/metaTags/LinkPreview';
 import { socket } from '@/lib/socket';
 import SocketAuthenticationProvider from '@/components/SocketAuthenticationProvider';
 import { Notification } from '@/interfaces/socketio';
+import { NextComponentType, NextPageContext } from 'next';
+import LoadingAnimation from '@/components/LoadingAnimation';
 import { CookiesProvider } from 'react-cookie';
 
+declare type ComponentWithAuth = NextComponentType<NextPageContext, any, any> & {
+    auth?: boolean;
+};
+declare type AppPropsWithAuth = AppProps & {
+    Component: ComponentWithAuth;
+};
+// any component that defines Component.auth = true will be wrapped inside this component,
+// which triggers a relogin flow if the session does not validate
+// meaning that inside a component no session check is required, one can
+// be assured that the component is onyl rendered if the session is valid.
+function Auth({ children }: { children: JSX.Element }): JSX.Element {
+    const { data: session, status } = useSession();
 
-export default function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
+    if (status === 'loading') {
+        return <LoadingAnimation />;
+    } else {
+        if (!session || session?.error === 'RefreshAccessTokenError') {
+            console.log('forced new signIn');
+            signIn('keycloak');
+        }
+    }
+
+    return children;
+}
+
+export default function App({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAuth) {
     const [notificationEvents, setNotificationEvents] = useState<Notification[]>([]);
 
     // don't do anything else inside this hook, especially with deps, because it would always
@@ -56,23 +82,34 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
     return (
         <>
             <SessionProvider session={session}>
-                <SocketAuthenticationProvider>
-                    <CookiesProvider defaultSetOptions={{ path: '/'}}>
+                <CookiesProvider defaultSetOptions={{ path: '/' }}>
+                    <SocketAuthenticationProvider>
                         <Head>
                             <title>Ve Collab</title>
                             <Favicon />
                             <LinkPreview />
                         </Head>
                         <LayoutSection notificationEvents={notificationEvents}>
-                            <Component
-                                {...pageProps}
-                                socket={socket}
-                                notificationEvents={notificationEvents}
-                                setNotificationEvents={setNotificationEvents}
-                            />
+                            {Component.auth ? (
+                                <Auth>
+                                    <Component
+                                        {...pageProps}
+                                        socket={socket}
+                                        notificationEvents={notificationEvents}
+                                        setNotificationEvents={setNotificationEvents}
+                                    />
+                                </Auth>
+                            ) : (
+                                <Component
+                                    {...pageProps}
+                                    socket={socket}
+                                    notificationEvents={notificationEvents}
+                                    setNotificationEvents={setNotificationEvents}
+                                />
+                            )}
                         </LayoutSection>
-                    </CookiesProvider>
-                </SocketAuthenticationProvider>
+                    </SocketAuthenticationProvider>
+                </CookiesProvider>
             </SessionProvider>
         </>
     );

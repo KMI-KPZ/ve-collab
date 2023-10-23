@@ -1,4 +1,4 @@
-import { Dispatch, FormEvent, SetStateAction, useEffect, useState } from 'react';
+import { Dispatch, FormEvent, SetStateAction } from 'react';
 import EditProfileHeader from './EditProfileHeader';
 import EditProfileVerticalSpacer from './EditProfileVerticalSpacer';
 import EditProfileHeadline from './EditProfileHeadline';
@@ -6,10 +6,9 @@ import SlateBox from '../Layout/SlateBox';
 import EditProfilePlusMinusButtons from './EditProfilePlusMinusButtons';
 import EditProfileItemRow from './EditProfileItemRow';
 import Swapper from './Swapper';
-import { VEPlanSnippet, VEWindowItem } from '@/interfaces/profile/profileInterfaces';
-import { fetchGET } from '@/lib/backend';
+import { VEWindowItem } from '@/interfaces/profile/profileInterfaces';
+import { useGetPublicPlansOfCurrentUser } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/router';
 
 interface Props {
     items: VEWindowItem[];
@@ -19,6 +18,7 @@ interface Props {
     importOrcidProfile(evt: FormEvent): Promise<void>;
 }
 
+EditProfileVeWindow.auth = true;
 export default function EditProfileVeWindow({
     items,
     setItems,
@@ -27,38 +27,13 @@ export default function EditProfileVeWindow({
     importOrcidProfile,
 }: Props) {
     const { data: session, status } = useSession();
-    const [loading, setLoading] = useState(false);
-    const router = useRouter();
 
-    const [myPublicPlans, setMyPublicPlans] = useState<VEPlanSnippet[]>([
-        {
-            _id: '',
-            name: '',
-        },
-    ]);
-
-    // request all personal public plans for dropdown
-    useEffect(() => {
-        // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
-        if (!router.isReady || status === 'loading') {
-            setLoading(true);
-            return;
-        }
-        // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
-        if (session) {
-            fetchGET(
-                `/planner/get_public_of_user?username=${session.user.preferred_username}`,
-                session?.accessToken
-            ).then((data) => {
-                setMyPublicPlans(
-                    data.plans.map((plan: any) => ({
-                        _id: plan._id,
-                        name: plan.name,
-                    }))
-                );
-            });
-        }
-    }, [session, status, router]);
+    const {
+        data: myPublicPlans,
+        isLoading,
+        error,
+        mutate,
+    } = useGetPublicPlansOfCurrentUser(session!.accessToken, session!.user!.preferred_username!);
 
     const modifyTitle = (index: number, value: string) => {
         let newItems = [...items];
