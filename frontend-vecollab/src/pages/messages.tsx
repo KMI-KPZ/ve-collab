@@ -1,3 +1,4 @@
+import ChatWindow from '@/components/chat/ChatWindow';
 import { useSession } from 'next-auth/react';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { Socket } from 'socket.io-client';
@@ -11,37 +12,31 @@ Messages.auth = true;
 export default function Messages({ socket, messageEvents, setMessageEvents }: Props) {
     const { data: session, status } = useSession();
     const [selectedChat, setSelectedChat] = useState<string>('');
-    const [sendingMessage, setSendingMessage] = useState<string>('');
 
     const handleChatSelect = (chat: string) => {
         setSelectedChat(chat);
     };
     const handleNewChatSelect = (chat: string) => {
+        /* TODO:
+            create new room by using api with participants, name, etc from form (also TODO)
+            and get back room id
+        */
         setSelectedChat(chat);
     };
 
-    const handleMessageSend = () => {
-        console.log(`Sending message "${sendingMessage}" to ${selectedChat}`);
-        socket.emit('message', {
-            message: sendingMessage,
-            recipients: [
-                // for testing purposes, always send messages back and forth between test_admin and test_user depending on who is logged in
-                session?.user.preferred_username === 'test_admin' ? 'test_user' : 'test_admin',
-            ],
-        });
-        setSendingMessage('');
-    };
-
     useEffect(() => {
+        // TODO request all rooms of user from api with their corresponding room ids and render
+        // them in sidebar
         console.log(messageEvents);
     }, [messageEvents]);
 
     // TODO possible solution:
     // - subcomponent for every chat, has a message list and the input field, ...
-    // - this parent component listens for the message events, distinguishes them (e.g. by participants, some id, ...) and
-    //   passes them to the correct subcomponent for display
+    // - this parent component here has a big dictionary that maps rooms (id) to a list of messages, listens for the message events, distinguishes them (by room id) and
+    //   adds the message to the corresponding room
     // - by doing this, the subcomponent can initially request the message history via api call itself and then only
     //   wait for new messages that have to be displayed
+    // - subcompoents also remove messages from events list themselves once they determine the message was "read" (e.g. in viewport or scroll to bottom)
 
     return (
         <>
@@ -90,6 +85,7 @@ export default function Messages({ socket, messageEvents, setMessageEvents }: Pr
                         className="bg-gray-300 rounded-md p-2 cursor-pointer hover:bg-gray-400 absolute bottom-4"
                         onClick={(e) => handleNewChatSelect('neuer Chat')}
                     >
+                        {/* TODO render small form with user select, name, etc */}
                         <div className="flex justify-between items-center">
                             <div className="flex flex-col">
                                 <p className="text-lg font-medium">+</p>
@@ -98,59 +94,14 @@ export default function Messages({ socket, messageEvents, setMessageEvents }: Pr
                         </div>
                     </button>
                 </div>
-                {/* Main window */}
-                <div className="w-4/5 bg-white h-[80vh] overflow-y-auto relative">
+                <div className="w-4/5 h-[80vh]">
                     {selectedChat ? (
-                        <div>
-                            <h1>{selectedChat}</h1>
-                            {/* Chat messages */}
-                            <div className="flex flex-col px-36 justify-end">
-                                {messageEvents.map((message, index) => (
-                                    <div key={index}>
-                                        {message.sender === session?.user.preferred_username ? (
-                                            <div className="flex justify-end">
-                                                <div className="bg-ve-collab-blue/50 rounded-md p-2 m-1 max-w-4xl break-words">
-                                                    <p>{message.message}</p>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="flex flex-col items-start">
-                                                <div className="bg-gray-200 rounded-md p-2 m-1 max-w-4xl break-words">
-                                                    <p>{message.message}</p>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
+                        <ChatWindow selectedChat={selectedChat} messages={messageEvents} socket={socket} />
                     ) : (
-                        <div>
-                            <h1>Select a chat to start messaging</h1>
-                        </div>
+                        <div className='bg-white h-full'>Please select a chat</div>
                     )}
                 </div>
             </div>
-            {/* Input textarea and send button, only renders when a chat is selected */}
-            {selectedChat && (
-                <div className="flex">
-                    <div className="w-1/5 bg-gray-200"></div>
-                    <div className="w-4/5 flex items-center p-4 justify-center">
-                        <textarea
-                            className="w-4/5 h-16 p-2 rounded-md resize-none"
-                            placeholder="Type your message here..."
-                            value={sendingMessage}
-                            onChange={(e) => setSendingMessage(e.target.value)}
-                        />
-                        <button
-                            className="bg-ve-collab-orange hover:bg-ve-collab-orange/70 text-white font-bold py-2 px-4 rounded-md ml-2"
-                            onClick={handleMessageSend}
-                        >
-                            Send
-                        </button>
-                    </div>
-                </div>
-            )}
         </>
     );
 }

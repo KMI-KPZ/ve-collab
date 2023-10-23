@@ -288,6 +288,11 @@ async def message(sid, data):
         )["_id"]
         print("corresponding room _id:", str(room_id))
 
+        # TODO refactor above:
+        # handle room creation/member management by api and instead of recipients list and expensive db operation.
+        # just expect a room id in the payload that the message gets appended to (id is very fast lookup with index)
+        # auto creation like it is now could be a fallback.
+
         # send states of the message for each recipient,
         # the sender obviously has the state "acknowledged" already
         # because he sent the message
