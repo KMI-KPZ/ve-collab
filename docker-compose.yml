@@ -2,6 +2,7 @@ version: "3.9"
 services:
   mongodb:
     image: mongo:latest
+    container_name: mongodb
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
@@ -22,6 +23,7 @@ services:
         max-size: 10m
 
   backend:
+    container_name: backend
     build:
       context: backend
       dockerfile: Dockerfile
@@ -58,6 +60,7 @@ services:
         max-size: 10m
 
   frontend:
+    container_name: frontend
     build:
       context: frontend-vecollab
       dockerfile: Dockerfile
@@ -80,6 +83,7 @@ services:
         max-size: 10m
 
   etherpad:
+    container_name: etherpad
     build:
       context: https://github.com/ether/etherpad-lite.git
       dockerfile: Dockerfile
@@ -108,6 +112,7 @@ services:
         max-size: 10m
 
   elasticsearch:
+    container_name: elasticsearch
     image: elasticsearch:8.8.0
     ports:
       - ${ELASTICSEARCH_PORT}:9200
