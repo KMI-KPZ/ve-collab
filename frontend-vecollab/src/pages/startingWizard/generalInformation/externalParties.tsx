@@ -1,13 +1,20 @@
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
 import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import { signIn, useSession } from 'next-auth/react';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import LoadingAnimation from '@/components/LoadingAnimation';
+import { sideMenuStepsData } from '@/data/sideMenuSteps';
+import {
+    initialSideProgressBarStates,
+    ISideProgressBarStates,
+    ProgressState,
+} from '@/interfaces/startingWizard/sideProgressBar';
+import { generateFineStepLinkTopMenu } from '@/pages/startingWizard/generalInformation/courseFormat';
 
 interface ExternalParty {
     externalParty: string;
@@ -21,6 +28,12 @@ export default function ExternalPersons() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
+        initialSideProgressBarStates
+    );
+    const [linkFineStepTopMenu, setLinkFineStepTopMenu] = useState<string>(
+        '/startingWizard/finePlanner'
+    );
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -37,7 +50,6 @@ export default function ExternalPersons() {
         formState: { errors },
         handleSubmit,
         control,
-        watch,
         setValue,
     } = useForm<FormValues>({
         mode: 'onChange',
@@ -70,6 +82,10 @@ export default function ExternalPersons() {
                             }))
                         );
                     }
+                    if (data.plan.progress.length !== 0) {
+                        setSideMenuStepsProgress(data.plan.progress);
+                    }
+                    setLinkFineStepTopMenu(generateFineStepLinkTopMenu(data.plan.steps));
                 }
             );
         }
@@ -80,13 +96,25 @@ export default function ExternalPersons() {
         control,
     });
 
-    const onSubmit: SubmitHandler<FormValues> = async () => {
+    const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         await fetchPOST(
-            '/planner/update_field',
+            '/planner/update_fields',
             {
-                plan_id: router.query.plannerId,
-                field_name: 'involved_parties',
-                value: watch('externalParties').map((element) => element.externalParty),
+                update: [
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'involved_parties',
+                        value: data.externalParties.map((element) => element.externalParty),
+                    },
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'progress',
+                        value: {
+                            ...sideMenuStepsProgress,
+                            involved_parties: ProgressState.completed,
+                        },
+                    },
+                ],
             },
             session?.accessToken
         );
@@ -123,7 +151,7 @@ export default function ExternalPersons() {
 
     return (
         <>
-            <HeadProgressBarSection stage={0} />
+            <HeadProgressBarSection stage={0} linkFineStep={linkFineStepTopMenu} />
             <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
                 {loading ? (
                     <LoadingAnimation />
@@ -183,7 +211,12 @@ export default function ExternalPersons() {
                         </div>
                     </form>
                 )}
-                <SideProgressBarSection />
+                <SideProgressBarSection
+                    progressState={sideMenuStepsProgress}
+                    handleValidation={handleSubmit(onSubmit)}
+                    isValid={true}
+                    sideMenuStepsData={sideMenuStepsData}
+                />
             </div>
         </>
     );

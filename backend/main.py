@@ -207,10 +207,13 @@ def init_indexes(force_rebuild: bool) -> None:
             )
 
 
-def create_initial_admin(username: str) -> None:
+def create_initial_admin() -> None:
     """
-    create an initial admin with the given username
+    create an initial admin based on INITIAL_ADMIN_USERNAME env-variable
+    or "admin" if not set
     """
+
+    username = os.getenv("INITIAL_ADMIN_USERNAME", "admin")
 
     with util.get_mongodb() as db:
         profile_manager = Profiles(db)
@@ -409,12 +412,6 @@ def main():
         help="force the application to (re)build the indexes for full text search and query optimization. Warning: this might take a long time depending on your database size",
     )
     define(
-        "create_admin",
-        default="admin",
-        type=str,
-        help="Create an initial admin user with this username in the ACL",
-    )
-    define(
         "supress_stdout_access_log",
         default=False,
         type=bool,
@@ -427,7 +424,7 @@ def main():
     set_global_vars()
 
     # insert default admin role and acl templates
-    create_initial_admin(options.create_admin)
+    create_initial_admin()
 
     # setup text indexes for searching
     init_indexes(options.build_indexes)

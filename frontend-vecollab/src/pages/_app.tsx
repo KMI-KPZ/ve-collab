@@ -11,6 +11,7 @@ import SocketAuthenticationProvider from '@/components/SocketAuthenticationProvi
 import { Notification } from '@/interfaces/socketio';
 import { NextComponentType, NextPageContext } from 'next';
 import LoadingAnimation from '@/components/LoadingAnimation';
+import { CookiesProvider } from 'react-cookie';
 
 declare type ComponentWithAuth = NextComponentType<NextPageContext, any, any> & {
     auth?: boolean;
@@ -81,32 +82,34 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
     return (
         <>
             <SessionProvider session={session}>
-                <SocketAuthenticationProvider>
-                    <Head>
-                        <title>Ve Collab</title>
-                        <Favicon />
-                        <LinkPreview />
-                    </Head>
-                    <LayoutSection notificationEvents={notificationEvents}>
-                        {Component.auth ? (
-                            <Auth>
+                <CookiesProvider defaultSetOptions={{ path: '/' }}>
+                    <SocketAuthenticationProvider>
+                        <Head>
+                            <title>Ve Collab</title>
+                            <Favicon />
+                            <LinkPreview />
+                        </Head>
+                        <LayoutSection notificationEvents={notificationEvents}>
+                            {Component.auth ? (
+                                <Auth>
+                                    <Component
+                                        {...pageProps}
+                                        socket={socket}
+                                        notificationEvents={notificationEvents}
+                                        setNotificationEvents={setNotificationEvents}
+                                    />
+                                </Auth>
+                            ) : (
                                 <Component
                                     {...pageProps}
                                     socket={socket}
                                     notificationEvents={notificationEvents}
                                     setNotificationEvents={setNotificationEvents}
                                 />
-                            </Auth>
-                        ) : (
-                            <Component
-                                {...pageProps}
-                                socket={socket}
-                                notificationEvents={notificationEvents}
-                                setNotificationEvents={setNotificationEvents}
-                            />
-                        )}
-                    </LayoutSection>
-                </SocketAuthenticationProvider>
+                            )}
+                        </LayoutSection>
+                    </SocketAuthenticationProvider>
+                </CookiesProvider>
             </SessionProvider>
         </>
     );

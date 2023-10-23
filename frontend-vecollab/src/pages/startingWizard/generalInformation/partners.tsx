@@ -13,6 +13,13 @@ import {
     BackendSearchResponse,
     BackendUserSnippet,
 } from '@/interfaces/api/apiInterfaces';
+import { generateFineStepLinkTopMenu } from '@/pages/startingWizard/generalInformation/courseFormat';
+import {
+    initialSideProgressBarStates,
+    ISideProgressBarStates,
+    ProgressState,
+} from '@/interfaces/startingWizard/sideProgressBar';
+import { sideMenuStepsData } from '@/data/sideMenuSteps';
 
 export default function Partners() {
     const { data: session, status } = useSession();
@@ -23,6 +30,12 @@ export default function Partners() {
     const [partnerProfileSnippets, setPartnerProfileSnippets] = useState<{
         [Key: string]: BackendUserSnippet;
     }>({});
+    const [linkFineStepTopMenu, setLinkFineStepTopMenu] = useState<string>(
+        '/startingWizard/finePlanner'
+    );
+    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
+        initialSideProgressBarStates
+    );
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -66,6 +79,10 @@ export default function Partners() {
                     } else {
                         setLoading(false);
                     }
+                    if (data.plan.progress.length !== 0) {
+                        setSideMenuStepsProgress(data.plan.progress);
+                    }
+                    setLinkFineStepTopMenu(generateFineStepLinkTopMenu(data.plan.steps));
                 }
             );
         }
@@ -89,16 +106,25 @@ export default function Partners() {
         setPartners(copy);
     };
 
-    const onSubmit = async (e: FormEvent) => {
-        e.preventDefault();
-        console.log(partners);
-
+    const onSubmit = async () => {
         await fetchPOST(
-            '/planner/update_field',
+            '/planner/update_fields',
             {
-                plan_id: router.query.plannerId,
-                field_name: 'partners',
-                value: partners,
+                update: [
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'partners',
+                        value: partners,
+                    },
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'progress',
+                        value: {
+                            ...sideMenuStepsProgress,
+                            partners: ProgressState.completed,
+                        },
+                    },
+                ],
             },
             session?.accessToken
         );
@@ -131,7 +157,7 @@ export default function Partners() {
 
     return (
         <>
-            <HeadProgressBarSection stage={0} />
+            <HeadProgressBarSection stage={0} linkFineStep={linkFineStepTopMenu} />
             <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
                 {loading ? (
                     <LoadingAnimation />
@@ -214,7 +240,8 @@ export default function Partners() {
                             </div>
                             <div>
                                 <button
-                                    type="submit"
+                                    type="button"
+                                    onClick={onSubmit}
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
                                 >
                                     Weiter
@@ -223,7 +250,12 @@ export default function Partners() {
                         </div>
                     </form>
                 )}
-                <SideProgressBarSection />
+                <SideProgressBarSection
+                    progressState={sideMenuStepsProgress}
+                    handleValidation={() => {}}
+                    isValid={true}
+                    sideMenuStepsData={sideMenuStepsData}
+                />
             </div>
         </>
     );

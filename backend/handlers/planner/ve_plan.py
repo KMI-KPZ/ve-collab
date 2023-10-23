@@ -1,5 +1,5 @@
 import json
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional
 
 from bson import ObjectId
 from bson.errors import InvalidId
@@ -230,7 +230,22 @@ class VEPlanHandler(BaseHandler):
                                 "attachments": ["<object_id_str>", "<object_id_str>"],
                                 "custom_attributes": {"my_attr": "my_value"}
                             }
-                        ]
+                        ],
+                        "progress": {
+                            "name": "<completed|uncompleted|not_started>",
+                            "institutions": "<completed|uncompleted|not_started>",
+                            "topic": "<completed|uncompleted|not_started>",
+                            "lectures": "<completed|uncompleted|not_started>",
+                            "audience": "<completed|uncompleted|not_started>",
+                            "languages": "<completed|uncompleted|not_started>",
+                            "involved_parties": "<completed|uncompleted|not_started>",
+                            "realization": "<completed|uncompleted|not_started>",
+                            "learning_env": "<completed|uncompleted|not_started>",
+                            "tools": "<completed|uncompleted|not_started>",
+                            "new_content": "<completed|uncompleted|not_started>",
+                            "formalities": "<completed|uncompleted|not_started>",
+                            "steps": "<completed|uncompleted|not_started>",
+                        },
                     }
 
                 The only really necessary values are the "name"-keys of the steps and the "title"-keys
@@ -404,7 +419,22 @@ class VEPlanHandler(BaseHandler):
                                 "attachments": ["<object_id_str>", "<object_id_str>"],
                                 "custom_attributes": {"my_attr": "my_value"}
                             }
-                        ]
+                        ],
+                        "progress": {
+                            "name": "<completed|uncompleted|not_started>",
+                            "institutions": "<completed|uncompleted|not_started>",
+                            "topic": "<completed|uncompleted|not_started>",
+                            "lectures": "<completed|uncompleted|not_started>",
+                            "audience": "<completed|uncompleted|not_started>",
+                            "languages": "<completed|uncompleted|not_started>",
+                            "involved_parties": "<completed|uncompleted|not_started>",
+                            "realization": "<completed|uncompleted|not_started>",
+                            "learning_env": "<completed|uncompleted|not_started>",
+                            "tools": "<completed|uncompleted|not_started>",
+                            "new_content": "<completed|uncompleted|not_started>",
+                            "formalities": "<completed|uncompleted|not_started>",
+                            "steps": "<completed|uncompleted|not_started>",
+                        },
                     }
 
                 The only really necessary values are the "name"-keys of the steps and the "title"-keys
@@ -545,6 +575,107 @@ class VEPlanHandler(BaseHandler):
                 unique)
                 {"success": False,
                  "reason": "non_unique_task_titles"}
+
+        POST /planner/update_fields
+            update multiple fields of a VEPlan by supplying expected data via the HTTP Body.
+            The syntax and semantics are equivalent to the /planner/update_field - endpoint,
+            only that here multiple update dicts are supplied in a list in the http body and
+            upserts are not allowed.
+
+            The values are type-checked and also semantic checks like unique step names or task
+            titles are enforced with respective error messages.
+
+            If you want to update one of the object-like attributes of a VEPlan (e.g. audience,
+            lectures, steps, ...), pay attention to supply all of those objects in a list (as
+            there are naturally multiple possible as per model), because they will be overwritten
+            (i.e. if you want to append a new step, send all other already existing steps as well).
+            If you want to simple append or remove new objects to/from those list,
+            use the append/remove-endpoints instead.
+
+            Technically, one could also provide multiple update instructions to different plans
+            as they are handled sequentially, though for clear structure it is not recommended.
+
+            Note that this query does not provide an "all-or-nothing"-approach, i.e. if some update
+            instructions fail due to conflicts or malformed syntax, the other successfull instructions
+            will still be executed.
+
+            query params:
+                None
+
+            http body:
+                the body has to contain a list of update-instructions that each are the same
+                as for the single-field-update-endpoint:
+                {
+                    "update": [
+                        {
+                            "plan_id": "object_id_str",
+                            "field_name": "str_identifier_of_attribute",
+                            "value": "<Any corresponding value>"
+                        },
+                        {
+                            "plan_id": "object_id_str",
+                            "field_name": "str_identifier_of_attribute",
+                            "value": "<Any corresponding value>"
+                        },
+                    ]
+                }
+
+                e.g.
+                {
+                    "update": [
+                        {
+                            "plan_id": "object_id_str",
+                            "field_name": "realization",
+                            "value": "new value"
+                        },
+                        {
+                            "plan_id": "object_id_str",
+                            "field_name": "topic",
+                            "value": "new value2"
+                        },
+                    ]
+                }
+                will update the attributes "realization" to "new value" and "topic" to "new value2".
+
+
+            returns:
+                200 OK,
+                (indicates that all update instructions were successfull)
+                {"success": True}
+
+                400 Bad Request
+                (the http does not contain valid json)
+                {"success": False,
+                 "reason": "json_parsing_error"}
+
+                400 Bad Request
+                (the http misses a required key)
+                {"success": False,
+                 "reason": "missing_key_in_http_body:<missing_key>"}
+
+                401 Unauthorized
+                (access token is not valid)
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
+                409 Conflict
+                (Atleast one of the update instructions failed, 
+                 the errors list contains those that failed, possible
+                 error message are the same as in the singular update field
+                 endpoint)
+                {"success": False,
+                 "reason": "operation_errors",
+                 "errors": [
+                    {
+                        "update_instruction": {                            --> the instruction that caused the error
+                            "plan_id": "object_id_str",
+                            "field_name": "str_identifier_of_attribute",
+                            "value": "<Any corresponding value>"
+                        },
+                        "error_status_code": "<http_error_code>",
+                        "error_reason": "<error_description>",
+                    }
+                ]}
 
         POST /planner/append_step
             Append a new step to an already existing plan by specifying the
@@ -758,6 +889,52 @@ class VEPlanHandler(BaseHandler):
                     http_body["field_name"],
                     http_body["value"],
                     upsert=upsert,
+                )
+                return
+
+            elif slug == "update_fields":
+                if "update" not in http_body:
+                    self.set_status(400)
+                    self.write(
+                        {
+                            "success": False,
+                            "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "plan_id",
+                        }
+                    )
+                    return
+                for update_instruction in http_body["update"]:
+                    # ensure necessary keys are present in each update instruction
+                    if "plan_id" not in update_instruction:
+                        self.set_status(400)
+                        self.write(
+                            {
+                                "success": False,
+                                "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "plan_id",
+                            }
+                        )
+                        return
+                    if "field_name" not in update_instruction:
+                        self.set_status(400)
+                        self.write(
+                            {
+                                "success": False,
+                                "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "field_name",
+                            }
+                        )
+                        return
+                    if "value" not in update_instruction:
+                        self.set_status(400)
+                        self.write(
+                            {
+                                "success": False,
+                                "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "value",
+                            }
+                        )
+                        return
+
+                self.bulk_update_fields_in_plan(
+                    db,
+                    http_body["update"],
                 )
                 return
 
@@ -1278,6 +1455,78 @@ class VEPlanHandler(BaseHandler):
                 er.initiate_etherpad_for_plan(_id)
 
             self.serialize_and_write({"success": True, "updated_id": _id})
+
+    def bulk_update_fields_in_plan(self, db: Database, update_instructions: List[Dict]):
+        """
+        This function is invoked by the handler when the correspoding endpoint
+        is requested. It just de-crowds the handler function and should therefore
+        not be called manually anywhere else.
+
+        Execute all the `update_instructions` sequentially, not providing all-or-nothing
+        security (successfull queries pass, others might fail, but there is no rollback!).
+
+        This function works similar to `update_field_in_plan`, but grabs all the errors that
+        could occur there for a single update instructions and bundles them into a list in case
+        that some queries might fail.
+
+        Responses:
+            200 OK       --> all update instructions were successfull
+            409 Conflict --> atleast one failure, further information about each occured error 
+                             is contained in the "errors" list in the response
+        """
+
+        planner = VEPlanResource(db)
+        errors = []
+
+        for update_instruction in update_instructions:
+            error_reason = None
+            error_status_code = None
+            try:
+                plan_id = util.parse_object_id(update_instruction["plan_id"])
+                planner.update_field(
+                    plan_id,
+                    update_instruction["field_name"],
+                    update_instruction["value"],
+                    requesting_username=self.current_user.username,
+                )
+            except InvalidId:
+                error_reason = "invalid_object_id"
+                error_status_code = 400
+            except TypeError as e:
+                error_reason = "TypeError: " + str(e)
+                error_status_code = 400
+            except ValueError:
+                error_reason = "unexpected_attribute"
+                error_status_code = 400
+            except MissingKeyError as e:
+                error_reason = MISSING_KEY_IN_HTTP_BODY_SLUG + e.missing_value
+                error_status_code = 400
+            except NoWriteAccessError:
+                error_reason = INSUFFICIENT_PERMISSIONS
+                error_status_code = 403
+            except NonUniqueStepsError:
+                error_reason = NON_UNIQUE_STEP_NAMES
+                error_status_code = 409
+            except NonUniqueTasksError:
+                error_reason = NON_UNIQUE_TASK_TITLES
+                error_status_code = 409
+
+            if error_reason or error_status_code:
+                errors.append(
+                    {
+                        "update_instruction": update_instruction,
+                        "error_status_code": error_status_code,
+                        "error_reason": error_reason,
+                    }
+                )
+
+        if errors:
+            self.set_status(409)
+            self.serialize_and_write(
+                {"success": False, "reason": "operation_errors", "errors": errors}
+            )
+        else:
+            self.serialize_and_write({"success": True})
 
     def append_step_to_plan(
         self, db: Database, plan_id: str | ObjectId, step: dict | Step
