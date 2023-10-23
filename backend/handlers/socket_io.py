@@ -269,9 +269,18 @@ async def message(sid, data):
     with util.get_mongodb() as db:
         # check if combination of sender and recipients already have a "room" together
         # (create one if not) and return the room id.
-        # find + upsert + setOnInsert is shorthand for "insert if not exists"
+        # find + upsert + setOnInsert is shorthand for "insert if not exists".
+        # have to use an ugly elemMatch because otherwise referencing members in the
+        # match-clause and update-clause would trigger an error...
         room_id = db.chatrooms.find_one_and_update(
-            {"members": {"$size": len(chatroom_members), "$all": chatroom_members}},
+            {
+                "members": {
+                    "$size": len(chatroom_members),
+                    "$all": [
+                        {"$elemMatch": {"$eq": member}} for member in chatroom_members
+                    ],
+                }
+            },
             {"$setOnInsert": {"members": chatroom_members, "messages": []}},
             upsert=True,
             return_document=ReturnDocument.AFTER,
@@ -303,6 +312,21 @@ async def message(sid, data):
             else:
                 # recipient is offline, message will be stored as "pending"
                 send_states[recipient] = "pending"
+        
+        # also dispatch message to sender for easier displaying in frontend, 
+        # TODO decide if we should keep this or not (it doesnt matter for acknowledging because
+        # for the sender the send_state is always already "acknowledged")
+        await emit_event(
+            "message",
+            {
+                "_id": message_id,
+                "message": data["message"],
+                "sender": token["preferred_username"],
+                "recipients": data["recipients"],
+                "room_id": room_id,
+            },
+            room=sid,
+        )
 
         print("send states for all recipients:", send_states)
 
@@ -314,6 +338,8 @@ async def message(sid, data):
                     "messages": {
                         "_id": message_id,
                         "message": data["message"],
+                        "sender": token["preferred_username"],
+                        "recipients": data["recipients"],
                         "send_states": send_states,
                     }
                 }
@@ -357,7 +383,7 @@ async def acknowledge_message(sid, data):
         # check if room exists
         if not room:
             return {"status": 409, "success": False, "reason": "room_doesnt_exist"}
-        
+
         # check if the message exists in the room
         message_found = False
         for message in room["messages"]:
@@ -366,18 +392,23 @@ async def acknowledge_message(sid, data):
                 break
         if not message_found:
             return {"status": 409, "success": False, "reason": "message_doesnt_exist"}
-        
+
         # check if user is a member of this chatroom to be eligible to acknowledge a message
         # at all
         if token["preferred_username"] not in room["members"]:
             return {"status": 403, "reason": INSUFFICIENT_PERMISSIONS}
-        
+
         # update the send state of this user to "acknowledged"
         db.chatrooms.update_one(
             {
                 "_id": ObjectId(data["room_id"]),
             },
-            {"$set": {"messages.$.send_states." + token["preferred_username"]: "acknowledged"}},
+            {
+                "$set": {
+                    "messages.$.send_states."
+                    + token["preferred_username"]: "acknowledged"
+                }
+            },
         )
 
 

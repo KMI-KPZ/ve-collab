@@ -12,6 +12,7 @@ import { Notification } from '@/interfaces/socketio';
 
 export default function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
     const [notificationEvents, setNotificationEvents] = useState<Notification[]>([]);
+    const [messageEvents, setMessageEvents] = useState<any[]>([]);
 
     // don't do anything else inside this hook, especially with deps, because it would always
     // re-init the socket when the effect triggers
@@ -44,12 +45,20 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
             }
         }
 
+        function onMessageEvent(value: any){
+            console.log('new message:');
+            console.log(value);
+            setMessageEvents([...messageEvents, value]);
+        }
+
         socket.on('notification', onNotifcationEvent);
+        socket.on('message', onMessageEvent);
 
         return () => {
             socket.off('notification', onNotifcationEvent);
+            socket.off('message', onMessageEvent);
         };
-    }, [notificationEvents]);
+    }, [notificationEvents, messageEvents]);
 
     return (
         <>
@@ -60,12 +69,14 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
                         <Favicon />
                         <LinkPreview />
                     </Head>
-                    <LayoutSection notificationEvents={notificationEvents}>
+                    <LayoutSection notificationEvents={notificationEvents} messageEvents={messageEvents}>
                         <Component
                             {...pageProps}
                             socket={socket}
                             notificationEvents={notificationEvents}
                             setNotificationEvents={setNotificationEvents}
+                            messageEvents={messageEvents}
+                            setMessageEvents={setMessageEvents}
                         />
                     </LayoutSection>
                 </SocketAuthenticationProvider>
