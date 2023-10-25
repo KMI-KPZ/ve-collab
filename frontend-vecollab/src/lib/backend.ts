@@ -1,6 +1,6 @@
 import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import { Notification } from '@/interfaces/socketio';
-import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
+import { IPlan, PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import { signIn } from 'next-auth/react';
 import useSWR, { KeyedMutator } from 'swr';
 import { VEPlanSnippet } from '@/interfaces/profile/profileInterfaces';
@@ -37,6 +37,28 @@ export function useGetAvailablePlans(accessToken: string): {
 
     return {
         data: isLoading || error ? [] : data.plans,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
+export function useGetPlanById(
+    accessToken: string,
+    planId: string
+): {
+    data: IPlan;
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        [`/planner/get?_id=${planId}`, accessToken],
+        ([url, token]) => GETfetcher(url, token)
+    );
+
+    return {
+        data: isLoading || error ? {} : data.plan,
         isLoading,
         error,
         mutate,
