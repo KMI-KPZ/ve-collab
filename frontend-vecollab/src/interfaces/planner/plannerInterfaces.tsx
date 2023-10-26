@@ -21,7 +21,13 @@ export interface IPlan {
         technology: string | null;
         exam_regulations: string | null;
     };
-    institutions: string[];
+    institutions: {
+        name: string;
+        school_type: string;
+        country: string;
+        departments: string[];
+        academic_courses: string[];
+    }[];
     involved_parties: string[];
     languages: string[];
     last_modified: string;
