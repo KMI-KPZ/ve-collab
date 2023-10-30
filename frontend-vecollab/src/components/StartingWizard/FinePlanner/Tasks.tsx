@@ -1,27 +1,30 @@
 import React from 'react';
-import { RxMinus, RxPlus } from 'react-icons/rx';
+import { useFieldArray, useFormContext } from 'react-hook-form';
+import { IFineStepFrontend, IToolsFrontend } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import Tools from '@/components/StartingWizard/FinePlanner/Tools';
-import { ITask } from '@/pages/startingWizard/finePlanner';
+import { RxPlus } from 'react-icons/rx';
 
 interface Props {
-    task: ITask;
-    stepIndex: number;
     taskIndex: number;
-    modifyTask: (stepIndex: number, taskIndex: number, valueName: string, value: string) => void;
-    modifyTaskTool: (index: number, taskIndex: number, toolIndex: number, value: string) => void;
-    removeToolInputField: (e: React.MouseEvent, stepIndex: number, taskIndex: number) => void;
-    addToolInputField: (e: React.MouseEvent, stepIndex: number, taskIndex: number) => void;
 }
 
-export default function Tasks({
-    task,
-    stepIndex,
-    taskIndex,
-    modifyTask,
-    modifyTaskTool,
-    removeToolInputField,
-    addToolInputField,
-}: Props) {
+const defaultValueTools: IToolsFrontend = { name: '' };
+
+export default function Tasks({ taskIndex }: Props) {
+    const { register, formState, control } = useFormContext<IFineStepFrontend>();
+    const { fields, append, remove, update } = useFieldArray<IFineStepFrontend>({
+        name: `tasks.${taskIndex}.tools`,
+        control,
+    });
+
+    const handleDelete = (index: number): void => {
+        if (fields.length > 1) {
+            remove(index);
+        } else {
+            update(index, defaultValueTools);
+        }
+    };
+
     return (
         <div className={'p-4 my-4 mx-2 bg-slate-200 rounded-3xl shadow-2xl'}>
             <div className="mt-2 flex">
@@ -33,12 +36,18 @@ export default function Tasks({
                 <div className="w-5/6">
                     <input
                         type="text"
-                        name="title"
-                        value={task.title}
-                        onChange={(e) => modifyTask(stepIndex, taskIndex, 'title', e.target.value)}
+                        {...register(`tasks.${taskIndex}.title`, {
+                            maxLength: {
+                                value: 100,
+                                message: 'Bitte nicht mehr als 100 Zeichen.',
+                            },
+                        })}
                         placeholder="Aufgabentitel"
                         className="border border-gray-500 rounded-lg w-full h-12 p-2"
                     />
+                    <p className="text-red-600 pt-2">
+                        {formState.errors?.tasks?.[taskIndex]?.title?.message}
+                    </p>
                 </div>
             </div>
             <div className="mt-2 flex">
@@ -50,14 +59,18 @@ export default function Tasks({
                 <div className="w-5/6">
                     <textarea
                         rows={5}
-                        name="description"
-                        value={task.description}
-                        onChange={(e) =>
-                            modifyTask(stepIndex, taskIndex, 'description', e.target.value)
-                        }
+                        {...register(`tasks.${taskIndex}.description`, {
+                            maxLength: {
+                                value: 500,
+                                message: 'Bitte nicht mehr als 500 Zeichen.',
+                            },
+                        })}
                         placeholder="Beschreibe die Aufgabe detailierter"
                         className="border border-gray-500 rounded-lg w-full p-2"
                     />
+                    <p className="text-red-600 pt-2">
+                        {formState.errors?.tasks?.[taskIndex]?.description?.message}
+                    </p>
                 </div>
             </div>
             <div className="mt-2 flex">
@@ -69,45 +82,48 @@ export default function Tasks({
                 <div className="w-5/6">
                     <textarea
                         rows={5}
-                        name="learning_goal"
-                        value={task.learning_goal}
-                        onChange={(e) =>
-                            modifyTask(stepIndex, taskIndex, 'learning_goal', e.target.value)
-                        }
+                        {...register(`tasks.${taskIndex}.learning_goal`, {
+                            maxLength: {
+                                value: 500,
+                                message: 'Bitte nicht mehr als 500 Zeichen.',
+                            },
+                        })}
                         placeholder="Welche Lernziele werden mit der Aufgabe verfolgt?"
                         className="border border-gray-500 rounded-lg w-full p-2"
                     />
+                    <p className="text-red-600 pt-2">
+                        {formState.errors?.tasks?.[taskIndex]?.learning_goal?.message}
+                    </p>
                 </div>
             </div>
             <div className="mt-2">
                 <div className="flex">
-                    <div className="w-1/6 flex items-center">
+                    <div className="w-1/6 flex items-start">
                         <label htmlFor="tools" className="px-2 py-2">
                             Tools & Medien
                         </label>
                     </div>
-                    <div className="w-5/6">
-                        {task.tools.map((tool, toolIndex) => (
+                    <div className="w-full flex flex-col gap-2">
+                        {fields.map((tool, toolIndex) => (
                             <Tools
-                                // nur state mitgeben
-                                key={toolIndex}
-                                stepIndex={stepIndex}
+                                key={tool.id}
                                 taskIndex={taskIndex}
                                 toolIndex={toolIndex}
-                                tool={tool}
-                                modifyTaskTool={modifyTaskTool}
+                                removeItem={handleDelete}
                             />
                         ))}
+                        <div className="w-full flex items-center justify-center">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    append(defaultValueTools);
+                                }}
+                            >
+                                <RxPlus size={20} />
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div className={'mx-7 flex justify-end'}>
-                <button onClick={(e) => removeToolInputField(e, stepIndex, taskIndex)}>
-                    <RxMinus size={20} />
-                </button>
-                <button onClick={(e) => addToolInputField(e, stepIndex, taskIndex)}>
-                    <RxPlus size={20} />
-                </button>
             </div>
         </div>
     );

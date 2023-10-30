@@ -1,39 +1,61 @@
 import Tasks from '@/components/StartingWizard/FinePlanner/Tasks';
-import { RxMinus, RxPlus } from 'react-icons/rx';
 import WhiteBox from '@/components/Layout/WhiteBox';
 import React from 'react';
-import { IStep } from '@/pages/startingWizard/finePlanner';
+import { IFineStepFrontend, ITaskFrontend } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+import { useFormContext, useFieldArray } from 'react-hook-form';
+import Image from 'next/image';
+import imageTrashcan from '@/images/icons/startingWizard/trash.png';
 
 interface Props {
-    step: IStep;
-    stepIndex: number;
-    modifyTaskTool: (index: number, taskIndex: number, toolIndex: number, value: string) => void;
-    modifyTask: (stepIndex: number, taskIndex: number, valueName: string, value: string) => void;
-    modifyStep: <T>(stepIndex: number, valueName: string, value: T) => void;
-    removeToolInputField: (e: React.MouseEvent, stepIndex: number, taskIndex: number) => void;
-    addToolInputField: (e: React.MouseEvent, stepIndex: number, taskIndex: number) => void;
-    removeTask: (e: React.MouseEvent, stepIndex: number) => void;
-    addTask: (e: React.MouseEvent, stepIndex: number) => void;
+    fineStep: IFineStepFrontend;
 }
 
-export default function Stage({
-    step,
-    stepIndex,
-    modifyTaskTool,
-    modifyTask,
-    modifyStep,
-    removeTask,
-    addTask,
-    removeToolInputField,
-    addToolInputField,
-}: Props) {
+export const defaultValueTask: ITaskFrontend = {
+    title: '',
+    description: '',
+    learning_goal: '',
+    tools: [{ name: '' }, { name: '' }],
+};
+
+export default function Stage({ fineStep }: Props) {
+    const { register, control, formState } = useFormContext<IFineStepFrontend>();
+    const { fields, append, remove, update } = useFieldArray<IFineStepFrontend>({
+        name: 'tasks',
+        control,
+        rules: { minLength: 1 },
+    });
+    let dateFrom = new Date(fineStep.timestamp_from).toLocaleString('de-DE', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+    });
+    let dateTo = new Date(fineStep.timestamp_to).toLocaleString('de-DE', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+    });
+
+    const handleDelete = (index: number): void => {
+        if (fields.length > 1) {
+            remove(index);
+        } else {
+            update(index, defaultValueTask);
+        }
+    };
+
     return (
         <WhiteBox>
             <div className="w-[60rem]">
-                <div className="flex justify-center items-center">
-                    <div className="mx-2">Etappe: {step.name}</div>
-                    <div className="mx-2">
-                        {step.timestamp_from} - {step.timestamp_to}
+                <div className="flex justify-center items-center space-x-10">
+                    <div className="flex">
+                        <div className="font-bold text-xl mx-2">Etappe:</div>
+                        <div className="font-bold text-xl">{fineStep.name}</div>
+                    </div>
+                    <div className="flex">
+                        <div className="font-bold mx-2">Zeitspanne:</div>
+                        <div className="mx-2">
+                            {dateFrom} - {dateTo}
+                        </div>
                     </div>
                 </div>
                 <div className="mt-4 flex">
@@ -45,14 +67,17 @@ export default function Stage({
                     <div className="w-5/6">
                         <input
                             type="number"
-                            name="workload"
-                            value={step.workload}
-                            onChange={(e) =>
-                                modifyStep<number>(stepIndex, 'workload', Number(e.target.value))
-                            }
+                            {...register(`workload`, {
+                                max: {
+                                    value: 9999,
+                                    message: 'Geben Sie bitte einen realistischen Workload an.',
+                                },
+                                valueAsNumber: true,
+                            })}
                             placeholder="in Stunden"
                             className="border border-gray-500 rounded-lg w-full h-12 p-2"
                         />
+                        <p className="text-red-600 pt-2">{formState.errors?.workload?.message}</p>
                     </div>
                 </div>
                 <div className="mt-4 flex">
@@ -64,14 +89,18 @@ export default function Stage({
                     <div className="w-5/6">
                         <input
                             type="text"
-                            name="social_form"
-                            value={step.social_form}
-                            onChange={(e) =>
-                                modifyStep<string>(stepIndex, 'social_form', e.target.value)
-                            }
+                            {...register(`social_form`, {
+                                maxLength: {
+                                    value: 100,
+                                    message: 'Bitte nicht mehr als 100 Zeichen.',
+                                },
+                            })}
                             placeholder="wie arbeiten die Studierenden zusammen, z.B. Partner-/Gruppenarbeit, individuell"
                             className="border border-gray-500 rounded-lg w-full h-12 p-2"
                         />
+                        <p className="text-red-600 pt-2">
+                            {formState.errors?.social_form?.message}
+                        </p>
                     </div>
                 </div>
                 <div className="mt-4 flex">
@@ -83,14 +112,18 @@ export default function Stage({
                     <div className="w-5/6">
                         <textarea
                             rows={5}
-                            name="learning_env"
-                            value={step.learning_env}
-                            onChange={(e) =>
-                                modifyStep<string>(stepIndex, 'learning_env', e.target.value)
-                            }
+                            {...register(`learning_env`, {
+                                maxLength: {
+                                    value: 500,
+                                    message: 'Bitte nicht mehr als 500 Zeichen.',
+                                },
+                            })}
                             placeholder="Struktur und Inhalte der ausgewählten Umgebung (LMS, social Media, kooperatives Dokument usw.)"
                             className="border border-gray-500 rounded-lg w-full p-2"
                         />
+                        <p className="text-red-600 pt-2">
+                            {formState.errors?.learning_env?.message}
+                        </p>
                     </div>
                 </div>
                 <div className="mt-4 flex">
@@ -101,15 +134,18 @@ export default function Stage({
                     </div>
                     <div className="w-5/6">
                         <input
-                            type="text"
-                            name="ve_approach"
-                            value={step.ve_approach}
-                            onChange={(e) =>
-                                modifyStep<string>(stepIndex, 've_approach', e.target.value)
-                            }
+                            {...register(`ve_approach`, {
+                                maxLength: {
+                                    value: 100,
+                                    message: 'Bitte nicht mehr als 100 Zeichen.',
+                                },
+                            })}
                             placeholder="Welche Ansätze werden verfolgt? (z. B. aufgabenorientierter Ansatz, kulturbezogenes Lernen)"
                             className="border border-gray-500 rounded-lg w-full h-12 p-2"
                         />
+                        <p className="text-red-600 pt-2">
+                            {formState.errors?.ve_approach?.message}
+                        </p>
                     </div>
                 </div>
                 <div className="mt-4 flex">
@@ -118,28 +154,34 @@ export default function Stage({
                             Aufgabenstellungen
                         </label>
                     </div>
-                    <div className="w-5/6">
-                        {step.tasks.map((task, taskIndex) => (
-                            <Tasks
-                                key={taskIndex}
-                                addToolInputField={addToolInputField}
-                                modifyTask={modifyTask}
-                                modifyTaskTool={modifyTaskTool}
-                                removeToolInputField={removeToolInputField}
-                                stepIndex={stepIndex}
-                                task={task}
-                                taskIndex={taskIndex}
-                            />
+                    <div className="flex flex-col w-5/6">
+                        {fields.map((task, taskIndex) => (
+                            <div className="relative" key={task.id}>
+                                <Tasks taskIndex={taskIndex} />
+                                <div className="absolute left-10 bottom-7">
+                                    <button type="button" onClick={() => handleDelete(taskIndex)}>
+                                        <Image
+                                            src={imageTrashcan}
+                                            width={20}
+                                            height={20}
+                                            alt="trashcan"
+                                        ></Image>
+                                    </button>
+                                </div>
+                            </div>
                         ))}
+                        <div className="w-full flex items-center justify-center">
+                            <button
+                                type="button"
+                                className="rounded-2xl bg-slate-200 px-4 py-2 flex items-center space-x-2"
+                                onClick={() => {
+                                    append(defaultValueTask);
+                                }}
+                            >
+                                neue Aufgabe hinzufügen
+                            </button>
+                        </div>
                     </div>
-                </div>
-                <div className={'mx-7 flex justify-end'}>
-                    <button onClick={(e) => removeTask(e, stepIndex)}>
-                        <RxMinus size={20} />
-                    </button>
-                    <button onClick={(e) => addTask(e, stepIndex)}>
-                        <RxPlus size={20} />
-                    </button>
                 </div>
             </div>
         </WhiteBox>

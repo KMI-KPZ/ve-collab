@@ -2,6 +2,7 @@ version: "3.9"
 services:
   mongodb:
     image: mongo:latest
+    container_name: mongodb
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
@@ -22,6 +23,7 @@ services:
         max-size: 10m
 
   backend:
+    container_name: backend
     build:
       context: backend
       dockerfile: Dockerfile
@@ -58,6 +60,7 @@ services:
         max-size: 10m
 
   frontend:
+    container_name: frontend
     build:
       context: frontend-vecollab
       dockerfile: Dockerfile
@@ -80,6 +83,7 @@ services:
         max-size: 10m
 
   etherpad:
+    container_name: etherpad
     build:
       context: https://github.com/ether/etherpad-lite.git
       dockerfile: Dockerfile
@@ -89,11 +93,18 @@ services:
       - TRUST_PROXY=true
       - EDIT_ONLY=true
       - REQUIRE_AUTHENTICATION=true
+      - DB_TYPE=mongodb
+      - DB_NAME=etherpad
+      - DB_COLLECTION=etherpad
+      - DB_URL=mongodb://${MONGODB_USERNAME}:${MONGODB_PASSWORD}@mongodb:${MONGODB_PORT}/admin
     ports:
       - ${ETHERPAD_PORT}:9001
+    depends_on:
+      mongodb:
+        condition: service_healthy
     volumes:
       - ./APIKEY.txt:/opt/etherpad-lite/APIKEY.txt # unfortunately the api key cannot be supplied via config (why?!!!!!), so we have to inject it into the container to be able to use it in the rest of the application
-      - ./etherpad_config.json:/opt/etherpad-lite/settings.json # because we use the openid connect plugin, which requires configuration in settings.json that is not achieveable via env variables, we have to inject a full etherpad configuration into the container
+      - ./etherpad_config.json:/opt/etherpad-lite/settings.json # because we use the openid connect plugin, which requires configuration in settings.json that is not achieveable via .env variables, we have to inject a full etherpad configuration into the container
     logging:
       driver: "json-file"
       options:
@@ -101,6 +112,7 @@ services:
         max-size: 10m
 
   elasticsearch:
+    container_name: elasticsearch
     image: elasticsearch:8.8.0
     ports:
       - ${ELASTICSEARCH_PORT}:9200

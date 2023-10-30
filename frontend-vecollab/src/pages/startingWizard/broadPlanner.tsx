@@ -2,14 +2,22 @@ import WhiteBox from '@/components/Layout/WhiteBox';
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
-import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
-import { IStep } from '@/pages/startingWizard/finePlanner';
+import {
+    initialSideProgressBarStates,
+    ISideProgressBarStates,
+    ISideProgressBarStateSteps,
+    ProgressState,
+} from '@/interfaces/startingWizard/sideProgressBar';
+import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
+import { sideMenuStepsData } from '@/data/sideMenuSteps';
+import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+import { generateFineStepLinkTopMenu } from '@/pages/startingWizard/generalInformation/courseFormat';
 
 interface BroadStep {
     from: string;
@@ -21,10 +29,39 @@ interface FormValues {
     broadSteps: BroadStep[];
 }
 
+export const defaultFineStepData: IFineStep = {
+    name: '',
+    workload: 0,
+    timestamp_from: '',
+    timestamp_to: '',
+    social_form: '',
+    learning_env: '',
+    ve_approach: '',
+    tasks: [
+        {
+            title: '',
+            description: '',
+            learning_goal: '',
+            tools: ['', ''],
+        },
+    ],
+    evaluation_tools: [],
+    attachments: [],
+    custom_attributes: {},
+};
+
 export default function BroadPlanner() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
+        initialSideProgressBarStates
+    );
+    const { validateAndRoute } = useValidation();
+    const [allSteps, setAllSteps] = useState<IFineStep[]>([defaultFineStepData]);
+    const [linkFineStepTopMenu, setLinkFineStepTopMenu] = useState<string>(
+        '/startingWizard/finePlanner'
+    );
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -38,11 +75,12 @@ export default function BroadPlanner() {
 
     const {
         register,
-        formState: { errors },
+        formState: { errors, isValid },
         handleSubmit,
         control,
-        watch,
         setValue,
+        watch,
+        getValues,
     } = useForm<FormValues>({
         mode: 'onChange',
     });
@@ -63,6 +101,7 @@ export default function BroadPlanner() {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
                     setLoading(false);
+                    setAllSteps(data.plan.steps);
                     setValue('broadSteps', [
                         {
                             from: '',
@@ -71,7 +110,7 @@ export default function BroadPlanner() {
                         },
                     ]);
                     if (data.plan.steps?.length > 0) {
-                        const steps: IStep[] = data.plan.steps;
+                        const steps: IFineStep[] = data.plan.steps;
                         const broadSteps: BroadStep[] = steps.map((step) => {
                             const { timestamp_from, timestamp_to, name } = step;
                             return {
@@ -82,6 +121,10 @@ export default function BroadPlanner() {
                         });
                         setValue('broadSteps', broadSteps);
                     }
+                    if (data.plan.progress.length !== 0) {
+                        setSideMenuStepsProgress(data.plan.progress);
+                    }
+                    setLinkFineStepTopMenu(generateFineStepLinkTopMenu(data.plan.steps));
                 }
             );
         }
@@ -92,66 +135,128 @@ export default function BroadPlanner() {
         control,
     });
 
-    const onSubmit: SubmitHandler<FormValues> = async () => {
-        let broadSteps: BroadStep[] = watch('broadSteps');
-        for (const step of broadSteps) {
-            let payload = {
-                name: step.name,
-                workload: 0,
-                timestamp_from: step.from,
-                timestamp_to: step.to,
-                social_form: null,
-                learning_env: null,
-                ve_approach: null,
-                tasks: [],
-                evaluation_tools: [],
-                attachments: [],
-                custom_attributes: {},
-            };
-            await fetchPOST(
-                '/planner/append_step',
-                { plan_id: router.query.plannerId, step: payload },
-                session?.accessToken
-            );
-        }
+    const checkIfNamesAreUnique = (broadSteps: BroadStep[]): boolean => {
+        const broadStepNames = broadSteps.map((broadStep) => broadStep.name);
+        return new Set(broadStepNames).size !== broadSteps.length;
+    };
 
-        await router.push({
-            pathname: '/startingWizard/finePlanner',
-            query: { plannerId: router.query.plannerId },
+    const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
+        const broadSteps: BroadStep[] = data.broadSteps;
+        let payload: IFineStep = {
+            ...defaultFineStepData,
+        };
+        const broadStepsData = broadSteps.map((broadStep) => {
+            const fineStepBackend = allSteps.find((fineStep) => fineStep.name === broadStep.name);
+            if (fineStepBackend !== undefined) {
+                payload = fineStepBackend;
+            }
+            return {
+                ...payload,
+                name: broadStep.name,
+                timestamp_from: broadStep.from,
+                timestamp_to: broadStep.to,
+            };
         });
+        const sideMenuStateSteps: ISideProgressBarStateSteps[] = broadSteps.map((broadStep) => {
+            return { [broadStep.name]: ProgressState.notStarted };
+        });
+        const sideMenuStates: ISideProgressBarStates = {
+            ...sideMenuStepsProgress,
+            steps: sideMenuStateSteps,
+        };
+        await fetchPOST(
+            '/planner/update_fields',
+            {
+                update: [
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'steps',
+                        value: broadStepsData,
+                    },
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'progress',
+                        value: sideMenuStates,
+                    },
+                ],
+            },
+            session?.accessToken
+        );
+    };
+
+    const getEarliestSideMenuStepLink = (): string => {
+        const broadSteps: BroadStep[] = watch('broadSteps');
+        if (broadSteps === undefined || broadSteps.length === 0) {
+            return '/startingWizard/broadPlanner';
+        }
+        const sortedBroadSteps = broadSteps
+            .sort((a: BroadStep, b: BroadStep) => (a.from > b.from ? 1 : -1))
+            .map((step: BroadStep) => ({
+                id: encodeURIComponent(step.name),
+                text: step.name,
+                link: `/startingWizard/fineplanner/${encodeURIComponent(step.name)}`,
+            }));
+        return sortedBroadSteps[0].link;
     };
 
     const renderBroadStepsInputs = (): JSX.Element[] => {
         return fields.map((step, index) => (
             <WhiteBox key={index}>
-                <div className="flex justify-center items-center">
-                    <label htmlFor="from" className="">
-                        von:
-                    </label>
-                    <input
-                        type="date"
-                        {...register(`broadSteps.${index}.from`)}
-                        className="border border-gray-500 rounded-lg h-12 p-2 mx-2"
-                    />
-                    <p className="text-red-600 pt-2">
+                <div>
+                    <div className="flex justify-center items-center">
+                        <label htmlFor="from" className="">
+                            von:
+                        </label>
+                        <input
+                            type="date"
+                            {...register(`broadSteps.${index}.from`, {
+                                required: {
+                                    value: true,
+                                    message: 'Bitte fülle das Felde "von" aus',
+                                },
+                            })}
+                            className="border border-gray-500 rounded-lg h-12 p-2 mx-2"
+                        />
+                        <label htmlFor="to" className="">
+                            bis:
+                        </label>
+                        <input
+                            type="date"
+                            {...register(`broadSteps.${index}.to`, {
+                                required: {
+                                    value: true,
+                                    message: 'Bitte fülle das Felde "bis" aus',
+                                },
+                            })}
+                            className="border border-gray-500 rounded-lg h-12 p-2 mx-2"
+                        />
+                        <input
+                            type="text"
+                            {...register(`broadSteps.${index}.name`, {
+                                required: {
+                                    value: true,
+                                    message: 'Bitte fülle das Felde "Name" aus',
+                                },
+                                validate: {
+                                    unique: () => {
+                                        return (
+                                            !checkIfNamesAreUnique(getValues('broadSteps')) ||
+                                            'Bitte wähle einen einzigartigen Namen'
+                                        );
+                                    },
+                                },
+                            })}
+                            placeholder="Name, z.B. Kennenlernphase"
+                            className="border border-gray-500 rounded-lg h-12 p-2 mx-2"
+                        />
+                    </div>
+                    <p className="text-red-600 pt-2 flex justify-center">
                         {errors?.broadSteps?.[index]?.from?.message}
                     </p>
-                    <label htmlFor="to" className="">
-                        bis:
-                    </label>
-                    <input
-                        type="date"
-                        {...register(`broadSteps.${index}.to`)}
-                        className="border border-gray-500 rounded-lg h-12 p-2 mx-2"
-                    />
-                    <p className="text-red-600 pt-2">{errors?.broadSteps?.[index]?.to?.message}</p>
-                    <input
-                        type="text"
-                        {...register(`broadSteps.${index}.name`)}
-                        placeholder="Name, z.B. Kennenlernphase"
-                        className="border border-gray-500 rounded-lg h-12 p-2 mx-2"
-                    />
-                    <p className="text-red-600 pt-2">
+                    <p className="text-red-600 pt-2 flex justify-center">
+                        {errors?.broadSteps?.[index]?.to?.message}
+                    </p>
+                    <p className="text-red-600 pt-2 flex justify-center">
                         {errors?.broadSteps?.[index]?.name?.message}
                     </p>
                 </div>
@@ -161,15 +266,12 @@ export default function BroadPlanner() {
 
     return (
         <>
-            <HeadProgressBarSection stage={1} />
+            <HeadProgressBarSection stage={1} linkFineStep={linkFineStepTopMenu} />
             <div className="flex justify-center bg-pattern-left-blue-small bg-no-repeat">
                 {loading ? (
                     <LoadingAnimation />
                 ) : (
-                    <form
-                        onSubmit={handleSubmit(onSubmit)}
-                        className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
-                    >
+                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                         <div>
                             <div className={'text-center font-bold text-4xl mb-2'}>
                                 Plane den groben Ablauf
@@ -199,25 +301,33 @@ export default function BroadPlanner() {
                         </div>
                         <div className="flex justify-around w-full">
                             <div>
-                                <Link
-                                    href={{
-                                        pathname:
+                                <button
+                                    type="button"
+                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    onClick={() => {
+                                        validateAndRoute(
                                             '/startingWizard/generalInformation/formalConditions',
-                                        query: { plannerId: router.query.plannerId },
+                                            router.query.plannerId,
+                                            handleSubmit(onSubmit),
+                                            isValid
+                                        );
                                     }}
                                 >
-                                    <button
-                                        type="button"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    >
-                                        Zurück
-                                    </button>
-                                </Link>
+                                    Zurück
+                                </button>
                             </div>
                             <div>
                                 <button
-                                    type="submit"
+                                    type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    onClick={() => {
+                                        validateAndRoute(
+                                            getEarliestSideMenuStepLink(),
+                                            router.query.plannerId,
+                                            handleSubmit(onSubmit),
+                                            isValid
+                                        );
+                                    }}
                                 >
                                     Weiter
                                 </button>
@@ -225,7 +335,12 @@ export default function BroadPlanner() {
                         </div>
                     </form>
                 )}
-                <SideProgressBarSection />
+                <SideProgressBarSection
+                    progressState={sideMenuStepsProgress}
+                    handleValidation={handleSubmit(onSubmit)}
+                    isValid={isValid}
+                    sideMenuStepsData={sideMenuStepsData}
+                />
             </div>
         </>
     );

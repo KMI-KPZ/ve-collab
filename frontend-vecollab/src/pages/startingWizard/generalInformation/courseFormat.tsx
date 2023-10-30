@@ -2,20 +2,44 @@ import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarS
 import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
-import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import { SubmitHandler, useForm } from 'react-hook-form';
+import {
+    initialSideProgressBarStates,
+    ISideProgressBarStates,
+    ProgressState,
+} from '@/interfaces/startingWizard/sideProgressBar';
+import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
+import { sideMenuStepsData } from '@/data/sideMenuSteps';
+import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 
 interface FormValues {
     courseFormat: string;
+}
+
+export function generateFineStepLinkTopMenu(fineSteps: IFineStep[]): string {
+    if (fineSteps.length > 0) {
+        fineSteps.sort((a: IFineStep, b: IFineStep) =>
+            a.timestamp_from > b.timestamp_from ? 1 : -1
+        );
+        return `/startingWizard/fineplanner/${encodeURIComponent(fineSteps[0].name)}`;
+    }
+    return '/startingWizard/finePlanner';
 }
 
 export default function Realization() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
+        initialSideProgressBarStates
+    );
+    const [linkFineStepTopMenu, setLinkFineStepTopMenu] = useState<string>(
+        '/startingWizard/finePlanner'
+    );
+    const { validateAndRoute } = useValidation();
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -29,9 +53,8 @@ export default function Realization() {
 
     const {
         register,
-        formState: { errors },
+        formState: { errors, isValid },
         handleSubmit,
-        watch,
         setValue,
     } = useForm<FormValues>({
         mode: 'onChange',
@@ -59,38 +82,49 @@ export default function Realization() {
                     if (data.plan.realization !== null) {
                         setValue('courseFormat', data.plan.realization);
                     }
+
+                    setLinkFineStepTopMenu(generateFineStepLinkTopMenu(data.plan.steps));
+
+                    if (data.plan.progress.length !== 0) {
+                        setSideMenuStepsProgress(data.plan.progress);
+                    }
                 }
             );
         }
     }, [session, status, router, setValue]);
 
-    const onSubmit: SubmitHandler<FormValues> = async () => {
+    const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         await fetchPOST(
-            '/planner/update_field',
+            '/planner/update_fields',
             {
-                plan_id: router.query.plannerId,
-                field_name: 'realization',
-                value: watch('courseFormat'),
+                update: [
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'realization',
+                        value: data.courseFormat,
+                    },
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'progress',
+                        value: {
+                            ...sideMenuStepsProgress,
+                            realization: ProgressState.completed,
+                        },
+                    },
+                ],
             },
             session?.accessToken
         );
-        await router.push({
-            pathname: '/startingWizard/generalInformation/learningPlatform',
-            query: { plannerId: router.query.plannerId },
-        });
     };
 
     return (
         <>
-            <HeadProgressBarSection stage={0} />
+            <HeadProgressBarSection stage={0} linkFineStep={linkFineStepTopMenu} />
             <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
                 {loading ? (
                     <LoadingAnimation />
                 ) : (
-                    <form
-                        onSubmit={handleSubmit(onSubmit)}
-                        className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
-                    >
+                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                         <div>
                             <div className={'text-center font-bold text-4xl mb-2'}>
                                 Wie wird der VE umgesetzt?
@@ -112,24 +146,33 @@ export default function Realization() {
                         </div>
                         <div className="flex justify-around w-full">
                             <div>
-                                <Link
-                                    href={{
-                                        pathname: '/startingWizard/generalInformation/questionNewContent',
-                                        query: { plannerId: router.query.plannerId },
+                                <button
+                                    type="button"
+                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    onClick={() => {
+                                        validateAndRoute(
+                                            '/startingWizard/generalInformation/questionNewContent',
+                                            router.query.plannerId,
+                                            handleSubmit(onSubmit),
+                                            isValid
+                                        );
                                     }}
                                 >
-                                    <button
-                                        type="button"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    >
-                                        Zurück
-                                    </button>
-                                </Link>
+                                    Zurück
+                                </button>
                             </div>
                             <div>
                                 <button
-                                    type="submit"
+                                    type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    onClick={() => {
+                                        validateAndRoute(
+                                            '/startingWizard/generalInformation/learningPlatform',
+                                            router.query.plannerId,
+                                            handleSubmit(onSubmit),
+                                            isValid
+                                        );
+                                    }}
                                 >
                                     Weiter
                                 </button>
@@ -137,7 +180,12 @@ export default function Realization() {
                         </div>
                     </form>
                 )}
-                <SideProgressBarSection />
+                <SideProgressBarSection
+                    progressState={sideMenuStepsProgress}
+                    handleValidation={handleSubmit(onSubmit)}
+                    isValid={isValid}
+                    sideMenuStepsData={sideMenuStepsData}
+                />
             </div>
         </>
     );

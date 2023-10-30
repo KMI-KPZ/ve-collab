@@ -1,25 +1,22 @@
 import AuthenticatedImage from '@/components/AuthenticatedImage';
 import BoxHeadline from '@/components/BoxHeadline';
 import LoadingAnimation from '@/components/LoadingAnimation';
-import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
-import { fetchGET } from '@/lib/backend';
+import { useGetMatching } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 
+Matching.auth = true;
 export default function Matching() {
     const { data: session } = useSession();
     const router = useRouter();
-    const [loading, setLoading] = useState<boolean>(false);
-    const [matchedUserSnippets, setMatchedUserSnippets] = useState<BackendUserSnippet[]>([]);
+
+    const [triggerMatching, setTriggerMatching] = useState<boolean>(false);
+
+    const {data: matchedUserSnippets, isLoading, error, mutate} = useGetMatching(triggerMatching, session!.accessToken);
 
     const getMatchingCandidates = () => {
-        setLoading(true);
-        fetchGET('/matching', session?.accessToken).then((data) => {
-            data.matching_hits.sort((a: any, b: any) => b.score - a.score);
-            setMatchedUserSnippets(data.matching_hits);
-            setLoading(false);
-        });
+        setTriggerMatching(true);
     };
 
     return (
@@ -41,7 +38,7 @@ export default function Matching() {
                             <span>Partner finden</span>
                         </button>
                     </div>
-                    {loading ? (
+                    {isLoading ? (
                         <LoadingAnimation />
                     ) : (
                         <div className="max-h-[30rem] overflow-y-auto content-scrollbar">
