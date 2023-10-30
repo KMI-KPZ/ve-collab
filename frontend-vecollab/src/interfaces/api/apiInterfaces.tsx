@@ -18,3 +18,10 @@ export interface BackendSearchResponse {
     tags: any[],
     posts: any[]
 }
+
+export interface BackendChatroomSnippet{
+    _id: string,
+    members: string[],
+    name?: string,
+    last_message?: string,
+}

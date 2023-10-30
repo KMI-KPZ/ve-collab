@@ -1,4 +1,8 @@
+import LoadingAnimation from '@/components/LoadingAnimation';
 import ChatWindow from '@/components/chat/ChatWindow';
+import NewChatForm from '@/components/chat/NewChatForm';
+import Dialog from '@/components/profile/Dialog';
+import { useGetChatrooms } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { Socket } from 'socket.io-client';
@@ -12,15 +16,21 @@ Messages.auth = true;
 export default function Messages({ socket, messageEvents, setMessageEvents }: Props) {
     const { data: session, status } = useSession();
     const [selectedChat, setSelectedChat] = useState<string>('');
+    const [isNewChatDialogOpen, setIsNewChatDialogOpen] = useState(false);
+
+    const { data: roomSnippets, isLoading, error, mutate } = useGetChatrooms(session!.accessToken);
+    console.log(roomSnippets);
+    const handleOpenNewChatDialog = () => {
+        setIsNewChatDialogOpen(true);
+    };
+    const handleCloseNewChatDialog = () => {
+        // TODO reload chats maybe?
+        setIsNewChatDialogOpen(false);
+        mutate();
+    };
 
     const handleChatSelect = (chat: string) => {
-        setSelectedChat(chat);
-    };
-    const handleNewChatSelect = (chat: string) => {
-        /* TODO:
-            create new room by using api with participants, name, etc from form (also TODO)
-            and get back room id
-        */
+        console.log(chat);
         setSelectedChat(chat);
     };
 
@@ -44,46 +54,36 @@ export default function Messages({ socket, messageEvents, setMessageEvents }: Pr
                 {/* Sidebar */}
                 <div className="w-1/5 relative px-4 bg-gray-200 h-[80vh]">
                     <ul className="flex flex-col bg-gray-200 overflow-y-auto">
-                        <li
-                            className="bg-gray-200 rounded-md p-2 cursor-pointer hover:bg-gray-300 overflow-hidden whitespace-nowrap text-ellipsis"
-                            onClick={() => handleChatSelect('Chat 1')}
-                        >
-                            <div className="flex justify-between items-center">
-                                <div className="flex flex-col">
-                                    <p className="text-lg font-medium">Chat 1</p>
-                                    <p className="text-sm text-gray-500">
-                                        Last message poineg paiowengpagoni poiwengw üp wegüwpegkweg
-                                        un9aoas üesfkü
-                                    </p>
-                                </div>
-                            </div>
-                        </li>
-                        <li
-                            className="bg-gray-200 rounded-md p-2 cursor-pointer hover:bg-gray-300 overflow-hidden whitespace-nowrap text-ellipsis"
-                            onClick={() => handleChatSelect('Chat 2')}
-                        >
-                            <div className="flex justify-between items-center">
-                                <div className="flex flex-col">
-                                    <p className="text-lg font-medium">Chat 2</p>
-                                    <p className="text-sm text-gray-500">Last message</p>
-                                </div>
-                            </div>
-                        </li>
-                        <li
-                            className="bg-gray-200 rounded-md p-2 cursor-pointer hover:bg-gray-300 overflow-hidden whitespace-nowrap text-ellipsis"
-                            onClick={() => handleChatSelect('Chat 3')}
-                        >
-                            <div className="flex justify-between items-center">
-                                <div className="flex flex-col">
-                                    <p className="text-lg font-medium">Chat 3</p>
-                                    <p className="text-sm text-gray-500">Last message</p>
-                                </div>
-                            </div>
-                        </li>
+                        {isLoading ? (
+                            <li>
+                                <LoadingAnimation />
+                            </li>
+                        ) : (
+                            roomSnippets.map((room) => ( // TODO sort: rooms with unread messages first (sorted by last message timestamp), then by last message timestamp
+                                <li
+                                    key={room._id}
+                                    className="bg-gray-200 rounded-md p-2 cursor-pointer hover:bg-gray-300 overflow-hidden whitespace-nowrap text-ellipsis"
+                                    onClick={() => handleChatSelect(room._id)}
+                                >
+                                    <div className="flex justify-between items-center">
+                                        <div className="flex flex-col">
+                                            <p className="text-lg font-medium">
+                                                {room.name ? room.name : room.members.join(', ')}
+                                            </p>
+                                            <p className="text-sm text-gray-500">
+                                                {room.last_message
+                                                    ? room.last_message
+                                                    : 'No messages yet'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </li>
+                            ))
+                        )}
                     </ul>
                     <button
                         className="bg-gray-300 rounded-md p-2 cursor-pointer hover:bg-gray-400 absolute bottom-4"
-                        onClick={(e) => handleNewChatSelect('neuer Chat')}
+                        onClick={(e) => handleOpenNewChatDialog()}
                     >
                         {/* TODO render small form with user select, name, etc */}
                         <div className="flex justify-between items-center">
@@ -93,12 +93,23 @@ export default function Messages({ socket, messageEvents, setMessageEvents }: Pr
                             </div>
                         </div>
                     </button>
+                    <Dialog
+                        isOpen={isNewChatDialogOpen}
+                        title={`neuen Chat erstellen`}
+                        onClose={handleCloseNewChatDialog}
+                    >
+                        <NewChatForm closeDialogCallback={handleCloseNewChatDialog} />
+                    </Dialog>
                 </div>
                 <div className="w-4/5 h-[80vh]">
                     {selectedChat ? (
-                        <ChatWindow selectedChat={selectedChat} messages={messageEvents} socket={socket} />
+                        <ChatWindow
+                            selectedChat={selectedChat}
+                            messages={messageEvents}
+                            socket={socket}
+                        />
                     ) : (
-                        <div className='bg-white h-full'>Please select a chat</div>
+                        <div className="bg-white h-full">Please select a chat</div>
                     )}
                 </div>
             </div>
