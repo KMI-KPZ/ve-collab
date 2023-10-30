@@ -2,6 +2,7 @@ from typing import Dict, List, Optional
 from bson import ObjectId
 import jose
 import keycloak
+from pymongo import ReturnDocument
 
 import global_vars
 from error_reasons import INSUFFICIENT_PERMISSIONS, MISSING_KEY_SLUG
@@ -170,6 +171,8 @@ async def authenticate(sid, data):
             # and are awaiting acknowledgement
             notification_manager.bulk_set_send_state(new_notification_ids)
 
+    # TODO emit messages that appeared while this user was offline and set their state to "sent"
+
     return {"status": 200, "success": True}
 
 
@@ -226,6 +229,192 @@ async def acknowledge_notification(sid, data):
         notification_manager.acknowledge_notification(notification_id)
 
         return {"status": 200, "success": True}
+
+
+@global_vars.socket_io.event
+async def message(sid, data):
+    """
+    Event: message
+
+    A client sends a message and expects it to be delivered to all recipients,
+    either immediately if they are online or whenever they connect again.
+
+    Payload:
+    {
+        "message": "<str>",
+        "recipients": ["<username1>", "<username2>", ...]
+    }
+
+    - read message
+    - determine if combination of sender and recipients already have a "room" (has to be kinda efficient, probably index?)
+        - yes: get room id,
+        - no: create new room, get room id
+    - determine online status of each recipient (do each):
+        - currently online: dispatch via socketio, store with message with state "sent" for corresponding recipient
+        - currently offline: store with message with state "pending" for corresponding recipient, dispatch later
+    """
+
+    # TODO payload keys check
+
+    # authentication check
+    token = await global_vars.socket_io.get_session(sid)
+    if not token:
+        return {"status": 401, "success": False, "reason": "unauthenticated"}
+
+    chatroom_members = [*[token["preferred_username"]], *data["recipients"]]
+    print("merge of sender and recipients:", chatroom_members)
+
+    message_id = ObjectId()
+
+    with util.get_mongodb() as db:
+        # check if combination of sender and recipients already have a "room" together
+        # (create one if not) and return the room id.
+        # find + upsert + setOnInsert is shorthand for "insert if not exists".
+        # have to use an ugly elemMatch because otherwise referencing members in the
+        # match-clause and update-clause would trigger an error...
+        room_id = db.chatrooms.find_one_and_update(
+            {
+                "members": {
+                    "$size": len(chatroom_members),
+                    "$all": [
+                        {"$elemMatch": {"$eq": member}} for member in chatroom_members
+                    ],
+                }
+            },
+            {"$setOnInsert": {"members": chatroom_members, "messages": []}},
+            upsert=True,
+            return_document=ReturnDocument.AFTER,
+            projection={"_id": True},
+        )["_id"]
+        print("corresponding room _id:", str(room_id))
+
+        # TODO refactor above:
+        # handle room creation/member management by api and instead of recipients list and expensive db operation.
+        # just expect a room id in the payload that the message gets appended to (id is very fast lookup with index)
+        # auto creation like it is now could be a fallback.
+
+        # send states of the message for each recipient,
+        # the sender obviously has the state "acknowledged" already
+        # because he sent the message
+        send_states = {token["preferred_username"]: "acknowledged"}
+
+        # dispatch message to all recipients
+        for recipient in data["recipients"]:
+            if recipient_online(recipient):
+                # recipient is online, send message via socketio and store as "sent"
+                await emit_event(
+                    "message",
+                    {
+                        "_id": message_id,
+                        "message": data["message"],
+                        "sender": token["preferred_username"],
+                        "recipients": data["recipients"],
+                        "room_id": room_id,
+                    },
+                    room=get_sid_of_user(recipient),
+                )
+                send_states[recipient] = "sent"
+            else:
+                # recipient is offline, message will be stored as "pending"
+                send_states[recipient] = "pending"
+        
+        # also dispatch message to sender for easier displaying in frontend, 
+        # TODO decide if we should keep this or not (it doesnt matter for acknowledging because
+        # for the sender the send_state is always already "acknowledged")
+        await emit_event(
+            "message",
+            {
+                "_id": message_id,
+                "message": data["message"],
+                "sender": token["preferred_username"],
+                "recipients": data["recipients"],
+                "room_id": room_id,
+            },
+            room=sid,
+        )
+
+        print("send states for all recipients:", send_states)
+
+        # store message and corresponding send states in the room
+        db.chatrooms.update_one(
+            {"_id": room_id},
+            {
+                "$push": {
+                    "messages": {
+                        "_id": message_id,
+                        "message": data["message"],
+                        "sender": token["preferred_username"],
+                        "recipients": data["recipients"],
+                        "send_states": send_states,
+                    }
+                }
+            },
+        )
+
+
+@global_vars.socket_io.event
+async def acknowledge_message(sid, data):
+    """
+    Event: acknowledge_message
+
+    A client acknowledges the message, expecting it not be sent again
+    when the client connects again.
+
+    Payload:
+        {
+            "room_id": "<_id_of_room>",
+            "message_id": "<_id_of_message>"
+        }
+
+    TODO:
+    - check if user is recipient of to-be-acknowledged message
+        - yes: set message state to "acknowledged"
+        - no: insufficient permission error
+    """
+
+    # TODO payload keys check
+
+    # authentication check
+    token = await global_vars.socket_io.get_session(sid)
+    if not token:
+        return {"status": 401, "success": False, "reason": "unauthenticated"}
+
+    with util.get_mongodb() as db:
+        room = db.chatrooms.find_one(
+            {
+                "_id": ObjectId(data["room_id"]),
+            }
+        )
+        # check if room exists
+        if not room:
+            return {"status": 409, "success": False, "reason": "room_doesnt_exist"}
+
+        # check if the message exists in the room
+        message_found = False
+        for message in room["messages"]:
+            if message["_id"] == ObjectId(data["message_id"]):
+                message_found = True
+                break
+        if not message_found:
+            return {"status": 409, "success": False, "reason": "message_doesnt_exist"}
+
+        # check if user is a member of this chatroom to be eligible to acknowledge a message
+        # at all
+        if token["preferred_username"] not in room["members"]:
+            return {"status": 403, "reason": INSUFFICIENT_PERMISSIONS}
+
+        # update the send state of this user to "acknowledged"
+        db.chatrooms.update_one(
+            {
+                "_id": ObjectId(data["room_id"]),
+            },
+            {
+                "$set": {
+                    "messages.$.send_states."
+                    + token["preferred_username"]: "acknowledged"
+                }
+            },
+        )
 
 
 def recipient_online(recipient: str) -> bool:
