@@ -1,8 +1,10 @@
 import json
 from typing import List
 
+import tornado.web
+
 from pymongo import ReturnDocument
-from error_reasons import MISSING_KEY_IN_HTTP_BODY_SLUG
+from error_reasons import MISSING_KEY_IN_HTTP_BODY_SLUG, MISSING_KEY_SLUG
 from handlers.base_handler import BaseHandler, auth_needed
 import util
 
@@ -39,10 +41,31 @@ class RoomHandler(BaseHandler):
             returns:
                 list of rooms
                 TODO
+
+        GET /chatroom/get_messages
+            get all messages of a room
+
+            query params:
+                room_id: str, the _id of the room
+
+            http body:
+                None
+
+            returns:
+                list of messages
+                TODO
+
+        GET /chatroom/get_messages_after
+            Get a number of messages that are older then the message with the given message id.
+            Useful to determine the messages that have to be requested on scroll up by specifying
+            the oldest message that was sent via the socket.
+
+            TODO
         """
 
         if slug == "get":
             pass
+
         elif slug == "get_mine":
             with util.get_mongodb() as db:
                 # TODO include last sent message in response
@@ -53,6 +76,27 @@ class RoomHandler(BaseHandler):
                     )
                 )
                 self.serialize_and_write({"success": True, "rooms": rooms})
+
+        elif slug == "get_messages":
+            try:
+                room_id = self.get_argument("room_id")
+            except tornado.web.MissingArgumentError:
+                self.set_status(400)
+                self.write({"success": False, "reason": MISSING_KEY_SLUG + "room_id"})
+                return
+            with util.get_mongodb() as db:
+                messages = db.chatrooms.find_one(
+                    {"_id": util.parse_object_id(room_id)},
+                    projection={"messages": True},
+                )["messages"]
+
+                self.serialize_and_write(
+                    {"success": True, "room_id": room_id, "messages": messages}
+                )
+
+        elif slug == "get_messages_after":
+            pass
+
         else:
             self.set_status(404)
 

@@ -25,3 +25,11 @@ export interface BackendChatroomSnippet{
     name?: string,
     last_message?: string,
 }
+
+export interface BackendChatMessage {
+    _id: string,
+    sender: string,
+    recipients: string[],
+    message: string,
+    send_states: Record<string, string>,
+}

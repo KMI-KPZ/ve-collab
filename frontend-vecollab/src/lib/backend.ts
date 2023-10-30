@@ -1,4 +1,4 @@
-import { BackendChatroomSnippet, BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
+import { BackendChatMessage, BackendChatroomSnippet, BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import { Notification } from '@/interfaces/socketio';
 import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import { signIn } from 'next-auth/react';
@@ -150,6 +150,24 @@ export function useGetChatrooms(accessToken: string): {
     );
     return {
         data: isLoading || error ? [] : data.rooms,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
+export function useGetChatroomHistory(accessToken: string, chatroomId: string): {
+    data: BackendChatMessage[];
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        [`/chatroom/get_messages?room_id=${chatroomId}`, accessToken],
+        ([url, token]) => GETfetcher(url, token)
+    );
+    return {
+        data: isLoading || error ? [] : data.messages,
         isLoading,
         error,
         mutate,

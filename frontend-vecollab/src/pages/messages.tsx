@@ -104,8 +104,8 @@ export default function Messages({ socket, messageEvents, setMessageEvents }: Pr
                 <div className="w-4/5 h-[80vh]">
                     {selectedChat ? (
                         <ChatWindow
-                            selectedChat={selectedChat}
-                            messages={messageEvents}
+                            selectedChatID={selectedChat}
+                            socketMessages={messageEvents}
                             socket={socket}
                         />
                     ) : (
