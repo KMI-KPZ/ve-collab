@@ -15,6 +15,8 @@ export default function ChatWindow({ socket, selectedChatID, socketMessages }: P
 
     const [sendingMessage, setSendingMessage] = useState<string>('');
 
+    const [displayMessages, setDisplayMessages] = useState<any[]>([]);
+
     const {
         data: messageHistory,
         isLoading,
@@ -30,13 +32,33 @@ export default function ChatWindow({ socket, selectedChatID, socketMessages }: P
         console.log(`Sending message "${sendingMessage}" to ${selectedChatID}`);
         socket.emit('message', {
             message: sendingMessage,
-            recipients: [
-                // for testing purposes, always send messages back and forth between test_admin and test_user depending on who is logged in
-                session?.user.preferred_username === 'test_admin' ? 'test_user' : 'test_admin',
-            ],
+            room_id: selectedChatID,
         });
         setSendingMessage('');
     };
+
+    useEffect(() => {
+        console.log(messageHistory);
+        console.log(socketMessages);
+
+        // filter only those socket messages that are in this selected chat room
+        const filteredSocketMessages = socketMessages.filter(
+            (message) => message.room_id === selectedChatID
+        );
+
+        // join message history and filtered socket messages, removing duplicates based on _id
+        const allMessages = [...messageHistory, ...filteredSocketMessages];
+        const uniqueMessages = allMessages.reduce((acc, message) => {
+            const existingMessage = acc.find((m: any) => m._id === message._id);
+            if (existingMessage) {
+                return acc;
+            } else {
+                return [...acc, message];
+            }
+        }, []);
+
+        setDisplayMessages(uniqueMessages);
+    }, [messageHistory, socketMessages]);
 
     return (
         <div className="w-full h-full flex flex-col">
@@ -46,46 +68,29 @@ export default function ChatWindow({ socket, selectedChatID, socketMessages }: P
                     <h1>{selectedChatID}</h1>
                     {/* Chat messages */}
                     <div className="flex flex-col px-36 justify-end">
-                        {isLoading? (
+                        {isLoading ? (
                             <LoadingAnimation />
                         ) : (
                             <>
-                            {messageHistory.map((message, index) => (
-                                <div key={index}>
-                                    {message.sender === session?.user.preferred_username ? (
-                                        <div className="flex justify-end">
-                                            <div className="bg-ve-collab-blue/50 rounded-md p-2 m-1 max-w-4xl break-words">
-                                                <p>{message.message}</p>
+                                {displayMessages.map((message, index) => (
+                                    <div key={index}>
+                                        {message.sender === session?.user.preferred_username ? (
+                                            <div className="flex justify-end">
+                                                <div className="bg-ve-collab-blue/50 rounded-md p-2 m-1 max-w-4xl break-words">
+                                                    <p>{message.message}</p>
+                                                </div>
                                             </div>
-                                        </div>
-                                    ) : (
-                                        <div className="flex flex-col items-start">
-                                            <div className="bg-gray-200 rounded-md p-2 m-1 max-w-4xl break-words">
-                                                <p>{message.message}</p>
+                                        ) : (
+                                            <div className="flex flex-col items-start">
+                                                <div className="bg-gray-200 rounded-md p-2 m-1 max-w-4xl break-words">
+                                                    <p>{message.message}</p>
+                                                </div>
                                             </div>
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
+                                        )}
+                                    </div>
+                                ))}
                             </>
                         )}
-                        {socketMessages.map((message, index) => (
-                            <div key={index}>
-                                {message.sender === session?.user.preferred_username ? (
-                                    <div className="flex justify-end">
-                                        <div className="bg-ve-collab-blue/50 rounded-md p-2 m-1 max-w-4xl break-words">
-                                            <p>{message.message}</p>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="flex flex-col items-start">
-                                        <div className="bg-gray-200 rounded-md p-2 m-1 max-w-4xl break-words">
-                                            <p>{message.message}</p>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        ))}
                     </div>
                 </div>
             </div>

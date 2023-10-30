@@ -1,3 +1,4 @@
+import datetime
 from typing import Dict, List, Optional
 from bson import ObjectId
 import jose
@@ -242,7 +243,7 @@ async def message(sid, data):
     Payload:
     {
         "message": "<str>",
-        "recipients": ["<username1>", "<username2>", ...]
+        "room_id": "<str>"
     }
 
     - read message
@@ -261,37 +262,15 @@ async def message(sid, data):
     if not token:
         return {"status": 401, "success": False, "reason": "unauthenticated"}
 
-    chatroom_members = [*[token["preferred_username"]], *data["recipients"]]
-    print("merge of sender and recipients:", chatroom_members)
-
+    room_id = util.parse_object_id(data["room_id"])
     message_id = ObjectId()
+    creation_date = datetime.datetime.utcnow()
 
     with util.get_mongodb() as db:
-        # check if combination of sender and recipients already have a "room" together
-        # (create one if not) and return the room id.
-        # find + upsert + setOnInsert is shorthand for "insert if not exists".
-        # have to use an ugly elemMatch because otherwise referencing members in the
-        # match-clause and update-clause would trigger an error...
-        room_id = db.chatrooms.find_one_and_update(
-            {
-                "members": {
-                    "$size": len(chatroom_members),
-                    "$all": [
-                        {"$elemMatch": {"$eq": member}} for member in chatroom_members
-                    ],
-                }
-            },
-            {"$setOnInsert": {"members": chatroom_members, "messages": []}},
-            upsert=True,
-            return_document=ReturnDocument.AFTER,
-            projection={"_id": True},
-        )["_id"]
-        print("corresponding room _id:", str(room_id))
+        room = db.chatrooms.find_one({"_id": room_id})
 
-        # TODO refactor above:
-        # handle room creation/member management by api and instead of recipients list and expensive db operation.
-        # just expect a room id in the payload that the message gets appended to (id is very fast lookup with index)
-        # auto creation like it is now could be a fallback.
+        if not room:
+            return {"status": 409, "success": False, "reason": "room_doesnt_exist"}
 
         # send states of the message for each recipient,
         # the sender obviously has the state "acknowledged" already
@@ -299,7 +278,7 @@ async def message(sid, data):
         send_states = {token["preferred_username"]: "acknowledged"}
 
         # dispatch message to all recipients
-        for recipient in data["recipients"]:
+        for recipient in room["members"]:
             if recipient_online(recipient):
                 # recipient is online, send message via socketio and store as "sent"
                 await emit_event(
@@ -308,8 +287,9 @@ async def message(sid, data):
                         "_id": message_id,
                         "message": data["message"],
                         "sender": token["preferred_username"],
-                        "recipients": data["recipients"],
+                        "recipients": room["members"],
                         "room_id": room_id,
+                        "creation_date": creation_date,
                     },
                     room=get_sid_of_user(recipient),
                 )
@@ -317,21 +297,6 @@ async def message(sid, data):
             else:
                 # recipient is offline, message will be stored as "pending"
                 send_states[recipient] = "pending"
-        
-        # also dispatch message to sender for easier displaying in frontend, 
-        # TODO decide if we should keep this or not (it doesnt matter for acknowledging because
-        # for the sender the send_state is always already "acknowledged")
-        await emit_event(
-            "message",
-            {
-                "_id": message_id,
-                "message": data["message"],
-                "sender": token["preferred_username"],
-                "recipients": data["recipients"],
-                "room_id": room_id,
-            },
-            room=sid,
-        )
 
         print("send states for all recipients:", send_states)
 
@@ -344,7 +309,7 @@ async def message(sid, data):
                         "_id": message_id,
                         "message": data["message"],
                         "sender": token["preferred_username"],
-                        "recipients": data["recipients"],
+                        "creation_date": creation_date,
                         "send_states": send_states,
                     }
                 }
