@@ -1,6 +1,6 @@
 import { fetchGET, useGetChatroomHistory } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import { useEffect, useRef, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { Socket } from 'socket.io-client';
 import LoadingAnimation from '../LoadingAnimation';
 
@@ -8,15 +8,25 @@ interface Props {
     socket: Socket;
     selectedChatID: string;
     socketMessages: any[];
+    setSocketMessages: Dispatch<SetStateAction<any>>;
+    headerBarMessageEvents: any[];
+    setHeaderBarMessageEvents: Dispatch<SetStateAction<any[]>>;
     roomInfo?: any;
 }
 
-export default function ChatWindow({ socket, selectedChatID, socketMessages, roomInfo }: Props) {
+export default function ChatWindow({
+    socket,
+    selectedChatID,
+    socketMessages,
+    setSocketMessages,
+    headerBarMessageEvents,
+    setHeaderBarMessageEvents,
+    roomInfo,
+}: Props) {
     const { data: session, status } = useSession();
     const messageBottomRef = useRef<HTMLDivElement>(null);
     const messageContainerRef = useRef<HTMLDivElement>(null);
     const [sendingMessage, setSendingMessage] = useState<string>('');
-
     const [displayMessages, setDisplayMessages] = useState<any[]>([]);
 
     const {
@@ -49,6 +59,19 @@ export default function ChatWindow({ socket, selectedChatID, socketMessages, roo
         }
     };
 
+    const acknowledgeAllSocketMessages = () => {
+        socketMessages
+            .filter((message) => message.room_id === selectedChatID)
+            .forEach((message) => {
+                socket.emit('acknowledge_message', {
+                    message_id: message._id,
+                    room_id: message.room_id,
+                });
+            });
+
+        setHeaderBarMessageEvents(headerBarMessageEvents.filter((message) => message.room_id !== selectedChatID));
+    };
+
     useEffect(() => {
         if (!isLoading) {
             // wait till message history is loaded
@@ -77,6 +100,7 @@ export default function ChatWindow({ socket, selectedChatID, socketMessages, roo
 
     useEffect(() => {
         scrollMessagesToBottom();
+        acknowledgeAllSocketMessages();
     }, [displayMessages]);
 
     return (

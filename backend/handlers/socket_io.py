@@ -338,6 +338,7 @@ async def acknowledge_message(sid, data):
     """
 
     # TODO payload keys check
+    print("authenticating message: ", data)
 
     # authentication check
     token = await global_vars.socket_io.get_session(sid)
@@ -372,6 +373,7 @@ async def acknowledge_message(sid, data):
         db.chatrooms.update_one(
             {
                 "_id": ObjectId(data["room_id"]),
+                "messages._id": ObjectId(data["message_id"]),
             },
             {
                 "$set": {

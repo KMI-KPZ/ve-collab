@@ -42,6 +42,14 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
     const [notificationEvents, setNotificationEvents] = useState<Notification[]>([]);
     const [messageEvents, setMessageEvents] = useState<any[]>([]);
 
+    // it is a pain:
+    // the headerbar has to get a state copy of the messageEvents, because in order to remove the
+    // notification badge, the events have to be deleted from its list
+    // BUT we cannot directly delete the messageEvents, because they need to be rendered by the chat component (which would be de-rendered once deleted from the list)
+    // hence: copy to the headerbar and once message get acknowledged, the chat component will remove them from the copy-list,
+    // triggering the re-render of the notification badge in the header bar, but not the chat components
+    const [messageEventsHeaderBar, setMessageEventsHeaderBar] = useState<any[]>([]);
+
     // don't do anything else inside this hook, especially with deps, because it would always
     // re-init the socket when the effect triggers
     // we only want to connect it once during mount of this root component
@@ -73,10 +81,11 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
             }
         }
 
-        function onMessageEvent(value: any){
+        function onMessageEvent(value: any) {
             console.log('new message:');
             console.log(value);
             setMessageEvents([...messageEvents, value]);
+            setMessageEventsHeaderBar([...messageEvents, value]);
         }
 
         socket.on('notification', onNotifcationEvent);
@@ -98,7 +107,10 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
                             <Favicon />
                             <LinkPreview />
                         </Head>
-                        <LayoutSection notificationEvents={notificationEvents} messageEvents={messageEvents}>
+                        <LayoutSection
+                            notificationEvents={notificationEvents}
+                            messageEvents={messageEventsHeaderBar}
+                        >
                             {Component.auth ? (
                                 <Auth>
                                     <Component
@@ -108,6 +120,8 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
                                         setNotificationEvents={setNotificationEvents}
                                         messageEvents={messageEvents}
                                         setMessageEvents={setMessageEvents}
+                                        headerBarMessageEvents={messageEventsHeaderBar}
+                                        setHeaderBarMessageEvents={setMessageEventsHeaderBar}
                                     />
                                 </Auth>
                             ) : (
@@ -118,6 +132,8 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
                                     setNotificationEvents={setNotificationEvents}
                                     messageEvents={messageEvents}
                                     setMessageEvents={setMessageEvents}
+                                    headerBarMessageEvents={messageEventsHeaderBar}
+                                    setHeaderBarMessageEvents={setMessageEventsHeaderBar}
                                 />
                             )}
                         </LayoutSection>

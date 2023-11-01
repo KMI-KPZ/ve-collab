@@ -11,9 +11,11 @@ interface Props {
     socket: Socket;
     messageEvents: any[];
     setMessageEvents: Dispatch<SetStateAction<any[]>>;
+    headerBarMessageEvents: any[];
+    setHeaderBarMessageEvents: Dispatch<SetStateAction<any[]>>;
 }
 Messages.auth = true;
-export default function Messages({ socket, messageEvents, setMessageEvents }: Props) {
+export default function Messages({ socket, messageEvents, setMessageEvents,headerBarMessageEvents ,setHeaderBarMessageEvents }: Props) {
     const { data: session, status } = useSession();
     const [selectedChat, setSelectedChat] = useState<string>('');
     const [isNewChatDialogOpen, setIsNewChatDialogOpen] = useState(false);
@@ -106,6 +108,9 @@ export default function Messages({ socket, messageEvents, setMessageEvents }: Pr
                         <ChatWindow
                             selectedChatID={selectedChat}
                             socketMessages={messageEvents}
+                            setSocketMessages={setMessageEvents}
+                            headerBarMessageEvents={headerBarMessageEvents}
+                            setHeaderBarMessageEvents={setHeaderBarMessageEvents}
                             socket={socket}
                             roomInfo={roomSnippets.find((room) => room._id === selectedChat)}
                         />
