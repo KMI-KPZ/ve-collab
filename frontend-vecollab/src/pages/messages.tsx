@@ -107,6 +107,7 @@ export default function Messages({ socket, messageEvents, setMessageEvents }: Pr
                             selectedChatID={selectedChat}
                             socketMessages={messageEvents}
                             socket={socket}
+                            roomInfo={roomSnippets.find((room) => room._id === selectedChat)}
                         />
                     ) : (
                         <div className="bg-white h-full">Please select a chat</div>
