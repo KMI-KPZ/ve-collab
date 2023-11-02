@@ -68,11 +68,19 @@ class RoomHandler(BaseHandler):
 
         elif slug == "get_mine":
             with util.get_mongodb() as db:
-                # TODO include last sent message in response
                 rooms = list(
-                    db.chatrooms.find(
-                        {"members": self.current_user.username},
-                        projection={"_id": True, "members": True, "name": True},
+                    db.chatrooms.aggregate(
+                        [
+                            {"$match": {"members": self.current_user.username}},
+                            {
+                                "$project": {
+                                    "_id": True,
+                                    "members": True,
+                                    "name": True,
+                                    "last_message": {"$arrayElemAt": ["$messages", -1]},
+                                }
+                            },
+                        ]
                     )
                 )
                 self.serialize_and_write({"success": True, "rooms": rooms})

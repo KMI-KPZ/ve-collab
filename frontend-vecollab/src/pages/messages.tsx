@@ -87,8 +87,8 @@ export default function Messages({
                                                         : room.members.join(', ')}
                                                 </p>
                                                 <p className="text-sm text-gray-500">
-                                                    {room.last_message
-                                                        ? room.last_message
+                                                    {room.last_message?.message
+                                                        ? `${room.last_message.sender}: ${room.last_message.message}`
                                                         : 'No messages yet'}
                                                 </p>
                                             </div>
