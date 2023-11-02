@@ -6,7 +6,14 @@ import keycloak
 from pymongo import ReturnDocument
 
 import global_vars
-from error_reasons import INSUFFICIENT_PERMISSIONS, MISSING_KEY_SLUG
+from error_reasons import (
+    INSUFFICIENT_PERMISSIONS,
+    MISSING_KEY_SLUG,
+    ROOM_DOESNT_EXIST,
+    UNAUTHENTICATED,
+)
+from exceptions import MessageDoesntExistError, RoomDoesntExistError, UserNotMemberError
+from resources.network.chat import Chat
 from resources.notifications import NotificationResource
 import util
 
@@ -285,8 +292,10 @@ async def message(sid, data):
     """
     Event: message
 
-    A client sends a message and expects it to be delivered to all recipients,
+    A client sends a message to a room and expects it to be delivered to all recipients,
     either immediately if they are online or whenever they connect again.
+    A room can be created or it's id retrieved by using the `/chatroom/create_or_get`-endpoint
+    of the API.
 
     Payload:
     {
@@ -294,75 +303,50 @@ async def message(sid, data):
         "room_id": "<str>"
     }
 
-    - read message
-    - determine if combination of sender and recipients already have a "room" (has to be kinda efficient, probably index?)
-        - yes: get room id,
-        - no: create new room, get room id
-    - determine online status of each recipient (do each):
-        - currently online: dispatch via socketio, store with message with state "sent" for corresponding recipient
-        - currently offline: store with message with state "pending" for corresponding recipient, dispatch later
+    Returns:
+        Success:
+            - the message is also sent to you as the sender for easier display
+
+        Failure:
+            - {"status": 400, "success": False, "reason": "missing_key:message"}
+              The payload is missing the message
+
+            - {"status": 400, "success": False, "reason": "missing_key:room_id"}
+              The payload is missing the room_id
+
+            - {"status": 401, "success": False, "reason": "unauthenticated"}
+              This socket connection is not authenticated (use `authenticate` event)
+
+            - {"status": 403, "success": False, "reason": "insufficient_permissions"}
+              The user is not a member of the room
+
+            - {"status": 409, "success": False, "reason": "room_doesnt_exist"}
+              The room with the given _id doesn't exist
     """
 
-    # TODO payload keys check
+    print("message ", sid)
+
+    # payload keys check
+    if "message" not in data:
+        return {"status": 400, "success": False, "reason": MISSING_KEY_SLUG + "message"}
+    if "room_id" not in data:
+        return {"status": 400, "success": False, "reason": MISSING_KEY_SLUG + "room_id"}
 
     # authentication check
     token = await global_vars.socket_io.get_session(sid)
     if not token:
-        return {"status": 401, "success": False, "reason": "unauthenticated"}
-
-    room_id = util.parse_object_id(data["room_id"])
-    message_id = ObjectId()
-    creation_date = datetime.datetime.utcnow()
+        return {"status": 401, "success": False, "reason": UNAUTHENTICATED}
 
     with util.get_mongodb() as db:
-        room = db.chatrooms.find_one({"_id": room_id})
-
-        if not room:
-            return {"status": 409, "success": False, "reason": "room_doesnt_exist"}
-
-        # send states of the message for each recipient,
-        # the sender obviously has the state "acknowledged" already
-        # because he sent the message
-        send_states = {token["preferred_username"]: "acknowledged"}
-
-        # dispatch message to all recipients
-        for recipient in room["members"]:
-            if recipient_online(recipient):
-                # recipient is online, send message via socketio and store as "sent"
-                await emit_event(
-                    "message",
-                    {
-                        "_id": message_id,
-                        "message": data["message"],
-                        "sender": token["preferred_username"],
-                        "recipients": room["members"],
-                        "room_id": room_id,
-                        "creation_date": creation_date,
-                    },
-                    room=get_sid_of_user(recipient),
-                )
-                send_states[recipient] = "sent"
-            else:
-                # recipient is offline, message will be stored as "pending"
-                send_states[recipient] = "pending"
-
-        print("send states for all recipients:", send_states)
-
-        # store message and corresponding send states in the room
-        db.chatrooms.update_one(
-            {"_id": room_id},
-            {
-                "$push": {
-                    "messages": {
-                        "_id": message_id,
-                        "message": data["message"],
-                        "sender": token["preferred_username"],
-                        "creation_date": creation_date,
-                        "send_states": send_states,
-                    }
-                }
-            },
-        )
+        chat_manager = Chat(db)
+        try:
+            await chat_manager.send_message(
+                data["room_id"], data["message"], token["preferred_username"]
+            )
+        except RoomDoesntExistError:
+            return {"status": 409, "success": False, "reason": ROOM_DOESNT_EXIST}
+        except UserNotMemberError:
+            return {"status": 403, "success": False, "reason": INSUFFICIENT_PERMISSIONS}
 
 
 @global_vars.socket_io.event
@@ -379,14 +363,42 @@ async def acknowledge_message(sid, data):
             "message_id": "<_id_of_message>"
         }
 
-    TODO:
-    - check if user is recipient of to-be-acknowledged message
-        - yes: set message state to "acknowledged"
-        - no: insufficient permission error
+    Returns:
+        Success:
+            - {"status": 200, "success": True}
+        Failure:
+            - {"status": 400, "success": False, "reason": "missing_key:message_id"}
+              The payload is missing the message_id
+
+            - {"status": 400, "success": False, "reason": "missing_key:room_id"}
+              The payload is missing the room_id
+
+            - {"status": 401, "success": False, "reason": "unauthenticated"}
+              This socket connection is not authenticated (use `authenticate` event)
+
+            - {"status": 403, "success": False, "reason": "insufficient_permissions"}
+              The user is not a member of the room
+
+            - {"status": 409, "success": False, "reason": "room_doesnt_exist"}
+              The room with the given _id doesn't exist
+
+            - {"status": 409, "success": False, "reason": "message_doesnt_exist"}
+              The message with the given _id doesn't exist in the room
+
+
     """
 
-    # TODO payload keys check
-    print("authenticating message: ", data)
+    print("acknowledge_message ", sid)
+
+    # payload keys check
+    if "message_id" not in data:
+        return {
+            "status": 400,
+            "success": False,
+            "reason": MISSING_KEY_SLUG + "message_id",
+        }
+    if "room_id" not in data:
+        return {"status": 400, "success": False, "reason": MISSING_KEY_SLUG + "room_id"}
 
     # authentication check
     token = await global_vars.socket_io.get_session(sid)
@@ -394,42 +406,20 @@ async def acknowledge_message(sid, data):
         return {"status": 401, "success": False, "reason": "unauthenticated"}
 
     with util.get_mongodb() as db:
-        room = db.chatrooms.find_one(
-            {
-                "_id": ObjectId(data["room_id"]),
-            }
-        )
-        # check if room exists
-        if not room:
+        chat_manager = Chat(db)
+
+        try:
+            chat_manager.acknowledge_message(
+                data["room_id"], data["message_id"], token["preferred_username"]
+            )
+        except RoomDoesntExistError:
             return {"status": 409, "success": False, "reason": "room_doesnt_exist"}
-
-        # check if the message exists in the room
-        message_found = False
-        for message in room["messages"]:
-            if message["_id"] == ObjectId(data["message_id"]):
-                message_found = True
-                break
-        if not message_found:
+        except MessageDoesntExistError:
             return {"status": 409, "success": False, "reason": "message_doesnt_exist"}
+        except UserNotMemberError:
+            return {"status": 403, "success": False, "reason": INSUFFICIENT_PERMISSIONS}
 
-        # check if user is a member of this chatroom to be eligible to acknowledge a message
-        # at all
-        if token["preferred_username"] not in room["members"]:
-            return {"status": 403, "reason": INSUFFICIENT_PERMISSIONS}
-
-        # update the send state of this user to "acknowledged"
-        db.chatrooms.update_one(
-            {
-                "_id": ObjectId(data["room_id"]),
-                "messages._id": ObjectId(data["message_id"]),
-            },
-            {
-                "$set": {
-                    "messages.$.send_states."
-                    + token["preferred_username"]: "acknowledged"
-                }
-            },
-        )
+        return {"status": 200, "success": True}
 
 
 def recipient_online(recipient: str) -> bool:

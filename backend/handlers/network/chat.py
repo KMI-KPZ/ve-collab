@@ -1,11 +1,12 @@
 import json
 from typing import List
 
+from pymongo import ReturnDocument
 import tornado.web
 
-from pymongo import ReturnDocument
 from error_reasons import MISSING_KEY_IN_HTTP_BODY_SLUG, MISSING_KEY_SLUG
 from handlers.base_handler import BaseHandler, auth_needed
+from resources.network.chat import Chat
 import util
 
 
@@ -68,20 +69,10 @@ class RoomHandler(BaseHandler):
 
         elif slug == "get_mine":
             with util.get_mongodb() as db:
-                rooms = list(
-                    db.chatrooms.aggregate(
-                        [
-                            {"$match": {"members": self.current_user.username}},
-                            {
-                                "$project": {
-                                    "_id": True,
-                                    "members": True,
-                                    "name": True,
-                                    "last_message": {"$arrayElemAt": ["$messages", -1]},
-                                }
-                            },
-                        ]
-                    )
+                chat_manager = Chat(db)
+
+                rooms = chat_manager.get_room_snippets_for_user(
+                    self.current_user.username
                 )
                 self.serialize_and_write({"success": True, "rooms": rooms})
 
@@ -93,10 +84,8 @@ class RoomHandler(BaseHandler):
                 self.write({"success": False, "reason": MISSING_KEY_SLUG + "room_id"})
                 return
             with util.get_mongodb() as db:
-                messages = db.chatrooms.find_one(
-                    {"_id": util.parse_object_id(room_id)},
-                    projection={"messages": True},
-                )["messages"]
+                chat_manager = Chat(db)
+                messages = chat_manager.get_all_messages_of_room(room_id)
 
                 self.serialize_and_write(
                     {"success": True, "room_id": room_id, "messages": messages}
@@ -157,43 +146,25 @@ class RoomHandler(BaseHandler):
                 if "name" in http_body and http_body["name"] != ""
                 else None
             )
-            print(name)
 
-            # add current user to members list if not already present
-            chatroom_members: List[str] = http_body["members"]
-            if self.current_user.username not in http_body["members"]:
-                chatroom_members.append(self.current_user.username)
+            self.create_or_get_room_id(http_body["members"], name)
+            return
 
-            with util.get_mongodb() as db:
-                # check if combination of sender and recipients already have a "room" together
-                # (create one if not) and return the room id.
-                # find + upsert + setOnInsert is shorthand for "insert if not exists".
-                # have to use an ugly elemMatch because otherwise referencing members in the
-                # match-clause and update-clause would trigger an error...
-                room_id = db.chatrooms.find_one_and_update(
-                    {
-                        "members": {
-                            "$size": len(chatroom_members),
-                            "$all": [
-                                {"$elemMatch": {"$eq": member}}
-                                for member in chatroom_members
-                            ],
-                        },
-                        "name": name,
-                    },
-                    {
-                        "$setOnInsert": {
-                            "members": chatroom_members,
-                            "messages": [],
-                            "name": name,
-                        }
-                    },
-                    upsert=True,
-                    return_document=ReturnDocument.AFTER,
-                    projection={"_id": True},
-                )["_id"]
-            print("room _id:", str(room_id))
-
-            self.serialize_and_write({"success": True, "room_id": room_id})
         else:
             self.set_status(404)
+
+    def create_or_get_room_id(self, members: List[str], name: str = None):
+        """
+        exchange a list of usernames (`members`) and a room name (optional)
+        for the _id of the room, creating a new room if necessary.
+        """
+
+        # add current user to members list if not already present
+        if self.current_user.username not in members:
+            members.append(self.current_user.username)
+
+        with util.get_mongodb() as db:
+            chat_manager = Chat(db)
+            room_id = chat_manager.get_or_create_room_id(members, name)
+
+            self.serialize_and_write({"success": True, "room_id": room_id})

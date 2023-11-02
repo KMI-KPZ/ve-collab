@@ -129,3 +129,15 @@ class NotificationDoesntExistError(Exception):
     """The requested notification doesn't exist"""
 
     pass
+
+
+class RoomDoesntExistError(Exception):
+    """the requested chatroom doesn't exist"""
+
+    pass
+
+
+class MessageDoesntExistError(Exception):
+    """the requested message doesn't exist"""
+
+    pass
