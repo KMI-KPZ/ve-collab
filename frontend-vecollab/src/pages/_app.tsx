@@ -82,10 +82,14 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
         }
 
         function onMessageEvent(value: any) {
-            console.log('new message:');
-            console.log(value);
-            setMessageEvents([...messageEvents, value]);
-            setMessageEventsHeaderBar([...messageEvents, value]);
+            // nextjs always sends 2 requests in dev mode, prevent any message from appearing twice
+            const alreadyExisting = messageEvents.find((message) => message._id === value._id);
+            if (alreadyExisting === undefined) {
+                console.log('new message:');
+                console.log(value);
+                setMessageEvents([...messageEvents, value]);
+                setMessageEventsHeaderBar([...messageEvents, value]);
+            }
         }
 
         socket.on('notification', onNotifcationEvent);

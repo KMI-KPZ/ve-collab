@@ -172,7 +172,55 @@ async def authenticate(sid, data):
             # and are awaiting acknowledgement
             notification_manager.bulk_set_send_state(new_notification_ids)
 
-    # TODO emit messages that appeared while this user was offline and set their state to "sent"
+        # emit messages that appeared while this user was offline (i.e. have send_state not equal to "acknowledged" )
+        # and set their state to "sent".
+        rooms = list(
+            db.chatrooms.find(
+                {
+                    "members": token_info["preferred_username"],
+                    "messages": {
+                        "$elemMatch": {
+                            "send_states.{}".format(token_info["preferred_username"]): {
+                                "$ne": "acknowledged"
+                            }
+                        }
+                    },
+                }
+            )
+        )
+        for room in rooms:
+            for message in room["messages"]:
+                if (
+                    message["send_states"][token_info["preferred_username"]]
+                    != "acknowledged"
+                ):
+                    await emit_event(
+                        "message",
+                        {
+                            "_id": message["_id"],
+                            "message": message["message"],
+                            "sender": message["sender"],
+                            "recipients": room["members"],
+                            "room_id": room["_id"],
+                            "creation_date": message["creation_date"],
+                        },
+                        room=sid,
+                    )
+                    # set the message from "pending" to "sent" to signify that
+                    # they have been atleast tried to be delivered to the client
+                    # and are awaiting acknowledgement
+                    db.chatrooms.update_one(
+                        {
+                            "_id": room["_id"],
+                            "messages._id": message["_id"],
+                        },
+                        {
+                            "$set": {
+                                "messages.$.send_states."
+                                + token_info["preferred_username"]: "sent"
+                            }
+                        },
+                    )
 
     return {"status": 200, "success": True}
 
