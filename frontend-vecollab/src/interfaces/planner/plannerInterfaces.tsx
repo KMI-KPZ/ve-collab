@@ -1,5 +1,9 @@
 import { ISideProgressBarStates } from '@/interfaces/startingWizard/sideProgressBar';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+import { TargetGroup } from '@/pages/startingWizard/generalInformation/targetGroups';
+import { Institution } from '@/pages/startingWizard/generalInformation/institutions';
+import { Lecture } from '@/pages/startingWizard/generalInformation/participatingCourses';
+import { Tool } from '@/pages/startingWizard/generalInformation/tools';
 
 export interface PlanPreview {
     _id: string;
@@ -13,7 +17,7 @@ export interface PlanPreview {
 
 export interface IPlan {
     _id: string;
-    audience: string[];
+    audience: TargetGroup[];
     author: string;
     creation_timestamp: string;
     duration: number | null;
@@ -21,18 +25,12 @@ export interface IPlan {
         technology: string | null;
         exam_regulations: string | null;
     };
-    institutions: {
-        name: string;
-        school_type: string;
-        country: string;
-        departments: string[];
-        academic_courses: string[];
-    }[];
+    institutions: Institution[];
     involved_parties: string[];
     languages: string[];
     last_modified: string;
     learning_env: string | null;
-    lectures: string[];
+    lectures: Lecture[];
     name: string;
     new_content: boolean | null;
     partners: string[];
@@ -42,7 +40,7 @@ export interface IPlan {
     steps: IFineStep[];
     timestamp_from: string | null;
     timestamp_to: string | null;
-    tools: string[];
+    tools: Tool[];
     topic: string | null;
     workload: number;
     write_access: string[];
