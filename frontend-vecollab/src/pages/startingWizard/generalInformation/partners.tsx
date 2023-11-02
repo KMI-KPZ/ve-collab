@@ -3,24 +3,26 @@ import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarS
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
-import { SubmitHandler, useForm, useFieldArray } from 'react-hook-form';
-
-interface FormValues {
-    partners: Partner[];
-}
-
-interface Partner {
-    name: string;
-}
+import AsyncCreatableSelect from 'react-select/async-creatable';
+import {
+    BackendProfileSnippetsResponse,
+    BackendSearchResponse,
+    BackendUserSnippet,
+} from '@/interfaces/api/apiInterfaces';
 
 export default function Partners() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+
+    const [partners, setPartners] = useState(['']);
+    const [partnerProfileSnippets, setPartnerProfileSnippets] = useState<{
+        [Key: string]: BackendUserSnippet;
+    }>({});
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -30,20 +32,6 @@ export default function Partners() {
             }
         }
     }, [session, status]);
-
-    const {
-        register,
-        formState: { errors },
-        handleSubmit,
-        control,
-        watch,
-        setValue,
-    } = useForm<FormValues>({
-        mode: 'onChange',
-        defaultValues: {
-            partners: [{ name: '' }],
-        },
-    });
 
     useEffect(() => {
         // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
@@ -60,59 +48,85 @@ export default function Partners() {
         if (session) {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
-                    setLoading(false);
-                    if (data.plan.involved_parties.length !== 0) {
-                        setValue('partners', data.plan.involved_parties);
+                    if (data.plan.partners.length !== 0) {
+                        setPartners(data.plan.partners);
+                        // fetch profile snippets to be able to display the full name instead of username only
+                        fetchPOST(
+                            '/profile_snippets',
+                            { usernames: data.plan.partners },
+                            session.accessToken
+                        ).then((snippets: BackendProfileSnippetsResponse) => {
+                            let partnerSnippets: { [Key: string]: BackendUserSnippet } = {};
+                            snippets.user_snippets.forEach((element: BackendUserSnippet) => {
+                                partnerSnippets[element.username] = element;
+                            });
+                            setPartnerProfileSnippets(partnerSnippets);
+                            setLoading(false);
+                        });
+                    } else {
+                        setLoading(false);
                     }
                 }
             );
         }
-    }, [session, status, router, setValue]);
+    }, [session, status, router]);
 
-    const { fields, append, remove } = useFieldArray({
-        name: 'partners',
-        control,
-    });
+    const modifyPartner = (index: number, value: string) => {
+        let newPartners = [...partners];
+        newPartners[index] = value;
+        setPartners(newPartners);
+    };
 
-    const onSubmit: SubmitHandler<FormValues> = async () => {
+    const addInputField = (e: FormEvent) => {
+        e.preventDefault();
+        setPartners([...partners, '']);
+    };
+
+    const removeInputField = (e: FormEvent) => {
+        e.preventDefault();
+        let copy = [...partners];
+        copy.pop();
+        setPartners(copy);
+    };
+
+    const onSubmit = async (e: FormEvent) => {
+        e.preventDefault();
+        console.log(partners);
+
         await fetchPOST(
             '/planner/update_field',
             {
                 plan_id: router.query.plannerId,
-                field_name: 'involved_parties',
-                value: watch('partners'),
+                field_name: 'partners',
+                value: partners,
             },
             session?.accessToken
         );
+
         await router.push({
             pathname: '/startingWizard/generalInformation/externalParties',
             query: { plannerId: router.query.plannerId },
         });
     };
 
-    const renderPartnersInputs = (): JSX.Element[] => {
-        return fields.map((partner, index) => (
-            <div key={partner.id}>
-                <div className="mx-7 mt-7 justify-center">
-                    <input
-                        type="text"
-                        placeholder="Name eingeben"
-                        className="border border-gray-500 rounded-lg w-full h-12 p-2"
-                        {...register(`partners.${index}.name`, {
-                            maxLength: {
-                                value: 50,
-                                message: 'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
-                            },
-                            pattern: {
-                                value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
-                                message: 'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?-',
-                            },
-                        })}
-                    />
-                    <p className="text-red-600 pt-2">{errors?.partners?.[index]?.name?.message}</p>
-                </div>
-            </div>
-        ));
+    const loadOptions = (
+        inputValue: string,
+        callback: (options: { label: string; value: string }[]) => void
+    ) => {
+        // a little less api queries, only start searching for recommendations from 2 letter inputs
+        if (inputValue.length > 1) {
+            fetchGET(`/search?users=true&query=${inputValue}`, session?.accessToken).then(
+                (data: BackendSearchResponse) => {
+                    console.log(data);
+                    callback(
+                        data.users.map((user) => ({
+                            label: user.first_name + ' ' + user.last_name + ' - ' + user.username,
+                            value: user.username,
+                        }))
+                    );
+                }
+            );
+        }
     };
 
     return (
@@ -123,7 +137,7 @@ export default function Partners() {
                     <LoadingAnimation />
                 ) : (
                     <form
-                        onSubmit={handleSubmit(onSubmit)}
+                        onSubmit={onSubmit}
                         className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
                     >
                         <div>
@@ -131,23 +145,55 @@ export default function Partners() {
                                 Füge deine Partner hinzu
                             </div>
                             <div className={'text-center mb-20'}>optional</div>
-                            {renderPartnersInputs()}
-                            <div className="mx-7 mt-2 flex justify-center">
-                                <div className={'w-full flex px-2 justify-end'}>
-                                    <button type="button" onClick={() => remove(fields.length - 1)}>
-                                        <RxMinus size={20} />
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            append({
-                                                name: '',
-                                            });
+                            {partners.map((partner, index) => (
+                                <div key={index} className="my-2">
+                                    <AsyncCreatableSelect
+                                        instanceId={index.toString()}
+                                        defaultOptions={[
+                                            {
+                                                label: `${
+                                                    partnerProfileSnippets[partner]
+                                                        ? partnerProfileSnippets[partner].first_name
+                                                        : ''
+                                                } ${
+                                                    partnerProfileSnippets[partner]
+                                                        ? partnerProfileSnippets[partner].last_name
+                                                        : ''
+                                                } - ${partner}`,
+                                                value: partner,
+                                            },
+                                        ]}
+                                        loadOptions={loadOptions}
+                                        onChange={(e) => modifyPartner(index, e!.value)}
+                                        value={{
+                                            label: `${
+                                                partnerProfileSnippets[partner]
+                                                    ? partnerProfileSnippets[partner].first_name
+                                                    : ''
+                                            } ${
+                                                partnerProfileSnippets[partner]
+                                                    ? partnerProfileSnippets[partner].last_name
+                                                    : ''
+                                            } - ${partner}`,
+                                            value: partner,
                                         }}
-                                    >
-                                        <RxPlus size={20} />
-                                    </button>
+                                        placeholder={'Suche nach Nutzer:innen...'}
+                                        getOptionLabel={(option) => option.label}
+                                        formatCreateLabel={(inputValue) => (
+                                            <span>
+                                                kein Treffer? <b>{inputValue}</b> trotzdem verwenden
+                                            </span>
+                                        )}
+                                    />
                                 </div>
+                            ))}
+                            <div className={'w-3/4 mx-7 mt-3 flex justify-end'}>
+                                <button onClick={removeInputField}>
+                                    <RxMinus size={20} />
+                                </button>
+                                <button onClick={addInputField}>
+                                    <RxPlus size={20} />
+                                </button>
                             </div>
                         </div>
                         <div className="flex justify-around w-full">

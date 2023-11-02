@@ -15,6 +15,7 @@ import tornado.web
 import global_vars
 from model import User
 from resources.network.profile import ProfileDoesntExistException, Profiles
+import util
 
 logger = logging.getLogger()
 
@@ -34,7 +35,7 @@ def auth_needed(
         if not self.current_user:
             self.set_status(401)
             self.write({"status": 401, "reason": "no_logged_in_user"})
-            #self.redirect("/login")
+            # self.redirect("/login")
             return
         return method(self, *args, **kwargs)
 
@@ -103,7 +104,7 @@ class BaseHandler(tornado.web.RequestHandler):
                     token_info["email"],
                 )
 
-                # if the user was authenticated via ORCiD, 
+                # if the user was authenticated via ORCiD,
                 # or atleast has their ORCiD account linked,
                 # set their id for use within the handlers
                 if "orcid" in token_info:
@@ -111,7 +112,7 @@ class BaseHandler(tornado.web.RequestHandler):
 
                 self._access_token = bearer_token
                 return
-            
+
             # Authorization Header was not in the request
             # so we cannot authentication any user
             self.current_user = None
@@ -165,8 +166,12 @@ class BaseHandler(tornado.web.RequestHandler):
 
     def set_default_headers(self):
         self.set_header("Access-Control-Allow-Origin", "*")
-        self.set_header("Access-Control-Allow-Headers", "x-requested-with, Authorization")
-        self.set_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        self.set_header(
+            "Access-Control-Allow-Headers", "x-requested-with, Authorization"
+        )
+        self.set_header(
+            "Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS"
+        )
 
     def options(self):
         # no body
@@ -175,41 +180,11 @@ class BaseHandler(tornado.web.RequestHandler):
 
     def json_serialize_response(self, dictionary: dict) -> dict:
         """
-        recursively traverse the (variably) nested dict to find any fields that
-        require a transformation from its object representation into a str.
-        Fields that are transformed are those whose type is an instances of `ObjectId`
-        and `datetime.datetime`.
-        Parse those values using the `str()` function (for ObjectId's),
-        or the `.isoformat()` function (for datetimes).
+        wrapper around `util.json_serialize_response()` to make
+        a dictionary serializable by JSON. see this function for details.
         """
 
-        for key in dictionary:
-            # check for keys whose values need to be transformed
-            if isinstance(dictionary[key], ObjectId):
-                dictionary[key] = str(dictionary[key])
-            elif isinstance(dictionary[key], datetime.datetime):
-                dictionary[key] = dictionary[key].isoformat()
-
-            # if it is a nested dict, recursively run on subdict
-            # and reassemble it
-            elif isinstance(dictionary[key], dict):
-                dictionary[key] = self.json_serialize_response(dictionary[key])
-
-            # if it is a list, there are two options:
-            # either the entries in the list are ObjectIds themselves, in that
-            # case transform them as str's and reassemble the list,
-            # or the list contains dicts again, in which case we run recursively
-            # on each of those subdicts again.
-            # This can be seen as an exclusive-or, meaning mixed-lists may cause
-            # strange or undesired behaviour.
-            elif isinstance(dictionary[key], list):
-                for elem in dictionary[key]:
-                    if isinstance(elem, ObjectId):
-                        dictionary[key][dictionary[key].index(elem)] = str(elem)
-                    elif isinstance(elem, dict):
-                        elem = self.json_serialize_response(elem)
-
-        return dictionary
+        return util.json_serialize_response(dictionary)
 
     def serialize_and_write(self, response: dict) -> None:
         self.write(self.json_serialize_response(response))
@@ -218,7 +193,8 @@ class BaseHandler(tornado.web.RequestHandler):
         if not self.current_user:
             return None  # TODO could also raise exception?
 
-        with Profiles() as profile_manager:
+        with util.get_mongodb() as db:
+            profile_manager = Profiles(db)
             try:
                 return profile_manager.get_role(self.current_user.username)
             except ProfileDoesntExistException:

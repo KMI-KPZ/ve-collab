@@ -41,6 +41,10 @@ export default function PublicPlansSelect({ chosenPlanId, setChosenPlanId }: Pro
                         name: plan.name,
                     }))
                 );
+                // default select the first plan, otherwise it would be visible in the select, but value still null
+                if(data.plans.length > 0){
+                    setChosenPlanId(data.plans[0]._id)
+                }
             });
         }
     }, [session, status]);

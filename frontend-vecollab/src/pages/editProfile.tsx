@@ -4,7 +4,7 @@ import VerticalTabs from '@/components/profile/VerticalTabs';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { FormEvent, SetStateAction, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import EditVEInfo from '@/components/profile/EditVEInfo';
 import EditPersonalInformation from '@/components/profile/EditPersonalInformation';
 import EditResearchAndTeachingInformation from '@/components/profile/EditResearchAndTeachingInformation';
@@ -18,10 +18,9 @@ import {
     VEWindowItem,
     WorkExperience,
 } from '@/interfaces/profile/profileInterfaces';
-import SuccessAlert from '@/components/profile/SuccessAlert';
+import SuccessAlert from '@/components/SuccessAlert';
 import EditVisibilitySettings from '@/components/profile/EditVisibilitySettings';
 import EditProfileVeWindow from '@/components/profile/EditProfileVeWindow';
-import ExcludedFromMatchingBanner from '@/components/profile/ExcludedFromMatchingBanner';
 
 export default function EditProfile() {
     const [personalInformation, setPersonalInformation] = useState<PersonalInformation>({

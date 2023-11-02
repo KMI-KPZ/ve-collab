@@ -2,10 +2,11 @@ from datetime import datetime, timedelta
 import io
 import json
 import logging
+import os
 from typing import List
 
 from bson import ObjectId
-import dateutil
+from dotenv import load_dotenv
 import gridfs
 import pymongo
 import pymongo.errors
@@ -13,6 +14,7 @@ from requests_toolbelt import MultipartEncoder
 from tornado.options import options
 from tornado.testing import AsyncHTTPTestCase
 
+from resources.elasticsearch_integration import ElasticsearchConnector
 from resources.network.acl import ACL
 import global_vars
 from main import make_app
@@ -25,6 +27,9 @@ from model import (
     User,
     VEPlan,
 )
+
+# load environment variables
+load_dotenv()
 
 # hack all loggers to not produce too much irrelevant (info) output here
 for logger_name in logging.root.manager.loggerDict:
@@ -57,6 +62,8 @@ PLAN_ALREADY_EXISTS_ERROR = "plan_already_exists"
 NON_UNIQUE_STEPS_ERROR = "non_unique_step_names"
 NON_UNIQUE_TASKS_ERROR = "non_unique_task_titles"
 
+INVITATION_DOESNT_EXIST_ERROR = "invitation_doesnt_exist"
+
 # don't change, these values match with the ones in BaseHandler
 CURRENT_ADMIN = User(
     "test_admin", "aaaaaaaa-bbbb-0000-cccc-dddddddddddd", "test_admin@mail.de"
@@ -80,21 +87,26 @@ def setUpModule():
     unittest will call this method itself.
     """
 
-    with open(options.config) as json_file:
-        config = json.load(json_file)
-
-    global_vars.keycloak_callback_url = config["keycloak_callback_url"]
-    global_vars.domain = config["domain"]
-    global_vars.keycloak_client_id = config["keycloak_client_id"]
-    global_vars.cookie_secret = config["cookie_secret"]
-
-    global_vars.mongodb_host = config["mongodb_host"]
-    global_vars.mongodb_port = config["mongodb_port"]
-    global_vars.mongodb_username = config["mongodb_username"]
-    global_vars.mongodb_password = config["mongodb_password"]
-    global_vars.mongodb_db_name = "test_db"
-    global_vars.etherpad_base_url = config["etherpad_base_url"]
-    global_vars.etherpad_api_key = config["etherpad_api_key"]
+    global_vars.port = int(os.getenv("PORT", "8888"))
+    global_vars.cookie_secret = os.getenv("COOKIE_SECRET")
+    global_vars.wordpress_url = os.getenv("WORDPRESS_URL")
+    global_vars.mongodb_host = os.getenv("MONGODB_HOST", "localhost")
+    global_vars.mongodb_port = int(os.getenv("MONGODB_PORT", "27017"))
+    global_vars.mongodb_username = os.getenv("MONGODB_USERNAME")
+    global_vars.mongodb_password = os.getenv("MONGODB_PASSWORD")
+    global_vars.mongodb_db_name = os.getenv("MONGODB_DB_NAME", "ve_collab")
+    global_vars.etherpad_base_url = os.getenv("ETHERPAD_BASE_URL")
+    global_vars.etherpad_api_key = os.getenv("ETHERPAD_API_KEY")
+    global_vars.elasticsearch_base_url = os.getenv("ELASTICSEARCH_BASE_URL")
+    global_vars.elasticsearch_username = os.getenv("ELASTICSEARCH_USERNAME", "elastic")
+    global_vars.elasticsearch_password = os.getenv("ELASTICSEARCH_PASSWORD")
+    global_vars.dummy_personas_passcode = os.getenv("DUMMY_PERSONAS_PASSCODE")
+    global_vars.keycloak_base_url = os.getenv("KEYCLOAK_BASE_URL")
+    global_vars.keycloak_realm = os.getenv("KEYCLOAK_REALM")
+    global_vars.keycloak_client_id = os.getenv("KEYCLOAK_CLIENT_ID")
+    global_vars.keycloak_client_secret = os.getenv("KEYCLOAK_CLIENT_SECRET")
+    global_vars.keycloak_admin_username = os.getenv("KEYCLOAK_ADMIN_USERNAME")
+    global_vars.keycloak_admin_password = os.getenv("KEYCLOAK_ADMIN_PASSWORD")
 
 
 def tearDownModule():
@@ -1197,8 +1209,9 @@ class RoleACLIntegrationTest(BaseApiTestCase):
 
         self.db.profiles.delete_many({})
 
-        with ACL() as acl_manager:
-            acl_manager._cleanup_unused_rules()
+        from resources.network.acl import cleanup_unused_rules
+
+        cleanup_unused_rules()
 
         # expect an empty global acl
         global_acl_db_state = list(self.db.global_acl.find())
@@ -3355,6 +3368,37 @@ class PinHandlerTest(BaseApiTestCase):
 
 
 class SearchHandlerTest(BaseApiTestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+
+        cls.profile = {
+            "username": CURRENT_ADMIN.username,
+            "role": "admin",
+            "follows": [],
+            "bio": "test",
+            "institution": "test",
+            "projects": "test",
+            "profile_pic": "test",
+            "first_name": "test",
+            "last_name": "test",
+            "gender": "test",
+            "address": "test",
+            "birthday": "test",
+            "experience": "test",
+            "education": "test",
+        }
+        # replicate to ES
+        ElasticsearchConnector().on_insert(str(ObjectId()), cls.profile, "profiles")
+
+        # there seems to be a problem over at ES, because when the insert request
+        # finishes, the data is not yet available for search, so tests would fail.
+        # there is no real solution i can think of other than just wait a little bit
+        # for ES to finish analyzing and indexing
+        import time
+        time.sleep(2)
+        
+
     def setUp(self) -> None:
         super().setUp()
 
@@ -3363,47 +3407,9 @@ class SearchHandlerTest(BaseApiTestCase):
             [("text", pymongo.TEXT), ("tags", pymongo.TEXT), ("files", pymongo.TEXT)],
             name="posts",
         )
-        self.db.profiles.create_index(
-            [
-                ("bio", pymongo.TEXT),
-                ("institution", pymongo.TEXT),
-                ("projects", pymongo.TEXT),
-                ("first_name", pymongo.TEXT),
-                ("last_name", pymongo.TEXT),
-                ("gender", pymongo.TEXT),
-                ("address", pymongo.TEXT),
-                ("birthday", pymongo.TEXT),
-                ("experience", pymongo.TEXT),
-                ("education", pymongo.TEXT),
-                ("username", pymongo.TEXT),
-            ],
-            name="profiles",
-        )
 
         # setup basic environment of permissions
         self.base_permission_environment_setUp()
-
-        self.db.profiles.update_one(
-            {"username": CURRENT_ADMIN.username},
-            {
-                "$set": {
-                    "username": CURRENT_ADMIN.username,
-                    "role": "admin",
-                    "follows": [],
-                    "bio": "test",
-                    "institution": "test",
-                    "projects": "test",
-                    "profile_pic": "test",
-                    "first_name": "test",
-                    "last_name": "test",
-                    "gender": "test",
-                    "address": "test",
-                    "birthday": "test",
-                    "experience": "test",
-                    "education": "test",
-                }
-            },
-        )
 
         self.post_oid = ObjectId()
         self.comment_oid = ObjectId()
@@ -6695,6 +6701,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "creation_timestamp": datetime.now(),
             "last_modified": datetime.now(),
             "name": "test",
+            "partners": [CURRENT_USER.username],
             "institutions": [self.institution.to_dict()],
             "topic": "test",
             "lectures": [self.lecture.to_dict()],
@@ -6766,6 +6773,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan._id, default_plan._id)
         self.assertEqual(response_plan.author, default_plan.author)
         self.assertEqual(response_plan.name, default_plan.name)
+        self.assertEqual(response_plan.partners, default_plan.partners)
         self.assertEqual(response_plan.institutions, default_plan.institutions)
         self.assertEqual(response_plan.topic, default_plan.topic)
         self.assertEqual(response_plan.lectures, default_plan.lectures)
@@ -6853,6 +6861,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan._id, default_plan._id)
         self.assertEqual(response_plan.author, default_plan.author)
         self.assertEqual(response_plan.name, default_plan.name)
+        self.assertEqual(response_plan.partners, default_plan.partners)
         self.assertEqual(response_plan.institutions, default_plan.institutions)
         self.assertEqual(response_plan.topic, default_plan.topic)
         self.assertEqual(response_plan.lectures, default_plan.lectures)
@@ -7645,7 +7654,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], PLAN_DOESNT_EXIST_ERROR)
 
-
     def test_post_grant_write_permission(self):
         """
         expect: successfully set write permissions for the user, which includes
@@ -7749,7 +7757,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             200,
             body=self.json_serialize(payload),
         )
-        
+
         # expect the user not to be in the read_access nor write_access list
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
@@ -7802,7 +7810,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], PLAN_DOESNT_EXIST_ERROR)
 
-
     def test_post_revoke_write_permission(self):
         """
         expect: sucessfully revoke write permission, but not read
@@ -7833,7 +7840,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             200,
             body=self.json_serialize(payload),
         )
-        
+
         # expect the user not to be in the write_access, but still in the read_access list
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
@@ -8060,3 +8067,245 @@ class VEPlanHandlerTest(BaseApiTestCase):
         # expect step to still be there
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertEqual(len(db_state["steps"]), 1)
+
+
+class VeInvitationHandlerTest(BaseApiTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+
+        self.base_permission_environment_setUp()
+        self.plan_id = ObjectId()
+        invitation_id = self.default_invitation_setup()
+        self.invitation_id = invitation_id
+
+    def tearDown(self) -> None:
+        super().tearDown()
+
+        self.base_permission_environments_tearDown()
+        self.db.invitations.delete_many({})
+        self.db.notifications.delete_many({})
+        self.db.plans.delete_many({})
+
+    def default_invitation_setup(self) -> ObjectId:
+        self.db.plans.insert_one(
+            VEPlan(self.plan_id, author=CURRENT_ADMIN.username).to_dict()
+        )
+        self.default_invitation = {
+            "plan_id": self.plan_id,
+            "message": "invitation",
+            "sender": CURRENT_ADMIN.username,
+            "recipient": CURRENT_USER.username,
+            "accepted": None,
+        }
+        result = self.db.invitations.insert_one(self.default_invitation)
+        return result.inserted_id
+
+    def test_post_send_ve_invitation(self):
+        """
+        expect: successfully send invitation
+        """
+
+        payload = {
+            "message": "this_is_an_invite",
+            "plan_id": str(self.plan_id),
+            "username": CURRENT_USER.username,
+        }
+
+        self.base_checks("POST", "/ve_invitation/send", True, 200, body=payload)
+
+        # expect invitation to be in db
+        db_state = self.db.invitations.find_one(
+            {"plan_id": self.plan_id, "message": "this_is_an_invite"}
+        )
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["sender"], CURRENT_ADMIN.username)
+        self.assertEqual(db_state["recipient"], CURRENT_USER.username)
+        self.assertIsNone(db_state["accepted"])
+
+        # expect invited user to have read permissions to the plan
+        plan = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIn(CURRENT_USER.username, plan["read_access"])
+
+        # expect notifiation to be stored for the invited user,
+        # but not yet dispatched (== receive_state = pending)
+        notification = self.db.notifications.find_one(
+            {
+                "payload.from": CURRENT_ADMIN.username,
+                "payload.message": "this_is_an_invite",
+            }
+        )
+        self.assertIsNotNone(notification)
+        self.assertEqual(notification["payload"]["plan_id"], str(self.plan_id))
+        self.assertEqual(notification["receive_state"], "pending")
+        self.assertEqual(notification["to"], CURRENT_USER.username)
+        self.assertEqual(notification["type"], "ve_invitation")
+
+        # again, but this time dont include a plan
+        payload2 = {
+            "message": "this_is_another_invite",
+            "username": CURRENT_USER.username,
+            "plan_id": None,
+        }
+        self.base_checks("POST", "/ve_invitation/send", True, 200, body=payload2)
+
+        # expect invitation to be in db
+        db_state2 = self.db.invitations.find_one({"message": "this_is_another_invite"})
+        self.assertIsNotNone(db_state2)
+        self.assertEqual(db_state2["sender"], CURRENT_ADMIN.username)
+        self.assertEqual(db_state2["recipient"], CURRENT_USER.username)
+        self.assertIsNone(db_state2["accepted"])
+        self.assertIsNone(db_state2["plan_id"])
+
+    def test_post_send_ve_invitation_error_missing_key(self):
+        """
+        expect: fail message because plan_id, message or username is missing
+        """
+
+        payload = {"message": "this_is_an_invite", "plan_id": str(self.plan_id)}
+        response = self.base_checks(
+            "POST", "/ve_invitation/send", False, 400, body=payload
+        )
+        self.assertEqual(
+            response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "username"
+        )
+
+        payload2 = {"message": "this_is_an_invite", "username": CURRENT_USER.username}
+        response2 = self.base_checks(
+            "POST", "/ve_invitation/send", False, 400, body=payload2
+        )
+        self.assertEqual(
+            response2["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "plan_id"
+        )
+
+        payload3 = {"plan_id": str(self.plan_id), "username": CURRENT_USER.username}
+        response3 = self.base_checks(
+            "POST", "/ve_invitation/send", False, 400, body=payload3
+        )
+        self.assertEqual(
+            response3["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "message"
+        )
+
+    def test_post_send_ve_invitation_error_insufficient_permissions(self):
+        """
+        expect: fail message because user is not the author of the appended plan
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        payload = {
+            "plan_id": str(self.plan_id),
+            "username": CURRENT_ADMIN.username,
+            "message": "invite",
+        }
+
+        response = self.base_checks(
+            "POST", "/ve_invitation/send", False, 403, body=payload
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_post_reply_ve_invitation(self):
+        """
+        expect: successfully reply to invitation
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        payload = {
+            "invitation_id": str(self.invitation_id),
+            "accepted": True,
+        }
+
+        self.base_checks("POST", "/ve_invitation/reply", True, 200, body=payload)
+
+        # expect invitation to be accepted
+        db_state = self.db.invitations.find_one({"_id": self.invitation_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["accepted"], True)
+
+        # expect notifcation to be stored for the origin sender of the invitation,
+        # but not yet dispatched (== receive_state = pending)
+        notification = self.db.notifications.find_one(
+            {
+                "payload.from": CURRENT_USER.username,
+                "payload.invitation_id": str(self.invitation_id),
+                "type": "ve_invitation_reply",
+            }
+        )
+        self.assertIsNotNone(notification)
+        self.assertEqual(notification["receive_state"], "pending")
+        self.assertEqual(notification["to"], self.default_invitation["sender"])
+        self.assertEqual(notification["payload"]["accepted"], True)
+        self.assertEqual(
+            notification["payload"]["message"], self.default_invitation["message"]
+        )
+
+        # again, but this time decline the invitation
+        payload2 = {
+            "invitation_id": str(self.invitation_id),
+            "accepted": False,
+        }
+        self.base_checks("POST", "/ve_invitation/reply", True, 200, body=payload2)
+
+        # expect invitation to be declined
+        db_state2 = self.db.invitations.find_one({"_id": self.invitation_id})
+        self.assertIsNotNone(db_state2)
+        self.assertEqual(db_state2["accepted"], False)
+
+        # this time also expect read access to the associated plan to be removed
+        plan = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertNotIn(CURRENT_USER.username, plan["read_access"])
+
+    def test_post_reply_ve_invitation_error_missing_key(self):
+        """
+        expect: fail message because invitation_id or accepted is missing
+        """
+
+        payload = {"invitation_id": str(self.invitation_id)}
+        response = self.base_checks(
+            "POST", "/ve_invitation/reply", False, 400, body=payload
+        )
+        self.assertEqual(
+            response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "accepted"
+        )
+
+        payload2 = {"accepted": True}
+        response2 = self.base_checks(
+            "POST", "/ve_invitation/reply", False, 400, body=payload2
+        )
+        self.assertEqual(
+            response2["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "invitation_id"
+        )
+
+    def test_post_reply_ve_invitation_error_invitation_doesnt_exist(self):
+        """
+        expect: fail message because invitation doesnt exist
+        """
+
+        payload = {
+            "invitation_id": str(ObjectId()),
+            "accepted": True,
+        }
+
+        response = self.base_checks(
+            "POST", "/ve_invitation/reply", False, 409, body=payload
+        )
+        self.assertEqual(response["reason"], INVITATION_DOESNT_EXIST_ERROR)
+
+    def test_post_reply_ve_invitation_error_insufficient_permissions(self):
+        """
+        expect: fail message because current user is not the recipient of the invitation
+        """
+
+        payload = {
+            "invitation_id": str(self.invitation_id),
+            "accepted": True,
+        }
+
+        response = self.base_checks(
+            "POST", "/ve_invitation/reply", False, 403, body=payload
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)

@@ -25,7 +25,7 @@ export default function AuthComponentTest(props: Props) {
                 "Authorization": "Bearer " + session.accessToken
             }
             try {
-                fetch(process.env.NEXT_PUBLIC_BACKEND_URL + "/profileinformation", {
+                fetch(process.env.NEXT_PUBLIC_BACKEND_BASE_URL + "/profileinformation", {
                     headers: headers
                 })
                 .then(res => res.json())
