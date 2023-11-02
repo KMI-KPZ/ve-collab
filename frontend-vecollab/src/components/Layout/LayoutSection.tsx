@@ -8,10 +8,10 @@ import { Notification } from '@/interfaces/socketio';
 
 interface Props {
     children: React.ReactNode;
-    messageEvents: any[];
+    headerBarMessageEvents: any[];
     notificationEvents: Notification[];
 }
-export default function LayoutSection({ children, notificationEvents, messageEvents }: Props): JSX.Element {
+export default function LayoutSection({ children, notificationEvents, headerBarMessageEvents }: Props): JSX.Element {
     const { data: session, status } = useSession();
 
     const {
@@ -23,7 +23,7 @@ export default function LayoutSection({ children, notificationEvents, messageEve
 
     return (
         <>
-            <HeaderSection notificationEvents={notificationEvents} messageEvents={messageEvents}/>
+            <HeaderSection notificationEvents={notificationEvents} headerBarMessageEvents={headerBarMessageEvents}/>
             <main>
                 {!isLoading && excludedFromMatching && <ExcludedFromMatchingBanner />}
                 <>{children}</>

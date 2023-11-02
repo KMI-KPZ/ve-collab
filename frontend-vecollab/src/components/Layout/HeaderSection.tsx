@@ -7,20 +7,20 @@ import { Notification } from '@/interfaces/socketio';
 
 interface Props {
     notificationEvents: Notification[];
-    messageEvents: any[];
+    headerBarMessageEvents: any[];
 }
 
-export default function HeaderSection({ notificationEvents, messageEvents }: Props) {
+export default function HeaderSection({ notificationEvents, headerBarMessageEvents }: Props) {
     const { data: session } = useSession();
     const [messageEventCount, setMessageEventCount] = useState<number>(0);
 
     useEffect(() => {
         //filter out the messages that the user sent himself --> they should not trigger a notification icon
-        const filteredMessageEvents = messageEvents.filter((message) => {
+        const filteredMessageEvents = headerBarMessageEvents.filter((message) => {
             return message.sender !== session?.user.preferred_username;
         });
         setMessageEventCount(filteredMessageEvents.length);
-    }, [messageEvents])
+    }, [headerBarMessageEvents])
 
     return (
         <header className="bg-white px-4 lg:px-6 py-2.5 drop-shadow-lg">

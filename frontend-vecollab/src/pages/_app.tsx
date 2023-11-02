@@ -88,7 +88,7 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
                 console.log('new message:');
                 console.log(value);
                 setMessageEvents([...messageEvents, value]);
-                setMessageEventsHeaderBar([...messageEvents, value]);
+                setMessageEventsHeaderBar((prev) => [...prev, value]);
             }
         }
 
@@ -113,7 +113,7 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
                         </Head>
                         <LayoutSection
                             notificationEvents={notificationEvents}
-                            messageEvents={messageEventsHeaderBar}
+                            headerBarMessageEvents={messageEventsHeaderBar}
                         >
                             {Component.auth ? (
                                 <Auth>

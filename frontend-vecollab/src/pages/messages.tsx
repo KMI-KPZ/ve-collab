@@ -15,7 +15,13 @@ interface Props {
     setHeaderBarMessageEvents: Dispatch<SetStateAction<any[]>>;
 }
 Messages.auth = true;
-export default function Messages({ socket, messageEvents, setMessageEvents,headerBarMessageEvents ,setHeaderBarMessageEvents }: Props) {
+export default function Messages({
+    socket,
+    messageEvents,
+    setMessageEvents,
+    headerBarMessageEvents,
+    setHeaderBarMessageEvents,
+}: Props) {
     const { data: session, status } = useSession();
     const [selectedChat, setSelectedChat] = useState<string>('');
     const [isNewChatDialogOpen, setIsNewChatDialogOpen] = useState(false);
@@ -39,7 +45,10 @@ export default function Messages({ socket, messageEvents, setMessageEvents,heade
     useEffect(() => {
         // TODO request all rooms of user from api with their corresponding room ids and render
         // them in sidebar
+        console.log('messageEvents:');
         console.log(messageEvents);
+        console.log('headerBarMessageEvents:');
+        console.log(headerBarMessageEvents);
     }, [messageEvents]);
 
     // TODO possible solution:
@@ -61,26 +70,37 @@ export default function Messages({ socket, messageEvents, setMessageEvents,heade
                                 <LoadingAnimation />
                             </li>
                         ) : (
-                            roomSnippets.map((room) => ( // TODO sort: rooms with unread messages first (sorted by last message timestamp), then by last message timestamp
-                                <li
-                                    key={room._id}
-                                    className="bg-gray-200 rounded-md p-2 cursor-pointer hover:bg-gray-300 overflow-hidden whitespace-nowrap text-ellipsis"
-                                    onClick={() => handleChatSelect(room._id)}
-                                >
-                                    <div className="flex justify-between items-center">
-                                        <div className="flex flex-col">
-                                            <p className="text-lg font-medium">
-                                                {room.name ? room.name : room.members.join(', ')}
-                                            </p>
-                                            <p className="text-sm text-gray-500">
-                                                {room.last_message
-                                                    ? room.last_message
-                                                    : 'No messages yet'}
-                                            </p>
+                            roomSnippets.map(
+                                (
+                                    room // TODO sort: rooms with unread messages first (sorted by last message timestamp), then by last message timestamp
+                                ) => (
+                                    <li
+                                        key={room._id}
+                                        className="bg-gray-200 rounded-md p-2 cursor-pointer hover:bg-gray-300 overflow-hidden whitespace-nowrap text-ellipsis"
+                                        onClick={() => handleChatSelect(room._id)}
+                                    >
+                                        <div className="flex justify-between items-center">
+                                            <div className="flex flex-col">
+                                                <p className="text-lg font-medium">
+                                                    {room.name
+                                                        ? room.name
+                                                        : room.members.join(', ')}
+                                                </p>
+                                                <p className="text-sm text-gray-500">
+                                                    {room.last_message
+                                                        ? room.last_message
+                                                        : 'No messages yet'}
+                                                </p>
+                                            </div>
+                                            {headerBarMessageEvents.filter(
+                                                (message) => message.room_id === room._id
+                                            ).length > 0 && ( // determine if there are any unread messages in this room, by using the copy of message events that get deleted once they are acknowledged
+                                                <div className="bg-blue-500 w-2 h-2 rounded-full mr-2"></div>
+                                            )}
                                         </div>
-                                    </div>
-                                </li>
-                            ))
+                                    </li>
+                                )
+                            )
                         )}
                     </ul>
                     <button
