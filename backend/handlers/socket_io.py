@@ -1,9 +1,6 @@
-import datetime
 from typing import Dict, List, Optional
-from bson import ObjectId
 import jose
 import keycloak
-from pymongo import ReturnDocument
 
 import global_vars
 from error_reasons import (
@@ -102,8 +99,8 @@ async def authenticate(sid, data):
     The server emits the state of authentication as the event acknowledgment (see below).
 
     Since this event can be treated as the "real" connect event, the server will emit
-    all notification events that have happened since the last time the user had a valid,
-    open socket connection, i.e. that last time the user was "online".
+    all notification events and message events that have happened since the last time the user
+    had a valid, open socket connection, i.e. that last time the user was "online".
 
     Payload:
         {
@@ -179,55 +176,41 @@ async def authenticate(sid, data):
             # and are awaiting acknowledgement
             notification_manager.bulk_set_send_state(new_notification_ids)
 
-        # emit messages that appeared while this user was offline (i.e. have send_state not equal to "acknowledged" )
-        # and set their state to "sent".
-        rooms = list(
-            db.chatrooms.find(
-                {
-                    "members": token_info["preferred_username"],
-                    "messages": {
-                        "$elemMatch": {
-                            "send_states.{}".format(token_info["preferred_username"]): {
-                                "$ne": "acknowledged"
-                            }
-                        }
-                    },
-                }
-            )
+        # emit messages that appeared while this user was offline, i.e. all
+        # messages that dont have send state "acknowledged" for the user and
+        # set their send states to "sent"
+        chat_manager = Chat(db)
+        rooms = chat_manager.get_rooms_with_unacknowledged_messages_for_user(
+            token_info["preferred_username"]
         )
+
+        room_ids = []
+        message_ids = []
+
+        # only the unacknowledged messages are included, so we can just ship them
         for room in rooms:
             for message in room["messages"]:
-                if (
-                    message["send_states"][token_info["preferred_username"]]
-                    != "acknowledged"
-                ):
-                    await emit_event(
-                        "message",
-                        {
-                            "_id": message["_id"],
-                            "message": message["message"],
-                            "sender": message["sender"],
-                            "recipients": room["members"],
-                            "room_id": room["_id"],
-                            "creation_date": message["creation_date"],
-                        },
-                        room=sid,
-                    )
-                    # set the message from "pending" to "sent" to signify that
-                    # they have been atleast tried to be delivered to the client
-                    # and are awaiting acknowledgement
-                    db.chatrooms.update_one(
-                        {
-                            "_id": room["_id"],
-                            "messages._id": message["_id"],
-                        },
-                        {
-                            "$set": {
-                                "messages.$.send_states."
-                                + token_info["preferred_username"]: "sent"
-                            }
-                        },
-                    )
+                await emit_event(
+                    "message",
+                    {
+                        "_id": message["_id"],
+                        "message": message["message"],
+                        "sender": message["sender"],
+                        "recipients": room["members"],
+                        "room_id": room["_id"],
+                        "creation_date": message["creation_date"],
+                    },
+                    room=sid,
+                )
+                message_ids.append(message["_id"])
+            room_ids.append(room["_id"])
+
+        # set the message from "pending" to "sent" to signify that
+        # they have been atleast tried to be delivered to the client
+        # and are awaiting acknowledgement
+        chat_manager.bulk_set_message_sent_state(
+            room_ids, message_ids, token_info["preferred_username"]
+        )
 
     return {"status": 200, "success": True}
 

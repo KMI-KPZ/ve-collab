@@ -146,7 +146,7 @@ class Chat:
 
         if not room:
             raise RoomDoesntExistError()
-        
+
         if sender not in room["members"]:
             raise UserNotMemberError()
 
@@ -235,3 +235,80 @@ class Chat:
 
         if result.modified_count != 1:
             raise MessageDoesntExistError()
+
+    def get_rooms_with_unacknowledged_messages_for_user(
+        self, username: str
+    ) -> List[Dict]:
+        """
+        Retrieve all rooms in which the user given by its `username` is a member
+        and has unacknowledged messages (i.e. messages that he has not yet seen).
+
+        The messages in the result are only those that are unacknowledged.
+        """
+
+        return list(
+            self.db.chatrooms.aggregate(
+                [
+                    # find rooms that the user is member in 
+                    # and has messages in it that are not yet acknowledged for the user
+                    {
+                        "$match": {
+                            "members": username,
+                            "messages": {
+                                "$elemMatch": {
+                                    "send_states.{}".format(username): {
+                                        "$ne": "acknowledged"
+                                    }
+                                }
+                            },
+                        }
+                    },
+                    # only return the messages that are not yet acknowledged
+                    # for easier dispatching of the events and less data queried
+                    {
+                        "$project": {
+                            "messages": {
+                                "$filter": {
+                                    "input": "$messages",
+                                    "as": "message",
+                                    "cond": {
+                                        "$ne": [
+                                            "$$message.send_states.{}".format(username),
+                                            "acknowledged",
+                                        ]
+                                    },
+                                }
+                            },
+                            "members": True,
+                            "name": True,
+                        }
+                    },
+                ]
+            )
+        )
+
+    def bulk_set_message_sent_state(
+        self,
+        room_ids: List[str | ObjectId],
+        message_ids: List[str | ObjectId],
+        username: str,
+    ) -> None:
+        """
+        Bulk operation to set send states of messages to "sent" for the given user.
+
+        The `room_ids` list contains the _id's of the rooms in which the messages
+        appeared.
+        The `message_ids` list contains the _id's of the messages
+        (all of them together, NOT separated by rooms).
+        """
+
+        for room_id in room_ids:
+            room_id = util.parse_object_id(room_id)
+        for message_id in message_ids:
+            message_id = util.parse_object_id(message_id)
+
+        self.db.chatrooms.update_many(
+            {"_id": {"$in": room_ids}},
+            {"$set": {"messages.$[elem].send_states.{}".format(username): "sent"}},
+            array_filters=[{"elem._id": {"$in": message_ids}}],
+        )
