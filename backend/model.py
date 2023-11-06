@@ -49,6 +49,84 @@ class User:
         return {"username": self.username, "user_id": self.user_id, "email": self.email}
 
 
+class Space(dict):
+    """
+    model class for a space as a dict that enforces certain keys,
+    i.e. only the values from EXPECTED_DICT_ENTRIES are allowed,
+    others get deleted.
+
+    Attributes can be accessed like normal classes, e.g. space.name,
+    but also like dicts, e.g. space["name"].
+    """
+
+    EXPECTED_DICT_ENTRIES = {
+        "name": (str, type(None)),
+        "invisible": bool,
+        "joinable": bool,
+        "members": list,
+        "admins": list,
+        "invites": list,
+        "requests": list,
+        "files": list,
+    }
+
+    def __init__(
+        self,
+        params: Dict[str, Any] = {},
+    ) -> None:
+        
+        # init default values
+        setattr(self, "_id", ObjectId())
+        super().__setitem__("_id", ObjectId())
+        setattr(self, "name", None)
+        super().__setitem__("name", None)
+        setattr(self, "invisible", False)
+        super().__setitem__("invisible", False)
+        setattr(self, "joinable", True)
+        super().__setitem__("joinable", True)
+        setattr(self, "members", [])
+        super().__setitem__("members", [])
+        setattr(self, "admins", [])
+        super().__setitem__("admins", [])
+        setattr(self, "invites", [])
+        super().__setitem__("invites", [])
+        setattr(self, "requests", [])
+        super().__setitem__("requests", [])
+        setattr(self, "files", [])
+        super().__setitem__("files", [])
+
+
+        # delete any keys from params that are not expected to avoid having
+        # any other additional attributes that might cause trouble
+        # (e.g. on serialization)
+        for key in list(params.keys()):
+            if key not in [*self.EXPECTED_DICT_ENTRIES.keys(), *["_id"]]:
+                del params[key]
+
+        # override default attributes from params
+        for k, v in params.items():
+            setattr(self, k, v)
+            super().__setitem__(k, v)
+
+    def __getitem__(self, key):
+        return super().__getitem__(key)
+
+    def __setitem__(self, key, value):
+        if key in [*self.EXPECTED_DICT_ENTRIES.keys(), *["_id"]]:
+            setattr(self, key, value)
+            return super().__setitem__(key, value)
+
+    def __delitem__(self, key):
+        delattr(self, key)
+        return super().__delitem__(key)
+
+    def __str__(self) -> str:
+        return super().__str__()
+
+    def __repr__(self) -> str:
+        return super().__repr__()
+
+
 class Task:
     """
     model class for a Task within a Step of a VE-Plan
