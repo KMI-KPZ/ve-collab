@@ -1,10 +1,15 @@
 import json
 from typing import List
 
-from pymongo import ReturnDocument
 import tornado.web
+from exceptions import RoomDoesntExistError
 
-from error_reasons import MISSING_KEY_IN_HTTP_BODY_SLUG, MISSING_KEY_SLUG
+from error_reasons import (
+    INSUFFICIENT_PERMISSIONS,
+    MISSING_KEY_IN_HTTP_BODY_SLUG,
+    MISSING_KEY_SLUG,
+    ROOM_DOESNT_EXIST,
+)
 from handlers.base_handler import BaseHandler, auth_needed
 from resources.network.chat import Chat
 import util
@@ -108,6 +113,16 @@ class RoomHandler(BaseHandler):
                 {"success": False,
                  "reason": "no_logged_in_user"}
 
+                403 Forbidden
+                (the current user is not a member of the room)
+                {"success": False,
+                 "reason": "insufficient_permission"}
+
+                409 Conflict
+                (the room does not exist)
+                {"success": False,
+                 "reason": "room_doesnt_exist"}
+
         GET /chatroom/get_messages_after
             Get a number of messages that are older then the message with the given message id.
             Useful to determine the messages that have to be requested on scroll up by specifying
@@ -117,7 +132,7 @@ class RoomHandler(BaseHandler):
         """
 
         if slug == "get":
-            self.set_status(501) # not yet implemented, TODO
+            self.set_status(501)  # not yet implemented, TODO
 
         elif slug == "get_mine":
             with util.get_mongodb() as db:
@@ -135,16 +150,12 @@ class RoomHandler(BaseHandler):
                 self.set_status(400)
                 self.write({"success": False, "reason": MISSING_KEY_SLUG + "room_id"})
                 return
-            with util.get_mongodb() as db:
-                chat_manager = Chat(db)
-                messages = chat_manager.get_all_messages_of_room(room_id)
 
-                self.serialize_and_write(
-                    {"success": True, "room_id": room_id, "messages": messages}
-                )
+            self.get_messages(room_id)
+            return
 
         elif slug == "get_messages_after":
-            self.set_status(501) # not yet implemented, TODO
+            self.set_status(501)  # not yet implemented, TODO
 
         else:
             self.set_status(404)
@@ -219,6 +230,36 @@ class RoomHandler(BaseHandler):
 
         else:
             self.set_status(404)
+
+    def get_messages(self, room_id: str) -> None:
+        """
+        Request all messages of a room.
+
+        Returns:
+            200 OK -> contains all messages of the room
+            403 Forbidden -> the current user is not a member of the room
+            409 Conflict -> the room does not exist
+        """
+
+        with util.get_mongodb() as db:
+            chat_manager = Chat(db)
+
+            try:
+                if not chat_manager.check_is_user_chatroom_member(
+                    room_id, self.current_user.username
+                ):
+                    self.set_status(403)
+                    self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
+                    return
+            except RoomDoesntExistError:
+                self.set_status(409)
+                self.write({"success": False, "reason": ROOM_DOESNT_EXIST})
+                return
+
+            messages = chat_manager.get_all_messages_of_room(room_id)
+            self.serialize_and_write(
+                {"success": True, "room_id": room_id, "messages": messages}
+            )
 
     def create_or_get_room_id(self, members: List[str], name: str = None):
         """

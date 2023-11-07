@@ -91,6 +91,26 @@ class Chat:
                 ]
             )
         )
+    
+    def check_is_user_chatroom_member(self, room_id: str | ObjectId, username: str) -> bool:
+        """
+        Returns True if the user given by its `username` is a member of the chatroom
+        (identified by the `room_id`), or False otherwise.
+
+        Raises `RoomDoesntExistError` if no room with the given _id was found.
+        """
+
+        room_id = util.parse_object_id(room_id)
+
+        room = self.db.chatrooms.find_one(
+            {"_id": room_id},
+            projection={"members": True},
+        )
+
+        if not room:
+            raise RoomDoesntExistError()
+        
+        return username in room["members"]
 
     def get_all_messages_of_room(self, room_id: str | ObjectId) -> List[Dict]:
         """

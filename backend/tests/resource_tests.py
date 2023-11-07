@@ -1724,6 +1724,37 @@ class ChatResourceTest(BaseResourceTestCase, IsolatedAsyncioTestCase):
                 self.assertEqual(snippet["members"], room1["members"])
                 self.assertEqual(snippet["last_message"], None)
 
+    def test_check_is_user_chatroom_member(self):
+        """
+        expect: successfully check if user is member of the room
+        """
+
+        # expect True because user is member
+        self.assertTrue(
+            self.chat_manager.check_is_user_chatroom_member(
+                self.room_id, CURRENT_USER.username
+            )
+        )
+
+        # expect False
+        self.assertFalse(
+            self.chat_manager.check_is_user_chatroom_member(
+                self.room_id, "non_member_user"
+            )
+        )
+
+    def test_check_is_user_chatroom_member_error_room_doesnt_exist(self):
+        """
+        expect: RoomDoesntExistError is raised because no room with this _id exists
+        """
+
+        self.assertRaises(
+            RoomDoesntExistError,
+            self.chat_manager.check_is_user_chatroom_member,
+            ObjectId(),
+            CURRENT_USER.username,
+        )
+
     def test_get_all_messages_of_room(self):
         """
         expect: successfully get all messages of the room
