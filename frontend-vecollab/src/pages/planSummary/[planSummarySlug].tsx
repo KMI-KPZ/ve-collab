@@ -6,6 +6,8 @@ import LoadingAnimation from '@/components/LoadingAnimation';
 
 // TODO what if values empty? -> maybe (/) sign
 // TODO aufklappbar
+// TODO abstände anpassen
+// TODO Unzufrieden mit der Darstellung der Aufgabenstellung
 
 // authentication is required on this page
 PlanSummarySlug.auth = true;
@@ -13,12 +15,16 @@ export default function PlanSummarySlug() {
     const router = useRouter();
     const { data: session } = useSession();
     const currentPlanId: string = router.query.planSummarySlug as string;
-    const {
-        data: plan,
-        isLoading,
-        error,
-        mutate,
-    } = useGetPlanById(session!.accessToken, currentPlanId);
+    const { data: plan, isLoading } = useGetPlanById(session!.accessToken, currentPlanId);
+
+    const convertDateToLocal = (timestamp: string) => {
+        return new Date(timestamp).toLocaleString('de-DE', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+        });
+    };
+
     return (
         <>
             <div className="flex justify-center bg-pattern-left-blue-small bg-no-repeat">
@@ -32,24 +38,26 @@ export default function PlanSummarySlug() {
                             <LoadingAnimation />
                         ) : (
                             <div className="bg-white rounded-lg p-4">
-                                <div className="text-xl font-semibold mb-4">Eigenschaften</div>
-                                <ul className="grid grid-cols-4 gap-8">
+                                <div className="text-2xl font-semibold mb-4">Eigenschaften</div>
+                                <ul className="grid grid-cols-4 gap-8 border-2 border-gray-400 rounded-3xl p-4">
                                     <span className="font-semibold pr-5">Partners:</span>
                                     <ul className="flex flex-col space-y-2 col-span-3">
                                         {plan.partners.map((partner, index) => (
                                             <li
-                                                className="flex w-fit bg-gray-100 rounded-lg p-2"
+                                                className="flex w-fit bg-slate-200 rounded-lg p-2"
                                                 key={index}
                                             >
                                                 {partner}
                                             </li>
                                         ))}
                                     </ul>
-                                    <span className="font-semibold pr-5">Externe Beteidigte:</span>
+                                    <span className="text-base font-semibold pr-5">
+                                        Externe Beteidigte:
+                                    </span>
                                     <ul className="flex flex-col space-y-3 col-span-3">
                                         {plan.involved_parties.map((party, index) => (
                                             <li
-                                                className="flex w-fit bg-gray-100 rounded-lg p-2"
+                                                className="flex w-fit bg-slate-200 rounded-lg p-2"
                                                 key={index}
                                             >
                                                 {party}
@@ -61,7 +69,7 @@ export default function PlanSummarySlug() {
                                         {plan.institutions.map((institution, index) => (
                                             <div
                                                 key={index}
-                                                className="grid grid-cols-2 p-5 mr-3 mb-3 bg-gray-100 rounded-lg space-x-2"
+                                                className="grid grid-cols-2 p-5 mr-3 mb-3 bg-slate-200 rounded-lg space-x-2"
                                             >
                                                 <ul className="space-y-1 mr-2">
                                                     <li className="font-medium"> Name </li>
@@ -87,7 +95,7 @@ export default function PlanSummarySlug() {
                                         {plan.lectures.map((lecture, index) => (
                                             <div
                                                 key={index}
-                                                className="grid grid-cols-2 p-5 mr-3 mb-3 bg-gray-100 rounded-lg space-x-2"
+                                                className="grid grid-cols-2 p-5 mr-3 mb-3 bg-slate-200 rounded-lg space-x-2"
                                             >
                                                 <ul className="space-y-1 mr-2">
                                                     <li className="font-medium"> Name </li>
@@ -109,7 +117,7 @@ export default function PlanSummarySlug() {
                                         {plan.audience.map((studyGroup, index) => (
                                             <div
                                                 key={index}
-                                                className="grid grid-cols-2 p-5 mr-3 mb-3 bg-gray-100 rounded-lg space-x-2"
+                                                className="grid grid-cols-2 p-5 mr-3 mb-3 bg-slate-200 rounded-lg space-x-2"
                                             >
                                                 <ul className="space-y-1 mr-2">
                                                     <li className="font-medium"> Name </li>
@@ -136,7 +144,7 @@ export default function PlanSummarySlug() {
                                     </div>
                                     <span className="font-semibold pr-5">Thema:</span>
                                     <ul className="flex flex-col col-span-3">
-                                        <li className="flex w-fit bg-gray-100 rounded-lg p-2">
+                                        <li className="flex w-fit bg-slate-200 rounded-lg p-2">
                                             {plan.topic}
                                         </li>
                                     </ul>
@@ -144,7 +152,7 @@ export default function PlanSummarySlug() {
                                     <ul className="flex flex-col space-y-2 col-span-3">
                                         {plan.languages.map((language, index) => (
                                             <li
-                                                className="flex w-fit bg-gray-100 rounded-lg p-2"
+                                                className="flex w-fit bg-slate-200 rounded-lg p-2"
                                                 key={index}
                                             >
                                                 {language}
@@ -153,13 +161,13 @@ export default function PlanSummarySlug() {
                                     </ul>
                                     <span className="font-semibold pr-5">Neue Inhalte:</span>
                                     <ul className="flex flex-col col-span-3">
-                                        <li className="flex w-fit bg-gray-100 rounded-lg p-2">
+                                        <li className="flex w-fit bg-slate-200 rounded-lg p-2">
                                             {plan.new_content ? 'Ja' : 'Nein'}
                                         </li>
                                     </ul>
                                     <span className="font-semibold pr-5">Digitale Umsetzung:</span>
                                     <ul className="flex flex-col col-span-3">
-                                        <li className="flex w-fit bg-gray-100 rounded-lg p-2">
+                                        <li className="flex w-fit bg-slate-200 rounded-lg p-2">
                                             {plan.realization}
                                         </li>
                                     </ul>
@@ -167,7 +175,7 @@ export default function PlanSummarySlug() {
                                         Digitale Lernumgebung:
                                     </span>
                                     <ul className="flex flex-col col-span-3">
-                                        <li className="flex w-fit bg-gray-100 rounded-lg p-2">
+                                        <li className="flex w-fit bg-slate-200 rounded-lg p-2">
                                             {plan.learning_env}
                                         </li>
                                     </ul>
@@ -175,7 +183,7 @@ export default function PlanSummarySlug() {
                                     <ul className="flex flex-col space-y-2 col-span-3">
                                         {plan.tools.map((toolObject, index) => (
                                             <li
-                                                className="flex w-fit bg-gray-100 rounded-lg p-2"
+                                                className="flex w-fit bg-slate-200 rounded-lg p-2"
                                                 key={index}
                                             >
                                                 {toolObject.tool}
@@ -183,8 +191,117 @@ export default function PlanSummarySlug() {
                                         ))}
                                     </ul>
                                 </ul>
-                                <hr className="h-px my-10 bg-gray-200 border-0 dark:bg-gray-300" />
-                                <div className="text-xl font-semibold mb-4">Etappen</div>
+                                <hr className="h-px my-10 bg-gray-400 border-0" />
+                                <div className="text-2xl font-semibold mb-4 ml-4">Etappen</div>
+                                {plan.steps.map((fineStep, index) => (
+                                    <div
+                                        className="p-4 my-8 bg-white border-2 border-gray-400 rounded-3xl"
+                                        key={index}
+                                    >
+                                        <div className="flex justify-center items-center space-x-10">
+                                            <div className="flex">
+                                                <div className="font-bold text-xl mx-2">
+                                                    Etappe:
+                                                </div>
+                                                <div className="font-bold text-xl">
+                                                    {fineStep.name}
+                                                </div>
+                                            </div>
+                                            <div className="flex">
+                                                <div className="font-bold mx-2">Zeitspanne:</div>
+                                                <div className="mx-2">
+                                                    {convertDateToLocal(fineStep.timestamp_from)}
+                                                    {' - '}
+                                                    {convertDateToLocal(fineStep.timestamp_to)}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="mt-4 flex">
+                                            <div className="w-1/6 flex items-center">
+                                                <p className="font-semibold px-2 py-2">Workload</p>
+                                            </div>
+                                            <div className="flex items-center w-fit bg-slate-200 rounded-lg px-3">
+                                                {fineStep.workload + ' Stunden'}
+                                            </div>
+                                        </div>
+                                        <div className="mt-4 flex">
+                                            <div className="w-1/6 flex items-center">
+                                                <p className="font-semibold px-2 py-2 flex items-center">
+                                                    Sozialform
+                                                </p>
+                                            </div>
+                                            <div className="flex items-center w-fit bg-slate-200 rounded-lg px-3">
+                                                {fineStep.social_form}
+                                            </div>
+                                        </div>
+                                        <div className="mt-4 flex">
+                                            <div className="w-1/6 flex items-center">
+                                                <p className="font-semibold px-2 py-2 ">
+                                                    digitale Lernumgebung
+                                                </p>
+                                            </div>
+                                            <div className="flex items-center w-fit bg-slate-200 rounded-lg px-3">
+                                                {fineStep.learning_env}
+                                            </div>
+                                        </div>
+                                        <div className="mt-4 flex">
+                                            <div className="w-1/6 flex items-center">
+                                                <p className="font-semibold px-2 py-2">VE-Ansatz</p>
+                                            </div>
+                                            <div className="flex items-center w-fit bg-slate-200 rounded-lg px-3">
+                                                {fineStep.ve_approach}
+                                            </div>
+                                        </div>
+                                        <div className="mt-4 flex">
+                                            <div className="font-semibold w-1/6 flex items-center px-2 py-2px-2 py-2">
+                                                Aufgabenstellungen
+                                            </div>
+                                            {fineStep.tasks.map((task, taskIndex) => (
+                                                <div
+                                                    className="flex flex-col space-y-1 w-1/2 p-4 my-4 mx-2 bg-slate-200 rounded-3xl shadow-2xl "
+                                                    key={taskIndex}
+                                                >
+                                                    <div className="flex space-x-8">
+                                                        <span className="w-1/4 font-medium">
+                                                            Titel:
+                                                        </span>
+                                                        <span>{task.title}</span>
+                                                    </div>
+                                                    <div className="flex space-x-8">
+                                                        <span className="w-1/4 font-medium">
+                                                            Beschreibung:
+                                                        </span>
+                                                        <span>{task.description}</span>
+                                                    </div>
+                                                    <div className="flex space-x-8">
+                                                        <span className="w-1/4 font-medium">
+                                                            Lernziele:
+                                                        </span>
+                                                        <span>{task.learning_goal}</span>
+                                                    </div>
+                                                    <div className="flex space-x-8">
+                                                        <span className="w-1/4 font-medium">
+                                                            Beschreibung:
+                                                        </span>
+                                                        <span>{task.description}</span>
+                                                    </div>
+                                                    <div className="flex space-x-8">
+                                                        <span className="w-1/4 font-medium">
+                                                            Lernziel:
+                                                        </span>
+                                                        <span>{task.learning_goal}</span>
+                                                    </div>
+                                                    <div className="flex space-x-8">
+                                                        <span className="w-1/4 font-medium">
+                                                            Tools:
+                                                        </span>
+                                                        <span>{task.tools.join(', ')}</span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         )}
                     </div>
