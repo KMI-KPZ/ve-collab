@@ -2,19 +2,22 @@ from bson import ObjectId
 from datetime import datetime
 import os
 import time
-from unittest import TestCase
+from unittest import IsolatedAsyncioTestCase, TestCase
 
 from dotenv import load_dotenv
 import pymongo
 from tornado.options import options
 from exceptions import (
     InvitationDoesntExistError,
+    MessageDoesntExistError,
     MissingKeyError,
     NoReadAccessError,
     NoWriteAccessError,
     NonUniqueTasksError,
     PlanAlreadyExistsError,
     PlanDoesntExistError,
+    RoomDoesntExistError,
+    UserNotMemberError,
 )
 
 import global_vars
@@ -24,12 +27,23 @@ from model import (
     Step,
     TargetGroup,
     Task,
+    User,
     VEPlan,
 )
+from resources.network.chat import Chat
 from resources.planner.ve_plan import VEPlanResource
 import util
 
+# don't change, these values match with the ones in BaseHandler
+CURRENT_ADMIN = User(
+    "test_admin", "aaaaaaaa-bbbb-0000-cccc-dddddddddddd", "test_admin@mail.de"
+)
+CURRENT_USER = User(
+    "test_user", "aaaaaaaa-bbbb-0000-cccc-dddddddddddd", "test_user@mail.de"
+)
+
 load_dotenv()
+
 
 def setUpModule():
     """
@@ -597,7 +611,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "new_content": "not_started",
                 "formalities": "not_started",
                 "steps": "not_started",
-            }
+            },
         }
 
         # expect an "inserted" response
@@ -765,7 +779,10 @@ class PlanResourceTest(BaseResourceTestCase):
         self.planner.update_field(
             self.plan_id, "formalities", {"technology": True, "exam_regulations": True}
         )
-        self.planner.update_field(self.plan_id, "progress", {
+        self.planner.update_field(
+            self.plan_id,
+            "progress",
+            {
                 "name": "completed",
                 "institutions": "not_started",
                 "topic": "not_started",
@@ -779,7 +796,8 @@ class PlanResourceTest(BaseResourceTestCase):
                 "new_content": "not_started",
                 "formalities": "not_started",
                 "steps": "not_started",
-            })
+            },
+        )
 
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
@@ -836,7 +854,10 @@ class PlanResourceTest(BaseResourceTestCase):
             {"technology": True, "exam_regulations": True},
             requesting_username="test_user",
         )
-        self.planner.update_field(self.plan_id, "progress", {
+        self.planner.update_field(
+            self.plan_id,
+            "progress",
+            {
                 "name": "completed",
                 "institutions": "not_started",
                 "topic": "not_started",
@@ -850,7 +871,9 @@ class PlanResourceTest(BaseResourceTestCase):
                 "new_content": "not_started",
                 "formalities": "not_started",
                 "steps": "not_started",
-            }, requesting_username="test_user")
+            },
+            requesting_username="test_user",
+        )
 
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
@@ -1575,7 +1598,7 @@ class PlanResourceTest(BaseResourceTestCase):
 
     def test_set_invitation_reply_error_invalid_id(self):
         """
-        expect: InvitationDoesntExistError is raised because the provided 
+        expect: InvitationDoesntExistError is raised because the provided
         id is not a valid ObjectId
         """
 
@@ -1584,4 +1607,469 @@ class PlanResourceTest(BaseResourceTestCase):
             self.planner.set_invitation_reply,
             "invalid_id",
             True,
+        )
+
+
+class ChatResourceTest(BaseResourceTestCase, IsolatedAsyncioTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+
+        self.chat_manager = Chat(self.db)
+
+        self.room_id = ObjectId()
+        self.message_id = ObjectId()
+        self.default_message = {
+            "_id": self.message_id,
+            "message": "test",
+            "sender": CURRENT_ADMIN.username,
+            "creation_date": datetime(2023, 1, 1, 8, 0, 0),
+            "send_states": {
+                CURRENT_ADMIN.username: "acknowledged",
+                CURRENT_USER.username: "sent",
+            },
+        }
+        self.default_room = {
+            "_id": self.room_id,
+            "name": "test_room",
+            "members": [CURRENT_ADMIN.username, CURRENT_USER.username],
+            "messages": [self.default_message],
+        }
+        self.db.chatrooms.insert_one(self.default_room)
+
+    def tearDown(self) -> None:
+        self.db.chatrooms.delete_many({})
+        self.chat_manager = None
+
+        super().tearDown()
+
+    def test_get_or_create_room_id(self):
+        """
+        expect: - successfully get room id if room exists
+                - successfully create room and return id if room doesn't exist
+        """
+
+        # try for the existing room
+        room_id = self.chat_manager.get_or_create_room_id(
+            [CURRENT_ADMIN.username, CURRENT_USER.username], self.default_room["name"]
+        )
+        self.assertEqual(room_id, self.room_id)
+
+        # try creating a new room with the same users, but different name
+        room_id = self.chat_manager.get_or_create_room_id(
+            [CURRENT_ADMIN.username, CURRENT_USER.username], "new_name"
+        )
+        self.assertNotEqual(room_id, self.room_id)
+        self.assertIsNotNone(room_id)
+        # expect the room to be in the db
+        db_state = self.db.chatrooms.find_one({"_id": room_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["name"], "new_name")
+        self.assertEqual(
+            db_state["members"], [CURRENT_ADMIN.username, CURRENT_USER.username]
+        )
+        self.assertEqual(db_state["messages"], [])
+
+        # also try creating a new room with the same users, but no name, which should
+        # be just another room as well
+        room_id = self.chat_manager.get_or_create_room_id(
+            [CURRENT_ADMIN.username, CURRENT_USER.username]
+        )
+        self.assertNotEqual(room_id, self.room_id)
+        self.assertIsNotNone(room_id)
+        # expect the room to be in the db
+        db_state = self.db.chatrooms.find_one({"_id": room_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["name"], None)
+        self.assertEqual(
+            db_state["members"], [CURRENT_ADMIN.username, CURRENT_USER.username]
+        )
+        self.assertEqual(db_state["messages"], [])
+
+    def test_get_room_snippets_for_user(self):
+        """
+        expect: successfully get snippets of all rooms the user is a member of
+        """
+
+        # create two more rooms, one where the user is a member and one where not
+        room1 = {
+            "_id": ObjectId(),
+            "name": "room1",
+            "members": [CURRENT_ADMIN.username, CURRENT_USER.username],
+            "messages": [],
+        }
+        room2 = {
+            "_id": ObjectId(),
+            "name": "room2",
+            "members": [CURRENT_USER.username, "some_other_user"],
+            "messages": [],
+        }
+        self.db.chatrooms.insert_many([room1, room2])
+
+        # expect snippets of the default room and room1
+        snippets = self.chat_manager.get_room_snippets_for_user(CURRENT_ADMIN.username)
+        self.assertEqual(len(snippets), 2)
+        self.assertIn(
+            self.default_room["_id"], [snippet["_id"] for snippet in snippets]
+        )
+        self.assertIn(room1["_id"], [snippet["_id"] for snippet in snippets])
+
+        # expect the snippet is of the correct form
+        for snippet in snippets:
+            if snippet["_id"] == self.room_id:
+                self.assertEqual(snippet["name"], self.default_room["name"])
+                self.assertEqual(snippet["members"], self.default_room["members"])
+                self.assertEqual(snippet["last_message"], self.default_message)
+            elif snippet["_id"] == room1["_id"]:
+                self.assertEqual(snippet["name"], room1["name"])
+                self.assertEqual(snippet["members"], room1["members"])
+                self.assertEqual(snippet["last_message"], None)
+
+    def test_get_all_messages_of_room(self):
+        """
+        expect: successfully get all messages of the room
+        """
+
+        # add one more message to the default room
+        message = {
+            "_id": ObjectId(),
+            "message": "test2",
+            "sender": CURRENT_USER.username,
+            "creation_date": datetime(2023, 1, 1, 9, 0, 0),
+            "send_states": {
+                CURRENT_ADMIN.username: "sent",
+                CURRENT_USER.username: "acknowledged",
+            },
+        }
+        self.db.chatrooms.update_one(
+            {"_id": self.room_id}, {"$push": {"messages": message}}
+        )
+
+        # expect both messages to be returned
+        messages = self.chat_manager.get_all_messages_of_room(self.room_id)
+        self.assertEqual(len(messages), 2)
+        self.assertIn(self.default_message, messages)
+        self.assertIn(message, messages)
+
+    def test_get_all_messages_of_room_error_room_doesnt_exist(self):
+        """
+        expect: RoomDoesntExistError is raised because no room with this _id exists
+        """
+
+        self.assertRaises(
+            RoomDoesntExistError, self.chat_manager.get_all_messages_of_room, ObjectId()
+        )
+
+    def test_store_message(self):
+        """
+        expect: successfully add a message to the room
+        """
+
+        message = {
+            "_id": ObjectId(),
+            "message": "test2",
+            "sender": CURRENT_USER.username,
+            "creation_date": datetime(2023, 1, 1, 9, 0, 0),
+            "send_states": {
+                CURRENT_ADMIN.username: "sent",
+                CURRENT_USER.username: "acknowledged",
+            },
+        }
+
+        self.chat_manager.store_message(self.room_id, message)
+
+        # expect the message to be in the db
+        db_state = self.db.chatrooms.find_one({"_id": self.room_id})
+        self.assertIsNotNone(db_state)
+        self.assertIn(message, db_state["messages"])
+
+    def test_store_message_error_malformed_message(self):
+        """
+        expect: ValueError or TypeError is raised if message is missing required keys
+                or has wrong types
+        """
+
+        # missing keys
+        message = {
+            "_id": ObjectId(),
+            "message": "test2",
+            "sender": CURRENT_USER.username,
+            "creation_date": datetime(2023, 1, 1, 9, 0, 0),
+        }
+        self.assertRaises(
+            ValueError, self.chat_manager.store_message, self.room_id, message
+        )
+
+        # wrong types
+        message["send_states"] = "wrong_type"
+        self.assertRaises(
+            TypeError, self.chat_manager.store_message, self.room_id, message
+        )
+
+    def test_store_message_error_room_doesnt_exist(self):
+        """
+        expect: RoomDoesntExistError is raised because no room with this _id exists
+        """
+
+        message = {
+            "_id": ObjectId(),
+            "message": "test2",
+            "sender": CURRENT_USER.username,
+            "creation_date": datetime(2023, 1, 1, 9, 0, 0),
+            "send_states": {
+                CURRENT_ADMIN.username: "sent",
+                CURRENT_USER.username: "acknowledged",
+            },
+        }
+
+        self.assertRaises(
+            RoomDoesntExistError,
+            self.chat_manager.store_message,
+            ObjectId(),
+            message,
+        )
+
+    async def test_send_message(self):
+        """
+        expect: successfully send message. since the recipients are not currently online,
+                expect them to be stored in the db with a send_state of "pending"
+        """
+        message_content = "test_message"
+        await self.chat_manager.send_message(
+            self.room_id, message_content, CURRENT_ADMIN.username
+        )
+
+        # expect the message to be in the db
+        db_state = self.db.chatrooms.find_one({"_id": self.room_id})
+        self.assertIsNotNone(db_state)
+        self.assertIn(
+            message_content, [message["message"] for message in db_state["messages"]]
+        )
+        self.assertEqual(
+            db_state["messages"][1]["send_states"][CURRENT_ADMIN.username],
+            "acknowledged",
+        )
+        self.assertEqual(
+            db_state["messages"][1]["send_states"][CURRENT_USER.username], "pending"
+        )
+
+    async def test_send_message_error_room_doesnt_exist(self):
+        """
+        expect: RoomDoesntExistError is raised because no room with this _id exists
+        """
+
+        with self.assertRaises(RoomDoesntExistError):
+            await self.chat_manager.send_message(
+                ObjectId(), "test_message", CURRENT_ADMIN.username
+            )
+
+    async def test_send_message_error_user_not_room_member(self):
+        """
+        expect: UserNotMemberError is raised because the user is not a member of the room
+        """
+
+        with self.assertRaises(UserNotMemberError):
+            await self.chat_manager.send_message(
+                self.room_id, "test_message", "non_member_user"
+            )
+
+    def test_acknowledge_message(self):
+        """
+        expect: successfully acknowledge a message, i.e. set the send_state of the user
+                to "acknowledged"
+        """
+
+        self.chat_manager.acknowledge_message(
+            self.room_id, self.message_id, CURRENT_USER.username
+        )
+
+        # expect the send_state to be acknowledged now (was "sent" before)
+        db_state = self.db.chatrooms.find_one({"_id": self.room_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(
+            db_state["messages"][0]["send_states"][CURRENT_USER.username],
+            "acknowledged",
+        )
+
+    def test_acknowledge_message_error_room_doesnt_exist(self):
+        """
+        expect: RoomDoesntExistError is raised because no room with this _id exists
+        """
+
+        self.assertRaises(
+            RoomDoesntExistError,
+            self.chat_manager.acknowledge_message,
+            ObjectId(),
+            self.message_id,
+            CURRENT_USER.username,
+        )
+
+    def test_acknowledge_message_error_user_not_room_member(self):
+        """
+        expect: UserNotMemberError is raised because the user is not a member of the room
+        """
+
+        self.assertRaises(
+            UserNotMemberError,
+            self.chat_manager.acknowledge_message,
+            self.room_id,
+            self.message_id,
+            "non_member_user",
+        )
+
+    def test_acknowledge_message_error_message_doesnt_exist(self):
+        """
+        expect: MessageDoesntExistError is raised because no message with this _id exists
+        """
+
+        self.assertRaises(
+            MessageDoesntExistError,
+            self.chat_manager.acknowledge_message,
+            self.room_id,
+            ObjectId(),
+            CURRENT_USER.username,
+        )
+
+    def test_get_rooms_with_unacknowledged_messages_for_user(self):
+        """
+        expect: successfully get all rooms where the user has unacknowledged messages
+        """
+
+        # add one more room where the user is not even a member and one where he is a member
+        # but has no unacknowledged messages
+        room1 = {
+            "_id": ObjectId(),
+            "name": "room1",
+            "members": [CURRENT_ADMIN.username, "some_other_user"],
+            "messages": [
+                {
+                    "_id": ObjectId(),
+                    "message": "test2",
+                    "sender": CURRENT_USER.username,
+                    "creation_date": datetime(2023, 1, 1, 9, 0, 0),
+                    "send_states": {
+                        "some_other_user": "sent",
+                        CURRENT_ADMIN.username: "acknowledged",
+                    },
+                }
+            ],
+        }
+        room2 = {
+            "_id": ObjectId(),
+            "name": "room1",
+            "members": [CURRENT_ADMIN.username, CURRENT_USER.username],
+            "messages": [
+                {
+                    "_id": ObjectId(),
+                    "message": "test2",
+                    "sender": CURRENT_USER.username,
+                    "creation_date": datetime(2023, 1, 1, 9, 0, 0),
+                    "send_states": {
+                        CURRENT_ADMIN.username: "acknowledged",
+                        CURRENT_USER.username: "acknowledged",
+                    },
+                }
+            ],
+        }
+        self.db.chatrooms.insert_many([room1, room2])
+
+        # also add one more acknowledged message to the default room
+        # that should not be included in the result
+        message = {
+            "_id": ObjectId(),
+            "message": "test2",
+            "sender": CURRENT_ADMIN.username,
+            "creation_date": datetime(2023, 1, 1, 9, 0, 0),
+            "send_states": {
+                CURRENT_ADMIN.username: "acknowledged",
+                CURRENT_USER.username: "acknowledged",
+            },
+        }
+        self.db.chatrooms.update_one(
+            {"_id": self.room_id}, {"$push": {"messages": message}}
+        )
+
+        # expect only the default room to be returned
+        rooms = self.chat_manager.get_rooms_with_unacknowledged_messages_for_user(
+            CURRENT_USER.username
+        )
+        self.assertEqual(len(rooms), 1)
+        self.assertEqual(rooms[0]["_id"], self.room_id)
+        self.assertEqual(len(rooms[0]["messages"]), 1)
+
+    def test_bulk_sent_message_sent_state(self):
+        """
+        expect: successfully update message send state
+        """
+
+        # add one more message to the default room
+        message = {
+            "_id": ObjectId(),
+            "message": "test2",
+            "sender": CURRENT_USER.username,
+            "creation_date": datetime(2023, 1, 1, 9, 0, 0),
+            "send_states": {
+                CURRENT_ADMIN.username: "pending",
+                CURRENT_USER.username: "acknowledged",
+            },
+        }
+        self.db.chatrooms.update_one(
+            {"_id": self.room_id}, {"$push": {"messages": message}}
+        )
+
+        # add one more room with two messages, one acknowledged and one pending
+        room1 = {
+            "_id": ObjectId(),
+            "name": "room1",
+            "members": [CURRENT_ADMIN.username, CURRENT_USER.username],
+            "messages": [
+                {
+                    "_id": ObjectId(),
+                    "message": "test2",
+                    "sender": CURRENT_USER.username,
+                    "creation_date": datetime(2023, 1, 1, 9, 0, 0),
+                    "send_states": {
+                        CURRENT_ADMIN.username: "acknowledged",
+                        CURRENT_USER.username: "acknowledged",
+                    },
+                },
+                {
+                    "_id": ObjectId(),
+                    "message": "test2",
+                    "sender": CURRENT_USER.username,
+                    "creation_date": datetime(2023, 1, 1, 9, 0, 0),
+                    "send_states": {
+                        CURRENT_ADMIN.username: "pending",
+                        CURRENT_USER.username: "acknowledged",
+                    },
+                },
+            ],
+        }
+        self.db.chatrooms.insert_one(room1)
+
+        self.chat_manager.bulk_set_message_sent_state(
+            [self.room_id, room1["_id"]],
+            [message["_id"], room1["messages"][1]["_id"]],
+            CURRENT_ADMIN.username,
+        )
+
+        # expect the new message in the default room and the 2nd message in room1 to be updated
+        # to sent
+        db_state = self.db.chatrooms.find_one({"_id": self.room_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(
+            list(filter(lambda m: m["_id"] == message["_id"], db_state["messages"]))[0][
+                "send_states"
+            ][CURRENT_ADMIN.username],
+            "sent",
+        )
+        other_room = self.db.chatrooms.find_one({"_id": room1["_id"]})
+        self.assertIsNotNone(other_room)
+        self.assertEqual(
+            list(
+                filter(
+                    lambda m: m["_id"] == room1["messages"][1]["_id"],
+                    other_room["messages"],
+                )
+            )[0]["send_states"][CURRENT_ADMIN.username],
+            "sent",
         )

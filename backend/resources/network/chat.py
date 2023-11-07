@@ -22,6 +22,14 @@ class Chat:
     def __init__(self, db: Database):
         self.db = db
 
+        self.MESSAGE_ATTRIBUTES = {
+            "_id": ObjectId,
+            "message": str,
+            "sender": str,
+            "creation_date": datetime.datetime,
+            "send_states": dict,
+        }
+
     def get_or_create_room_id(self, members: List[str], name: str = None) -> ObjectId:
         """
         Retrieve the _id of a room that matches the given list of usernames (`members`) and name
@@ -75,7 +83,9 @@ class Chat:
                             "_id": True,
                             "members": True,
                             "name": True,
-                            "last_message": {"$arrayElemAt": ["$messages", -1]},
+                            "last_message": {
+                                "$ifNull": [{"$arrayElemAt": ["$messages", -1]}, None]
+                            },
                         }
                     },
                 ]
@@ -108,10 +118,24 @@ class Chat:
         """
         Store the given message in the room given by its _id.
 
+        Raises `ValueError` if the message dict misses required attributes.
+        Raises `TypeError` if the types of the attributes in the message dict
+        don't match the expected types.
         Raises `RoomDoesntExistError` if no room with the given _id was found.
         """
 
-        # TODO assert correct message keys in the dict
+        # check correct message keys and their types in the dict
+        if not all(key in message for key in self.MESSAGE_ATTRIBUTES.keys()):
+            raise ValueError("Message misses required attribute")
+
+        # verify types of attributes
+        for attr_key in message:
+            if type(message[attr_key]) != self.MESSAGE_ATTRIBUTES[attr_key]:
+                raise TypeError(
+                    "Type mismatch on attribute '{}'. expected type '{}', got '{}'".format(
+                        attr_key, self.MESSAGE_ATTRIBUTES[attr_key], message[attr_key]
+                    )
+                )
 
         result = self.db.chatrooms.update_one(
             {"_id": room_id},
@@ -150,10 +174,8 @@ class Chat:
         if sender not in room["members"]:
             raise UserNotMemberError()
 
-        # send states of the message for each recipient,
-        # the sender obviously has the state "acknowledged" already
-        # because he sent the message
-        send_states = {sender: "acknowledged"}
+        # send states of the message for each recipient
+        send_states = {}
 
         # i really don't know why, but top level import crashes the socketio server...
         from handlers.socket_io import emit_event, get_sid_of_user, recipient_online
@@ -178,6 +200,10 @@ class Chat:
             else:
                 # recipient is offline, message will be stored as "pending"
                 send_states[recipient] = "pending"
+
+        # the sender obviously gets the state "acknowledged" already
+        # because he sent the message
+        send_states[sender] = "acknowledged"
 
         # store message and corresponding send states in the room
         message = {
@@ -249,7 +275,7 @@ class Chat:
         return list(
             self.db.chatrooms.aggregate(
                 [
-                    # find rooms that the user is member in 
+                    # find rooms that the user is member in
                     # and has messages in it that are not yet acknowledged for the user
                     {
                         "$match": {

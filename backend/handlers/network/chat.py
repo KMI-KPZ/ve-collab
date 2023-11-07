@@ -40,8 +40,34 @@ class RoomHandler(BaseHandler):
                 None
 
             returns:
-                list of rooms
-                TODO
+                200 OK
+                (contains snippets of all rooms where the current user is a member)
+                {
+                    "success": True,
+                    "rooms": [
+                        {
+                            "_id": str,
+                            "name": str,
+                            "members": [str, ...],
+                            "last_message": {
+                                "_id": str,
+                                "message": str,
+                                "sender": str,
+                                "creation_date": str,
+                                "send_states": {
+                                    "<username>": "pending|sent|acknowledged",
+                                    ...
+                                },
+                            }
+                        },
+                        {...}
+                    ]
+                }
+
+                401 Unauthorized
+                (access token is not valid)
+                {"success": False,
+                 "reason": "no_logged_in_user"}
 
         GET /chatroom/get_messages
             get all messages of a room
@@ -53,8 +79,34 @@ class RoomHandler(BaseHandler):
                 None
 
             returns:
-                list of messages
-                TODO
+                200 OK
+                (contains all messages of this room)
+                {
+                    "success": True,
+                    "room_id": str,
+                    "messages": [
+                        {
+                            "_id": str,
+                            "message": str,
+                            "sender": str,
+                            "creation_date": str,
+                            "send_states": {
+                                "<username>": "pending|sent|acknowledged",
+                                ...
+                            },
+                        },
+                        {...},
+                    ]}
+
+                400 Bad Request
+                (the request misses the room_id query parameter)
+                {"success": False,
+                 "reason": "missing_key:room_id"}
+
+                401 Unauthorized
+                (access token is not valid)
+                {"success": False,
+                 "reason": "no_logged_in_user"}
 
         GET /chatroom/get_messages_after
             Get a number of messages that are older then the message with the given message id.
@@ -65,7 +117,7 @@ class RoomHandler(BaseHandler):
         """
 
         if slug == "get":
-            pass
+            self.set_status(501) # not yet implemented, TODO
 
         elif slug == "get_mine":
             with util.get_mongodb() as db:
@@ -92,7 +144,7 @@ class RoomHandler(BaseHandler):
                 )
 
         elif slug == "get_messages_after":
-            pass
+            self.set_status(501) # not yet implemented, TODO
 
         else:
             self.set_status(404)
@@ -119,6 +171,21 @@ class RoomHandler(BaseHandler):
                 (sucessful, contains created or already existing room id)
                 {"success": True,
                  "room_id": str}
+
+                400 Bad Request
+                (the request body is not valid json)
+                {"success": False,
+                 "reason": "json_parsing_error"}
+
+                400 Bad Request
+                (the request body misses the members key)
+                {"success": False,
+                 "reason": "missing_key:members"}
+
+                401 Unauthorized
+                (access token is not valid)
+                {"success": False,
+                 "reason": "no_logged_in_user"}
         """
 
         try:
