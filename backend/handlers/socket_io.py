@@ -1,6 +1,9 @@
+import logging
 from typing import Dict, List, Optional
+
 import jose
 import keycloak
+from tornado.options import options
 
 import global_vars
 from error_reasons import (
@@ -13,6 +16,8 @@ from exceptions import MessageDoesntExistError, RoomDoesntExistError, UserNotMem
 from resources.network.chat import Chat
 from resources.notifications import NotificationResource
 import util
+
+logger = logging.getLogger(__name__)
 
 #######################################################################
 # do not top-of-file-import functions from these files, it will crash #
@@ -50,7 +55,8 @@ async def connect(sid, environment, auth):
         None
     """
 
-    print("connected ", sid)
+    logger.info("connected ", sid)
+    return "hi"
 
 
 @global_vars.socket_io.event
@@ -71,7 +77,7 @@ async def disconnect(sid):
     """
 
     session = await global_vars.socket_io.get_session(sid)
-    print("disconnect ", sid)
+    logger.info("disconnect ", sid)
 
     try:
         # delete the mapping username <--> socket id
@@ -128,21 +134,38 @@ async def authenticate(sid, data):
 
     """
 
-    print("authenticate ", sid)
+    logger.info("authenticate ", sid)
 
-    if "token" not in data:
-        return {"status": 400, "success": False, "reason": MISSING_KEY_SLUG + "token"}
-
-    try:
-        token_info = util.validate_keycloak_jwt(data["token"])
-    except keycloak.KeycloakGetError:
-        return {
-            "status": 401,
-            "success": False,
-            "reason": "keycloak_public_key_not_retrieveable",
+    # make authentication exception if we are in test mode,
+    # otherwise check the supplied token for validity
+    if options.test_admin:
+        token_info = {
+            "preferred_username": "test_admin",
+            "given_name": "Test",
+            "family_name": "admin",
+            "email": "test_admin@mail.de"
         }
-    except jose.exceptions.JWTError:
-        return {"status": 401, "success": False, "reason": "jwt_invalid"}
+    elif options.test_user:
+        token_info = {
+            "preferred_username": "test_user",
+            "given_name": "Test",
+            "family_name": "user",
+            "email": "test_user@mail.de",
+        }
+    else:
+        if "token" not in data:
+            return {"status": 400, "success": False, "reason": MISSING_KEY_SLUG + "token"}
+
+        try:
+            token_info = util.validate_keycloak_jwt(data["token"])
+        except keycloak.KeycloakGetError:
+            return {
+                "status": 401,
+                "success": False,
+                "reason": "keycloak_public_key_not_retrieveable",
+            }
+        except jose.exceptions.JWTError:
+            return {"status": 401, "success": False, "reason": "jwt_invalid"}
 
     # save the session
     await global_vars.socket_io.save_session(sid, token_info)
@@ -239,7 +262,7 @@ async def acknowledge_notification(sid, data):
               This socket connection is not authenticated (use `authenticate` event)
     """
 
-    print("acknowledge_notification ", sid)
+    logger.info("acknowledge_notification ", sid)
 
     if "notification_id" not in data:
         return {
@@ -307,7 +330,7 @@ async def message(sid, data):
               The room with the given _id doesn't exist
     """
 
-    print("message ", sid)
+    logger.info("message ", sid)
 
     # payload keys check
     if "message" not in data:
@@ -371,7 +394,7 @@ async def acknowledge_message(sid, data):
 
     """
 
-    print("acknowledge_message ", sid)
+    logger.info("acknowledge_message ", sid)
 
     # payload keys check
     if "message_id" not in data:
