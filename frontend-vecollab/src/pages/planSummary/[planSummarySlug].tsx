@@ -4,10 +4,10 @@ import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import LoadingAnimation from '@/components/LoadingAnimation';
 
-// TODO what if values empty? -> maybe (/) sign
 // TODO aufklappbar
 // TODO abstände anpassen
-// TODO Unzufrieden mit der Darstellung der Aufgabenstellung
+
+// TODO Idee: Klappen in Eigenschaften untereinander und standart zu geklappt
 
 // authentication is required on this page
 PlanSummarySlug.auth = true;
@@ -23,6 +23,14 @@ export default function PlanSummarySlug() {
             month: 'long',
             day: 'numeric',
         });
+    };
+
+    const showDataOrEmptySign = (data: any) => {
+        if (data === null || data === undefined || data === '') {
+            return '/';
+        } else {
+            return data;
+        }
     };
 
     return (
@@ -42,133 +50,241 @@ export default function PlanSummarySlug() {
                                 <ul className="grid grid-cols-4 gap-8 border-2 border-gray-400 rounded-3xl p-4">
                                     <span className="font-semibold pr-5">Partners:</span>
                                     <ul className="flex flex-col space-y-2 col-span-3">
-                                        {plan.partners.map((partner, index) => (
-                                            <li
-                                                className="flex w-fit bg-slate-200 rounded-lg p-2"
-                                                key={index}
-                                            >
-                                                {partner}
+                                        {plan.partners.length !== 0 ? (
+                                            plan.partners.map((partner, index) => (
+                                                <li
+                                                    className="flex w-fit bg-slate-200 rounded-lg p-2"
+                                                    key={index}
+                                                >
+                                                    {showDataOrEmptySign(partner)}
+                                                </li>
+                                            ))
+                                        ) : (
+                                            <li className="flex w-fit bg-slate-200 rounded-lg p-2">
+                                                /
                                             </li>
-                                        ))}
+                                        )}
                                     </ul>
                                     <span className="text-base font-semibold pr-5">
                                         Externe Beteidigte:
                                     </span>
                                     <ul className="flex flex-col space-y-3 col-span-3">
-                                        {plan.involved_parties.map((party, index) => (
-                                            <li
-                                                className="flex w-fit bg-slate-200 rounded-lg p-2"
-                                                key={index}
-                                            >
-                                                {party}
+                                        {plan.involved_parties.length !== 0 ? (
+                                            plan.involved_parties.map((party, index) => (
+                                                <li
+                                                    className="flex w-fit bg-slate-200 rounded-lg p-2"
+                                                    key={index}
+                                                >
+                                                    {showDataOrEmptySign(party)}
+                                                </li>
+                                            ))
+                                        ) : (
+                                            <li className="flex w-fit bg-slate-200 rounded-lg p-2">
+                                                /
                                             </li>
-                                        ))}
+                                        )}
                                     </ul>
                                     <span className="font-semibold pr-5">Institutionen:</span>
                                     <div className="grid grid-cols-2 col-span-3">
-                                        {plan.institutions.map((institution, index) => (
-                                            <div
-                                                key={index}
-                                                className="grid grid-cols-2 p-5 mr-3 mb-3 bg-slate-200 rounded-lg space-x-2"
-                                            >
-                                                <ul className="space-y-1 mr-2">
-                                                    <li className="font-medium"> Name </li>
-                                                    <li className="font-medium"> Schulform </li>
-                                                    <li className="font-medium"> Land </li>
-                                                    <li className="font-medium">Abteilungsname</li>
-                                                    <li className="font-medium">
-                                                        Beteidigte Studiengänge
-                                                    </li>
-                                                </ul>
-                                                <ul className="space-y-1">
-                                                    <li>{institution.name} </li>
-                                                    <li>{institution.school_type} </li>
-                                                    <li>{institution.country} </li>
-                                                    <li>{institution.departments} </li>
-                                                    <li>{institution.academic_courses} </li>
-                                                </ul>
-                                            </div>
-                                        ))}
+                                        {plan.institutions.length !== 0 ? (
+                                            plan.institutions.map((institution, index) => (
+                                                <div
+                                                    key={index}
+                                                    className="grid grid-cols-2 p-5 mr-3 mb-3 bg-slate-200 rounded-lg space-x-2"
+                                                >
+                                                    <ul className="space-y-1 mr-2">
+                                                        <li className="font-medium"> Name </li>
+                                                        <li className="font-medium"> Schulform </li>
+                                                        <li className="font-medium"> Land </li>
+                                                        <li className="font-medium">
+                                                            Abteilungsname
+                                                        </li>
+                                                        <li className="font-medium">
+                                                            Beteidigte Studiengänge
+                                                        </li>
+                                                    </ul>
+                                                    <ul className="space-y-1">
+                                                        <li>
+                                                            {showDataOrEmptySign(institution.name)}
+                                                        </li>
+                                                        <li>
+                                                            {showDataOrEmptySign(
+                                                                institution.school_type
+                                                            )}
+                                                        </li>
+                                                        <li>
+                                                            {showDataOrEmptySign(
+                                                                institution.country
+                                                            )}
+                                                        </li>
+                                                        <li>
+                                                            {showDataOrEmptySign(
+                                                                institution.departments
+                                                            )}
+                                                        </li>
+                                                        <li>
+                                                            {showDataOrEmptySign(
+                                                                institution.academic_courses
+                                                            )}
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <li className="flex w-fit bg-slate-200 rounded-lg p-2">
+                                                /
+                                            </li>
+                                        )}
                                     </div>
                                     <span className="font-semibold pr-5">Lehrveranstaltungen:</span>
                                     <div className="grid grid-cols-2 col-span-3">
-                                        {plan.lectures.map((lecture, index) => (
-                                            <div
-                                                key={index}
-                                                className="grid grid-cols-2 p-5 mr-3 mb-3 bg-slate-200 rounded-lg space-x-2"
-                                            >
-                                                <ul className="space-y-1 mr-2">
-                                                    <li className="font-medium"> Name </li>
-                                                    <li className="font-medium"> Typ </li>
-                                                    <li className="font-medium"> Format </li>
-                                                    <li className="font-medium">Teilnehmerzahl</li>
-                                                </ul>
-                                                <ul className="space-y-1">
-                                                    <li>{lecture.name} </li>
-                                                    <li>{lecture.lecture_type} </li>
-                                                    <li>{lecture.lecture_format} </li>
-                                                    <li>{lecture.participants_amount} </li>
-                                                </ul>
-                                            </div>
-                                        ))}
+                                        {plan.lectures.length !== 0 ? (
+                                            plan.lectures.map((lecture, index) => (
+                                                <div
+                                                    key={index}
+                                                    className="grid grid-cols-2 p-5 mr-3 mb-3 bg-slate-200 rounded-lg space-x-2"
+                                                >
+                                                    <ul className="space-y-1 mr-2">
+                                                        <li className="font-medium"> Name </li>
+                                                        <li className="font-medium"> Typ </li>
+                                                        <li className="font-medium"> Format </li>
+                                                        <li className="font-medium">
+                                                            Teilnehmerzahl
+                                                        </li>
+                                                    </ul>
+                                                    <ul className="space-y-1">
+                                                        <li>
+                                                            {showDataOrEmptySign(lecture.name)}{' '}
+                                                        </li>
+                                                        <li>
+                                                            {showDataOrEmptySign(
+                                                                lecture.lecture_type
+                                                            )}
+                                                        </li>
+                                                        <li>
+                                                            {showDataOrEmptySign(
+                                                                lecture.lecture_format
+                                                            )}
+                                                        </li>
+                                                        <li>
+                                                            {showDataOrEmptySign(
+                                                                lecture.participants_amount
+                                                            )}
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <li className="flex w-fit bg-slate-200 rounded-lg p-2">
+                                                /
+                                            </li>
+                                        )}
                                     </div>
                                     <span className="font-semibold pr-5">Zielgruppen:</span>
                                     <div className="grid grid-cols-2 col-span-3">
-                                        {plan.audience.map((studyGroup, index) => (
-                                            <div
-                                                key={index}
-                                                className="grid grid-cols-2 p-5 mr-3 mb-3 bg-slate-200 rounded-lg space-x-2"
-                                            >
-                                                <ul className="space-y-1 mr-2">
-                                                    <li className="font-medium"> Name </li>
-                                                    <li className="font-medium"> Alter </li>
-                                                    <li className="font-medium"> Erfahrung </li>
-                                                    <li className="font-medium">Studiengang</li>
-                                                    <li className="font-medium">Muttersprache</li>
-                                                    <li className="font-medium">Fremdsprachen</li>
-                                                    <li className="font-medium">Lernziele</li>
-                                                </ul>
-                                                <ul className="space-y-1">
-                                                    <li>{studyGroup.name} </li>
-                                                    <li>
-                                                        {studyGroup.age_min} - {studyGroup.age_max}
-                                                    </li>
-                                                    <li>{studyGroup.experience} </li>
-                                                    <li>{studyGroup.academic_course} </li>
-                                                    <li>{studyGroup.mother_tongue} </li>
-                                                    <li>{studyGroup.foreign_languages} </li>
-                                                    <li>{studyGroup.learning_goal} </li>
-                                                </ul>
-                                            </div>
-                                        ))}
+                                        {plan.audience.length !== 0 ? (
+                                            plan.audience.map((studyGroup, index) => (
+                                                <div
+                                                    key={index}
+                                                    className="grid grid-cols-2 p-5 mr-3 mb-3 bg-slate-200 rounded-lg space-x-2"
+                                                >
+                                                    <ul className="space-y-1 mr-2">
+                                                        <li className="font-medium"> Name </li>
+                                                        <li className="font-medium"> Alter </li>
+                                                        <li className="font-medium"> Erfahrung </li>
+                                                        <li className="font-medium">Studiengang</li>
+                                                        <li className="font-medium">
+                                                            Muttersprache
+                                                        </li>
+                                                        <li className="font-medium">
+                                                            Fremdsprachen
+                                                        </li>
+                                                        <li className="font-medium">Lernziele</li>
+                                                    </ul>
+                                                    <ul className="space-y-1">
+                                                        <li>
+                                                            {showDataOrEmptySign(studyGroup.name)}{' '}
+                                                        </li>
+                                                        <li>
+                                                            {showDataOrEmptySign(
+                                                                studyGroup.age_min
+                                                            )}
+                                                            {' - '}
+                                                            {showDataOrEmptySign(
+                                                                studyGroup.age_max
+                                                            )}
+                                                        </li>
+                                                        <li>
+                                                            {showDataOrEmptySign(
+                                                                studyGroup.experience
+                                                            )}
+                                                        </li>
+                                                        <li>
+                                                            {showDataOrEmptySign(
+                                                                studyGroup.academic_course
+                                                            )}
+                                                        </li>
+                                                        <li>
+                                                            {showDataOrEmptySign(
+                                                                studyGroup.mother_tongue
+                                                            )}
+                                                        </li>
+                                                        <li>
+                                                            {showDataOrEmptySign(
+                                                                studyGroup.foreign_languages
+                                                            )}
+                                                        </li>
+                                                        <li>
+                                                            {showDataOrEmptySign(
+                                                                studyGroup.learning_goal
+                                                            )}
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <li className="flex w-fit bg-slate-200 rounded-lg p-2">
+                                                /
+                                            </li>
+                                        )}
                                     </div>
                                     <span className="font-semibold pr-5">Thema:</span>
                                     <ul className="flex flex-col col-span-3">
                                         <li className="flex w-fit bg-slate-200 rounded-lg p-2">
-                                            {plan.topic}
+                                            {showDataOrEmptySign(plan.topic)}
                                         </li>
                                     </ul>
                                     <span className="font-semibold pr-5">Sprachen:</span>
                                     <ul className="flex flex-col space-y-2 col-span-3">
-                                        {plan.languages.map((language, index) => (
-                                            <li
-                                                className="flex w-fit bg-slate-200 rounded-lg p-2"
-                                                key={index}
-                                            >
-                                                {language}
+                                        {plan.languages.length !== 0 ? (
+                                            plan.languages.map((language, index) => (
+                                                <li
+                                                    className="flex w-fit bg-slate-200 rounded-lg p-2"
+                                                    key={index}
+                                                >
+                                                    {showDataOrEmptySign(language)}
+                                                </li>
+                                            ))
+                                        ) : (
+                                            <li className="flex w-fit bg-slate-200 rounded-lg p-2">
+                                                /
                                             </li>
-                                        ))}
+                                        )}
                                     </ul>
                                     <span className="font-semibold pr-5">Neue Inhalte:</span>
                                     <ul className="flex flex-col col-span-3">
                                         <li className="flex w-fit bg-slate-200 rounded-lg p-2">
-                                            {plan.new_content ? 'Ja' : 'Nein'}
+                                            {plan.new_content
+                                                ? plan.new_content
+                                                    ? 'Ja'
+                                                    : 'Nein'
+                                                : '/'}
                                         </li>
                                     </ul>
                                     <span className="font-semibold pr-5">Digitale Umsetzung:</span>
                                     <ul className="flex flex-col col-span-3">
                                         <li className="flex w-fit bg-slate-200 rounded-lg p-2">
-                                            {plan.realization}
+                                            {showDataOrEmptySign(plan.realization)}
                                         </li>
                                     </ul>
                                     <span className="font-semibold pr-5">
@@ -176,19 +292,25 @@ export default function PlanSummarySlug() {
                                     </span>
                                     <ul className="flex flex-col col-span-3">
                                         <li className="flex w-fit bg-slate-200 rounded-lg p-2">
-                                            {plan.learning_env}
+                                            {showDataOrEmptySign(plan.learning_env)}
                                         </li>
                                     </ul>
                                     <span className="font-semibold pr-5">Tools:</span>
                                     <ul className="flex flex-col space-y-2 col-span-3">
-                                        {plan.tools.map((toolObject, index) => (
-                                            <li
-                                                className="flex w-fit bg-slate-200 rounded-lg p-2"
-                                                key={index}
-                                            >
-                                                {toolObject.tool}
+                                        {plan.tools.length !== 0 ? (
+                                            plan.tools.map((toolObject, index) => (
+                                                <li
+                                                    className="flex w-fit bg-slate-200 rounded-lg p-2"
+                                                    key={index}
+                                                >
+                                                    {showDataOrEmptySign(toolObject.tool)}
+                                                </li>
+                                            ))
+                                        ) : (
+                                            <li className="flex w-fit bg-slate-200 rounded-lg p-2">
+                                                /
                                             </li>
-                                        ))}
+                                        )}
                                     </ul>
                                 </ul>
                                 <hr className="h-px my-10 bg-gray-400 border-0" />
@@ -204,15 +326,19 @@ export default function PlanSummarySlug() {
                                                     Etappe:
                                                 </div>
                                                 <div className="font-bold text-xl">
-                                                    {fineStep.name}
+                                                    {showDataOrEmptySign(fineStep.name)}
                                                 </div>
                                             </div>
                                             <div className="flex">
                                                 <div className="font-bold mx-2">Zeitspanne:</div>
                                                 <div className="mx-2">
-                                                    {convertDateToLocal(fineStep.timestamp_from)}
+                                                    {showDataOrEmptySign(
+                                                        convertDateToLocal(fineStep.timestamp_from)
+                                                    )}
                                                     {' - '}
-                                                    {convertDateToLocal(fineStep.timestamp_to)}
+                                                    {showDataOrEmptySign(
+                                                        convertDateToLocal(fineStep.timestamp_to)
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -221,7 +347,8 @@ export default function PlanSummarySlug() {
                                                 <p className="font-semibold px-2 py-2">Workload</p>
                                             </div>
                                             <div className="flex items-center w-fit bg-slate-200 rounded-lg px-3">
-                                                {fineStep.workload + ' Stunden'}
+                                                {showDataOrEmptySign(fineStep.workload) +
+                                                    ' Stunden'}
                                             </div>
                                         </div>
                                         <div className="mt-4 flex">
@@ -231,7 +358,7 @@ export default function PlanSummarySlug() {
                                                 </p>
                                             </div>
                                             <div className="flex items-center w-fit bg-slate-200 rounded-lg px-3">
-                                                {fineStep.social_form}
+                                                {showDataOrEmptySign(fineStep.social_form)}
                                             </div>
                                         </div>
                                         <div className="mt-4 flex">
@@ -241,7 +368,7 @@ export default function PlanSummarySlug() {
                                                 </p>
                                             </div>
                                             <div className="flex items-center w-fit bg-slate-200 rounded-lg px-3">
-                                                {fineStep.learning_env}
+                                                {showDataOrEmptySign(fineStep.learning_env)}
                                             </div>
                                         </div>
                                         <div className="mt-4 flex">
@@ -249,7 +376,7 @@ export default function PlanSummarySlug() {
                                                 <p className="font-semibold px-2 py-2">VE-Ansatz</p>
                                             </div>
                                             <div className="flex items-center w-fit bg-slate-200 rounded-lg px-3">
-                                                {fineStep.ve_approach}
+                                                {showDataOrEmptySign(fineStep.ve_approach)}
                                             </div>
                                         </div>
                                         <div className="mt-4 flex">
@@ -265,37 +392,59 @@ export default function PlanSummarySlug() {
                                                         <span className="w-1/4 font-medium">
                                                             Titel:
                                                         </span>
-                                                        <span>{task.title}</span>
+                                                        <span>
+                                                            {showDataOrEmptySign(task.title)}
+                                                        </span>
                                                     </div>
                                                     <div className="flex space-x-8">
                                                         <span className="w-1/4 font-medium">
                                                             Beschreibung:
                                                         </span>
-                                                        <span>{task.description}</span>
+                                                        <span>
+                                                            {showDataOrEmptySign(task.description)}
+                                                        </span>
                                                     </div>
                                                     <div className="flex space-x-8">
                                                         <span className="w-1/4 font-medium">
                                                             Lernziele:
                                                         </span>
-                                                        <span>{task.learning_goal}</span>
+                                                        <span>
+                                                            {showDataOrEmptySign(
+                                                                task.learning_goal
+                                                            )}
+                                                        </span>
                                                     </div>
                                                     <div className="flex space-x-8">
                                                         <span className="w-1/4 font-medium">
                                                             Beschreibung:
                                                         </span>
-                                                        <span>{task.description}</span>
+                                                        <span>
+                                                            {showDataOrEmptySign(task.description)}
+                                                        </span>
                                                     </div>
                                                     <div className="flex space-x-8">
                                                         <span className="w-1/4 font-medium">
                                                             Lernziel:
                                                         </span>
-                                                        <span>{task.learning_goal}</span>
+                                                        <span>
+                                                            {showDataOrEmptySign(
+                                                                task.learning_goal
+                                                            )}
+                                                        </span>
                                                     </div>
                                                     <div className="flex space-x-8">
                                                         <span className="w-1/4 font-medium">
                                                             Tools:
                                                         </span>
-                                                        <span>{task.tools.join(', ')}</span>
+                                                        <span>
+                                                            {showDataOrEmptySign(
+                                                                task.tools
+                                                                    .filter(
+                                                                        (element) => element !== ''
+                                                                    )
+                                                                    .join(', ')
+                                                            )}
+                                                        </span>
                                                     </div>
                                                 </div>
                                             ))}
@@ -310,3 +459,5 @@ export default function PlanSummarySlug() {
         </>
     );
 }
+
+// plan.task.tools (doppel string join )
