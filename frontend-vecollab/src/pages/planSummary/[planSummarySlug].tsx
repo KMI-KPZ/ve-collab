@@ -9,7 +9,7 @@ import ViewFinestep from '@/components/planSummary/ViewFinestep';
 // TODO aufklappbar
 // TODO Idee: Klappen in Eigenschaften untereinander und standart zu geklappt
 
-// TODO Componenten drauß machen
+// TODO Componenten aus Tasks
 
 export const showDataOrEmptySign = (data: any) => {
     if (data === null || data === undefined || data === '') {
