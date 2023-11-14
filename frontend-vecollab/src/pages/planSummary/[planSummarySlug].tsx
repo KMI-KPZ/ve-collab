@@ -6,10 +6,10 @@ import LoadingAnimation from '@/components/LoadingAnimation';
 import ViewAttributes from '@/components/planSummary/ViewAttributes';
 import ViewFinestep from '@/components/planSummary/ViewFinestep';
 
-// TODO aufklappbar
-// TODO Idee: Klappen in Eigenschaften untereinander und standart zu geklappt
+// TODO Bei Etappe: Zwischen EtappenName und Facts eine HR einfügen
 
-// TODO Componenten aus Tasks
+// TODO Breite anpassen bei an und aus -> feste Breite
+// ToDO dropdown Icon drehen bei öffnen Eigenschaften
 
 export const showDataOrEmptySign = (data: any) => {
     if (data === null || data === undefined || data === '') {
