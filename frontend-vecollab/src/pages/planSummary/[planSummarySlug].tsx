@@ -6,8 +6,6 @@ import LoadingAnimation from '@/components/LoadingAnimation';
 import ViewAttributes from '@/components/planSummary/ViewAttributes';
 import ViewFinestep from '@/components/planSummary/ViewFinestep';
 
-// TODO Bei Etappe: Zwischen EtappenName und Facts eine HR einfügen
-
 // TODO Breite anpassen bei an und aus -> feste Breite
 
 export const showDataOrEmptySign = (data: any) => {
