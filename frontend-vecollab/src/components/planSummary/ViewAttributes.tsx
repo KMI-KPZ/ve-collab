@@ -39,7 +39,7 @@ export default function ViewAttributes({ plan }: Props): JSX.Element {
                         )}
                     </ul>
                     <span className="text-base font-semibold pr-5">Externe Beteidigte:</span>
-                    <ul className="flex flex-col space-y-3 col-span-3">
+                    <ul className="flex flex-col space-y-2 col-span-3">
                         {plan.involved_parties.length !== 0 ? (
                             plan.involved_parties.map((party, index) => (
                                 <li className="flex w-fit bg-slate-200 rounded-lg p-2" key={index}>
@@ -105,7 +105,7 @@ export default function ViewAttributes({ plan }: Props): JSX.Element {
                         )}
                     </div>
                     <span className="font-semibold pr-5">Zielgruppen:</span>
-                    <div className="grid grid-cols-2 col-span-3">
+                    <div className="grid grid-cols-2 space-y-2 col-span-3">
                         {plan.audience.length !== 0 ? (
                             plan.audience.map((studyGroup, index) => (
                                 <div
@@ -141,7 +141,7 @@ export default function ViewAttributes({ plan }: Props): JSX.Element {
                         )}
                     </div>
                     <span className="font-semibold pr-5">Thema:</span>
-                    <ul className="flex flex-col col-span-3">
+                    <ul className="flex flex-col space-y-2  col-span-3">
                         <li className="flex w-fit bg-slate-200 rounded-lg p-2">
                             {showDataOrEmptySign(plan.topic)}
                         </li>
@@ -159,25 +159,25 @@ export default function ViewAttributes({ plan }: Props): JSX.Element {
                         )}
                     </ul>
                     <span className="font-semibold pr-5">Neue Inhalte:</span>
-                    <ul className="flex flex-col col-span-3">
+                    <ul className="flex flex-col space-y-2  col-span-3">
                         <li className="flex w-fit bg-slate-200 rounded-lg p-2">
                             {plan.new_content ? (plan.new_content ? 'Ja' : 'Nein') : '/'}
                         </li>
                     </ul>
                     <span className="font-semibold pr-5">Digitale Umsetzung:</span>
-                    <ul className="flex flex-col col-span-3">
+                    <ul className="flex flex-col col-span-3 space-y-2 ">
                         <li className="flex w-fit bg-slate-200 rounded-lg p-2">
                             {showDataOrEmptySign(plan.realization)}
                         </li>
                     </ul>
                     <span className="font-semibold pr-5">Digitale Lernumgebung:</span>
-                    <ul className="flex flex-col col-span-3">
+                    <ul className="flex flex-col col-span-3 space-y-2 ">
                         <li className="flex w-fit bg-slate-200 rounded-lg p-2">
                             {showDataOrEmptySign(plan.learning_env)}
                         </li>
                     </ul>
                     <span className="font-semibold pr-5">Tools:</span>
-                    <ul className="flex flex-col space-y-2 col-span-3">
+                    <ul className="flex flex-col space-y-2 col-span-3 ">
                         {plan.tools.length !== 0 ? (
                             plan.tools.map((toolObject, index) => (
                                 <li className="flex w-fit bg-slate-200 rounded-lg p-2" key={index}>
@@ -204,7 +204,7 @@ export default function ViewAttributes({ plan }: Props): JSX.Element {
                         )}
                     </ul>
                     <span className="text-base font-semibold pr-5">Externe Beteidigte:</span>
-                    <ul className="flex flex-col space-y-3 col-span-3">
+                    <ul className="flex flex-col space-y-2 col-span-3">
                         {plan.involved_parties.length !== 0 ? (
                             plan.involved_parties.map((party, index) => (
                                 <li className="flex w-fit bg-slate-200 rounded-lg p-2" key={index}>
@@ -217,7 +217,7 @@ export default function ViewAttributes({ plan }: Props): JSX.Element {
                     </ul>
                     <span
                         onClick={() => setIsOpenStepSection(!isOpenStepSection)}
-                        className="flex flex-col col-span-3 font-semibold pr-5 pt-4 cursor-pointer justify-center items-center"
+                        className="flex flex-col col-span-4  space-y-3 font-semibold pr-5 pt-4 cursor-pointer justify-center items-center"
                     >
                         mehr anzeigen...
                     </span>
