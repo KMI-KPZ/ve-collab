@@ -9,7 +9,6 @@ import ViewFinestep from '@/components/planSummary/ViewFinestep';
 // TODO Bei Etappe: Zwischen EtappenName und Facts eine HR einfügen
 
 // TODO Breite anpassen bei an und aus -> feste Breite
-// ToDO dropdown Icon drehen bei öffnen Eigenschaften
 
 export const showDataOrEmptySign = (data: any) => {
     if (data === null || data === undefined || data === '') {
