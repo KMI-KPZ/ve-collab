@@ -1,4 +1,4 @@
-import { signIn, useSession } from "next-auth/react"
+import { useSession } from "next-auth/react"
 import { useEffect, useState } from "react"
 
 interface Props {
@@ -6,18 +6,11 @@ interface Props {
     profileData: Record<string, string> | null
 }
 
+AuthComponentTest.auth = true;
 export default function AuthComponentTest(props: Props) {
     const { data: session } = useSession()
 
     const [profileData, setProfileData] = useState({})
-
-
-    useEffect(() => {
-        if (session?.error === "RefreshAccessTokenError") {
-            console.log("forced new signIn")
-            signIn("keycloak"); // Force sign in to hopefully resolve error
-        }
-    }, [session]);
 
     useEffect(() => {
         if (session) {
@@ -25,7 +18,7 @@ export default function AuthComponentTest(props: Props) {
                 "Authorization": "Bearer " + session.accessToken
             }
             try {
-                fetch(process.env.NEXT_PUBLIC_BACKEND_URL + "/profileinformation", {
+                fetch(process.env.NEXT_PUBLIC_BACKEND_BASE_URL + "/profileinformation", {
                     headers: headers
                 })
                 .then(res => res.json())

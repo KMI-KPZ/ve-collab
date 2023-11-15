@@ -22,7 +22,7 @@ export default function EditProfileHeader({ orcid, importOrcidProfile }: Props) 
         evt.preventDefault();
 
         const provider = 'orcid';
-        const clientId = process.env.NEXT_PUBLIC_KEYCLOAK_ID;
+        const clientId = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID;
         const redirectUri = encodeURIComponent(
             window.location.origin + '/orcidAccountLinkCallback?logout=true&fwd=/editProfile'
         );
@@ -37,9 +37,7 @@ export default function EditProfileHeader({ orcid, importOrcidProfile }: Props) 
             .replace(/\//g, '_');
 
         // send user to link keycloak account with ORCiD
-        let url =
-            process.env.NEXT_PUBLIC_KEYCLOAK_ISSUER +
-            `/broker/${provider}/link?client_id=${clientId}&redirect_uri=${redirectUri}&nonce=${nonce}&hash=${b64HashUrlEncoded}`;
+        let url = `${process.env.NEXT_PUBLIC_KEYCLOAK_BASE_URL}realms/${process.env.NEXT_PUBLIC_KEYCLOAK_REALM}/broker/${provider}/link?client_id=${clientId}&redirect_uri=${redirectUri}&nonce=${nonce}&hash=${b64HashUrlEncoded}`;
         router.push(url);
     };
 

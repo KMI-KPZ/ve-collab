@@ -11,6 +11,7 @@ from exceptions import (
 from model import (
     Institution,
     Lecture,
+    Space,
     Step,
     TargetGroup,
     Task,
@@ -82,6 +83,93 @@ class UserModelTest(TestCase):
         orcid = 123
         self.assertRaises(TypeError, User, name, user_id, mail, orcid)
         orcid = "0000-0000-0000-0000"
+
+
+class SpaceModelTest(TestCase):
+    def setUp(self) -> None:
+        return super().setUp()
+
+    def tearDown(self) -> None:
+        return super().tearDown()
+
+    def test_init_default(self):
+        """
+        expect: object-like and dict-like access to default
+        attributes
+        """
+
+        space = Space({})
+        self.assertEqual(space.name, None)
+        self.assertEqual(space.invisible, False)
+        self.assertEqual(space.joinable, True)
+        self.assertEqual(space.members, [])
+        self.assertEqual(space.admins, [])
+        self.assertEqual(space.invites, [])
+        self.assertEqual(space.requests, [])
+        self.assertEqual(space.files, [])
+
+        self.assertEqual(space["name"], None)
+        self.assertEqual(space["invisible"], False)
+        self.assertEqual(space["joinable"], True)
+        self.assertEqual(space["members"], [])
+        self.assertEqual(space["admins"], [])
+        self.assertEqual(space["invites"], [])
+        self.assertEqual(space["requests"], [])
+        self.assertEqual(space["files"], [])
+
+    def test_init(self):
+        """
+        expect: object-like and dict-like access to non-default
+        attributes
+        """
+
+        space = Space({
+            "name": "test",
+            "invisible": False,
+            "joinable": True,
+            "members": ["test"],
+            "admins": ["test"],
+            "invites": ["test"],
+            "requests": ["test"],
+            "files": ["test"],
+        })
+
+        self.assertEqual(space.name, "test")
+        self.assertEqual(space.invisible, False)
+        self.assertEqual(space.joinable, True)
+        self.assertEqual(space.members, ["test"])
+        self.assertEqual(space.admins, ["test"])
+        self.assertEqual(space.invites, ["test"])
+        self.assertEqual(space.requests, ["test"])
+        self.assertEqual(space.files, ["test"])
+
+        self.assertEqual(space["name"], "test")
+        self.assertEqual(space["invisible"], False)
+        self.assertEqual(space["joinable"], True)
+        self.assertEqual(space["members"], ["test"])
+        self.assertEqual(space["admins"], ["test"])
+        self.assertEqual(space["invites"], ["test"])
+        self.assertEqual(space["requests"], ["test"])
+        self.assertEqual(space["files"], ["test"])
+
+
+        # again, but omit some values to let them be default created
+        space2 = Space({
+            "name": "test",
+            "invisible": False,
+            "joinable": True,
+            "admins": ["test"],
+            "invites": ["test"],
+            "requests": ["test"],
+            "files": ["test"],
+        })
+
+        self.assertEqual(space2.name, "test")
+        self.assertEqual(space2.invisible, False)
+        self.assertEqual(space2.joinable, True)
+        self.assertEqual(space2.members, [])
+
+
 
 
 class TaskModelTest(TestCase):
@@ -1285,6 +1373,21 @@ class LectureModelTest(TestCase):
 
 class VEPlanModelTest(TestCase):
     def setUp(self) -> None:
+        self.default_progress = {
+            "name": "not_started",
+            "institutions": "not_started",
+            "topic": "not_started",
+            "lectures": "not_started",
+            "audience": "not_started",
+            "languages": "not_started",
+            "involved_parties": "not_started",
+            "realization": "not_started",
+            "learning_env": "not_started",
+            "tools": "not_started",
+            "new_content": "not_started",
+            "formalities": "not_started",
+            "steps": [],
+        }
         return super().setUp()
 
     def tearDown(self) -> None:
@@ -1365,6 +1468,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.read_access, [])
         self.assertEqual(plan.write_access, [])
         self.assertIsNone(plan.name)
+        self.assertEqual(plan.partners, [])
         self.assertEqual(plan.institutions, [])
         self.assertIsNone(plan.topic)
         self.assertEqual(plan.lectures, [])
@@ -1379,6 +1483,7 @@ class VEPlanModelTest(TestCase):
             plan.formalities, {"technology": None, "exam_regulations": None}
         )
         self.assertEqual(plan.steps, [])
+        self.assertEqual(plan.progress, self.default_progress)
         self.assertEqual(plan.duration, None)
         self.assertEqual(plan.workload, 0)
         self.assertIsNone(plan.timestamp_from)
@@ -1420,6 +1525,7 @@ class VEPlanModelTest(TestCase):
             read_access=["test"],
             write_access=["test"],
             name="test",
+            partners=["test"],
             institutions=institutions,
             topic="test",
             lectures=lectures,
@@ -1432,6 +1538,21 @@ class VEPlanModelTest(TestCase):
             new_content=True,
             formalities={"technology": True, "exam_regulations": False},
             steps=steps,
+            progress={
+                "name": "completed",
+                "institutions": "not_started",
+                "topic": "not_started",
+                "lectures": "not_started",
+                "audience": "not_started",
+                "languages": "not_started",
+                "involved_parties": "not_started",
+                "realization": "not_started",
+                "learning_env": "not_started",
+                "tools": "not_started",
+                "new_content": "not_started",
+                "formalities": "not_started",
+                "steps": "not_started",
+            },
         )
 
         self.assertEqual(plan._id, _id)
@@ -1439,6 +1560,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.read_access, ["test"])
         self.assertEqual(plan.write_access, ["test"])
         self.assertEqual(plan.name, "test")
+        self.assertEqual(plan.partners, ["test"])
         self.assertEqual(plan.institutions, institutions)
         self.assertEqual(plan.topic, "test")
         self.assertEqual(plan.lectures, lectures)
@@ -1453,6 +1575,7 @@ class VEPlanModelTest(TestCase):
             plan.formalities, {"technology": True, "exam_regulations": False}
         )
         self.assertEqual(plan.steps, steps)
+        self.assertEqual(plan.progress["name"], "completed")
         self.assertEqual(plan.workload, 20)
         self.assertEqual(plan.timestamp_from, datetime(2023, 1, 1))
         self.assertEqual(plan.timestamp_to, datetime(2023, 1, 16))
@@ -1467,6 +1590,7 @@ class VEPlanModelTest(TestCase):
         ]
         plan = VEPlan(
             name="test",
+            partners=["test"],
             institutions=institutions,
             topic="test",
             lectures=lectures,
@@ -1478,9 +1602,25 @@ class VEPlanModelTest(TestCase):
             tools=["test", "test"],
             new_content=True,
             steps=steps,
+            progress={
+                "name": "completed",
+                "institutions": "not_started",
+                "topic": "not_started",
+                "lectures": "not_started",
+                "audience": "not_started",
+                "languages": "not_started",
+                "involved_parties": "not_started",
+                "realization": "not_started",
+                "learning_env": "not_started",
+                "tools": "not_started",
+                "new_content": "not_started",
+                "formalities": "not_started",
+                "steps": "not_started",
+            },
         )
         self.assertIsInstance(plan._id, ObjectId)
         self.assertEqual(plan.name, "test")
+        self.assertEqual(plan.partners, ["test"])
         self.assertEqual(plan.institutions, institutions)
         self.assertEqual(plan.topic, "test")
         self.assertEqual(plan.lectures, lectures)
@@ -1496,6 +1636,7 @@ class VEPlanModelTest(TestCase):
         )
         self.assertEqual(plan.steps, steps)
         self.assertIsInstance(plan.steps[0]._id, ObjectId)
+        self.assertEqual(plan.progress["name"], "completed")
         self.assertEqual(plan.workload, 10)
         self.assertEqual(plan.timestamp_from, datetime(2023, 1, 1))
         self.assertEqual(plan.timestamp_to, None)
@@ -1563,6 +1704,8 @@ class VEPlanModelTest(TestCase):
         )
         institution = self.create_institution()
         lecture = self.create_lecture()
+        expected_progress = self.default_progress
+        expected_progress["steps"] = [{"step_id": step._id, "progress": "not_started"}]
         plan_dict = VEPlan(
             steps=[step], institutions=[institution], lectures=[lecture]
         ).to_dict()
@@ -1572,6 +1715,7 @@ class VEPlanModelTest(TestCase):
         self.assertIn("read_access", plan_dict)
         self.assertIn("write_access", plan_dict),
         self.assertIn("name", plan_dict)
+        self.assertIn("partners", plan_dict)
         self.assertIn("institutions", plan_dict)
         self.assertIn("topic", plan_dict)
         self.assertIn("lectures", plan_dict)
@@ -1588,11 +1732,13 @@ class VEPlanModelTest(TestCase):
         self.assertIn("duration", plan_dict)
         self.assertIn("workload", plan_dict)
         self.assertIn("steps", plan_dict)
+        self.assertIn("progress", plan_dict)
         self.assertIsInstance(plan_dict["_id"], ObjectId)
         self.assertIsNone(plan_dict["author"])
         self.assertEqual(plan_dict["read_access"], [])
         self.assertEqual(plan_dict["write_access"], [])
         self.assertIsNone(plan_dict["name"])
+        self.assertEqual(plan_dict["partners"], [])
         self.assertEqual(plan_dict["institutions"], [institution.to_dict()])
         self.assertIsNone(plan_dict["topic"])
         self.assertEqual(plan_dict["lectures"], [lecture.to_dict()])
@@ -1609,6 +1755,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan_dict["workload"], 10)
         self.assertEqual(plan_dict["duration"], None)
         self.assertEqual(plan_dict["steps"], [step.to_dict()])
+        self.assertEqual(plan_dict["progress"], expected_progress)
 
     def test_from_dict(self):
         """
@@ -1625,6 +1772,7 @@ class VEPlanModelTest(TestCase):
         plan_dict = {
             "_id": _id,
             "name": None,
+            "partners": [],
             "institutions": [
                 {
                     "_id": institution._id,
@@ -1684,11 +1832,27 @@ class VEPlanModelTest(TestCase):
                     "custom_attributes": step.custom_attributes,
                 }
             ],
+            "progress": {
+                "name": "completed",
+                "institutions": "not_started",
+                "topic": "not_started",
+                "lectures": "not_started",
+                "audience": "not_started",
+                "languages": "not_started",
+                "involved_parties": "not_started",
+                "realization": "not_started",
+                "learning_env": "not_started",
+                "tools": "not_started",
+                "new_content": "not_started",
+                "formalities": "not_started",
+                "steps": "not_started",
+            },
         }
 
         plan = VEPlan.from_dict(plan_dict)
 
         self.assertIsNone(plan.name)
+        self.assertEqual(plan.partners, [])
         self.assertIsNone(plan.author)
         self.assertEqual(plan.read_access, [])
         self.assertEqual(plan.write_access, [])
@@ -1707,6 +1871,7 @@ class VEPlanModelTest(TestCase):
         )
         self.assertEqual(plan._id, _id)
         self.assertEqual(plan.steps, [step])
+        self.assertEqual(plan.progress["name"], "completed")
         self.assertEqual(plan.duration, step.duration)
         self.assertEqual(plan.timestamp_from, step.timestamp_from)
         self.assertEqual(plan.timestamp_to, step.timestamp_to)
@@ -1717,6 +1882,7 @@ class VEPlanModelTest(TestCase):
             "author": "test",
             "read_access": ["test"],
             "name": None,
+            "partners": [],
             "institutions": [
                 {
                     "name": institution.name,
@@ -1772,6 +1938,21 @@ class VEPlanModelTest(TestCase):
                     "custom_attributes": step.custom_attributes,
                 }
             ],
+            "progress": {
+                "name": "completed",
+                "institutions": "not_started",
+                "topic": "not_started",
+                "lectures": "not_started",
+                "audience": "not_started",
+                "languages": "not_started",
+                "involved_parties": "not_started",
+                "realization": "not_started",
+                "learning_env": "not_started",
+                "tools": "not_started",
+                "new_content": "not_started",
+                "formalities": "not_started",
+                "steps": "not_started",
+            },
         }
 
         plan = VEPlan.from_dict(plan_dict)
@@ -1780,6 +1961,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.read_access, ["test"])
         self.assertEqual(plan.write_access, [])
         self.assertIsNone(plan.name)
+        self.assertEqual(plan.partners, [])
         self.assertEqual(len(plan.institutions), 1)
         self.assertIsInstance(plan.institutions[0], Institution)
         self.assertIsNone(plan.topic)
@@ -1798,6 +1980,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.timestamp_from, step.timestamp_from)
         self.assertEqual(plan.timestamp_to, step.timestamp_to)
         self.assertEqual(plan.workload, 10)
+        self.assertEqual(plan.progress["name"], "completed")
         self.assertIsInstance(plan._id, ObjectId)
         self.assertIsInstance(plan.steps[0]._id, ObjectId)
         self.assertIsInstance(plan.audience[0]._id, ObjectId)
@@ -1822,6 +2005,7 @@ class VEPlanModelTest(TestCase):
         plan_dict = {
             "_id": ObjectId(),
             "name": None,
+            "partners": [],
             "institutions": [],
             "topic": None,
             "lectures": [],
@@ -1836,6 +2020,21 @@ class VEPlanModelTest(TestCase):
                 "technology": None,
                 "exam_regulations": None,
             },
+            "progress": {
+                "name": "not_started",
+                "institutions": "not_started",
+                "topic": "not_started",
+                "lectures": "not_started",
+                "audience": "not_started",
+                "languages": "not_started",
+                "involved_parties": "not_started",
+                "realization": "not_started",
+                "learning_env": "not_started",
+                "tools": "not_started",
+                "new_content": "not_started",
+                "formalities": "not_started",
+                "steps": "not_started",
+            },
         }
         self.assertRaises(MissingKeyError, VEPlan.from_dict, plan_dict)
 
@@ -1848,6 +2047,7 @@ class VEPlanModelTest(TestCase):
         plan_dict = {
             "_id": ObjectId(),
             "name": None,
+            "partners": [],
             "institutions": [],
             "topic": None,
             "lectures": [],
@@ -1863,6 +2063,21 @@ class VEPlanModelTest(TestCase):
                 "exam_regulations": None,
             },
             "steps": [],
+            "progress": {
+                "name": "not_started",
+                "institutions": "not_started",
+                "topic": "not_started",
+                "lectures": "not_started",
+                "audience": "not_started",
+                "languages": "not_started",
+                "involved_parties": "not_started",
+                "realization": "not_started",
+                "learning_env": "not_started",
+                "tools": "not_started",
+                "new_content": "not_started",
+                "formalities": "not_started",
+                "steps": "not_started",
+            },
         }
 
         # try wrong types for all fields
@@ -1873,6 +2088,10 @@ class VEPlanModelTest(TestCase):
         plan_dict["name"] = 1
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
         plan_dict["name"] = None
+
+        plan_dict["partners"] = 1
+        self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
+        plan_dict["partners"] = []
 
         plan_dict["institutions"] = 123
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
@@ -1922,6 +2141,10 @@ class VEPlanModelTest(TestCase):
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
         plan_dict["steps"] = list()
 
+        plan_dict["progress"] = 123
+        self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
+        plan_dict["progress"] = {}
+
     def test_from_dict_error_non_unique_steps(self):
         """
         expect: creation of a VEPlan object from a dict raises NonUniqueStepsError
@@ -1931,6 +2154,7 @@ class VEPlanModelTest(TestCase):
         plan_dict = {
             "_id": ObjectId(),
             "name": None,
+            "partners": [],
             "institutions": [],
             "topic": None,
             "lectures": [],
@@ -1949,5 +2173,20 @@ class VEPlanModelTest(TestCase):
                 self.create_step("test").to_dict(),
                 self.create_step("test").to_dict(),
             ],
+            "progress": {
+                "name": "not_started",
+                "institutions": "not_started",
+                "topic": "not_started",
+                "lectures": "not_started",
+                "audience": "not_started",
+                "languages": "not_started",
+                "involved_parties": "not_started",
+                "realization": "not_started",
+                "learning_env": "not_started",
+                "tools": "not_started",
+                "new_content": "not_started",
+                "formalities": "not_started",
+                "steps": "not_started",
+            },
         }
         self.assertRaises(NonUniqueStepsError, VEPlan.from_dict, plan_dict)

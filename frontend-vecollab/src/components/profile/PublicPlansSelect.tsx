@@ -10,6 +10,7 @@ interface Props {
     setChosenPlanId: Dispatch<SetStateAction<string>>;
 }
 
+PublicPlansSelect.auth = true;
 export default function PublicPlansSelect({ chosenPlanId, setChosenPlanId }: Props) {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
@@ -24,26 +25,24 @@ export default function PublicPlansSelect({ chosenPlanId, setChosenPlanId }: Pro
     // request all personal public plans for dropdown
     useEffect(() => {
         setLoading(true);
-        // if session is not yet ready, don't make any requests, just wait for the next re-render
-        if (status === 'loading') {
-            return;
-        }
-        // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
-        if (session) {
-            fetchGET(
-                `/planner/get_public_of_user?username=${session.user.preferred_username}`,
-                session?.accessToken
-            ).then((data) => {
-                setLoading(false);
-                setMyPublicPlans(
-                    data.plans.map((plan: any) => ({
-                        _id: plan._id,
-                        name: plan.name,
-                    }))
-                );
-            });
-        }
-    }, [session, status]);
+        fetchGET(
+            `/planner/get_public_of_user?username=${session!.user.preferred_username}`,
+            session?.accessToken
+        ).then((data) => {
+            setLoading(false);
+            setMyPublicPlans(
+                data.plans.map((plan: any) => ({
+                    _id: plan._id,
+                    name: plan.name,
+                }))
+            );
+            // default select the first plan, otherwise it would be visible in the select, but value still null
+            if(data.plans.length > 0){
+                setChosenPlanId(data.plans[0]._id)
+            }
+        });
+        
+    }, [session, setChosenPlanId]);
     return (
         <>
             {loading ? (

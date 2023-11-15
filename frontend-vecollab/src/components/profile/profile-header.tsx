@@ -1,13 +1,13 @@
 import Link from 'next/link';
 import { RxDotFilled, RxDotsVertical } from 'react-icons/rx';
 import { fetchDELETE, fetchPOST } from '@/lib/backend';
-import { signIn, useSession } from 'next-auth/react';
-import { SetStateAction, useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { useState } from 'react';
 import { useRouter } from 'next/router';
-import AuthenticatedImage from './AuthenticatedImage';
+import AuthenticatedImage from '@/components/AuthenticatedImage';
 import Dialog from './Dialog';
 import PublicPlansSelect from './PublicPlansSelect';
-import SuccessAlert from './SuccessAlert';
+import SuccessAlert from '@/components/SuccessAlert';
 
 interface Props {
     name: string;
@@ -18,6 +18,7 @@ interface Props {
     veReady: boolean;
 }
 
+ProfileHeader.auth = true;
 export default function ProfileHeader({
     name,
     institution,
@@ -30,16 +31,6 @@ export default function ProfileHeader({
     const { data: session, status } = useSession();
 
     const [successPopupOpen, setSuccessPopupOpen] = useState(false);
-
-    // check for session errors and trigger the login flow if necessary
-    useEffect(() => {
-        if (status !== 'loading') {
-            if (!session || session?.error === 'RefreshAccessTokenError') {
-                console.log('forced new signIn');
-                signIn('keycloak');
-            }
-        }
-    }, [session, status]);
 
     const [isInvitationDialogOpen, setIsInvitationDialogOpen] = useState(false);
     const handleOpenInvitationDialog = () => {
@@ -77,17 +68,19 @@ export default function ProfileHeader({
     const sendVeInvitation = () => {
         const payload = {
             message: veInvitationMessage,
-            plan: chosenPlanId === '' ? null : chosenPlanId,
+            plan_id: chosenPlanId === '' ? null : chosenPlanId,
+            username: usernameOfProfileOwner,
         };
 
-        // TODO api call once finished
-        console.log(payload);
+        fetchPOST('/ve_invitation/send', payload, session?.accessToken).then((response) => {
+            console.log(response);
 
-        // render success message that disappears after 2 seconds
-        setSuccessPopupOpen(true);
-        setTimeout(() => {
-            setSuccessPopupOpen((successPopupOpen) => false);
-        }, 2000);
+            // render success message that disappears after 2 seconds
+            setSuccessPopupOpen(true);
+            setTimeout(() => {
+                setSuccessPopupOpen((successPopupOpen) => false);
+            }, 2000);
+        });
     };
 
     return (
@@ -221,8 +214,8 @@ export default function ProfileHeader({
                                             setChosenPlanId={setChosenPlanId}
                                         />
                                         <p className="my-2 text-gray-400">
-                                            es werden automatisch Leserechte an eingeladene
-                                            Personen vergeben!
+                                            es werden automatisch Leserechte an eingeladene Personen
+                                            vergeben!
                                         </p>
                                     </>
                                 )}

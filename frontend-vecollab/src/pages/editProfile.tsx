@@ -2,9 +2,9 @@ import WhiteBox from '@/components/Layout/WhiteBox';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import VerticalTabs from '@/components/profile/VerticalTabs';
 import { fetchGET, fetchPOST } from '@/lib/backend';
-import { signIn, useSession } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { FormEvent, SetStateAction, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import EditVEInfo from '@/components/profile/EditVEInfo';
 import EditPersonalInformation from '@/components/profile/EditPersonalInformation';
 import EditResearchAndTeachingInformation from '@/components/profile/EditResearchAndTeachingInformation';
@@ -18,11 +18,11 @@ import {
     VEWindowItem,
     WorkExperience,
 } from '@/interfaces/profile/profileInterfaces';
-import SuccessAlert from '@/components/profile/SuccessAlert';
+import SuccessAlert from '@/components/SuccessAlert';
 import EditVisibilitySettings from '@/components/profile/EditVisibilitySettings';
 import EditProfileVeWindow from '@/components/profile/EditProfileVeWindow';
-import ExcludedFromMatchingBanner from '@/components/profile/ExcludedFromMatchingBanner';
 
+EditProfile.auth = true;
 export default function EditProfile() {
     const [personalInformation, setPersonalInformation] = useState<PersonalInformation>({
         firstName: '',
@@ -86,68 +86,50 @@ export default function EditProfile() {
     const [successPopupOpen, setSuccessPopupOpen] = useState(false);
     const router = useRouter();
 
-    // check for session errors and trigger the login flow if necessary
     useEffect(() => {
-        if (status !== 'loading') {
-            if (!session || session?.error === 'RefreshAccessTokenError') {
-                console.log('forced new signIn');
-                signIn('keycloak');
+        fetchGET(`/profileinformation`, session?.accessToken).then((data) => {
+            setLoading(false);
+            if (data) {
+                setPersonalInformation({
+                    firstName: data.profile.first_name,
+                    lastName: data.profile.last_name,
+                    institution: data.profile.institution,
+                    bio: data.profile.bio,
+                    expertise: data.profile.expertise,
+                    birthday: data.profile.birthday,
+                    profilePicId: data.profile.profile_pic,
+                    languageTags: data.profile.languages.map((language: string) => ({
+                        id: language,
+                        text: language,
+                    })),
+                });
+                setVeReady(data.profile.ve_ready);
+                setExcludedFromMatching(data.profile.excluded_from_matching);
+                setVeInformation({
+                    veInterests: data.profile.ve_interests,
+                    veGoals: data.profile.ve_goals,
+                    experience: data.profile.experience,
+                    preferredFormats: data.profile.preferred_formats,
+                });
+                setResearchTags(
+                    data.profile.research_tags.map((tag: string) => ({
+                        id: tag,
+                        text: tag,
+                    }))
+                );
+                setCourses(data.profile.courses);
+                setEducations(data.profile.educations);
+                setWorkExperience(data.profile.work_experience);
+                setVeWindowItems(
+                    data.profile.ve_window.map((elem: any) => ({
+                        plan: { _id: elem.plan_id, name: '' },
+                        title: elem.title,
+                        description: elem.description,
+                    }))
+                );
             }
-        }
-    }, [session, status]);
-
-    useEffect(() => {
-        // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
-        if (!router.isReady || status === 'loading') {
-            setLoading(true);
-            return;
-        }
-        // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
-        if (session) {
-            fetchGET(`/profileinformation`, session?.accessToken).then((data) => {
-                setLoading(false);
-                if (data) {
-                    setPersonalInformation({
-                        firstName: data.profile.first_name,
-                        lastName: data.profile.last_name,
-                        institution: data.profile.institution,
-                        bio: data.profile.bio,
-                        expertise: data.profile.expertise,
-                        birthday: data.profile.birthday,
-                        profilePicId: data.profile.profile_pic,
-                        languageTags: data.profile.languages.map((language: string) => ({
-                            id: language,
-                            text: language,
-                        })),
-                    });
-                    setVeReady(data.profile.ve_ready);
-                    setExcludedFromMatching(data.profile.excluded_from_matching);
-                    setVeInformation({
-                        veInterests: data.profile.ve_interests,
-                        veGoals: data.profile.ve_goals,
-                        experience: data.profile.experience,
-                        preferredFormats: data.profile.preferred_formats,
-                    });
-                    setResearchTags(
-                        data.profile.research_tags.map((tag: string) => ({
-                            id: tag,
-                            text: tag,
-                        }))
-                    );
-                    setCourses(data.profile.courses);
-                    setEducations(data.profile.educations);
-                    setWorkExperience(data.profile.work_experience);
-                    setVeWindowItems(
-                        data.profile.ve_window.map((elem: any) => ({
-                            plan: { _id: elem.plan_id, name: '' },
-                            title: elem.title,
-                            description: elem.description,
-                        }))
-                    );
-                }
-            });
-        }
-    }, [session, status, router]);
+        });
+    }, [session]);
 
     const KeyCodes = {
         comma: 188,

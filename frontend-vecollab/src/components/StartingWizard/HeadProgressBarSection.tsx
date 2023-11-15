@@ -15,9 +15,10 @@ export interface HeadMenuProgressStep {
 
 interface HeadProgressBar {
     stage: number;
+    linkFineStep: string;
 }
 
-export default function HeadProgressBarSection({ stage }: HeadProgressBar) {
+export default function HeadProgressBarSection({ stage, linkFineStep }: HeadProgressBar) {
     const router = useRouter();
 
     const headMenuProgressSteps: HeadMenuProgressStep[] = [
@@ -33,7 +34,7 @@ export default function HeadProgressBarSection({ stage }: HeadProgressBar) {
         },
         {
             description: 'Feinplanner',
-            link: '/startingWizard/finePlanner',
+            link: linkFineStep,
             image: imageFinePlanner,
         },
         {
@@ -92,10 +93,10 @@ export default function HeadProgressBarSection({ stage }: HeadProgressBar) {
     return (
         <>
             <nav className="flex w-full justify-center py-6">
-                    {renderHeadProgressBar(headMenuProgressSteps)}
-                </nav>
+                {renderHeadProgressBar(headMenuProgressSteps)}
+            </nav>
             <div className="flex justify-center">
-                <Link href={`/etherpad?planID=${router.query.plannerId}`} target="_blank">
+                <Link href={`/etherpad?planID=${router.query.plannerId}`} target="_blank" className='mx-2'>
                     <button
                         type="submit"
                         className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
@@ -103,7 +104,7 @@ export default function HeadProgressBarSection({ stage }: HeadProgressBar) {
                         kollaboratives Pad öffnen
                     </button>
                 </Link>
-                <Link href={`/meeting?meetingId=${router.query.plannerId}`} target="_blank">
+                <Link href={`/meeting?meetingId=${router.query.plannerId}`} target="_blank" className='mx-2'>
                     <button
                         type="submit"
                         className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"

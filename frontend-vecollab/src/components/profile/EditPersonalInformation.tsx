@@ -8,7 +8,7 @@ import Dialog from './Dialog';
 import AvatarEditor from './AvatarEditor';
 import { fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import AuthenticatedImage from './AuthenticatedImage';
+import AuthenticatedImage from '@/components/AuthenticatedImage';
 
 interface Props {
     personalInformation: PersonalInformation;

@@ -46,7 +46,15 @@ class AlreadyRequestedJoinError(Exception):
     pass
 
 
+class NotRequestedJoinError(Exception):
+    pass
+
+
 class UserNotMemberError(Exception):
+    pass
+
+
+class UserNotInvitedError(Exception):
     pass
 
 
@@ -115,5 +123,17 @@ class NoReadAccessError(Exception):
 
 class NoWriteAccessError(Exception):
     """a user has no write access to a VEPlan"""
+
+    pass
+
+
+class InvitationDoesntExistError(Exception):
+    """The requested ve invitation doesn't exist"""
+
+    pass
+
+
+class NotificationDoesntExistError(Exception):
+    """The requested notification doesn't exist"""
 
     pass

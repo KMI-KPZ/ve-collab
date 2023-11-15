@@ -1,39 +1,39 @@
-import { Categories, Post, PostPreview } from "@/interfaces";
+import { Categories, Post, PostPreview } from '@/interfaces';
 
-let API_URL_STR = process.env.WORDPRESS_API_URL
-// fallback to localhost if WORDPRESS_API_URL is not defined in .env.local
+let API_URL_STR = process.env.WORDPRESS_GRAPHQL_API_URL;
+// fallback to localhost if WORDPRESS_GRAPHQL_API_URL is not defined in .env
 if (API_URL_STR === undefined) {
-  API_URL_STR = "http://localhost"
+    API_URL_STR = 'http://localhost';
 }
 const API_URL = new URL(API_URL_STR);
 
 async function fetchAPI(query: string = '', { variables }: Record<string, any> = {}) {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
 
-  if (process.env.WORDPRESS_AUTH_REFRESH_TOKEN) {
-    headers['Authorization'] = `Bearer ${process.env.WORDPRESS_AUTH_REFRESH_TOKEN}`
-  }
+    if (process.env.WORDPRESS_AUTH_REFRESH_TOKEN) {
+        headers['Authorization'] = `Bearer ${process.env.WORDPRESS_AUTH_REFRESH_TOKEN}`;
+    }
 
-  // WPGraphQL Plugin must be enabled
-  const res = await fetch(API_URL, {
-    headers,
-    method: 'POST',
-    body: JSON.stringify({
-      query,
-      variables,
-    }),
-  })
+    // WPGraphQL Plugin must be enabled
+    const res = await fetch(API_URL, {
+        headers,
+        method: 'POST',
+        body: JSON.stringify({
+            query,
+            variables,
+        }),
+    });
 
-  const json = await res.json()
-  if (json.errors) {
-    console.error(json.errors)
-    throw new Error('Failed to fetch API')
-  }
-  return json.data
+    const json = await res.json();
+    if (json.errors) {
+        console.error(json.errors);
+        throw new Error('Failed to fetch API');
+    }
+    return json.data;
 }
 
 export async function getCategories(): Promise<Categories> {
-  const data = await fetchAPI(`
+    const data = await fetchAPI(`
     {
       categories {
         edges {
@@ -44,13 +44,12 @@ export async function getCategories(): Promise<Categories> {
         }
       }
     }
-  `)
-  return data?.categories
+  `);
+    return data?.categories;
 }
 
-
 export async function getAllPostsTitleExcerptSlug(): Promise<{ edges: [{ node: PostPreview }] }> {
-  const data = await fetchAPI(`
+    const data = await fetchAPI(`
     {
       posts {
         edges {
@@ -62,13 +61,15 @@ export async function getAllPostsTitleExcerptSlug(): Promise<{ edges: [{ node: P
         }
       }
     }
-  `)
-  return data?.posts
+  `);
+    return data?.posts;
 }
 
-export async function getPostsTitleExcerptSlugByCategory(categorySlug: any): Promise<{ category: { posts: { edges: [{ node: PostPreview }] } } }> {
-  const data = await fetchAPI(
-    `
+export async function getPostsTitleExcerptSlugByCategory(
+    categorySlug: any
+): Promise<{ category: { posts: { edges: [{ node: PostPreview }] } } }> {
+    return await fetchAPI(
+        `
     query CategoryByName($id: ID = "") {
       category(id: $id, idType: SLUG) {
         posts {
@@ -83,18 +84,17 @@ export async function getPostsTitleExcerptSlugByCategory(categorySlug: any): Pro
       }
     }
     `,
-    {
-      variables: {
-        id: categorySlug,
-      },
-    }
-  )
-  return data
+        {
+            variables: {
+                id: categorySlug,
+            },
+        }
+    );
 }
 
-export async function getPost(slug: string | string[] | undefined): Promise<{post: Post}> {
-  const data = await fetchAPI(
-    `
+export async function getPost(slug: string | string[] | undefined): Promise<{ post: Post }> {
+    return await fetchAPI(
+        `
     fragment PostFields on Post {
       title
       excerpt
@@ -115,12 +115,11 @@ export async function getPost(slug: string | string[] | undefined): Promise<{pos
       }
     }
   `,
-    {
-      variables: {
-        id: slug,
-        idType: 'SLUG',
-      },
-    }
-  )
-  return data
+        {
+            variables: {
+                id: slug,
+                idType: 'SLUG',
+            },
+        }
+    );
 }

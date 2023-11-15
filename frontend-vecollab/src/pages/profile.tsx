@@ -5,10 +5,10 @@ import ProfileHeader from '@/components/profile/profile-header';
 import WhiteBox from '@/components/Layout/WhiteBox';
 import VEVitrine from '@/components/profile/VEVitrine';
 import ExtendedPersonalInformation from '@/components/profile/ExtendedPersonalInformation';
-import BoxHeadline from '@/components/profile/BoxHeadline';
+import BoxHeadline from '@/components/BoxHeadline';
 import { useEffect, useState } from 'react';
 import { fetchGET } from '@/lib/backend';
-import { useSession, signIn } from 'next-auth/react';
+import { useSession} from 'next-auth/react';
 import { useRouter } from 'next/router';
 import {
     Course,
@@ -19,6 +19,7 @@ import {
     VEWindowItem,
 } from '@/interfaces/profile/profileInterfaces';
 
+Profile.auth = true;
 export default function Profile() {
     const [personalInformation, setPersonalInformation] = useState<PersonalInformation>({
         firstName: '',
@@ -82,107 +83,88 @@ export default function Profile() {
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
-    // check for session errors and trigger the login flow if necessary
     useEffect(() => {
-        if (status !== 'loading') {
-            if (!session || session?.error === 'RefreshAccessTokenError') {
-                console.log('forced new signIn');
-                signIn('keycloak');
-            }
-        }
-    }, [session, status]);
-
-    useEffect(() => {
-        // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
-        if (!router.isReady || status === 'loading') {
-            setLoading(true);
-            return;
-        }
-        // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
-        if (session) {
-            // determine if we are watching the profile of a foreign user or my own
-            // by checking for a username query parameter and comparing against
-            // the user stored in the session
-            let username = '';
-            if (router.query.username) {
-                username = router.query.username as string;
-                if (username !== session.user.preferred_username) {
-                    setForeignUser((prev) => {
-                        return true;
-                    });
-                } else {
-                    setForeignUser((prev) => {
-                        return false;
-                    });
-                }
+        // determine if we are watching the profile of a foreign user or my own
+        // by checking for a username query parameter and comparing against
+        // the user stored in the session
+        let username = '';
+        if (router.query.username) {
+            username = router.query.username as string;
+            if (username !== session!.user.preferred_username) {
+                setForeignUser((prev) => {
+                    return true;
+                });
             } else {
                 setForeignUser((prev) => {
                     return false;
                 });
             }
-
-            // fetch profile information of the determined user
-            fetchGET(`/profileinformation?username=${username}`, session?.accessToken).then(
-                (data) => {
-                    setLoading(false);
-                    if (data) {
-                        // if the minimum profile data such as first_name and last_name is not set,
-                        // chances are high it is after the first register, therefore incentivize user
-                        // to fill out his profile by sending him to the edit page
-                        // TODO maybe also popup hint on there with some text that says exactly that.
-
-                        // foreignUser state always says false in the first pass, so gotta check manually -.-
-                        if (username == '' || username == session.user.preferred_username) {
-                            if (
-                                data.profile.first_name === null ||
-                                data.profile.last_name === null ||
-                                data.profile.first_name === '' ||
-                                data.profile.last_name === ''
-                            ) {
-                                router.push('/editProfile');
-                            }
-                        }
-                        setPersonalInformation({
-                            firstName: data.profile.first_name,
-                            lastName: data.profile.last_name,
-                            institution: data.profile.institution,
-                            bio: data.profile.bio,
-                            expertise: data.profile.expertise,
-                            birthday: data.profile.birthday,
-                            languageTags: data.profile.languages.map((language: string) => ({
-                                id: language,
-                                text: language,
-                            })),
-                        });
-                        setFollowers(data.followers);
-                        setFollows(data.follows);
-                        setProfilePicUrl(data.profile.profile_pic);
-                        setVeReady(data.profile.ve_ready);
-                        setVeInformation({
-                            veInterests: data.profile.ve_interests,
-                            veGoals: data.profile.ve_goals,
-                            experience: data.profile.experience,
-                            preferredFormats: data.profile.preferred_formats,
-                        });
-
-                        setResearchTags(data.profile.research_tags);
-                        setCourses(data.profile.courses);
-                        setEducations(data.profile.educations);
-                        setWorkExperience(data.profile.work_experience);
-                        setVeWindowItems(
-                            data.profile.ve_window.map((elem: any) => ({
-                                plan: { _id: elem.plan_id, name: '' },
-                                title: elem.title,
-                                description: elem.description,
-                            }))
-                        );
-                    }
-                }
-            );
         } else {
-            signIn('keycloak');
+            setForeignUser((prev) => {
+                return false;
+            });
         }
-    }, [session, status, router]);
+
+        // fetch profile information of the determined user
+        fetchGET(`/profileinformation?username=${username}`, session?.accessToken).then(
+            (data) => {
+                setLoading(false);
+                if (data) {
+                    // if the minimum profile data such as first_name and last_name is not set,
+                    // chances are high it is after the first register, therefore incentivize user
+                    // to fill out his profile by sending him to the edit page
+                    // TODO maybe also popup hint on there with some text that says exactly that.
+
+                    // foreignUser state always says false in the first pass, so gotta check manually -.-
+                    if (username == '' || username == session!.user.preferred_username) {
+                        if (
+                            data.profile.first_name === null ||
+                            data.profile.last_name === null ||
+                            data.profile.first_name === '' ||
+                            data.profile.last_name === ''
+                        ) {
+                            router.push('/editProfile');
+                        }
+                    }
+                    setPersonalInformation({
+                        firstName: data.profile.first_name,
+                        lastName: data.profile.last_name,
+                        institution: data.profile.institution,
+                        bio: data.profile.bio,
+                        expertise: data.profile.expertise,
+                        birthday: data.profile.birthday,
+                        languageTags: data.profile.languages.map((language: string) => ({
+                            id: language,
+                            text: language,
+                        })),
+                    });
+                    setFollowers(data.followers);
+                    setFollows(data.follows);
+                    setProfilePicUrl(data.profile.profile_pic);
+                    setVeReady(data.profile.ve_ready);
+                    setVeInformation({
+                        veInterests: data.profile.ve_interests,
+                        veGoals: data.profile.ve_goals,
+                        experience: data.profile.experience,
+                        preferredFormats: data.profile.preferred_formats,
+                    });
+
+                    setResearchTags(data.profile.research_tags);
+                    setCourses(data.profile.courses);
+                    setEducations(data.profile.educations);
+                    setWorkExperience(data.profile.work_experience);
+                    setVeWindowItems(
+                        data.profile.ve_window.map((elem: any) => ({
+                            plan: { _id: elem.plan_id, name: '' },
+                            title: elem.title,
+                            description: elem.description,
+                        }))
+                    );
+                }
+            }
+        );
+        
+    }, [session, router]);
 
     return (
         <>
