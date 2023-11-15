@@ -8,14 +8,20 @@ interface Props {
     plan: IPlan;
 }
 export default function ViewAttributes({ plan }: Props): JSX.Element {
-    const [isOpenStepSection, setIsOpenStepSection] = useState<boolean>(true);
+    const [isOpenStepSection, setIsOpenStepSection] = useState<boolean>(false);
     return (
         <>
             <div
                 className="flex cursor-pointer justify-start items-center space-x-10 mb-4 ml-1"
                 onClick={() => setIsOpenStepSection(!isOpenStepSection)}
             >
-                <Image src={iconDropdown} alt="Dropdown arrow" width={20} height={20} />
+                <Image
+                    src={iconDropdown}
+                    alt="Dropdown arrow"
+                    width={20}
+                    height={20}
+                    className={`${isOpenStepSection ? `rotate-180` : `rotate-0`}`}
+                />
                 <div className="text-2xl font-semibold">Eigenschaften</div>
             </div>
             {isOpenStepSection ? (
