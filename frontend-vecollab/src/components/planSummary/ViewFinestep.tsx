@@ -47,6 +47,7 @@ export default function ViewFinestep({ fineStep }: Props): JSX.Element {
             </div>
             {isOpenStepSection && (
                 <section>
+                    <hr className="h-px my-5 bg-gray-400 border-0" />
                     <div className="mt-4 flex">
                         <div className="w-1/6 flex items-center">
                             <p className="font-semibold px-2 py-2">Workload</p>
