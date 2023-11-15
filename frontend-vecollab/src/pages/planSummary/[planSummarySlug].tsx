@@ -6,8 +6,6 @@ import LoadingAnimation from '@/components/LoadingAnimation';
 import ViewAttributes from '@/components/planSummary/ViewAttributes';
 import ViewFinestep from '@/components/planSummary/ViewFinestep';
 
-// TODO Breite anpassen bei an und aus -> feste Breite
-
 export const showDataOrEmptySign = (data: any) => {
     if (data === null || data === undefined || data === '') {
         return '/';
@@ -32,11 +30,11 @@ export default function PlanSummarySlug() {
                         <div className={'text-center font-bold text-4xl mb-2'}>{plan.name}</div>
                         <div className={'text-center mb-10'}>Zusammenfassung des Plans</div>
                     </div>
-                    <div className="flex flex-wrap">
+                    <div className="flex w-full">
                         {isLoading ? (
                             <LoadingAnimation />
                         ) : (
-                            <div className="bg-white rounded-lg p-4">
+                            <div className="bg-white rounded-lg p-4 w-full">
                                 <ViewAttributes plan={plan} />
                                 <hr className="h-px my-10 bg-gray-400 border-0" />
                                 <div className="text-2xl font-semibold mb-4 ml-4">Etappen</div>
