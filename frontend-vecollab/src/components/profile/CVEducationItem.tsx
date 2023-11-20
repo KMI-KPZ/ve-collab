@@ -1,3 +1,4 @@
+import moment from 'moment';
 import { RxDotFilled } from 'react-icons/rx';
 
 interface Props {
@@ -22,7 +23,7 @@ export default function CVEducationItem({
             <div className={'font-bold'}>{institution}</div>
             <div className={'flex items-center'}>
                 <div>{level}</div>
-                {(field === undefined || field === null || field === "") ? (
+                {field === undefined || field === null || field === '' ? (
                     <></>
                 ) : (
                     <>
@@ -31,7 +32,9 @@ export default function CVEducationItem({
                     </>
                 )}
             </div>
-            <div className={'text-sm text-gray-600'}>{`${timeStampFrom}-${timeStampTo}`}</div>
+            <div className={'text-sm text-gray-600'}>{`${moment(timeStampFrom).year()} - ${moment(
+                timeStampTo
+            ).year()}`}</div>
             <div className={'mt-1'}>{additionalInformation}</div>
         </li>
     );

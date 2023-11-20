@@ -56,7 +56,7 @@ export default function EditProfileEducationItem({ education, index, modifyCallb
                     <div className="w-2/3">
                         {/* TODO month/year only date picker*/}
                         <input
-                            type="text"
+                            type="date"
                             name="timestampFrom"
                             value={education.timestamp_from}
                             onChange={(e) =>
@@ -76,19 +76,15 @@ export default function EditProfileEducationItem({ education, index, modifyCallb
                     <div className="w-2/3 flex">
                         {/* TODO month/year only date picker*/}
                         <input
-                            type="text"
+                            type="date"
                             name="timestampTo"
                             value={education.timestamp_to}
                             onChange={(e) =>
                                 modifyCallbacks.modifyEducationTimestampTo(index, e.target.value)
                             }
                             placeholder="optional"
-                            className="border border-gray-500 rounded-lg h-12 p-2"
+                            className="border border-gray-500 rounded-lg h-12 p-2 w-full"
                         />
-                        <div className="w-full flex justify-end items-center mx-2">
-                            <input type="checkbox" name="tody" className="mx-2" />
-                            <label htmlFor="today">heute</label>
-                        </div>
                     </div>
                 </div>
                 <EditProfileItemRow
