@@ -3,8 +3,10 @@ import { useGetPlanById } from '@/lib/backend';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import LoadingAnimation from '@/components/LoadingAnimation';
-import ViewAttributes from '@/components/planSummary/ViewAttributes';
-import ViewFinestep from '@/components/planSummary/ViewFinestep';
+import { PlanOverview } from '@/components/planSummary/planOverview';
+
+// TODO nur lese rechte -> summary
+// TODO https://github.com/KMI-KPZ/ve-collab/issues/41
 
 export const showDataOrEmptySign = (data: any) => {
     if (data === null || data === undefined || data === '') {
@@ -31,18 +33,7 @@ export default function PlanSummarySlug() {
                         <div className={'text-center mb-10'}>Zusammenfassung des Plans</div>
                     </div>
                     <div className="flex w-full">
-                        {isLoading ? (
-                            <LoadingAnimation />
-                        ) : (
-                            <div className="bg-white rounded-lg p-4 w-full">
-                                <ViewAttributes plan={plan} />
-                                <hr className="h-px my-10 bg-gray-400 border-0" />
-                                <div className="text-2xl font-semibold mb-4 ml-4">Etappen</div>
-                                {plan.steps.map((fineStep, index) => (
-                                    <ViewFinestep key={index} fineStep={fineStep} />
-                                ))}
-                            </div>
-                        )}
+                        {isLoading ? <LoadingAnimation /> : <PlanOverview plan={plan} />}
                     </div>
                 </div>
             </div>
