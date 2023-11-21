@@ -26,6 +26,7 @@ from exceptions import (
 )
 from handlers.base_handler import auth_needed, BaseHandler
 from model import Step, VEPlan
+from resources.network.profile import Profiles
 from resources.planner.etherpad_integration import EtherpadResouce
 from resources.planner.ve_plan import VEPlanResource
 import util
@@ -1710,7 +1711,10 @@ class VEPlanHandler(BaseHandler):
         not be called manually anywhere else.
 
         Delete a plan by specifying its _id. Only the author of a plan is able to do that,
-        write access is not sufficient
+        write access is not sufficient. 
+
+        As a side effect, the deletion of a plan will also remove it from all VE Windows
+        on the profile, where this plan was inside.
 
         Responses:
             200 OK        --> successfully deleted
@@ -1731,6 +1735,12 @@ class VEPlanHandler(BaseHandler):
             self.set_status(409)
             self.write({"success": False, "reason": PLAN_DOESNT_EXIST})
             return
+        
+        profile_manager = Profiles(db)
+        profile_manager.remove_ve_windows_entry_by_plan_id(_id)
+
+        # TODO dispatch a notification to clients that were affected by
+        # the removal from their window
 
         self.write({"success": True})
 

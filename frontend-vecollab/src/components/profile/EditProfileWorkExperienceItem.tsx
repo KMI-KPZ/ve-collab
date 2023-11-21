@@ -62,9 +62,8 @@ export default function EditProfileWorkExperienceItem({
                         </label>
                     </div>
                     <div className="w-2/3">
-                        {/* TODO month/year only date picker*/}
                         <input
-                            type="text"
+                            type="date"
                             name="timestampFrom"
                             value={workExperience.timestamp_from}
                             onChange={(e) =>
@@ -85,9 +84,8 @@ export default function EditProfileWorkExperienceItem({
                         </label>
                     </div>
                     <div className="w-2/3 flex">
-                        {/* TODO month/year only date picker*/}
                         <input
-                            type="text"
+                            type="date"
                             name="timestampTo"
                             value={workExperience.timestamp_to}
                             onChange={(e) =>
@@ -97,12 +95,9 @@ export default function EditProfileWorkExperienceItem({
                                 )
                             }
                             placeholder="optional"
-                            className="border border-gray-500 rounded-lg h-12 p-2"
+                            className="border border-gray-500 rounded-lg w-full h-12 p-2"
                         />
-                        <div className="w-full flex justify-end items-center mx-2">
-                            <input type="checkbox" name="tody" className="mx-2" />
-                            <label htmlFor="today">heute</label>
-                        </div>
+                        
                     </div>
                 </div>
                 <EditProfileItemRow
