@@ -382,7 +382,8 @@ class Profiles:
 
             # if the user does not already exist, add him with guest role
             self.insert_default_profile(
-                platform_user["username"], elasticsearch_collection=auto_create_elastic_collection
+                platform_user["username"],
+                elasticsearch_collection=auto_create_elastic_collection,
             )
             # manually create return entry
             # because otherwise non-json-serializable ObjectId is in payload
@@ -491,6 +492,13 @@ class Profiles:
             )
             updated_profile["profile_pic"] = _id
 
+        # ensure that plan_id inside a ve_window entry is an ObjectId
+        if "ve_window" in updated_profile:
+            for ve_window_entry in updated_profile["ve_window"]:
+                ve_window_entry["plan_id"] = util.parse_object_id(
+                    ve_window_entry["plan_id"]
+                )
+
         result = self.db.profiles.find_one_and_update(
             {"username": username},
             {
@@ -504,7 +512,9 @@ class Profiles:
 
         # replicate the update to elasticsearch
         updated_profile["username"] = username
-        ElasticsearchConnector().on_update(result["_id"], elasticsearch_collection, result)
+        ElasticsearchConnector().on_update(
+            result["_id"], elasticsearch_collection, result
+        )
 
         return (
             updated_profile["profile_pic"] if "profile_pic" in updated_profile else None
@@ -565,3 +575,18 @@ class Profiles:
             return False
         else:
             return result["excluded_from_matching"]
+
+    def remove_ve_windows_entry_by_plan_id(self, plan_id: str | ObjectId):
+        """
+        Remove all VE windows entries from all profiles that contain the given plan_id.
+
+        This function can be called as a side effect of deleting a VE plan.
+        """
+
+        # ensure valid ObjectId
+        plan_id = util.parse_object_id(plan_id)
+
+        self.db.profiles.update_many(
+            {"ve_window.plan_id": plan_id},
+            {"$pull": {"ve_window": {"plan_id": plan_id}}},
+        )

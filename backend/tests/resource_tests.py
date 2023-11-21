@@ -3067,7 +3067,7 @@ class ProfileResourceTest(BaseResourceTestCase):
             excluded_from_matching, self.default_profile["excluded_from_matching"]
         )
 
-    def test_get_matching_exclusion_erro_profile_doesnt_exist(self):
+    def test_get_matching_exclusion_error_profile_doesnt_exist(self):
         """
         expect: ProfileDoesntExistException is raised because no profile with this username exists
         """
@@ -3078,6 +3078,32 @@ class ProfileResourceTest(BaseResourceTestCase):
             profile_manager.get_matching_exclusion,
             "non_existing",
         )
+
+    def test_remove_ve_windows_entry_by_plan_id(self):
+        """
+        expect: successfully delete all ve_window entries
+        that reference the supplied plan_id
+        """
+        
+        # add one more profile, that has a ve_window entry with the same plan_id
+        # as the default_profile
+        profile1 = self.create_profile("test1", ObjectId())
+        profile1["ve_window"].append(self.default_profile["ve_window"][0])
+        self.db.profiles.insert_one(profile1)
+
+        profile_manager = Profiles(self.db)
+        profile_manager.remove_ve_windows_entry_by_plan_id(
+            self.default_profile["ve_window"][0]["plan_id"]
+        )
+
+        # check if the ve_window entry was deleted from both profiles,
+        # but profile1 should still have one entry left
+        result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(len(result["ve_window"]), 0)
+        result2 = self.db.profiles.find_one({"username": "test1"})
+        self.assertEqual(len(result2["ve_window"]), 1)
+        self.assertIn(profile1["ve_window"][0], result2["ve_window"])
+
 
 
 class SpaceResourceTest(BaseResourceTestCase):

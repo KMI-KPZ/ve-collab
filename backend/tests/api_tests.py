@@ -253,6 +253,7 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                 "courses": [],
                 "educations": [],
                 "work_experience": [],
+                "ve_window": []
             },
             CURRENT_USER.username: {
                 "username": CURRENT_USER.username,
@@ -276,6 +277,7 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                 "courses": [],
                 "educations": [],
                 "work_experience": [],
+                "ve_window": []
             },
         }
 
@@ -3396,8 +3398,8 @@ class SearchHandlerTest(BaseApiTestCase):
         # there is no real solution i can think of other than just wait a little bit
         # for ES to finish analyzing and indexing
         import time
+
         time.sleep(2)
-        
 
     def setUp(self) -> None:
         super().setUp()
@@ -7999,6 +8001,83 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNone(db_state)
+
+    def test_delete_plan_side_effect_delete_from_ve_windows(self):
+        """
+        expect: successfully delete plan and also delete the plan from all VEWindows
+        that reference it
+        """
+
+        # insert a user with a ve_window entry that references the plan
+        self.db.profiles.insert_one(
+            {
+                "_id": ObjectId(),
+                "username": "some_other_user",
+                "role": "guest",
+                "follows": [],
+                "bio": "test",
+                "institution": "test",
+                "profile_pic": "default_profile_pic.jpg",
+                "first_name": "Test",
+                "last_name": "Admin",
+                "gender": "male",
+                "address": "test",
+                "birthday": "2023-01-01",
+                "experience": ["test", "test"],
+                "expertise": "test",
+                "languages": ["german", "english"],
+                "ve_ready": True,
+                "excluded_from_matching": False,
+                "ve_interests": ["test", "test"],
+                "ve_goals": ["test", "test"],
+                "preferred_formats": ["test"],
+                "research_tags": ["test"],
+                "courses": [
+                    {"title": "test", "academic_course": "test", "semester": "test"}
+                ],
+                "educations": [
+                    {
+                        "institution": "test",
+                        "degree": "test",
+                        "department": "test",
+                        "timestamp_from": "2023-01-01",
+                        "timestamp_to": "2023-02-01",
+                        "additional_info": "test",
+                    }
+                ],
+                "work_experience": [
+                    {
+                        "position": "test",
+                        "institution": "test",
+                        "department": "test",
+                        "timestamp_from": "2023-01-01",
+                        "timestamp_to": "2023-02-01",
+                        "city": "test",
+                        "country": "test",
+                        "additional_info": "test",
+                    }
+                ],
+                "ve_window": [
+                    {
+                        "plan_id": self.plan_id,
+                        "title": "test",
+                        "description": "test",
+                    }
+                ],
+            }
+        )
+
+        self.base_checks(
+            "DELETE", "/planner/delete?_id={}".format(str(self.plan_id)), True, 200
+        )
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNone(db_state)
+
+        # expect the plan to be deleted from the ve_window as well
+        db_state = self.db.profiles.find_one({"username": "some_other_user"})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(len(db_state["ve_window"]), 0)
 
     def test_delete_plan_error_missing_key(self):
         """
