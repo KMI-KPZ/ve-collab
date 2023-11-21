@@ -16,7 +16,12 @@ export default function HeaderSection({ notificationEvents }: Props) {
         <header className="bg-white px-4 lg:px-6 py-2.5 drop-shadow-lg">
             <nav className="flex flex-wrap justify-between items-center mx-auto max-w-screen-2xl">
                 <Link href="/">
-                    <Image src={veCollabLogo} alt="Ve Collab Logo" width={100}></Image>
+                    <Image
+                        src={veCollabLogo}
+                        alt="Ve Collab Logo"
+                        width={100}
+                        className="duration-300 hover:scale-110"
+                    ></Image>
                 </Link>
                 <ul className="flex items-center font-semibold space-x-14">
                     <li>
