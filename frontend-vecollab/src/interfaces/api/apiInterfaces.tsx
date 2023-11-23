@@ -18,3 +18,19 @@ export interface BackendSearchResponse {
     tags: any[],
     posts: any[]
 }
+
+export interface BackendChatroomSnippet{
+    _id: string,
+    members: string[],
+    name?: string,
+    last_message?: BackendChatMessage,
+}
+
+export interface BackendChatMessage {
+    _id: string,
+    sender: string,
+    recipients?: string[],
+    message: string,
+    creation_date: string,
+    send_states: Record<string, string>,
+}
