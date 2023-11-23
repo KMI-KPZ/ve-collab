@@ -5,6 +5,7 @@ import os
 from dotenv import load_dotenv
 import pymongo
 import socketio
+import tornado
 from tornado.options import options
 from tornado.testing import AsyncHTTPTestCase
 from tornado.testing import gen_test

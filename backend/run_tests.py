@@ -4,7 +4,14 @@ from tornado.options import define
 import tornado.testing
 
 
-TEST_MODULES = ["tests.model_tests", "tests.resource_tests", "tests.api_tests"]
+# socketio tests need to run before any other tests that need an io loop, otherwise they crash
+# why on earth tho...
+TEST_MODULES = [
+    "tests.model_tests",
+    "tests.socketio_tests",
+    "tests.resource_tests",
+    "tests.api_tests",
+]
 
 
 def all():

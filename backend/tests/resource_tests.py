@@ -2,11 +2,13 @@ from bson import ObjectId
 from datetime import datetime
 import os
 import time
-from unittest import IsolatedAsyncioTestCase, TestCase
+from unittest import TestCase
 
 from dotenv import load_dotenv
 import pymongo
-from tornado.options import options
+from tornado.testing import AsyncTestCase
+from tornado.testing import gen_test
+
 from exceptions import (
     InvitationDoesntExistError,
     MessageDoesntExistError,
@@ -19,7 +21,6 @@ from exceptions import (
     RoomDoesntExistError,
     UserNotMemberError,
 )
-
 import global_vars
 from model import (
     Institution,
@@ -1610,7 +1611,7 @@ class PlanResourceTest(BaseResourceTestCase):
         )
 
 
-class ChatResourceTest(BaseResourceTestCase, IsolatedAsyncioTestCase):
+class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
     def setUp(self) -> None:
         super().setUp()
 
@@ -1859,6 +1860,7 @@ class ChatResourceTest(BaseResourceTestCase, IsolatedAsyncioTestCase):
             message,
         )
 
+    @gen_test
     async def test_send_message(self):
         """
         expect: successfully send message. since the recipients are not currently online,
@@ -1883,6 +1885,7 @@ class ChatResourceTest(BaseResourceTestCase, IsolatedAsyncioTestCase):
             db_state["messages"][1]["send_states"][CURRENT_USER.username], "pending"
         )
 
+    @gen_test
     async def test_send_message_error_room_doesnt_exist(self):
         """
         expect: RoomDoesntExistError is raised because no room with this _id exists
@@ -1892,7 +1895,7 @@ class ChatResourceTest(BaseResourceTestCase, IsolatedAsyncioTestCase):
             await self.chat_manager.send_message(
                 ObjectId(), "test_message", CURRENT_ADMIN.username
             )
-
+    @gen_test
     async def test_send_message_error_user_not_room_member(self):
         """
         expect: UserNotMemberError is raised because the user is not a member of the room
