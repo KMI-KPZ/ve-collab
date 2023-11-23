@@ -41,6 +41,7 @@ export default function EditEducationInformation({
     };
 
     const modifyEducationTimestampFrom = (index: number, value: string) => {
+        console.log(value);
         let newEducations = [...educations];
         newEducations[index].timestamp_from = value;
         setEducations(newEducations);

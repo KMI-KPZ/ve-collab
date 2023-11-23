@@ -1010,7 +1010,7 @@ class MatchingHandler(BaseHandler):
             for profile in profile_snippets:
                 profile["score"] = username_score_map[profile["username"]]
 
-        self.write({"success": True, "matching_hits": profile_snippets})
+        self.serialize_and_write({"success": True, "matching_hits": profile_snippets})
 
     @auth_needed
     def post(self):
