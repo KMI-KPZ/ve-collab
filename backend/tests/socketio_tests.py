@@ -136,7 +136,7 @@ class SocketIOHandlerTest(AsyncHTTPTestCase):
         self.assertEqual(socketio_response["status"], 200)
         self.assertTrue(socketio_response["success"])
 
-    @gen_test
+    @gen_test(timeout=30)
     async def test(self):
         """
         for some reason, the individuel tests cannot be separated into
