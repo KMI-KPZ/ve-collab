@@ -30,6 +30,7 @@ CURRENT_USER = User(
     "test_user", "aaaaaaaa-bbbb-0000-cccc-dddddddddddd", "test_user@mail.de"
 )
 
+MISSING_KEY_ERROR_SLUG = "missing_key:"
 
 def setUpModule():
     """
@@ -100,7 +101,7 @@ class SocketIOHandlerTest(AsyncHTTPTestCase):
     def setUp(self) -> None:
         super().setUp()
 
-        # set test mode to bypass authentication as an admin as default for each test case 
+        # set test mode to bypass authentication as an admin as default for each test case
         # (test cases where user view is required will set mode themselves)
         options.test_admin = True
 
@@ -108,8 +109,6 @@ class SocketIOHandlerTest(AsyncHTTPTestCase):
         self.client = self.__class__._client
         self.db = self.__class__._db
 
-        # initialize socketio client
-        self.socketio_client = socketio.AsyncClient(logger=True, engineio_logger=True)
 
     def tearDown(self) -> None:
         self.client = None
@@ -120,8 +119,8 @@ class SocketIOHandlerTest(AsyncHTTPTestCase):
         # close mongodb connection
         cls._client.close()
 
-    async def socketio_connect(self):
-        await self.socketio_client.connect(
+    async def socketio_connect(self, socketio_client: socketio.AsyncClient):
+        await socketio_client.connect(
             "http://localhost:{}".format(self.get_http_port())
         )
 
@@ -137,37 +136,104 @@ class SocketIOHandlerTest(AsyncHTTPTestCase):
         self.assertTrue(socketio_response["success"])
 
     @gen_test
-    async def test_connect(self):
-        await self.socketio_connect()
-        await self.socketio_client.disconnect()
+    async def test(self):
+        """
+        for some reason, the individuel tests cannot be separated into
+        different test cases, because seemingly the engineio layer
+        of the socketio client is not properly reset between test cases.
+        Might also be related to the way io loops are handled in the tornado
+        test cases. Therefore, all tests are in this one test case and run
+        sequentially.
+        """
 
-    @gen_test
-    async def test_authenticate(self):
-        release_event = self.socketio_client.eio.create_event()
+        async def test_connect(self):
+            """
+            expect: successfully connect to the socketio server
+            """
 
-        def authenticate_callback(data):
-            print(data)
-            self.assert_success(data)
+            socketio_client = socketio.AsyncClient()
+            await self.socketio_connect(socketio_client)
+            await socketio_client.disconnect()
 
-            release_event.set()
+        async def test_authenticate(self):
+            """
+            expect: successfully emit an authenticate event to the server,
+            and await a success response
+            """
 
-        await self.socketio_connect()
+            socketio_client = socketio.AsyncClient()
+            await self.socketio_connect(socketio_client)
 
-        @self.socketio_client.on("notification")
-        def test(data):
-            print("notification event recognized")
-            print(data)
+            release_event = socketio_client.eio.create_event()
 
-        @self.socketio_client.on("message")
-        def message(data):
-            print("message event recognized")
-            print(data)
+            async def authenticate_callback(data):
+                self.assert_success(data)
 
-        # emit event to server and wait for response (i.e. return value from server handler function)
-        # other events that appear meanwhile can be handled by the callback function, see above
-        await self.socketio_client.emit(
-            "authenticate", data={"data": "test"}, callback=authenticate_callback
-        )
-        await asyncio.wait_for(release_event.wait(), timeout=5)
+                # check that server side session was created
+                self.assertIn(CURRENT_ADMIN.username, global_vars.username_sid_map)
+                self.assertEqual(
+                    global_vars.username_sid_map[CURRENT_ADMIN.username],
+                    socketio_client.get_sid(),
+                )
+                self.assertIsNotNone(
+                    await global_vars.socket_io.get_session(socketio_client.get_sid())
+                )
 
-        await self.socketio_client.disconnect()
+                release_event.set()
+
+            @socketio_client.on("notification")
+            def test(data):
+                print("notification event recognized")
+                print(data)
+
+            @socketio_client.on("message")
+            def message(data):
+                print("message event recognized")
+                print(data)
+
+            try:
+                # emit event to server and wait for response (i.e. return value from server handler function)
+                # other events that appear meanwhile can be handled by the callback function, see above
+                await socketio_client.emit(
+                    "authenticate",
+                    data={"token": "usually_valid_jwt_token"},
+                    callback=authenticate_callback,
+                )
+                await asyncio.wait_for(release_event.wait(), timeout=5)
+            finally:
+                release_event.clear()
+                await socketio_client.disconnect()
+
+        async def test_authenticate_error_missing_token(self):
+            """
+            expect: error message from authenticate event because
+            the access token is missing
+            """
+
+            socketio_client = socketio.AsyncClient()
+            await self.socketio_connect(socketio_client)
+            
+            release_event = socketio_client.eio.create_event()
+
+            async def authenticate_callback2(data, *args):
+                self.assertFalse(data["success"])
+                self.assertEqual(data["status"], 400)
+                self.assertEqual(data["reason"], MISSING_KEY_ERROR_SLUG + "token")
+
+                release_event.set()
+
+            try:
+                await socketio_client.emit(
+                    "authenticate", data={"bla": "bla"}, callback=authenticate_callback2
+                )
+                await asyncio.wait_for(release_event.wait(), timeout=5)
+            finally:
+                release_event.clear()
+                await socketio_client.disconnect()
+
+        #################################################################################
+        # run all tests                                                                 #
+        #################################################################################
+        await test_connect(self)
+        await test_authenticate(self)
+        await test_authenticate_error_missing_token(self)

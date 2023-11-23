@@ -55,7 +55,7 @@ async def connect(sid, environment, auth):
         None
     """
 
-    logger.info("connected ", sid)
+    logger.info("connected " + sid)
     return "hi"
 
 
@@ -76,8 +76,9 @@ async def disconnect(sid):
         None
     """
 
+    logger.info("disconnect " + sid)
+
     session = await global_vars.socket_io.get_session(sid)
-    logger.info("disconnect ", sid)
 
     try:
         # delete the mapping username <--> socket id
@@ -134,7 +135,10 @@ async def authenticate(sid, data):
 
     """
 
-    logger.info("authenticate ", sid)
+    logger.info("authenticate " + sid)
+
+    if "token" not in data:
+        return {"status": 400, "success": False, "reason": MISSING_KEY_SLUG + "token"}
 
     # make authentication exception if we are in test mode,
     # otherwise check the supplied token for validity
@@ -143,7 +147,7 @@ async def authenticate(sid, data):
             "preferred_username": "test_admin",
             "given_name": "Test",
             "family_name": "admin",
-            "email": "test_admin@mail.de"
+            "email": "test_admin@mail.de",
         }
     elif options.test_user:
         token_info = {
@@ -153,9 +157,6 @@ async def authenticate(sid, data):
             "email": "test_user@mail.de",
         }
     else:
-        if "token" not in data:
-            return {"status": 400, "success": False, "reason": MISSING_KEY_SLUG + "token"}
-
         try:
             token_info = util.validate_keycloak_jwt(data["token"])
         except keycloak.KeycloakGetError:
@@ -262,7 +263,7 @@ async def acknowledge_notification(sid, data):
               This socket connection is not authenticated (use `authenticate` event)
     """
 
-    logger.info("acknowledge_notification ", sid)
+    logger.info("acknowledge_notification " + sid)
 
     if "notification_id" not in data:
         return {
@@ -330,7 +331,7 @@ async def message(sid, data):
               The room with the given _id doesn't exist
     """
 
-    logger.info("message ", sid)
+    logger.info("message " + sid)
 
     # payload keys check
     if "message" not in data:
@@ -394,7 +395,7 @@ async def acknowledge_message(sid, data):
 
     """
 
-    logger.info("acknowledge_message ", sid)
+    logger.info("acknowledge_message " + sid)
 
     # payload keys check
     if "message_id" not in data:
