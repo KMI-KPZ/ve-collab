@@ -17,7 +17,7 @@ import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { generateFineStepLinkTopMenu } from '@/pages/startingWizard/generalInformation/courseFormat';
 
-interface Lecture {
+export interface Lecture {
     name: string;
     lecture_type: string;
     lecture_format: string;

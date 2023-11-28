@@ -11,17 +11,17 @@ export default function Disclaimer() {
     useEffect(() => {
         const consentIsTrue = cookies[USER_CONSENT_COOKIE_KEY] === true;
         setCookieConsent(consentIsTrue);
-    }, []);
+    }, [cookies]);
 
     const onClick = (e: MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
-        
+
         // determine tomorrows Date for cookie expires attribute
         const expiryTomorrow = new Date();
         expiryTomorrow.setDate(expiryTomorrow.getDate() + 1);
-        
+
         if (!cookieConsent) {
-            setCookie(USER_CONSENT_COOKIE_KEY, 'true', {expires: expiryTomorrow});
+            setCookie(USER_CONSENT_COOKIE_KEY, 'true', { expires: expiryTomorrow });
             setCookieConsent(true);
         }
     };
@@ -34,9 +34,10 @@ export default function Disclaimer() {
                 <div className="flex flex-col items-start px-5 py-3 bg-gray-300 md:flex-row md:space-y-0 md:items-stretch md:space-x-2">
                     <div className="flex items-center flex-grow">
                         <p className="text-sm font-medium">
-                            Diese Plattform ist ein Prototyp und wird fortlaufend weiterentwickelt, Datenverlust ist daher aktuell trotz größter Bemühungen nicht ausgeschlossen.
-                            Wir verwenden nur notwendige Cookies, um die Funktionalität der Seite zu
-                            gewährleisten.
+                            Diese Plattform ist ein Prototyp und wird fortlaufend weiterentwickelt,
+                            Datenverlust ist daher aktuell trotz größter Bemühungen nicht
+                            ausgeschlossen. Wir verwenden nur notwendige Cookies, um die
+                            Funktionalität der Seite zu gewährleisten.
                         </p>
                     </div>
                     <div className="flex items-center">

@@ -1,7 +1,11 @@
-import { BackendChatMessage, BackendChatroomSnippet, BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
+import {
+    BackendChatMessage,
+    BackendChatroomSnippet,
+    BackendUserSnippet,
+} from '@/interfaces/api/apiInterfaces';
 import { Notification } from '@/interfaces/socketio';
-import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
-import { signIn } from 'next-auth/react';
+import { IPlan, PlanPreview } from '@/interfaces/planner/plannerInterfaces';
+import { signIn, useSession } from 'next-auth/react';
 import useSWR, { KeyedMutator } from 'swr';
 import { VEPlanSnippet } from '@/interfaces/profile/profileInterfaces';
 
@@ -37,6 +41,26 @@ export function useGetAvailablePlans(accessToken: string): {
 
     return {
         data: isLoading || error ? [] : data.plans,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
+export function useGetPlanById(planId: string): {
+    data: IPlan;
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data: session } = useSession();
+    const { data, error, isLoading, mutate } = useSWR(
+        [`/planner/get?_id=${planId}`, session?.accessToken],
+        ([url, token]) => GETfetcher(url, token)
+    );
+
+    return {
+        data: isLoading || error ? {} : data.plan,
         isLoading,
         error,
         mutate,
@@ -156,7 +180,10 @@ export function useGetChatrooms(accessToken: string): {
     };
 }
 
-export function useGetChatroomHistory(accessToken: string, chatroomId: string): {
+export function useGetChatroomHistory(
+    accessToken: string,
+    chatroomId: string
+): {
     data: BackendChatMessage[];
     isLoading: boolean;
     error: any;
