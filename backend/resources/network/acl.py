@@ -144,6 +144,7 @@ class _GlobalACL:
         if record:
             del record["_id"]  # _id useless information here, can leave it out
         return record
+        # TODO raise exception instead of returning None if the roles was not found
 
     def get_all(self) -> Optional[List[Dict]]:
         """
@@ -342,6 +343,7 @@ class _SpaceACL:
         if record:
             del record["_id"]  # _id useless information here, can leave it out
         return record
+        # TODO raise exception instead of returning None if the role/space combination was not found
 
     def get_all(self, space: str) -> Optional[List[Dict]]:
         """
@@ -390,6 +392,7 @@ class _SpaceACL:
             {"$set": {permission_key: value}},
             upsert=True,
         )
+        # TODO fix: we get an inconsistency problem here when using upsert, because all other keys would not be present
 
     def set_all(self, acl_entry: dict) -> None:
         """

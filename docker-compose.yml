@@ -74,6 +74,7 @@ services:
         NEXT_PUBLIC_KEYCLOAK_BASE_URL: ${KEYCLOAK_BASE_URL}
         NEXT_PUBLIC_KEYCLOAK_REALM: ${KEYCLOAK_REALM}
         NEXT_PUBLIC_BACKEND_BASE_URL: "http://localhost:${BACKEND_PORT}"
+        NEXT_PUBLIC_SOCKETIO_BASE_URL: "http://localhost:${BACKEND_PORT}"
         NEXT_PUBLIC_ETHERPAD_BASE_URL: "http://localhost:${ETHERPAD_PORT}"
     network_mode: host
     logging:

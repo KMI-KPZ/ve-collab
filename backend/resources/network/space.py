@@ -9,13 +9,16 @@ from exceptions import (
     AlreadyRequestedJoinError,
     FileAlreadyInRepoError,
     FileDoesntExistError,
+    NotRequestedJoinError,
     OnlyAdminError,
     PostFileNotDeleteableError,
     SpaceAlreadyExistsError,
     SpaceDoesntExistError,
     UserNotAdminError,
+    UserNotInvitedError,
     UserNotMemberError,
 )
+from model import Space
 import util
 
 
@@ -78,7 +81,6 @@ class Spaces:
         """
 
         space = self.get_space(space_name, projection={"_id": False, "members": True})
-
         if not space:
             raise SpaceDoesntExistError()
 
@@ -87,14 +89,15 @@ class Spaces:
         else:
             return False
 
-    def get_space(self, space_name: str, projection: dict = {}) -> Optional[dict]:
+    def get_space(self, space_name: str, projection: dict = {}) -> Optional[Space]:
         """
         get the space data of the space given by its name. optionally specify a projection
         to reduce query to the necessary fields (increases performance)
         :return: the space data as a dict or None, if the space doesnt exist
         """
 
-        return self.db.spaces.find_one({"name": space_name}, projection=projection)
+        result = self.db.spaces.find_one({"name": space_name}, projection=projection)
+        return Space(result) if result is not None else None
 
     def get_all_spaces(self, projection: dict = {}) -> List[dict]:
         """
@@ -103,7 +106,10 @@ class Spaces:
         :return: the space data of all spaces as dicts, combined into a list
         """
 
-        return list(self.db.spaces.find(projection=projection))
+        spaces = []
+        for space in self.db.spaces.find(projection=projection):
+            spaces.append(Space(space))
+        return spaces
 
     def get_all_spaces_visible_to_user(
         self, username: str, projection: dict = {}
@@ -117,18 +123,19 @@ class Spaces:
         :return: the space data of all allowed spaces as dicts, combined into a list
         """
 
-        return list(
-            self.db.spaces.find(
-                {
-                    "$or": [
-                        {"invisible": False},
-                        {"invisible": {"$exists": False}},
-                        {"members": username},
-                    ]
-                },
-                projection=projection,
-            )
-        )
+        spaces = []
+        for space in self.db.spaces.find(
+            {
+                "$or": [
+                    {"invisible": False},
+                    {"invisible": {"$exists": False}},
+                    {"members": username},
+                ]
+            },
+            projection=projection,
+        ):
+            spaces.append(Space(space))
+        return spaces
 
     def get_space_names(self) -> List[str]:
         """
@@ -169,8 +176,9 @@ class Spaces:
     def create_space(self, space: dict) -> None:
         """
         create a new space, validating the existence of the necessary attributes
-        beforehand. mandatory attributes are: name (str), invisible (bool), members (list<str>),
-        admins (list<str>), invites (list<str>), requests (list<str>)
+        beforehand. mandatory attributes are: name (str), invisible (bool),
+        joinable (bool), members (list<str>), admins (list<str>), invites (list<str>),
+        requests (list<str>), files (list<ObjectId>)
         """
 
         # verify space has all the necessary attributes
@@ -280,27 +288,14 @@ class Spaces:
         if update_result.modified_count != 1:
             raise AlreadyRequestedJoinError()
 
-    def check_user_is_member(self, space_name: str, username: str) -> bool:
-        """
-        check if the give user is a member of the given space
-        :return: True if the user is a member of the space, False otherwise
-        """
-        space = self.get_space(space_name, projection={"_id": False, "members": True})
-        if not space:
-            raise SpaceDoesntExistError()
-
-        if username in space["members"]:
-            return True
-        else:
-            return False
-
     def add_space_admin(self, space_name: str, username: str) -> None:
         """
         set a user as a space admin
         """
 
         update_result = self.db.spaces.update_one(
-            {"name": space_name}, {"$addToSet": {"admins": username}}
+            {"name": space_name},
+            {"$addToSet": {"admins": username, "members": username}},
         )
 
         # the filter didnt match any document, so the space doesnt exist
@@ -381,18 +376,24 @@ class Spaces:
         :param username: the user who accepts his invite
         """
 
+        space_invites = self.get_space(
+            space_name, projection={"_id": False, "invites": True}
+        )
+
+        if not space_invites:
+            raise SpaceDoesntExistError()
+
+        if username not in space_invites["invites"]:
+            raise UserNotInvitedError()
+
         # pull user from invites and add him to members
-        update_result = self.db.spaces.update_one(
+        self.db.spaces.update_one(
             {"name": space_name},
             {
                 "$addToSet": {"members": username},
                 "$pull": {"invites": username},
             },
         )
-
-        # the filter didnt match any document, so the space doesnt exist
-        if update_result.matched_count != 1:
-            raise SpaceDoesntExistError()
 
     def decline_space_invite(self, space_name: str, username: str) -> None:
         """
@@ -420,15 +421,20 @@ class Spaces:
         :param username: the user whose request is accepted
         """
 
+        space_requests = self.get_space(
+            space_name, projection={"_id": False, "requests": True}
+        )
+        if not space_requests:
+            raise SpaceDoesntExistError()
+        
+        if username not in space_requests["requests"]:
+            raise NotRequestedJoinError()
+
         # add user to members and pull them from pending requests
-        update_result = self.db.spaces.update_one(
+        self.db.spaces.update_one(
             {"name": space_name},
             {"$addToSet": {"members": username}, "$pull": {"requests": username}},
         )
-
-        # the filter didnt match any document, so the space doesnt exist
-        if update_result.matched_count != 1:
-            raise SpaceDoesntExistError()
 
     def reject_join_request(self, space_name: str, username: str) -> None:
         """
@@ -519,18 +525,23 @@ class Spaces:
         :param username: the user whose permissions will be revoked
         """
 
+        space_admins = self.get_space(
+            space_name, projection={"_id": False, "admins": True}
+        )
+        if not space_admins:
+            raise SpaceDoesntExistError()
+        
+        if username not in space_admins["admins"]:
+            raise UserNotAdminError()
+        
+        # if the user is the only admin left, he cannot be degraded
+        if len(space_admins["admins"]) == 1:
+            raise OnlyAdminError()
+
         # remove user from spaces admins list
-        update_result = self.db.spaces.update_one(
+        self.db.spaces.update_one(
             {"name": space_name}, {"$pull": {"admins": username}}
         )
-
-        # the filter didnt match any document, so the space doesnt exist
-        if update_result.matched_count != 1:
-            raise SpaceDoesntExistError()
-
-        # if no documents were modified, we know that the user was no admin
-        if update_result.modified_count != 1:
-            raise UserNotAdminError()
 
     def create_or_join_discussion_space(self, wp_post: dict, username: str) -> str:
         """

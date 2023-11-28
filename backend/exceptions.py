@@ -46,7 +46,15 @@ class AlreadyRequestedJoinError(Exception):
     pass
 
 
+class NotRequestedJoinError(Exception):
+    pass
+
+
 class UserNotMemberError(Exception):
+    pass
+
+
+class UserNotInvitedError(Exception):
     pass
 
 
@@ -127,5 +135,17 @@ class InvitationDoesntExistError(Exception):
 
 class NotificationDoesntExistError(Exception):
     """The requested notification doesn't exist"""
+
+    pass
+
+
+class RoomDoesntExistError(Exception):
+    """the requested chatroom doesn't exist"""
+
+    pass
+
+
+class MessageDoesntExistError(Exception):
+    """the requested message doesn't exist"""
 
     pass
