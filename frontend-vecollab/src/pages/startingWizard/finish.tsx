@@ -15,10 +15,8 @@ export default function Finished() {
     const [linkFineStepTopMenu, setLinkFineStepTopMenu] = useState<string>(
         '/startingWizard/finePlanner'
     );
-    const { data: plan, isLoading } = useGetPlanById(
-        session!.accessToken,
-        router.query.plannerId as string
-    );
+
+    const { data: plan, isLoading } = useGetPlanById(router.query.plannerId as string);
 
     useEffect(() => {
         if (status !== 'loading') {
