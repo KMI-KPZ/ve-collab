@@ -20,7 +20,7 @@ export default function HeaderSection({ notificationEvents, headerBarMessageEven
             return message.sender !== session?.user.preferred_username;
         });
         setMessageEventCount(filteredMessageEvents.length);
-    }, [headerBarMessageEvents])
+    }, [headerBarMessageEvents, session]);
 
     return (
         <header className="bg-white px-4 lg:px-6 py-2.5 drop-shadow-lg">
@@ -46,7 +46,7 @@ export default function HeaderSection({ notificationEvents, headerBarMessageEven
                     <li>
                         <Link href="/overviewProjects">VE Designer</Link>
                     </li>
-                    <li className='relative'>
+                    <li className="relative">
                         <Link href="/messages">Chat</Link>
                         {messageEventCount > 0 && (
                             <span className="absolute top-[-10px] right-[-20px] py-1 px-2 rounded-[50%] bg-red-600 text-xs">
