@@ -1,12 +1,8 @@
 import React from 'react';
 import { useGetPlanById } from '@/lib/backend';
 import { useRouter } from 'next/router';
-import { useSession } from 'next-auth/react';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import { PlanOverview } from '@/components/planSummary/planOverview';
-
-// TODO nur lese rechte -> summary
-// TODO https://github.com/KMI-KPZ/ve-collab/issues/41
 
 export const showDataOrEmptySign = (data: any) => {
     if (data === null || data === undefined || data === '') {
@@ -20,9 +16,8 @@ export const showDataOrEmptySign = (data: any) => {
 PlanSummarySlug.auth = true;
 export default function PlanSummarySlug() {
     const router = useRouter();
-    const { data: session } = useSession();
     const currentPlanId: string = router.query.planSummarySlug as string;
-    const { data: plan, isLoading } = useGetPlanById(session!.accessToken, currentPlanId);
+    const { data: plan, isLoading } = useGetPlanById(currentPlanId);
 
     return (
         <>
