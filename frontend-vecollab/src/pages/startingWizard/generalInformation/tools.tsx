@@ -20,7 +20,7 @@ interface FormValues {
     tools: Tool[];
 }
 
-interface Tool {
+export interface Tool {
     tool: string;
 }
 

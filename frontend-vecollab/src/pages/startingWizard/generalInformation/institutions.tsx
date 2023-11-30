@@ -17,7 +17,7 @@ import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { generateFineStepLinkTopMenu } from '@/pages/startingWizard/generalInformation/courseFormat';
 
-interface Institution {
+export interface Institution {
     name: string;
     school_type: string;
     country: string;
@@ -150,9 +150,9 @@ export default function Institutions() {
                                             'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
                                     },
                                     pattern: {
-                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
+                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
                                         message:
-                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?-',
+                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?-,',
                                     },
                                 })}
                             />
@@ -179,9 +179,9 @@ export default function Institutions() {
                                             'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
                                     },
                                     pattern: {
-                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
+                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
                                         message:
-                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?-',
+                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?,-',
                                     },
                                 })}
                             />
@@ -208,9 +208,9 @@ export default function Institutions() {
                                             'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
                                     },
                                     pattern: {
-                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
+                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
                                         message:
-                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?-',
+                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?,-',
                                     },
                                 })}
                             />
@@ -237,9 +237,9 @@ export default function Institutions() {
                                             'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
                                     },
                                     pattern: {
-                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
+                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
                                         message:
-                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
+                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?,-',
                                     },
                                 })}
                             />
@@ -266,9 +266,9 @@ export default function Institutions() {
                                             'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
                                     },
                                     pattern: {
-                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
+                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
                                         message:
-                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
+                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?,-',
                                     },
                                 })}
                             />

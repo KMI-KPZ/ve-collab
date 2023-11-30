@@ -1,10 +1,12 @@
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
-import { fetchGET } from '@/lib/backend';
+import React, { useEffect, useState } from 'react';
+import { fetchGET, useGetPlanById } from '@/lib/backend';
 import { generateFineStepLinkTopMenu } from '@/pages/startingWizard/generalInformation/courseFormat';
 import { signIn, useSession } from 'next-auth/react';
+import { PlanOverview } from '@/components/planSummary/planOverview';
+import LoadingAnimation from '@/components/LoadingAnimation';
 
 export default function Finished() {
     const router = useRouter();
@@ -13,6 +15,8 @@ export default function Finished() {
     const [linkFineStepTopMenu, setLinkFineStepTopMenu] = useState<string>(
         '/startingWizard/finePlanner'
     );
+
+    const { data: plan, isLoading } = useGetPlanById(router.query.plannerId as string);
 
     useEffect(() => {
         if (status !== 'loading') {
@@ -51,11 +55,12 @@ export default function Finished() {
                 <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                     <div>
                         <div className={'text-center font-bold text-4xl mb-2'}>Fertig</div>
-                        <div className={'text-center mb-20'}>
-                            herzlichen Glückwunsch, du hast den VE erfolgreich geplant!
+                        <div className={'text-center mb-10'}>
+                            Herzlichen Glückwunsch, du hast den VE erfolgreich geplant!
                         </div>
                     </div>
-                    <div className="flex justify-around w-full">
+                    {isLoading ? <LoadingAnimation /> : <PlanOverview plan={plan} />}
+                    <div className="flex justify-around w-full mt-10">
                         <div>
                             <Link
                                 href={{
