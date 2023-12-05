@@ -131,7 +131,7 @@ class BaseHandler(tornado.web.RequestHandler):
         # in case we need more performance, we can instead do offline validation
         # by decoding the jwt and checking if it is not expired
         # (tradeoff: we dont know if it was manually invalidated)
-        token_info = global_vars.keycloak.introspect(token["access_token"])
+        token_info = global_vars.keycloak.introspect(token)
 
         # access token is still valid, successfully set current_user
         if token_info["active"]:

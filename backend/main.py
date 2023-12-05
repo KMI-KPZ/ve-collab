@@ -267,6 +267,7 @@ def set_global_vars() -> None:
         "KEYCLOAK_REALM",
         "KEYCLOAK_CLIENT_ID",
         "KEYCLOAK_CLIENT_SECRET",
+        "KEYCLOAK_CALLBACK_URL",
         "KEYCLOAK_ADMIN_USERNAME",
         "KEYCLOAK_ADMIN_PASSWORD",
         "MONGODB_USERNAME",
@@ -301,6 +302,7 @@ def set_global_vars() -> None:
     global_vars.keycloak_realm = os.getenv("KEYCLOAK_REALM")
     global_vars.keycloak_client_id = os.getenv("KEYCLOAK_CLIENT_ID")
     global_vars.keycloak_client_secret = os.getenv("KEYCLOAK_CLIENT_SECRET")
+    global_vars.keycloak_callback_url = os.getenv("KEYCLOAK_CALLBACK_URL")
     global_vars.keycloak_admin_username = os.getenv("KEYCLOAK_ADMIN_USERNAME")
     global_vars.keycloak_admin_password = os.getenv("KEYCLOAK_ADMIN_PASSWORD")
 
