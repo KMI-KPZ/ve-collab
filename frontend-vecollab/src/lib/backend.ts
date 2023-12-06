@@ -1,6 +1,7 @@
 import {
     BackendChatMessage,
     BackendChatroomSnippet,
+    BackendSpace,
     BackendUserSnippet,
 } from '@/interfaces/api/apiInterfaces';
 import { Notification } from '@/interfaces/socketio';
@@ -195,6 +196,27 @@ export function useGetChatroomHistory(
     );
     return {
         data: isLoading || error ? [] : data.messages,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
+export function useGetSpace(
+    accessToken: string,
+    spaceName: string
+): {
+    data: BackendSpace;
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        [`/spaceadministration/info?name=${spaceName}`, accessToken],
+        ([url, token]) => GETfetcher(url, token)
+    );
+    return {
+        data: isLoading || error ? [] : data.space,
         isLoading,
         error,
         mutate,

@@ -44,6 +44,8 @@ class Spaces:
             "invites": list,
             "requests": list,
             "files": list,
+            "space_pic": str,
+            "space_description": str,
         }
 
     def check_space_exists(self, name: str) -> bool:

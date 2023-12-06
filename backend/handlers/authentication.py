@@ -27,7 +27,7 @@ class LoginHandler(tornado.web.RequestHandler, metaclass=ABCMeta):
         self.redirect(url)
 
 
-class LoginCallbackHandler(BaseHandler, metaclass=ABCMeta):
+class LoginCallbackHandler(tornado.web.RequestHandler, metaclass=ABCMeta):
 
     async def get(self):
         # keycloak redirects you back here with this code

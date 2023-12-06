@@ -3126,6 +3126,8 @@ class SpaceResourceTest(BaseResourceTestCase):
             "invites": [],
             "requests": [],
             "files": [],
+            "space_pic": "default_space_pic.jpg",
+            "space_description": "test",
         }
 
         self.db.spaces.insert_one(self.default_space)
@@ -3243,6 +3245,10 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertEqual(space.invites, self.default_space["invites"])
         self.assertEqual(space.requests, self.default_space["requests"])
         self.assertEqual(space.files, self.default_space["files"])
+        self.assertEqual(space.space_pic, self.default_space["space_pic"])
+        self.assertEqual(
+            space.space_description, self.default_space["space_description"]
+        )
 
     def test_get_space_failure(self):
         """
@@ -3269,6 +3275,8 @@ class SpaceResourceTest(BaseResourceTestCase):
             "invites": [],
             "requests": [],
             "files": [],
+            "space_pic": "default_space_pic.jpg",
+            "space_description": "test",
         }
         self.db.spaces.insert_one(additional_space)
 
@@ -3295,6 +3303,8 @@ class SpaceResourceTest(BaseResourceTestCase):
                 "invites": [],
                 "requests": [],
                 "files": [],
+                "space_pic": "default_space_pic.jpg",
+                "space_description": "test",
             },
             # user can see this one because it is invisible, but he is a member
             {
@@ -3307,6 +3317,8 @@ class SpaceResourceTest(BaseResourceTestCase):
                 "invites": [],
                 "requests": [],
                 "files": [],
+                "space_pic": "default_space_pic.jpg",
+                "space_description": "test",
             },
             # user cannot see this one
             {
@@ -3319,6 +3331,8 @@ class SpaceResourceTest(BaseResourceTestCase):
                 "invites": [],
                 "requests": [],
                 "files": [],
+                "space_pic": "default_space_pic.jpg",
+                "space_description": "test",
             },
         ]
         self.db.spaces.insert_many(additional_spaces)
@@ -3348,6 +3362,8 @@ class SpaceResourceTest(BaseResourceTestCase):
             "invites": [],
             "requests": [],
             "files": [],
+            "space_pic": "default_space_pic.jpg",
+            "space_description": "test",
         }
         self.db.spaces.insert_one(additional_space)
 
@@ -3374,6 +3390,8 @@ class SpaceResourceTest(BaseResourceTestCase):
                 "invites": [],
                 "requests": [],
                 "files": [],
+                "space_pic": "default_space_pic.jpg",
+                "space_description": "test",
             },
             {
                 "_id": ObjectId(),
@@ -3385,6 +3403,8 @@ class SpaceResourceTest(BaseResourceTestCase):
                 "invites": [],
                 "requests": [],
                 "files": [],
+                "space_pic": "default_space_pic.jpg",
+                "space_description": "test",
             },
         ]
 
@@ -3418,6 +3438,8 @@ class SpaceResourceTest(BaseResourceTestCase):
             "invites": [CURRENT_ADMIN.username],
             "requests": [],
             "files": [],
+            "space_pic": "default_space_pic.jpg",
+            "space_description": "test",
         }
         self.db.spaces.insert_one(additional_space)
 
@@ -3438,6 +3460,8 @@ class SpaceResourceTest(BaseResourceTestCase):
             "invites": [],
             "requests": [],
             "files": [],
+            "space_pic": "default_space_pic.jpg",
+            "space_description": "test",
         }
 
         space_manager = Spaces(self.db)
@@ -3455,6 +3479,8 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertEqual(space["invites"], new_space["invites"])
         self.assertEqual(space["requests"], new_space["requests"])
         self.assertEqual(space["files"], new_space["files"])
+        self.assertEqual(space["space_pic"], new_space["space_pic"])
+        self.assertEqual(space["space_description"], new_space["space_description"])
 
     def test_create_space_failure_space_already_exists(self):
         """
@@ -3470,6 +3496,8 @@ class SpaceResourceTest(BaseResourceTestCase):
             "invites": [],
             "requests": [],
             "files": [],
+            "space_pic": "default_space_pic.jpg",
+            "space_description": "test",
         }
 
         space_manager = Spaces(self.db)
@@ -3491,6 +3519,8 @@ class SpaceResourceTest(BaseResourceTestCase):
             "invites": [],
             "requests": [],
             "files": [],
+            "space_pic": "default_space_pic.jpg",
+            "space_description": "test",
         }
 
         # invisible is missing

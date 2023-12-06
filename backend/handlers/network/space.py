@@ -28,6 +28,11 @@ class SpaceHandler(BaseHandler):
     handle existing and creation of new spaces
     """
 
+    def options(self, slug):
+        # no body
+        self.set_status(200)
+        self.finish()
+
     @auth_needed
     def get(self, slug):
         """
@@ -1138,6 +1143,8 @@ class SpaceHandler(BaseHandler):
                 "invites": [],
                 "requests": [],
                 "files": [],
+                "space_pic": "default_group_pic.jpg",
+                "space_description": "",
             }
 
             try:
@@ -1662,6 +1669,8 @@ class SpaceHandler(BaseHandler):
             try:
                 # in order to kick an admin from the space,
                 # you have to be global admin (prevents space admins from kicking each other)
+                # TODO reject kick if user is the only admin left, i.e. if he is the last admin
+                # he cannot be kicked unless another admin is added first
                 if space_manager.check_user_is_space_admin(space_name, user_name):
                     if not self.is_current_user_lionet_admin():
                         self.set_status(403)
@@ -1729,6 +1738,11 @@ class SpaceHandler(BaseHandler):
             except UserNotAdminError:
                 self.set_status(409)
                 self.write({"success": False, "reason": "user_not_space_admin"})
+                return
+            except OnlyAdminError:
+                # TODO test this case
+                self.set_status(409)
+                self.write({"success": False, "reason": "no_other_admins_left"})
                 return
 
     def delete_space(self, space_name: str) -> None:
