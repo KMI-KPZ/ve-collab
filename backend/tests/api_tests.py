@@ -255,7 +255,7 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                 "courses": [],
                 "educations": [],
                 "work_experience": [],
-                "ve_window": []
+                "ve_window": [],
             },
             CURRENT_USER.username: {
                 "username": CURRENT_USER.username,
@@ -279,7 +279,7 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                 "courses": [],
                 "educations": [],
                 "work_experience": [],
-                "ve_window": []
+                "ve_window": [],
             },
         }
 
@@ -1417,6 +1417,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "author": CURRENT_ADMIN.username,
                 "file_id": file._id,
+                "file_name": self.test_file_name,
                 "manually_uploaded": False,
             },
             space_state["files"],
@@ -5456,6 +5457,7 @@ class SpaceHandlerTest(BaseApiTestCase):
             {
                 "author": CURRENT_ADMIN.username,
                 "file_id": file._id,
+                "file_name": file_name,
                 "manually_uploaded": True,
             },
             db_state["files"],

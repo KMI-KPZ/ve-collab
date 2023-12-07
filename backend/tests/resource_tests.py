@@ -4175,11 +4175,13 @@ class SpaceResourceTest(BaseResourceTestCase):
         """
 
         file_id = ObjectId()
+        filename = "test"
         space_manager = Spaces(self.db)
         space_manager.add_new_post_file(
             self.space_name,
             CURRENT_USER.username,
             file_id,
+            filename
         )
 
         space = self.db.spaces.find_one({"name": self.space_name})
@@ -4189,6 +4191,7 @@ class SpaceResourceTest(BaseResourceTestCase):
                 {
                     "author": CURRENT_USER.username,
                     "file_id": file_id,
+                    "file_name": filename,
                     "manually_uploaded": False,
                 }
             ],
@@ -4207,6 +4210,7 @@ class SpaceResourceTest(BaseResourceTestCase):
             "non_existing_space",
             CURRENT_USER.username,
             file_id,
+            "test"
         )
 
     def test_add_new_post_file_error_file_already_in_repo(self):
@@ -4218,6 +4222,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         file_obj = {
             "author": CURRENT_USER.username,
             "file_id": ObjectId(),
+            "file_name": "test",
             "manually_uploaded": False,
         }
         self.db.spaces.update_one(
@@ -4232,6 +4237,7 @@ class SpaceResourceTest(BaseResourceTestCase):
             self.space_name,
             CURRENT_USER.username,
             file_obj["file_id"],
+            file_obj["file_name"]
         )
 
     def test_add_new_repo_file(self):
@@ -4255,6 +4261,7 @@ class SpaceResourceTest(BaseResourceTestCase):
                 {
                     "author": CURRENT_ADMIN.username,
                     "file_id": _id,
+                    "file_name": "test_file",
                     "manually_uploaded": True,
                 }
             ],

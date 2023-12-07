@@ -600,7 +600,7 @@ class Spaces:
         return db_result["files"]
 
     def add_new_post_file(
-        self, space_name: str, author: str, file_id: ObjectId
+        self, space_name: str, author: str, file_id: ObjectId, file_name: str
     ) -> None:
         """
         add a new file to the space's 'repository', that was originally part of a post.
@@ -616,6 +616,7 @@ class Spaces:
                     "files": {
                         "author": author,
                         "file_id": file_id,
+                        "file_name": file_name,
                         "manually_uploaded": False,
                     }
                 }
@@ -659,6 +660,7 @@ class Spaces:
                     "files": {
                         "author": uploader,
                         "file_id": _id,
+                        "file_name": file_name,
                         "manually_uploaded": True,
                     }
                 }
