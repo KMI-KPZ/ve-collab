@@ -18,7 +18,7 @@ export default function GroupHeader() {
 
     return (
         <div className={'flex'}>
-            <div className={'mr-8 rounded-full overflow-hidden border-4 border-white shadow-2xl'}>
+            <div className={'mr-8 rounded-full overflow-hidden border-4 border-white shadow-2xl w-[180px] h-[180px]'}>
                 <AuthenticatedImage
                     imageId={space.space_pic}
                     alt={'Gruppenbild'}

@@ -1,15 +1,17 @@
+import { AuthenticatedFile } from '@/components/AuthenticatedFile';
 import AuthenticatedImage from '@/components/AuthenticatedImage';
 import BoxHeadline from '@/components/BoxHeadline';
 import WhiteBox from '@/components/Layout/WhiteBox';
 import Container from '@/components/Layout/container';
 import GroupBanner from '@/components/network/GroupBanner';
 import GroupHeader from '@/components/network/GroupHeader';
+import Dialog from '@/components/profile/Dialog';
 import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
 import { fetchPOST, useGetSpace } from '@/lib/backend';
-import { is } from 'date-fns/locale';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
+import { RxCross2, RxFile, RxPlus } from 'react-icons/rx';
 
 Space.auth = true;
 export default function Space() {
@@ -17,6 +19,9 @@ export default function Space() {
     const router = useRouter();
 
     const [renderPicker, setRenderPicker] = useState<'timeline' | 'members' | 'files'>('timeline');
+
+    const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+    const [uploadFile, setUploadFile] = useState<Blob>();
 
     const [memberSnippets, setMemberSnippets] = useState<UserSnippet[]>([
         { name: '', profilePicUrl: '', institution: '', preferredUsername: '' },
@@ -30,6 +35,48 @@ export default function Space() {
     } = useGetSpace(session!.accessToken, router.query.name as string);
     console.log(space);
     console.log(memberSnippets);
+
+    const handleCloseUploadDialog = () => {
+        setIsUploadDialogOpen(false);
+    };
+
+    const uploadToClient = (event: ChangeEvent<HTMLInputElement>) => {
+        if (event.target.files && event.target.files[0]) {
+            setUploadFile(event.target.files[0]);
+        }
+    };
+
+    const uploadToBackend = async () => {
+        // allow max 5 MB
+        if (uploadFile!.size > 5242880) {
+            alert('max. 5 MB erlaubt');
+            return;
+        }
+
+        const body = new FormData();
+        body.append('file', uploadFile!);
+
+        const headers: { Authorization?: string } = {};
+        headers['Authorization'] = 'Bearer ' + session!.accessToken;
+
+        // upload as form data instead of json
+        const response = await fetch(
+            process.env.NEXT_PUBLIC_BACKEND_BASE_URL +
+                `/spaceadministration/put_file?name=${space.name}`,
+            {
+                method: 'POST',
+                headers: headers,
+                body,
+            }
+        );
+
+        const responseJson = await response.json();
+        console.log(responseJson);
+
+        mutate();
+        setUploadFile(undefined);
+        handleCloseUploadDialog();
+    };
 
     useEffect(() => {
         if (isLoading) {
@@ -50,7 +97,60 @@ export default function Space() {
     }, [space, isLoading]);
 
     function files() {
-        return <div>Dateiablage</div>;
+        return (
+            <>
+                <WhiteBox className="relative">
+                    <BoxHeadline title={'Dateiablage'} />
+                    <div className="absolute top-0 right-0 mx-2 p-4">
+                        <button
+                            className="bg-ve-collab-orange text-white rounded-lg p-1 flex justify-center items-center"
+                            onClick={() => {
+                                setIsUploadDialogOpen(true);
+                            }}
+                        >
+                            <RxPlus />
+                            <span className="mx-1">Hochladen</span>
+                        </button>
+                    </div>
+                    <hr className="h-px mt-2 mb-6 bg-gray-200 border-0" />
+                    <div className="mb-8 flex flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
+                        {space.files.map((file, index) => (
+                            <AuthenticatedFile
+                                key={index}
+                                url={`/uploads/${file.file_id}`}
+                                filename={file.file_name}
+                            >
+                                <div className="flex justify-center">
+                                    <RxFile size={80} /> {/* TODO preview for certain file types*/}
+                                </div>
+                                <div className="max-w-[150px] justify-center mx-2 px-1 my-1 font-bold text-slate-900 text-lg text-center truncate">
+                                    {file.file_name}
+                                </div>
+                            </AuthenticatedFile>
+                        ))}
+                    </div>
+                </WhiteBox>
+                <Dialog
+                    isOpen={isUploadDialogOpen}
+                    title={'Datei hochladen'}
+                    onClose={handleCloseUploadDialog}
+                >
+                    <div className="w-[30rem] flex items-center">
+                        <input type="file" onChange={uploadToClient} />
+                        <button
+                            className={
+                                'bg-ve-collab-orange border text-white mx-auto py-2 px-5 rounded-lg shadow-xl ' +
+                                (uploadFile === undefined ? 'opacity-50 cursor-not-allowed' : '')
+                            }
+                            onClick={uploadToBackend}
+                            disabled={!uploadFile}
+                        >
+                            <span>Hochladen</span>
+                        </button>
+                    </div>
+                </Dialog>
+            </>
+        );
     }
 
     function members() {
@@ -189,7 +289,7 @@ export default function Space() {
                         </button>
                         <WhiteBox>
                             <BoxHeadline title={'Beschreibung'} />
-                            <div className="min-h-[20vh] mx-2 my-1">
+                            <div className="min-h-[20vh] mx-2 my-4 px-1">
                                 <div className={'text-gray-500'}>
                                     {space?.space_description
                                         ? space.space_description

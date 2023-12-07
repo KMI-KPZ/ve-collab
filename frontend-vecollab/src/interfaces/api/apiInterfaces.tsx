@@ -35,12 +35,19 @@ export interface BackendChatMessage {
     send_states: Record<string, string>;
 }
 
+export interface BackendFileSnippet {
+    author: string,
+    file_id: string,
+    file_name: string,
+    manually_uploaded: boolean,
+}
+
 export interface BackendSpace {
     _id: string;
     name: string;
     admins: string[];
     members: string[];
-    files: string[];
+    files: BackendFileSnippet[];
     invisible: boolean;
     joinable: boolean;
     invites: string[];
