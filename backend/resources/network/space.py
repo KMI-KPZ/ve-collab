@@ -428,7 +428,7 @@ class Spaces:
         )
         if not space_requests:
             raise SpaceDoesntExistError()
-        
+
         if username not in space_requests["requests"]:
             raise NotRequestedJoinError()
 
@@ -463,6 +463,20 @@ class Spaces:
         # toggle visibility
         update_result = self.db.spaces.update_one(
             {"name": space_name}, [{"$set": {"invisible": {"$not": "$invisible"}}}]
+        )
+
+        # the filter didnt match any document, so the space doesnt exist
+        if update_result.matched_count != 1:
+            raise SpaceDoesntExistError()
+
+    def toggle_joinability(self, space_name: str) -> None:
+        """
+        toggle the joinability of the space, i.e. joinable --> not joinable, not joinable --> joinable
+        """
+
+        # toggle joinability
+        update_result = self.db.spaces.update_one(
+            {"name": space_name}, [{"$set": {"joinable": {"$not": "$joinable"}}}]
         )
 
         # the filter didnt match any document, so the space doesnt exist
@@ -532,18 +546,16 @@ class Spaces:
         )
         if not space_admins:
             raise SpaceDoesntExistError()
-        
+
         if username not in space_admins["admins"]:
             raise UserNotAdminError()
-        
+
         # if the user is the only admin left, he cannot be degraded
         if len(space_admins["admins"]) == 1:
             raise OnlyAdminError()
 
         # remove user from spaces admins list
-        self.db.spaces.update_one(
-            {"name": space_name}, {"$pull": {"admins": username}}
-        )
+        self.db.spaces.update_one({"name": space_name}, {"$pull": {"admins": username}})
 
     def create_or_join_discussion_space(self, wp_post: dict, username: str) -> str:
         """

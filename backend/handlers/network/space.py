@@ -539,6 +539,35 @@ class SpaceHandler(BaseHandler):
                 {"success": False,
                  "reason": "space_doesnt_exist"}
 
+        POST /spaceadministration/toggle_joinability
+            (toggle joinable state of space, i.e. true --> false, false --> true, requires space admin or global admin privileges)
+            query param:
+                "name" : the space which to trigger
+
+            returns:
+                200 OK,
+                {"success": True}
+
+                400 Bad Request
+                {"success": False,
+                 "reason": missing_key:name}
+
+                400 Bad Request
+                {"success": False,
+                 "reason": "space_doesnt_exist"}
+
+                401 Unauthorized
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                {"success": False,
+                 "reason": "insufficient_permission"}
+
+                409 Conflict
+                {"success": False,
+                 "reason": "space_doesnt_exist"}
+
         POST /spaceadministration/join_discussion
             start or join the space that discusses about a wordpress post
             query param:
@@ -683,6 +712,10 @@ class SpaceHandler(BaseHandler):
 
         elif slug == "toggle_visibility":
             self.toggle_space_visibility(space_name)
+            return
+
+        elif slug == "toggle_joinability":
+            self.toggle_space_joinability(space_name)
             return
 
         elif slug == "join_discussion":
@@ -1512,6 +1545,35 @@ class SpaceHandler(BaseHandler):
 
             # toggle visibility
             space_manager.toggle_visibility(space_name)
+
+            self.set_status(200)
+            self.write({"success": True})
+
+    def toggle_space_joinability(self, space_name: str) -> None:
+        """
+        toggle joinable state of space depending on current state, i.e. true --> false, false --> true
+        """
+
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
+            try:
+                # abort if user is neither space nor global admin
+                if not (
+                    space_manager.check_user_is_space_admin(
+                        space_name, self.current_user.username
+                    )
+                    or self.is_current_user_lionet_admin()
+                ):
+                    self.set_status(403)
+                    self.write({"success": False, "reason": "insufficient_permission"})
+                    return
+            except SpaceDoesntExistError:
+                self.set_status(409)
+                self.write({"success": False, "reason": "space_doesnt_exist"})
+                return
+
+            # toggle joinability
+            space_manager.toggle_joinability(space_name)
 
             self.set_status(200)
             self.write({"success": True})

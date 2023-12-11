@@ -3,8 +3,8 @@ import AuthenticatedImage from '../AuthenticatedImage';
 import { RxDotFilled, RxDotsVertical } from 'react-icons/rx';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { useGetSpace } from '@/lib/backend';
-import { useState } from 'react';
+import { fetchPOST, useGetSpace } from '@/lib/backend';
+import { useEffect, useState } from 'react';
 import Dialog from '../profile/Dialog';
 import { set } from 'date-fns';
 import Tabs from '../profile/Tabs';
@@ -28,6 +28,32 @@ export default function GroupHeader() {
     const handleCloseEditDialog = () => {
         setIsEditDialogOpen(false);
     };
+
+    const toggleVisibility = () => {
+        fetchPOST(
+            `/spaceadministration/toggle_visibility?name=${space.name}`,
+            {},
+            session!.accessToken
+        );
+        setToggleInvisible(!toggleInvisible);
+        mutate();
+    };
+
+    const toggleJoinability = () => {
+        fetchPOST(
+            `/spaceadministration/toggle_joinability?name=${space.name}`,
+            {},
+            session!.accessToken
+        );
+        setToggleJoinable(!toggleJoinable);
+        mutate();
+    };
+
+    useEffect(() => {
+        if (!isLoading) {
+            setToggleInvisible(space.invisible);
+        }
+    }, [isLoading, space]);
 
     return (
         <>
@@ -89,9 +115,7 @@ export default function GroupHeader() {
                                 <div className="mx-4">öffentlich</div>
                                 <div
                                     className="md:w-14 md:h-7 w-12 h-6 flex items-center bg-gray-400 rounded-full p-1 cursor-pointer"
-                                    onClick={() => {
-                                        setToggleJoinable(!toggleJoinable);
-                                    }}
+                                    onClick={toggleJoinability}
                                 >
                                     <div
                                         className={
@@ -106,9 +130,7 @@ export default function GroupHeader() {
                                 <div className="mx-4">unsichtbar</div>
                                 <div
                                     className="md:w-14 md:h-7 w-12 h-6 flex items-center bg-gray-400 rounded-full p-1 cursor-pointer"
-                                    onClick={() => {
-                                        setToggleInvisible(!toggleInvisible);
-                                    }}
+                                    onClick={toggleVisibility}
                                 >
                                     <div
                                         className={

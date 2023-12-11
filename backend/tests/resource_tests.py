@@ -83,7 +83,7 @@ def setUpModule():
     global_vars.mongodb_port = int(os.getenv("MONGODB_PORT", "27017"))
     global_vars.mongodb_username = os.getenv("MONGODB_USERNAME")
     global_vars.mongodb_password = os.getenv("MONGODB_PASSWORD")
-    global_vars.mongodb_db_name = "test_db"
+    global_vars.mongodb_db_name = "ve-collab-unittest"
     global_vars.elasticsearch_base_url = os.getenv(
         "ELASTICSEARCH_BASE_URL", "http://localhost:9200"
     )
@@ -99,7 +99,8 @@ def tearDownModule():
     """
 
     with util.get_mongodb() as db:
-        db.drop_collection("plans")
+        for collection_name in db.list_collection_names():
+            db.drop_collection(collection_name)
 
 
 class BaseResourceTestCase(TestCase):
@@ -3959,6 +3960,47 @@ class SpaceResourceTest(BaseResourceTestCase):
         space = self.db.spaces.find_one({"name": self.space_name})
         self.assertEqual(space["invisible"], current_visibility)
 
+    def test_toggle_visibility_error_space_doesnt_exist(self):
+        """
+        expect: SpaceDoesntExistError is raised because no
+        space with this name exists
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            SpaceDoesntExistError, space_manager.toggle_visibility, "non_existing_space"
+        )
+
+    def test_toggle_joinability(self):
+        """
+        expect: set joinable attribute to True if it was False and False if it was True
+        """
+
+        current_joinability = self.default_space["joinable"]
+        space_manager = Spaces(self.db)
+        space_manager.toggle_joinability(self.space_name)
+
+        space = self.db.spaces.find_one({"name": self.space_name})
+        self.assertEqual(space["joinable"], not current_joinability)
+
+        # try again backwards
+        space_manager.toggle_joinability(self.space_name)
+        space = self.db.spaces.find_one({"name": self.space_name})
+        self.assertEqual(space["joinable"], current_joinability)
+
+    def test_toggle_joinability_error_space_doesnt_exist(self):
+        """
+        expect: SpaceDoesntExistError is raised because no
+        space with this name exists
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            SpaceDoesntExistError,
+            space_manager.toggle_joinability,
+            "non_existing_space",
+        )
+
     def test_leave_space_member(self):
         """
         expect: successfully leave space as member
@@ -4178,10 +4220,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         filename = "test"
         space_manager = Spaces(self.db)
         space_manager.add_new_post_file(
-            self.space_name,
-            CURRENT_USER.username,
-            file_id,
-            filename
+            self.space_name, CURRENT_USER.username, file_id, filename
         )
 
         space = self.db.spaces.find_one({"name": self.space_name})
@@ -4210,7 +4249,7 @@ class SpaceResourceTest(BaseResourceTestCase):
             "non_existing_space",
             CURRENT_USER.username,
             file_id,
-            "test"
+            "test",
         )
 
     def test_add_new_post_file_error_file_already_in_repo(self):
@@ -4237,7 +4276,7 @@ class SpaceResourceTest(BaseResourceTestCase):
             self.space_name,
             CURRENT_USER.username,
             file_obj["file_id"],
-            file_obj["file_name"]
+            file_obj["file_name"],
         )
 
     def test_add_new_repo_file(self):
