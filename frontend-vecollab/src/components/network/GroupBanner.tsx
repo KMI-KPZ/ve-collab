@@ -66,11 +66,11 @@ export default function GroupBanner() {
     return (
         <>
             <div className={'w-full h-72 mt-10 relative rounded-2xl'}>
-                <Image className={'z-10'} fill src={blueBackground} alt={''} />
+                <Image fill src={blueBackground} alt={''} />
                 {isLoading ? (
                     <LoadingAnimation />
                 ) : (
-                    <div className={'flex absolute bottom-5 right-14 divide-x z-20'}>
+                    <div className={'flex absolute bottom-5 right-14 divide-x z-10'}>
                         <div className={'flex items-center pr-6 text-lg text-white'}>
                             <div>
                                 <div className="font-bold">

@@ -233,7 +233,7 @@ export default function Space() {
     return (
         <Container>
             <GroupBanner />
-            <div className={'mx-20 mb-2 px-5 relative -mt-16 z-10'}>
+            <div className={'mx-20 mb-2 px-5 relative -mt-16'}>
                 <GroupHeader />
             </div>
             <Container>

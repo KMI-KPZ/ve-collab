@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import Dialog from '../profile/Dialog';
 import { set } from 'date-fns';
 import Tabs from '../profile/Tabs';
+import BoxHeadline from '../BoxHeadline';
 
 export default function GroupHeader() {
     const { data: session, status } = useSession();
@@ -142,7 +143,49 @@ export default function GroupHeader() {
                                 <div className="mx-4">sichtbar</div>
                             </div>
                         </div>
-                        <div tabname="Anfragen"></div>
+                        <div tabname="Anfragen">
+                            <div className="divide-y">
+                                {Array(3)
+                                    .fill(0)
+                                    .map((_, index) => (
+                                        <div key={index} className="flex py-2 justify-between">
+                                            <div className="flex cursor-pointer">
+                                                <div>
+                                                    <AuthenticatedImage
+                                                        imageId={'default_profile_pic.jpg'}
+                                                        alt={'Profilbild'}
+                                                        width={60}
+                                                        height={60}
+                                                        className="rounded-full"
+                                                    ></AuthenticatedImage>
+                                                </div>
+                                                <div>
+                                                    <BoxHeadline title={'Max Mustermann'} />
+                                                    <div className="mx-2 px-1 my-1 text-gray-600">
+                                                        {'Lorem ipsum Institution'}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center">
+                                                <button
+                                                    className={
+                                                        'h-10 bg-transparent border border-green-600 text-green-600 px-4 mx-2 rounded-lg shadow-xl'
+                                                    }
+                                                >
+                                                    <span>Annehmen</span>
+                                                </button>
+                                                <button
+                                                    className={
+                                                        'h-10 bg-transparent border border-red-600 text-red-600 px-4 mx-2 rounded-lg shadow-xl'
+                                                    }
+                                                >
+                                                    <span>Ablehnen</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                            </div>
+                        </div>
                         <div tabname="Einladungen"></div>
                         <div tabname="Berechtigungen"></div>
                     </Tabs>
