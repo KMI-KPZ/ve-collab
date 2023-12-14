@@ -62,6 +62,17 @@ class SpaceHandler(BaseHandler):
                 {"success": False,
                  "reason": "insufficient_permission"}
 
+        GET /spaceadministration/my
+            (view all spaces that current user is a member of)
+            return:
+                200 OK,
+                {"success": True,
+                 "spaces": [space1, space2,...]}
+
+                401 Unauthorized
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
         GET /spaceadministration/info
             (view details about one space, if it is invisible, you need to be a member of the space
             or an admin)
@@ -190,6 +201,10 @@ class SpaceHandler(BaseHandler):
         elif slug == "list_all":
             self.list_spaces()
             return
+        
+        elif slug == "my":
+            self.list_personal_spaces()
+            return
 
         elif slug == "info":
             try:
@@ -260,6 +275,7 @@ class SpaceHandler(BaseHandler):
             query param:
                 "name" : space name to create, mandatory argument
                 "invisible" : boolean to mark if space should be visible to users in overview or not, optional argument, default False
+                "joinable" : boolean to mark if space should be joinable to user or only upon request, optional argument, default True
 
             returns:
                 200 OK,
@@ -641,7 +657,7 @@ class SpaceHandler(BaseHandler):
             # explicit bool cast in case user puts any string or int value that is not already "true" (will be interpreted as true then)
             invisible = bool(invisible)
 
-            joinable = self.get_argument("joinable", False)
+            joinable = self.get_argument("joinable", True)
             if joinable == "false":
                 joinable = False
             joinable = bool(joinable)
@@ -777,6 +793,14 @@ class SpaceHandler(BaseHandler):
                 401 Unauthorized
                 {"success": False,
                  "reason": "no_logged_in_user"}
+
+                409 Conflict
+                {"success": False,
+                 "reason": "space_doesnt_exist"}
+                
+                409 Conflict
+                {"success": False,
+                 "reason": "no_other_admins_left"}
 
         DELETE /spaceadministration/kick
             (kick a user from the space, requires being global or space admin)
@@ -991,6 +1015,19 @@ class SpaceHandler(BaseHandler):
             spaces = space_manager.get_all_spaces_visible_to_user(
                 self.current_user.username
             )
+
+        self.set_status(200)
+        self.write(self.json_serialize_response({"success": True, "spaces": spaces}))
+        return
+    
+    def list_personal_spaces(self) -> None:
+        """
+        list all spaces that the current user is a member of
+        """
+
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
+            spaces = space_manager.get_spaces_of_user(self.current_user.username)
 
         self.set_status(200)
         self.write(self.json_serialize_response({"success": True, "spaces": spaces}))

@@ -3,7 +3,7 @@ import AuthenticatedImage from '../AuthenticatedImage';
 import { RxDotFilled, RxDotsVertical } from 'react-icons/rx';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { fetchPOST, useGetSpace } from '@/lib/backend';
+import { fetchDELETE, fetchPOST, useGetSpace } from '@/lib/backend';
 import { useEffect, useState } from 'react';
 import Dialog from '../profile/Dialog';
 import { set } from 'date-fns';
@@ -50,6 +50,15 @@ export default function GroupHeader() {
         mutate();
     };
 
+    const leaveSpace = () => {
+        fetchDELETE(`/spaceadministration/leave?name=${space.name}`, {}, session!.accessToken).then(response => {
+            console.log(response);
+            // TODO error handling
+        });
+        router.push("/spaces");
+    }
+
+
     useEffect(() => {
         if (!isLoading) {
             setToggleInvisible(space.invisible);
@@ -92,6 +101,7 @@ export default function GroupHeader() {
                         }
                         onClick={(e) => {
                             e.preventDefault();
+                            leaveSpace();
                         }}
                     >
                         {' '}
@@ -111,9 +121,10 @@ export default function GroupHeader() {
             >
                 <div className="w-[70vw] h-[50vh]">
                     <Tabs>
+                        <div tabname='Bild & Beschreibung'>todo</div>
                         <div tabname="Sichtbarkeit">
                             <div className="flex mx-4 my-4">
-                                <div className="mx-4">öffentlich</div>
+                                <div className="mx-4">privat</div>
                                 <div
                                     className="md:w-14 md:h-7 w-12 h-6 flex items-center bg-gray-400 rounded-full p-1 cursor-pointer"
                                     onClick={toggleJoinability}
@@ -125,7 +136,7 @@ export default function GroupHeader() {
                                         }
                                     ></div>
                                 </div>
-                                <div className="mx-4">privat</div>
+                                <div className="mx-4">öffentlich</div>
                             </div>
                             <div className="flex mx-4 my-4">
                                 <div className="mx-4">unsichtbar</div>

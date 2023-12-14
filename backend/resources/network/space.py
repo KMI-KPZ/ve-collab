@@ -139,6 +139,19 @@ class Spaces:
             spaces.append(Space(space))
         return spaces
 
+    def get_spaces_of_user(self, username: str) -> List[Space]:
+        """
+        get data of all spaces the given user is a member (or admin) of
+        :return: the space data of all spaces the user is a member (or admin) of
+        """
+
+        spaces = []
+        for space in self.db.spaces.find(
+            {"$or": [{"members": username}, {"admins": username}]}
+        ):
+            spaces.append(Space(space))
+        return spaces
+
     def get_space_names(self) -> List[str]:
         """
         retrieve a list of all existing space names
@@ -148,7 +161,7 @@ class Spaces:
             space["name"] for space in self.db.spaces.find(projection={"name": True})
         ]
 
-    def get_spaces_of_user(self, username: str) -> List[str]:
+    def get_space_names_of_user(self, username: str) -> List[str]:
         """
         retrieve a list of space names that the given user is a member of.
         :param username: the user to query for

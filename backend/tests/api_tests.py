@@ -3745,6 +3745,46 @@ class SpaceHandlerTest(BaseApiTestCase):
         response = self.base_checks("GET", "/spaceadministration/list_all", False, 403)
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
 
+    def test_get_personal_spaces(self):
+        """
+        expect: list all spaces that user is member of
+        """
+
+        # insert 2 more spaces, in one user member and one not
+        self.db.spaces.insert_many(
+            [
+                {
+                    "name": "another1",
+                    "invisible": True,
+                    "joinable": False,
+                    "members": [CURRENT_ADMIN.username],
+                    "admins": [CURRENT_ADMIN.username],
+                    "invites": [],
+                    "requests": [],
+                    "files": [],
+                },
+                {
+                    "name": "another2",
+                    "invisible": False,
+                    "joinable": False,
+                    "members": [CURRENT_USER.username],
+                    "admins": [CURRENT_USER.username],
+                    "invites": [],
+                    "requests": [],
+                    "files": [],
+                },
+            ]
+        )
+
+        response = self.base_checks("GET", "/spaceadministration/my", True, 200)
+        self.assertIn("spaces", response)
+        self.assertTrue(
+            any(self.test_space == space["name"] for space in response["spaces"])
+        )
+        self.assertTrue(
+            any("another1" == space["name"] for space in response["spaces"])
+        )
+
     def test_get_space_info(self):
         """
         expect: successfully request info about that space even though user is not member

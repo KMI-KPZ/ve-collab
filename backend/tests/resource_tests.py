@@ -3374,6 +3374,49 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertIn("test", space_names)
         self.assertIn("test2", space_names)
 
+    def test_get_space_names_of_user(self):
+        """
+        expect: successfully get a list of all space names the user is a member of
+        """
+
+        # add 2 more space
+        additional_spaces = [
+            {
+                "_id": ObjectId(),
+                "name": "test2",
+                "invisible": False,
+                "joinable": True,
+                "members": [CURRENT_ADMIN.username],
+                "admins": [CURRENT_ADMIN.username],
+                "invites": [],
+                "requests": [],
+                "files": [],
+                "space_pic": "default_space_pic.jpg",
+                "space_description": "test",
+            },
+            {
+                "_id": ObjectId(),
+                "name": "test3",
+                "invisible": False,
+                "joinable": True,
+                "members": [],
+                "admins": [],
+                "invites": [],
+                "requests": [],
+                "files": [],
+                "space_pic": "default_space_pic.jpg",
+                "space_description": "test",
+            },
+        ]
+
+        self.db.spaces.insert_many(additional_spaces)
+
+        space_manager = Spaces(self.db)
+        spaces = space_manager.get_space_names_of_user(CURRENT_ADMIN.username)
+        self.assertEqual(len(spaces), 2)
+        self.assertIn("test", spaces)
+        self.assertIn("test2", spaces)
+
     def test_get_spaces_of_user(self):
         """
         expect: successfully get a list of all spaces the user is a member of
@@ -3414,8 +3457,8 @@ class SpaceResourceTest(BaseResourceTestCase):
         space_manager = Spaces(self.db)
         spaces = space_manager.get_spaces_of_user(CURRENT_ADMIN.username)
         self.assertEqual(len(spaces), 2)
-        self.assertIn("test", spaces)
-        self.assertIn("test2", spaces)
+        self.assertIn(self.default_space, spaces)
+        self.assertIn(additional_spaces[0], spaces)
 
     def test_get_space_invites_of_user(self):
         """

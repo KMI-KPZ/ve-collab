@@ -223,6 +223,42 @@ export function useGetSpace(
     };
 }
 
+export function useGetAllSpaces(accessToken: string): {
+    data: BackendSpace[];
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        ['/spaceadministration/list', accessToken],
+        ([url, token]) => GETfetcher(url, token)
+    );
+    return {
+        data: isLoading || error ? [] : data.spaces,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
+export function useGetMySpaces(accessToken: string): {
+    data: BackendSpace[];
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        ['/spaceadministration/my', accessToken],
+        ([url, token]) => GETfetcher(url, token)
+    );
+    return {
+        data: isLoading || error ? [] : data.spaces,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
 export async function fetchGET(relativeUrl: string, accessToken?: string) {
     const headers: { Authorization?: string } = {};
 
