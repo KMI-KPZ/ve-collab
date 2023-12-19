@@ -38,9 +38,11 @@ export default function EditProfile() {
     const [excludedFromMatching, setExcludedFromMatching] = useState(false);
     const [veInformation, setVeInformation] = useState<VEInformation>({
         veInterests: [''],
+        veContents: [''],
         veGoals: [''],
         experience: [''],
-        preferredFormats: [''],
+        interdisciplinaryExchange: true,
+        preferredFormat: '',
     });
     const [researchTags, setResearchTags] = useState([{ id: '', text: '' }]);
     const [courses, setCourses] = useState<Course[]>([
@@ -107,9 +109,11 @@ export default function EditProfile() {
                 setExcludedFromMatching(data.profile.excluded_from_matching);
                 setVeInformation({
                     veInterests: data.profile.ve_interests,
+                    veContents: data.profile.ve_contents,
                     veGoals: data.profile.ve_goals,
                     experience: data.profile.experience,
-                    preferredFormats: data.profile.preferred_formats,
+                    interdisciplinaryExchange: data.profile.interdisciplinary_exchange,
+                    preferredFormat: data.profile.preferred_format,
                 });
                 setResearchTags(
                     data.profile.research_tags.map((tag: string) => ({
@@ -156,9 +160,11 @@ export default function EditProfile() {
                 languages: personalInformation.languageTags.map((elem) => elem.text),
                 ve_ready: veReady,
                 ve_interests: veInformation.veInterests,
+                ve_contents: veInformation.veContents,
                 ve_goals: veInformation.veGoals,
                 experience: veInformation.experience,
-                preferred_formats: veInformation.preferredFormats,
+                interdisciplinary_exchange: veInformation.interdisciplinaryExchange,
+                preferred_format: veInformation.preferredFormat,
                 research_tags: researchTags.map((elem) => elem.text),
                 courses: courses,
                 educations: educations,

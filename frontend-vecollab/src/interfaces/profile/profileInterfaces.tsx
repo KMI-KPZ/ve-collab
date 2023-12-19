@@ -21,9 +21,11 @@ export interface ResearchTag {
 
 export interface VEInformation {
     veInterests: string[];
+    veContents: string[];
     veGoals: string[];
     experience: string[];
-    preferredFormats: string[];
+    interdisciplinaryExchange: boolean;
+    preferredFormat: string;
 }
 
 export interface Course {
