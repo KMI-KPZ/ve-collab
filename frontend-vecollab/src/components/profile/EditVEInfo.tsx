@@ -4,7 +4,6 @@ import EditProfileHeader from './EditProfileHeader';
 import EditProfileVerticalSpacer from './EditProfileVerticalSpacer';
 import EditProfileHeadline from './EditProfileHeadline';
 import EditProfilePlusMinusButtons from './EditProfilePlusMinusButtons';
-import { RxArrowDown, RxArrowUp, RxTrash } from 'react-icons/rx';
 import Swapper from './Swapper';
 
 interface Props {
@@ -54,6 +53,34 @@ export default function EditVEInfo({
         setVeInformation({ ...veInformation, veInterests: [...veInformation.veInterests, ''] });
     };
 
+    const modifyVeContents = (index: number, value: string) => {
+        let newContents = [...veInformation.veContents];
+        newContents[index] = value;
+        setVeInformation({ ...veInformation, veContents: newContents });
+    };
+
+    const swapVeContents = (e: FormEvent, firstIndex: number, secondIndex: number) => {
+        e.preventDefault();
+
+        // swap indices
+        [veInformation.veContents[firstIndex], veInformation.veContents[secondIndex]] = [
+            veInformation.veContents[secondIndex],
+            veInformation.veContents[firstIndex],
+        ];
+        setVeInformation({ ...veInformation, veContents: veInformation.veContents });
+    };
+
+    const deleteFromVeContents = (e: FormEvent, index: number) => {
+        e.preventDefault();
+        veInformation.veContents.splice(index, 1);
+        setVeInformation({ ...veInformation, veContents: veInformation.veContents });
+    };
+
+    const addVeContentsInputField = (e: FormEvent) => {
+        e.preventDefault();
+        setVeInformation({ ...veInformation, veContents: [...veInformation.veContents, ''] });
+    };
+
     const modifyVeGoals = (index: number, value: string) => {
         let newGoals = [...veInformation.veGoals];
         newGoals[index] = value;
@@ -80,6 +107,10 @@ export default function EditVEInfo({
     const addVeGoalsInputField = (e: FormEvent) => {
         e.preventDefault();
         setVeInformation({ ...veInformation, veGoals: [...veInformation.veGoals, ''] });
+    };
+
+    const modifyInterdisciplinaryExchange = (value: boolean) => {
+        setVeInformation({ ...veInformation, interdisciplinaryExchange: value });
     };
 
     const modifyExperience = (index: number, value: string) => {
@@ -110,36 +141,8 @@ export default function EditVEInfo({
         setVeInformation({ ...veInformation, experience: [...veInformation.experience, ''] });
     };
 
-    const modifyPreferredFormats = (index: number, value: string) => {
-        let newFormats = [...veInformation.preferredFormats];
-        newFormats[index] = value;
-        setVeInformation({ ...veInformation, preferredFormats: newFormats });
-    };
-
-    const swapPreferredFormats = (e: FormEvent, firstIndex: number, secondIndex: number) => {
-        e.preventDefault();
-
-        // swap indices
-        [veInformation.preferredFormats[firstIndex], veInformation.preferredFormats[secondIndex]] =
-            [
-                veInformation.preferredFormats[secondIndex],
-                veInformation.preferredFormats[firstIndex],
-            ];
-        setVeInformation({ ...veInformation, preferredFormats: veInformation.preferredFormats });
-    };
-
-    const deleteFromPreferredFormats = (e: FormEvent, index: number) => {
-        e.preventDefault();
-        veInformation.preferredFormats.splice(index, 1);
-        setVeInformation({ ...veInformation, preferredFormats: veInformation.preferredFormats });
-    };
-
-    const addPreferredFormatsInputField = (e: FormEvent) => {
-        e.preventDefault();
-        setVeInformation({
-            ...veInformation,
-            preferredFormats: [...veInformation.preferredFormats, ''],
-        });
+    const modifyPreferredFormat = (value: string) => {
+        setVeInformation({ ...veInformation, preferredFormat: value });
     };
 
     return (
@@ -147,6 +150,7 @@ export default function EditVEInfo({
             <EditProfileHeader orcid={orcid} importOrcidProfile={importOrcidProfile} />
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'aktuelle Verfügbarkeit für VE'} />
+                <div className="mb-2 text-sm">Bist du aktuell für einen VE verfügbar?</div>
                 <select
                     value={veReady === true ? 'true' : 'false'}
                     onChange={(e) =>
@@ -157,9 +161,13 @@ export default function EditVEInfo({
                     <option value="true">Ja</option>
                     <option value="false">Nein</option>
                 </select>
+                <div className="min-h-[20px]" /> {/* spacer to match "+" button spacing */}
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
-                <EditProfileHeadline name={'VE-Themeninteressen'} />
+                <EditProfileHeadline name={'VE-Themen'} />
+                <div className="mb-2 text-sm">
+                    Welche Themen rund um VE interessieren dich besonders?
+                </div>
                 {veInformation.veInterests.map((interest, index) => (
                     <Swapper
                         key={index}
@@ -169,11 +177,8 @@ export default function EditVEInfo({
                         deleteCallback={deleteFromVeInterests}
                     >
                         <input
-                            className={
-                                'border border-gray-500 rounded-lg px-2 py-1 mb-1 w-full mx-1'
-                            }
+                            className={'border border-gray-500 rounded-lg px-2 py-1 mb-1 w-full'}
                             type="text"
-                            placeholder={'In welchen Themengebieten willst du dich mit VE bewegen?'}
                             value={interest}
                             onChange={(e) => modifyVeInterests(index, e.target.value)}
                         />
@@ -182,7 +187,34 @@ export default function EditVEInfo({
                 <EditProfilePlusMinusButtons plusCallback={addVeInterestInputField} />
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
+                <EditProfileHeadline name={'VE-Inhalte'} />
+                <div className="mb-2 text-sm">
+                    Zu welchen (fachlichen, sprachlichen, kulturellen) Inhalten würdest du gern
+                    einen VE planen?
+                </div>
+                {veInformation.veContents.map((content, index) => (
+                    <Swapper
+                        key={index}
+                        index={index}
+                        arrayLength={veInformation.veContents.length}
+                        swapCallback={swapVeContents}
+                        deleteCallback={deleteFromVeContents}
+                    >
+                        <input
+                            className={'border border-gray-500 rounded-lg px-2 py-1 mb-1 w-full'}
+                            type="text"
+                            value={content}
+                            onChange={(e) => modifyVeContents(index, e.target.value)}
+                        />
+                    </Swapper>
+                ))}
+                <EditProfilePlusMinusButtons plusCallback={addVeContentsInputField} />
+            </EditProfileVerticalSpacer>
+            <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'VE-Zielsetzung'} />
+                <div className="mb-2 text-sm">
+                    Welche Ziele möchtest du mit deinem VE erreichen?
+                </div>
                 {veInformation.veGoals.map((goal, index) => (
                     <Swapper
                         key={index}
@@ -194,7 +226,6 @@ export default function EditVEInfo({
                         <input
                             className={'border border-gray-500 rounded-lg px-2 py-1 mb-1 w-full'}
                             type="text"
-                            placeholder={'Welche Ziele willst du mit VE erreichen?'}
                             value={goal}
                             onChange={(e) => modifyVeGoals(index, e.target.value)}
                         />
@@ -203,7 +234,29 @@ export default function EditVEInfo({
                 <EditProfilePlusMinusButtons plusCallback={addVeGoalsInputField} />
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
+                <EditProfileHeadline name={'interdisziplinärer Austausch'} />
+                <div className="mb-2 text-sm">
+                    Bist du an einem interdisziplinären Austausch interessiert?
+                </div>
+                <select
+                    value={veInformation.interdisciplinaryExchange === true ? 'true' : 'false'}
+                    onChange={(e) =>
+                        e.target.value === 'true'
+                            ? modifyInterdisciplinaryExchange(true)
+                            : modifyInterdisciplinaryExchange(false)
+                    }
+                    className="border border-gray-500 rounded-lg p-2 bg-white"
+                >
+                    <option value="true">Ja</option>
+                    <option value="false">Nein</option>
+                </select>
+                <div className="min-h-[20px]" /> {/* spacer to match "+" button spacing */}
+            </EditProfileVerticalSpacer>
+            <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'VE-Erfahrungen'} />
+                <div className="mb-2 text-sm">
+                    Welche VE-Erfahrungen konntest du bereits sammeln?
+                </div>
                 {veInformation.experience.map((exp, index) => (
                     <Swapper
                         key={index}
@@ -215,7 +268,6 @@ export default function EditVEInfo({
                         <input
                             className={'border border-gray-500 rounded-lg px-2 py-1 mb-1 w-full'}
                             type="text"
-                            placeholder={'Welche Erfahrungen konntest du bereits sammeln?'}
                             value={exp}
                             onChange={(e) => modifyExperience(index, e.target.value)}
                         />
@@ -225,26 +277,16 @@ export default function EditVEInfo({
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'präferierte Formate'} />
-                {veInformation.preferredFormats.map((format, index) => (
-                    <Swapper
-                        key={index}
-                        index={index}
-                        arrayLength={veInformation.preferredFormats.length}
-                        swapCallback={swapPreferredFormats}
-                        deleteCallback={deleteFromPreferredFormats}
-                    >
-                        <input
-                            className={'border border-gray-500 rounded-lg px-2 py-1 mb-1 w-full'}
-                            type="text"
-                            placeholder={
-                                'In welchen Formaten möchtest du VEs abhalten? z.B. synchron/asynchron/hybrid'
-                            }
-                            value={format}
-                            onChange={(e) => modifyPreferredFormats(index, e.target.value)}
-                        />
-                    </Swapper>
-                ))}
-                <EditProfilePlusMinusButtons plusCallback={addPreferredFormatsInputField} />
+                <div className="mb-2 text-sm">In welchen Formaten möchtest du den VE abhalten?</div>
+                <select
+                    value={veInformation.preferredFormat}
+                    onChange={(e) => modifyPreferredFormat(e.target.value)}
+                    className="border border-gray-500 rounded-lg p-2 bg-white"
+                >
+                    <option value="synchron">synchron</option>
+                    <option value="asynchron">asynchron</option>
+                    <option value="synchron und asynchron">synchron und asynchron</option>
+                </select>
             </EditProfileVerticalSpacer>
         </form>
     );

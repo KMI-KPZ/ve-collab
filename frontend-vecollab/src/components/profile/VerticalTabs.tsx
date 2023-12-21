@@ -1,5 +1,4 @@
 import { Component } from 'react';
-import Tab from './Tab';
 import VerticalTab from './VerticalTab';
 
 interface TabsProps {

@@ -1,7 +1,5 @@
-import { Notification } from '@/interfaces/socketio';
-import { fetchGET } from '@/lib/backend';
+import { useGetNotifications } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import { useEffect, useState } from 'react';
 import VeInvitationNotification from './VeInvitationNotification';
 import { Socket } from 'socket.io-client';
 import VeInvitationReplyNotification from './VeInvitationReplyNotification';
@@ -10,19 +8,11 @@ interface Props {
     socket: Socket;
 }
 
+AllNotifications.auth = true;
 export default function AllNotifications({ socket }: Props) {
     const { data: session, status } = useSession();
-    const [notifications, setNotifications] = useState<Notification[]>([]);
 
-    useEffect(() => {
-        fetchGET('/notifications', session?.accessToken).then((data: { notifications: any[] }) => {
-            setNotifications(
-                data.notifications.sort((a, b) => {
-                    return a.creation_timestamp < b.creation_timestamp ? 1 : -1;
-                })
-            );
-        });
-    }, [session]);
+    const {data: notifications, isLoading, error, mutate} = useGetNotifications(session!.accessToken)
 
     console.log(notifications);
 

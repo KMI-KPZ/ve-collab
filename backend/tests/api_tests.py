@@ -64,6 +64,8 @@ NON_UNIQUE_TASKS_ERROR = "non_unique_task_titles"
 
 INVITATION_DOESNT_EXIST_ERROR = "invitation_doesnt_exist"
 
+ROOM_DOESNT_EXIST_ERROR = "room_doesnt_exist"
+
 # don't change, these values match with the ones in BaseHandler
 CURRENT_ADMIN = User(
     "test_admin", "aaaaaaaa-bbbb-0000-cccc-dddddddddddd", "test_admin@mail.de"
@@ -253,6 +255,7 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                 "courses": [],
                 "educations": [],
                 "work_experience": [],
+                "ve_window": []
             },
             CURRENT_USER.username: {
                 "username": CURRENT_USER.username,
@@ -276,6 +279,7 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                 "courses": [],
                 "educations": [],
                 "work_experience": [],
+                "ve_window": []
             },
         }
 
@@ -3396,8 +3400,8 @@ class SearchHandlerTest(BaseApiTestCase):
         # there is no real solution i can think of other than just wait a little bit
         # for ES to finish analyzing and indexing
         import time
+
         time.sleep(2)
-        
 
     def setUp(self) -> None:
         super().setUp()
@@ -6721,6 +6725,21 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "duration": self.step.duration.total_seconds(),
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
+            "progress": {
+                "name": "not_started",
+                "institutions": "not_started",
+                "topic": "not_started",
+                "lectures": "not_started",
+                "audience": "not_started",
+                "languages": "not_started",
+                "involved_parties": "not_started",
+                "realization": "not_started",
+                "learning_env": "not_started",
+                "tools": "not_started",
+                "new_content": "not_started",
+                "formalities": "not_started",
+                "steps": "not_started",
+            },
         }
         self.db.plans.insert_one(self.default_plan)
 
@@ -6790,6 +6809,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.duration, default_plan.duration)
         self.assertEqual(response_plan.workload, default_plan.workload)
         self.assertEqual(response_plan.steps, default_plan.steps)
+        self.assertEqual(response_plan.progress, default_plan.progress)
         self.assertIsNotNone(response_plan.creation_timestamp)
         self.assertIsNotNone(response_plan.last_modified)
 
@@ -6878,6 +6898,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.duration, default_plan.duration)
         self.assertEqual(response_plan.workload, default_plan.workload)
         self.assertEqual(response_plan.steps, default_plan.steps)
+        self.assertEqual(response_plan.progress, default_plan.progress)
         self.assertIsNotNone(response_plan.creation_timestamp)
         self.assertIsNotNone(response_plan.last_modified)
 
@@ -7582,6 +7603,84 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
 
+    def test_post_update_fields(self):
+        """
+        expect: successfully update multiple fields
+        """
+
+        payload = {
+            "update": [
+                {
+                    "plan_id": self.plan_id,
+                    "field_name": "realization",
+                    "value": "updated_realization",
+                },
+                {
+                    "plan_id": self.plan_id,
+                    "field_name": "topic",
+                    "value": "updated_topic",
+                },
+            ]
+        }
+
+        self.base_checks(
+            "POST",
+            "/planner/update_fields",
+            True,
+            200,
+            body=self.json_serialize(payload),
+        )
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["realization"], "updated_realization")
+        self.assertEqual(db_state["topic"], "updated_topic")
+        self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
+
+    def test_post_update_fields_errors(self):
+        """
+        expect: one query to be successfull and the other caused an error
+        """
+
+        payload = {
+            "update": [
+                {
+                    "plan_id": self.plan_id,
+                    "field_name": "realization",
+                    "value": "updated_realization",
+                },
+                {
+                    "plan_id": self.plan_id,
+                    "field_name": "topics",  # field name is wrong, should cause unexpected_attribute
+                    "value": "updated_topic",
+                },
+            ]
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/update_fields",
+            False,
+            409,
+            body=self.json_serialize(payload),
+        )
+
+        self.assertEqual(response["reason"], "operation_errors")
+        self.assertIn("errors", response)
+        self.assertEqual(1, len(response["errors"]))
+        error = response["errors"][0]
+        self.assertIn("update_instruction", error)
+        self.assertIn("error_status_code", error)
+        self.assertIn("error_reason", error)
+        self.assertEqual(error["error_status_code"], 400)
+        self.assertEqual(error["error_reason"], "unexpected_attribute")
+
+        # realization should be updated, but topic not
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["realization"], "updated_realization")
+        self.assertNotEqual(db_state["topic"], "updated_topic")
+
     def test_post_grant_read_permission(self):
         """
         expect: successfully set read permissions for the user
@@ -7904,6 +8003,83 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNone(db_state)
+
+    def test_delete_plan_side_effect_delete_from_ve_windows(self):
+        """
+        expect: successfully delete plan and also delete the plan from all VEWindows
+        that reference it
+        """
+
+        # insert a user with a ve_window entry that references the plan
+        self.db.profiles.insert_one(
+            {
+                "_id": ObjectId(),
+                "username": "some_other_user",
+                "role": "guest",
+                "follows": [],
+                "bio": "test",
+                "institution": "test",
+                "profile_pic": "default_profile_pic.jpg",
+                "first_name": "Test",
+                "last_name": "Admin",
+                "gender": "male",
+                "address": "test",
+                "birthday": "2023-01-01",
+                "experience": ["test", "test"],
+                "expertise": "test",
+                "languages": ["german", "english"],
+                "ve_ready": True,
+                "excluded_from_matching": False,
+                "ve_interests": ["test", "test"],
+                "ve_goals": ["test", "test"],
+                "preferred_formats": ["test"],
+                "research_tags": ["test"],
+                "courses": [
+                    {"title": "test", "academic_course": "test", "semester": "test"}
+                ],
+                "educations": [
+                    {
+                        "institution": "test",
+                        "degree": "test",
+                        "department": "test",
+                        "timestamp_from": "2023-01-01",
+                        "timestamp_to": "2023-02-01",
+                        "additional_info": "test",
+                    }
+                ],
+                "work_experience": [
+                    {
+                        "position": "test",
+                        "institution": "test",
+                        "department": "test",
+                        "timestamp_from": "2023-01-01",
+                        "timestamp_to": "2023-02-01",
+                        "city": "test",
+                        "country": "test",
+                        "additional_info": "test",
+                    }
+                ],
+                "ve_window": [
+                    {
+                        "plan_id": self.plan_id,
+                        "title": "test",
+                        "description": "test",
+                    }
+                ],
+            }
+        )
+
+        self.base_checks(
+            "DELETE", "/planner/delete?_id={}".format(str(self.plan_id)), True, 200
+        )
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNone(db_state)
+
+        # expect the plan to be deleted from the ve_window as well
+        db_state = self.db.profiles.find_one({"username": "some_other_user"})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(len(db_state["ve_window"]), 0)
 
     def test_delete_plan_error_missing_key(self):
         """
@@ -8309,3 +8485,245 @@ class VeInvitationHandlerTest(BaseApiTestCase):
             "POST", "/ve_invitation/reply", False, 403, body=payload
         )
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+
+class ChatHandlerTest(BaseApiTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+
+        self.base_permission_environment_setUp()
+
+        self.room_id = ObjectId()
+        self.message_id = ObjectId()
+        self.default_message = {
+            "_id": self.message_id,
+            "message": "test",
+            "sender": CURRENT_ADMIN.username,
+            "creation_date": datetime(2023, 1, 1, 8, 0, 0),
+            "send_states": {
+                CURRENT_ADMIN.username: "acknowledged",
+                "other_user": "sent",
+            },
+        }
+        self.default_room = {
+            "_id": self.room_id,
+            "name": "test_room",
+            "members": [CURRENT_ADMIN.username, "other_user"],
+            "messages": [self.default_message],
+        }
+        self.db.chatrooms.insert_one(self.default_room)
+
+    def tearDown(self) -> None:
+        self.base_permission_environments_tearDown()
+
+        self.db.chatrooms.delete_many({})
+
+        super().tearDown()
+
+    def test_get_get_mine(self):
+        """
+        expect: successfully get chatroom snippets for all rooms where
+        the current user is a member
+        """
+
+        # create two more rooms, one where the user is a member and one where not
+        room1 = {
+            "_id": ObjectId(),
+            "name": "room1",
+            "members": [CURRENT_ADMIN.username, CURRENT_USER.username],
+            "messages": [],
+        }
+        room2 = {
+            "_id": ObjectId(),
+            "name": "room2",
+            "members": [CURRENT_USER.username, "some_other_user"],
+            "messages": [],
+        }
+        self.db.chatrooms.insert_many([room1, room2])
+
+        response = self.base_checks("GET", "/chatroom/get_mine", True, 200)
+        self.assertIn("rooms", response)
+
+        snippets = response["rooms"]
+        self.assertEqual(len(snippets), 2)
+        self.assertIn(
+            str(self.default_room["_id"]), [snippet["_id"] for snippet in snippets]
+        )
+        self.assertIn(str(room1["_id"]), [snippet["_id"] for snippet in snippets])
+
+        # expect the snippet is of the correct form
+        for snippet in snippets:
+            if snippet["_id"] == self.room_id:
+                self.assertEqual(snippet["name"], self.default_room["name"])
+                self.assertEqual(snippet["members"], self.default_room["members"])
+                self.assertEqual(
+                    snippet["last_message"]["_id"], str(self.default_message["_id"])
+                )
+            elif snippet["_id"] == room1["_id"]:
+                self.assertEqual(snippet["name"], room1["name"])
+                self.assertEqual(snippet["members"], room1["members"])
+                self.assertEqual(snippet["last_message"], None)
+
+    def test_get_get_messages(self):
+        """
+        expect: successfully get all messages of the given room
+        """
+
+        # add one more message to the default room
+        message = {
+            "_id": ObjectId(),
+            "message": "test2",
+            "sender": "other_user",
+            "creation_date": datetime(2023, 1, 1, 9, 0, 0),
+            "send_states": {
+                CURRENT_ADMIN.username: "sent",
+                "other_user": "acknowledged",
+            },
+        }
+        self.db.chatrooms.update_one(
+            {"_id": self.room_id}, {"$push": {"messages": message}}
+        )
+
+        response = self.base_checks(
+            "GET",
+            "/chatroom/get_messages?room_id={}".format(str(self.room_id)),
+            True,
+            200,
+        )
+
+        self.assertIn("room_id", response)
+        self.assertIn("messages", response)
+        self.assertEqual(len(response["messages"]), 2)
+        self.assertIn(
+            str(self.default_message["_id"]),
+            [msg["_id"] for msg in response["messages"]],
+        )
+        self.assertIn(str(message["_id"]), [msg["_id"] for msg in response["messages"]])
+
+    def test_get_get_messages_error_missing_key(self):
+        """
+        expect: fail message because room_id is missing
+        """
+
+        response = self.base_checks("GET", "/chatroom/get_messages", False, 400)
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "room_id")
+
+    def test_get_get_messages_error_insufficient_permissions(self):
+        """
+        expect: fail message because user is not a member of the room
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        response = self.base_checks(
+            "GET",
+            "/chatroom/get_messages?room_id={}".format(str(self.room_id)),
+            False,
+            403,
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_get_get_messages_error_room_doesnt_exist(self):
+        """
+        expect: fail message because no room with this _id exists
+        """
+
+        response = self.base_checks(
+            "GET",
+            "/chatroom/get_messages?room_id={}".format(str(ObjectId())),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], ROOM_DOESNT_EXIST_ERROR)
+
+    def test_post_create_or_get(self):
+        """
+        expect: successfully create a new room or get an existing one
+        """
+
+        # this should create a new room, because there is a room with the same members,
+        # but is has a name
+        payload = {
+            "members": [CURRENT_ADMIN.username, "other_user"],
+        }
+        response = self.base_checks(
+            "POST", "/chatroom/create_or_get", True, 200, body=payload
+        )
+        self.assertIn("room_id", response)
+
+        # expect the room to be in the db
+        db_state = self.db.chatrooms.find_one({"_id": ObjectId(response["room_id"])})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["name"], None)
+        self.assertEqual(db_state["members"], payload["members"])
+        self.assertEqual(db_state["messages"], [])
+        self.assertNotEqual(db_state["_id"], self.room_id)
+
+        # this time, create a new room with a name, though again with the same members
+        payload2 = {
+            "members": [CURRENT_ADMIN.username, "other_user"],
+            "name": "another_test_room",
+        }
+        response2 = self.base_checks(
+            "POST", "/chatroom/create_or_get", True, 200, body=payload2
+        )
+        self.assertIn("room_id", response2)
+
+        # expect the room to be in the db
+        db_state2 = self.db.chatrooms.find_one({"_id": ObjectId(response2["room_id"])})
+        self.assertIsNotNone(db_state2)
+        self.assertEqual(db_state2["name"], payload2["name"])
+        self.assertEqual(db_state2["members"], payload2["members"])
+        self.assertEqual(db_state2["messages"], [])
+        self.assertNotEqual(db_state2["_id"], self.room_id)
+
+        # this time, create a room with an already existing name, but different members,
+        # which should also be an independent room
+        payload3 = {
+            "members": [CURRENT_ADMIN.username, "another_other_user"],
+            "name": self.default_room["name"],
+        }
+        response3 = self.base_checks(
+            "POST", "/chatroom/create_or_get", True, 200, body=payload3
+        )
+        self.assertIn("room_id", response3)
+
+        # expect the room to be in the db
+        db_state3 = self.db.chatrooms.find_one({"_id": ObjectId(response3["room_id"])})
+        self.assertIsNotNone(db_state3)
+        self.assertEqual(db_state3["name"], payload3["name"])
+        self.assertEqual(db_state3["members"], payload3["members"])
+        self.assertEqual(db_state3["messages"], [])
+        self.assertNotEqual(db_state3["_id"], self.room_id)
+
+        # and finally, get the already existing room
+        payload4 = {
+            "members": self.default_room["members"],
+            "name": self.default_room["name"],
+        }
+        response4 = self.base_checks(
+            "POST", "/chatroom/create_or_get", True, 200, body=payload4
+        )
+        self.assertIn("room_id", response4)
+
+        # expect the room to be in the db
+        db_state4 = self.db.chatrooms.find_one({"_id": ObjectId(response4["room_id"])})
+        self.assertIsNotNone(db_state4)
+        self.assertEqual(db_state4["name"], payload4["name"])
+        self.assertEqual(db_state4["members"], payload4["members"])
+        self.assertEqual(db_state4["messages"], [self.default_message])
+        self.assertEqual(db_state4["_id"], self.room_id)
+
+    def test_post_create_or_get_eroror_missing_key(self):
+        """
+        expect: fail message because members is missing
+        """
+
+        response = self.base_checks(
+            "POST", "/chatroom/create_or_get", False, 400, body={}
+        )
+        self.assertEqual(
+            response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "members"
+        )

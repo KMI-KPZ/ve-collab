@@ -4,4 +4,4 @@ import { io } from 'socket.io-client';
 // is running behind a nginx location block (e.g. /backend/socket.io/ needs "path": "/backend/socket.io")
 // OR configure nginx to proxy pass /backend/socket.io directly to the backends /socket.io
 // with a custom nginx /socket.io location
-export const socket = io(process.env.NEXT_PUBLIC_BACKEND_BASE_URL!, { autoConnect: false });
+export const socket = io(process.env.NEXT_PUBLIC_SOCKETIO_BASE_URL!, { autoConnect: false });

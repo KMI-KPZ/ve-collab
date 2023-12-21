@@ -11,6 +11,7 @@ interface Props {
     className?: string;
 }
 
+AuthenticatedImage.auth = true;
 export default function AuthenticatedImage({ imageId, alt, width, height, className }: Props) {
     const { data: session, status } = useSession();
     const [image, setImage] = useState('');
@@ -22,14 +23,8 @@ export default function AuthenticatedImage({ imageId, alt, width, height, classN
                 let cached = window.localStorage.getItem(imageId);
                 if (cached) {
                     setImage(cached);
-                    //If not, get it from API
                 } else {
-                    // if session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
-                    if (status === 'loading') {
-                        return;
-                    }
-
-                    // fetch it
+                    //If not, get it from API
                     const response = await fetchImage(`/uploads/${imageId}`, session?.accessToken);
 
                     // read the blob and create a data url from it that is readable by the Image component
@@ -42,7 +37,7 @@ export default function AuthenticatedImage({ imageId, alt, width, height, classN
                 }
             }
         })();
-    }, [status, session, imageId]);
+    }, [session, imageId]);
 
     return (
         <>

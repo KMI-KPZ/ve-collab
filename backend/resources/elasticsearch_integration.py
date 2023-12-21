@@ -35,6 +35,9 @@ class ElasticsearchConnector:
         # for the recursion base case: str remains as str
         if isinstance(doc, str):
             result_str = doc
+        # ObjectIds also get returned as str representation
+        elif isinstance(doc, ObjectId):
+            result_str = str(doc)
         # lists get flattened, if values are str, they remain str,
         # dicts or nested lists get flattened recursively
         elif isinstance(doc, list):
@@ -73,6 +76,15 @@ class ElasticsearchConnector:
         for key, value in document.items():
             if isinstance(value, (dict, list)):
                 document[key] = self._dict_or_list_values_to_str(value)
+
+        # elasticsearch has pain with meta fields being inside documents
+        if "_id" in document:
+            del document["_id"]
+
+        # apparently elasticsearch also has pain with empty date fields...
+        if "birthday" in document:
+            del document["birthday"]
+
         try:
             requests.put(
                 "{}/{}/_doc/{}".format(

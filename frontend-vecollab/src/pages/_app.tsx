@@ -3,15 +3,52 @@ import '@/styles/globals.css';
 import type { AppProps } from 'next/app';
 import LayoutSection from '@/components/Layout/LayoutSection';
 import Head from 'next/head';
-import { SessionProvider } from 'next-auth/react';
+import { SessionProvider, signIn, useSession } from 'next-auth/react';
 import Favicon from '@/components/metaTags/Favicon';
 import LinkPreview from '@/components/metaTags/LinkPreview';
 import { socket } from '@/lib/socket';
 import SocketAuthenticationProvider from '@/components/SocketAuthenticationProvider';
 import { Notification } from '@/interfaces/socketio';
+import { NextComponentType, NextPageContext } from 'next';
+import LoadingAnimation from '@/components/LoadingAnimation';
+import { CookiesProvider } from 'react-cookie';
 
-export default function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
+declare type ComponentWithAuth = NextComponentType<NextPageContext, any, any> & {
+    auth?: boolean;
+};
+declare type AppPropsWithAuth = AppProps & {
+    Component: ComponentWithAuth;
+};
+// any component that defines Component.auth = true will be wrapped inside this component,
+// which triggers a relogin flow if the session does not validate
+// meaning that inside a component no session check is required, one can
+// be assured that the component is onyl rendered if the session is valid.
+function Auth({ children }: { children: JSX.Element }): JSX.Element {
+    const { data: session, status } = useSession();
+
+    if (status === 'loading') {
+        return <LoadingAnimation />;
+    } else {
+        if (!session || session?.error === 'RefreshAccessTokenError') {
+            console.log('forced new signIn');
+            signIn('keycloak');
+        }
+    }
+
+    return children;
+}
+
+export default function App({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAuth) {
     const [notificationEvents, setNotificationEvents] = useState<Notification[]>([]);
+    const [messageEvents, setMessageEvents] = useState<any[]>([]);
+
+    // it is a pain:
+    // the headerbar has to get a state copy of the messageEvents, because in order to remove the
+    // notification badge, the events have to be deleted from its list
+    // BUT we cannot directly delete the messageEvents, because they need to be rendered by the chat component (which would be de-rendered once deleted from the list)
+    // hence: copy to the headerbar and once message get acknowledged, the chat component will remove them from the copy-list,
+    // triggering the re-render of the notification badge in the header bar, but not the chat components
+    const [messageEventsHeaderBar, setMessageEventsHeaderBar] = useState<any[]>([]);
 
     // don't do anything else inside this hook, especially with deps, because it would always
     // re-init the socket when the effect triggers
@@ -44,31 +81,68 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
             }
         }
 
+        function onMessageEvent(value: any) {
+            // nextjs always sends 2 requests in dev mode, prevent any message from appearing twice
+            const alreadyExisting = messageEvents.find((message) => message._id === value._id);
+            if (alreadyExisting === undefined) {
+                console.log('new message:');
+                console.log(value);
+                setMessageEvents([...messageEvents, value]);
+                setMessageEventsHeaderBar((prev) => [...prev, value]);
+            }
+        }
+
         socket.on('notification', onNotifcationEvent);
+        socket.on('message', onMessageEvent);
 
         return () => {
             socket.off('notification', onNotifcationEvent);
+            socket.off('message', onMessageEvent);
         };
-    }, [notificationEvents]);
+    }, [notificationEvents, messageEvents]);
 
     return (
         <>
             <SessionProvider session={session}>
-                <SocketAuthenticationProvider>
-                    <Head>
-                        <title>Ve Collab</title>
-                        <Favicon />
-                        <LinkPreview />
-                    </Head>
-                    <LayoutSection notificationEvents={notificationEvents}>
-                        <Component
-                            {...pageProps}
-                            socket={socket}
+                <CookiesProvider defaultSetOptions={{ path: '/' }}>
+                    <SocketAuthenticationProvider>
+                        <Head>
+                            <title>Ve Collab</title>
+                            <Favicon />
+                            <LinkPreview />
+                        </Head>
+                        <LayoutSection
                             notificationEvents={notificationEvents}
-                            setNotificationEvents={setNotificationEvents}
-                        />
-                    </LayoutSection>
-                </SocketAuthenticationProvider>
+                            headerBarMessageEvents={messageEventsHeaderBar}
+                        >
+                            {Component.auth ? (
+                                <Auth>
+                                    <Component
+                                        {...pageProps}
+                                        socket={socket}
+                                        notificationEvents={notificationEvents}
+                                        setNotificationEvents={setNotificationEvents}
+                                        messageEvents={messageEvents}
+                                        setMessageEvents={setMessageEvents}
+                                        headerBarMessageEvents={messageEventsHeaderBar}
+                                        setHeaderBarMessageEvents={setMessageEventsHeaderBar}
+                                    />
+                                </Auth>
+                            ) : (
+                                <Component
+                                    {...pageProps}
+                                    socket={socket}
+                                    notificationEvents={notificationEvents}
+                                    setNotificationEvents={setNotificationEvents}
+                                    messageEvents={messageEvents}
+                                    setMessageEvents={setMessageEvents}
+                                    headerBarMessageEvents={messageEventsHeaderBar}
+                                    setHeaderBarMessageEvents={setMessageEventsHeaderBar}
+                                />
+                            )}
+                        </LayoutSection>
+                    </SocketAuthenticationProvider>
+                </CookiesProvider>
             </SessionProvider>
         </>
     );

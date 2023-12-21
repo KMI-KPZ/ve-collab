@@ -1,3 +1,4 @@
+import React from 'react';
 import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import { useSession } from 'next-auth/react';
 import { HiOutlineShare, HiOutlineTrash } from 'react-icons/hi';
@@ -21,7 +22,7 @@ export default function PlanPreviewTopButtons({
                 <>
                     <button
                         className="p-2 flex justify-center items-center"
-                        onClick={(e) => openShareDialogCallback()}
+                        onClick={() => openShareDialogCallback()}
                     >
                         <HiOutlineShare />
                     </button>
@@ -29,7 +30,7 @@ export default function PlanPreviewTopButtons({
             )}
             <button
                 className="bg-gray-300 rounded-lg p-2 flex justify-center items-center"
-                onClick={(e) => deletePlanCallback(plan._id)}
+                onClick={() => deletePlanCallback(plan._id)}
             >
                 <HiOutlineTrash />
             </button>

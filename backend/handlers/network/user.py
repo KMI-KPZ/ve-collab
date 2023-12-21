@@ -52,8 +52,10 @@ class ProfileInformationHandler(BaseHandler):
                         "ve_ready": boolean,
                         "excluded_from_matching": boolean,
                         "ve_interests": [<string1>, <string2>, ...],
+                        "ve-contents": [<string1>, <string2>, ...],
                         "ve_goals": [<string1>, <string2>, ...],
-                        "preferred_formats": [<string1>, <string2>, ...],
+                        "interdisciplinary_exchange": <boolean>,
+                        "preferred_format": <string>,
                         "courses": [
                             {
                                 "title": "<string>",
@@ -185,8 +187,10 @@ class ProfileInformationHandler(BaseHandler):
                     "ve_ready": boolean,
                     "excluded_from_matching": boolean,
                     "ve_interests": [<string1>, <string2>, ...],
+                    "ve-contents": [<string1>, <string2>, ...],
                     "ve_goals": [<string1>, <string2>, ...],
-                    "preferred_formats": [<string1>, <string2>, ...],
+                    "interdisciplinary_exchange": <boolean>,
+                    "preferred_format": <string>,
                     "courses": [
                         {
                             "title": "<string>",
@@ -978,6 +982,11 @@ class MatchingExclusionHandler(BaseHandler):
                 self.set_status(409)
                 self.write({"success": False, "reason": USER_DOESNT_EXIST})
                 return
+            # on key error the user has not EXPLICITELY excluded him/herself from matching
+            # so the answer is false
+            except KeyError:
+                self.write({"success": True, "excluded_from_matching": False})
+                return
 
             self.write({"success": True, "excluded_from_matching": excluded})
 
@@ -1005,7 +1014,7 @@ class MatchingHandler(BaseHandler):
             for profile in profile_snippets:
                 profile["score"] = username_score_map[profile["username"]]
 
-        self.write({"success": True, "matching_hits": profile_snippets})
+        self.serialize_and_write({"success": True, "matching_hits": profile_snippets})
 
     @auth_needed
     def post(self):

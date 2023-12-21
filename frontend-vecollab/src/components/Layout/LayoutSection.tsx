@@ -1,37 +1,31 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import HeaderSection from '@/components/Layout/HeaderSection';
 import FooterSection from '@/components/Layout/FooterSection';
 import { useSession } from 'next-auth/react';
 import ExcludedFromMatchingBanner from '../profile/ExcludedFromMatchingBanner';
-import { fetchGET } from '@/lib/backend';
+import { useGetExcludedFromMatching } from '@/lib/backend';
 import { Notification } from '@/interfaces/socketio';
 
 interface Props {
     children: React.ReactNode;
+    headerBarMessageEvents: any[];
     notificationEvents: Notification[];
 }
-export default function LayoutSection({ children, notificationEvents }: Props): JSX.Element {
+export default function LayoutSection({ children, notificationEvents, headerBarMessageEvents }: Props): JSX.Element {
     const { data: session, status } = useSession();
-    const [excludedFromMatching, setExcludedFromMatching] = useState(false);
 
-    useEffect(() => {
-        // if router or session is not yet ready, don't make any requests, just wait for the next re-render
-        if (status === 'loading') {
-            return;
-        }
-        // if a user is logged in, determine if he is excluded from matching and set warning banner accordingly
-        if (session) {
-            fetchGET(`/matching_exclusion_info`, session?.accessToken).then((data) => {
-                setExcludedFromMatching(data.excluded_from_matching)
-            });
-        }
-    }, [session, status]);
+    const {
+        data: excludedFromMatching,
+        isLoading,
+        error,
+        mutate,
+    } = useGetExcludedFromMatching(session?.accessToken);
 
     return (
         <>
-            <HeaderSection notificationEvents={notificationEvents}/>
+            <HeaderSection notificationEvents={notificationEvents} headerBarMessageEvents={headerBarMessageEvents}/>
             <main>
-                {excludedFromMatching && <ExcludedFromMatchingBanner />}
+                {!isLoading && excludedFromMatching && <ExcludedFromMatchingBanner />}
                 <>{children}</>
             </main>
             <FooterSection />

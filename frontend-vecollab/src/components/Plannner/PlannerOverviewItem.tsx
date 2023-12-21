@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Dialog from '../profile/Dialog';
 import Tabs from '../profile/Tabs';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import SharePlanForm from './SharePlanForm';
 import EditAccessList from './EditAccessList';
 import SuccessAlert from '@/components/SuccessAlert';
@@ -9,6 +9,8 @@ import { RxArrowRight } from 'react-icons/rx';
 import PlanPreviewInformation from './PlanPreviewInformation';
 import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import PlanPreviewTopButtons from './PlanPreviewTopButtons';
+import Image from 'next/image';
+import imageInfoIcon from '@/images/icons/startingWizard/infoIcon.png';
 interface Props {
     plan: PlanPreview;
     deleteCallback: (planId: string) => Promise<void>;
@@ -16,7 +18,6 @@ interface Props {
 }
 
 export default function PlannerOverviewItem({ plan, deleteCallback, refetchPlansCallback }: Props) {
-
     // sub components will use these setters to trigger the success popup display
     // because it won't render if triggered within the Dialog for some reason
     const [successPopupOpen, setSuccessPopupOpen] = useState(false);
@@ -27,22 +28,28 @@ export default function PlannerOverviewItem({ plan, deleteCallback, refetchPlans
     const handleOpenShareDialog = () => {
         setIsShareDialogOpen(true);
     };
-    const handleCloseShareDialog = () => {
+    const handleCloseShareDialog = async () => {
         setIsShareDialogOpen(false);
         // refetch plans to have all up-to-date information without having to reload the page
-        refetchPlansCallback();
+        await refetchPlansCallback();
     };
 
     return (
         <>
             <div className="m-2">
-                <div className="rounded-lg shadow-md bg-gray-100 w-52 relative">
+                <div className="flex rounded-lg shadow-md bg-gray-100 w-52 relative pb-6">
                     <PlanPreviewTopButtons
                         plan={plan}
                         openShareDialogCallback={handleOpenShareDialog}
                         deletePlanCallback={deleteCallback}
                     />
                     <PlanPreviewInformation plan={plan} />
+                    <Link
+                        href={{ pathname: `/planSummary/${plan._id}` }}
+                        className="absolute bg-gray-300 rounded-lg p-1.5 flex justify-center items-center bottom-0 left-0"
+                    >
+                        <Image src={imageInfoIcon} width={20} height={20} alt="info"></Image>
+                    </Link>
                     <Link
                         href={{
                             pathname: '/startingWizard/generalInformation/projectName',

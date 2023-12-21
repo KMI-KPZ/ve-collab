@@ -112,16 +112,17 @@ export default function EditResearchAndTeachingInformation({
                     handleDrag={handleDragResearch}
                     handleTagClick={handleTagClickResearch}
                     inputFieldPosition="bottom"
-                    placeholder="Enter oder Komma, um neue Sprache hinzuzufügen"
+                    placeholder="Enter oder Komma, um neue Forschungsschwerpunkte hinzuzufügen"
                     classNames={{
                         tag: 'mr-2 mb-2 px-2 py-1 rounded-lg bg-gray-300 shadow-lg',
-                        tagInputField: 'w-2/3 border border-gray-500 rounded-lg my-4 px-2 py-1',
+                        tagInputField: 'w-5/6 border border-gray-500 rounded-lg my-4 px-2 py-1',
                         remove: 'ml-1',
                     }}
                 />
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'Lehrveranstaltungen'} />
+                <div className="mb-2 text-sm">In welchen Lehrveranstaltungen würdest du gern einen VE integrieren?</div>
                 {courses.map((course, index) => (
                     <Swapper
                         key={index}
