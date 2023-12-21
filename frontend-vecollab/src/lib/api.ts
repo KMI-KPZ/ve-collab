@@ -1,6 +1,7 @@
 import { Categories, Post, PostPreview } from '@/interfaces';
 
 let API_URL_STR = process.env.WORDPRESS_GRAPHQL_API_URL;
+
 // fallback to localhost if WORDPRESS_GRAPHQL_API_URL is not defined in .env
 if (API_URL_STR === undefined) {
     API_URL_STR = 'http://localhost';
@@ -45,6 +46,9 @@ export async function getCategories(): Promise<Categories> {
       }
     }
   `);
+  
+    data.categories.edges.push({ node: { name: 'KnowledgeWorker', slug: 'knowledgeworker' } });
+    data.categories.edges.push({ node: { name: 'WP Pages', slug: 'wp_pages' } });
     return data?.categories;
 }
 
@@ -67,8 +71,49 @@ export async function getAllPostsTitleExcerptSlug(): Promise<{ edges: [{ node: P
 
 export async function getPostsTitleExcerptSlugByCategory(
     categorySlug: any
-): Promise<{ category: { posts: { edges: [{ node: PostPreview }] } } }> {
-    return await fetchAPI(
+): Promise<{ category: { posts: { edges: { node: PostPreview }[] } } }> {
+    if (categorySlug === 'knowledgeworker') {
+        return {
+            category: {
+                posts: {
+                    edges: [
+                        {
+                            node: {
+                                title: 'Einführung in die künstliche Intelligenz',
+                                excerpt: 'lorem ipsum dolor si amet',
+                                slug: 'ki',
+                            },
+                        },
+                        {
+                            node: {
+                                title: 'Programmierung und Softwareenwicklung',
+                                excerpt: 'lorem ipsum dolor si amet',
+                                slug: 'programmieren',
+                            },
+                        },
+                    ],
+                },
+            },
+        };
+    } else if (categorySlug === 'wp_pages') {
+        return {
+            category: {
+                posts: {
+                    edges: [
+                        {
+                            node: {
+                                title: 'nur eine Beispiel Seite',
+                                excerpt: 'lorem ipsum dolor si amet',
+                                slug: 'wp_page_test',
+                            },
+                        },
+                    ],
+                },
+            },
+        };
+    }
+
+    const data = await fetchAPI(
         `
     query CategoryByName($id: ID = "") {
       category(id: $id, idType: SLUG) {
@@ -90,10 +135,11 @@ export async function getPostsTitleExcerptSlugByCategory(
             },
         }
     );
+    return data;
 }
 
 export async function getPost(slug: string | string[] | undefined): Promise<{ post: Post }> {
-    return await fetchAPI(
+    const data = await fetchAPI(
         `
     fragment PostFields on Post {
       title
@@ -122,4 +168,5 @@ export async function getPost(slug: string | string[] | undefined): Promise<{ po
             },
         }
     );
+    return data;
 }

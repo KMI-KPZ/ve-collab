@@ -135,6 +135,7 @@ def make_app(cookie_secret: str, debug: bool = False):
             ),
             (r"/uploads/(.*)", GridFSStaticFileHandler, {"path": ""}),
             (r"/socket.io/", socketio.get_tornado_handler(global_vars.socket_io)),
+            (r"/knowledgeworker/(.*)", tornado.web.StaticFileHandler, {"path": "./knowledgeworker_courses", "default_filename": "index.html"}),
         ],
         cookie_secret=cookie_secret,
         template_path="html",

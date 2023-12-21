@@ -16,9 +16,11 @@ declare module 'react' {
 interface Props {
     veInfo: {
         veInterests: string[];
+        veContents: string[];
         veGoals: string[];
         experience: string[];
-        preferredFormats: string[];
+        interdisciplinaryExchange: boolean;
+        preferredFormat: string;
     };
     researchAndTeachingInfo: {
         researchInterests: string[];
@@ -40,9 +42,11 @@ export default function ExtendedPersonalInformation({
             <div tabname="VE-Infos">
                 <VEInformation
                     veInterests={veInfo.veInterests}
+                    veContents={veInfo.veContents}
                     veGoals={veInfo.veGoals}
                     experiences={veInfo.experience}
-                    preferredFormats={veInfo.preferredFormats}
+                    interdisciplinaryExchange={veInfo.interdisciplinaryExchange}
+                    preferredFormat={veInfo.preferredFormat}
                 />
             </div>
             <div tabname="Lehre & Forschung">

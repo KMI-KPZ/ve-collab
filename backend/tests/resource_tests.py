@@ -2319,8 +2319,10 @@ class ProfileResourceTest(BaseResourceTestCase):
             "ve_ready": True,
             "excluded_from_matching": False,
             "ve_interests": ["test", "test"],
+            "ve_contents": ["test", "test"],
             "ve_goals": ["test", "test"],
-            "preferred_formats": ["test"],
+            "interdisciplinary_exchange": True,
+            "preferred_format": "test",
             "research_tags": ["test"],
             "courses": [
                 {"title": "test", "academic_course": "test", "semester": "test"}
@@ -2384,9 +2386,11 @@ class ProfileResourceTest(BaseResourceTestCase):
             self.default_profile["excluded_from_matching"],
         )
         self.assertEqual(profile["ve_interests"], self.default_profile["ve_interests"])
+        self.assertEqual(profile["ve_contents"], self.default_profile["ve_contents"])
         self.assertEqual(profile["ve_goals"], self.default_profile["ve_goals"])
+        self.assertEqual(profile["interdisciplinary_exchange"], self.default_profile["interdisciplinary_exchange"])
         self.assertEqual(
-            profile["preferred_formats"], self.default_profile["preferred_formats"]
+            profile["preferred_format"], self.default_profile["preferred_format"]
         )
         self.assertEqual(
             profile["research_tags"], self.default_profile["research_tags"]
@@ -2421,8 +2425,10 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertNotIn("ve_ready", profile)
         self.assertNotIn("excluded_from_matching", profile)
         self.assertNotIn("ve_interests", profile)
+        self.assertNotIn("ve_contents", profile)
         self.assertNotIn("ve_goals", profile)
-        self.assertNotIn("preferred_formats", profile)
+        self.assertNotIn("interdisciplinary_exchange", profile)
+        self.assertNotIn("preferred_format", profile)
         self.assertNotIn("research_tags", profile)
         self.assertNotIn("courses", profile)
         self.assertNotIn("educations", profile)
@@ -2516,8 +2522,10 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(profile["ve_ready"], True)
         self.assertEqual(profile["excluded_from_matching"], False)
         self.assertEqual(profile["ve_interests"], [""])
+        self.assertEqual(profile["ve_contents"], [""])
         self.assertEqual(profile["ve_goals"], [""])
-        self.assertEqual(profile["preferred_formats"], [""])
+        self.assertEqual(profile["interdisciplinary_exchange"], True)
+        self.assertEqual(profile["preferred_format"], "")
         self.assertEqual(profile["research_tags"], [])
         self.assertEqual(profile["courses"], [])
         self.assertEqual(profile["educations"], [])
@@ -2566,8 +2574,10 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(profile["ve_ready"], True)
         self.assertEqual(profile["excluded_from_matching"], False)
         self.assertEqual(profile["ve_interests"], [""])
+        self.assertEqual(profile["ve_contents"], [""])
         self.assertEqual(profile["ve_goals"], [""])
-        self.assertEqual(profile["preferred_formats"], [""])
+        self.assertEqual(profile["interdisciplinary_exchange"], True)
+        self.assertEqual(profile["preferred_format"], "")
         self.assertEqual(profile["research_tags"], [])
         self.assertEqual(profile["courses"], [])
         self.assertEqual(profile["educations"], [])
@@ -2616,8 +2626,10 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(result["ve_ready"], True)
         self.assertEqual(result["excluded_from_matching"], False)
         self.assertEqual(result["ve_interests"], [""])
+        self.assertEqual(result["ve_contents"], [""])
         self.assertEqual(result["ve_goals"], [""])
-        self.assertEqual(result["preferred_formats"], [""])
+        self.assertEqual(result["interdisciplinary_exchange"], True)
+        self.assertEqual(result["preferred_format"], "")
         self.assertEqual(result["research_tags"], [])
         self.assertEqual(result["courses"], [])
         self.assertEqual(result["educations"], [])
@@ -2847,8 +2859,10 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(profile["ve_ready"], True)
         self.assertEqual(profile["excluded_from_matching"], False)
         self.assertEqual(profile["ve_interests"], [""])
+        self.assertEqual(profile["ve_contents"], [""])
         self.assertEqual(profile["ve_goals"], [""])
-        self.assertEqual(profile["preferred_formats"], [""])
+        self.assertEqual(profile["interdisciplinary_exchange"], True)
+        self.assertEqual(profile["preferred_format"], "")
         self.assertEqual(profile["research_tags"], [])
         self.assertEqual(profile["courses"], [])
         self.assertEqual(profile["educations"], [])

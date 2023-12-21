@@ -52,8 +52,10 @@ class ProfileInformationHandler(BaseHandler):
                         "ve_ready": boolean,
                         "excluded_from_matching": boolean,
                         "ve_interests": [<string1>, <string2>, ...],
+                        "ve-contents": [<string1>, <string2>, ...],
                         "ve_goals": [<string1>, <string2>, ...],
-                        "preferred_formats": [<string1>, <string2>, ...],
+                        "interdisciplinary_exchange": <boolean>,
+                        "preferred_format": <string>,
                         "courses": [
                             {
                                 "title": "<string>",
@@ -185,8 +187,10 @@ class ProfileInformationHandler(BaseHandler):
                     "ve_ready": boolean,
                     "excluded_from_matching": boolean,
                     "ve_interests": [<string1>, <string2>, ...],
+                    "ve-contents": [<string1>, <string2>, ...],
                     "ve_goals": [<string1>, <string2>, ...],
-                    "preferred_formats": [<string1>, <string2>, ...],
+                    "interdisciplinary_exchange": <boolean>,
+                    "preferred_format": <string>,
                     "courses": [
                         {
                             "title": "<string>",

@@ -36,9 +36,11 @@ export default function Profile() {
     const [veReady, setVeReady] = useState(true);
     const [veInformation, setVeInformation] = useState<VEInformation>({
         veInterests: [''],
+        veContents: [''],
         veGoals: [''],
         experience: [''],
-        preferredFormats: [''],
+        interdisciplinaryExchange: true,
+        preferredFormat: '',
     });
     const [researchTags, setResearchTags] = useState(['']);
     const [courses, setCourses] = useState<Course[]>([
@@ -144,9 +146,11 @@ export default function Profile() {
                     setVeReady(data.profile.ve_ready);
                     setVeInformation({
                         veInterests: data.profile.ve_interests,
+                        veContents: data.profile.ve_contents,
                         veGoals: data.profile.ve_goals,
                         experience: data.profile.experience,
-                        preferredFormats: data.profile.preferred_formats,
+                        interdisciplinaryExchange: data.profile.interdisciplinary_exchange,
+                        preferredFormat: data.profile.preferred_format,
                     });
 
                     setResearchTags(data.profile.research_tags);

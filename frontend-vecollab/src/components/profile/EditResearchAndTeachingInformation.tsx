@@ -122,6 +122,7 @@ export default function EditResearchAndTeachingInformation({
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'Lehrveranstaltungen'} />
+                <div className="mb-2 text-sm">In welchen Lehrveranstaltungen würdest du gern einen VE integrieren?</div>
                 {courses.map((course, index) => (
                     <Swapper
                         key={index}
