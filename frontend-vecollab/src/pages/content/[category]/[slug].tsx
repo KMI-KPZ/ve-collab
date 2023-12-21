@@ -50,6 +50,7 @@ interface Props {
         };
     };
     knowledgeWorkerFrame?: boolean;
+    WPPagesFrame?: boolean;
     slug?: string;
 }
 
@@ -81,6 +82,11 @@ export default function LearningContentView(props: Props) {
                                 className="rounded-xl mx-1"
                                 src={`http://localhost:8888/knowledgeworker/${props.slug}/`}
                             ></iframe>
+                        ) : props.WPPagesFrame === true ? (
+                            <iframe
+                                className="rounded-xl mx-1"
+                                src={`https://soserve.rz.uni-leipzig.de:10001/content-test-page/`}
+                            ></iframe>
                         ) : (
                             <Post post={props.post!} />
                         )
@@ -102,6 +108,15 @@ export const getServerSideProps: GetServerSideProps = async ({
             props: {
                 categories,
                 knowledgeWorkerFrame: true,
+                slug: params.slug,
+                allPostsInCategory,
+            },
+        };
+    } else if (params?.category === 'wp_pages') {
+        return {
+            props: {
+                categories,
+                WPPagesFrame: true,
                 slug: params.slug,
                 allPostsInCategory,
             },

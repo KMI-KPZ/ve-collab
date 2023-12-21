@@ -1,7 +1,6 @@
 import { Categories, Post, PostPreview } from '@/interfaces';
 
-
-let API_URL_STR = process.env.WORDPRESS_GRAPHQL_API_URL
+let API_URL_STR = process.env.WORDPRESS_GRAPHQL_API_URL;
 // fallback to localhost if WORDPRESS_GRAPHQL_API_URL is not defined in env
 if (API_URL_STR === undefined) {
     API_URL_STR = 'http://localhost';
@@ -47,6 +46,7 @@ export async function getCategories(): Promise<Categories> {
     }
   `);
     data.categories.edges.push({ node: { name: 'KnowledgeWorker', slug: 'knowledgeworker' } });
+    data.categories.edges.push({ node: { name: 'WP Pages', slug: 'wp_pages' } });
     return data?.categories;
 }
 
@@ -93,7 +93,24 @@ export async function getPostsTitleExcerptSlugByCategory(
                 },
             },
         };
+    } else if (categorySlug === 'wp_pages') {
+        return {
+            category: {
+                posts: {
+                    edges: [
+                        {
+                            node: {
+                                title: 'nur eine Beispiel Seite',
+                                excerpt: 'lorem ipsum dolor si amet',
+                                slug: 'wp_page_test',
+                            },
+                        },
+                    ],
+                },
+            },
+        };
     }
+
     const data = await fetchAPI(
         `
     query CategoryByName($id: ID = "") {
