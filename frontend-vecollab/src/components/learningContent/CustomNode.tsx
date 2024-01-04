@@ -3,6 +3,8 @@ import { IoMdTrash, IoMdCopy, IoMdCreate, IoMdCheckmark, IoMdClose } from 'react
 import { useDragOver } from '@minoru/react-dnd-treeview';
 import { RxDropdownMenu } from 'react-icons/rx';
 import { FaFile } from 'react-icons/fa';
+import Dialog from '../profile/Dialog';
+import BoxHeadline from '../BoxHeadline';
 
 export type CustomData = {
     fileType: string;
@@ -33,6 +35,18 @@ export const CustomNode: React.FC<Props> = (props) => {
     const [labelText, setLabelText] = useState(text);
     const indent = props.depth * 24;
 
+    const [currentChosenMaterial, setCurrentChosenMaterial] = useState<string>(''); // TODO, for now this is just a string, but it should be a Material object including the link and metadata
+
+    const [isMaterialDialogOpen, setIsMaterialDialogOpen] = useState(false);
+
+    const handleOpenMaterialDialog = () => {
+        setIsMaterialDialogOpen(true);
+    };
+
+    const handleCloseMaterialDialog = () => {
+        setIsMaterialDialogOpen(false);
+    };
+
     const handleToggle = (e: React.MouseEvent) => {
         e.stopPropagation();
         props.onToggle(props.node.id);
@@ -49,6 +63,13 @@ export const CustomNode: React.FC<Props> = (props) => {
 
     const handleChangeText = (e: React.ChangeEvent<HTMLInputElement>) => {
         setLabelText(e.target.value);
+    };
+
+    const handleChangeData = (value: string) => {
+        // TODO
+        // for now, update label text as dummy
+        setLabelText(value);
+        props.onTextChange(id, value);
     };
 
     const handleSubmit = () => {
@@ -97,7 +118,7 @@ export const CustomNode: React.FC<Props> = (props) => {
                         </div>
                     ) : (
                         <div className="ps-2">
-                            <p className="cursor-pointer">{props.node.text}</p>
+                            <p className="cursor-pointer" onClick={handleOpenMaterialDialog}>{props.node.text}</p>
                         </div>
                     )}
                     {hover && (
@@ -123,6 +144,49 @@ export const CustomNode: React.FC<Props> = (props) => {
                     )}
                 </>
             )}
+            <Dialog
+                isOpen={isMaterialDialogOpen}
+                title={'Lehrinhalt bearbeiten'}
+                onClose={() => {
+                    handleCloseMaterialDialog();
+                }}
+            >
+                <div className="w-[40rem] h-[40rem] overflow-y-auto content-scrollbar relative">
+                    <BoxHeadline title={'Einbettungslink'} />
+                    <div className="mb-10">
+                        <input
+                            type="text"
+                            className="w-full border border-gray-500 rounded-lg px-2 py-1 my-1"
+                            placeholder="Link zum Lehrinhalt, um ihn einzubetten, TODO would be filled with current value"
+                            value={currentChosenMaterial}
+                            onChange={(e) => setCurrentChosenMaterial(e.target.value)}
+                        />
+                    </div>
+                    <BoxHeadline title={'Metadaten'} />
+                    <div>TODO, would be filled with current values</div>
+                    <div className="flex absolute bottom-0 w-full">
+                        <button
+                            className={
+                                'bg-transparent border border-gray-500 py-3 px-6 mr-auto rounded-lg shadow-lg'
+                            }
+                            onClick={handleCloseMaterialDialog}
+                        >
+                            <span>Ablehnen</span>
+                        </button>
+                        <button
+                            className={
+                                'bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
+                            }
+                            onClick={(e) => {
+                                handleChangeData("Material updated dummy-wise");
+                                handleCloseMaterialDialog();
+                            }}
+                        >
+                            <span>Annehmen</span>
+                        </button>
+                    </div>
+                </div>
+            </Dialog>
         </div>
     );
 };

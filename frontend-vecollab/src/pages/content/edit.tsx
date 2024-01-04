@@ -12,6 +12,7 @@ import {
 import { RxPlus } from 'react-icons/rx';
 import { CustomNode } from '@/components/learningContent/CustomNode';
 import { CustomDragPreview } from '@/components/learningContent/CustomDragPreview';
+import Dialog from '@/components/profile/Dialog';
 
 Edit.auth = true;
 // TODO only render as admin
@@ -120,6 +121,19 @@ export default function Edit() {
             },
         },
     ]);
+
+    const [currentChosenMaterial, setCurrentChosenMaterial] = useState<string>(''); // TODO, for now this is just a string, but it should be a Material object including the link and metadata
+
+    const [isMaterialDialogOpen, setIsMaterialDialogOpen] = useState(false);
+
+    const handleOpenMaterialDialog = () => {
+        setIsMaterialDialogOpen(true);
+    };
+
+    const handleCloseMaterialDialog = () => {
+        setIsMaterialDialogOpen(false);
+    };
+
     const handleDrop = (newTree: any) => setTreeData(newTree);
     const [open, setOpen] = useState<boolean>(false);
 
@@ -203,13 +217,7 @@ export default function Edit() {
                                 </button>
                                 <button
                                     className="flex justify-center items-center bg-ve-collab-orange rounded-md px-2 py-1 mx-2 text-white"
-                                    onClick={(e) =>
-                                        handleSubmit({
-                                            parent: 0,
-                                            droppable: false,
-                                            text: 'neuer Inhalt',
-                                        })
-                                    }
+                                    onClick={handleOpenMaterialDialog}
                                 >
                                     <RxPlus />
                                     <div className="mx-1">neuer Lehrinhalt</div>
@@ -243,6 +251,53 @@ export default function Edit() {
                         </DndProvider>
                     </div>
                 </WhiteBox>
+                <Dialog
+                    isOpen={isMaterialDialogOpen}
+                    title={'neuer Lehrinhalt'}
+                    onClose={() => {
+                        handleCloseMaterialDialog();
+                    }}
+                >
+                    <div className="w-[40rem] h-[40rem] overflow-y-auto content-scrollbar relative">
+                        <BoxHeadline title={'Einbettungslink'} />
+                        <div className="mb-10">
+                            <input
+                                type="text"
+                                className="w-full border border-gray-500 rounded-lg px-2 py-1 my-1"
+                                placeholder="Link zum Lehrinhalt, um ihn einzubetten"
+                                value={currentChosenMaterial}
+                                onChange={(e) => setCurrentChosenMaterial(e.target.value)}
+                            />
+                        </div>
+                        <BoxHeadline title={'Metadaten'} />
+                        <div>TODO</div>
+                        <div className="flex absolute bottom-0 w-full">
+                            <button
+                                className={
+                                    'bg-transparent border border-gray-500 py-3 px-6 mr-auto rounded-lg shadow-lg'
+                                }
+                                onClick={handleCloseMaterialDialog}
+                            >
+                                <span>Ablehnen</span>
+                            </button>
+                            <button
+                                className={
+                                    'bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
+                                }
+                                onClick={(e) => {
+                                    handleSubmit({
+                                        parent: 0,
+                                        droppable: false,
+                                        text: 'neuer Lehrinhalt',
+                                    });
+                                    handleCloseMaterialDialog();
+                                }}
+                            >
+                                <span>Annehmen</span>
+                            </button>
+                        </div>
+                    </div>
+                </Dialog>
             </div>
         </>
     );
