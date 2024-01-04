@@ -1,6 +1,6 @@
 import { Course, ResearchTag } from '@/interfaces/profile/profileInterfaces';
 import { Dispatch, FormEvent, SetStateAction } from 'react';
-import { WithContext as ReactTags } from 'react-tag-input';
+//import { WithContext as ReactTags } from 'react-tag-input';
 import EditProfileHeader from './EditProfileHeader';
 import EditProfileVerticalSpacer from './EditProfileVerticalSpacer';
 import EditProfileHeadline from './EditProfileHeadline';
@@ -104,6 +104,8 @@ export default function EditResearchAndTeachingInformation({
             <EditProfileHeader orcid={orcid} importOrcidProfile={importOrcidProfile} />
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'Forschungsschwerpunkte'} />
+                <div>Tags are broken because of version mismatch with hierarchy, todo fix</div>
+                {/*
                 <ReactTags
                     tags={researchTags}
                     delimiters={keyCodeDelimiters}
@@ -119,6 +121,7 @@ export default function EditResearchAndTeachingInformation({
                         remove: 'ml-1',
                     }}
                 />
+                */}
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'Lehrveranstaltungen'} />

@@ -1,5 +1,5 @@
 import { Dispatch, FormEvent, SetStateAction, useState, ChangeEvent } from 'react';
-import { WithContext as ReactTags } from 'react-tag-input';
+//import { WithContext as ReactTags } from 'react-tag-input';
 import { PersonalInformation } from '@/interfaces/profile/profileInterfaces';
 import EditProfileHeader from './EditProfileHeader';
 import EditProfileHeadline from './EditProfileHeadline';
@@ -211,6 +211,8 @@ export default function EditPersonalInformation({
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'Sprachen'} />
+                <div>Tags are broken because of version mismatch with hierarchy, todo fix</div>
+                {/*
                 <ReactTags
                     tags={personalInformation.languageTags}
                     delimiters={keyCodeDelimiters}
@@ -226,6 +228,7 @@ export default function EditPersonalInformation({
                         remove: 'ml-1',
                     }}
                 />
+                */}
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'Profilbild'} />
