@@ -7,7 +7,7 @@ import Dialog from '../profile/Dialog';
 import BoxHeadline from '../BoxHeadline';
 
 export type CustomData = {
-    fileType: string;
+    url: string;
 };
 
 export type NodeModel<T = unknown> = {
@@ -25,7 +25,7 @@ type Props = {
     onToggle: (id: NodeModel['id']) => void;
     onDelete: (id: NodeModel['id']) => void;
     onCopy: (id: NodeModel['id']) => void;
-    onTextChange: (id: NodeModel['id'], value: string) => void;
+    onChange: (id: NodeModel['id'], textUpdate: string, dataUpdate?: CustomData) => void;
 };
 
 export const CustomNode: React.FC<Props> = (props) => {
@@ -35,11 +35,15 @@ export const CustomNode: React.FC<Props> = (props) => {
     const [labelText, setLabelText] = useState(text);
     const indent = props.depth * 24;
 
-    const [currentChosenMaterial, setCurrentChosenMaterial] = useState<string>(''); // TODO, for now this is just a string, but it should be a Material object including the link and metadata
+    // TODO, for now these are separate state vars, but it should be a Material object including the link and metadata
+    const [currentMaterialInputName, setCurrentMaterialInputName] = useState<string>('');
+    const [currentMaterialInputLink, setCurrentMaterialInputLink] = useState<string>(''); 
 
     const [isMaterialDialogOpen, setIsMaterialDialogOpen] = useState(false);
 
     const handleOpenMaterialDialog = () => {
+        setCurrentMaterialInputName(text);
+        setCurrentMaterialInputLink(data?.url || '');
         setIsMaterialDialogOpen(true);
     };
 
@@ -65,16 +69,19 @@ export const CustomNode: React.FC<Props> = (props) => {
         setLabelText(e.target.value);
     };
 
-    const handleChangeData = (value: string) => {
+    const handleEditMaterial = () => {
         // TODO
         // for now, update label text as dummy
-        setLabelText(value);
-        props.onTextChange(id, value);
+        setLabelText(currentMaterialInputName);
+        props.onChange(id, currentMaterialInputName, { url: currentMaterialInputLink });
+
+        setCurrentMaterialInputName('');
+        setCurrentMaterialInputLink('');
     };
 
     const handleSubmit = () => {
         setVisibleInput(false);
-        props.onTextChange(id, labelText);
+        props.onChange(id, labelText);
     };
 
     const dragOverProps = useDragOver(id, props.isOpen, props.onToggle as any);
@@ -89,7 +96,7 @@ export const CustomNode: React.FC<Props> = (props) => {
         >
             <div>
                 {props.node.droppable && (
-                    <div onClick={handleToggle}>
+                    <div className="cursor-pointer" onClick={handleToggle}>
                         <RxDropdownMenu />
                     </div>
                 )}
@@ -152,40 +159,50 @@ export const CustomNode: React.FC<Props> = (props) => {
                 }}
             >
                 <div className="w-[40rem] h-[40rem] overflow-y-auto content-scrollbar relative">
-                    <BoxHeadline title={'Einbettungslink'} />
-                    <div className="mb-10">
-                        <input
-                            type="text"
-                            className="w-full border border-gray-500 rounded-lg px-2 py-1 my-1"
-                            placeholder="Link zum Lehrinhalt, um ihn einzubetten, TODO would be filled with current value"
-                            value={currentChosenMaterial}
-                            onChange={(e) => setCurrentChosenMaterial(e.target.value)}
-                        />
+                    <BoxHeadline title={'Name'} />
+                        <div className="mb-10">
+                            <input
+                                type="text"
+                                className="w-full border border-gray-500 rounded-lg px-2 py-1 my-1"
+                                placeholder="Name des Lehrinhalts"
+                                value={currentMaterialInputName}
+                                onChange={(e) => setCurrentMaterialInputName(e.target.value)}
+                            />
+                        </div>
+                        <BoxHeadline title={'Einbettungslink'} />
+                        <div className="mb-10">
+                            <input
+                                type="text"
+                                className="w-full border border-gray-500 rounded-lg px-2 py-1 my-1"
+                                placeholder="Link zum Lehrinhalt, um ihn einzubetten"
+                                value={currentMaterialInputLink}
+                                onChange={(e) => setCurrentMaterialInputLink(e.target.value)}
+                            />
+                        </div>
+                        <BoxHeadline title={'Metadaten'} />
+                        <div>TODO</div>
+                        <div className="flex absolute bottom-0 w-full">
+                            <button
+                                className={
+                                    'bg-transparent border border-gray-500 py-3 px-6 mr-auto rounded-lg shadow-lg'
+                                }
+                                onClick={handleCloseMaterialDialog}
+                            >
+                                <span>Abbrechen</span>
+                            </button>
+                            <button
+                                className={
+                                    'bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
+                                }
+                                onClick={(e) => {
+                                    handleEditMaterial();
+                                    handleCloseMaterialDialog();
+                                }}
+                            >
+                                <span>Ändern</span>
+                            </button>
+                        </div>
                     </div>
-                    <BoxHeadline title={'Metadaten'} />
-                    <div>TODO, would be filled with current values</div>
-                    <div className="flex absolute bottom-0 w-full">
-                        <button
-                            className={
-                                'bg-transparent border border-gray-500 py-3 px-6 mr-auto rounded-lg shadow-lg'
-                            }
-                            onClick={handleCloseMaterialDialog}
-                        >
-                            <span>Ablehnen</span>
-                        </button>
-                        <button
-                            className={
-                                'bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
-                            }
-                            onClick={(e) => {
-                                handleChangeData("Material updated dummy-wise");
-                                handleCloseMaterialDialog();
-                            }}
-                        >
-                            <span>Annehmen</span>
-                        </button>
-                    </div>
-                </div>
             </Dialog>
         </div>
     );

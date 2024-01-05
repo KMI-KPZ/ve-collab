@@ -13,11 +13,12 @@ import { RxPlus } from 'react-icons/rx';
 import { CustomNode } from '@/components/learningContent/CustomNode';
 import { CustomDragPreview } from '@/components/learningContent/CustomDragPreview';
 import Dialog from '@/components/profile/Dialog';
+import { set } from 'date-fns';
 
 Edit.auth = true;
 // TODO only render as admin
 export type CustomData = {
-    fileType: string;
+    url: string;
 };
 
 export type NodeModel<T = unknown> = {
@@ -66,7 +67,7 @@ export default function Edit() {
             droppable: false,
             text: 'Material 1',
             data: {
-                fileType: 'image',
+                url: 'http://localhost/dummy',
             },
         },
         {
@@ -81,7 +82,7 @@ export default function Edit() {
             droppable: false,
             text: 'Material 2',
             data: {
-                fileType: 'image',
+                url: 'http://localhost/dummy',
             },
         },
         {
@@ -96,7 +97,7 @@ export default function Edit() {
             droppable: false,
             text: 'Material 3',
             data: {
-                fileType: 'image',
+                url: 'http://localhost/dummy',
             },
         },
         {
@@ -117,12 +118,14 @@ export default function Edit() {
             droppable: false,
             text: 'Material 4',
             data: {
-                fileType: 'image',
+                url: 'http://localhost/dummy',
             },
         },
     ]);
 
-    const [currentChosenMaterial, setCurrentChosenMaterial] = useState<string>(''); // TODO, for now this is just a string, but it should be a Material object including the link and metadata
+    // TODO, for now these are separate state vars, but it should be a Material object including the link and metadata
+    const [currentMaterialInputName, setCurrentMaterialInputName] = useState<string>('');
+    const [currentMaterialInputLink, setCurrentMaterialInputLink] = useState<string>(''); 
 
     const [isMaterialDialogOpen, setIsMaterialDialogOpen] = useState(false);
 
@@ -178,12 +181,31 @@ export default function Edit() {
         setOpen(false);
     };
 
-    const handleTextChange = (id: NodeModel['id'], value: string) => {
+    const handleCreateNewMaterial = () => {
+        handleSubmit({
+            parent: 0,
+            droppable: false,
+            text: currentMaterialInputName,
+            data: {
+                url: currentMaterialInputLink,
+            },
+        });
+        setCurrentMaterialInputName('');
+        setCurrentMaterialInputLink('');
+
+    };
+
+    const handleSaveToBackend = () => {
+        //TODO
+    };
+
+    const handleNodeChange = (id: NodeModel['id'], textUpdate: string, dataUpdate?: CustomData) => {
         const newTree = treeData.map((node) => {
             if (node.id === id) {
                 return {
                     ...node,
-                    text: value,
+                    text: textUpdate,
+                    data: dataUpdate,
                 };
             }
 
@@ -193,17 +215,24 @@ export default function Edit() {
         setTreeData(newTree);
     };
 
+    console.log(treeData)
+
     return (
         <>
             <div className="flex justify-center">
                 <WhiteBox>
                     <div className="w-[60vw] h-[60vh] overflow-y-auto content-scrollbar">
                         <BoxHeadline title="Lehrmaterialien bearbeiten" />
-                        <p className="mb-10">TODO: Dialog für Materialien</p>
                         <DndProvider backend={MultiBackend} options={getBackendOptions()}>
-                            <div className="flex">
+                            <div className="flex px-1">
                                 <button
                                     className="flex justify-center items-center bg-ve-collab-orange rounded-md px-2 py-1 mx-2 text-white"
+                                    onClick={handleSaveToBackend}
+                                >
+                                    Änderungen speichern
+                                </button>
+                                <button
+                                    className="flex justify-center items-center border border-ve-collab-orange rounded-md px-2 py-1 mx-2 text-ve-collab-orange"
                                     onClick={(e) =>
                                         handleSubmit({
                                             parent: 0,
@@ -216,14 +245,14 @@ export default function Edit() {
                                     <div className="mx-1">neue Hierarchieebene</div>
                                 </button>
                                 <button
-                                    className="flex justify-center items-center bg-ve-collab-orange rounded-md px-2 py-1 mx-2 text-white"
+                                    className="flex justify-center items-center border border-ve-collab-orange rounded-md px-2 py-1 mx-2 text-ve-collab-orange"
                                     onClick={handleOpenMaterialDialog}
                                 >
                                     <RxPlus />
                                     <div className="mx-1">neuer Lehrinhalt</div>
                                 </button>
                             </div>
-                            <div className="h-full">
+                            <div className="h-full px-1 mx-2 my-1">
                                 <Tree
                                     tree={treeData}
                                     rootId={0}
@@ -233,7 +262,7 @@ export default function Edit() {
                                             {...options}
                                             onDelete={handleDelete}
                                             onCopy={handleCopy}
-                                            onTextChange={handleTextChange}
+                                            onChange={handleNodeChange}
                                         />
                                     )}
                                     dragPreviewRender={(
@@ -259,14 +288,24 @@ export default function Edit() {
                     }}
                 >
                     <div className="w-[40rem] h-[40rem] overflow-y-auto content-scrollbar relative">
+                    <BoxHeadline title={'Name'} />
+                        <div className="mb-10">
+                            <input
+                                type="text"
+                                className="w-full border border-gray-500 rounded-lg px-2 py-1 my-1"
+                                placeholder="Name des Lehrinhalts"
+                                value={currentMaterialInputName}
+                                onChange={(e) => setCurrentMaterialInputName(e.target.value)}
+                            />
+                        </div>
                         <BoxHeadline title={'Einbettungslink'} />
                         <div className="mb-10">
                             <input
                                 type="text"
                                 className="w-full border border-gray-500 rounded-lg px-2 py-1 my-1"
                                 placeholder="Link zum Lehrinhalt, um ihn einzubetten"
-                                value={currentChosenMaterial}
-                                onChange={(e) => setCurrentChosenMaterial(e.target.value)}
+                                value={currentMaterialInputLink}
+                                onChange={(e) => setCurrentMaterialInputLink(e.target.value)}
                             />
                         </div>
                         <BoxHeadline title={'Metadaten'} />
@@ -278,22 +317,18 @@ export default function Edit() {
                                 }
                                 onClick={handleCloseMaterialDialog}
                             >
-                                <span>Ablehnen</span>
+                                <span>Abbrechen</span>
                             </button>
                             <button
                                 className={
                                     'bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
                                 }
                                 onClick={(e) => {
-                                    handleSubmit({
-                                        parent: 0,
-                                        droppable: false,
-                                        text: 'neuer Lehrinhalt',
-                                    });
+                                    handleCreateNewMaterial();
                                     handleCloseMaterialDialog();
                                 }}
                             >
-                                <span>Annehmen</span>
+                                <span>Einfügen</span>
                             </button>
                         </div>
                     </div>
