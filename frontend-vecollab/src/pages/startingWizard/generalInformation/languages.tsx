@@ -152,7 +152,7 @@ export default function Languages() {
                     <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                         <div>
                             <div className={'text-center font-bold text-4xl mb-2'}>
-                                In welchen Sprachen findet der VE statt?
+                                In welchen Sprachen findet der VE (hauptsächlich) statt?
                             </div>
                             <div className={'text-center mb-20'}>optional</div>
                             {renderLanguagesInputs()}

@@ -16,9 +16,12 @@ import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { generateFineStepLinkTopMenu } from '@/pages/startingWizard/generalInformation/courseFormat';
 
 interface FormValues {
-    technology: boolean;
+    time: boolean;
+    place: boolean;
+    technicalEquipment: boolean;
+    institutionalRequirements: boolean;
     examinationRegulations: boolean;
-    more: boolean;
+    dataProtection: boolean;
 }
 
 export default function FormalConditions() {
@@ -40,9 +43,12 @@ export default function FormalConditions() {
     } = useForm<FormValues>({
         mode: 'onChange',
         defaultValues: {
-            technology: undefined,
+            time: undefined,
+            place: undefined,
+            technicalEquipment: undefined,
+            institutionalRequirements: undefined,
             examinationRegulations: undefined,
-            more: undefined,
+            dataProtection: undefined,
         },
     });
 
@@ -99,11 +105,40 @@ export default function FormalConditions() {
                     <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                         <div>
                             <div className={'text-center font-bold text-4xl mb-2'}>
-                                Checkt die folgenden formalen Rahmenbedingungen
+                                Formale Rahmenbedingungen
+                            </div>
+                            <div className="text-center mb-20">
+                                Bevor es mit der inhaltlichen und didaktischen Planung losgeht: Sind
+                                die folgenden formalen Rahmenbedingungen bei allen Beteiligten
+                                erfüllt?
                             </div>
                             <div className={'text-center mb-20'}>optional</div>
                             <div className="mx-7 mt-7 flex justify-center">
                                 <div className="w-1/2">
+                                    <div className="flex my-3">
+                                        <div className="w-1/2">
+                                            <p className="px-2 py-2">Zeit</p>
+                                        </div>
+                                        <div className="w-1/2 flex justify-center items-center">
+                                            <input
+                                                type="checkbox"
+                                                {...register(`time`)}
+                                                className="border border-gray-500 rounded-lg w-4 h-4 p-2"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="flex my-3">
+                                        <div className="w-1/2">
+                                            <p className="px-2 py-2">Ort / Raum</p>
+                                        </div>
+                                        <div className="w-1/2 flex justify-center items-center">
+                                            <input
+                                                type="checkbox"
+                                                {...register(`place`)}
+                                                className="border border-gray-500 rounded-lg w-4 h-4 p-2"
+                                            />
+                                        </div>
+                                    </div>
                                     <div className="flex my-3">
                                         <div className="w-1/2">
                                             <p className="px-2 py-2">Technik</p>
@@ -111,14 +146,28 @@ export default function FormalConditions() {
                                         <div className="w-1/2 flex justify-center items-center">
                                             <input
                                                 type="checkbox"
-                                                {...register(`technology`)}
+                                                {...register('technicalEquipment')}
                                                 className="border border-gray-500 rounded-lg w-4 h-4 p-2"
                                             />
                                         </div>
                                     </div>
                                     <div className="flex my-3">
                                         <div className="w-1/2">
-                                            <p className="px-2 py-2">Prüfungsordnung</p>
+                                            <p className="px-2 py-2">Institutionelle Vorgaben</p>
+                                        </div>
+                                        <div className="w-1/2 flex justify-center items-center">
+                                            <input
+                                                type="checkbox"
+                                                {...register(`institutionalRequirements`)}
+                                                className="border border-gray-500 rounded-lg w-4 h-4 p-2"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="flex my-3">
+                                        <div className="w-1/2">
+                                            <p className="px-2 py-2">
+                                                Prüfungsordnung (Prüfungsleistung, Anrechnung etc.)
+                                            </p>
                                         </div>
                                         <div className="w-1/2 flex justify-center items-center">
                                             <input
@@ -130,12 +179,12 @@ export default function FormalConditions() {
                                     </div>
                                     <div className="flex my-3">
                                         <div className="w-1/2">
-                                            <p className="px-2 py-2">...</p>
+                                            <p className="px-2 py-2">Datenschutz</p>
                                         </div>
                                         <div className="w-1/2 flex justify-center items-center">
                                             <input
                                                 type="checkbox"
-                                                {...register(`more`)}
+                                                {...register(`dataProtection`)}
                                                 className="border border-gray-500 rounded-lg w-4 h-4 p-2"
                                             />
                                         </div>

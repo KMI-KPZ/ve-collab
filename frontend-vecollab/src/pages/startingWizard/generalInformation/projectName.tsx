@@ -108,7 +108,7 @@ export default function EssentialInformation() {
                     <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                         <div>
                             <div className={'text-center font-bold text-4xl mb-20'}>
-                                Gib deinem Projekt einen Namen
+                                Wer ist am Projekt beteiligt?
                             </div>
                             <div className="m-7 flex justify-center">
                                 <div>

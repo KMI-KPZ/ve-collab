@@ -3,7 +3,7 @@ import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarS
 import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
@@ -168,8 +168,7 @@ export default function Institutions() {
                             </label>
                         </div>
                         <div className="w-3/4">
-                            <input
-                                type="text"
+                            <select
                                 placeholder="Schulform eingeben"
                                 className="border border-gray-500 rounded-lg w-full h-12 p-2"
                                 {...register(`institutions.${index}.school_type`, {
@@ -178,13 +177,24 @@ export default function Institutions() {
                                         message:
                                             'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
                                     },
-                                    pattern: {
-                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
-                                        message:
-                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?,-',
-                                    },
                                 })}
-                            />
+                            >
+                                <option value="Hochschule/Universität/College">
+                                    Hochschule/Universität/College
+                                </option>
+                                <option value="Fachhochschule/University of Applied Sciences">
+                                    Fachhochschule/University of Applied Sciences
+                                </option>
+                                <option value="Berufsschule">Berufsschule</option>
+                                <option value="Schule – Primärbereich">
+                                    Schule – Primärbereich
+                                </option>
+                                <option value="Schule – Sekundarbereich">
+                                    Schule – Sekundarbereich
+                                </option>
+
+                                <option value="Sonstige">Sonstige</option>
+                            </select>
                             <p className="text-red-600 pt-2">
                                 {errors?.institutions?.[index]?.school_type?.message}
                             </p>
@@ -292,7 +302,7 @@ export default function Institutions() {
                     <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                         <div>
                             <div className={'text-center font-bold text-4xl mb-2'}>
-                                Beschreibe die teilnehmenden Institutionen
+                                In welchen Institutionen wird der VE umgesetzt?
                             </div>
                             <div className={'text-center mb-20'}>optional</div>
                             <div className={'flex flex-wrap justify-center'}>
