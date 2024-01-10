@@ -168,7 +168,7 @@ export default function Partners() {
                     >
                         <div>
                             <div className={'text-center font-bold text-4xl mb-2'}>
-                                Füge deine Partner hinzu
+                                Wer ist am Projekt beteiligt?
                             </div>
                             <div className={'text-center mb-20'}>optional</div>
                             {partners.map((partner, index) => (

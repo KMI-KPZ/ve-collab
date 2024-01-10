@@ -167,23 +167,22 @@ export default function Lectures() {
                             </label>
                         </div>
                         <div className="w-3/4">
-                            <input
-                                type="text"
+                            <select
                                 {...register(`lectures.${index}.lecture_type`, {
                                     maxLength: {
                                         value: 50,
                                         message:
                                             'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
                                     },
-                                    pattern: {
-                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
-                                        message:
-                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
-                                    },
                                 })}
                                 placeholder="z.B. Wahl, Wahlpflicht, Pflicht"
                                 className="border border-gray-500 rounded-lg w-full h-12 p-2"
-                            />
+                            >
+                                <option value="Pflichtveranstaltung">Pflichtveranstaltung</option>
+                                <option value="Fachhochschule/University of Applied Sciences">
+                                    Wahlveranstaltung
+                                </option>
+                            </select>
                             <p className="text-red-600 pt-2">
                                 {errors?.lectures?.[index]?.lecture_type?.message}
                             </p>
@@ -196,23 +195,21 @@ export default function Lectures() {
                             </label>
                         </div>
                         <div className="w-3/4">
-                            <input
-                                type="text"
+                            <select
                                 {...register(`lectures.${index}.lecture_format`, {
                                     maxLength: {
                                         value: 50,
                                         message:
                                             'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
                                     },
-                                    pattern: {
-                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
-                                        message:
-                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
-                                    },
                                 })}
                                 placeholder="z.B. online, hybrid, präsenz"
                                 className="border border-gray-500 rounded-lg w-full h-12 p-2"
-                            />
+                            >
+                                <option value="Präsenz">Präsenz</option>
+                                <option value="Online">Online</option>
+                                <option value="Hybrid">Hybrid</option>
+                            </select>
                             <p className="text-red-600 pt-2">
                                 {errors?.lectures?.[index]?.lecture_format?.message}
                             </p>
@@ -260,7 +257,7 @@ export default function Lectures() {
                     <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                         <div>
                             <div className={'text-center font-bold text-4xl mb-2'}>
-                                Beschreibe die teilnehmenden Lehrveranstaltungen
+                                Im Rahmen welcher Lehrveranstaltungen wird der VE umgesetzt?
                             </div>
                             <div className={'text-center mb-20'}>optional</div>
                             <div className="flex flex-wrap justify-center">
@@ -308,7 +305,7 @@ export default function Lectures() {
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
                                     onClick={() => {
                                         validateAndRoute(
-                                            '/startingWizard/generalInformation/targetGroups',
+                                            '/startingWizard/generalInformation/globalGoals',
                                             router.query.plannerId,
                                             handleSubmit(onSubmit),
                                             isValid

@@ -250,15 +250,21 @@ export default function BroadPlanner() {
                             className="border border-gray-500 rounded-lg h-12 p-2 mx-2"
                         />
                     </div>
-                    <p className="text-red-600 pt-2 flex justify-center">
-                        {errors?.broadSteps?.[index]?.from?.message}
-                    </p>
-                    <p className="text-red-600 pt-2 flex justify-center">
-                        {errors?.broadSteps?.[index]?.to?.message}
-                    </p>
-                    <p className="text-red-600 pt-2 flex justify-center">
-                        {errors?.broadSteps?.[index]?.name?.message}
-                    </p>
+                    {errors?.broadSteps?.[index]?.from && (
+                        <p className="text-red-600 pt-2 flex justify-center">
+                            {errors?.broadSteps?.[index]?.from?.message}
+                        </p>
+                    )}
+                    {errors?.broadSteps?.[index]?.to && (
+                        <p className="text-red-600 pt-2 flex justify-center">
+                            {errors?.broadSteps?.[index]?.to?.message}
+                        </p>
+                    )}
+                    {errors?.broadSteps?.[index]?.name && (
+                        <p className="text-red-600 pt-2 flex justify-center">
+                            {errors?.broadSteps?.[index]?.name?.message}
+                        </p>
+                    )}
                 </div>
             </WhiteBox>
         ));

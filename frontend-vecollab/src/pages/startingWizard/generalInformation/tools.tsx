@@ -145,7 +145,7 @@ export default function Tools() {
                     <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                         <div>
                             <div className={'text-center font-bold text-4xl mb-2'}>
-                                Mit welchen Tools können die Studierenden arbeiten?
+                                Mit welchen Tools werden die Studierenden (hauptsächlich) arbeiten?
                             </div>
                             <div className={'text-center mb-20'}>optional</div>
                             {renderToolsInput()}
