@@ -164,12 +164,12 @@ export default function Institutions() {
                     <div className="mt-4 flex">
                         <div className="w-1/4 flex items-center">
                             <label htmlFor="schoolType" className="px-2 py-2">
-                                Schulform
+                                Bildungseinrichtung
                             </label>
                         </div>
                         <div className="w-3/4">
                             <select
-                                placeholder="Schulform eingeben"
+                                placeholder="Bildungseinrichtung eingeben"
                                 className="border border-gray-500 rounded-lg w-full h-12 p-2"
                                 {...register(`institutions.${index}.school_type`, {
                                     maxLength: {
