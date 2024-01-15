@@ -44,6 +44,9 @@ export default function HeaderSection({ notificationEvents, headerBarMessageEven
                         <Link href="/profile">Profil</Link>
                     </li>
                     <li>
+                        <Link href="/spaces">Gruppen</Link>
+                    </li>
+                    <li>
                         <Link href="/overviewProjects">VE Designer</Link>
                     </li>
                     <li className="relative">

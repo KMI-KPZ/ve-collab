@@ -1,4 +1,5 @@
 import csv
+import random
 from typing import List
 import uuid
 
@@ -95,7 +96,7 @@ class Persona:
         ve_interests: List[str],
         ve_goals: List[str],
         experience: List[str],
-        preferred_formats: List[str],
+        preferred_format: str,
         research_tags: List[str],
         courses: List[Course],
         educations: List[Education],
@@ -112,7 +113,7 @@ class Persona:
         self.ve_interests = ve_interests
         self.ve_goals = ve_goals
         self.experience = experience
-        self.preferred_formats = preferred_formats
+        self.preferred_format = preferred_format
         self.research_tags = research_tags
         self.courses = courses
         self.educations = educations
@@ -280,8 +281,8 @@ def parse_ve_experiences(persona: List[str]) -> List[str]:
 
 
 def parse_preferred_formats(persona: List[str]) -> List[str]:
-    return [format.strip() for format in persona[10].split("|")]
-
+    #return [format.strip() for format in persona[10].split("|")]
+    return random.choice(["synchron", "asynchron", "synchron und asynchron"])
 
 def parse_research_focus(persona: List[str]) -> List[str]:
     return [focus.strip() for focus in persona[11].split("|")]
