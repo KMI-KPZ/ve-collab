@@ -84,8 +84,8 @@ export default function LearningContentView(props: Props) {
                             ></iframe>
                         ) : props.WPPagesFrame === true ? (
                             <iframe
-                                className="rounded-xl mx-1"
-                                src={`https://soserve.rz.uni-leipzig.de:10001/content-test-page/`}
+                                className="rounded-xl mx-1 h-[90vh]"
+                                src={`https://soserve.rz.uni-leipzig.de:10001/herausforderungen-in-virtuellen-austauschen/`}
                             ></iframe>
                         ) : (
                             <Post post={props.post!} />

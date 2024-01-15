@@ -102,9 +102,9 @@ export async function getPostsTitleExcerptSlugByCategory(
                     edges: [
                         {
                             node: {
-                                title: 'nur eine Beispiel Seite',
+                                title: 'Herausforderungen in virtuellen Austauschen',
                                 excerpt: 'lorem ipsum dolor si amet',
-                                slug: 'wp_page_test',
+                                slug: 'herausforderungen-in-virtuellen-austauschen',
                             },
                         },
                     ],

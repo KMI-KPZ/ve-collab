@@ -104,7 +104,7 @@ export default function Topic() {
                     <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                         <div>
                             <div className={'text-center font-bold text-4xl mb-2'}>
-                                zu welchem Thema soll der VE stattfinden?
+                                Zu welchem Thema findet der VE statt?
                             </div>
                             <div className={'text-center mb-20'}>optional</div>
                             <div className="m-7 flex justify-center">
