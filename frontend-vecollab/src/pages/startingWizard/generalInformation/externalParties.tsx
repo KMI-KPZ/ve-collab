@@ -213,7 +213,7 @@ export default function ExternalPersons() {
                 )}
                 <SideProgressBarSection
                     progressState={sideMenuStepsProgress}
-                    handleValidation={handleSubmit(onSubmit)}
+                    handleValidation={() => {}}
                     isValid={true}
                     sideMenuStepsData={sideMenuStepsData}
                 />

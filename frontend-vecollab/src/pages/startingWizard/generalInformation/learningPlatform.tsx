@@ -115,17 +115,16 @@ export default function LearningEnvironment() {
                     <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                         <div>
                             <div className={'text-center font-bold text-4xl mb-2'}>
-                                Was ist die digitale Lernumgebung?
+                                In welcher digitalen Lernumgebung findet der VE statt?
                             </div>
                             <div className={'text-center '}>optional</div>
                             <div className={'text-center mb-20'}>
-                                Wo können die Infos/Aufgaben für die Studiernden zur Verfügung
-                                gestellt und umgesetzt werden?
+                                Weitere mögliche digitale Lernumgebungen finden Sie hier.
                             </div>
                             <div className="mt-4 flex justify-center">
                                 <textarea
                                     rows={5}
-                                    placeholder="z.B. Moodle, ..."
+                                    placeholder="Freitextfeld für manuelle Eingabe eines LMS"
                                     className="border border-gray-500 rounded-lg w-3/4 p-2"
                                     {...register('learningEnv', {
                                         maxLength: {

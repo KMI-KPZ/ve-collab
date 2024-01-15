@@ -40,7 +40,7 @@ export default function EditProfileTeachingItem({ course, index, modifyCallbacks
                     onChange={(e) => modifyCallbacks.modifyCourseSemester(index, e.target.value)}
                     labelElementWidth="w-1/5"
                     inputElemenWidth="w-4/5"
-                    placeholder="In welchem Semester fand diese Lehrveranstaltung statt?"
+                    placeholder="In welchem Semester findet diese Lehrveranstaltung statt? (mehrere durch Komma trennen)"
                 />
             </SlateBox>
         </div>

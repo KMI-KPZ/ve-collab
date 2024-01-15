@@ -21,6 +21,7 @@ from handlers.authentication import LoginHandler, LoginCallbackHandler, LogoutHa
 from handlers.db_static_files import GridFSStaticFileHandler
 from handlers.healthcheck import HealthCheckHandler
 from handlers.import_personas import ImportDummyPersonasHandler
+from handlers.material_taxonomy import MaterialTaxonomyHandler
 from handlers.network.chat import RoomHandler
 from handlers.network.follow import FollowHandler
 from handlers.network.notifications import NotificationHandler
@@ -124,6 +125,7 @@ def make_app(cookie_secret: str, debug: bool = False):
             (r"/ve_invitation/(.+)", VeInvitationHandler),
             (r"/notifications", NotificationHandler),
             (r"/chatroom/(.*)", RoomHandler),
+            (r"/material_taxonomy", MaterialTaxonomyHandler),
             (r"/import_personas", ImportDummyPersonasHandler),
             (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
             (r"/assets/(.*)", tornado.web.StaticFileHandler, {"path": "./assets/"}),
@@ -135,6 +137,7 @@ def make_app(cookie_secret: str, debug: bool = False):
             ),
             (r"/uploads/(.*)", GridFSStaticFileHandler, {"path": ""}),
             (r"/socket.io/", socketio.get_tornado_handler(global_vars.socket_io)),
+            (r"/knowledgeworker/(.*)", tornado.web.StaticFileHandler, {"path": "./knowledgeworker_courses", "default_filename": "index.html"}),
         ],
         cookie_secret=cookie_secret,
         template_path="html",

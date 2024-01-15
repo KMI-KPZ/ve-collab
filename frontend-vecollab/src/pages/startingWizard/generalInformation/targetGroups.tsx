@@ -220,7 +220,7 @@ export default function TargetGroups() {
                     <div className="mt-4 flex">
                         <div className="w-1/4 flex items-center">
                             <label htmlFor="experience" className="px-2 py-2">
-                                Erfahrung
+                                VE-Projektrelevante Erfahrungen
                             </label>
                         </div>
                         <div className="w-3/4">
@@ -238,7 +238,7 @@ export default function TargetGroups() {
                                             'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
                                     },
                                 })}
-                                placeholder="welche Erfahrung hat die Zielgruppe bereits?"
+                                placeholder=" z.B. Sprachkenntnisse, bisherige Seminare zum Thema, etc."
                                 className="border border-gray-500 rounded-lg w-full p-2"
                             />
                             <p className="text-red-600 pt-2">
@@ -267,7 +267,7 @@ export default function TargetGroups() {
                                             'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
                                     },
                                 })}
-                                placeholder="Studiengang eingeben"
+                                placeholder="Studiengang eingeben, mehrere durch Komma trennen"
                                 className="border border-gray-500 rounded-lg w-full h-12 p-2"
                             />
                             <p className="text-red-600 pt-2">
@@ -278,7 +278,7 @@ export default function TargetGroups() {
                     <div className="mt-4 flex">
                         <div className="w-1/4 flex items-center">
                             <label htmlFor="motherTongue" className="px-2 py-2">
-                                Muttersprache
+                                Erstsprachen
                             </label>
                         </div>
                         <div className="w-3/4">
@@ -290,13 +290,8 @@ export default function TargetGroups() {
                                         message:
                                             'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
                                     },
-                                    pattern: {
-                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
-                                        message:
-                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
-                                    },
                                 })}
-                                placeholder="Muttersprache eingeben"
+                                placeholder="Erstsprachen eingeben, mehrere durch Komma trennen"
                                 className="border border-gray-500 rounded-lg w-full h-12 p-2"
                             />
                             <p className="text-red-600 pt-2">
@@ -307,7 +302,7 @@ export default function TargetGroups() {
                     <div className="mt-4 flex">
                         <div className="w-1/4 flex items-center">
                             <label htmlFor="foreignLanguages" className="px-2 py-2">
-                                Fremdsprache(n)
+                                Weitere Sprachen
                             </label>
                         </div>
                         <div className="w-3/4">
@@ -325,7 +320,7 @@ export default function TargetGroups() {
                                             'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
                                     },
                                 })}
-                                placeholder="mehrere durch Komma trennen"
+                                placeholder="Weitere Sprachen eingeben, mehrere durch Komma trennen"
                                 className="border border-gray-500 rounded-lg w-full h-12 p-2"
                             />
                             <p className="text-red-600 pt-2">
@@ -336,7 +331,7 @@ export default function TargetGroups() {
                     <div className="mt-4 flex">
                         <div className="w-1/4 flex items-center">
                             <label htmlFor="foreignLanguages" className="px-2 py-2">
-                                Lernziele
+                                Lehr-/Lernziele
                             </label>
                         </div>
                         <div className="w-3/4">
@@ -354,7 +349,7 @@ export default function TargetGroups() {
                                             'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
                                     },
                                 })}
-                                placeholder="Welche Lernziele soll diese Zielgruppe im VE erreichen?"
+                                placeholder="Welche"
                                 className="border border-gray-500 rounded-lg w-full p-2"
                             />
                             <p className="text-red-600 pt-2">
@@ -376,7 +371,7 @@ export default function TargetGroups() {
                     <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                         <div>
                             <div className={'text-center font-bold text-4xl mb-2'}>
-                                Beschreibe alle Zielgruppen
+                                An welche Zielgruppen richtet sich der VE?
                             </div>
                             <div className={'text-center mb-20'}>optional</div>
                             <div className="flex flex-wrap justify-center">
@@ -412,7 +407,7 @@ export default function TargetGroups() {
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
                                     onClick={() => {
                                         validateAndRoute(
-                                            '/startingWizard/generalInformation/participatingCourses',
+                                            '/startingWizard/generalInformation/globalGoals',
                                             router.query.plannerId,
                                             handleSubmit(onSubmit),
                                             isValid

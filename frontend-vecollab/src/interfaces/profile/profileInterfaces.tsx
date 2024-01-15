@@ -6,7 +6,7 @@ export interface PersonalInformation {
     expertise: string;
     birthday: string;
     profilePicId?: string;
-    languageTags: LanguageTag[];
+    languages: string[];
 }
 
 export interface LanguageTag {
@@ -14,16 +14,13 @@ export interface LanguageTag {
     text: string;
 }
 
-export interface ResearchTag {
-    id: string;
-    text: string;
-}
-
 export interface VEInformation {
     veInterests: string[];
+    veContents: string[];
     veGoals: string[];
     experience: string[];
-    preferredFormats: string[];
+    interdisciplinaryExchange: boolean;
+    preferredFormat: string;
 }
 
 export interface Course {

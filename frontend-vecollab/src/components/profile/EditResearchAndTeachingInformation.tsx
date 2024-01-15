@@ -1,6 +1,5 @@
-import { Course, ResearchTag } from '@/interfaces/profile/profileInterfaces';
+import { Course} from '@/interfaces/profile/profileInterfaces';
 import { Dispatch, FormEvent, SetStateAction } from 'react';
-import { WithContext as ReactTags } from 'react-tag-input';
 import EditProfileHeader from './EditProfileHeader';
 import EditProfileVerticalSpacer from './EditProfileVerticalSpacer';
 import EditProfileHeadline from './EditProfileHeadline';
@@ -9,12 +8,11 @@ import EditProfileTeachingItem from './EditProfileTeachingItem';
 import Swapper from './Swapper';
 
 interface Props {
-    researchTags: ResearchTag[];
-    setResearchTags: Dispatch<SetStateAction<ResearchTag[]>>;
+    researchTags: string[];
+    setResearchTags: Dispatch<SetStateAction<string[]>>;
     courses: Course[];
     setCourses: Dispatch<SetStateAction<Course[]>>;
     updateProfileData(evt: FormEvent): Promise<void>;
-    keyCodeDelimiters: number[];
     orcid: string | null | undefined;
     importOrcidProfile(evt: FormEvent): Promise<void>;
 }
@@ -25,34 +23,40 @@ export default function EditResearchAndTeachingInformation({
     courses,
     setCourses,
     updateProfileData,
-    keyCodeDelimiters,
     orcid,
     importOrcidProfile,
 }: Props) {
-    const handleDeleteResearch = (i: number) => {
-        setResearchTags(researchTags.filter((tag, index) => index !== i));
+
+    const modifyResearchTags = (index: number, value: string) => {
+        let newResearchTags = [...researchTags];
+        newResearchTags[index] = value;
+        setResearchTags(newResearchTags);
     };
 
-    const handleAdditionResearch = (tag: { id: string; text: string }) => {
-        setResearchTags([...researchTags, tag]);
+    const swapResearchTags = (e: FormEvent, firstIndex: number, secondIndex: number) => {
+        e.preventDefault();
+        let newResearchTags = [...researchTags];
+        // swap indices
+        [
+            newResearchTags[firstIndex],
+            newResearchTags[secondIndex],
+        ] = [
+            newResearchTags[secondIndex],
+            newResearchTags[firstIndex],
+        ];
+        setResearchTags(newResearchTags);
     };
 
-    const handleDragResearch = (
-        tag: { id: string; text: string },
-        currPos: number,
-        newPos: number
-    ) => {
-        const newTags = researchTags.slice();
-
-        newTags.splice(currPos, 1);
-        newTags.splice(newPos, 0, tag);
-
-        // re-render
-        setResearchTags(newTags);
+    const deleteFromResearchTags = (e: FormEvent, index: number) => {
+        e.preventDefault();
+        researchTags.splice(index, 1);
+        setResearchTags(researchTags);
     };
 
-    const handleTagClickResearch = (index: number) => {
-        console.log('The tag at index ' + index + ' was clicked');
+    const addLanguageTagInputField = (e: FormEvent) => {
+        e.preventDefault();
+        setResearchTags([...researchTags, ""],
+        );
     };
 
     const modifyCourseTitle = (index: number, value: string) => {
@@ -104,24 +108,28 @@ export default function EditResearchAndTeachingInformation({
             <EditProfileHeader orcid={orcid} importOrcidProfile={importOrcidProfile} />
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'Forschungsschwerpunkte'} />
-                <ReactTags
-                    tags={researchTags}
-                    delimiters={keyCodeDelimiters}
-                    handleDelete={handleDeleteResearch}
-                    handleAddition={handleAdditionResearch}
-                    handleDrag={handleDragResearch}
-                    handleTagClick={handleTagClickResearch}
-                    inputFieldPosition="bottom"
-                    placeholder="Enter oder Komma, um neue Forschungsschwerpunkte hinzuzufügen"
-                    classNames={{
-                        tag: 'mr-2 mb-2 px-2 py-1 rounded-lg bg-gray-300 shadow-lg',
-                        tagInputField: 'w-5/6 border border-gray-500 rounded-lg my-4 px-2 py-1',
-                        remove: 'ml-1',
-                    }}
-                />
+                {researchTags.map((researchTag, index) => (
+                    <Swapper
+                        key={index}
+                        index={index}
+                        arrayLength={researchTags.length}
+                        swapCallback={swapResearchTags}
+                        deleteCallback={deleteFromResearchTags}
+                    >
+                        <input
+                            className={'border border-gray-500 rounded-lg px-2 py-1 mb-1 w-full'}
+                            type="text"
+                            placeholder="Verwende ein Feld pro Forschungsschwerpunkt"
+                            value={researchTag}
+                            onChange={(e) => modifyResearchTags(index, e.target.value)}
+                        />
+                    </Swapper>
+                ))}
+                <EditProfilePlusMinusButtons plusCallback={addLanguageTagInputField} />
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'Lehrveranstaltungen'} />
+                <div className="mb-2 text-sm">In welchen Lehrveranstaltungen würdest du gern einen VE integrieren?</div>
                 {courses.map((course, index) => (
                     <Swapper
                         key={index}

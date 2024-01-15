@@ -28,7 +28,7 @@ export default function Profile() {
         bio: '',
         expertise: '',
         birthday: '',
-        languageTags: [],
+        languages: [],
     });
     const [followers, setFollowers] = useState(['']); // other users that follow this user (usernames)
     const [follows, setFollows] = useState(['']); // the other users that this user follows (usernames)
@@ -36,9 +36,11 @@ export default function Profile() {
     const [veReady, setVeReady] = useState(true);
     const [veInformation, setVeInformation] = useState<VEInformation>({
         veInterests: [''],
+        veContents: [''],
         veGoals: [''],
         experience: [''],
-        preferredFormats: [''],
+        interdisciplinaryExchange: true,
+        preferredFormat: '',
     });
     const [researchTags, setResearchTags] = useState(['']);
     const [courses, setCourses] = useState<Course[]>([
@@ -133,10 +135,7 @@ export default function Profile() {
                         bio: data.profile.bio,
                         expertise: data.profile.expertise,
                         birthday: data.profile.birthday,
-                        languageTags: data.profile.languages.map((language: string) => ({
-                            id: language,
-                            text: language,
-                        })),
+                        languages: data.profile.languages,
                     });
                     setFollowers(data.followers);
                     setFollows(data.follows);
@@ -144,9 +143,11 @@ export default function Profile() {
                     setVeReady(data.profile.ve_ready);
                     setVeInformation({
                         veInterests: data.profile.ve_interests,
+                        veContents: data.profile.ve_contents,
                         veGoals: data.profile.ve_goals,
                         experience: data.profile.experience,
-                        preferredFormats: data.profile.preferred_formats,
+                        interdisciplinaryExchange: data.profile.interdisciplinary_exchange,
+                        preferredFormat: data.profile.preferred_format,
                     });
 
                     setResearchTags(data.profile.research_tags);
@@ -218,9 +219,7 @@ export default function Profile() {
                                     bio={personalInformation.bio}
                                     expertise={personalInformation.expertise}
                                     birthday={personalInformation.birthday}
-                                    languages={personalInformation.languageTags.map(
-                                        (tag) => tag.text
-                                    )}
+                                    languages={personalInformation.languages}
                                 />
                             </WhiteBox>
                             <WhiteBox>

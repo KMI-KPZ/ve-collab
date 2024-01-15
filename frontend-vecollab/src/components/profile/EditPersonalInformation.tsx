@@ -1,5 +1,4 @@
 import { Dispatch, FormEvent, SetStateAction, useState, ChangeEvent } from 'react';
-import { WithContext as ReactTags } from 'react-tag-input';
 import { PersonalInformation } from '@/interfaces/profile/profileInterfaces';
 import EditProfileHeader from './EditProfileHeader';
 import EditProfileHeadline from './EditProfileHeadline';
@@ -9,12 +8,13 @@ import AvatarEditor from './AvatarEditor';
 import { fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import AuthenticatedImage from '@/components/AuthenticatedImage';
+import Swapper from './Swapper';
+import EditProfilePlusMinusButtons from './EditProfilePlusMinusButtons';
 
 interface Props {
     personalInformation: PersonalInformation;
     setPersonalInformation: Dispatch<SetStateAction<PersonalInformation>>;
     updateProfileData(evt: FormEvent): Promise<void>;
-    keyCodeDelimiters: number[];
     orcid: string | null | undefined;
     importOrcidProfile(evt: FormEvent): Promise<void>;
 }
@@ -23,7 +23,6 @@ export default function EditPersonalInformation({
     personalInformation,
     setPersonalInformation,
     updateProfileData,
-    keyCodeDelimiters,
     orcid,
     importOrcidProfile,
 }: Props) {
@@ -54,39 +53,44 @@ export default function EditPersonalInformation({
         }
     };
 
-    const handleDeleteLanguage = (i: number) => {
+    const modifyLanguages = (index: number, value: string) => {
+        let newLanguageTags = [...personalInformation.languages];
+        newLanguageTags[index] = value;
+        setPersonalInformation({ ...personalInformation, languages: newLanguageTags });
+    };
+
+    const swapLanguages = (e: FormEvent, firstIndex: number, secondIndex: number) => {
+        e.preventDefault();
+
+        // swap indices
+        [
+            personalInformation.languages[firstIndex],
+            personalInformation.languages[secondIndex],
+        ] = [
+            personalInformation.languages[secondIndex],
+            personalInformation.languages[firstIndex],
+        ];
         setPersonalInformation({
             ...personalInformation,
-            languageTags: personalInformation.languageTags.filter((tag, index) => index !== i),
+            languages: personalInformation.languages,
         });
     };
 
-    const handleAdditionLanguage = (tag: { id: string; text: string }) => {
+    const deleteFromLanguages = (e: FormEvent, index: number) => {
+        e.preventDefault();
+        personalInformation.languages.splice(index, 1);
         setPersonalInformation({
             ...personalInformation,
-            languageTags: [...personalInformation.languageTags, tag],
+            languages: personalInformation.languages,
         });
     };
 
-    const handleDragLanguage = (
-        tag: { id: string; text: string },
-        currPos: number,
-        newPos: number
-    ) => {
-        const newTags = personalInformation.languageTags.slice();
-
-        newTags.splice(currPos, 1);
-        newTags.splice(newPos, 0, tag);
-
-        // re-render
+    const addLanguagesInputField = (e: FormEvent) => {
+        e.preventDefault();
         setPersonalInformation({
             ...personalInformation,
-            languageTags: newTags,
+            languages: [...personalInformation.languages, ""],
         });
-    };
-
-    const handleTagClickLanguage = (index: number) => {
-        console.log('The tag at index ' + index + ' was clicked');
     };
 
     /*
@@ -211,21 +215,24 @@ export default function EditPersonalInformation({
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'Sprachen'} />
-                <ReactTags
-                    tags={personalInformation.languageTags}
-                    delimiters={keyCodeDelimiters}
-                    handleDelete={handleDeleteLanguage}
-                    handleAddition={handleAdditionLanguage}
-                    handleDrag={handleDragLanguage}
-                    handleTagClick={handleTagClickLanguage}
-                    inputFieldPosition="bottom"
-                    placeholder="Enter, um neue Sprache hinzuzufügen"
-                    classNames={{
-                        tag: 'mr-2 mb-2 px-2 py-1 rounded-lg bg-gray-300 shadow-lg',
-                        tagInputField: 'w-3/4 border border-gray-500 rounded-lg my-4 px-2 py-1',
-                        remove: 'ml-1',
-                    }}
-                />
+                {personalInformation.languages.map((language, index) => (
+                    <Swapper
+                        key={index}
+                        index={index}
+                        arrayLength={personalInformation.languages.length}
+                        swapCallback={swapLanguages}
+                        deleteCallback={deleteFromLanguages}
+                    >
+                        <input
+                            className={'border border-gray-500 rounded-lg px-2 py-1 mb-1 w-full'}
+                            type="text"
+                            placeholder="Verwende ein Feld pro Sprache"
+                            value={language}
+                            onChange={(e) => modifyLanguages(index, e.target.value)}
+                        />
+                    </Swapper>
+                ))}
+                <EditProfilePlusMinusButtons plusCallback={addLanguagesInputField} />
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'Profilbild'} />
