@@ -28,7 +28,7 @@ export default function Profile() {
         bio: '',
         expertise: '',
         birthday: '',
-        languageTags: [],
+        languages: [],
     });
     const [followers, setFollowers] = useState(['']); // other users that follow this user (usernames)
     const [follows, setFollows] = useState(['']); // the other users that this user follows (usernames)
@@ -135,10 +135,7 @@ export default function Profile() {
                         bio: data.profile.bio,
                         expertise: data.profile.expertise,
                         birthday: data.profile.birthday,
-                        languageTags: data.profile.languages.map((language: string) => ({
-                            id: language,
-                            text: language,
-                        })),
+                        languages: data.profile.languages,
                     });
                     setFollowers(data.followers);
                     setFollows(data.follows);
@@ -222,9 +219,7 @@ export default function Profile() {
                                     bio={personalInformation.bio}
                                     expertise={personalInformation.expertise}
                                     birthday={personalInformation.birthday}
-                                    languages={personalInformation.languageTags.map(
-                                        (tag) => tag.text
-                                    )}
+                                    languages={personalInformation.languages}
                                 />
                             </WhiteBox>
                             <WhiteBox>
