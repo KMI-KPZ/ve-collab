@@ -112,9 +112,10 @@ class MaterialTaxonomyHandler(BaseHandler):
         taxonomy = http_body["taxonomy"]
 
         # validate structure of each node
+        # TODO only if dropppable is false, data has to be present
         for node in taxonomy:
             if not all(
-                key in node for key in ["id", "parent", "droppable", "text", "data"]
+                key in node for key in ["id", "parent", "droppable", "text"]
             ):
                 self.set_status(400)
                 self.write(

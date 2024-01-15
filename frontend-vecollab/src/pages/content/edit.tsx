@@ -1,6 +1,6 @@
 import BoxHeadline from '@/components/BoxHeadline';
 import WhiteBox from '@/components/Layout/WhiteBox';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import {
     Tree,
@@ -13,7 +13,9 @@ import { RxPlus } from 'react-icons/rx';
 import { CustomNode } from '@/components/learningContent/CustomNode';
 import { CustomDragPreview } from '@/components/learningContent/CustomDragPreview';
 import Dialog from '@/components/profile/Dialog';
-import { set } from 'date-fns';
+import { fetchGET, fetchPOST } from '@/lib/backend';
+import { useSession } from 'next-auth/react';
+import SuccessAlert from '@/components/SuccessAlert';
 
 Edit.auth = true;
 // TODO only render as admin
@@ -48,6 +50,9 @@ const getLastId = (treeData: NodeModel[]) => {
 };
 
 export default function Edit() {
+    const { data: session } = useSession();
+    const [successPopupOpen, setSuccessPopupOpen] = useState(false);
+
     const [treeData, setTreeData] = useState<NodeModel<CustomData>[]>([
         {
             id: 1,
@@ -123,9 +128,17 @@ export default function Edit() {
         },
     ]);
 
+    useEffect(() => {
+        fetchGET('/material_taxonomy', session?.accessToken).then((res) => {
+            if (res) {
+                setTreeData(res.taxonomy);
+            }
+        });
+    }, []);
+
     // TODO, for now these are separate state vars, but it should be a Material object including the link and metadata
     const [currentMaterialInputName, setCurrentMaterialInputName] = useState<string>('');
-    const [currentMaterialInputLink, setCurrentMaterialInputLink] = useState<string>(''); 
+    const [currentMaterialInputLink, setCurrentMaterialInputLink] = useState<string>('');
 
     const [isMaterialDialogOpen, setIsMaterialDialogOpen] = useState(false);
 
@@ -192,11 +205,16 @@ export default function Edit() {
         });
         setCurrentMaterialInputName('');
         setCurrentMaterialInputLink('');
-
     };
 
     const handleSaveToBackend = () => {
-        //TODO
+        fetchPOST('/material_taxonomy', { taxonomy: treeData }, session?.accessToken);
+
+        // render success message that disappears after 2 seconds
+        setSuccessPopupOpen(true);
+        setTimeout(() => {
+            setSuccessPopupOpen((successPopupOpen) => false);
+        }, 2000);
     };
 
     const handleNodeChange = (id: NodeModel['id'], textUpdate: string, dataUpdate?: CustomData) => {
@@ -214,8 +232,6 @@ export default function Edit() {
 
         setTreeData(newTree);
     };
-
-    console.log(treeData)
 
     return (
         <>
@@ -288,7 +304,7 @@ export default function Edit() {
                     }}
                 >
                     <div className="w-[40rem] h-[40rem] overflow-y-auto content-scrollbar relative">
-                    <BoxHeadline title={'Name'} />
+                        <BoxHeadline title={'Name'} />
                         <div className="mb-10">
                             <input
                                 type="text"
@@ -334,6 +350,7 @@ export default function Edit() {
                     </div>
                 </Dialog>
             </div>
+            {successPopupOpen && <SuccessAlert message={'Gespeichert'} />}
         </>
     );
 }
