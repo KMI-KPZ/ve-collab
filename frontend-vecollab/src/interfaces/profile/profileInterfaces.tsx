@@ -6,15 +6,10 @@ export interface PersonalInformation {
     expertise: string;
     birthday: string;
     profilePicId?: string;
-    languageTags: LanguageTag[];
+    languages: string[];
 }
 
 export interface LanguageTag {
-    id: string;
-    text: string;
-}
-
-export interface ResearchTag {
     id: string;
     text: string;
 }
