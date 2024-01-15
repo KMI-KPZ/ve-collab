@@ -79,8 +79,8 @@ export default function LearningContentView(props: Props) {
                     contentChildren={
                         props.knowledgeWorkerFrame === true ? (
                             <iframe
-                                className="rounded-xl mx-1 h-[90vh]"
-                                src={`http://localhost:8888/knowledgeworker/${props.slug}/`}
+                                className="rounded-xl mx-1"
+                                src={`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/knowledgeworker/${props.slug}/`}
                             ></iframe>
                         ) : props.WPPagesFrame === true ? (
                             <iframe

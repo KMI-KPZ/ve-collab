@@ -1,12 +1,11 @@
-import React from 'react';
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
 import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
+import { useForm, SubmitHandler } from 'react-hook-form';
 import LoadingAnimation from '@/components/LoadingAnimation';
-import { SubmitHandler, useForm } from 'react-hook-form';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
@@ -17,20 +16,20 @@ import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { generateFineStepLinkTopMenu } from '@/pages/startingWizard/generalInformation/courseFormat';
 
 interface FormValues {
-    newContent: string;
+    globalGoals: string;
 }
 
-export default function NewContent() {
+export default function GlobalGoals() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
-    const { validateAndRoute } = useValidation();
     const [linkFineStepTopMenu, setLinkFineStepTopMenu] = useState<string>(
         '/startingWizard/finePlanner'
     );
+    const { validateAndRoute } = useValidation();
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -50,7 +49,7 @@ export default function NewContent() {
     } = useForm<FormValues>({
         mode: 'onChange',
         defaultValues: {
-            newContent: undefined,
+            globalGoals: '',
         },
     });
 
@@ -69,35 +68,37 @@ export default function NewContent() {
         if (session) {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
-                    if (data.plan.new_content === true || data.plan.new_content === false) {
-                        setValue('newContent', data.plan.new_content.toString());
+                    setLoading(false);
+                    if (data.plan.globalGoals !== null) {
+                        setValue('globalGoals', data.plan.globalGoals);
                     }
+
+                    setLinkFineStepTopMenu(generateFineStepLinkTopMenu(data.plan.steps));
+
                     if (data.plan.progress.length !== 0) {
                         setSideMenuStepsProgress(data.plan.progress);
                     }
-                    setLinkFineStepTopMenu(generateFineStepLinkTopMenu(data.plan.steps));
                 }
             );
         }
     }, [session, status, router, setValue]);
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        const typedValue = data.newContent == null ? null : data.newContent === 'true';
         await fetchPOST(
             '/planner/update_fields',
             {
                 update: [
                     {
                         plan_id: router.query.plannerId,
-                        field_name: 'new_content',
-                        value: typedValue,
+                        field_name: 'globalGoals',
+                        value: data.globalGoals,
                     },
                     {
                         plan_id: router.query.plannerId,
                         field_name: 'progress',
                         value: {
                             ...sideMenuStepsProgress,
-                            new_content: ProgressState.completed,
+                            globalGoals: ProgressState.completed,
                         },
                     },
                 ],
@@ -116,45 +117,21 @@ export default function NewContent() {
                     <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                         <div>
                             <div className={'text-center font-bold text-4xl mb-2'}>
-                                Werden Sie neue Inhalte für den VE erstellen und bestehende Teile
-                                der Lehrveranstaltungen anpassen?
+                                Welche globalen Lehr-/Lernziele sollen im VE erreicht werden?
                             </div>
-                            <div className={'mb-20'}></div>
-                            <div className="mt-4 flex justify-center">
-                                <div className="w-1/6">
-                                    <div className="flex my-1">
-                                        <div className="w-1/2">
-                                            <label className="px-2 py-2">Ja</label>
-                                        </div>
-                                        <div className="w-1/2">
-                                            <input
-                                                {...register(`newContent`)}
-                                                type="radio"
-                                                value="true"
-                                                className="border border-gray-500 rounded-lg p-2"
-                                            />
-                                            <p className="text-red-600 pt-2">
-                                                {errors.newContent?.message}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="flex my-1">
-                                        <div className="w-1/2">
-                                            <label className="px-2 py-2">Nein</label>
-                                        </div>
-                                        <div className="w-1/2">
-                                            <input
-                                                {...register(`newContent`)}
-                                                type="radio"
-                                                value="false"
-                                                className="border border-gray-500 rounded-lg p-2"
-                                            />
-                                            <p className="text-red-600 pt-2">
-                                                {errors.newContent?.message}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
+                            <div className={'text-center mb-20'}>optional</div>
+                            <div className="mx-7 mt-7 flex justify-center">
+                                <select
+                                    placeholder="Globalen Lehr-/Lernziele"
+                                    className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
+                                    {...register('globalGoals')}
+                                >
+                                    <option value="Test">Test</option>
+                                    <option value="A">A</option>
+                                    <option value="B">B</option>
+                                    <option value="C">C</option>
+                                </select>
+                                <p className="text-red-600 pt-2">{errors?.globalGoals?.message}</p>
                             </div>
                         </div>
                         <div className="flex justify-around w-full">
@@ -164,7 +141,7 @@ export default function NewContent() {
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
                                     onClick={() => {
                                         validateAndRoute(
-                                            '/startingWizard/generalInformation/languages',
+                                            '/startingWizard/generalInformation/participatingCourses',
                                             router.query.plannerId,
                                             handleSubmit(onSubmit),
                                             isValid
@@ -180,7 +157,7 @@ export default function NewContent() {
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
                                     onClick={() => {
                                         validateAndRoute(
-                                            '/startingWizard/generalInformation/courseFormat',
+                                            '/startingWizard/generalInformation/targetGroups',
                                             router.query.plannerId,
                                             handleSubmit(onSubmit),
                                             isValid

@@ -14,9 +14,11 @@ import {
 import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+import WhiteBox from '@/components/Layout/WhiteBox';
 
 interface FormValues {
     courseFormat: string;
+    physicalMobility: boolean;
 }
 
 export function generateFineStepLinkTopMenu(fineSteps: IFineStep[]): string {
@@ -124,10 +126,10 @@ export default function Realization() {
                 {loading ? (
                     <LoadingAnimation />
                 ) : (
-                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
+                    <form className="flex flex-col w-full p-12 max-w-screen-2xl items-center justify-start">
                         <div>
                             <div className={'text-center font-bold text-4xl mb-2'}>
-                                Wie wird der VE umgesetzt?
+                                In welchem Format / welchen Formaten wird der VE umgesetzt?
                             </div>
                             <div className={'text-center mb-20'}>optional</div>
                             <div className="mx-7 mt-7 flex justify-center">
@@ -136,22 +138,65 @@ export default function Realization() {
                                     className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
                                     {...register('courseFormat')}
                                 >
-                                    <option value="">keine Auswahl</option>
-                                    <option value="asynchron">asynchron</option>
                                     <option value="synchron">synchron</option>
-                                    <option value="gemischt">gemischt</option>
+                                    <option value="asynchron">asynchron</option>
+                                    <option value="asynchron und synchron ">
+                                        asynchron und synchron{' '}
+                                    </option>
                                 </select>
                                 <p className="text-red-600 pt-2">{errors?.courseFormat?.message}</p>
                             </div>
                         </div>
-                        <div className="flex justify-around w-full">
+                        <h2 className="flex font-bold mt-16 "> Zusatzfrage: </h2>
+                        <WhiteBox>
+                            <div className="flex gap-y-6 p-12 items-center justify-start">
+                                <p className="w-1/2">
+                                    Wird der VE durch eine physische Mobilität ergänzt / begleitet?
+                                </p>
+                                <div className="flex w-1/2 gap-x-5">
+                                    <div className="flex my-1">
+                                        <div>
+                                            <label className="px-2 py-2">Ja</label>
+                                        </div>
+                                        <div>
+                                            <input
+                                                {...register(`physicalMobility`)}
+                                                type="radio"
+                                                value="true"
+                                                className="border border-gray-500 rounded-lg p-2"
+                                            />
+                                            <p className="text-red-600 pt-2">
+                                                {errors.physicalMobility?.message}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="flex my-1">
+                                        <div>
+                                            <label className="px-2 py-2">Nein</label>
+                                        </div>
+                                        <div>
+                                            <input
+                                                {...register(`physicalMobility`)}
+                                                type="radio"
+                                                value="false"
+                                                className="border border-gray-500 rounded-lg p-2"
+                                            />
+                                            <p className="text-red-600 pt-2">
+                                                {errors.physicalMobility?.message}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </WhiteBox>
+                        <div className="flex justify-around w-full mt-10">
                             <div>
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
                                     onClick={() => {
                                         validateAndRoute(
-                                            '/startingWizard/generalInformation/questionNewContent',
+                                            '/startingWizard/generalInformation/languages',
                                             router.query.plannerId,
                                             handleSubmit(onSubmit),
                                             isValid
