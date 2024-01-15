@@ -130,7 +130,7 @@ export default function Edit() {
 
     useEffect(() => {
         fetchGET('/material_taxonomy', session?.accessToken).then((res) => {
-            if (res) {
+            if (res.success) {
                 setTreeData(res.taxonomy);
             }
         });
