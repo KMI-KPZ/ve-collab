@@ -95,21 +95,26 @@ export function CVWorkItem({
             <div className={'flex items-center'}>
                 <div>{institution}</div>
             </div>
-            <div className={'flex items-center text-sm text-gray-600'}>
-                <div>{`${startMoment.month() + 1}/${startMoment.year()} - ${
-                    endMoment.month() + 1
-                }/${endMoment.year()}`}</div>
-                <RxDotFilled />
-                <div>
-                    {diff.years > 0 ? (
-                        <>{`${diff.years} Jahre, ${diff.months} Monate`}</>
-                    ) : (
-                        <>{`${diff.months} Monate`}</>
-                    )}
+            {timestamp_from !== '' && timestamp_to !== '' ? (
+                <div className={'flex items-center text-sm text-gray-600'}>
+                    <div>{`${startMoment.month() + 1}/${startMoment.year()} - ${
+                        endMoment.month() + 1
+                    }/${endMoment.year()}`}</div>
+                    <RxDotFilled />
+                    <div>
+                        {diff.years > 0 ? (
+                            <>{`${diff.years} Jahre, ${diff.months} Monate`}</>
+                        ) : (
+                            <>{`${diff.months} Monate`}</>
+                        )}
+                    </div>
                 </div>
-            </div>
+            ) : (
+                <></>
+            )}
             <div className={'text-sm text-gray-600'}>
-                {city}, {country}
+                {city}
+                {city !== '' && country !== '' ? ',' : ''} {country}
             </div>
             <div className={'mt-1'}>{additional_info}</div>
         </li>

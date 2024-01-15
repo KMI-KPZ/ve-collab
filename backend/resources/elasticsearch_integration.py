@@ -195,8 +195,8 @@ class ElasticsearchConnector:
                         },
                         {
                             "match": {
-                                "preferred_formats": {
-                                    "query": profile["preferred_formats"]
+                                "preferred_format": {
+                                    "query": profile["preferred_format"]
                                 },
                             }
                         },

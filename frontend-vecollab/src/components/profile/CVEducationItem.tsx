@@ -32,9 +32,13 @@ export default function CVEducationItem({
                     </>
                 )}
             </div>
-            <div className={'text-sm text-gray-600'}>{`${moment(timeStampFrom).year()} - ${moment(
-                timeStampTo
-            ).year()}`}</div>
+            {timeStampFrom !== '' && timeStampTo !== '' ? (
+                <div className={'text-sm text-gray-600'}>{`${moment(
+                    timeStampFrom
+                ).year()} - ${moment(timeStampTo).year()}`}</div>
+            ) : (
+                <></>
+            )}
             <div className={'mt-1'}>{additionalInformation}</div>
         </li>
     );

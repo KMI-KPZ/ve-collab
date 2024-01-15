@@ -13,6 +13,7 @@ from tornado.testing import gen_test
 import global_vars
 from main import make_app
 from model import User
+import util
 
 # load environment variables
 load_dotenv()
@@ -46,7 +47,7 @@ def setUpModule():
     global_vars.mongodb_port = int(os.getenv("MONGODB_PORT", "27017"))
     global_vars.mongodb_username = os.getenv("MONGODB_USERNAME")
     global_vars.mongodb_password = os.getenv("MONGODB_PASSWORD")
-    global_vars.mongodb_db_name = os.getenv("MONGODB_DB_NAME", "ve_collab")
+    global_vars.mongodb_db_name = "ve-collab-unittest"
     global_vars.etherpad_base_url = os.getenv("ETHERPAD_BASE_URL")
     global_vars.etherpad_api_key = os.getenv("ETHERPAD_API_KEY")
     global_vars.elasticsearch_base_url = os.getenv("ELASTICSEARCH_BASE_URL")
@@ -67,21 +68,10 @@ def tearDownModule():
     in case any of the test cases missed to clean up.
     unittest will call this method itself.
     """
-    with pymongo.MongoClient(
-        global_vars.mongodb_host,
-        global_vars.mongodb_port,
-        username=global_vars.mongodb_username,
-        password=global_vars.mongodb_password,
-    ) as mongo_client:
-        db = mongo_client[global_vars.mongodb_db_name]
-        db.drop_collection("posts")
-        db.drop_collection("spaces")
-        db.drop_collection("profiles")
-        db.drop_collection("global_acl")
-        db.drop_collection("space_acl")
-        db.drop_collection("fs.files")
-        db.drop_collection("fs.chunks")
-        db.drop_collection("plans")
+
+    with util.get_mongodb() as db:
+        for collection_name in db.list_collection_names():
+            db.drop_collection(collection_name)
 
 
 class SocketIOHandlerTest(AsyncHTTPTestCase):

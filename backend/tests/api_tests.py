@@ -27,6 +27,7 @@ from model import (
     User,
     VEPlan,
 )
+import util
 
 # load environment variables
 load_dotenv()
@@ -96,7 +97,7 @@ def setUpModule():
     global_vars.mongodb_port = int(os.getenv("MONGODB_PORT", "27017"))
     global_vars.mongodb_username = os.getenv("MONGODB_USERNAME")
     global_vars.mongodb_password = os.getenv("MONGODB_PASSWORD")
-    global_vars.mongodb_db_name = os.getenv("MONGODB_DB_NAME", "ve_collab")
+    global_vars.mongodb_db_name = "ve-collab-unittest"
     global_vars.etherpad_base_url = os.getenv("ETHERPAD_BASE_URL")
     global_vars.etherpad_api_key = os.getenv("ETHERPAD_API_KEY")
     global_vars.elasticsearch_base_url = os.getenv("ELASTICSEARCH_BASE_URL")
@@ -117,21 +118,10 @@ def tearDownModule():
     in case any of the test cases missed to clean up.
     unittest will call this method itself.
     """
-    with pymongo.MongoClient(
-        global_vars.mongodb_host,
-        global_vars.mongodb_port,
-        username=global_vars.mongodb_username,
-        password=global_vars.mongodb_password,
-    ) as mongo_client:
-        db = mongo_client[global_vars.mongodb_db_name]
-        db.drop_collection("posts")
-        db.drop_collection("spaces")
-        db.drop_collection("profiles")
-        db.drop_collection("global_acl")
-        db.drop_collection("space_acl")
-        db.drop_collection("fs.files")
-        db.drop_collection("fs.chunks")
-        db.drop_collection("plans")
+
+    with util.get_mongodb() as db:
+        for collection_name in db.list_collection_names():
+            db.drop_collection(collection_name)
 
 
 class RenderHandlerTest(AsyncHTTPTestCase):
@@ -255,7 +245,7 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                 "courses": [],
                 "educations": [],
                 "work_experience": [],
-                "ve_window": []
+                "ve_window": [],
             },
             CURRENT_USER.username: {
                 "username": CURRENT_USER.username,
@@ -279,7 +269,7 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                 "courses": [],
                 "educations": [],
                 "work_experience": [],
-                "ve_window": []
+                "ve_window": [],
             },
         }
 
@@ -1417,6 +1407,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "author": CURRENT_ADMIN.username,
                 "file_id": file._id,
+                "file_name": self.test_file_name,
                 "manually_uploaded": False,
             },
             space_state["files"],
@@ -3754,6 +3745,46 @@ class SpaceHandlerTest(BaseApiTestCase):
         response = self.base_checks("GET", "/spaceadministration/list_all", False, 403)
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
 
+    def test_get_personal_spaces(self):
+        """
+        expect: list all spaces that user is member of
+        """
+
+        # insert 2 more spaces, in one user member and one not
+        self.db.spaces.insert_many(
+            [
+                {
+                    "name": "another1",
+                    "invisible": True,
+                    "joinable": False,
+                    "members": [CURRENT_ADMIN.username],
+                    "admins": [CURRENT_ADMIN.username],
+                    "invites": [],
+                    "requests": [],
+                    "files": [],
+                },
+                {
+                    "name": "another2",
+                    "invisible": False,
+                    "joinable": False,
+                    "members": [CURRENT_USER.username],
+                    "admins": [CURRENT_USER.username],
+                    "invites": [],
+                    "requests": [],
+                    "files": [],
+                },
+            ]
+        )
+
+        response = self.base_checks("GET", "/spaceadministration/my", True, 200)
+        self.assertIn("spaces", response)
+        self.assertTrue(
+            any(self.test_space == space["name"] for space in response["spaces"])
+        )
+        self.assertTrue(
+            any("another1" == space["name"] for space in response["spaces"])
+        )
+
     def test_get_space_info(self):
         """
         expect: successfully request info about that space even though user is not member
@@ -5421,6 +5452,111 @@ class SpaceHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
 
+    def test_post_space_toggle_joinability_global_admin(self):
+        """
+        expect: successfully toggle joinability of space (false -> true, true -> false),
+        permission is granted because user is global admin
+        """
+
+        joinability = False
+
+        # pull user from space admins to trigger global admin
+        # and set joinability explicitely
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {
+                    "admins": CURRENT_ADMIN.username,
+                },
+                "$set": {"joinable": joinability},
+            },
+        )
+
+        self.base_checks(
+            "POST",
+            "/spaceadministration/toggle_joinability?name={}".format(self.test_space),
+            True,
+            200,
+        )
+
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertEqual(db_state["joinable"], not joinability)
+
+        # do the same thing once more to test the other toggle direction
+        joinability = not joinability
+        self.base_checks(
+            "POST",
+            "/spaceadministration/toggle_joinability?name={}".format(self.test_space),
+            True,
+            200,
+        )
+
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertEqual(db_state["joinable"], not joinability)
+
+    def test_post_space_toggle_joinability_space_admin(self):
+        """
+        expect: successfully toggle joinability of space, permission is granted
+        because user is space admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        joinability = False
+
+        # set user as space admin
+        # and set joinability explicitely
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$push": {
+                    "admins": CURRENT_USER.username,
+                },
+                "$set": {"joinable": joinability},
+            },
+        )
+
+        self.base_checks(
+            "POST",
+            "/spaceadministration/toggle_joinability?name={}".format(self.test_space),
+            True,
+            200,
+        )
+
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertEqual(db_state["joinable"], not joinability)
+
+        # do the same thing once more to test the other toggle direction
+        joinability = not joinability
+        self.base_checks(
+            "POST",
+            "/spaceadministration/toggle_joinability?name={}".format(self.test_space),
+            True,
+            200,
+        )
+
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertEqual(db_state["joinable"], not joinability)
+
+    def test_post_space_toggle_joinability_error_insufficient_permission(self):
+        """
+        expect: fail message because user is neither global admin nor space admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        response = self.base_checks(
+            "POST",
+            "/spaceadministration/toggle_joinability?name={}".format(self.test_space),
+            False,
+            403,
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
     def test_post_space_put_file(self):
         """
         expect: successfully add a new file
@@ -5456,6 +5592,7 @@ class SpaceHandlerTest(BaseApiTestCase):
             {
                 "author": CURRENT_ADMIN.username,
                 "file_id": file._id,
+                "file_name": file_name,
                 "manually_uploaded": True,
             },
             db_state["files"],
