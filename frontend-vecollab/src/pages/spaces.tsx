@@ -1,3 +1,4 @@
+import React from 'react';
 import AuthenticatedImage from '@/components/AuthenticatedImage';
 import BoxHeadline from '@/components/BoxHeadline';
 import WhiteBox from '@/components/Layout/WhiteBox';
