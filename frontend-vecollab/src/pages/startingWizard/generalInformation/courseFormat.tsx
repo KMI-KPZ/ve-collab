@@ -196,7 +196,7 @@ export default function Realization() {
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
                                     onClick={() => {
                                         validateAndRoute(
-                                            '/startingWizard/generalInformation/questionNewContent',
+                                            '/startingWizard/generalInformation/languages',
                                             router.query.plannerId,
                                             handleSubmit(onSubmit),
                                             isValid
