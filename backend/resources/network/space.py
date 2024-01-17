@@ -44,6 +44,8 @@ class Spaces:
             "invites": list,
             "requests": list,
             "files": list,
+            "space_pic": str,
+            "space_description": str,
         }
 
     def check_space_exists(self, name: str) -> bool:
@@ -137,6 +139,19 @@ class Spaces:
             spaces.append(Space(space))
         return spaces
 
+    def get_spaces_of_user(self, username: str) -> List[Space]:
+        """
+        get data of all spaces the given user is a member (or admin) of
+        :return: the space data of all spaces the user is a member (or admin) of
+        """
+
+        spaces = []
+        for space in self.db.spaces.find(
+            {"$or": [{"members": username}, {"admins": username}]}
+        ):
+            spaces.append(Space(space))
+        return spaces
+
     def get_space_names(self) -> List[str]:
         """
         retrieve a list of all existing space names
@@ -146,7 +161,7 @@ class Spaces:
             space["name"] for space in self.db.spaces.find(projection={"name": True})
         ]
 
-    def get_spaces_of_user(self, username: str) -> List[str]:
+    def get_space_names_of_user(self, username: str) -> List[str]:
         """
         retrieve a list of space names that the given user is a member of.
         :param username: the user to query for
@@ -426,7 +441,7 @@ class Spaces:
         )
         if not space_requests:
             raise SpaceDoesntExistError()
-        
+
         if username not in space_requests["requests"]:
             raise NotRequestedJoinError()
 
@@ -461,6 +476,20 @@ class Spaces:
         # toggle visibility
         update_result = self.db.spaces.update_one(
             {"name": space_name}, [{"$set": {"invisible": {"$not": "$invisible"}}}]
+        )
+
+        # the filter didnt match any document, so the space doesnt exist
+        if update_result.matched_count != 1:
+            raise SpaceDoesntExistError()
+
+    def toggle_joinability(self, space_name: str) -> None:
+        """
+        toggle the joinability of the space, i.e. joinable --> not joinable, not joinable --> joinable
+        """
+
+        # toggle joinability
+        update_result = self.db.spaces.update_one(
+            {"name": space_name}, [{"$set": {"joinable": {"$not": "$joinable"}}}]
         )
 
         # the filter didnt match any document, so the space doesnt exist
@@ -530,18 +559,16 @@ class Spaces:
         )
         if not space_admins:
             raise SpaceDoesntExistError()
-        
+
         if username not in space_admins["admins"]:
             raise UserNotAdminError()
-        
+
         # if the user is the only admin left, he cannot be degraded
         if len(space_admins["admins"]) == 1:
             raise OnlyAdminError()
 
         # remove user from spaces admins list
-        self.db.spaces.update_one(
-            {"name": space_name}, {"$pull": {"admins": username}}
-        )
+        self.db.spaces.update_one({"name": space_name}, {"$pull": {"admins": username}})
 
     def create_or_join_discussion_space(self, wp_post: dict, username: str) -> str:
         """
@@ -598,7 +625,7 @@ class Spaces:
         return db_result["files"]
 
     def add_new_post_file(
-        self, space_name: str, author: str, file_id: ObjectId
+        self, space_name: str, author: str, file_id: ObjectId, file_name: str
     ) -> None:
         """
         add a new file to the space's 'repository', that was originally part of a post.
@@ -614,6 +641,7 @@ class Spaces:
                     "files": {
                         "author": author,
                         "file_id": file_id,
+                        "file_name": file_name,
                         "manually_uploaded": False,
                     }
                 }
@@ -657,6 +685,7 @@ class Spaces:
                     "files": {
                         "author": uploader,
                         "file_id": _id,
+                        "file_name": file_name,
                         "manually_uploaded": True,
                     }
                 }

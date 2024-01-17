@@ -28,6 +28,11 @@ class SpaceHandler(BaseHandler):
     handle existing and creation of new spaces
     """
 
+    def options(self, slug):
+        # no body
+        self.set_status(200)
+        self.finish()
+
     @auth_needed
     def get(self, slug):
         """
@@ -56,6 +61,17 @@ class SpaceHandler(BaseHandler):
                 403 Forbidden
                 {"success": False,
                  "reason": "insufficient_permission"}
+
+        GET /spaceadministration/my
+            (view all spaces that current user is a member of)
+            return:
+                200 OK,
+                {"success": True,
+                 "spaces": [space1, space2,...]}
+
+                401 Unauthorized
+                {"success": False,
+                 "reason": "no_logged_in_user"}
 
         GET /spaceadministration/info
             (view details about one space, if it is invisible, you need to be a member of the space
@@ -185,6 +201,10 @@ class SpaceHandler(BaseHandler):
         elif slug == "list_all":
             self.list_spaces()
             return
+        
+        elif slug == "my":
+            self.list_personal_spaces()
+            return
 
         elif slug == "info":
             try:
@@ -255,6 +275,7 @@ class SpaceHandler(BaseHandler):
             query param:
                 "name" : space name to create, mandatory argument
                 "invisible" : boolean to mark if space should be visible to users in overview or not, optional argument, default False
+                "joinable" : boolean to mark if space should be joinable to user or only upon request, optional argument, default True
 
             returns:
                 200 OK,
@@ -534,6 +555,35 @@ class SpaceHandler(BaseHandler):
                 {"success": False,
                  "reason": "space_doesnt_exist"}
 
+        POST /spaceadministration/toggle_joinability
+            (toggle joinable state of space, i.e. true --> false, false --> true, requires space admin or global admin privileges)
+            query param:
+                "name" : the space which to trigger
+
+            returns:
+                200 OK,
+                {"success": True}
+
+                400 Bad Request
+                {"success": False,
+                 "reason": missing_key:name}
+
+                400 Bad Request
+                {"success": False,
+                 "reason": "space_doesnt_exist"}
+
+                401 Unauthorized
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                {"success": False,
+                 "reason": "insufficient_permission"}
+
+                409 Conflict
+                {"success": False,
+                 "reason": "space_doesnt_exist"}
+
         POST /spaceadministration/join_discussion
             start or join the space that discusses about a wordpress post
             query param:
@@ -607,7 +657,7 @@ class SpaceHandler(BaseHandler):
             # explicit bool cast in case user puts any string or int value that is not already "true" (will be interpreted as true then)
             invisible = bool(invisible)
 
-            joinable = self.get_argument("joinable", False)
+            joinable = self.get_argument("joinable", True)
             if joinable == "false":
                 joinable = False
             joinable = bool(joinable)
@@ -680,6 +730,10 @@ class SpaceHandler(BaseHandler):
             self.toggle_space_visibility(space_name)
             return
 
+        elif slug == "toggle_joinability":
+            self.toggle_space_joinability(space_name)
+            return
+
         elif slug == "join_discussion":
             try:
                 wp_post_id = self.get_argument("wp_post_id")
@@ -739,6 +793,14 @@ class SpaceHandler(BaseHandler):
                 401 Unauthorized
                 {"success": False,
                  "reason": "no_logged_in_user"}
+
+                409 Conflict
+                {"success": False,
+                 "reason": "space_doesnt_exist"}
+                
+                409 Conflict
+                {"success": False,
+                 "reason": "no_other_admins_left"}
 
         DELETE /spaceadministration/kick
             (kick a user from the space, requires being global or space admin)
@@ -957,6 +1019,19 @@ class SpaceHandler(BaseHandler):
         self.set_status(200)
         self.write(self.json_serialize_response({"success": True, "spaces": spaces}))
         return
+    
+    def list_personal_spaces(self) -> None:
+        """
+        list all spaces that the current user is a member of
+        """
+
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
+            spaces = space_manager.get_spaces_of_user(self.current_user.username)
+
+        self.set_status(200)
+        self.write(self.json_serialize_response({"success": True, "spaces": spaces}))
+        return
 
     def get_space_info(self, space_name: str) -> None:
         """
@@ -1138,6 +1213,8 @@ class SpaceHandler(BaseHandler):
                 "invites": [],
                 "requests": [],
                 "files": [],
+                "space_pic": "default_group_pic.jpg",
+                "space_description": "",
             }
 
             try:
@@ -1509,6 +1586,35 @@ class SpaceHandler(BaseHandler):
             self.set_status(200)
             self.write({"success": True})
 
+    def toggle_space_joinability(self, space_name: str) -> None:
+        """
+        toggle joinable state of space depending on current state, i.e. true --> false, false --> true
+        """
+
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
+            try:
+                # abort if user is neither space nor global admin
+                if not (
+                    space_manager.check_user_is_space_admin(
+                        space_name, self.current_user.username
+                    )
+                    or self.is_current_user_lionet_admin()
+                ):
+                    self.set_status(403)
+                    self.write({"success": False, "reason": "insufficient_permission"})
+                    return
+            except SpaceDoesntExistError:
+                self.set_status(409)
+                self.write({"success": False, "reason": "space_doesnt_exist"})
+                return
+
+            # toggle joinability
+            space_manager.toggle_joinability(space_name)
+
+            self.set_status(200)
+            self.write({"success": True})
+
     def _create_or_join_discussion_space(self, wordpress_post_id: str) -> None:
         """
         helper function the create or join the discussion space about the wordpress post.
@@ -1662,6 +1768,8 @@ class SpaceHandler(BaseHandler):
             try:
                 # in order to kick an admin from the space,
                 # you have to be global admin (prevents space admins from kicking each other)
+                # TODO reject kick if user is the only admin left, i.e. if he is the last admin
+                # he cannot be kicked unless another admin is added first
                 if space_manager.check_user_is_space_admin(space_name, user_name):
                     if not self.is_current_user_lionet_admin():
                         self.set_status(403)
@@ -1729,6 +1837,11 @@ class SpaceHandler(BaseHandler):
             except UserNotAdminError:
                 self.set_status(409)
                 self.write({"success": False, "reason": "user_not_space_admin"})
+                return
+            except OnlyAdminError:
+                # TODO test this case
+                self.set_status(409)
+                self.write({"success": False, "reason": "no_other_admins_left"})
                 return
 
     def delete_space(self, space_name: str) -> None:

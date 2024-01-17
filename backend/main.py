@@ -21,6 +21,7 @@ from handlers.authentication import LoginHandler, LoginCallbackHandler, LogoutHa
 from handlers.db_static_files import GridFSStaticFileHandler
 from handlers.healthcheck import HealthCheckHandler
 from handlers.import_personas import ImportDummyPersonasHandler
+from handlers.material_taxonomy import MaterialTaxonomyHandler
 from handlers.network.chat import RoomHandler
 from handlers.network.follow import FollowHandler
 from handlers.network.notifications import NotificationHandler
@@ -124,6 +125,7 @@ def make_app(cookie_secret: str, debug: bool = False):
             (r"/ve_invitation/(.+)", VeInvitationHandler),
             (r"/notifications", NotificationHandler),
             (r"/chatroom/(.*)", RoomHandler),
+            (r"/material_taxonomy", MaterialTaxonomyHandler),
             (r"/import_personas", ImportDummyPersonasHandler),
             (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
             (r"/assets/(.*)", tornado.web.StaticFileHandler, {"path": "./assets/"}),
@@ -268,6 +270,7 @@ def set_global_vars() -> None:
         "KEYCLOAK_REALM",
         "KEYCLOAK_CLIENT_ID",
         "KEYCLOAK_CLIENT_SECRET",
+        "KEYCLOAK_CALLBACK_URL",
         "KEYCLOAK_ADMIN_USERNAME",
         "KEYCLOAK_ADMIN_PASSWORD",
         "MONGODB_USERNAME",
@@ -302,6 +305,7 @@ def set_global_vars() -> None:
     global_vars.keycloak_realm = os.getenv("KEYCLOAK_REALM")
     global_vars.keycloak_client_id = os.getenv("KEYCLOAK_CLIENT_ID")
     global_vars.keycloak_client_secret = os.getenv("KEYCLOAK_CLIENT_SECRET")
+    global_vars.keycloak_callback_url = os.getenv("KEYCLOAK_CALLBACK_URL")
     global_vars.keycloak_admin_username = os.getenv("KEYCLOAK_ADMIN_USERNAME")
     global_vars.keycloak_admin_password = os.getenv("KEYCLOAK_ADMIN_PASSWORD")
 

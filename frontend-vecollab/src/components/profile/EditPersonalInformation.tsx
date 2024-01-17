@@ -1,5 +1,4 @@
 import { Dispatch, FormEvent, SetStateAction, useState, ChangeEvent } from 'react';
-import { WithContext as ReactTags } from 'react-tag-input';
 import { PersonalInformation } from '@/interfaces/profile/profileInterfaces';
 import EditProfileHeader from './EditProfileHeader';
 import EditProfileHeadline from './EditProfileHeadline';
@@ -9,23 +8,27 @@ import AvatarEditor from './AvatarEditor';
 import { fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import AuthenticatedImage from '@/components/AuthenticatedImage';
+import Swapper from './Swapper';
+import EditProfilePlusMinusButtons from './EditProfilePlusMinusButtons';
+import CreatableSelect from 'react-select/creatable';
+import { DropdownList } from '@/interfaces/dropdowns';
 
 interface Props {
     personalInformation: PersonalInformation;
     setPersonalInformation: Dispatch<SetStateAction<PersonalInformation>>;
     updateProfileData(evt: FormEvent): Promise<void>;
-    keyCodeDelimiters: number[];
     orcid: string | null | undefined;
     importOrcidProfile(evt: FormEvent): Promise<void>;
+    dropdowns: DropdownList;
 }
 
 export default function EditPersonalInformation({
     personalInformation,
     setPersonalInformation,
     updateProfileData,
-    keyCodeDelimiters,
     orcid,
     importOrcidProfile,
+    dropdowns,
 }: Props) {
     const { data: session } = useSession();
 
@@ -54,39 +57,41 @@ export default function EditPersonalInformation({
         }
     };
 
-    const handleDeleteLanguage = (i: number) => {
+    const modifyLanguages = (index: number, value: string) => {
+        let newLanguageTags = [...personalInformation.languages];
+        newLanguageTags[index] = value;
+        setPersonalInformation({ ...personalInformation, languages: newLanguageTags });
+    };
+
+    const swapLanguages = (e: FormEvent, firstIndex: number, secondIndex: number) => {
+        e.preventDefault();
+
+        // swap indices
+        [personalInformation.languages[firstIndex], personalInformation.languages[secondIndex]] = [
+            personalInformation.languages[secondIndex],
+            personalInformation.languages[firstIndex],
+        ];
         setPersonalInformation({
             ...personalInformation,
-            languageTags: personalInformation.languageTags.filter((tag, index) => index !== i),
+            languages: personalInformation.languages,
         });
     };
 
-    const handleAdditionLanguage = (tag: { id: string; text: string }) => {
+    const deleteFromLanguages = (e: FormEvent, index: number) => {
+        e.preventDefault();
+        personalInformation.languages.splice(index, 1);
         setPersonalInformation({
             ...personalInformation,
-            languageTags: [...personalInformation.languageTags, tag],
+            languages: personalInformation.languages,
         });
     };
 
-    const handleDragLanguage = (
-        tag: { id: string; text: string },
-        currPos: number,
-        newPos: number
-    ) => {
-        const newTags = personalInformation.languageTags.slice();
-
-        newTags.splice(currPos, 1);
-        newTags.splice(newPos, 0, tag);
-
-        // re-render
+    const addLanguagesInputField = (e: FormEvent) => {
+        e.preventDefault();
         setPersonalInformation({
             ...personalInformation,
-            languageTags: newTags,
+            languages: [...personalInformation.languages, ''],
         });
-    };
-
-    const handleTagClickLanguage = (index: number) => {
-        console.log('The tag at index ' + index + ' was clicked');
     };
 
     /*
@@ -131,7 +136,7 @@ export default function EditPersonalInformation({
                 <div className={'flex justify-between'}>
                     {/* TODO validation: treat first name and last name as required information*/}
                     <input
-                        className={'border border-gray-500 rounded-lg px-2 py-1'}
+                        className={'border border-[#cccccc] rounded-md px-2 py-[6px]'}
                         type="text"
                         placeholder={'Vorname'}
                         value={personalInformation.firstName}
@@ -143,7 +148,7 @@ export default function EditPersonalInformation({
                         }
                     />
                     <input
-                        className={'border border-gray-500 rounded-lg px-2 py-1'}
+                        className={'border border-[#cccccc] rounded-md px-2 py-[6px]'}
                         type="text"
                         placeholder={'Nachname'}
                         value={personalInformation.lastName}
@@ -159,7 +164,7 @@ export default function EditPersonalInformation({
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'Institution'} />
                 <input
-                    className={'border border-gray-500 rounded-lg px-2 py-1 w-1/2'}
+                    className={'border border-[#cccccc] rounded-md px-2 py-[6px] w-1/2'}
                     type="text"
                     placeholder={'Name deiner aktuellen Institution'}
                     value={personalInformation.institution}
@@ -174,7 +179,7 @@ export default function EditPersonalInformation({
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'Bio'} />
                 <textarea
-                    className={'w-full border border-gray-500 rounded-lg px-2 py-1'}
+                    className={'w-full border border-[#cccccc] rounded-md px-2 py-[6px]'}
                     rows={5}
                     placeholder={'Erzähle kurz etwas über dich'}
                     value={personalInformation.bio}
@@ -185,23 +190,35 @@ export default function EditPersonalInformation({
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'Fachgebiet'} />
-                <input
-                    className={'border border-gray-500 rounded-lg px-2 py-1 w-1/2'}
-                    type="text"
-                    placeholder={'Worin liegt deine Expertise?'}
-                    value={personalInformation.expertise}
+                <CreatableSelect
+                    className="w-full mb-1"
+                    options={dropdowns.expertise}
                     onChange={(e) =>
-                        setPersonalInformation({
-                            ...personalInformation,
-                            expertise: e.target.value,
-                        })
+                        setPersonalInformation({ ...personalInformation, expertise: e!.value })
                     }
+                    // if value is not null, placeholder wont show, even though value inside the object is ''
+                    value={
+                        personalInformation.expertise !== ''
+                            ? {
+                                  label: personalInformation.expertise,
+                                  value: personalInformation.expertise,
+                              }
+                            : null
+                    }
+                    placeholder={
+                        'Fachgebiet auswählen oder neues Fachgebiet durch Tippen hinzufügen'
+                    }
+                    formatCreateLabel={(inputValue) => (
+                        <span>
+                            Nichts passendes dabei? <b>{inputValue}</b> verwenden
+                        </span>
+                    )}
                 />
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'Geburtstag'} />
                 <input
-                    className={'border border-gray-500 rounded-lg px-2 py-1'}
+                    className={'border border-[#cccccc] rounded-md px-2 py-[6px]'}
                     type="date"
                     value={personalInformation.birthday}
                     onChange={(e) =>
@@ -211,21 +228,24 @@ export default function EditPersonalInformation({
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'Sprachen'} />
-                <ReactTags
-                    tags={personalInformation.languageTags}
-                    delimiters={keyCodeDelimiters}
-                    handleDelete={handleDeleteLanguage}
-                    handleAddition={handleAdditionLanguage}
-                    handleDrag={handleDragLanguage}
-                    handleTagClick={handleTagClickLanguage}
-                    inputFieldPosition="bottom"
-                    placeholder="Enter, um neue Sprache hinzuzufügen"
-                    classNames={{
-                        tag: 'mr-2 mb-2 px-2 py-1 rounded-lg bg-gray-300 shadow-lg',
-                        tagInputField: 'w-3/4 border border-gray-500 rounded-lg my-4 px-2 py-1',
-                        remove: 'ml-1',
-                    }}
-                />
+                {personalInformation.languages.map((language, index) => (
+                    <Swapper
+                        key={index}
+                        index={index}
+                        arrayLength={personalInformation.languages.length}
+                        swapCallback={swapLanguages}
+                        deleteCallback={deleteFromLanguages}
+                    >
+                        <input
+                            className={'border border-[#cccccc] rounded-md px-2 py-[6px] mb-1 w-full'}
+                            type="text"
+                            placeholder="Verwende pro Sprache ein Feld"
+                            value={language}
+                            onChange={(e) => modifyLanguages(index, e.target.value)}
+                        />
+                    </Swapper>
+                ))}
+                <EditProfilePlusMinusButtons plusCallback={addLanguagesInputField} />
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'Profilbild'} />

@@ -21,9 +21,13 @@ import {
 import SuccessAlert from '@/components/SuccessAlert';
 import EditVisibilitySettings from '@/components/profile/EditVisibilitySettings';
 import EditProfileVeWindow from '@/components/profile/EditProfileVeWindow';
+import type { InferGetServerSidePropsType, GetServerSideProps } from 'next';
+import { DropdownList } from '@/interfaces/dropdowns';
 
 EditProfile.auth = true;
-export default function EditProfile() {
+export default function EditProfile({
+    dropdowns,
+}: InferGetServerSidePropsType<typeof getServerSideProps>) {
     const [personalInformation, setPersonalInformation] = useState<PersonalInformation>({
         firstName: '',
         lastName: '',
@@ -32,7 +36,7 @@ export default function EditProfile() {
         expertise: '',
         birthday: '',
         profilePicId: '',
-        languageTags: [],
+        languages: [''],
     });
     const [veReady, setVeReady] = useState(true);
     const [excludedFromMatching, setExcludedFromMatching] = useState(false);
@@ -44,7 +48,7 @@ export default function EditProfile() {
         interdisciplinaryExchange: true,
         preferredFormat: '',
     });
-    const [researchTags, setResearchTags] = useState([{ id: '', text: '' }]);
+    const [researchTags, setResearchTags] = useState(['']);
     const [courses, setCourses] = useState<Course[]>([
         { title: '', academic_courses: '', semester: '' },
         { title: '', academic_courses: '', semester: '' },
@@ -100,10 +104,7 @@ export default function EditProfile() {
                     expertise: data.profile.expertise,
                     birthday: data.profile.birthday,
                     profilePicId: data.profile.profile_pic,
-                    languageTags: data.profile.languages.map((language: string) => ({
-                        id: language,
-                        text: language,
-                    })),
+                    languages: data.profile.languages,
                 });
                 setVeReady(data.profile.ve_ready);
                 setExcludedFromMatching(data.profile.excluded_from_matching);
@@ -115,12 +116,7 @@ export default function EditProfile() {
                     interdisciplinaryExchange: data.profile.interdisciplinary_exchange,
                     preferredFormat: data.profile.preferred_format,
                 });
-                setResearchTags(
-                    data.profile.research_tags.map((tag: string) => ({
-                        id: tag,
-                        text: tag,
-                    }))
-                );
+                setResearchTags(data.profile.research_tags);
                 setCourses(data.profile.courses);
                 setEducations(data.profile.educations);
                 setWorkExperience(data.profile.work_experience);
@@ -134,13 +130,6 @@ export default function EditProfile() {
             }
         });
     }, [session]);
-
-    const KeyCodes = {
-        comma: 188,
-        enter: 13,
-    };
-
-    const delimiters = [KeyCodes.comma, KeyCodes.enter];
 
     /*
     sync the currently entered form data with the backend
@@ -157,7 +146,7 @@ export default function EditProfile() {
                 bio: personalInformation.bio,
                 expertise: personalInformation.expertise,
                 birthday: personalInformation.birthday,
-                languages: personalInformation.languageTags.map((elem) => elem.text),
+                languages: personalInformation.languages,
                 ve_ready: veReady,
                 ve_interests: veInformation.veInterests,
                 ve_contents: veInformation.veContents,
@@ -165,7 +154,7 @@ export default function EditProfile() {
                 experience: veInformation.experience,
                 interdisciplinary_exchange: veInformation.interdisciplinaryExchange,
                 preferred_format: veInformation.preferredFormat,
-                research_tags: researchTags.map((elem) => elem.text),
+                research_tags: researchTags,
                 courses: courses,
                 educations: educations,
                 work_experience: workExperience,
@@ -209,14 +198,9 @@ export default function EditProfile() {
                 institution: profile.institution,
                 expertise: personalInformation.expertise,
                 birthday: personalInformation.birthday,
-                languageTags: personalInformation.languageTags,
+                languages: personalInformation.languages,
             });
-            setResearchTags(
-                profile.research_tags.map((tag: string) => ({
-                    id: tag,
-                    text: tag,
-                }))
-            );
+            setResearchTags(profile.research_tags);
             setEducations(profile.educations);
             setWorkExperience(profile.work_experience);
         });
@@ -236,9 +220,9 @@ export default function EditProfile() {
                                         personalInformation={personalInformation}
                                         setPersonalInformation={setPersonalInformation}
                                         updateProfileData={updateProfileData}
-                                        keyCodeDelimiters={delimiters}
                                         orcid={session?.user.orcid}
                                         importOrcidProfile={importOrcidProfile}
+                                        dropdowns={dropdowns}
                                     />
                                 </div>
                                 <div tabname="VE-Info">
@@ -250,6 +234,7 @@ export default function EditProfile() {
                                         updateProfileData={updateProfileData}
                                         orcid={session?.user.orcid}
                                         importOrcidProfile={importOrcidProfile}
+                                        dropdowns={dropdowns}
                                     />
                                 </div>
                                 <div tabname="Lehre & Forschung">
@@ -259,7 +244,6 @@ export default function EditProfile() {
                                         courses={courses}
                                         setCourses={setCourses}
                                         updateProfileData={updateProfileData}
-                                        keyCodeDelimiters={delimiters}
                                         orcid={session?.user.orcid}
                                         importOrcidProfile={importOrcidProfile}
                                     />
@@ -309,3 +293,117 @@ export default function EditProfile() {
         </>
     );
 }
+
+export const getServerSideProps = (async () => {
+    // prepare select dropdown options
+    const optionLists = {
+        veInterests: [
+            'Best Practice-Beispiele',
+            'Evaluation',
+            'Fachspezifische Umsetzungsmöglichkeiten',
+            'Forschung',
+            'Fördermöglichkeiten',
+            'Implementierung',
+            'Methoden und Aufgabenformate',
+            'Netzwerke',
+            'Theoretische Grundlagen und Ansätze',
+            '(digitale) Tools',
+        ],
+        veGoals: [
+            'Förderung globalen Lernens',
+            'Förderung kommunikativer Kompetenzen',
+            'Förderung fachlicher Kompetenzen',
+            'Förderung (fremd)sprachlicher Kompetenzen',
+            'Interdisziplinärer Austausch',
+            'Internationale Zusammenarbeit',
+        ],
+        preferredFormat: ['synchron', 'asynchron', 'synchron und asynchron'],
+        expertise: [
+            'Agrar- und Forstwissenschaft',
+            'Allgemeine Naturwissenschaft',
+            'Amerikanistik',
+            'Anglistik',
+            'Archäologie',
+            'Architektur, Bauingenieur- und Vermessungswesen',
+            'Außereuropäische Sprachen und Literaturen',
+            'Bildungswissenschaften',
+            'Biologie',
+            'Biotechnologie',
+            'Buch- und Bibliothekswesen',
+            'Chemie',
+            'Deutsch als Fremd- und Zweitsprache',
+            'Elektrotechnik, Elektronik, Nachrichtentechnik',
+            'Energietechnik',
+            'Ernährungs- und Haushaltswissenschaft',
+            'Ethnologie',
+            'Fachdidaktik Englisch',
+            'Fachdidaktik romanische Sprachen',
+            'Gartenbau',
+            'Geographie',
+            'Geowissenschaften',
+            'Germanistik',
+            'Geschichte',
+            'Gesundheitswissenschaften',
+            'Indogermanistik',
+            'Ingenieurwissenschaften',
+            'Informatik',
+            'Informationswissenschaft',
+            'Klassische Philologie, Mittellateinische und Neugriechische Philologie',
+            'Kommunikationsdesign',
+            'Kulturwissenschaften',
+            'Kunstwissenschaften und Kunstgeschichte',
+            'Literaturwissenschaft',
+            'Maschinenbau',
+            'Mathematik',
+            'Medien- und Kommunikationswissenschaften',
+            'Medizin',
+            'Militärwissenschaft',
+            'Museologie',
+            'Musikwissenschaft',
+            'Natur- und Umweltschutz',
+            'Niederlandistik',
+            'Pädagogik',
+            'Pharmazie',
+            'Philosophie',
+            'Physik',
+            'Politologie',
+            'Psychologie',
+            'Rechtswissenschaft',
+            'Romanistik',
+            'Skandinavistik',
+            'Slavistik',
+            'Soziologie, empirische Sozialforschung, soziale Arbeit',
+            'Sportwissenschaft',
+            'Sprachwissenschaft',
+            'Sprechwissenschaft',
+            'Technik',
+            'Theologie und Religionswissenschaften',
+            'Übersetzen und Dolmetschen (Translationswissenschaft)',
+            'Werkstoffwissenschaften und Fertigungstechnik',
+            'Wirtschaftsingenieurwesen',
+            'Wirtschaftswissenschaften (BWL und VWL)',
+        ],
+    };
+
+    // generate value/label options to directly pass them to the react-select components
+    const dropdowns = {
+        veInterests: optionLists.veInterests.map((elem) => ({
+            value: elem,
+            label: elem,
+        })),
+        veGoals: optionLists.veGoals.map((elem) => ({
+            value: elem,
+            label: elem,
+        })),
+        preferredFormat: optionLists.preferredFormat.map((elem) => ({
+            value: elem,
+            label: elem,
+        })),
+        expertise: optionLists.expertise.map((elem) => ({
+            value: elem,
+            label: elem,
+        })),
+    };
+
+    return { props: { dropdowns } };
+}) satisfies GetServerSideProps<{ dropdowns: DropdownList }>;

@@ -242,7 +242,7 @@ class SearchHandler(BaseHandler):
         with util.get_mongodb() as db:
             space_manager = Spaces(db)
             profile_manager = Profiles(db)
-            spaces_of_user = space_manager.get_spaces_of_user(
+            spaces_of_user = space_manager.get_space_names_of_user(
                 self.current_user.username
             )
             follows_of_user = profile_manager.get_follows(self.current_user.username)
