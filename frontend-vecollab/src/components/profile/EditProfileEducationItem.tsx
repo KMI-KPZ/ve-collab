@@ -54,7 +54,6 @@ export default function EditProfileEducationItem({ education, index, modifyCallb
                         </label>
                     </div>
                     <div className="w-2/3">
-                        {/* TODO month/year only date picker*/}
                         <input
                             type="date"
                             name="timestampFrom"
@@ -63,7 +62,7 @@ export default function EditProfileEducationItem({ education, index, modifyCallb
                                 modifyCallbacks.modifyEducationTimestampFrom(index, e.target.value)
                             }
                             placeholder="optional"
-                            className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                            className="border border-[#cccccc] rounded-md px-2 py-[6px] w-full text-gray-400"
                         />
                     </div>
                 </div>
@@ -74,7 +73,6 @@ export default function EditProfileEducationItem({ education, index, modifyCallb
                         </label>
                     </div>
                     <div className="w-2/3 flex">
-                        {/* TODO month/year only date picker*/}
                         <input
                             type="date"
                             name="timestampTo"
@@ -83,7 +81,7 @@ export default function EditProfileEducationItem({ education, index, modifyCallb
                                 modifyCallbacks.modifyEducationTimestampTo(index, e.target.value)
                             }
                             placeholder="optional"
-                            className="border border-gray-500 rounded-lg h-12 p-2 w-full"
+                            className="border border-[#cccccc] rounded-md px-2 py-[6px] w-full text-gray-400"
                         />
                     </div>
                 </div>

@@ -117,7 +117,7 @@ export default function EditResearchAndTeachingInformation({
                         deleteCallback={deleteFromResearchTags}
                     >
                         <input
-                            className={'border border-gray-500 rounded-lg px-2 py-1 mb-1 w-full'}
+                            className={'border border-[#cccccc] rounded-md px-2 py-[6px] mb-1 w-full'}
                             type="text"
                             placeholder="Verwende ein Feld pro Forschungsschwerpunkt"
                             value={researchTag}

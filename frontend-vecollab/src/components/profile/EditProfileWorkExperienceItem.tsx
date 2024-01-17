@@ -73,7 +73,7 @@ export default function EditProfileWorkExperienceItem({
                                 )
                             }
                             placeholder="optional"
-                            className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                            className="border border-[#cccccc] rounded-md px-2 py-[6px] w-full text-gray-400"
                         />
                     </div>
                 </div>
@@ -95,7 +95,7 @@ export default function EditProfileWorkExperienceItem({
                                 )
                             }
                             placeholder="optional"
-                            className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                            className="border border-[#cccccc] rounded-md px-2 py-[6px] w-full text-gray-400"
                         />
                         
                     </div>

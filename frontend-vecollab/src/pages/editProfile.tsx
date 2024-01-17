@@ -21,9 +21,13 @@ import {
 import SuccessAlert from '@/components/SuccessAlert';
 import EditVisibilitySettings from '@/components/profile/EditVisibilitySettings';
 import EditProfileVeWindow from '@/components/profile/EditProfileVeWindow';
+import type { InferGetServerSidePropsType, GetServerSideProps } from 'next';
+import { DropdownList } from '@/interfaces/dropdowns';
 
 EditProfile.auth = true;
-export default function EditProfile() {
+export default function EditProfile({
+    dropdowns,
+}: InferGetServerSidePropsType<typeof getServerSideProps>) {
     const [personalInformation, setPersonalInformation] = useState<PersonalInformation>({
         firstName: '',
         lastName: '',
@@ -32,7 +36,7 @@ export default function EditProfile() {
         expertise: '',
         birthday: '',
         profilePicId: '',
-        languages: [""],
+        languages: [''],
     });
     const [veReady, setVeReady] = useState(true);
     const [excludedFromMatching, setExcludedFromMatching] = useState(false);
@@ -44,7 +48,7 @@ export default function EditProfile() {
         interdisciplinaryExchange: true,
         preferredFormat: '',
     });
-    const [researchTags, setResearchTags] = useState([""]);
+    const [researchTags, setResearchTags] = useState(['']);
     const [courses, setCourses] = useState<Course[]>([
         { title: '', academic_courses: '', semester: '' },
         { title: '', academic_courses: '', semester: '' },
@@ -218,6 +222,7 @@ export default function EditProfile() {
                                         updateProfileData={updateProfileData}
                                         orcid={session?.user.orcid}
                                         importOrcidProfile={importOrcidProfile}
+                                        dropdowns={dropdowns}
                                     />
                                 </div>
                                 <div tabname="VE-Info">
@@ -229,6 +234,7 @@ export default function EditProfile() {
                                         updateProfileData={updateProfileData}
                                         orcid={session?.user.orcid}
                                         importOrcidProfile={importOrcidProfile}
+                                        dropdowns={dropdowns}
                                     />
                                 </div>
                                 <div tabname="Lehre & Forschung">
@@ -287,3 +293,117 @@ export default function EditProfile() {
         </>
     );
 }
+
+export const getServerSideProps = (async () => {
+    // prepare select dropdown options
+    const optionLists = {
+        veInterests: [
+            'Best Practice-Beispiele',
+            'Evaluation',
+            'Fachspezifische Umsetzungsmöglichkeiten',
+            'Forschung',
+            'Fördermöglichkeiten',
+            'Implementierung',
+            'Methoden und Aufgabenformate',
+            'Netzwerke',
+            'Theoretische Grundlagen und Ansätze',
+            '(digitale) Tools',
+        ],
+        veGoals: [
+            'Förderung globalen Lernens',
+            'Förderung kommunikativer Kompetenzen',
+            'Förderung fachlicher Kompetenzen',
+            'Förderung (fremd)sprachlicher Kompetenzen',
+            'Interdisziplinärer Austausch',
+            'Internationale Zusammenarbeit',
+        ],
+        preferredFormat: ['synchron', 'asynchron', 'synchron und asynchron'],
+        expertise: [
+            'Agrar- und Forstwissenschaft',
+            'Allgemeine Naturwissenschaft',
+            'Amerikanistik',
+            'Anglistik',
+            'Archäologie',
+            'Architektur, Bauingenieur- und Vermessungswesen',
+            'Außereuropäische Sprachen und Literaturen',
+            'Bildungswissenschaften',
+            'Biologie',
+            'Biotechnologie',
+            'Buch- und Bibliothekswesen',
+            'Chemie',
+            'Deutsch als Fremd- und Zweitsprache',
+            'Elektrotechnik, Elektronik, Nachrichtentechnik',
+            'Energietechnik',
+            'Ernährungs- und Haushaltswissenschaft',
+            'Ethnologie',
+            'Fachdidaktik Englisch',
+            'Fachdidaktik romanische Sprachen',
+            'Gartenbau',
+            'Geographie',
+            'Geowissenschaften',
+            'Germanistik',
+            'Geschichte',
+            'Gesundheitswissenschaften',
+            'Indogermanistik',
+            'Ingenieurwissenschaften',
+            'Informatik',
+            'Informationswissenschaft',
+            'Klassische Philologie, Mittellateinische und Neugriechische Philologie',
+            'Kommunikationsdesign',
+            'Kulturwissenschaften',
+            'Kunstwissenschaften und Kunstgeschichte',
+            'Literaturwissenschaft',
+            'Maschinenbau',
+            'Mathematik',
+            'Medien- und Kommunikationswissenschaften',
+            'Medizin',
+            'Militärwissenschaft',
+            'Museologie',
+            'Musikwissenschaft',
+            'Natur- und Umweltschutz',
+            'Niederlandistik',
+            'Pädagogik',
+            'Pharmazie',
+            'Philosophie',
+            'Physik',
+            'Politologie',
+            'Psychologie',
+            'Rechtswissenschaft',
+            'Romanistik',
+            'Skandinavistik',
+            'Slavistik',
+            'Soziologie, empirische Sozialforschung, soziale Arbeit',
+            'Sportwissenschaft',
+            'Sprachwissenschaft',
+            'Sprechwissenschaft',
+            'Technik',
+            'Theologie und Religionswissenschaften',
+            'Übersetzen und Dolmetschen (Translationswissenschaft)',
+            'Werkstoffwissenschaften und Fertigungstechnik',
+            'Wirtschaftsingenieurwesen',
+            'Wirtschaftswissenschaften (BWL und VWL)',
+        ],
+    };
+
+    // generate value/label options to directly pass them to the react-select components
+    const dropdowns = {
+        veInterests: optionLists.veInterests.map((elem) => ({
+            value: elem,
+            label: elem,
+        })),
+        veGoals: optionLists.veGoals.map((elem) => ({
+            value: elem,
+            label: elem,
+        })),
+        preferredFormat: optionLists.preferredFormat.map((elem) => ({
+            value: elem,
+            label: elem,
+        })),
+        expertise: optionLists.expertise.map((elem) => ({
+            value: elem,
+            label: elem,
+        })),
+    };
+
+    return { props: { dropdowns } };
+}) satisfies GetServerSideProps<{ dropdowns: DropdownList }>;

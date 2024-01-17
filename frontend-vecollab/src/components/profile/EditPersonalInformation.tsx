@@ -10,6 +10,8 @@ import { useSession } from 'next-auth/react';
 import AuthenticatedImage from '@/components/AuthenticatedImage';
 import Swapper from './Swapper';
 import EditProfilePlusMinusButtons from './EditProfilePlusMinusButtons';
+import CreatableSelect from 'react-select/creatable';
+import { DropdownList } from '@/interfaces/dropdowns';
 
 interface Props {
     personalInformation: PersonalInformation;
@@ -17,6 +19,7 @@ interface Props {
     updateProfileData(evt: FormEvent): Promise<void>;
     orcid: string | null | undefined;
     importOrcidProfile(evt: FormEvent): Promise<void>;
+    dropdowns: DropdownList;
 }
 
 export default function EditPersonalInformation({
@@ -25,6 +28,7 @@ export default function EditPersonalInformation({
     updateProfileData,
     orcid,
     importOrcidProfile,
+    dropdowns,
 }: Props) {
     const { data: session } = useSession();
 
@@ -63,10 +67,7 @@ export default function EditPersonalInformation({
         e.preventDefault();
 
         // swap indices
-        [
-            personalInformation.languages[firstIndex],
-            personalInformation.languages[secondIndex],
-        ] = [
+        [personalInformation.languages[firstIndex], personalInformation.languages[secondIndex]] = [
             personalInformation.languages[secondIndex],
             personalInformation.languages[firstIndex],
         ];
@@ -89,7 +90,7 @@ export default function EditPersonalInformation({
         e.preventDefault();
         setPersonalInformation({
             ...personalInformation,
-            languages: [...personalInformation.languages, ""],
+            languages: [...personalInformation.languages, ''],
         });
     };
 
@@ -135,7 +136,7 @@ export default function EditPersonalInformation({
                 <div className={'flex justify-between'}>
                     {/* TODO validation: treat first name and last name as required information*/}
                     <input
-                        className={'border border-gray-500 rounded-lg px-2 py-1'}
+                        className={'border border-[#cccccc] rounded-md px-2 py-[6px]'}
                         type="text"
                         placeholder={'Vorname'}
                         value={personalInformation.firstName}
@@ -147,7 +148,7 @@ export default function EditPersonalInformation({
                         }
                     />
                     <input
-                        className={'border border-gray-500 rounded-lg px-2 py-1'}
+                        className={'border border-[#cccccc] rounded-md px-2 py-[6px]'}
                         type="text"
                         placeholder={'Nachname'}
                         value={personalInformation.lastName}
@@ -163,7 +164,7 @@ export default function EditPersonalInformation({
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'Institution'} />
                 <input
-                    className={'border border-gray-500 rounded-lg px-2 py-1 w-1/2'}
+                    className={'border border-[#cccccc] rounded-md px-2 py-[6px] w-1/2'}
                     type="text"
                     placeholder={'Name deiner aktuellen Institution'}
                     value={personalInformation.institution}
@@ -178,7 +179,7 @@ export default function EditPersonalInformation({
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'Bio'} />
                 <textarea
-                    className={'w-full border border-gray-500 rounded-lg px-2 py-1'}
+                    className={'w-full border border-[#cccccc] rounded-md px-2 py-[6px]'}
                     rows={5}
                     placeholder={'Erzähle kurz etwas über dich'}
                     value={personalInformation.bio}
@@ -189,23 +190,35 @@ export default function EditPersonalInformation({
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'Fachgebiet'} />
-                <input
-                    className={'border border-gray-500 rounded-lg px-2 py-1 w-1/2'}
-                    type="text"
-                    placeholder={'Worin liegt deine Expertise?'}
-                    value={personalInformation.expertise}
+                <CreatableSelect
+                    className="w-full mb-1"
+                    options={dropdowns.expertise}
                     onChange={(e) =>
-                        setPersonalInformation({
-                            ...personalInformation,
-                            expertise: e.target.value,
-                        })
+                        setPersonalInformation({ ...personalInformation, expertise: e!.value })
                     }
+                    // if value is not null, placeholder wont show, even though value inside the object is ''
+                    value={
+                        personalInformation.expertise !== ''
+                            ? {
+                                  label: personalInformation.expertise,
+                                  value: personalInformation.expertise,
+                              }
+                            : null
+                    }
+                    placeholder={
+                        'Fachgebiet auswählen oder neues Fachgebiet durch Tippen hinzufügen'
+                    }
+                    formatCreateLabel={(inputValue) => (
+                        <span>
+                            Nichts passendes dabei? <b>{inputValue}</b> verwenden
+                        </span>
+                    )}
                 />
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'Geburtstag'} />
                 <input
-                    className={'border border-gray-500 rounded-lg px-2 py-1'}
+                    className={'border border-[#cccccc] rounded-md px-2 py-[6px]'}
                     type="date"
                     value={personalInformation.birthday}
                     onChange={(e) =>
@@ -224,9 +237,9 @@ export default function EditPersonalInformation({
                         deleteCallback={deleteFromLanguages}
                     >
                         <input
-                            className={'border border-gray-500 rounded-lg px-2 py-1 mb-1 w-full'}
+                            className={'border border-[#cccccc] rounded-md px-2 py-[6px] mb-1 w-full'}
                             type="text"
-                            placeholder="Verwende ein Feld pro Sprache"
+                            placeholder="Verwende pro Sprache ein Feld"
                             value={language}
                             onChange={(e) => modifyLanguages(index, e.target.value)}
                         />
