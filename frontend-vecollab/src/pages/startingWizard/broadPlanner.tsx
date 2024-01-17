@@ -199,14 +199,22 @@ export default function BroadPlanner() {
         return sortedBroadSteps[0].link;
     };
 
+    const validateDateRange = (fromValue: string, indexFromTo: number) => {
+        const fromDate = new Date(fromValue);
+        const toDate = new Date(watch(`broadSteps.${indexFromTo}.to`));
+        if (fromDate > toDate) {
+            return 'Das Startdatum muss vor dem Enddatum liegen';
+        } else {
+            return true;
+        }
+    };
+
     const renderBroadStepsInputs = (): JSX.Element[] => {
         return fields.map((step, index) => (
             <WhiteBox key={index}>
                 <div>
                     <div className="flex justify-center items-center">
-                        <label htmlFor="from" className="">
-                            von:
-                        </label>
+                        <label>von:</label>
                         <input
                             type="date"
                             {...register(`broadSteps.${index}.from`, {
@@ -214,12 +222,11 @@ export default function BroadPlanner() {
                                     value: true,
                                     message: 'Bitte fülle das Felde "von" aus',
                                 },
+                                validate: (v) => validateDateRange(v, index),
                             })}
                             className="border border-gray-500 rounded-lg h-12 p-2 mx-2"
                         />
-                        <label htmlFor="to" className="">
-                            bis:
-                        </label>
+                        <label>bis:</label>
                         <input
                             type="date"
                             {...register(`broadSteps.${index}.to`, {
