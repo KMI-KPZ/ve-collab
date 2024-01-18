@@ -4,18 +4,20 @@ import CVEducationItem from './CVEducationItem';
 import { CVWorkItem } from './CVWorkItem';
 
 interface Props {
-    educations: Education[];
-    workExperience: WorkExperience[];
+    cvInfo: {
+        educations: Education[];
+        workExperience: WorkExperience[];
+    };
 }
 
-export default function CVInformation({ educations, workExperience }: Props) {
+export default function CVInformation({ cvInfo }: Props) {
     return (
         <div className={'min-h-[30rem] mx-2 my-1 flex'}>
             {/* fixed height to enable scrolling instead of letting to box grow very large */}
             <div className={'w-1/2 overflow-y-auto content-scrollbar'}>
                 <BoxContentHeadline className={'text-center'} text={'Ausbildung'} />
                 <ul className={'divide-y mr-4'}>
-                    {educations.map((education, index) => (
+                    {cvInfo.educations.map((education, index) => (
                         <CVEducationItem
                             key={index}
                             institution={education.institution}
@@ -31,7 +33,7 @@ export default function CVInformation({ educations, workExperience }: Props) {
             <div className={'w-1/2 overflow-y-auto content-scrollbar'}>
                 <BoxContentHeadline className={'text-center'} text={'Berufserfahrung'} />
                 <ul className={'divide-y ml-4'}>
-                    {workExperience.map((workExp, index) => (
+                    {cvInfo.workExperience.map((workExp, index) => (
                         <CVWorkItem
                             key={index}
                             position={workExp.position}

@@ -91,6 +91,9 @@ export default function EditProfileVeWindow({
             <EditProfileHeader orcid={orcid} importOrcidProfile={importOrcidProfile} />
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'VE-Schaufenster'} />
+                <div className="mb-2 text-sm">
+                    Stelle deine bereits geplanten VEs in deinem Profil aus
+                </div>
                 {isLoading ? (
                     <LoadingAnimation />
                 ) : (

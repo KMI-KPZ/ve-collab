@@ -100,6 +100,9 @@ export default function EditEducationInformation({
             <EditProfileHeader orcid={orcid} importOrcidProfile={importOrcidProfile} />
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'Ausbildung'} />
+                <div className="mb-2 text-sm">
+                    Dokumentiere relevante Abschnitte in deiner Ausbildung
+                </div>
                 {educations.map((education, index) => (
                     <Swapper
                         key={index}
