@@ -11,9 +11,9 @@ import EditResearchAndTeachingInformation from '@/components/profile/EditResearc
 import EditEducationInformation from '@/components/profile/EditEducationInformation';
 import EditWorkExperienceInformation from '@/components/profile/EditWorkExperienceInformation';
 import {
-    Course,
     Education,
     PersonalInformation,
+    ResearchAndTeachingInformation,
     VEInformation,
     VEWindowItem,
     WorkExperience,
@@ -48,11 +48,19 @@ export default function EditProfile({
         interdisciplinaryExchange: true,
         preferredFormat: '',
     });
-    const [researchTags, setResearchTags] = useState(['']);
-    const [courses, setCourses] = useState<Course[]>([
-        { title: '', academic_courses: '', semester: '' },
-        { title: '', academic_courses: '', semester: '' },
-    ]);
+    const [researchandTeachingInformation, setResearchAndTeachingInformation] =
+        useState<ResearchAndTeachingInformation>({
+            researchTags: [''],
+            courses: [
+                {
+                    title: '',
+                    academic_courses: '',
+                    semester: '',
+                },
+            ],
+            lms: [''],
+            tools: [''],
+        });
     const [educations, setEducations] = useState<Education[]>([
         {
             institution: '',
@@ -116,8 +124,12 @@ export default function EditProfile({
                     interdisciplinaryExchange: data.profile.interdisciplinary_exchange,
                     preferredFormat: data.profile.preferred_format,
                 });
-                setResearchTags(data.profile.research_tags);
-                setCourses(data.profile.courses);
+                setResearchAndTeachingInformation({
+                    researchTags: data.profile.research_tags,
+                    courses: data.profile.courses,
+                    lms: data.profile.lms,
+                    tools: data.profile.tools,
+                });
                 setEducations(data.profile.educations);
                 setWorkExperience(data.profile.work_experience);
                 setVeWindowItems(
@@ -154,8 +166,10 @@ export default function EditProfile({
                 experience: veInformation.experience,
                 interdisciplinary_exchange: veInformation.interdisciplinaryExchange,
                 preferred_format: veInformation.preferredFormat,
-                research_tags: researchTags,
-                courses: courses,
+                research_tags: researchandTeachingInformation.researchTags,
+                courses: researchandTeachingInformation.courses,
+                lms: researchandTeachingInformation.lms,
+                tools: researchandTeachingInformation.tools,
                 educations: educations,
                 work_experience: workExperience,
                 ve_window: veWindowItems.map((elem) => ({
@@ -200,7 +214,12 @@ export default function EditProfile({
                 birthday: personalInformation.birthday,
                 languages: personalInformation.languages,
             });
-            setResearchTags(profile.research_tags);
+            setResearchAndTeachingInformation({
+                researchTags: profile.research_tags,
+                courses: researchandTeachingInformation.courses,
+                lms: researchandTeachingInformation.lms,
+                tools: researchandTeachingInformation.tools,
+            });
             setEducations(profile.educations);
             setWorkExperience(profile.work_experience);
         });
@@ -239,10 +258,12 @@ export default function EditProfile({
                                 </div>
                                 <div tabname="Lehre & Forschung">
                                     <EditResearchAndTeachingInformation
-                                        researchTags={researchTags}
-                                        setResearchTags={setResearchTags}
-                                        courses={courses}
-                                        setCourses={setCourses}
+                                        researchAndTeachingInformation={
+                                            researchandTeachingInformation
+                                        }
+                                        setResearchAndTeachingInformation={
+                                            setResearchAndTeachingInformation
+                                        }
                                         updateProfileData={updateProfileData}
                                         orcid={session?.user.orcid}
                                         importOrcidProfile={importOrcidProfile}
