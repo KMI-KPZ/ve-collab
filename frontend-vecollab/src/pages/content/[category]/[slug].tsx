@@ -3,93 +3,42 @@ import LearningContentPreview from '@/components/learningContent/content-preview
 import HorizontalDivider from '@/components/learningContent/horizontal-divider';
 import MainLearningContentLayout from '@/components/Layout/main-learning-content-layout';
 import PageBanner from '@/components/learningContent/page-banner';
-import Post from '@/components/learningContent/post';
-import { getCategories, getPost, getPostsTitleExcerptSlugByCategory } from '@/lib/api';
 import { GetServerSideProps, GetServerSidePropsContext } from 'next';
+import { getChildrenOfNodeByText, getLeafNodeByParentText, getTopLevelNodes } from '@/lib/backend';
+import { IMaterialNode, INode, ITopLevelNode } from '@/interfaces/material/materialInterfaces';
 
 interface Props {
-    categories: {
-        edges: [
-            {
-                node: {
-                    name: string;
-                    slug: string;
-                };
-            }
-        ];
-    };
-    allPostsInCategory: {
-        category: {
-            posts: {
-                edges: [
-                    {
-                        node: {
-                            title: string;
-                            slug: string;
-                            excerpt: string;
-                        };
-                    }
-                ];
-            };
-        };
-    };
-    post?: {
-        title: string;
-        excerpt: string;
-        slug: string;
-        date: string;
-        content: string;
-        tags: {
-            edges: [
-                {
-                    node: {
-                        name: string;
-                    };
-                }
-            ];
-        };
-    };
-    knowledgeWorkerFrame?: boolean;
-    WPPagesFrame?: boolean;
-    slug?: string;
+    topLevelNodes: ITopLevelNode[];
+    childrenOfChosenTopNode: INode[];
+    materialNode: IMaterialNode;
 }
 
 // coming from previous page (only category chosen), a pos preview has been selected and therefore the content of the post is rendered as well
 export default function LearningContentView(props: Props) {
-    const { posts } = props.allPostsInCategory.category;
-    const postPreviews = posts.edges.map(({ node }) => (
+    const nodePreviews = props.childrenOfChosenTopNode.map((node) => (
         <LearningContentPreview
-            key={node.title}
-            title={node.title}
-            slug={node.slug}
-            snippet={node.excerpt.replace(/<\/?[^>]+(>|$)/g, '')}
+            key={node.id}
+            title={node.text}
+            slug={node.text}
+            snippet={'Lorem ipsum dolor si amet'}
             imgFilename={'/images/example_image.jpg'}
-        /> //html needs to be filtered from excerpt
+        />
     ));
 
     return (
         <>
             <Container>
-                <PageBanner categories={props.categories} />
+                <PageBanner topLevelNodes={props.topLevelNodes} />
             </Container>
             <HorizontalDivider />
             <Container>
                 <MainLearningContentLayout
-                    previewChildren={postPreviews}
+                    previewChildren={nodePreviews}
                     contentChildren={
-                        props.knowledgeWorkerFrame === true ? (
-                            <iframe
-                                className="rounded-xl mx-1"
-                                src={`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/knowledgeworker/${props.slug}/`}
-                            ></iframe>
-                        ) : props.WPPagesFrame === true ? (
-                            <iframe
-                                className="rounded-xl mx-1 h-[90vh]"
-                                src={`https://soserve.rz.uni-leipzig.de:10001/herausforderungen-in-virtuellen-austauschen/`}
-                            ></iframe>
-                        ) : (
-                            <Post post={props.post!} />
-                        )
+                        <iframe
+                            className="rounded-xl mx-1 h-[90vh]"
+                            src={props.materialNode.data.url}
+                        ></iframe>
                     }
                 />
             </Container>
@@ -100,35 +49,15 @@ export default function LearningContentView(props: Props) {
 export const getServerSideProps: GetServerSideProps = async ({
     params,
 }: GetServerSidePropsContext) => {
-    const categories = await getCategories();
-    const allPostsInCategory = await getPostsTitleExcerptSlugByCategory(params?.category);
-
-    if (params?.category === 'knowledgeworker') {
-        return {
-            props: {
-                categories,
-                knowledgeWorkerFrame: true,
-                slug: params.slug,
-                allPostsInCategory,
-            },
-        };
-    } else if (params?.category === 'wp_pages') {
-        return {
-            props: {
-                categories,
-                WPPagesFrame: true,
-                slug: params.slug,
-                allPostsInCategory,
-            },
-        };
-    }
-    const currentPost = await getPost(params?.slug);
+    const topLevelNodes = await getTopLevelNodes();
+    const childrenOfChosenTopNode = await getChildrenOfNodeByText(params?.category as string);
+    const materialNode = await getLeafNodeByParentText(params?.slug as string);
 
     return {
         props: {
-            categories,
-            post: currentPost.post,
-            allPostsInCategory,
+            topLevelNodes,
+            childrenOfChosenTopNode,
+            materialNode,
         },
     };
 };

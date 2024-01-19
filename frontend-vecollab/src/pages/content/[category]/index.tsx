@@ -1,55 +1,59 @@
-import Container from "@/components/Layout/container";
-import LearningContentPreview from "@/components/learningContent/content-preview-li";
-import HorizontalDivider from "@/components/learningContent/horizontal-divider";
-import MainLearningContentLayout from "@/components/Layout/main-learning-content-layout";
-import PageBanner from "@/components/learningContent/page-banner";
-import { getCategories, getPostsTitleExcerptSlugByCategory } from "@/lib/api";
-import { GetServerSideProps, GetServerSidePropsContext } from "next";
-import { Categories, PostPreview } from "@/interfaces";
+import Container from '@/components/Layout/container';
+import LearningContentPreview from '@/components/learningContent/content-preview-li';
+import HorizontalDivider from '@/components/learningContent/horizontal-divider';
+import MainLearningContentLayout from '@/components/Layout/main-learning-content-layout';
+import PageBanner from '@/components/learningContent/page-banner';
+import { GetServerSideProps, GetServerSidePropsContext } from 'next';
+import { getChildrenOfNodeByText, getTopLevelNodes } from '@/lib/backend';
+import { INode, ITopLevelNode } from '@/interfaces/material/materialInterfaces';
 
 interface Props {
-    categories: Categories,
-    allPostsInCategory: {
-        category: {
-            posts: {
-                edges: [
-                    {
-                        node: PostPreview
-                    }
-                ]
-            }
-        }
-    }
+    topLevelNodes: ITopLevelNode[];
+    childrenOfChosenTopNode: INode[];
 }
 
 // coming from landing page: category has been chosen, depending on categories, previews to the posts are shown on the left
 export default function PageCategorySelected(props: Props) {
-    const { posts } = props.allPostsInCategory.category
-    const postPreviews = posts.edges.map(({ node }) => (
-        <LearningContentPreview key={node.title} title={node.title} slug={node.slug} snippet={node.excerpt.replace(/<\/?[^>]+(>|$)/g, "")} imgFilename={"/images/example_image.jpg"} /> //html needs to be filtered from excerpt
-    ))
+    const nodePreviews = props.childrenOfChosenTopNode.map((node) => (
+        <LearningContentPreview
+            key={node.id}
+            title={node.text}
+            slug={node.text}
+            snippet={'Lorem ipsum dolor si amet'}
+            imgFilename={'/images/example_image.jpg'}
+        />
+    ));
 
     return (
         <>
             <Container>
-                <PageBanner categories={props.categories} />
+                <PageBanner topLevelNodes={props.topLevelNodes} />
             </Container>
             <HorizontalDivider />
             <Container>
-                <MainLearningContentLayout previewChildren={postPreviews} contentChildren={<h1 className={"font-bold text-5xl text-center"}>wähle aus der Liste links!</h1>} />
+                <MainLearningContentLayout
+                    previewChildren={nodePreviews}
+                    contentChildren={
+                        <h1 className={'font-bold text-5xl text-center'}>
+                            wähle aus der Liste links!
+                        </h1>
+                    }
+                />
             </Container>
         </>
-    )
+    );
 }
 
-export const getServerSideProps: GetServerSideProps = async ({ params }: GetServerSidePropsContext) => {
-    const categories = await getCategories();
-    const allPostsInCategory = await getPostsTitleExcerptSlugByCategory(params?.category);
+export const getServerSideProps: GetServerSideProps = async ({
+    params,
+}: GetServerSidePropsContext) => {
+    const topLevelNodes = await getTopLevelNodes();
+    const childrenOfChosenTopNode = await getChildrenOfNodeByText(params?.category as string);
 
     return {
         props: {
-            categories,
-            allPostsInCategory
-        }
-    }
-}
+            topLevelNodes,
+            childrenOfChosenTopNode,
+        },
+    };
+};

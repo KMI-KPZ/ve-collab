@@ -93,7 +93,6 @@ class BaseHandler(tornado.web.RequestHandler):
                         bearer_token, KEYCLOAK_PUBLIC_KEY, audience="account"
                     )
                 except jose.exceptions.JWTError as e:
-                    logger.info("Caught Exception: {} ".format(e))
                     self.current_user = None
                     self._access_token = None
                     return
@@ -148,7 +147,6 @@ class BaseHandler(tornado.web.RequestHandler):
                 new_token = global_vars.keycloak.refresh_token(token["refresh_token"])
                 token_info = global_vars.keycloak.introspect(new_token["access_token"])
             except KeycloakError as e:
-                logger.info("Caught Exception: {} ".format(e))
                 self.current_user = None
                 self._access_token = None
                 return

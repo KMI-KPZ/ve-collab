@@ -8,6 +8,7 @@ import { IPlan, PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import { signIn, useSession } from 'next-auth/react';
 import useSWR, { KeyedMutator } from 'swr';
 import { VEPlanSnippet } from '@/interfaces/profile/profileInterfaces';
+import { IMaterialNode, INode } from '@/interfaces/material/materialInterfaces';
 
 if (!process.env.NEXT_PUBLIC_BACKEND_BASE_URL) {
     throw new Error(`
@@ -299,4 +300,26 @@ export async function fetchImage(relativeUrl: string, accessToken?: string): Pro
         console.log('network error, probably backend down');
         return new Blob();
     }
+}
+
+export async function fetchTaxonomy(): Promise<INode[]>{
+    const data = await GETfetcher('/material_taxonomy');
+    return data.taxonomy;
+}
+
+export async function getTopLevelNodes(){
+    const taxonomy = await fetchTaxonomy();
+    return taxonomy.filter((node: any) => node.parent === 0);
+}
+
+export async function getChildrenOfNodeByText(nodeText: string): Promise<INode[]>{
+    const taxonomy = await fetchTaxonomy();
+    const nodeId = taxonomy.find((node: any) => node.text === nodeText)?.id;
+    return taxonomy.filter((node: any) => node.parent === nodeId);
+}
+
+export async function getLeafNodeByParentText(parentText: string): Promise<IMaterialNode>{
+    const taxonomy = await fetchTaxonomy();
+    const parentId = taxonomy.find((node: any) => node.text === parentText)?.id;
+    return taxonomy.find((node: any) => node.parent === parentId)! as IMaterialNode;
 }

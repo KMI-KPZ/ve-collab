@@ -134,7 +134,7 @@ export default function Edit() {
                 setTreeData(res.taxonomy);
             }
         });
-    }, []);
+    }, [session]);
 
     // TODO, for now these are separate state vars, but it should be a Material object including the link and metadata
     const [currentMaterialInputName, setCurrentMaterialInputName] = useState<string>('');
@@ -208,6 +208,7 @@ export default function Edit() {
     };
 
     const handleSaveToBackend = () => {
+        // TODO if possible validate structure to avoid crashing material site
         fetchPOST('/material_taxonomy', { taxonomy: treeData }, session?.accessToken);
 
         // render success message that disappears after 2 seconds
@@ -239,6 +240,7 @@ export default function Edit() {
                 <WhiteBox>
                     <div className="w-[60vw] h-[60vh] overflow-y-auto content-scrollbar">
                         <BoxHeadline title="Lehrmaterialien bearbeiten" />
+                        <div className="mx-2 px-1">TODO: Strukturbeschreibung hier</div>
                         <DndProvider backend={MultiBackend} options={getBackendOptions()}>
                             <div className="flex px-1">
                                 <button
