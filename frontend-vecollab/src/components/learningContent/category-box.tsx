@@ -26,7 +26,7 @@ export default function CategoryBox({ categoryName, slug }: Props) {
                         <div className="flex justify-center">
                             <BiAlignMiddle className={'mb-1'} size={28} color={'#00748f'} />
                         </div>
-                        <p className={'mt-1 font-bold'}>{categoryName}</p>
+                        <p className={'mt-1 font-bold text-center'}>{categoryName}</p>
                     </div>
                 </div>
             </Link>
