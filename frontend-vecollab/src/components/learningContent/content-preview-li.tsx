@@ -24,18 +24,16 @@ export default function LearningContentPreview({ title, slug, snippet, imgFilena
                     }
                 >
                     <Image
-                        className={'rounded-xl'}
-                        width={100}
-                        height={100}
+                        className="rounded-xl max-w-[80px] max-h-[60px]"
+                        width={80}
+                        height={60}
                         src={imgFilename}
                         alt={''}
                     ></Image>
-                    <div className={'mx-4 flex items-center'}>
-                        <div className={'h-12 w-56'}>
-                            {' '}
-                            {/* TODO this should not be fixed width, but instead force same width as parent to truncate text correctly depending on screen size*/}
-                            <div className={'font-bold truncate'}>{title}</div>
-                            <div className={'text-gray-500 truncate'}>{snippet}</div>
+                    <div className="flex items-center mx-4 w-3/4 py-1 truncate hover:overflow-visible hover:whitespace-normal hover:h-auto">
+                        <div>
+                            <div className="font-bold">{title}</div>
+                            <div className="text-gray-500">{snippet}</div>
                         </div>
                     </div>
                 </div>
