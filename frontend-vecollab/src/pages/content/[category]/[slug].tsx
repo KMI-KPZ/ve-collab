@@ -4,23 +4,23 @@ import HorizontalDivider from '@/components/learningContent/horizontal-divider';
 import MainLearningContentLayout from '@/components/Layout/main-learning-content-layout';
 import PageBanner from '@/components/learningContent/page-banner';
 import { GetServerSideProps, GetServerSidePropsContext } from 'next';
-import { getChildrenOfNodeByText, getLeafNodeByParentText, getTopLevelNodes } from '@/lib/backend';
-import { IMaterialNode, INode, ITopLevelNode } from '@/interfaces/material/materialInterfaces';
+import { getMaterialNodesOfNodeByText, getTopLevelNodes } from '@/lib/backend';
+import { IMaterialNode, ITopLevelNode } from '@/interfaces/material/materialInterfaces';
 
 interface Props {
     topLevelNodes: ITopLevelNode[];
-    childrenOfChosenTopNode: INode[];
+    leafNodesOfTopNode: IMaterialNode[];
     materialNode: IMaterialNode;
 }
 
 // coming from previous page (only category chosen), a pos preview has been selected and therefore the content of the post is rendered as well
 export default function LearningContentView(props: Props) {
-    const nodePreviews = props.childrenOfChosenTopNode.map((node) => (
+    const nodePreviews = props.leafNodesOfTopNode.map((node) => (
         <LearningContentPreview
             key={node.id}
             title={node.text}
             slug={node.text}
-            snippet={'Lorem ipsum dolor si amet'}
+            snippet={node.data.description}
             imgFilename={'/images/example_image.jpg'}
         />
     ));
@@ -50,13 +50,13 @@ export const getServerSideProps: GetServerSideProps = async ({
     params,
 }: GetServerSidePropsContext) => {
     const topLevelNodes = await getTopLevelNodes();
-    const childrenOfChosenTopNode = await getChildrenOfNodeByText(params?.category as string);
-    const materialNode = await getLeafNodeByParentText(params?.slug as string);
+    const leafNodesOfTopNode = await getMaterialNodesOfNodeByText(params?.category as string);
+    const materialNode = leafNodesOfTopNode.find((node) => node.text === params?.slug);
 
     return {
         props: {
             topLevelNodes,
-            childrenOfChosenTopNode,
+            leafNodesOfTopNode,
             materialNode,
         },
     };

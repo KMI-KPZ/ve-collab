@@ -1,3 +1,5 @@
+type Overwrite<T, U> = Omit<T, keyof U> & U;
+
 export interface INode {
     id: number;
     parent: number;
@@ -6,14 +8,13 @@ export interface INode {
     data?: Record<string, any>;
 }
 
-export interface ITopLevelNode extends INode {
-    parent: 0;
-    droppable: true;
-}
+export type ITopLevelNode = Overwrite<INode, { parent: 0; droppable: false }>;
+ 
 
 export interface IMaterialNode extends INode {
     droppable: false;
     data: {
+        description: string;
         url: string;
     };
 }

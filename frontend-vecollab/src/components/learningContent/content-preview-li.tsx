@@ -33,7 +33,9 @@ export default function LearningContentPreview({ title, slug, snippet, imgFilena
                     <div className="flex items-center mx-4 w-3/4 py-1 truncate hover:overflow-visible hover:whitespace-normal hover:h-auto">
                         <div>
                             <div className="font-bold">{title}</div>
-                            <div className="text-gray-500">{snippet}</div>
+                            <div className="text-gray-500">
+                                {snippet != '' ? snippet : 'Keine Beschreibung vorhanden'}
+                            </div>
                         </div>
                     </div>
                 </div>

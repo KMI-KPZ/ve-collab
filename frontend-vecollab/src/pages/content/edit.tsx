@@ -20,6 +20,7 @@ import SuccessAlert from '@/components/SuccessAlert';
 Edit.auth = true;
 // TODO only render as admin
 export type CustomData = {
+    description: string;
     url: string;
 };
 
@@ -63,66 +64,46 @@ export default function Edit() {
         {
             id: 2,
             parent: 1,
-            droppable: true,
-            text: 'für Novizen',
-        },
-        {
-            id: 3,
-            parent: 2,
             droppable: false,
             text: 'Material 1',
             data: {
+                description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                url: 'http://localhost/dummy',
+            },
+        },
+        {
+            id: 3,
+            parent: 1,
+            droppable: false,
+            text: 'Material 2',
+            data: {
+                description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
                 url: 'http://localhost/dummy',
             },
         },
         {
             id: 4,
             parent: 1,
-            droppable: true,
-            text: 'für Erfahrene',
-        },
-        {
-            id: 5,
-            parent: 4,
-            droppable: false,
-            text: 'Material 2',
-            data: {
-                url: 'http://localhost/dummy',
-            },
-        },
-        {
-            id: 6,
-            parent: 1,
-            droppable: true,
-            text: 'für Expert:innen',
-        },
-        {
-            id: 7,
-            parent: 6,
             droppable: false,
             text: 'Material 3',
             data: {
+                description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
                 url: 'http://localhost/dummy',
             },
         },
         {
-            id: 8,
+            id: 5,
             parent: 0,
             droppable: true,
             text: 'Was ist ein VE?',
         },
         {
-            id: 9,
-            parent: 8,
-            droppable: true,
-            text: '1. Lektion...',
-        },
-        {
-            id: 10,
-            parent: 9,
+            id: 6,
+            parent: 5,
             droppable: false,
             text: 'Material 4',
             data: {
+                description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
                 url: 'http://localhost/dummy',
             },
         },
@@ -138,6 +119,7 @@ export default function Edit() {
 
     // TODO, for now these are separate state vars, but it should be a Material object including the link and metadata
     const [currentMaterialInputName, setCurrentMaterialInputName] = useState<string>('');
+    const [currentMaterialInputDescription, setCurrentMaterialInputDescription] = useState<string>('');
     const [currentMaterialInputLink, setCurrentMaterialInputLink] = useState<string>('');
 
     const [isMaterialDialogOpen, setIsMaterialDialogOpen] = useState(false);
@@ -200,10 +182,12 @@ export default function Edit() {
             droppable: false,
             text: currentMaterialInputName,
             data: {
+                description: currentMaterialInputDescription,
                 url: currentMaterialInputLink,
             },
         });
         setCurrentMaterialInputName('');
+        setCurrentMaterialInputDescription('');
         setCurrentMaterialInputLink('');
     };
 
@@ -233,6 +217,8 @@ export default function Edit() {
 
         setTreeData(newTree);
     };
+
+    console.log(treeData)
 
     return (
         <>
@@ -314,6 +300,16 @@ export default function Edit() {
                                 placeholder="Name des Lehrinhalts"
                                 value={currentMaterialInputName}
                                 onChange={(e) => setCurrentMaterialInputName(e.target.value)}
+                            />
+                        </div>
+                        <BoxHeadline title={'Kurzbeschreibung'} />
+                        <div className="mb-10">
+                            <textarea
+                                rows={5}
+                                className="w-full border border-gray-500 rounded-lg px-2 py-1 my-1"
+                                placeholder="kurze Beschreibung für Seitleiste"
+                                value={currentMaterialInputDescription}
+                                onChange={(e) => setCurrentMaterialInputDescription(e.target.value)}
                             />
                         </div>
                         <BoxHeadline title={'Einbettungslink'} />
