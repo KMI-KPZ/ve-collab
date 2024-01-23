@@ -3,7 +3,7 @@ import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarS
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
-import { RxMinus, RxPlus } from 'react-icons/rx';
+import { RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
@@ -18,6 +18,17 @@ import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import { generateFineStepLinkTopMenu } from '@/pages/startingWizard/generalInformation/courseFormat';
+import {
+    DragDropContext,
+    Droppable,
+    Draggable,
+    DropResult,
+    DroppableProvided,
+    DraggableProvided,
+} from '@hello-pangea/dnd';
+import iconUpAndDown from '@/images/icons/startingWizard/upAndDownArrow.png';
+import trash from '@/images/icons/startingWizard/trash.png';
+import Image from 'next/image';
 
 interface BroadStep {
     from: string;
@@ -114,7 +125,7 @@ export default function BroadPlanner() {
                         const broadSteps: BroadStep[] = steps.map((step) => {
                             const { timestamp_from, timestamp_to, name } = step;
                             return {
-                                from: timestamp_from.split('T')[0], // only takes '2019-12-12'
+                                from: timestamp_from.split('T')[0], // react hook form only takes '2019-12-13'
                                 to: timestamp_to.split('T')[0],
                                 name: name,
                             };
@@ -130,7 +141,7 @@ export default function BroadPlanner() {
         }
     }, [session, status, router, setValue]);
 
-    const { fields, append, remove } = useFieldArray({
+    const { fields, append, remove, move } = useFieldArray({
         name: 'broadSteps',
         control,
     });
@@ -141,11 +152,14 @@ export default function BroadPlanner() {
     };
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
+        console.log('submit getValues', watch('broadSteps'));
+        console.log('submit data', data);
         const broadSteps: BroadStep[] = data.broadSteps;
         let payload: IFineStep = {
             ...defaultFineStepData,
         };
         const broadStepsData = broadSteps.map((broadStep) => {
+            // TODO ids lieber vergleichen
             const fineStepBackend = allSteps.find((fineStep) => fineStep.name === broadStep.name);
             if (fineStepBackend !== undefined) {
                 payload = fineStepBackend;
@@ -184,6 +198,7 @@ export default function BroadPlanner() {
         );
     };
 
+    // TODO
     const getEarliestSideMenuStepLink = (): string => {
         const broadSteps: BroadStep[] = watch('broadSteps');
         if (broadSteps === undefined || broadSteps.length === 0) {
@@ -211,70 +226,100 @@ export default function BroadPlanner() {
 
     const renderBroadStepsInputs = (): JSX.Element[] => {
         return fields.map((step, index) => (
-            <WhiteBox key={index}>
-                <div>
-                    <div className="flex justify-center items-center">
-                        <label>von:</label>
-                        <input
-                            type="date"
-                            {...register(`broadSteps.${index}.from`, {
-                                required: {
-                                    value: true,
-                                    message: 'Bitte fülle das Felde "von" aus',
-                                },
-                                validate: (v) => validateDateRange(v, index),
-                            })}
-                            className="border border-gray-500 rounded-lg h-12 p-2 mx-2"
-                        />
-                        <label>bis:</label>
-                        <input
-                            type="date"
-                            {...register(`broadSteps.${index}.to`, {
-                                required: {
-                                    value: true,
-                                    message: 'Bitte fülle das Felde "bis" aus',
-                                },
-                            })}
-                            className="border border-gray-500 rounded-lg h-12 p-2 mx-2"
-                        />
-                        <input
-                            type="text"
-                            {...register(`broadSteps.${index}.name`, {
-                                required: {
-                                    value: true,
-                                    message: 'Bitte fülle das Felde "Name" aus',
-                                },
-                                validate: {
-                                    unique: () => {
-                                        return (
-                                            !checkIfNamesAreUnique(getValues('broadSteps')) ||
-                                            'Bitte wähle einen einzigartigen Namen'
-                                        );
-                                    },
-                                },
-                            })}
-                            placeholder="Name, z.B. Kennenlernphase"
-                            className="border border-gray-500 rounded-lg h-12 p-2 mx-2"
-                        />
+            <Draggable key={`broadSteps.${index}`} draggableId={`step-${index}`} index={index}>
+                {(provided: DraggableProvided) => (
+                    <div key={step.id} {...provided.draggableProps} ref={provided.innerRef}>
+                        <WhiteBox>
+                            <div>
+                                <div className="flex justify-center items-center">
+                                    <label>von:</label>
+                                    <input
+                                        type="date"
+                                        {...register(`broadSteps.${index}.from`, {
+                                            required: {
+                                                value: true,
+                                                message: 'Bitte fülle das Felde "von" aus',
+                                            },
+                                            validate: (v) => validateDateRange(v, index),
+                                        })}
+                                        className="border border-gray-500 rounded-lg h-12 p-2 mx-2"
+                                    />
+                                    <label>bis:</label>
+                                    <input
+                                        type="date"
+                                        {...register(`broadSteps.${index}.to`, {
+                                            required: {
+                                                value: true,
+                                                message: 'Bitte fülle das Felde "bis" aus',
+                                            },
+                                        })}
+                                        className="border border-gray-500 rounded-lg h-12 p-2 mx-2"
+                                    />
+                                    <input
+                                        type="text"
+                                        {...register(`broadSteps.${index}.name`, {
+                                            required: {
+                                                value: true,
+                                                message: 'Bitte fülle das Felde "Name" aus',
+                                            },
+                                            validate: {
+                                                unique: () => {
+                                                    return (
+                                                        !checkIfNamesAreUnique(
+                                                            getValues('broadSteps')
+                                                        ) || 'Bitte wähle einen einzigartigen Namen'
+                                                    );
+                                                },
+                                            },
+                                        })}
+                                        placeholder="Name, z.B. Kennenlernphase"
+                                        className="border border-gray-500 rounded-lg h-12 p-2 mx-2"
+                                    />
+                                    <Image
+                                        className="mx-2"
+                                        {...provided.dragHandleProps}
+                                        src={iconUpAndDown}
+                                        width={20}
+                                        height={20}
+                                        alt="arrowUpAndDown"
+                                    ></Image>
+                                    <Image
+                                        className="mx-2 cursor-pointer"
+                                        onClick={() => remove(index)}
+                                        src={trash}
+                                        width={20}
+                                        height={20}
+                                        alt="deleteStep"
+                                    ></Image>
+                                </div>
+                                {errors?.broadSteps?.[index]?.from && (
+                                    <p className="text-red-600 pt-2 flex justify-center">
+                                        {errors?.broadSteps?.[index]?.from?.message}
+                                    </p>
+                                )}
+                                {errors?.broadSteps?.[index]?.to && (
+                                    <p className="text-red-600 pt-2 flex justify-center">
+                                        {errors?.broadSteps?.[index]?.to?.message}
+                                    </p>
+                                )}
+                                {errors?.broadSteps?.[index]?.name && (
+                                    <p className="text-red-600 pt-2 flex justify-center">
+                                        {errors?.broadSteps?.[index]?.name?.message}
+                                    </p>
+                                )}
+                            </div>
+                        </WhiteBox>
                     </div>
-                    {errors?.broadSteps?.[index]?.from && (
-                        <p className="text-red-600 pt-2 flex justify-center">
-                            {errors?.broadSteps?.[index]?.from?.message}
-                        </p>
-                    )}
-                    {errors?.broadSteps?.[index]?.to && (
-                        <p className="text-red-600 pt-2 flex justify-center">
-                            {errors?.broadSteps?.[index]?.to?.message}
-                        </p>
-                    )}
-                    {errors?.broadSteps?.[index]?.name && (
-                        <p className="text-red-600 pt-2 flex justify-center">
-                            {errors?.broadSteps?.[index]?.name?.message}
-                        </p>
-                    )}
-                </div>
-            </WhiteBox>
+                )}
+            </Draggable>
         ));
+    };
+
+    const onDragEnd = (result: DropResult): void => {
+        if (result.destination) {
+            move(result.source.index, result.destination.index);
+        }
+        console.log('on Move: ', getValues('broadSteps'));
     };
 
     return (
@@ -293,12 +338,19 @@ export default function BroadPlanner() {
                                 erstelle beliebig viele Etappen, setze deren Daten und vergib für
                                 jede einen individuellen Namen
                             </div>
-                            {renderBroadStepsInputs()}
-                            <div className={'w-3/4 mx-7 mt-3 flex justify-end'}>
-                                <button type="button" onClick={() => remove(fields.length - 1)}>
-                                    <RxMinus size={20} />
-                                </button>
+                            <DragDropContext onDragEnd={onDragEnd}>
+                                <Droppable droppableId="broadsteps-items">
+                                    {(provided: DroppableProvided) => (
+                                        <div ref={provided.innerRef} {...provided.droppableProps}>
+                                            {renderBroadStepsInputs()}
+                                            {provided.placeholder}
+                                        </div>
+                                    )}
+                                </Droppable>
+                            </DragDropContext>
+                            <div className="flex justify-center">
                                 <button
+                                    className="p-4 bg-white rounded-3xl shadow-2xl"
                                     type="button"
                                     onClick={() => {
                                         append({
@@ -308,7 +360,7 @@ export default function BroadPlanner() {
                                         });
                                     }}
                                 >
-                                    <RxPlus size={20} />
+                                    <RxPlus size={30} />
                                 </button>
                             </div>
                         </div>
