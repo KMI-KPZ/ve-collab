@@ -1019,3 +1019,24 @@ class MatchingHandler(BaseHandler):
     @auth_needed
     def post(self):
         pass
+
+
+class AdminCheckHandler(BaseHandler):
+
+    @auth_needed
+    def get(self):
+        """
+        GET /admin_check
+            check if the current user is an admin
+
+            returns:
+                200 OK
+                {"success": True,
+                 "is_admin": True/False}
+
+                401 Unauthorized
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+        """
+
+        self.write({"success": True, "is_admin": self.is_current_user_lionet_admin()})

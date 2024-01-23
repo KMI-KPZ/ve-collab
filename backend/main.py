@@ -127,6 +127,7 @@ def make_app(cookie_secret: str, debug: bool = False):
             (r"/chatroom/(.*)", RoomHandler),
             (r"/material_taxonomy", MaterialTaxonomyHandler),
             (r"/import_personas", ImportDummyPersonasHandler),
+            (r"/admin_check", AdminCheckHandler),
             (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
             (r"/assets/(.*)", tornado.web.StaticFileHandler, {"path": "./assets/"}),
             (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./html/"}),

@@ -202,6 +202,24 @@ export function useGetChatroomHistory(
     };
 }
 
+export function useGetCheckAdminUser(accessToken: string): {
+    data: boolean;
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        ['/admin_check', accessToken],
+        ([url, token]) => GETfetcher(url, token)
+    );
+    return {
+        data: isLoading || error ? false : data.is_admin,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
 export async function fetchGET(relativeUrl: string, accessToken?: string) {
     const headers: { Authorization?: string } = {};
 
