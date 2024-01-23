@@ -75,6 +75,8 @@ class ProfileInformationHandler(BaseHandler):
                             },
                             ...
                         ],
+                        "lms": ["<string>", "<string2>"],
+                        "tools": ["<string>", "<string2>"],
                         "work_experience": [
                             {
                                 position: "<string>",
@@ -199,6 +201,8 @@ class ProfileInformationHandler(BaseHandler):
                         },
                         ...
                     ],
+                    "lms": ["<string>", "<string>"],
+                    "tools": ["<string>", "<string>"],
                     "educations": [
                         {
                             institution: "<string>",

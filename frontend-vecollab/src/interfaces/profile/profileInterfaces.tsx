@@ -23,6 +23,13 @@ export interface VEInformation {
     preferredFormat: string;
 }
 
+export interface ResearchAndTeachingInformation {
+    researchTags: string[];
+    courses: Course[];
+    lms: string[];
+    tools: string[];
+}
+
 export interface Course {
     title: string;
     academic_courses: string;

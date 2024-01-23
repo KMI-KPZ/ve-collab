@@ -2328,6 +2328,8 @@ class ProfileResourceTest(BaseResourceTestCase):
             "courses": [
                 {"title": "test", "academic_course": "test", "semester": "test"}
             ],
+            "lms": ["test"],
+            "tools": ["test"],
             "educations": [
                 {
                     "institution": "test",
@@ -2389,7 +2391,10 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(profile["ve_interests"], self.default_profile["ve_interests"])
         self.assertEqual(profile["ve_contents"], self.default_profile["ve_contents"])
         self.assertEqual(profile["ve_goals"], self.default_profile["ve_goals"])
-        self.assertEqual(profile["interdisciplinary_exchange"], self.default_profile["interdisciplinary_exchange"])
+        self.assertEqual(
+            profile["interdisciplinary_exchange"],
+            self.default_profile["interdisciplinary_exchange"],
+        )
         self.assertEqual(
             profile["preferred_format"], self.default_profile["preferred_format"]
         )
@@ -2397,6 +2402,8 @@ class ProfileResourceTest(BaseResourceTestCase):
             profile["research_tags"], self.default_profile["research_tags"]
         )
         self.assertEqual(profile["courses"], self.default_profile["courses"])
+        self.assertEqual(profile["lms"], self.default_profile["lms"])
+        self.assertEqual(profile["tools"], self.default_profile["tools"])
         self.assertEqual(profile["educations"], self.default_profile["educations"])
         self.assertEqual(
             profile["work_experience"], self.default_profile["work_experience"]
@@ -2432,6 +2439,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertNotIn("preferred_format", profile)
         self.assertNotIn("research_tags", profile)
         self.assertNotIn("courses", profile)
+        self.assertNotIn("lms", profile)
+        self.assertNotIn("tools", profile)
         self.assertNotIn("educations", profile)
         self.assertNotIn("work_experience", profile)
         self.assertNotIn("ve_window", profile)
@@ -2529,6 +2538,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(profile["preferred_format"], "")
         self.assertEqual(profile["research_tags"], [])
         self.assertEqual(profile["courses"], [])
+        self.assertEqual(profile["lms"], [])
+        self.assertEqual(profile["tools"], [])
         self.assertEqual(profile["educations"], [])
         self.assertEqual(profile["work_experience"], [])
         self.assertEqual(profile["ve_window"], [])
@@ -2581,6 +2592,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(profile["preferred_format"], "")
         self.assertEqual(profile["research_tags"], [])
         self.assertEqual(profile["courses"], [])
+        self.assertEqual(profile["lms"], [])
+        self.assertEqual(profile["tools"], [])
         self.assertEqual(profile["educations"], [])
         self.assertEqual(profile["work_experience"], [])
         self.assertEqual(profile["ve_window"], [])
@@ -2633,6 +2646,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(result["preferred_format"], "")
         self.assertEqual(result["research_tags"], [])
         self.assertEqual(result["courses"], [])
+        self.assertEqual(result["lms"], [])
+        self.assertEqual(result["tools"], [])
         self.assertEqual(result["educations"], [])
         self.assertEqual(result["work_experience"], [])
         self.assertEqual(result["ve_window"], [])
@@ -2866,6 +2881,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(profile["preferred_format"], "")
         self.assertEqual(profile["research_tags"], [])
         self.assertEqual(profile["courses"], [])
+        self.assertEqual(profile["lms"], [])
+        self.assertEqual(profile["tools"], [])
         self.assertEqual(profile["educations"], [])
         self.assertEqual(profile["work_experience"], [])
         self.assertEqual(profile["ve_window"], [])
