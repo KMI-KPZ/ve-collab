@@ -14,7 +14,6 @@ import {
     ProgressState,
     SideMenuStep,
 } from '@/interfaces/startingWizard/sideProgressBar';
-import { generateFineStepLinkTopMenu } from '@/pages/startingWizard/generalInformation/courseFormat';
 
 export interface ITask {
     title: string;
@@ -101,9 +100,6 @@ export default function FinePlanner() {
 
     const [steps, setSteps] = useState<IFineStep[]>([]);
     const [sideMenuStepsData, setSideMenuStepsData] = useState<SideMenuStep[]>([]);
-    const [linkFineStepTopMenu, setLinkFineStepTopMenu] = useState<string>(
-        '/startingWizard/finePlanner'
-    );
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
@@ -157,10 +153,7 @@ export default function FinePlanner() {
                             };
                             setCurrentFineStep(fineStepCopyTransformedTools);
                             methods.reset({ ...fineStepCopyTransformedTools });
-                            setSideMenuStepsData(
-                                generateSideMenuStepsDateSortedData(data.plan.steps)
-                            );
-                            setLinkFineStepTopMenu(generateFineStepLinkTopMenu(data.plan.steps));
+                            setSideMenuStepsData(generateSideMenuStepsData(data.plan.steps));
                             setSideMenuStepsProgress(data.plan.progress);
                         }
                     }
@@ -216,39 +209,36 @@ export default function FinePlanner() {
         );
     };
 
-    const generateSideMenuStepsDateSortedData = (steps: IFineStep[]): SideMenuStep[] => {
-        return steps
-            .sort((a: IFineStep, b: IFineStep) => (a.timestamp_from > b.timestamp_from ? 1 : -1))
-            .map((step: IFineStep) => ({
-                id: encodeURIComponent(step.name),
-                text: step.name,
-                link: `/startingWizard/fineplanner/${encodeURIComponent(step.name)}`,
-            }));
+    const generateSideMenuStepsData = (steps: IFineStep[]): SideMenuStep[] => {
+        return steps.map((step: IFineStep) => ({
+            id: encodeURIComponent(step.name),
+            text: step.name,
+            link: `/startingWizard/fineplanner/${encodeURIComponent(step.name)}`,
+        }));
     };
 
     const getNextFineStepUrl = (): string => {
-        const nextFineStepIndex =
-            sideMenuStepsData.findIndex((item: SideMenuStep) => item.text === stepSlug) + 1;
+        const sideMenuStepsDataCopy: SideMenuStep[] = [...sideMenuStepsData];
+        const currentSideMenuStepIndex: number = sideMenuStepsDataCopy.findIndex(
+            (item: SideMenuStep): boolean => item.text === currentFineStep.name
+        ); // -1 if not found
         if (
-            sideMenuStepsData[nextFineStepIndex]?.link !== undefined &&
-            nextFineStepIndex <= sideMenuStepsData.length - 1 &&
-            nextFineStepIndex !== 0
+            currentSideMenuStepIndex < sideMenuStepsDataCopy.length - 1 ||
+            currentSideMenuStepIndex !== -1
         ) {
-            return sideMenuStepsData[nextFineStepIndex]?.link;
+            return sideMenuStepsDataCopy[currentSideMenuStepIndex + 1].link;
         } else {
             return '/startingWizard/finish';
         }
     };
 
     const getPreviousFineStepUrl = (): string => {
-        const nextFineStepIndex =
-            sideMenuStepsData.findIndex((item: SideMenuStep) => item.text === stepSlug) - 1;
-        if (
-            sideMenuStepsData[nextFineStepIndex]?.link !== undefined &&
-            nextFineStepIndex <= sideMenuStepsData.length - 1 &&
-            nextFineStepIndex > -1
-        ) {
-            return sideMenuStepsData[nextFineStepIndex]?.link;
+        const sideMenuStepsDataCopy: SideMenuStep[] = [...sideMenuStepsData];
+        const currentSideMenuStepIndex: number = sideMenuStepsDataCopy.findIndex(
+            (item: SideMenuStep): boolean => item.text === currentFineStep.name
+        );
+        if (currentSideMenuStepIndex > 0) {
+            return sideMenuStepsDataCopy[currentSideMenuStepIndex - 1].link;
         } else {
             return '/startingWizard/broadPlanner';
         }
@@ -256,7 +246,10 @@ export default function FinePlanner() {
 
     return (
         <>
-            <HeadProgressBarSection stage={2} linkFineStep={linkFineStepTopMenu} />
+            <HeadProgressBarSection
+                stage={2}
+                linkFineStep={`/startingWizard/fineplanner/${encodeURIComponent(steps[0]?.name)}`}
+            />
             <div className="flex justify-center bg-pattern-left-blue-small bg-no-repeat">
                 {loading ? (
                     <LoadingAnimation />
