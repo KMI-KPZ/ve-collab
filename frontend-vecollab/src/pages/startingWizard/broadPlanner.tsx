@@ -152,8 +152,6 @@ export default function BroadPlanner() {
     };
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        console.log('submit getValues', watch('broadSteps'));
-        console.log('submit data', data);
         const broadSteps: BroadStep[] = data.broadSteps;
         let payload: IFineStep = {
             ...defaultFineStepData,
@@ -196,22 +194,6 @@ export default function BroadPlanner() {
             },
             session?.accessToken
         );
-    };
-
-    // TODO
-    const getEarliestSideMenuStepLink = (): string => {
-        const broadSteps: BroadStep[] = watch('broadSteps');
-        if (broadSteps === undefined || broadSteps.length === 0) {
-            return '/startingWizard/broadPlanner';
-        }
-        const sortedBroadSteps = broadSteps
-            .sort((a: BroadStep, b: BroadStep) => (a.from > b.from ? 1 : -1))
-            .map((step: BroadStep) => ({
-                id: encodeURIComponent(step.name),
-                text: step.name,
-                link: `/startingWizard/fineplanner/${encodeURIComponent(step.name)}`,
-            }));
-        return sortedBroadSteps[0].link;
     };
 
     const validateDateRange = (fromValue: string, indexFromTo: number) => {
@@ -319,7 +301,6 @@ export default function BroadPlanner() {
         if (result.destination) {
             move(result.source.index, result.destination.index);
         }
-        console.log('on Move: ', getValues('broadSteps'));
     };
 
     return (
@@ -387,7 +368,9 @@ export default function BroadPlanner() {
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
                                     onClick={() => {
                                         validateAndRoute(
-                                            getEarliestSideMenuStepLink(),
+                                            `/startingWizard/fineplanner/${encodeURIComponent(
+                                                watch('broadSteps')[0].name
+                                            )}`,
                                             router.query.plannerId,
                                             handleSubmit(onSubmit),
                                             isValid
