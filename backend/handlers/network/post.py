@@ -152,6 +152,7 @@ class PostHandler(BaseHandler):
                                     space,
                                     self.current_user.username,
                                     stored_id,
+                                    file_obj["filename"],
                                 )
                             except FileAlreadyInRepoError:
                                 pass

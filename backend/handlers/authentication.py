@@ -27,7 +27,7 @@ class LoginHandler(tornado.web.RequestHandler, metaclass=ABCMeta):
         self.redirect(url)
 
 
-class LoginCallbackHandler(BaseHandler, metaclass=ABCMeta):
+class LoginCallbackHandler(tornado.web.RequestHandler, metaclass=ABCMeta):
 
     async def get(self):
         # keycloak redirects you back here with this code
@@ -57,8 +57,10 @@ class LoginCallbackHandler(BaseHandler, metaclass=ABCMeta):
                 token_info["family_name"],
             )
 
+        print(token)
+
         # dump token dict to str and store it in a secure cookie (BaseHandler will decode it later to validate a user is logged in)
-        self.set_secure_cookie("access_token", json.dumps(token))
+        self.set_secure_cookie("access_token", json.dumps(token["access_token"]))
 
         self.redirect("/main")
 

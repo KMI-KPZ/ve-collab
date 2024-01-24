@@ -107,6 +107,8 @@ class SpaceModelTest(TestCase):
         self.assertEqual(space.invites, [])
         self.assertEqual(space.requests, [])
         self.assertEqual(space.files, [])
+        self.assertEqual(space.space_pic, None)
+        self.assertEqual(space.space_description, None)
 
         self.assertEqual(space["name"], None)
         self.assertEqual(space["invisible"], False)
@@ -116,6 +118,8 @@ class SpaceModelTest(TestCase):
         self.assertEqual(space["invites"], [])
         self.assertEqual(space["requests"], [])
         self.assertEqual(space["files"], [])
+        self.assertEqual(space["space_pic"], None)
+        self.assertEqual(space["space_description"], None)
 
     def test_init(self):
         """
@@ -132,6 +136,8 @@ class SpaceModelTest(TestCase):
             "invites": ["test"],
             "requests": ["test"],
             "files": ["test"],
+            "space_pic": "test",
+            "space_description": "test",
         })
 
         self.assertEqual(space.name, "test")
@@ -142,6 +148,8 @@ class SpaceModelTest(TestCase):
         self.assertEqual(space.invites, ["test"])
         self.assertEqual(space.requests, ["test"])
         self.assertEqual(space.files, ["test"])
+        self.assertEqual(space.space_pic, "test")
+        self.assertEqual(space.space_description, "test")
 
         self.assertEqual(space["name"], "test")
         self.assertEqual(space["invisible"], False)
@@ -151,6 +159,8 @@ class SpaceModelTest(TestCase):
         self.assertEqual(space["invites"], ["test"])
         self.assertEqual(space["requests"], ["test"])
         self.assertEqual(space["files"], ["test"])
+        self.assertEqual(space["space_pic"], "test")
+        self.assertEqual(space["space_description"], "test")
 
 
         # again, but omit some values to let them be default created

@@ -34,7 +34,7 @@ export default function EditProfileItemRow({
                     value={value}
                     onChange={onChange}
                     placeholder={placeholder}
-                    className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                    className="border border-[#cccccc] rounded-md px-2 py-[6px] w-full"
                 />
             </div>
         </div>

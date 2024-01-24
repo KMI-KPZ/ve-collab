@@ -75,6 +75,8 @@ class ProfileInformationHandler(BaseHandler):
                             },
                             ...
                         ],
+                        "lms": ["<string>", "<string2>"],
+                        "tools": ["<string>", "<string2>"],
                         "work_experience": [
                             {
                                 position: "<string>",
@@ -153,7 +155,7 @@ class ProfileInformationHandler(BaseHandler):
 
             # grab and add spaces
             space_manager = Spaces(db)
-            spaces = space_manager.get_spaces_of_user(username)
+            spaces = space_manager.get_space_names_of_user(username)
             user_information_response["spaces"] = spaces
 
         self.set_status(200)
@@ -199,6 +201,8 @@ class ProfileInformationHandler(BaseHandler):
                         },
                         ...
                     ],
+                    "lms": ["<string>", "<string>"],
+                    "tools": ["<string>", "<string>"],
                     "educations": [
                         {
                             institution: "<string>",

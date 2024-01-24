@@ -83,7 +83,7 @@ def setUpModule():
     global_vars.mongodb_port = int(os.getenv("MONGODB_PORT", "27017"))
     global_vars.mongodb_username = os.getenv("MONGODB_USERNAME")
     global_vars.mongodb_password = os.getenv("MONGODB_PASSWORD")
-    global_vars.mongodb_db_name = "test_db"
+    global_vars.mongodb_db_name = "ve-collab-unittest"
     global_vars.elasticsearch_base_url = os.getenv(
         "ELASTICSEARCH_BASE_URL", "http://localhost:9200"
     )
@@ -99,7 +99,8 @@ def tearDownModule():
     """
 
     with util.get_mongodb() as db:
-        db.drop_collection("plans")
+        for collection_name in db.list_collection_names():
+            db.drop_collection(collection_name)
 
 
 class BaseResourceTestCase(TestCase):
@@ -2327,6 +2328,8 @@ class ProfileResourceTest(BaseResourceTestCase):
             "courses": [
                 {"title": "test", "academic_course": "test", "semester": "test"}
             ],
+            "lms": ["test"],
+            "tools": ["test"],
             "educations": [
                 {
                     "institution": "test",
@@ -2388,7 +2391,10 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(profile["ve_interests"], self.default_profile["ve_interests"])
         self.assertEqual(profile["ve_contents"], self.default_profile["ve_contents"])
         self.assertEqual(profile["ve_goals"], self.default_profile["ve_goals"])
-        self.assertEqual(profile["interdisciplinary_exchange"], self.default_profile["interdisciplinary_exchange"])
+        self.assertEqual(
+            profile["interdisciplinary_exchange"],
+            self.default_profile["interdisciplinary_exchange"],
+        )
         self.assertEqual(
             profile["preferred_format"], self.default_profile["preferred_format"]
         )
@@ -2396,6 +2402,8 @@ class ProfileResourceTest(BaseResourceTestCase):
             profile["research_tags"], self.default_profile["research_tags"]
         )
         self.assertEqual(profile["courses"], self.default_profile["courses"])
+        self.assertEqual(profile["lms"], self.default_profile["lms"])
+        self.assertEqual(profile["tools"], self.default_profile["tools"])
         self.assertEqual(profile["educations"], self.default_profile["educations"])
         self.assertEqual(
             profile["work_experience"], self.default_profile["work_experience"]
@@ -2431,6 +2439,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertNotIn("preferred_format", profile)
         self.assertNotIn("research_tags", profile)
         self.assertNotIn("courses", profile)
+        self.assertNotIn("lms", profile)
+        self.assertNotIn("tools", profile)
         self.assertNotIn("educations", profile)
         self.assertNotIn("work_experience", profile)
         self.assertNotIn("ve_window", profile)
@@ -2528,6 +2538,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(profile["preferred_format"], "")
         self.assertEqual(profile["research_tags"], [])
         self.assertEqual(profile["courses"], [])
+        self.assertEqual(profile["lms"], [])
+        self.assertEqual(profile["tools"], [])
         self.assertEqual(profile["educations"], [])
         self.assertEqual(profile["work_experience"], [])
         self.assertEqual(profile["ve_window"], [])
@@ -2580,6 +2592,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(profile["preferred_format"], "")
         self.assertEqual(profile["research_tags"], [])
         self.assertEqual(profile["courses"], [])
+        self.assertEqual(profile["lms"], [])
+        self.assertEqual(profile["tools"], [])
         self.assertEqual(profile["educations"], [])
         self.assertEqual(profile["work_experience"], [])
         self.assertEqual(profile["ve_window"], [])
@@ -2632,6 +2646,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(result["preferred_format"], "")
         self.assertEqual(result["research_tags"], [])
         self.assertEqual(result["courses"], [])
+        self.assertEqual(result["lms"], [])
+        self.assertEqual(result["tools"], [])
         self.assertEqual(result["educations"], [])
         self.assertEqual(result["work_experience"], [])
         self.assertEqual(result["ve_window"], [])
@@ -2865,6 +2881,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(profile["preferred_format"], "")
         self.assertEqual(profile["research_tags"], [])
         self.assertEqual(profile["courses"], [])
+        self.assertEqual(profile["lms"], [])
+        self.assertEqual(profile["tools"], [])
         self.assertEqual(profile["educations"], [])
         self.assertEqual(profile["work_experience"], [])
         self.assertEqual(profile["ve_window"], [])
@@ -3140,6 +3158,8 @@ class SpaceResourceTest(BaseResourceTestCase):
             "invites": [],
             "requests": [],
             "files": [],
+            "space_pic": "default_space_pic.jpg",
+            "space_description": "test",
         }
 
         self.db.spaces.insert_one(self.default_space)
@@ -3257,6 +3277,10 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertEqual(space.invites, self.default_space["invites"])
         self.assertEqual(space.requests, self.default_space["requests"])
         self.assertEqual(space.files, self.default_space["files"])
+        self.assertEqual(space.space_pic, self.default_space["space_pic"])
+        self.assertEqual(
+            space.space_description, self.default_space["space_description"]
+        )
 
     def test_get_space_failure(self):
         """
@@ -3283,6 +3307,8 @@ class SpaceResourceTest(BaseResourceTestCase):
             "invites": [],
             "requests": [],
             "files": [],
+            "space_pic": "default_space_pic.jpg",
+            "space_description": "test",
         }
         self.db.spaces.insert_one(additional_space)
 
@@ -3309,6 +3335,8 @@ class SpaceResourceTest(BaseResourceTestCase):
                 "invites": [],
                 "requests": [],
                 "files": [],
+                "space_pic": "default_space_pic.jpg",
+                "space_description": "test",
             },
             # user can see this one because it is invisible, but he is a member
             {
@@ -3321,6 +3349,8 @@ class SpaceResourceTest(BaseResourceTestCase):
                 "invites": [],
                 "requests": [],
                 "files": [],
+                "space_pic": "default_space_pic.jpg",
+                "space_description": "test",
             },
             # user cannot see this one
             {
@@ -3333,6 +3363,8 @@ class SpaceResourceTest(BaseResourceTestCase):
                 "invites": [],
                 "requests": [],
                 "files": [],
+                "space_pic": "default_space_pic.jpg",
+                "space_description": "test",
             },
         ]
         self.db.spaces.insert_many(additional_spaces)
@@ -3362,6 +3394,8 @@ class SpaceResourceTest(BaseResourceTestCase):
             "invites": [],
             "requests": [],
             "files": [],
+            "space_pic": "default_space_pic.jpg",
+            "space_description": "test",
         }
         self.db.spaces.insert_one(additional_space)
 
@@ -3370,6 +3404,49 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertEqual(len(space_names), 2)
         self.assertIn("test", space_names)
         self.assertIn("test2", space_names)
+
+    def test_get_space_names_of_user(self):
+        """
+        expect: successfully get a list of all space names the user is a member of
+        """
+
+        # add 2 more space
+        additional_spaces = [
+            {
+                "_id": ObjectId(),
+                "name": "test2",
+                "invisible": False,
+                "joinable": True,
+                "members": [CURRENT_ADMIN.username],
+                "admins": [CURRENT_ADMIN.username],
+                "invites": [],
+                "requests": [],
+                "files": [],
+                "space_pic": "default_space_pic.jpg",
+                "space_description": "test",
+            },
+            {
+                "_id": ObjectId(),
+                "name": "test3",
+                "invisible": False,
+                "joinable": True,
+                "members": [],
+                "admins": [],
+                "invites": [],
+                "requests": [],
+                "files": [],
+                "space_pic": "default_space_pic.jpg",
+                "space_description": "test",
+            },
+        ]
+
+        self.db.spaces.insert_many(additional_spaces)
+
+        space_manager = Spaces(self.db)
+        spaces = space_manager.get_space_names_of_user(CURRENT_ADMIN.username)
+        self.assertEqual(len(spaces), 2)
+        self.assertIn("test", spaces)
+        self.assertIn("test2", spaces)
 
     def test_get_spaces_of_user(self):
         """
@@ -3388,6 +3465,8 @@ class SpaceResourceTest(BaseResourceTestCase):
                 "invites": [],
                 "requests": [],
                 "files": [],
+                "space_pic": "default_space_pic.jpg",
+                "space_description": "test",
             },
             {
                 "_id": ObjectId(),
@@ -3399,6 +3478,8 @@ class SpaceResourceTest(BaseResourceTestCase):
                 "invites": [],
                 "requests": [],
                 "files": [],
+                "space_pic": "default_space_pic.jpg",
+                "space_description": "test",
             },
         ]
 
@@ -3407,8 +3488,8 @@ class SpaceResourceTest(BaseResourceTestCase):
         space_manager = Spaces(self.db)
         spaces = space_manager.get_spaces_of_user(CURRENT_ADMIN.username)
         self.assertEqual(len(spaces), 2)
-        self.assertIn("test", spaces)
-        self.assertIn("test2", spaces)
+        self.assertIn(self.default_space, spaces)
+        self.assertIn(additional_spaces[0], spaces)
 
     def test_get_space_invites_of_user(self):
         """
@@ -3432,6 +3513,8 @@ class SpaceResourceTest(BaseResourceTestCase):
             "invites": [CURRENT_ADMIN.username],
             "requests": [],
             "files": [],
+            "space_pic": "default_space_pic.jpg",
+            "space_description": "test",
         }
         self.db.spaces.insert_one(additional_space)
 
@@ -3452,6 +3535,8 @@ class SpaceResourceTest(BaseResourceTestCase):
             "invites": [],
             "requests": [],
             "files": [],
+            "space_pic": "default_space_pic.jpg",
+            "space_description": "test",
         }
 
         space_manager = Spaces(self.db)
@@ -3469,6 +3554,8 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertEqual(space["invites"], new_space["invites"])
         self.assertEqual(space["requests"], new_space["requests"])
         self.assertEqual(space["files"], new_space["files"])
+        self.assertEqual(space["space_pic"], new_space["space_pic"])
+        self.assertEqual(space["space_description"], new_space["space_description"])
 
     def test_create_space_failure_space_already_exists(self):
         """
@@ -3484,6 +3571,8 @@ class SpaceResourceTest(BaseResourceTestCase):
             "invites": [],
             "requests": [],
             "files": [],
+            "space_pic": "default_space_pic.jpg",
+            "space_description": "test",
         }
 
         space_manager = Spaces(self.db)
@@ -3505,6 +3594,8 @@ class SpaceResourceTest(BaseResourceTestCase):
             "invites": [],
             "requests": [],
             "files": [],
+            "space_pic": "default_space_pic.jpg",
+            "space_description": "test",
         }
 
         # invisible is missing
@@ -3943,6 +4034,47 @@ class SpaceResourceTest(BaseResourceTestCase):
         space = self.db.spaces.find_one({"name": self.space_name})
         self.assertEqual(space["invisible"], current_visibility)
 
+    def test_toggle_visibility_error_space_doesnt_exist(self):
+        """
+        expect: SpaceDoesntExistError is raised because no
+        space with this name exists
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            SpaceDoesntExistError, space_manager.toggle_visibility, "non_existing_space"
+        )
+
+    def test_toggle_joinability(self):
+        """
+        expect: set joinable attribute to True if it was False and False if it was True
+        """
+
+        current_joinability = self.default_space["joinable"]
+        space_manager = Spaces(self.db)
+        space_manager.toggle_joinability(self.space_name)
+
+        space = self.db.spaces.find_one({"name": self.space_name})
+        self.assertEqual(space["joinable"], not current_joinability)
+
+        # try again backwards
+        space_manager.toggle_joinability(self.space_name)
+        space = self.db.spaces.find_one({"name": self.space_name})
+        self.assertEqual(space["joinable"], current_joinability)
+
+    def test_toggle_joinability_error_space_doesnt_exist(self):
+        """
+        expect: SpaceDoesntExistError is raised because no
+        space with this name exists
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            SpaceDoesntExistError,
+            space_manager.toggle_joinability,
+            "non_existing_space",
+        )
+
     def test_leave_space_member(self):
         """
         expect: successfully leave space as member
@@ -4159,11 +4291,10 @@ class SpaceResourceTest(BaseResourceTestCase):
         """
 
         file_id = ObjectId()
+        filename = "test"
         space_manager = Spaces(self.db)
         space_manager.add_new_post_file(
-            self.space_name,
-            CURRENT_USER.username,
-            file_id,
+            self.space_name, CURRENT_USER.username, file_id, filename
         )
 
         space = self.db.spaces.find_one({"name": self.space_name})
@@ -4173,6 +4304,7 @@ class SpaceResourceTest(BaseResourceTestCase):
                 {
                     "author": CURRENT_USER.username,
                     "file_id": file_id,
+                    "file_name": filename,
                     "manually_uploaded": False,
                 }
             ],
@@ -4191,6 +4323,7 @@ class SpaceResourceTest(BaseResourceTestCase):
             "non_existing_space",
             CURRENT_USER.username,
             file_id,
+            "test",
         )
 
     def test_add_new_post_file_error_file_already_in_repo(self):
@@ -4202,6 +4335,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         file_obj = {
             "author": CURRENT_USER.username,
             "file_id": ObjectId(),
+            "file_name": "test",
             "manually_uploaded": False,
         }
         self.db.spaces.update_one(
@@ -4216,6 +4350,7 @@ class SpaceResourceTest(BaseResourceTestCase):
             self.space_name,
             CURRENT_USER.username,
             file_obj["file_id"],
+            file_obj["file_name"],
         )
 
     def test_add_new_repo_file(self):
@@ -4239,6 +4374,7 @@ class SpaceResourceTest(BaseResourceTestCase):
                 {
                     "author": CURRENT_ADMIN.username,
                     "file_id": _id,
+                    "file_name": "test_file",
                     "manually_uploaded": True,
                 }
             ],
