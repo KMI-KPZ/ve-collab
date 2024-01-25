@@ -1365,6 +1365,7 @@ class SpaceHandler(BaseHandler):
                 return
 
             # save the new picture to disk and store the filename
+            # TODO transform to base64 in http body as in profile update request
             if "space_pic" in self.request.files:
                 space_pic_obj = self.request.files["space_pic"][0]
                 space_manager.set_space_picture(

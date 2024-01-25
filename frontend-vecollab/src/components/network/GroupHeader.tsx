@@ -4,11 +4,12 @@ import { RxDotFilled, RxDotsVertical } from 'react-icons/rx';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { fetchDELETE, fetchPOST, useGetSpace } from '@/lib/backend';
-import { useEffect, useState } from 'react';
+import { ChangeEvent, useEffect, useState } from 'react';
 import Dialog from '../profile/Dialog';
 import { set } from 'date-fns';
 import Tabs from '../profile/Tabs';
 import BoxHeadline from '../BoxHeadline';
+import AvatarEditor from '../profile/AvatarEditor';
 
 export default function GroupHeader() {
     const { data: session, status } = useSession();
@@ -16,8 +17,11 @@ export default function GroupHeader() {
 
     const [toggleJoinable, setToggleJoinable] = useState(true);
     const [toggleInvisible, setToggleInvisible] = useState(true);
+    const [spacePicFile, setSpacePicFile] = useState('');
+    const [updatedSpaceDescription, setUpdatedSpaceDescription] = useState('');
 
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+    const [isEditImageDialogOpen, setIsEditImageDialogOpen] = useState(false);
 
     const {
         data: space,
@@ -29,6 +33,63 @@ export default function GroupHeader() {
     const handleCloseEditDialog = () => {
         setIsEditDialogOpen(false);
     };
+
+    const handleCloseEditImageDialog = () => {
+        setIsEditImageDialogOpen(false);
+    };
+
+    /*
+    callback that is triggered when the user selects a new space pic in
+    the input element. transforms the image to a base64 data uri and sets it
+    as spacePicFile
+    */
+    const onSelectSpacePicFile = (e: ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files.length > 0) {
+            const reader = new FileReader();
+            // on load the reader.result is always an image
+            reader.addEventListener('load', () => {
+                setSpacePicFile(reader.result as string);
+            });
+            reader.readAsDataURL(e.target.files[0]);
+        }
+    };
+
+    /*
+    upload the newly selected and cropped space picture
+    to the backend
+    */
+    const uploadSpaceImage = (blob: Blob) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onloadend = function () {
+            // transform base64 payload via base64 data uri and stripping the
+            // pre-information
+            var base64dataUri = reader.result as string;
+            const spacePicPayload = base64dataUri.replace(/^data:image\/[a-z]+;base64,/, '');
+
+            // send to backend and update state with returned _id to be able
+            // to retrieve image from uploads endpoint
+            /* 
+            fetchPOST(
+                '/profileinformation',
+                {
+                    profile_pic: {
+                        type: blob.type,
+                        payload: spacePicPayload,
+                    },
+                },
+                session?.accessToken
+                ).then((data) => {
+                    mutate();
+                });
+            */
+        };
+    };
+
+    const handleUpdateSpaceDescription = () => {
+        // TODO needs backend update
+        mutate();
+    }
 
     const toggleVisibility = () => {
         fetchPOST(
@@ -51,13 +112,14 @@ export default function GroupHeader() {
     };
 
     const leaveSpace = () => {
-        fetchDELETE(`/spaceadministration/leave?name=${space.name}`, {}, session!.accessToken).then(response => {
-            console.log(response);
-            // TODO error handling
-        });
-        router.push("/spaces");
-    }
-
+        fetchDELETE(`/spaceadministration/leave?name=${space.name}`, {}, session!.accessToken).then(
+            (response) => {
+                console.log(response);
+                // TODO error handling
+            }
+        );
+        router.push('/spaces');
+    };
 
     useEffect(() => {
         if (!isLoading) {
@@ -121,7 +183,97 @@ export default function GroupHeader() {
             >
                 <div className="w-[70vw] h-[50vh]">
                     <Tabs>
-                        <div tabname='Bild & Beschreibung'>todo</div>
+                        <div tabname="Bild & Beschreibung">
+                            <div className="flex">
+                                <div className="w-1/2 flex justify-center">
+                                    <div className="w-fit">
+                                        <div className="my-2 rounded-full overflow-hidden w-fit border-black border">
+                                            <AuthenticatedImage
+                                                imageId={space.space_pic}
+                                                alt={'Profilbild'}
+                                                width={180}
+                                                height={180}
+                                            />
+                                        </div>
+                                        <div className="flex justify-center">
+                                            <button
+                                                className={
+                                                    'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'
+                                                }
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    setIsEditImageDialogOpen(true);
+                                                }}
+                                            >
+                                                ändern
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <Dialog
+                                    isOpen={isEditImageDialogOpen}
+                                    title="Gruppenbild hochladen"
+                                    onClose={handleCloseEditImageDialog}
+                                    >
+                                    <div className="my-2 mx-2">
+                                        Wähle ein neues Profilbild aus und schneide es zurecht
+                                    </div>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="my-2"
+                                        onChange={onSelectSpacePicFile}
+                                        onClick={(e) => {
+                                            e.currentTarget.value = '';
+                                        }}
+                                        />
+                                     
+                                    {spacePicFile !== '' ? (
+                                        <div className="w-[90vw] max-w-[450px] max-h-[85vh]">
+                                            <AvatarEditor
+                                                sourceImg={spacePicFile}
+                                                onFinishUpload={(blob) => {
+                                                    uploadSpaceImage(blob);
+                                                    handleCloseEditImageDialog();
+                                                }}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <></>
+                                    )}
+                                
+                                </Dialog>
+                                <div className="w-1/2 ml-auto mx-6 flex items-center">
+                                    <div className='w-full'>
+                                        <div className={'mb-1 font-bold text-slate-900 text-lg'}>
+                                            Beschreibung
+                                        </div>
+                                        <textarea
+                                            className={
+                                                'w-full border border-[#cccccc] rounded-md px-2 py-[6px]'
+                                            }
+                                            rows={5}
+                                            placeholder={'Beschreibe diesen Space'}
+                                            value={updatedSpaceDescription}
+                                            onChange={
+                                                (e) => setUpdatedSpaceDescription(e.target.value)
+                                            }
+                                        ></textarea>
+                                        <button
+                                                className={
+                                                    'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'
+                                                }
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    handleUpdateSpaceDescription();
+                                                }}
+                                            >
+                                                Speichern
+                                            </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <div tabname="Sichtbarkeit">
                             <div className="flex mx-4 my-4">
                                 <div className="mx-4">privat</div>
