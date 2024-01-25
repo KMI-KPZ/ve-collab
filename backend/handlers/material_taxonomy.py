@@ -6,18 +6,7 @@ import util
 
 
 class MaterialTaxonomyHandler(BaseHandler):
-    @auth_needed
     def get(self):
-        if not self.is_current_user_lionet_admin():
-            self.set_status(403)
-            self.write(
-                {
-                    "success": False,
-                    "reason": "insufficient_permission",
-                }
-            )
-            return
-
         with util.get_mongodb() as db:
             taxonomy = db.material_taxonomy.find_one({})
             if taxonomy is None:

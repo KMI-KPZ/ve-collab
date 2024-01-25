@@ -113,6 +113,9 @@ export default function EditWorkExperienceInformation({
             <EditProfileHeader orcid={orcid} importOrcidProfile={importOrcidProfile} />
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'Berufserfahrung'} />
+                <div className="mb-2 text-sm">
+                    Dokumentiere relevante Abschnitte in deinem beruflichen Werdegang
+                </div>
                 {workExperience.map((workExp, index) => (
                     <Swapper
                         key={index}

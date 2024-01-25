@@ -7,6 +7,7 @@ import Dialog from '../profile/Dialog';
 import BoxHeadline from '../BoxHeadline';
 
 export type CustomData = {
+    description: string;
     url: string;
 };
 
@@ -37,12 +38,15 @@ export const CustomNode: React.FC<Props> = (props) => {
 
     // TODO, for now these are separate state vars, but it should be a Material object including the link and metadata
     const [currentMaterialInputName, setCurrentMaterialInputName] = useState<string>('');
-    const [currentMaterialInputLink, setCurrentMaterialInputLink] = useState<string>(''); 
+    const [currentMaterialInputDescription, setCurrentMaterialInputDescription] =
+        useState<string>('');
+    const [currentMaterialInputLink, setCurrentMaterialInputLink] = useState<string>('');
 
     const [isMaterialDialogOpen, setIsMaterialDialogOpen] = useState(false);
 
     const handleOpenMaterialDialog = () => {
         setCurrentMaterialInputName(text);
+        setCurrentMaterialInputDescription(data?.description || '');
         setCurrentMaterialInputLink(data?.url || '');
         setIsMaterialDialogOpen(true);
     };
@@ -70,12 +74,14 @@ export const CustomNode: React.FC<Props> = (props) => {
     };
 
     const handleEditMaterial = () => {
-        // TODO
-        // for now, update label text as dummy
         setLabelText(currentMaterialInputName);
-        props.onChange(id, currentMaterialInputName, { url: currentMaterialInputLink });
+        props.onChange(id, currentMaterialInputName, {
+            description: currentMaterialInputDescription,
+            url: currentMaterialInputLink,
+        });
 
         setCurrentMaterialInputName('');
+        setCurrentMaterialInputDescription('');
         setCurrentMaterialInputLink('');
     };
 
@@ -125,7 +131,9 @@ export const CustomNode: React.FC<Props> = (props) => {
                         </div>
                     ) : (
                         <div className="ps-2">
-                            <p className="cursor-pointer" onClick={handleOpenMaterialDialog}>{props.node.text}</p>
+                            <p className="cursor-pointer" onClick={handleOpenMaterialDialog}>
+                                {props.node.text}
+                            </p>
                         </div>
                     )}
                     {hover && (
@@ -160,49 +168,59 @@ export const CustomNode: React.FC<Props> = (props) => {
             >
                 <div className="w-[40rem] h-[40rem] overflow-y-auto content-scrollbar relative">
                     <BoxHeadline title={'Name'} />
-                        <div className="mb-10">
-                            <input
-                                type="text"
-                                className="w-full border border-gray-500 rounded-lg px-2 py-1 my-1"
-                                placeholder="Name des Lehrinhalts"
-                                value={currentMaterialInputName}
-                                onChange={(e) => setCurrentMaterialInputName(e.target.value)}
-                            />
-                        </div>
-                        <BoxHeadline title={'Einbettungslink'} />
-                        <div className="mb-10">
-                            <input
-                                type="text"
-                                className="w-full border border-gray-500 rounded-lg px-2 py-1 my-1"
-                                placeholder="Link zum Lehrinhalt, um ihn einzubetten"
-                                value={currentMaterialInputLink}
-                                onChange={(e) => setCurrentMaterialInputLink(e.target.value)}
-                            />
-                        </div>
-                        <BoxHeadline title={'Metadaten'} />
-                        <div>TODO</div>
-                        <div className="flex absolute bottom-0 w-full">
-                            <button
-                                className={
-                                    'bg-transparent border border-gray-500 py-3 px-6 mr-auto rounded-lg shadow-lg'
-                                }
-                                onClick={handleCloseMaterialDialog}
-                            >
-                                <span>Abbrechen</span>
-                            </button>
-                            <button
-                                className={
-                                    'bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
-                                }
-                                onClick={(e) => {
-                                    handleEditMaterial();
-                                    handleCloseMaterialDialog();
-                                }}
-                            >
-                                <span>Ändern</span>
-                            </button>
-                        </div>
+                    <div className="mb-10">
+                        <input
+                            type="text"
+                            className="w-full border border-gray-500 rounded-lg px-2 py-1 my-1"
+                            placeholder="Name des Lehrinhalts"
+                            value={currentMaterialInputName}
+                            onChange={(e) => setCurrentMaterialInputName(e.target.value)}
+                        />
                     </div>
+                    <BoxHeadline title={'Kurzbeschreibung'} />
+                    <div className="mb-10">
+                        <textarea
+                            rows={5}
+                            className="w-full border border-gray-500 rounded-lg px-2 py-1 my-1"
+                            placeholder="kurze Beschreibung für Seitleiste"
+                            value={currentMaterialInputDescription}
+                            onChange={(e) => setCurrentMaterialInputDescription(e.target.value)}
+                        />
+                    </div>
+                    <BoxHeadline title={'Einbettungslink'} />
+                    <div className="mb-10">
+                        <input
+                            type="text"
+                            className="w-full border border-gray-500 rounded-lg px-2 py-1 my-1"
+                            placeholder="Link zum Lehrinhalt, um ihn einzubetten"
+                            value={currentMaterialInputLink}
+                            onChange={(e) => setCurrentMaterialInputLink(e.target.value)}
+                        />
+                    </div>
+                    <BoxHeadline title={'Metadaten'} />
+                    <div>TODO</div>
+                    <div className="flex absolute bottom-0 w-full">
+                        <button
+                            className={
+                                'bg-transparent border border-gray-500 py-3 px-6 mr-auto rounded-lg shadow-lg'
+                            }
+                            onClick={handleCloseMaterialDialog}
+                        >
+                            <span>Abbrechen</span>
+                        </button>
+                        <button
+                            className={
+                                'bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
+                            }
+                            onClick={(e) => {
+                                handleEditMaterial();
+                                handleCloseMaterialDialog();
+                            }}
+                        >
+                            <span>Ändern</span>
+                        </button>
+                    </div>
+                </div>
             </Dialog>
         </div>
     );

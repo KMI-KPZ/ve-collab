@@ -3,7 +3,12 @@ import { AriaAttributes, DOMAttributes } from 'react';
 import VEInformation from './VEInformation';
 import TeachingAndResearchInformation from './TeachingAndResearchInformation';
 import CVInformation from './CVInformation';
-import { Course, Education, WorkExperience } from '@/interfaces/profile/profileInterfaces';
+import {
+    Education,
+    ResearchAndTeachingInformation,
+    VEInformation as IVEInformation, // name collision avoidance with VEInformation component
+    WorkExperience,
+} from '@/interfaces/profile/profileInterfaces';
 
 // have to declare "tabname" as a valid attribute for div tags, otherwise typescript is bothered
 declare module 'react' {
@@ -14,18 +19,8 @@ declare module 'react' {
 }
 
 interface Props {
-    veInfo: {
-        veInterests: string[];
-        veContents: string[];
-        veGoals: string[];
-        experience: string[];
-        interdisciplinaryExchange: boolean;
-        preferredFormat: string;
-    };
-    researchAndTeachingInfo: {
-        researchInterests: string[];
-        courses: Course[];
-    };
+    veInfo: IVEInformation;
+    researchAndTeachingInfo: ResearchAndTeachingInformation;
     cvInfo: {
         educations: Education[];
         workExperience: WorkExperience[];
@@ -40,23 +35,13 @@ export default function ExtendedPersonalInformation({
     return (
         <Tabs>
             <div tabname="VE-Infos">
-                <VEInformation
-                    veInterests={veInfo.veInterests}
-                    veContents={veInfo.veContents}
-                    veGoals={veInfo.veGoals}
-                    experiences={veInfo.experience}
-                    interdisciplinaryExchange={veInfo.interdisciplinaryExchange}
-                    preferredFormat={veInfo.preferredFormat}
-                />
+                <VEInformation veInfo={veInfo} />
             </div>
             <div tabname="Lehre & Forschung">
-                <TeachingAndResearchInformation
-                    researchInterests={researchAndTeachingInfo.researchInterests}
-                    courses={researchAndTeachingInfo.courses}
-                />
+                <TeachingAndResearchInformation researchAndTeachingInfo={researchAndTeachingInfo} />
             </div>
             <div tabname="CV">
-                <CVInformation educations={cvInfo.educations} workExperience={cvInfo.workExperience} />
+                <CVInformation cvInfo={cvInfo} />
             </div>
         </Tabs>
     );

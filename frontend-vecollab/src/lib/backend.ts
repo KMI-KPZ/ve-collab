@@ -9,6 +9,7 @@ import { IPlan, PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import { signIn, useSession } from 'next-auth/react';
 import useSWR, { KeyedMutator } from 'swr';
 import { VEPlanSnippet } from '@/interfaces/profile/profileInterfaces';
+import { IMaterialNode, INode, ITopLevelNode } from '@/interfaces/material/materialInterfaces';
 
 if (!process.env.NEXT_PUBLIC_BACKEND_BASE_URL) {
     throw new Error(`
@@ -202,6 +203,24 @@ export function useGetChatroomHistory(
     };
 }
 
+export function useGetCheckAdminUser(accessToken: string): {
+    data: boolean;
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        ['/admin_check', accessToken],
+        ([url, token]) => GETfetcher(url, token)
+    );
+    return {
+        data: isLoading || error ? false : data.is_admin,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
 export function useGetSpace(
     accessToken: string,
     spaceName: string
@@ -357,4 +376,20 @@ export async function fetchImage(relativeUrl: string, accessToken?: string): Pro
         console.log('network error, probably backend down');
         return new Blob();
     }
+}
+
+export async function fetchTaxonomy(): Promise<INode[]> {
+    const data = await GETfetcher('/material_taxonomy');
+    return data.taxonomy;
+}
+
+export async function getTopLevelNodes() {
+    const taxonomy = await fetchTaxonomy();
+    return taxonomy.filter((node: any) => node.parent === 0);
+}
+
+export async function getMaterialNodesOfNodeByText(nodeText: string): Promise<IMaterialNode[]> {
+    const taxonomy = await fetchTaxonomy();
+    const nodeId = taxonomy.find((node: INode) => node.text === nodeText)?.id;
+    return taxonomy.filter((node: INode) => node.parent === nodeId) as IMaterialNode[];
 }

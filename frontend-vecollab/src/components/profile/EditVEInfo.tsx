@@ -5,6 +5,9 @@ import EditProfileVerticalSpacer from './EditProfileVerticalSpacer';
 import EditProfileHeadline from './EditProfileHeadline';
 import EditProfilePlusMinusButtons from './EditProfilePlusMinusButtons';
 import Swapper from './Swapper';
+import CreatableSelect from 'react-select/creatable';
+import Select from 'react-select';
+import { DropdownList } from '@/interfaces/dropdowns';
 
 interface Props {
     veInformation: VEInformation;
@@ -14,6 +17,7 @@ interface Props {
     updateProfileData(evt: FormEvent): Promise<void>;
     orcid: string | null | undefined;
     importOrcidProfile(evt: FormEvent): Promise<void>;
+    dropdowns: DropdownList;
 }
 
 export default function EditVEInfo({
@@ -24,6 +28,7 @@ export default function EditVEInfo({
     updateProfileData,
     orcid,
     importOrcidProfile,
+    dropdowns,
 }: Props) {
     const modifyVeInterests = (index: number, value: string) => {
         let newInterests = [...veInformation.veInterests];
@@ -151,16 +156,20 @@ export default function EditVEInfo({
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'aktuelle Verfügbarkeit für VE'} />
                 <div className="mb-2 text-sm">Bist du aktuell für einen VE verfügbar?</div>
-                <select
-                    value={veReady === true ? 'true' : 'false'}
-                    onChange={(e) =>
-                        e.target.value === 'true' ? setVeReady(true) : setVeReady(false)
+                <Select
+                    className="w-1/2 mb-1"
+                    options={[
+                        { label: 'Ja', value: 'true' },
+                        { label: 'Nein', value: 'false' },
+                    ]}
+                    onChange={(e) => (e!.value === 'true' ? setVeReady(true) : setVeReady(false))}
+                    value={
+                        veReady === true
+                            ? { label: 'Ja', value: 'true' }
+                            : { label: 'Nein', value: 'false' }
                     }
-                    className="border border-gray-500 rounded-lg p-2 bg-white"
-                >
-                    <option value="true">Ja</option>
-                    <option value="false">Nein</option>
-                </select>
+                    placeholder={'auswählen...'}
+                />
                 <div className="min-h-[20px]" /> {/* spacer to match "+" button spacing */}
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
@@ -176,11 +185,18 @@ export default function EditVEInfo({
                         swapCallback={swapVeInterests}
                         deleteCallback={deleteFromVeInterests}
                     >
-                        <input
-                            className={'border border-gray-500 rounded-lg px-2 py-1 mb-1 w-full'}
-                            type="text"
-                            value={interest}
-                            onChange={(e) => modifyVeInterests(index, e.target.value)}
+                        <CreatableSelect
+                            className="w-full mb-1"
+                            options={dropdowns.veInterests}
+                            onChange={(e) => modifyVeInterests(index, e!.value)}
+                            // if value is not null, placeholder wont show, even though value inside the object is ''
+                            value={interest !== '' ? { label: interest, value: interest } : null}
+                            placeholder={'Thema auswählen oder neues Thema durch Tippen hinzufügen'}
+                            formatCreateLabel={(inputValue) => (
+                                <span>
+                                    Nichts passendes dabei? <b>{inputValue}</b> verwenden
+                                </span>
+                            )}
                         />
                     </Swapper>
                 ))}
@@ -201,7 +217,9 @@ export default function EditVEInfo({
                         deleteCallback={deleteFromVeContents}
                     >
                         <input
-                            className={'border border-gray-500 rounded-lg px-2 py-1 mb-1 w-full'}
+                            className={
+                                'border border-[#cccccc] rounded-md px-2 py-[6px] mb-1 w-full'
+                            }
                             type="text"
                             value={content}
                             onChange={(e) => modifyVeContents(index, e.target.value)}
@@ -223,11 +241,18 @@ export default function EditVEInfo({
                         swapCallback={swapVeGoals}
                         deleteCallback={deleteFromVeGoals}
                     >
-                        <input
-                            className={'border border-gray-500 rounded-lg px-2 py-1 mb-1 w-full'}
-                            type="text"
-                            value={goal}
-                            onChange={(e) => modifyVeGoals(index, e.target.value)}
+                        <CreatableSelect
+                            className="w-full mb-1"
+                            options={dropdowns.veGoals}
+                            onChange={(e) => modifyVeGoals(index, e!.value)}
+                            // if value is not null, placeholder wont show, even though value inside the object is ''
+                            value={goal !== '' ? { label: goal, value: goal } : null}
+                            placeholder={'Ziel auswählen oder neues Ziel durch Tippen hinzufügen'}
+                            formatCreateLabel={(inputValue) => (
+                                <span>
+                                    Nichts passendes dabei? <b>{inputValue}</b> verwenden
+                                </span>
+                            )}
                         />
                     </Swapper>
                 ))}
@@ -238,19 +263,25 @@ export default function EditVEInfo({
                 <div className="mb-2 text-sm">
                     Bist du an einem interdisziplinären Austausch interessiert?
                 </div>
-                <select
-                    value={veInformation.interdisciplinaryExchange === true ? 'true' : 'false'}
+                <Select
+                    className="w-1/2 mb-1"
+                    options={[
+                        { label: 'Ja', value: 'true' },
+                        { label: 'Nein', value: 'false' },
+                    ]}
                     onChange={(e) =>
-                        e.target.value === 'true'
+                        e!.value === 'true'
                             ? modifyInterdisciplinaryExchange(true)
                             : modifyInterdisciplinaryExchange(false)
                     }
-                    className="border border-gray-500 rounded-lg p-2 bg-white"
-                >
-                    <option value="true">Ja</option>
-                    <option value="false">Nein</option>
-                </select>
-                <div className="min-h-[20px]" /> {/* spacer to match "+" button spacing */}
+                    value={
+                        veInformation.interdisciplinaryExchange === true
+                            ? { label: 'Ja', value: 'true' }
+                            : { label: 'Nein', value: 'false' }
+                    }
+                    placeholder={'auswählen...'}
+                />
+                <div className="min-h-[20px]" /> {/* vertical spacer to match "+" button spacing */}
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'VE-Erfahrungen'} />
@@ -266,7 +297,9 @@ export default function EditVEInfo({
                         deleteCallback={deleteFromExperience}
                     >
                         <input
-                            className={'border border-gray-500 rounded-lg px-2 py-1 mb-1 w-full'}
+                            className={
+                                'border border-[#cccccc] rounded-md px-2 py-[6px] mb-1 w-full'
+                            }
                             type="text"
                             value={exp}
                             onChange={(e) => modifyExperience(index, e.target.value)}
@@ -278,15 +311,21 @@ export default function EditVEInfo({
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'präferierte Formate'} />
                 <div className="mb-2 text-sm">In welchen Formaten möchtest du den VE abhalten?</div>
-                <select
-                    value={veInformation.preferredFormat}
-                    onChange={(e) => modifyPreferredFormat(e.target.value)}
-                    className="border border-gray-500 rounded-lg p-2 bg-white"
-                >
-                    <option value="synchron">synchron</option>
-                    <option value="asynchron">asynchron</option>
-                    <option value="synchron und asynchron">synchron und asynchron</option>
-                </select>
+                <Select
+                    className="w-1/2 mb-1"
+                    options={dropdowns.preferredFormat}
+                    onChange={(e) => modifyPreferredFormat(e!.value)}
+                    // if value is not null, placeholder wont show, even though value inside the object is ''
+                    value={
+                        veInformation.preferredFormat !== ''
+                            ? {
+                                  label: veInformation.preferredFormat,
+                                  value: veInformation.preferredFormat,
+                              }
+                            : null
+                    }
+                    placeholder={'präferiertes Format auswählen'}
+                />
             </EditProfileVerticalSpacer>
         </form>
     );

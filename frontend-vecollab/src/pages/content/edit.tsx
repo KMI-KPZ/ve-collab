@@ -13,13 +13,13 @@ import { RxPlus } from 'react-icons/rx';
 import { CustomNode } from '@/components/learningContent/CustomNode';
 import { CustomDragPreview } from '@/components/learningContent/CustomDragPreview';
 import Dialog from '@/components/profile/Dialog';
-import { fetchGET, fetchPOST } from '@/lib/backend';
+import { fetchGET, fetchPOST, useGetCheckAdminUser } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import SuccessAlert from '@/components/SuccessAlert';
+import LoadingAnimation from '@/components/LoadingAnimation';
 
-Edit.auth = true;
-// TODO only render as admin
 export type CustomData = {
+    description: string;
     url: string;
 };
 
@@ -49,9 +49,17 @@ const getLastId = (treeData: NodeModel[]) => {
     return 0;
 };
 
+Edit.auth = true;
 export default function Edit() {
     const { data: session } = useSession();
     const [successPopupOpen, setSuccessPopupOpen] = useState(false);
+
+    const {
+        data: isUserAdmin,
+        isLoading,
+        error,
+        mutate,
+    } = useGetCheckAdminUser(session!.accessToken);
 
     const [treeData, setTreeData] = useState<NodeModel<CustomData>[]>([
         {
@@ -63,66 +71,46 @@ export default function Edit() {
         {
             id: 2,
             parent: 1,
-            droppable: true,
-            text: 'für Novizen',
-        },
-        {
-            id: 3,
-            parent: 2,
             droppable: false,
             text: 'Material 1',
             data: {
+                description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+                url: 'http://localhost/dummy',
+            },
+        },
+        {
+            id: 3,
+            parent: 1,
+            droppable: false,
+            text: 'Material 2',
+            data: {
+                description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
                 url: 'http://localhost/dummy',
             },
         },
         {
             id: 4,
             parent: 1,
-            droppable: true,
-            text: 'für Erfahrene',
-        },
-        {
-            id: 5,
-            parent: 4,
-            droppable: false,
-            text: 'Material 2',
-            data: {
-                url: 'http://localhost/dummy',
-            },
-        },
-        {
-            id: 6,
-            parent: 1,
-            droppable: true,
-            text: 'für Expert:innen',
-        },
-        {
-            id: 7,
-            parent: 6,
             droppable: false,
             text: 'Material 3',
             data: {
+                description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
                 url: 'http://localhost/dummy',
             },
         },
         {
-            id: 8,
+            id: 5,
             parent: 0,
             droppable: true,
             text: 'Was ist ein VE?',
         },
         {
-            id: 9,
-            parent: 8,
-            droppable: true,
-            text: '1. Lektion...',
-        },
-        {
-            id: 10,
-            parent: 9,
+            id: 6,
+            parent: 5,
             droppable: false,
             text: 'Material 4',
             data: {
+                description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
                 url: 'http://localhost/dummy',
             },
         },
@@ -134,10 +122,12 @@ export default function Edit() {
                 setTreeData(res.taxonomy);
             }
         });
-    }, []);
+    }, [session]);
 
     // TODO, for now these are separate state vars, but it should be a Material object including the link and metadata
     const [currentMaterialInputName, setCurrentMaterialInputName] = useState<string>('');
+    const [currentMaterialInputDescription, setCurrentMaterialInputDescription] =
+        useState<string>('');
     const [currentMaterialInputLink, setCurrentMaterialInputLink] = useState<string>('');
 
     const [isMaterialDialogOpen, setIsMaterialDialogOpen] = useState(false);
@@ -200,14 +190,17 @@ export default function Edit() {
             droppable: false,
             text: currentMaterialInputName,
             data: {
+                description: currentMaterialInputDescription,
                 url: currentMaterialInputLink,
             },
         });
         setCurrentMaterialInputName('');
+        setCurrentMaterialInputDescription('');
         setCurrentMaterialInputLink('');
     };
 
     const handleSaveToBackend = () => {
+        // TODO if possible validate structure to avoid crashing material site
         fetchPOST('/material_taxonomy', { taxonomy: treeData }, session?.accessToken);
 
         // render success message that disappears after 2 seconds
@@ -237,63 +230,91 @@ export default function Edit() {
         <>
             <div className="flex justify-center">
                 <WhiteBox>
-                    <div className="w-[60vw] h-[60vh] overflow-y-auto content-scrollbar">
-                        <BoxHeadline title="Lehrmaterialien bearbeiten" />
-                        <DndProvider backend={MultiBackend} options={getBackendOptions()}>
-                            <div className="flex px-1">
-                                <button
-                                    className="flex justify-center items-center bg-ve-collab-orange rounded-md px-2 py-1 mx-2 text-white"
-                                    onClick={handleSaveToBackend}
-                                >
-                                    Änderungen speichern
-                                </button>
-                                <button
-                                    className="flex justify-center items-center border border-ve-collab-orange rounded-md px-2 py-1 mx-2 text-ve-collab-orange"
-                                    onClick={(e) =>
-                                        handleSubmit({
-                                            parent: 0,
-                                            droppable: true,
-                                            text: 'neue Ebene',
-                                        })
-                                    }
-                                >
-                                    <RxPlus />
-                                    <div className="mx-1">neue Hierarchieebene</div>
-                                </button>
-                                <button
-                                    className="flex justify-center items-center border border-ve-collab-orange rounded-md px-2 py-1 mx-2 text-ve-collab-orange"
-                                    onClick={handleOpenMaterialDialog}
-                                >
-                                    <RxPlus />
-                                    <div className="mx-1">neuer Lehrinhalt</div>
-                                </button>
-                            </div>
-                            <div className="h-full px-1 mx-2 my-1">
-                                <Tree
-                                    tree={treeData}
-                                    rootId={0}
-                                    render={(node: any, options) => (
-                                        <CustomNode
-                                            node={node}
-                                            {...options}
-                                            onDelete={handleDelete}
-                                            onCopy={handleCopy}
-                                            onChange={handleNodeChange}
-                                        />
-                                    )}
-                                    dragPreviewRender={(
-                                        monitorProps: DragLayerMonitorProps<CustomData>
-                                    ) => <CustomDragPreview monitorProps={monitorProps} />}
-                                    onDrop={handleDrop}
-                                    classes={{
-                                        root: 'h-full my-6',
-                                        draggingSource: 'opacity-30',
-                                        dropTarget: 'bg-[#e8f0fe]',
-                                    }}
-                                    sort={false}
-                                />
-                            </div>
-                        </DndProvider>
+                    <div className="w-[60vw] h-[70vh] overflow-y-auto content-scrollbar">
+                        {isLoading ? (
+                            <LoadingAnimation />
+                        ) : (
+                            <>
+                                {!isUserAdmin ? (
+                                    <div className="w-full h-full text-2xl flex items-center justify-center font-bold">
+                                        Zugriff verweigert
+                                    </div>
+                                ) : (
+                                    <>
+                                        <BoxHeadline title="Lehrmaterialien bearbeiten" />
+                                        <div className="mx-2 mt-2 px-1">Struktur:</div>
+                                        <p className="mx-2 mb-2 px-1">
+                                            Jede Hierarchieebene spiegelt eine Box in der oberen
+                                            Leiste wieder. Diese können beliebig viele Lehrinhalte
+                                            unter sich sammeln, die alle in der linken Seitleiste
+                                            auswählbar sind.
+                                        </p>
+                                        <DndProvider
+                                            backend={MultiBackend}
+                                            options={getBackendOptions()}
+                                        >
+                                            <div className="flex px-1">
+                                                <button
+                                                    className="flex justify-center items-center bg-ve-collab-orange rounded-md px-2 py-1 mx-2 text-white"
+                                                    onClick={handleSaveToBackend}
+                                                >
+                                                    Änderungen speichern
+                                                </button>
+                                                <button
+                                                    className="flex justify-center items-center border border-ve-collab-orange rounded-md px-2 py-1 mx-2 text-ve-collab-orange"
+                                                    onClick={(e) =>
+                                                        handleSubmit({
+                                                            parent: 0,
+                                                            droppable: true,
+                                                            text: 'neue Ebene',
+                                                        })
+                                                    }
+                                                >
+                                                    <RxPlus />
+                                                    <div className="mx-1">neue Hierarchieebene</div>
+                                                </button>
+                                                <button
+                                                    className="flex justify-center items-center border border-ve-collab-orange rounded-md px-2 py-1 mx-2 text-ve-collab-orange"
+                                                    onClick={handleOpenMaterialDialog}
+                                                >
+                                                    <RxPlus />
+                                                    <div className="mx-1">neuer Lehrinhalt</div>
+                                                </button>
+                                            </div>
+                                            <div className="h-[3/4] px-1 mx-2 my-1">
+                                                <Tree
+                                                    tree={treeData}
+                                                    rootId={0}
+                                                    render={(node: any, options) => (
+                                                        <CustomNode
+                                                            node={node}
+                                                            {...options}
+                                                            onDelete={handleDelete}
+                                                            onCopy={handleCopy}
+                                                            onChange={handleNodeChange}
+                                                        />
+                                                    )}
+                                                    dragPreviewRender={(
+                                                        monitorProps: DragLayerMonitorProps<CustomData>
+                                                    ) => (
+                                                        <CustomDragPreview
+                                                            monitorProps={monitorProps}
+                                                        />
+                                                    )}
+                                                    onDrop={handleDrop}
+                                                    classes={{
+                                                        root: 'h-full my-6',
+                                                        draggingSource: 'opacity-30',
+                                                        dropTarget: 'bg-[#e8f0fe]',
+                                                    }}
+                                                    sort={false}
+                                                />
+                                            </div>
+                                        </DndProvider>
+                                    </>
+                                )}
+                            </>
+                        )}
                     </div>
                 </WhiteBox>
                 <Dialog
@@ -312,6 +333,16 @@ export default function Edit() {
                                 placeholder="Name des Lehrinhalts"
                                 value={currentMaterialInputName}
                                 onChange={(e) => setCurrentMaterialInputName(e.target.value)}
+                            />
+                        </div>
+                        <BoxHeadline title={'Kurzbeschreibung'} />
+                        <div className="mb-10">
+                            <textarea
+                                rows={5}
+                                className="w-full border border-gray-500 rounded-lg px-2 py-1 my-1"
+                                placeholder="kurze Beschreibung für Seitleiste"
+                                value={currentMaterialInputDescription}
+                                onChange={(e) => setCurrentMaterialInputDescription(e.target.value)}
                             />
                         </div>
                         <BoxHeadline title={'Einbettungslink'} />
