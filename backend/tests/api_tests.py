@@ -1,3 +1,4 @@
+from base64 import b64encode
 from datetime import datetime, timedelta
 import io
 import json
@@ -4642,7 +4643,168 @@ class SpaceHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
 
-    def test_post_space_description_global_admin(self):
+    def test_post_space_information_global_admin(self):
+        """
+        expect: successfully edit description and picture of space, permission is granted
+        because user is global admin
+        """
+
+        # pull user from space admins to trigger global admin privileges
+        self.db.spaces.update_one(
+            {"name": self.test_space}, {"$pull": {"admins": CURRENT_ADMIN.username}}
+        )
+
+        request_json = {
+            "picture": {
+                "payload": b64encode(b"test_picture").decode("utf-8"),
+                "type": "image/png",
+            },
+            "description": "updated_space_description",
+        }
+
+        self.base_checks(
+            "POST",
+            "/spaceadministration/space_information?name={}".format(self.test_space),
+            True,
+            200,
+            body=request_json,
+        )
+
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertEqual(db_state["space_description"], request_json["description"])
+
+        # check that the profile pic was also replicated to gridfs
+        fs = gridfs.GridFS(self.db)
+        fs_file = fs.get(db_state["space_pic"])
+        self.assertIsNotNone(fs_file)
+        self.assertEqual(fs_file.read(), b"test_picture")
+
+        # do another request, this time only updating the description
+        request_json2 = {
+            "description": "updated_space_description2",
+        }
+
+        self.base_checks(
+            "POST",
+            "/spaceadministration/space_information?name={}".format(self.test_space),
+            True,
+            200,
+            body=request_json2,
+        )
+
+        db_state2 = self.db.spaces.find_one({"name": self.test_space})
+        self.assertEqual(db_state2["space_description"], request_json2["description"])
+
+    def test_post_space_information_space_admin(self):
+        """
+        expect: successfully edit description and picture of space, permission is granted
+        because user is space admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        self.db.spaces.update_one(
+            {"name": self.test_space}, {"$push": {"admins": CURRENT_USER.username}}
+        )
+
+        request_json = {
+            "picture": {
+                "payload": b64encode(b"test_picture").decode("utf-8"),
+                "type": "image/png",
+            },
+            "description": "updated_space_description",
+        }
+
+        self.base_checks(
+            "POST",
+            "/spaceadministration/space_information?name={}".format(self.test_space),
+            True,
+            200,
+            body=request_json,
+        )
+
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertEqual(db_state["space_description"], request_json["description"])
+
+        # check that the profile pic was also replicated to gridfs
+        fs = gridfs.GridFS(self.db)
+        fs_file = fs.get(db_state["space_pic"])
+        self.assertIsNotNone(fs_file)
+        self.assertEqual(fs_file.read(), b"test_picture")
+
+        # do another request, this time only updating the description
+        request_json2 = {
+            "description": "updated_space_description2",
+        }
+
+        self.base_checks(
+            "POST",
+            "/spaceadministration/space_information?name={}".format(self.test_space),
+            True,
+            200,
+            body=request_json2,
+        )
+
+        db_state2 = self.db.spaces.find_one({"name": self.test_space})
+        self.assertEqual(db_state2["space_description"], request_json2["description"])
+
+    def test_post_space_information_error_space_doesnt_exist(self):
+        """
+        expect: fail message because space doesnt exist
+        """
+
+        request_json = {
+            "description": "updated_space_text",
+            "picture": {
+                "payload": b64encode(b"test_picture").decode("utf-8"),
+                "type": "image/png",
+            },
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/spaceadministration/space_information?name={}".format(
+                "not_existing_space"
+            ),
+            False,
+            409,
+            body=request_json,
+        )
+        self.assertEqual(response["reason"], SPACE_DOESNT_EXIST_ERROR)
+
+    def test_post_space_information_error_insufficient_permission(self):
+        """
+        expect: fail message because user is neither global admin nor space admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        self.db.spaces.update_one(
+            {"name": self.test_space}, {"$pull": {"admins": CURRENT_ADMIN.username}}
+        )
+
+        request_json = {
+            "description": "updated_space_text",
+            "picture": {
+                "payload": b64encode(b"test_picture").decode("utf-8"),
+                "type": "image/png",
+            },
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/spaceadministration/space_picture?name={}".format(self.test_space),
+            False,
+            403,
+            body=request_json,
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_post_space_description_legacy_global_admin(self):
         """
         expect: successfully edit description of space, permission is granted
         because user is global admin
@@ -4672,10 +4834,10 @@ class SpaceHandlerTest(BaseApiTestCase):
             db_state["space_description"], request_json["space_description"]
         )
 
-    def test_post_space_description_space_admin(self):
+    def test_post_space_description_legacy_space_admin(self):
         """
         expect: successfully edit description of space, permission is granted
-        because user is global admin
+        because user is space admin
         """
 
         # switch to user mode

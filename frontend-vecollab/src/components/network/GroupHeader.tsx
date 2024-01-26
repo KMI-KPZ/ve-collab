@@ -30,6 +30,11 @@ export default function GroupHeader() {
         mutate,
     } = useGetSpace(session!.accessToken, router.query.name as string);
 
+    const handleOpenEditDialog = () => {
+        setIsEditDialogOpen(true);
+        setUpdatedSpaceDescription(space.space_description);
+    };
+
     const handleCloseEditDialog = () => {
         setIsEditDialogOpen(false);
     };
@@ -69,11 +74,10 @@ export default function GroupHeader() {
 
             // send to backend and update state with returned _id to be able
             // to retrieve image from uploads endpoint
-            /* 
             fetchPOST(
-                '/profileinformation',
+                `/spaceadministration/space_information?name=${space.name}`,
                 {
-                    profile_pic: {
+                    picture: {
                         type: blob.type,
                         payload: spacePicPayload,
                     },
@@ -82,13 +86,19 @@ export default function GroupHeader() {
                 ).then((data) => {
                     mutate();
                 });
-            */
         };
     };
 
     const handleUpdateSpaceDescription = () => {
-        // TODO needs backend update
-        mutate();
+        fetchPOST(
+            `/spaceadministration/space_information?name=${space.name}`,
+            {
+                description: updatedSpaceDescription,
+            },
+            session?.accessToken
+        ).then((data) => {
+            mutate();
+        });
     }
 
     const toggleVisibility = () => {
@@ -148,7 +158,7 @@ export default function GroupHeader() {
                             className={
                                 'border border-white bg-black/75 text-white rounded-lg px-3 py-1'
                             }
-                            onClick={() => setIsEditDialogOpen(true)}
+                            onClick={() => handleOpenEditDialog()}
                         >
                             <span>Gruppe bearbeiten</span>
                         </button>

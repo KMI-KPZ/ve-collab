@@ -1,3 +1,5 @@
+from base64 import b64decode
+import json
 import logging
 from typing import Optional
 
@@ -201,7 +203,7 @@ class SpaceHandler(BaseHandler):
         elif slug == "list_all":
             self.list_spaces()
             return
-        
+
         elif slug == "my":
             self.list_personal_spaces()
             return
@@ -350,9 +352,45 @@ class SpaceHandler(BaseHandler):
                  "reason": "space_doesnt_exist"}
 
         POST /spaceadministration/space_picture
+            LEGACY COMPATIBILITY ROUTE, use /spaceadministration/space_information instead
             (update space picture)
             query param:
                 "name" : space name of which space to update space picture, mandatory argument
+
+            returns:
+                200 OK,
+                {"success": True}
+
+                400 Bad Request
+                {"success": False,
+                 "reason": missing_key:name}
+
+                401 Unauthorized
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                {"success": False,
+                 "reason": "insufficient_permission"}
+
+                409 Conflict
+                {"success": False,
+                 "reason": "space_doesnt_exist"}
+
+        POST /spaceadministration/space_information
+            (update the space's description and/or picture,
+            requires space admin or global admin privileges)
+            query param:
+                "name" : space name of which space to update, mandatory argument
+
+            http body:
+                {
+                    "description": "<str>", 
+                    "picture": {
+                        "payload": "<base64_encoded_image>", 
+                        "type": "<image/jpeg|image/png|...>"
+                    }
+                }
 
             returns:
                 200 OK,
@@ -682,8 +720,32 @@ class SpaceHandler(BaseHandler):
 
         elif slug == "space_picture":
             space_description = self.get_body_argument("space_description", None)
-            self.update_space_information(space_name, space_description)
+            self.update_space_information_legacy(space_name, space_description)
             return
+
+        elif slug == "space_information":
+            http_body = json.loads(self.request.body)
+            space_description = (
+                http_body["description"]
+                if "description" in http_body
+                else None
+            )
+
+            if "picture" in http_body:
+                space_pic_obj = {
+                    "body": b64decode(http_body["picture"]["payload"]),
+                    "content_type": http_body["picture"]["type"],
+                }
+                filename = "avatar_{}".format(space_name)
+                self.update_space_information(
+                    space_name,
+                    space_description,
+                    filename,
+                    space_pic_obj["body"],
+                    space_pic_obj["content_type"],
+                )
+            else:
+                self.update_space_information(space_name, space_description)
 
         elif slug == "invite":
             try:
@@ -797,7 +859,7 @@ class SpaceHandler(BaseHandler):
                 409 Conflict
                 {"success": False,
                  "reason": "space_doesnt_exist"}
-                
+
                 409 Conflict
                 {"success": False,
                  "reason": "no_other_admins_left"}
@@ -1019,7 +1081,7 @@ class SpaceHandler(BaseHandler):
         self.set_status(200)
         self.write(self.json_serialize_response({"success": True, "spaces": spaces}))
         return
-    
+
     def list_personal_spaces(self) -> None:
         """
         list all spaces that the current user is a member of
@@ -1339,9 +1401,56 @@ class SpaceHandler(BaseHandler):
                 return
 
     def update_space_information(
+        self,
+        space_name: str,
+        space_description: str = None,
+        space_pic_filename: str = None,
+        space_pic: bytes = None,
+        space_pic_content_type: str = None,
+    ):
+        """
+        update space information (description, picture)
+        requires space admin or global admin privileges
+        """
+
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
+            # check if user is either space or global admin
+            try:
+                if not (
+                    space_manager.check_user_is_space_admin(
+                        space_name, self.current_user.username
+                    )
+                    or self.is_current_user_lionet_admin()
+                ):
+                    self.set_status(403)
+                    self.write({"success": False, "reason": "insufficient_permission"})
+                    return
+            except SpaceDoesntExistError:
+                self.set_status(409)
+                self.write({"success": False, "reason": "space_doesnt_exist"})
+                return
+
+            if space_pic_filename and space_pic and space_pic_content_type:
+                space_manager.set_space_picture(
+                    space_name,
+                    space_pic_filename,
+                    space_pic,
+                    space_pic_content_type,
+                )
+
+            if space_description:
+                space_manager.set_space_description(space_name, space_description)
+
+            self.set_status(200)
+            self.write({"success": True})
+
+    def update_space_information_legacy(
         self, space_name: str, space_description: Optional[str]
     ) -> None:
         """
+        ONLY TO KEEP BACKWARDS COMPATIBILITY WITH OLD SYSTEM
+
         update space picture and space description,
         requires space admin or global admin privileges
         """
