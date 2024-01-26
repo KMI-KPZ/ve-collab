@@ -55,6 +55,15 @@ export default function Spaces() {
         mutateAllSpaces();
     };
 
+    function sendJoinRequest(spaceName: string): void {
+        fetchPOST(`/spaceadministration/join?name=${spaceName}`, {}, session!.accessToken).then(
+            () => {
+                mutateMySpaces();
+                mutateAllSpaces();
+            }
+        );
+    }
+
     return (
         <Container>
             <WhiteBox>
@@ -65,7 +74,10 @@ export default function Spaces() {
                             <div className="divide-y my-4">
                                 {mySpaces.map((space, index) => (
                                     <div key={index} className="px-2 py-5">
-                                        <Link  href={`/space?name=${space.name}`} className="flex cursor-pointer">
+                                        <Link
+                                            href={`/space?name=${space.name}`}
+                                            className="flex cursor-pointer"
+                                        >
                                             <div>
                                                 <AuthenticatedImage
                                                     imageId={space.space_pic}
@@ -239,6 +251,10 @@ export default function Spaces() {
                                                                 className={
                                                                     'h-10 bg-transparent border border-ve-collab-orange text-ve-collab-orange  px-4 mx-2 rounded-lg shadow-xl'
                                                                 }
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    sendJoinRequest(space.name);
+                                                                }}
                                                             >
                                                                 <span>Beitritt anfragen</span>
                                                             </button>

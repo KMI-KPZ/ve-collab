@@ -96,6 +96,8 @@ export default function Space() {
         );
     }, [space, isLoading]);
 
+    console.log(space)
+
     function files() {
         return (
             <>
