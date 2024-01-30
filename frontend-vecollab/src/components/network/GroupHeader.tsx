@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import AuthenticatedImage from '../AuthenticatedImage';
-import { RxDotFilled, RxDotsVertical } from 'react-icons/rx';
+import { RxDotFilled, RxDotsVertical, RxTrash } from 'react-icons/rx';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { fetchDELETE, fetchPOST, useGetSpace } from '@/lib/backend';
+import { fetchDELETE, fetchGET, fetchPOST, useGetSpace } from '@/lib/backend';
 import { ChangeEvent, useEffect, useState } from 'react';
 import Dialog from '../profile/Dialog';
 import Tabs from '../profile/Tabs';
@@ -11,6 +11,8 @@ import BoxHeadline from '../BoxHeadline';
 import AvatarEditor from '../profile/AvatarEditor';
 import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
 import LoadingAnimation from '../LoadingAnimation';
+import AsyncCreatableSelect from 'react-select/async-creatable';
+import { BackendSearchResponse } from '@/interfaces/api/apiInterfaces';
 
 export default function GroupHeader() {
     const { data: session, status } = useSession();
@@ -20,9 +22,13 @@ export default function GroupHeader() {
     const [toggleInvisible, setToggleInvisible] = useState(true);
     const [spacePicFile, setSpacePicFile] = useState('');
     const [updatedSpaceDescription, setUpdatedSpaceDescription] = useState('');
+    const [invitedUser, setInvitedUser] = useState<{ label: string; value: string }>({
+        label: '',
+        value: '',
+    });
 
     const [snippetsLoading, setSnippetsLoading] = useState(true);
-    const [requestSnippets, setRequestSnippets] = useState<UserSnippet[]>([
+    const [profileSnipppets, setProfileSnippets] = useState<UserSnippet[]>([
         { name: '', profilePicUrl: '', institution: '', preferredUsername: '' },
     ]);
 
@@ -144,11 +150,11 @@ export default function GroupHeader() {
             setSnippetsLoading(true);
             fetchPOST(
                 '/profile_snippets',
-                { usernames: space.requests },
+                { usernames: [...space.requests, ...space.invites] },
                 session?.accessToken
             ).then((data) => {
                 console.log('get snippets');
-                setRequestSnippets(
+                setProfileSnippets(
                     data.user_snippets.map((snippet: any) => ({
                         name: snippet.first_name + ' ' + snippet.last_name,
                         profilePicUrl: snippet.profile_pic,
@@ -174,6 +180,36 @@ export default function GroupHeader() {
     function declineRequest(requestUser: string): void {
         fetchPOST(
             `/spaceadministration/reject_request?name=${space.name}&user=${requestUser}`,
+            {},
+            session!.accessToken
+        ).then((response) => {
+            mutate();
+        });
+    }
+
+    const loadOptions = (
+        inputValue: string,
+        callback: (options: { label: string; value: string }[]) => void
+    ) => {
+        // a little less api queries, only start searching for recommendations from 2 letter inputs
+        if (inputValue.length > 1) {
+            fetchGET(`/search?users=true&query=${inputValue}`, session?.accessToken).then(
+                (data: BackendSearchResponse) => {
+                    console.log(data);
+                    callback(
+                        data.users.map((user) => ({
+                            label: user.first_name + ' ' + user.last_name + ' - ' + user.username,
+                            value: user.username,
+                        }))
+                    );
+                }
+            );
+        }
+    };
+
+    function inviteUserToSpace(value: string) {
+        fetchPOST(
+            `/spaceadministration/invite?name=${space.name}&user=${value}`,
             {},
             session!.accessToken
         ).then((response) => {
@@ -385,11 +421,11 @@ export default function GroupHeader() {
                                                         <div>
                                                             <AuthenticatedImage
                                                                 imageId={
-                                                                    requestSnippets.find(
+                                                                    profileSnipppets.find(
                                                                         (snippet) =>
                                                                             snippet.preferredUsername ===
                                                                             requestUser
-                                                                    )!.profilePicUrl
+                                                                    )?.profilePicUrl
                                                                 }
                                                                 alt={'Profilbild'}
                                                                 width={60}
@@ -400,20 +436,20 @@ export default function GroupHeader() {
                                                         <div>
                                                             <BoxHeadline
                                                                 title={
-                                                                    requestSnippets.find(
+                                                                    profileSnipppets.find(
                                                                         (snippet) =>
                                                                             snippet.preferredUsername ===
                                                                             requestUser
-                                                                    )!.name
+                                                                    )?.name
                                                                 }
                                                             />
                                                             <div className="mx-2 px-1 my-1 text-gray-600">
                                                                 {
-                                                                    requestSnippets.find(
+                                                                    profileSnipppets.find(
                                                                         (snippet) =>
                                                                             snippet.preferredUsername ===
                                                                             requestUser
-                                                                    )!.institution
+                                                                    )?.institution
                                                                 }
                                                             </div>
                                                         </div>
@@ -444,7 +480,100 @@ export default function GroupHeader() {
                                             ))}
                                     </div>
                                 </div>
-                                <div tabname="Einladungen"></div>
+                                <div tabname="Einladungen">
+                                    <div className="flex">
+                                        <AsyncCreatableSelect
+                                            className="w-3/4"
+                                            loadOptions={loadOptions}
+                                            onChange={(e) => setInvitedUser(e!)}
+                                            value={invitedUser}
+                                            placeholder={'Suche nach Nutzer:innen...'}
+                                            getOptionLabel={(option) => option.label}
+                                            formatCreateLabel={(inputValue) => (
+                                                <span>
+                                                    kein Treffer? <b>{inputValue}</b> trotzdem
+                                                    verwenden
+                                                </span>
+                                            )}
+                                        />
+                                        <div className="flex w-1/4 justify-center">
+                                            <button
+                                                className={
+                                                    'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'
+                                                }
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    inviteUserToSpace(invitedUser.value);
+                                                }}
+                                            >
+                                                Einladen
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="my-4">
+                                        <div className={'mb-1 font-bold text-slate-900 text-lg'}>
+                                            ausstehende Einladungen
+                                        </div>
+                                        <div className="divide-y">
+                                            {!snippetsLoading &&
+                                                space.invites.map((inviteUser, index) => (
+                                                    <div
+                                                        key={index}
+                                                        className="flex py-2 w-1/3 justify-between"
+                                                    >
+                                                        <div className="flex cursor-pointer">
+                                                            <div>
+                                                                <AuthenticatedImage
+                                                                    imageId={
+                                                                        profileSnipppets.find(
+                                                                            (snippet) =>
+                                                                                snippet.preferredUsername ===
+                                                                                inviteUser
+                                                                        )?.profilePicUrl
+                                                                    }
+                                                                    alt={'Profilbild'}
+                                                                    width={60}
+                                                                    height={60}
+                                                                    className="rounded-full"
+                                                                ></AuthenticatedImage>
+                                                            </div>
+                                                            <div>
+                                                                <BoxHeadline
+                                                                    title={
+                                                                        profileSnipppets.find(
+                                                                            (snippet) =>
+                                                                                snippet.preferredUsername ===
+                                                                                inviteUser
+                                                                        )?.name
+                                                                    }
+                                                                />
+                                                                <div className="mx-2 px-1 my-1 text-gray-600">
+                                                                    {
+                                                                        profileSnipppets.find(
+                                                                            (snippet) =>
+                                                                                snippet.preferredUsername ===
+                                                                                inviteUser
+                                                                        )?.institution
+                                                                    }
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center">
+                                                            <div className="flex items-center">
+                                                                <RxTrash
+                                                                    size={20}
+                                                                    onClick={(e) => {
+                                                                        e.preventDefault();
+                                                                    }}
+                                                                    className="cursor-pointer"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                        </div>
+                                    </div>
+                                </div>
                                 <div tabname="Berechtigungen"></div>
                             </Tabs>
                         </div>

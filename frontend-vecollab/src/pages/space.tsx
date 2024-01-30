@@ -94,7 +94,7 @@ export default function Space() {
                 );
             }
         );
-    }, [space, isLoading]);
+    }, [space, isLoading, session]);
 
     console.log(space)
 
