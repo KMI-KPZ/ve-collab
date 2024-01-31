@@ -113,7 +113,7 @@ class PostHandler(BaseHandler):
                     # to post into that space, if not end with 403 insufficient permission
                     acl = ACL(db)
                     user_can_post = acl.space_acl.ask(
-                        self.get_current_user_role(), space, "post"
+                        self.current_user.username, space, "post"
                     )
                     if not user_can_post:
                         self.set_status(403)
@@ -210,7 +210,7 @@ class PostHandler(BaseHandler):
                     acl = ACL(db)
                     user_can_post = False
                     user_can_post = acl.space_acl.ask(
-                        self.get_current_user_role(), post["space"], "post"
+                        self.current_user.username, post["space"], "post"
                     )
                     if not user_can_post:
                         self.set_status(403)
@@ -454,7 +454,7 @@ class CommentHandler(BaseHandler):
             if post["space"]:
                 acl = ACL(db)
                 if not acl.space_acl.ask(
-                    self.get_current_user_role(), post["space"], "comment"
+                    self.current_user.username, post["space"], "comment"
                 ):
                     self.set_status(403)
                     self.write(
@@ -949,7 +949,7 @@ class RepostHandler(BaseHandler):
                     acl = ACL(db)
                     user_can_post = False
                     user_can_post = acl.space_acl.ask(
-                        self.get_current_user_role(), space_name, "post"
+                        self.current_user.username, space_name, "post"
                     )
                     if not user_can_post:
                         self.set_status(403)
@@ -1021,7 +1021,7 @@ class RepostHandler(BaseHandler):
                     acl = ACL(db)
                     user_can_post = False
                     user_can_post = acl.space_acl.ask(
-                        self.get_current_user_role(), repost["space"], "post"
+                        self.current_user.username, repost["space"], "post"
                     )
                     if not user_can_post:
                         self.set_status(403)

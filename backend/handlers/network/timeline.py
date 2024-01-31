@@ -198,7 +198,7 @@ class SpaceTimelineHandler(BaseTimelineHandler):
             # ask for permission to read timeline
             acl = ACL(db)
             if not acl.space_acl.ask(
-                self.get_current_user_role(), space_name, "read_timeline"
+                self.current_user.username, space_name, "read_timeline"
             ):
                 self.set_status(403)
                 self.write({"success": False, "reason": "insufficient_permission"})

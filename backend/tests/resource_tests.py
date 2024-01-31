@@ -425,7 +425,7 @@ class SpaceACLResourceTest(BaseResourceTestCase):
         self.db.spaces.insert_one(self.default_space)
 
         self.default_acl_entry = {
-            "role": "guest",
+            "username": CURRENT_ADMIN.username,
             "space": self.space_name,
             "join_space": True,
             "read_timeline": True,
@@ -453,7 +453,7 @@ class SpaceACLResourceTest(BaseResourceTestCase):
         keys = acl_manager.space_acl.get_existing_keys()
         self.assertEqual(
             [
-                "role",
+                "username",
                 "space",
                 "join_space",
                 "read_timeline",
@@ -470,18 +470,18 @@ class SpaceACLResourceTest(BaseResourceTestCase):
     def test_insert_default(self):
         """
         expect: successfully insert default rule (everything except read_timeline False)
-        for the given role in the given space
+        for the given user in the given space
         """
 
         acl_manager = ACL(self.db)
-        acl_manager.space_acl.insert_default("another_role", self.space_name)
+        acl_manager.space_acl.insert_default(CURRENT_USER.username, self.space_name)
 
         # check if default rule was inserted
         acl_entry = self.db.space_acl.find_one(
-            {"role": "another_role", "space": self.space_name}
+            {"username": CURRENT_USER.username, "space": self.space_name}
         )
         self.assertIsNotNone(acl_entry)
-        self.assertEqual(acl_entry["role"], "another_role")
+        self.assertEqual(acl_entry["username"], CURRENT_USER.username)
         self.assertEqual(acl_entry["space"], self.space_name)
         self.assertEqual(acl_entry["join_space"], False)
         self.assertEqual(acl_entry["read_timeline"], True)
@@ -498,14 +498,14 @@ class SpaceACLResourceTest(BaseResourceTestCase):
         """
 
         acl_manager = ACL(self.db)
-        acl_manager.space_acl.insert_admin(self.space_name)
+        acl_manager.space_acl.insert_admin(CURRENT_USER.username, self.space_name)
 
         # check if admin rule was inserted
         acl_entry = self.db.space_acl.find_one(
-            {"role": "admin", "space": self.space_name}
+            {"username": CURRENT_USER.username, "space": self.space_name}
         )
         self.assertIsNotNone(acl_entry)
-        self.assertEqual(acl_entry["role"], "admin")
+        self.assertEqual(acl_entry["username"], CURRENT_USER.username)
         self.assertEqual(acl_entry["space"], self.space_name)
         self.assertEqual(acl_entry["join_space"], True)
         self.assertEqual(acl_entry["read_timeline"], True)
@@ -519,18 +519,18 @@ class SpaceACLResourceTest(BaseResourceTestCase):
     def test_insert_default_discussion(self):
         """
         expect: successfully insert default rule (everything except write_wiki True) for given
-        role and given discussion space name
+        user and given discussion space name
         """
 
         acl_manager = ACL(self.db)
-        acl_manager.space_acl.insert_default_discussion("another_role", self.space_name)
+        acl_manager.space_acl.insert_default_discussion(CURRENT_USER.username, self.space_name)
 
         # check if default rule was inserted
         acl_entry = self.db.space_acl.find_one(
-            {"role": "another_role", "space": self.space_name}
+            {"username": CURRENT_USER.username, "space": self.space_name}
         )
         self.assertIsNotNone(acl_entry)
-        self.assertEqual(acl_entry["role"], "another_role")
+        self.assertEqual(acl_entry["username"], CURRENT_USER.username)
         self.assertEqual(acl_entry["space"], self.space_name)
         self.assertEqual(acl_entry["join_space"], True)
         self.assertEqual(acl_entry["read_timeline"], True)
@@ -543,48 +543,48 @@ class SpaceACLResourceTest(BaseResourceTestCase):
 
     def test_ask(self):
         """
-        expect: successfully ask the acl for a given role/space and permission key
+        expect: successfully ask the acl for a given username/space and permission key
         """
 
         acl_manager = ACL(self.db)
         self.assertTrue(
             acl_manager.space_acl.ask(
-                self.default_acl_entry["role"], self.space_name, "join_space"
+                self.default_acl_entry["username"], self.space_name, "join_space"
             )
         )
         self.assertTrue(
             acl_manager.space_acl.ask(
-                self.default_acl_entry["role"], self.space_name, "read_timeline"
+                self.default_acl_entry["username"], self.space_name, "read_timeline"
             )
         )
         self.assertTrue(
             acl_manager.space_acl.ask(
-                self.default_acl_entry["role"], self.space_name, "post"
+                self.default_acl_entry["username"], self.space_name, "post"
             )
         )
         self.assertTrue(
             acl_manager.space_acl.ask(
-                self.default_acl_entry["role"], self.space_name, "comment"
+                self.default_acl_entry["username"], self.space_name, "comment"
             )
         )
         self.assertTrue(
             acl_manager.space_acl.ask(
-                self.default_acl_entry["role"], self.space_name, "read_wiki"
+                self.default_acl_entry["username"], self.space_name, "read_wiki"
             )
         )
         self.assertTrue(
             acl_manager.space_acl.ask(
-                self.default_acl_entry["role"], self.space_name, "write_wiki"
+                self.default_acl_entry["username"], self.space_name, "write_wiki"
             )
         )
         self.assertTrue(
             acl_manager.space_acl.ask(
-                self.default_acl_entry["role"], self.space_name, "read_files"
+                self.default_acl_entry["username"], self.space_name, "read_files"
             )
         )
         self.assertTrue(
             acl_manager.space_acl.ask(
-                self.default_acl_entry["role"], self.space_name, "write_files"
+                self.default_acl_entry["username"], self.space_name, "write_files"
             )
         )
 
@@ -597,35 +597,35 @@ class SpaceACLResourceTest(BaseResourceTestCase):
         self.assertRaises(
             KeyError,
             acl_manager.space_acl.ask,
-            self.default_acl_entry["role"],
+            self.default_acl_entry["username"],
             self.space_name,
             "test",
         )
 
     def test_ask_error_role_doesnt_exist(self):
         """
-        expect: ValueError is raised because the supplied role doesn't exist
+        expect: ValueError is raised because the supplied username doesn't exist
         """
 
         acl_manager = ACL(self.db)
         self.assertRaises(
             ValueError,
             acl_manager.space_acl.ask,
-            "test",
+            "non_existing_user",
             self.space_name,
             "join_space",
         )
 
     def test_get(self):
         """
-        expect: successfully get acl entry for given role/space
+        expect: successfully get acl entry for given username/space
         """
 
         acl_manager = ACL(self.db)
         acl_entry = acl_manager.space_acl.get(
-            self.default_acl_entry["role"], self.space_name
+            self.default_acl_entry["username"], self.space_name
         )
-        self.assertEqual(acl_entry["role"], self.default_acl_entry["role"])
+        self.assertEqual(acl_entry["username"], self.default_acl_entry["username"])
         self.assertEqual(acl_entry["space"], self.space_name)
         self.assertEqual(acl_entry["join_space"], True)
         self.assertEqual(acl_entry["read_timeline"], True)
@@ -636,13 +636,13 @@ class SpaceACLResourceTest(BaseResourceTestCase):
         self.assertEqual(acl_entry["read_files"], True)
         self.assertEqual(acl_entry["write_files"], True)
 
-    def test_get_error_role_doesnt_exist(self):
+    def test_get_error_username_doesnt_exist(self):
         """
-        expect: None is returned because the supplied role doesn't exist
+        expect: None is returned because the supplied username doesn't exist
         """
 
         acl_manager = ACL(self.db)
-        acl_entry = acl_manager.space_acl.get("test", self.space_name)
+        acl_entry = acl_manager.space_acl.get("non_existing_user", self.space_name)
         self.assertIsNone(acl_entry)
 
     def test_get_all(self):
@@ -652,7 +652,7 @@ class SpaceACLResourceTest(BaseResourceTestCase):
 
         # add one more rule for another space
         test_rule = {
-            "role": "test",
+            "username": "another_user",
             "space": "another_test",
             "join_space": False,
             "read_timeline": False,
@@ -678,7 +678,7 @@ class SpaceACLResourceTest(BaseResourceTestCase):
 
         # add one more rule for another space
         test_rule = {
-            "role": "test",
+            "username": "another_user",
             "space": "another_test",
             "join_space": False,
             "read_timeline": False,
@@ -699,20 +699,20 @@ class SpaceACLResourceTest(BaseResourceTestCase):
 
     def test_set(self):
         """
-        expect: successfully set a single permission key value for a given role/space
+        expect: successfully set a single permission key value for a given username/space
         """
 
         acl_manager = ACL(self.db)
         acl_manager.space_acl.set(
-            self.default_acl_entry["role"], self.space_name, "join_space", False
+            self.default_acl_entry["username"], self.space_name, "join_space", False
         )
 
         # check if value was set
         acl_entry = self.db.space_acl.find_one(
-            {"role": self.default_acl_entry["role"], "space": self.space_name}
+            {"username": self.default_acl_entry["username"], "space": self.space_name}
         )
         self.assertIsNotNone(acl_entry)
-        self.assertEqual(acl_entry["role"], self.default_acl_entry["role"])
+        self.assertEqual(acl_entry["username"], self.default_acl_entry["username"])
         self.assertEqual(acl_entry["space"], self.space_name)
         self.assertEqual(acl_entry["join_space"], False)
         self.assertEqual(acl_entry["read_timeline"], True)
@@ -725,19 +725,19 @@ class SpaceACLResourceTest(BaseResourceTestCase):
 
     def test_set_upsert(self):
         """
-        expect: using set, successfully insert a new role with permission key value
+        expect: using set, successfully insert a new username with permission key value
         that didn't exist before
         """
 
         acl_manager = ACL(self.db)
-        acl_manager.space_acl.set("test", self.space_name, "join_space", False)
+        acl_manager.space_acl.set("another_user", self.space_name, "join_space", False)
 
         # check if value was set
         acl_entry = self.db.space_acl.find_one(
-            {"role": "test", "space": self.space_name}
+            {"username": "another_user", "space": self.space_name}
         )
         self.assertIsNotNone(acl_entry)
-        self.assertEqual(acl_entry["role"], "test")
+        self.assertEqual(acl_entry["username"], "another_user")
         self.assertEqual(acl_entry["space"], self.space_name)
         self.assertEqual(acl_entry["join_space"], False)
 
@@ -750,7 +750,7 @@ class SpaceACLResourceTest(BaseResourceTestCase):
         self.assertRaises(
             KeyError,
             acl_manager.space_acl.set,
-            self.default_acl_entry["role"],
+            self.default_acl_entry["username"],
             self.space_name,
             "test",
             True,
@@ -758,13 +758,13 @@ class SpaceACLResourceTest(BaseResourceTestCase):
 
     def test_set_all(self):
         """
-        expect: successfully set all permission keys with values for a given role/space
+        expect: successfully set all permission keys with values for a given username/space
         """
 
         acl_manager = ACL(self.db)
         acl_manager.space_acl.set_all(
             {
-                "role": self.default_acl_entry["role"],
+                "username": self.default_acl_entry["username"],
                 "space": self.space_name,
                 "join_space": False,
                 "read_timeline": False,
@@ -779,10 +779,10 @@ class SpaceACLResourceTest(BaseResourceTestCase):
 
         # check if values were set
         acl_entry = self.db.space_acl.find_one(
-            {"role": self.default_acl_entry["role"], "space": self.space_name}
+            {"username": self.default_acl_entry["username"], "space": self.space_name}
         )
         self.assertIsNotNone(acl_entry)
-        self.assertEqual(acl_entry["role"], self.default_acl_entry["role"])
+        self.assertEqual(acl_entry["username"], self.default_acl_entry["username"])
         self.assertEqual(acl_entry["space"], self.space_name)
         self.assertEqual(acl_entry["join_space"], False)
         self.assertEqual(acl_entry["read_timeline"], False)
@@ -795,14 +795,14 @@ class SpaceACLResourceTest(BaseResourceTestCase):
 
     def test_set_all_upsert(self):
         """
-        expect: using set_all, successfully insert a new role/space with permission key values
+        expect: using set_all, successfully insert a new username/space with permission key values
         that didn't exist before
         """
 
         acl_manager = ACL(self.db)
         acl_manager.space_acl.set_all(
             {
-                "role": "test",
+                "username": "test",
                 "space": self.space_name,
                 "join_space": False,
                 "read_timeline": False,
@@ -817,10 +817,10 @@ class SpaceACLResourceTest(BaseResourceTestCase):
 
         # check if values were set
         acl_entry = self.db.space_acl.find_one(
-            {"role": "test", "space": self.space_name}
+            {"username": "test", "space": self.space_name}
         )
         self.assertIsNotNone(acl_entry)
-        self.assertEqual(acl_entry["role"], "test")
+        self.assertEqual(acl_entry["username"], "test")
         self.assertEqual(acl_entry["space"], self.space_name)
         self.assertEqual(acl_entry["join_space"], False)
         self.assertEqual(acl_entry["read_timeline"], False)
@@ -831,9 +831,9 @@ class SpaceACLResourceTest(BaseResourceTestCase):
         self.assertEqual(acl_entry["read_files"], False)
         self.assertEqual(acl_entry["write_files"], False)
 
-    def test_set_all_error_missing_role(self):
+    def test_set_all_error_missing_username(self):
         """
-        expect: KeyError is raised because "role" attribute is missing from the dict
+        expect: KeyError is raised because "username" attribute is missing from the dict
         """
 
         acl_manager = ACL(self.db)
@@ -863,7 +863,7 @@ class SpaceACLResourceTest(BaseResourceTestCase):
             KeyError,
             acl_manager.space_acl.set_all,
             {
-                "role": self.default_acl_entry["role"],
+                "username": self.default_acl_entry["username"],
                 "join_space": False,
                 "read_timeline": False,
                 "post": False,
@@ -886,7 +886,7 @@ class SpaceACLResourceTest(BaseResourceTestCase):
             KeyError,
             acl_manager.space_acl.set_all,
             {
-                "role": self.default_acl_entry["role"],
+                "username": self.default_acl_entry["username"],
                 "space": self.space_name,
                 "test": True,
             },
@@ -898,11 +898,11 @@ class SpaceACLResourceTest(BaseResourceTestCase):
         """
 
         acl_manager = ACL(self.db)
-        acl_manager.space_acl.delete(self.default_acl_entry["role"], self.space_name)
+        acl_manager.space_acl.delete(self.default_acl_entry["username"], self.space_name)
 
         # check if entry was deleted
         acl_entry = self.db.space_acl.find_one(
-            {"role": self.default_acl_entry["role"], "space": self.space_name}
+            {"username": self.default_acl_entry["username"], "space": self.space_name}
         )
         self.assertIsNone(acl_entry)
 
@@ -937,22 +937,7 @@ class ACLResourceTest(BaseResourceTestCase):
     def test_ensure_acl_entries(self):
         """
         expect: successfully ensure that all acl entries exist for the given role,
-        both for global_acl and for all spaces in space_acl
         """
-
-        # first, create a second space
-        new_space = {
-            "_id": ObjectId(),
-            "name": "new_test_space",
-            "invisible": False,
-            "joinable": True,
-            "members": [CURRENT_ADMIN.username],
-            "admins": [CURRENT_ADMIN.username],
-            "invites": [],
-            "requests": [],
-            "files": [],
-        }
-        self.db.spaces.insert_one(new_space)
 
         acl_manager = ACL(self.db)
         acl_manager.ensure_acl_entries("guest")
@@ -962,42 +947,6 @@ class ACLResourceTest(BaseResourceTestCase):
         self.assertIsNotNone(acl_entry)
         self.assertEqual(acl_entry["role"], "guest")
         self.assertEqual(acl_entry["create_space"], False)
-
-        # check if the default space acl entry was created for all spaces
-        acl_entries = list(
-            self.db.space_acl.find({"role": "guest"}, projection={"_id": False})
-        )
-        self.assertEqual(len(acl_entries), 2)
-        self.assertIn(
-            {
-                "role": "guest",
-                "space": self.space_name,
-                "join_space": False,
-                "read_timeline": True,
-                "post": False,
-                "comment": False,
-                "read_wiki": False,
-                "write_wiki": False,
-                "read_files": False,
-                "write_files": False,
-            },
-            acl_entries,
-        )
-        self.assertIn(
-            {
-                "role": "guest",
-                "space": "new_test_space",
-                "join_space": False,
-                "read_timeline": True,
-                "post": False,
-                "comment": False,
-                "read_wiki": False,
-                "write_wiki": False,
-                "read_files": False,
-                "write_files": False,
-            },
-            acl_entries,
-        )
 
 
 class PostResourceTest(BaseResourceTestCase):
@@ -2654,7 +2603,6 @@ class ProfileResourceTest(BaseResourceTestCase):
 
         # also test that in this case an acl entry for "guest" was created if it not
         # already existed
-        # only global acl tested here because we have no spaces
         global_acl = self.db.global_acl.find_one({"role": "guest"})
         self.assertIsNotNone(global_acl)
 

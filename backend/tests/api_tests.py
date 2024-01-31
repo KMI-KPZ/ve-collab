@@ -287,7 +287,7 @@ class BaseApiTestCase(AsyncHTTPTestCase):
 
         self.test_space_acl_rules = {
             CURRENT_ADMIN.username: {
-                "role": "admin",
+                "username": CURRENT_ADMIN.username,
                 "space": self.test_space,
                 "join_space": True,
                 "read_timeline": True,
@@ -299,7 +299,7 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                 "write_files": True,
             },
             CURRENT_USER.username: {
-                "role": "user",
+                "username": CURRENT_USER.username,
                 "space": self.test_space,
                 "join_space": True,
                 "read_timeline": True,
@@ -327,7 +327,7 @@ class BaseApiTestCase(AsyncHTTPTestCase):
         self.db.profiles.insert_many(
             [value.copy() for value in self.test_profiles.values()]
         )
-        # pymongo modifies parameters in place (adds _id fields), like WHAT THE FUCK!? anyway, thats why we give it a copy...
+        # pymongo modifies parameters in place (adds _id fields), thats why we give it a copy...
         self.db.space_acl.insert_many(
             [value.copy() for value in self.test_space_acl_rules.values()]
         )
@@ -866,15 +866,15 @@ class SpaceACLHandlerTest(BaseApiTestCase):
             response["acl_entry"], self.test_space_acl_rules[CURRENT_ADMIN.username]
         )
 
-    def test_get_space_acl_other_role(self):
+    def test_get_space_acl_other_user(self):
         """
         expect: acl entry of CURRENT_USER instead of CURRENT_ADMIN
         """
 
         response = self.base_checks(
             "GET",
-            "/space_acl/get?space={}&role={}".format(
-                self.test_space, self.test_roles[CURRENT_USER.username]
+            "/space_acl/get?space={}&username={}".format(
+                self.test_space, CURRENT_USER.username
             ),
             True,
             200,
@@ -893,19 +893,6 @@ class SpaceACLHandlerTest(BaseApiTestCase):
         response = self.base_checks("GET", "/space_acl/get", False, 400)
 
         self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "space")
-
-    def test_get_space_acl_error_user_has_no_role(self):
-        """
-        expect: fail message because user has no role
-        """
-
-        self.db.profiles.delete_many({})
-
-        response = self.base_checks(
-            "GET", "/space_acl/get?space={}".format(self.test_space), False, 409
-        )
-
-        self.assertEqual(response["reason"], "user_has_no_role")
 
     def test_get_space_acl_all(self):
         """
@@ -961,7 +948,7 @@ class SpaceACLHandlerTest(BaseApiTestCase):
         """
 
         updated_acl_entry = {
-            "role": self.test_roles[CURRENT_USER.username],
+            "username": CURRENT_USER.username,
             "space": self.test_space,
             "join_space": True,
             "read_timeline": True,
@@ -976,13 +963,13 @@ class SpaceACLHandlerTest(BaseApiTestCase):
         self.base_checks("POST", "/space_acl/update", True, 200, body=updated_acl_entry)
 
         db_state = self.db.space_acl.find_one(
-            {"role": self.test_roles[CURRENT_USER.username]}
+            {"username": CURRENT_USER.username, "space": self.test_space}
         )
 
         # for equality checks, delete the id
         del db_state["_id"]
 
-        self.assertIn("role", db_state)
+        self.assertIn("username", db_state)
         self.assertEqual(db_state, updated_acl_entry)
 
     def test_post_space_acl_update_error_no_admin(self):
@@ -996,7 +983,7 @@ class SpaceACLHandlerTest(BaseApiTestCase):
 
         # have to include the update payload here, because acl checks for space admin, therefore space has to be included
         updated_acl_entry = {
-            "role": self.test_roles[CURRENT_USER.username],
+            "username": CURRENT_USER.username,
             "space": self.test_space,
             "join_space": True,
             "read_timeline": True,
@@ -1020,7 +1007,7 @@ class SpaceACLHandlerTest(BaseApiTestCase):
         """
 
         updated_acl_entry = {
-            "role": self.test_roles[CURRENT_USER.username],
+            "username": CURRENT_USER.username,
             "space": self.test_space,
             "join_space": True,
             "read_timeline": True,
@@ -1045,7 +1032,7 @@ class SpaceACLHandlerTest(BaseApiTestCase):
         """
 
         updated_acl_entry = {
-            "role": self.test_roles[CURRENT_USER.username],
+            "username": CURRENT_USER.username,
             "space": self.test_space,
             "join_space": "non_bool_value",
             "read_timeline": True,
@@ -1063,13 +1050,13 @@ class SpaceACLHandlerTest(BaseApiTestCase):
 
         self.assertEqual(response["reason"], NON_BOOL_VALUE_ERROR)
 
-    def test_post_space_acl_update_error_role_doesnt_exist(self):
+    def test_post_space_acl_update_error_username_doesnt_exist(self):
         """
-        expect: fail message because the role doesnt exist
+        expect: fail message because the username doesnt exist
         """
 
         updated_acl_entry = {
-            "role": "non_existent_role",
+            "username": "non_existent_username",
             "space": self.test_space,
             "join_space": True,
             "read_timeline": True,
@@ -1085,7 +1072,7 @@ class SpaceACLHandlerTest(BaseApiTestCase):
             "POST", "/space_acl/update", False, 409, body=updated_acl_entry
         )
 
-        self.assertEqual(response["reason"], "role_doesnt_exist")
+        self.assertEqual(response["reason"], "user_doesnt_exist")
 
     def test_post_space_acl_update_error_space_doesnt_exist(self):
         """
@@ -1093,7 +1080,7 @@ class SpaceACLHandlerTest(BaseApiTestCase):
         """
 
         updated_acl_entry = {
-            "role": self.test_roles[CURRENT_USER.username],
+            "username": CURRENT_USER.username,
             "space": "non_existing_space",
             "join_space": True,
             "read_timeline": True,
@@ -1113,11 +1100,11 @@ class SpaceACLHandlerTest(BaseApiTestCase):
 
     def test_post_space_acl_update_error_admin_immutable(self):
         """
-        expect: fail message because the admin role should not be modifiable
+        expect: fail message because the admin users should not be modifiable
         """
 
         updated_acl_entry = {
-            "role": "admin",
+            "username": CURRENT_ADMIN.username,
             "space": self.test_space,
             "join_space": True,
             "read_timeline": True,
@@ -1170,12 +1157,6 @@ class RoleACLIntegrationTest(BaseApiTestCase):
         global_acl_db_state = self.db.global_acl.find_one({"role": "guest"})
         self.assertNotEqual(global_acl_db_state, None)
 
-        # also expect a corresponding space acl entry to be created (in all spaces, i.e. only in the test space here)
-        space_acl_db_state = self.db.space_acl.find_one(
-            {"role": "guest", "space": self.test_space}
-        )
-        self.assertNotEqual(space_acl_db_state, None)
-
     def test_acl_entry_creation_on_role_creation(self):
         """
         expect: creating a new role via update/upsert should also create a corresponding acl entry
@@ -1189,17 +1170,11 @@ class RoleACLIntegrationTest(BaseApiTestCase):
         global_acl_db_state = self.db.global_acl.find_one({"role": "new_role"})
         self.assertNotEqual(global_acl_db_state, None)
 
-        # also expect a corresponding space acl entry to be created (in all spaces, i.e. only in the test space here)
-        space_acl_db_state = self.db.space_acl.find_one(
-            {"role": "new_role", "space": self.test_space}
-        )
-        self.assertNotEqual(space_acl_db_state, None)
-
     def test_cleanup_unused_acl_rules(self):
         """
         expect: removing all roles should cleanup the full acl
         according to the cleanup procedure removing any entries,
-        that no longer have a matching role or space
+        that no longer have a matching role or username/space
         """
 
         self.db.profiles.delete_many({})
@@ -2047,7 +2022,7 @@ class CommentHandlerTest(BaseApiTestCase):
 
         # revoke comment permission for this test
         self.db.space_acl.update_one(
-            {"role": self.test_roles[CURRENT_USER.username], "space": self.test_space},
+            {"username": CURRENT_USER.username, "space": self.test_space},
             {"$set": {"comment": False}},
         )
 
@@ -4281,9 +4256,9 @@ class SpaceHandlerTest(BaseApiTestCase):
         self.assertIn(CURRENT_ADMIN.username, db_state["admins"])
 
         # expect space_acl roles to be created
-        space_acl_records = self.db.space_acl.find({"space": new_space_name})
-        for role in self.test_roles.values():
-            self.assertTrue(any(role == record["role"] for record in space_acl_records))
+        space_acl_records = list(self.db.space_acl.find({"space": new_space_name}))
+        self.assertEqual((len(space_acl_records)), 1)
+        self.assertEqual(space_acl_records[0]["username"], CURRENT_ADMIN.username)
 
     def test_post_create_space_invisible(self):
         """
@@ -4402,12 +4377,6 @@ class SpaceHandlerTest(BaseApiTestCase):
             {"$pull": {"members": CURRENT_USER.username}, "$set": {"joinable": True}},
         )
 
-        # unset role permission to join any space
-        self.db.space_acl.update_one(
-            {"role": self.test_roles[CURRENT_USER.username], "space": self.test_space},
-            {"$set": {"join_space": False}},
-        )
-
         response = self.base_checks(
             "POST",
             "/spaceadministration/join?name={}".format(self.test_space),
@@ -4423,18 +4392,20 @@ class SpaceHandlerTest(BaseApiTestCase):
         db_state = self.db.spaces.find_one({"name": self.test_space})
         self.assertIn(CURRENT_USER.username, db_state["members"])
 
-    def test_post_join_space_role_permission(self):
-        """
-        expect: successfully join space because user has permission to join any space
-        """
+        # expect acl entry to be created
+        acl_entry = self.db.space_acl.find_one(
+            {"space": self.test_space, "username": CURRENT_USER.username}
+        )
+        self.assertIsNotNone(acl_entry)
 
-        # switch to user mode
-        options.test_admin = False
-        options.test_user = True
+    def test_post_join_space_admin(self):
+        """
+        expect: successfully join space because user is an admin and can join any space
+        """
 
         # remove user from member list first
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$pull": {"members": CURRENT_USER.username}}
+            {"name": self.test_space}, {"$pull": {"members": CURRENT_ADMIN.username}}
         )
 
         response = self.base_checks(
@@ -4450,7 +4421,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # expect user to be a member now
         db_state = self.db.spaces.find_one({"name": self.test_space})
-        self.assertIn(CURRENT_USER.username, db_state["members"])
+        self.assertIn(CURRENT_ADMIN.username, db_state["members"])
 
     def test_post_join_space_join_request(self):
         """
@@ -4465,12 +4436,6 @@ class SpaceHandlerTest(BaseApiTestCase):
         # remove user from member list first
         self.db.spaces.update_one(
             {"name": self.test_space}, {"$pull": {"members": CURRENT_USER.username}}
-        )
-
-        # revoke join permision for user
-        self.db.space_acl.update_one(
-            {"space": self.test_space, "role": self.test_roles[CURRENT_USER.username]},
-            {"$set": {"join_space": False}},
         )
 
         response = self.base_checks(
@@ -6897,7 +6862,7 @@ class TimelineHandlerTest(BaseApiTestCase):
 
         # revoke permission to view the timeline
         self.db.space_acl.update_one(
-            {"space": self.test_space, "role": self.test_roles[CURRENT_USER.username]},
+            {"space": self.test_space, "username": CURRENT_USER.username},
             {"$set": {"read_timeline": False}},
         )
 

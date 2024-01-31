@@ -1241,7 +1241,7 @@ class SpaceHandler(BaseHandler):
 
             # reject if user is not allowed to view files
             if not acl.space_acl.ask(
-                self.get_current_user_role(), space_name, "read_files"
+                self.current_user.username, space_name, "read_files"
             ):
                 self.set_status(403)
                 self.write({"success": False, "reason": "insufficient_permission"})
@@ -1309,11 +1309,11 @@ class SpaceHandler(BaseHandler):
                 self.write({"success": False, "reason": "space_name_already_exists"})
                 return
 
-            # also create default acl entry for all different roles
-            acl.space_acl.insert_admin(space_name)
-            for role in profile_manager.get_distinct_roles():
-                if role != "admin":
-                    acl.space_acl.insert_default(role, space_name)
+            # also create default acl entry for the space admin user
+            acl.space_acl.insert_admin(self.current_user.username, space_name)
+            # for role in profile_manager.get_distinct_roles():
+            #    if role != "admin":
+            #        acl.space_acl.insert_default(role, space_name)
 
         self.set_status(200)
         self.write({"success": True})
@@ -1345,9 +1345,7 @@ class SpaceHandler(BaseHandler):
             # or user doesnt have elevated permissions to join any space,
             # send join request instead of joining directly
             if not space_manager.is_space_directly_joinable(space_name):
-                if not acl.space_acl.ask(
-                    self.get_current_user_role(), space_name, "join_space"
-                ):
+                if not self.is_current_user_lionet_admin():
                     space_manager.join_space_request(
                         space_name, self.current_user.username
                     )
@@ -1358,6 +1356,10 @@ class SpaceHandler(BaseHandler):
 
             # user has permission to join spaces, directly add him as member
             space_manager.join_space(space_name, self.current_user.username)
+            if self.is_current_user_lionet_admin():
+                acl.space_acl.insert_admin(self.current_user.username, space_name)
+            else:
+                acl.space_acl.insert_default(self.current_user.username, space_name)
 
         self.set_status(200)
         self.write({"success": True, "join_type": "joined"})
@@ -1802,18 +1804,18 @@ class SpaceHandler(BaseHandler):
 
         with util.get_mongodb() as db:
             space_manager = Spaces(db)
-            profile_manager = Profiles(db)
             acl = ACL(db)
 
             space_name = space_manager.create_or_join_discussion_space(
                 wp_post, self.current_user.username
             )
 
-            for role in profile_manager.get_distinct_roles():
-                if role == "admin":
-                    acl.space_acl.insert_admin(space_name)
-                else:
-                    acl.space_acl.insert_default_discussion(role, space_name)
+            if self.is_current_user_lionet_admin():
+                acl.space_acl.insert_admin(self.current_user.username, space_name)
+            else:
+                acl.space_acl.insert_default_discussion(
+                    self.current_user.username, space_name
+                )
 
         return space_name
 
@@ -1889,7 +1891,7 @@ class SpaceHandler(BaseHandler):
 
             # reject if user is not allowed to add files
             if not acl.space_acl.ask(
-                self.get_current_user_role(), space_name, "write_files"
+                self.current_user.username, space_name, "write_files"
             ):
                 self.set_status(403)
                 self.write({"success": False, "reason": "insufficient_permission"})

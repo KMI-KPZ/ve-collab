@@ -397,15 +397,15 @@ class GlobalACLHandler(BaseHandler):
 
 
 class SpaceACLHandler(BaseHandler):
-    def resolve_inconsistency(self, role: str, space: str) -> dict:
+    def resolve_inconsistency(self, username: str, space: str) -> dict:
         """
-        resolve inconsistency problem when the role exists,
+        resolve inconsistency problem when the username exists,
         but no acl entry for it: insert the default rule and return it
         """
 
         logger.warning(
-            "Inconsistency Problem: the role '{}' exists, but no Global ACL entry for it. Inserting default rule".format(
-                role
+            "Inconsistency Problem: the username '{}' exists, but no space ACL entry for it. Inserting default rule".format(
+                username
             )
         )
 
@@ -414,22 +414,22 @@ class SpaceACLHandler(BaseHandler):
 
             # if the role is admin, set everything to true instead of false
             # technically this should never happen, but better safe than sorry
-            if role == "admin":
-                return acl.space_acl.insert_admin(space)
+            if self.is_current_user_lionet_admin():
+                return acl.space_acl.insert_admin(self.current_user.username, space)
             else:
-                return acl.space_acl.insert_default(role, space)
+                return acl.space_acl.insert_default(self.current_user.username, space)
 
     @auth_needed
     async def get(self, slug):
         """
         GET /space_acl/get
-            get the current user's role acl entry
+            get the current user's acl entry
 
             query param:
                 space: name of space
 
             optional query param:
-                role: name of role (get the entry of the specified role, requires admin privileges)
+                username: name of user (get the entry of the specified user instead, requires admin privileges)
 
             returns:
                 200 OK,
@@ -479,8 +479,8 @@ class SpaceACLHandler(BaseHandler):
             # instead of the current_user's one. but in that case,
             # we need to be either global or space admin
             with util.get_mongodb() as db:
-                optional_role = self.get_argument("role", None)
-                if optional_role:
+                optional_username = self.get_argument("username", None)
+                if optional_username:
                     try:
                         space_manager = Spaces(db)
                         if not (
@@ -508,33 +508,21 @@ class SpaceACLHandler(BaseHandler):
                             }
                         )
                         return
-                    role_to_query = optional_role
+                    username_to_query = optional_username
 
                 # no role query parameter was passed, use current_user instead
-                # since acl is role-based, we need to query for the current user's role
                 else:
-                    current_user_role = self.get_current_user_role()
-                    if not current_user_role:
-                        self.set_status(409)
-                        self.write(
-                            {
-                                "status": 409,
-                                "success": False,
-                                "reason": "user_has_no_role",
-                            }
-                        )
-                        return
-                    role_to_query = current_user_role
+                    username_to_query = self.current_user.username
 
-                # after determining which role to query for, request the acl entry
+                # after determining which user to query for, request the acl entry
                 acl_entry = None
                 acl = ACL(db)
-                acl_entry = acl.space_acl.get(role_to_query, space_name)
+                acl_entry = acl.space_acl.get(username_to_query, space_name)
 
-                # inconsistency problem: the role exists, but no acl entry.
+                # inconsistency problem: the username exists, but no acl entry.
                 # construct an acl entry that has all permissions set to false
                 if not acl_entry:
-                    acl_entry = self.resolve_inconsistency(role_to_query, space_name)
+                    acl_entry = self.resolve_inconsistency(username_to_query, space_name)
 
                 self.set_status(200)
                 self.write(
@@ -596,7 +584,7 @@ class SpaceACLHandler(BaseHandler):
             an acl entry is of the following structure in the http body:
 
             {
-                "role": "<role>",
+                "username": "<username>",
                 "space": "<space>",
                 "join_space": True/False,
                 "read_timeline": True/False,
@@ -637,9 +625,9 @@ class SpaceACLHandler(BaseHandler):
                     )
                     return
 
-                # check if http body only contains boolean values, except for the role and space attribute
+                # check if http body only contains boolean values, except for the username and space attribute
                 for key in http_body:
-                    if key != "role" and key != "space":
+                    if key != "username" and key != "space":
                         if not isinstance(http_body[key], bool):
                             self.set_status(400)
                             self.write(
@@ -683,21 +671,23 @@ class SpaceACLHandler(BaseHandler):
                     )
                     return
 
-                # reject setting an entry of a role that does not exist to prevent dangling entries
+                # reject setting an entry of a user that does not exist to prevent dangling entries
                 profile_manager = Profiles(db)
-                if not profile_manager.check_role_exists(http_body["role"]):
+                try:
+                    profile_manager.get_profile(http_body["username"], projection={"_id": True})
+                except ProfileDoesntExistException:
                     self.set_status(409)
                     self.write(
                         {
                             "status": 409,
                             "success": False,
-                            "reason": "role_doesnt_exist",
+                            "reason": "user_doesnt_exist",
                         }
                     )
                     return
 
-                # forbid any modifications to the admin role to avoid deadlocks
-                if http_body["role"] == "admin":
+                # forbid any modifications to admin users to avoid deadlocks
+                if profile_manager.get_role(http_body["username"]) == "admin":
                     self.set_status(409)
                     self.write(
                         {
