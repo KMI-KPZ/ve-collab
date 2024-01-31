@@ -410,13 +410,9 @@ class Spaces:
             },
         )
 
-    def decline_space_invite(self, space_name: str, username: str) -> None:
+    def _remove_user_from_invite_list(self, space_name: str, username: str) -> None:
         """
-        the given user declines his invite into the given space,
-        therefore he is removed from the invite list, but not added to the members
-        obviously.
-        :param space_name: the space in which the invitation is declined
-        :param username: the user who declines his invite
+        helper function to remove a user from the invite list of a space
         """
 
         # pull user from pending invites to decline (dont add to members obviously)
@@ -427,6 +423,29 @@ class Spaces:
         # the filter didnt match any document, so the space doesnt exist
         if update_result.matched_count != 1:
             raise SpaceDoesntExistError()
+
+    def decline_space_invite(self, space_name: str, username: str) -> None:
+        """
+        the given user declines his invite into the given space,
+        therefore he is removed from the invite list, but not added to the members
+        obviously.
+        :param space_name: the space in which the invitation is declined
+        :param username: the user who declines his invite
+        """
+
+        # pull user from pending invites to decline (dont add to members obviously)
+        self._remove_user_from_invite_list(space_name, username)
+
+    def revoke_space_invite(self, space_name: str, username: str) -> None:
+        """
+        the invitation that was initially sent to the given user is revoked,
+        removing him from the invites list as if nothing happened.
+        :param space_name: the space in which the invitation is revoked
+        :param username: the user whose invitation is revoked
+        """
+
+        # pull use from pending invites
+        self._remove_user_from_invite_list(space_name, username)
 
     def accept_join_request(self, space_name: str, username: str) -> None:
         """

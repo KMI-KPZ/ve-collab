@@ -5204,6 +5204,166 @@ class SpaceHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], USER_NOT_INVITED_ERROR)
 
+    def test_post_space_revoke_invite_global_admin(self):
+        """
+        expect: successfully revoke invite of a user, permission is granted
+        because user is global admin
+        """
+
+        # pull user from space admins to trigger global admin privileges
+        # and remove other user from space and set him as invited
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {
+                    "admins": CURRENT_ADMIN.username,
+                    "members": CURRENT_USER.username,
+                },
+                "$push": {"invites": CURRENT_USER.username},
+            },
+        )
+
+        self.base_checks(
+            "POST",
+            "/spaceadministration/revoke_invite?name={}&user={}".format(
+                self.test_space, CURRENT_USER.username
+            ),
+            True,
+            200,
+        )
+
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertNotIn(CURRENT_USER.username, db_state["invites"])
+        # for sanity, check that user is not added elsewhere
+        self.assertNotIn(CURRENT_USER.username, db_state["members"])
+        self.assertNotIn(CURRENT_USER.username, db_state["requests"])
+
+    def test_post_space_revoke_invite_space_admin(self):
+        """
+        expect: successfully revoke invite of a user, permission is granted
+        because user is space admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # remove other user from member and set him as invited
+        # and set current user as space admin
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$set": {"admins": [CURRENT_USER.username]},
+                "$pull": {"members": CURRENT_ADMIN.username},
+                "$push": {"invites": CURRENT_ADMIN.username},
+            },
+        )
+
+        self.base_checks(
+            "POST",
+            "/spaceadministration/revoke_invite?name={}&user={}".format(
+                self.test_space, CURRENT_ADMIN.username
+            ),
+            True,
+            200,
+        )
+
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertNotIn(CURRENT_ADMIN.username, db_state["invites"])
+        # for sanity, check that user is not added elsewhere
+        self.assertNotIn(CURRENT_ADMIN.username, db_state["members"])
+        self.assertNotIn(CURRENT_ADMIN.username, db_state["requests"])
+
+    def test_post_space_revoke_invite_error_space_doesnt_exist(self):
+        """
+        expect: fail message because space doesnt exist
+        """
+
+        # set user as invited
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {"members": CURRENT_USER.username},
+                "$push": {"invites": CURRENT_USER.username},
+            },
+        )
+
+        response = self.base_checks(
+            "POST",
+            "/spaceadministration/revoke_invite?name={}&user={}".format(
+                "not_existing_space", CURRENT_USER.username
+            ),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], SPACE_DOESNT_EXIST_ERROR)
+
+    def test_post_space_revoke_invite_error_user_already_member(self):
+        """
+        expect: fail message because user is already a member of the space
+        """
+
+        response = self.base_checks(
+            "POST",
+            "/spaceadministration/revoke_invite?name={}&user={}".format(
+                self.test_space, CURRENT_USER.username
+            ),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], USER_ALREADY_MEMBER_ERROR)
+
+    def test_post_space_revoke_invite_error_user_not_invited(self):
+        """
+        expect: fail message because user wasnt event invited into the space
+        """
+
+        # pull user from members, but dont invite him either
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {"members": CURRENT_USER.username},
+            },
+        )
+
+        response = self.base_checks(
+            "POST",
+            "/spaceadministration/revoke_invite?name={}&user={}".format(
+                self.test_space, CURRENT_USER.username
+            ),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], USER_NOT_INVITED_ERROR)
+
+    def test_post_space_revoke_invite_error_insufficient_permission(self):
+        """
+        expect: fail message because user is neither global admin nor space admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # remove other user from member and set him as invited
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {"members": CURRENT_ADMIN.username},
+                "$push": {"invites": CURRENT_ADMIN.username},
+            },
+        )
+
+        response = self.base_checks(
+            "POST",
+            "/spaceadministration/revoke_invite?name={}&user={}".format(
+                self.test_space, CURRENT_ADMIN.username
+            ),
+            False,
+            403,
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
     def test_post_space_accept_request_global_admin(self):
         """
         expect: successfully accept join request of a user, making him a member

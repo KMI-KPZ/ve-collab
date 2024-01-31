@@ -3939,6 +3939,40 @@ class SpaceResourceTest(BaseResourceTestCase):
             CURRENT_USER.username,
         )
 
+    def test_revoke_space_invite(self):
+        """
+        expect: successfully remove user from invites list
+        """
+
+        # manually add user to invites list
+        self.db.spaces.update_one(
+            {"name": self.space_name},
+            {"$push": {"invites": CURRENT_USER.username}},
+        )
+
+        space_manager = Spaces(self.db)
+        space_manager.revoke_space_invite(self.space_name, CURRENT_USER.username)
+
+        space = self.db.spaces.find_one({"name": self.space_name})
+        self.assertNotIn(CURRENT_USER.username, space["invites"])
+        # for sanity, check that user is not added elsewhere
+        self.assertNotIn(CURRENT_USER.username, space["requests"])
+        self.assertNotIn(CURRENT_USER.username, space["members"])
+
+    def test_revoke_space_invite_error_space_doesnt_exist(self):
+        """
+        expect: SpaceDoesntExistError is raised because no
+        space with this name exists
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            SpaceDoesntExistError,
+            space_manager.revoke_space_invite,
+            "non_existing_space",
+            CURRENT_USER.username,
+        )
+
     def test_accept_join_request(self):
         """
         expect: successfully accept join request, i.e. get added to members list

@@ -385,9 +385,9 @@ class SpaceHandler(BaseHandler):
 
             http body:
                 {
-                    "description": "<str>", 
+                    "description": "<str>",
                     "picture": {
-                        "payload": "<base64_encoded_image>", 
+                        "payload": "<base64_encoded_image>",
                         "type": "<image/jpeg|image/png|...>"
                     }
                 }
@@ -726,9 +726,7 @@ class SpaceHandler(BaseHandler):
         elif slug == "space_information":
             http_body = json.loads(self.request.body)
             space_description = (
-                http_body["description"]
-                if "description" in http_body
-                else None
+                http_body["description"] if "description" in http_body else None
             )
 
             if "picture" in http_body:
@@ -764,6 +762,17 @@ class SpaceHandler(BaseHandler):
 
         elif slug == "decline_invite":
             self.decline_space_invite(space_name)
+            return
+
+        elif slug == "revoke_invite":
+            try:
+                username = self.get_argument("user")
+            except tornado.web.MissingArgumentError as e:
+                self.set_status(400)
+                self.write({"success": False, "reason": "missing_key:user"})
+                return
+
+            self.revoke_space_invite(space_name, username)
             return
 
         elif slug == "accept_request":
@@ -1587,6 +1596,58 @@ class SpaceHandler(BaseHandler):
 
             # decline the invite
             space_manager.decline_space_invite(space_name, self.current_user.username)
+
+            self.set_status(200)
+            self.write({"success": True})
+
+    def revoke_space_invite(self, space_name: str, username: str) -> None:
+        """
+        space admin or global admin revokes the invitation of a user
+        """
+
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
+            space = space_manager.get_space(
+                space_name,
+                projection={
+                    "_id": False,
+                    "invites": True,
+                    "admins": True,
+                    "members": True,
+                },
+            )
+
+            # abort if space doesnt exist
+            if not space:
+                self.set_status(409)
+                self.write({"success": False, "reason": "space_doesnt_exist"})
+                return
+
+            # reject if user is already a member of the space
+            if username in space["members"]:
+                self.set_status(409)
+                self.write({"success": False, "reason": "user_already_member"})
+                return
+
+            # abort if user wasn't even invited into space in first place
+            if username not in space["invites"]:
+                self.set_status(409)
+                self.write(
+                    {"success": False, "reason": "user_is_not_invited_into_space"}
+                )
+                return
+
+            # abort if user is neither space nor global admin
+            if not (
+                self.current_user.username in space["admins"]
+                or self.get_current_user_role() == "admin"
+            ):
+                self.set_status(403)
+                self.write({"success": False, "reason": "insufficient_permission"})
+                return
+
+            # revoke the invite, i.e. remove the user from the invites list
+            space_manager.revoke_space_invite(space_name, username)
 
             self.set_status(200)
             self.write({"success": True})

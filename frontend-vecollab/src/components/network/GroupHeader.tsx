@@ -217,6 +217,16 @@ export default function GroupHeader() {
         });
     }
 
+    function revokeInvite(inviteUser: string) {
+        fetchPOST(
+            `/spaceadministration/revoke_invite?name=${space.name}&user=${inviteUser}`,
+            {},
+            session!.accessToken
+        ).then((response) => {
+            mutate();
+        });
+    }
+
     return (
         <>
             {isLoading ? (
@@ -564,6 +574,7 @@ export default function GroupHeader() {
                                                                     size={20}
                                                                     onClick={(e) => {
                                                                         e.preventDefault();
+                                                                        revokeInvite(inviteUser);
                                                                     }}
                                                                     className="cursor-pointer"
                                                                 />
