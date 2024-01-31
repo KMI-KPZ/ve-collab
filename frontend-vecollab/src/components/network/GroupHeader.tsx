@@ -420,6 +420,11 @@ export default function GroupHeader() {
                                     </div>
                                 </div>
                                 <div tabname="Anfragen">
+                                    {space.requests.length === 0 && (
+                                        <div className="mx-4 my-4 text-gray-600">
+                                            Keine Anfragen vorhanden
+                                        </div>
+                                    )}
                                     <div className="divide-y">
                                         {!snippetsLoading &&
                                             space.requests.map((requestUser, index) => (
@@ -524,6 +529,11 @@ export default function GroupHeader() {
                                         <div className={'mb-1 font-bold text-slate-900 text-lg'}>
                                             ausstehende Einladungen
                                         </div>
+                                        {space.invites.length === 0 && (
+                                            <div className="mx-4 my-4 text-gray-600">
+                                                Keine ausstehenden Einladungen
+                                            </div>
+                                        )}
                                         <div className="divide-y">
                                             {!snippetsLoading &&
                                                 space.invites.map((inviteUser, index) => (
