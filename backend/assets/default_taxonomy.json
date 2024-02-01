@@ -1,0 +1,139 @@
+{
+    "taxonomy": [
+        {
+            "parent": 11,
+            "droppable": false,
+            "text": "2.1 Einstieg",
+            "data": {
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/potenziale/"
+            },
+            "id": 21
+        },
+        {
+            "parent": 11,
+            "droppable": false,
+            "text": "2.2 21st Century Skills",
+            "data": {
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/2-2-21st-century-skills/"
+            },
+            "id": 22
+        },
+        {
+            "parent": 11,
+            "droppable": false,
+            "text": "2.3 Blick in die Forschung",
+            "data": {
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/elementor-849/"
+            },
+            "id": 23
+        },
+        {
+            "parent": 11,
+            "droppable": false,
+            "text": "2.4 Schlussreflexion",
+            "data": {
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/2-4-potenziale-schlussreflexion/"
+            },
+            "id": 24
+        },
+        {
+            "id": 3,
+            "parent": 1,
+            "droppable": false,
+            "text": "1.1 Herausforderungen in virtuellen Austauschen",
+            "data": {
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/herausforderungen-in-virtuellen-austauschen/"
+            }
+        },
+        {
+            "parent": 1,
+            "droppable": false,
+            "text": "1.2 Herausforderungen als Chance",
+            "data": {
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/1-2-herausforderungen-in-va/"
+            },
+            "id": 25
+        },
+        {
+            "id": 8,
+            "parent": 0,
+            "droppable": true,
+            "text": "Was ist ein VE",
+            "data": {
+                "slug": "Was%20ist%20ein%20VE"
+            }
+        },
+        {
+            "parent": 0,
+            "droppable": true,
+            "text": "Potenziale",
+            "id": 11
+        },
+        {
+            "id": 1,
+            "parent": 0,
+            "droppable": true,
+            "text": "Herausforderungen"
+        },
+        {
+            "parent": 0,
+            "droppable": true,
+            "text": "fachbezogene VEs",
+            "id": 12
+        },
+        {
+            "parent": 0,
+            "droppable": true,
+            "text": "Partnersuche",
+            "id": 13
+        },
+        {
+            "parent": 0,
+            "droppable": true,
+            "text": "VE-Planung",
+            "id": 14
+        },
+        {
+            "parent": 0,
+            "droppable": true,
+            "text": "Evaluation",
+            "id": 15
+        },
+        {
+            "parent": 0,
+            "droppable": true,
+            "text": "Datenschutz",
+            "id": 16
+        },
+        {
+            "parent": 0,
+            "droppable": true,
+            "text": "Kollaboratives Arbeiten",
+            "id": 17
+        },
+        {
+            "parent": 0,
+            "droppable": true,
+            "text": "Digitale Medien & Werkzeuge",
+            "id": 18
+        },
+        {
+            "parent": 0,
+            "droppable": true,
+            "text": "kulturelle Aspekte",
+            "id": 19
+        },
+        {
+            "parent": 0,
+            "droppable": true,
+            "text": "sprachliche Aspekte",
+            "id": 20
+        }
+    ]
+}
