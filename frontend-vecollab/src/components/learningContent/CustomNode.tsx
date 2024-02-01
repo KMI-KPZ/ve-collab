@@ -223,7 +223,7 @@ export const CustomNode: React.FC<Props> = (props) => {
                             </li>
                             <li>
                                 audience: Zielgruppe (Educational Audience Role von LRMI, vermutl.
-                                automatisch "teacher")
+                                automatisch teacher)
                             </li>
                             <li>teaches: erreichbare Kompetenzen</li>
                             <li>assesses: feststellbare Kompetenzen (ggf. gleich mit teaches)</li>
