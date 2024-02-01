@@ -46,7 +46,15 @@ class AlreadyRequestedJoinError(Exception):
     pass
 
 
+class NotRequestedJoinError(Exception):
+    pass
+
+
 class UserNotMemberError(Exception):
+    pass
+
+
+class UserNotInvitedError(Exception):
     pass
 
 
@@ -103,5 +111,41 @@ class PlanDoesntExistError(Exception):
 
 class PlanAlreadyExistsError(Exception):
     """a VEPlan with this _id already exists"""
+
+    pass
+
+
+class NoReadAccessError(Exception):
+    """a user has no read access to a VEPlan"""
+
+    pass
+
+
+class NoWriteAccessError(Exception):
+    """a user has no write access to a VEPlan"""
+
+    pass
+
+
+class InvitationDoesntExistError(Exception):
+    """The requested ve invitation doesn't exist"""
+
+    pass
+
+
+class NotificationDoesntExistError(Exception):
+    """The requested notification doesn't exist"""
+
+    pass
+
+
+class RoomDoesntExistError(Exception):
+    """the requested chatroom doesn't exist"""
+
+    pass
+
+
+class MessageDoesntExistError(Exception):
+    """the requested message doesn't exist"""
 
     pass

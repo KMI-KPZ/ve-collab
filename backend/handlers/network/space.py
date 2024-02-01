@@ -18,6 +18,7 @@ from resources.network.space import (
     UserNotMemberError,
 )
 from resources.network.wordpress import Wordpress
+import util
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +27,11 @@ class SpaceHandler(BaseHandler):
     """
     handle existing and creation of new spaces
     """
+
+    def options(self, slug):
+        # no body
+        self.set_status(200)
+        self.finish()
 
     @auth_needed
     def get(self, slug):
@@ -55,6 +61,17 @@ class SpaceHandler(BaseHandler):
                 403 Forbidden
                 {"success": False,
                  "reason": "insufficient_permission"}
+
+        GET /spaceadministration/my
+            (view all spaces that current user is a member of)
+            return:
+                200 OK,
+                {"success": True,
+                 "spaces": [space1, space2,...]}
+
+                401 Unauthorized
+                {"success": False,
+                 "reason": "no_logged_in_user"}
 
         GET /spaceadministration/info
             (view details about one space, if it is invisible, you need to be a member of the space
@@ -184,6 +201,10 @@ class SpaceHandler(BaseHandler):
         elif slug == "list_all":
             self.list_spaces()
             return
+        
+        elif slug == "my":
+            self.list_personal_spaces()
+            return
 
         elif slug == "info":
             try:
@@ -254,6 +275,7 @@ class SpaceHandler(BaseHandler):
             query param:
                 "name" : space name to create, mandatory argument
                 "invisible" : boolean to mark if space should be visible to users in overview or not, optional argument, default False
+                "joinable" : boolean to mark if space should be joinable to user or only upon request, optional argument, default True
 
             returns:
                 200 OK,
@@ -533,6 +555,35 @@ class SpaceHandler(BaseHandler):
                 {"success": False,
                  "reason": "space_doesnt_exist"}
 
+        POST /spaceadministration/toggle_joinability
+            (toggle joinable state of space, i.e. true --> false, false --> true, requires space admin or global admin privileges)
+            query param:
+                "name" : the space which to trigger
+
+            returns:
+                200 OK,
+                {"success": True}
+
+                400 Bad Request
+                {"success": False,
+                 "reason": missing_key:name}
+
+                400 Bad Request
+                {"success": False,
+                 "reason": "space_doesnt_exist"}
+
+                401 Unauthorized
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                {"success": False,
+                 "reason": "insufficient_permission"}
+
+                409 Conflict
+                {"success": False,
+                 "reason": "space_doesnt_exist"}
+
         POST /spaceadministration/join_discussion
             start or join the space that discusses about a wordpress post
             query param:
@@ -606,7 +657,7 @@ class SpaceHandler(BaseHandler):
             # explicit bool cast in case user puts any string or int value that is not already "true" (will be interpreted as true then)
             invisible = bool(invisible)
 
-            joinable = self.get_argument("joinable", False)
+            joinable = self.get_argument("joinable", True)
             if joinable == "false":
                 joinable = False
             joinable = bool(joinable)
@@ -679,6 +730,10 @@ class SpaceHandler(BaseHandler):
             self.toggle_space_visibility(space_name)
             return
 
+        elif slug == "toggle_joinability":
+            self.toggle_space_joinability(space_name)
+            return
+
         elif slug == "join_discussion":
             try:
                 wp_post_id = self.get_argument("wp_post_id")
@@ -738,6 +793,14 @@ class SpaceHandler(BaseHandler):
                 401 Unauthorized
                 {"success": False,
                  "reason": "no_logged_in_user"}
+
+                409 Conflict
+                {"success": False,
+                 "reason": "space_doesnt_exist"}
+                
+                409 Conflict
+                {"success": False,
+                 "reason": "no_other_admins_left"}
 
         DELETE /spaceadministration/kick
             (kick a user from the space, requires being global or space admin)
@@ -930,7 +993,8 @@ class SpaceHandler(BaseHandler):
             self.write({"success": False, "reason": "insufficient_permission"})
             return
 
-        with Spaces() as space_manager:
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
             spaces = space_manager.get_all_spaces()
 
         self.set_status(200)
@@ -946,10 +1010,24 @@ class SpaceHandler(BaseHandler):
             - you are a member of (no matter visibility setting)
         """
 
-        with Spaces() as space_manager:
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
             spaces = space_manager.get_all_spaces_visible_to_user(
                 self.current_user.username
             )
+
+        self.set_status(200)
+        self.write(self.json_serialize_response({"success": True, "spaces": spaces}))
+        return
+    
+    def list_personal_spaces(self) -> None:
+        """
+        list all spaces that the current user is a member of
+        """
+
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
+            spaces = space_manager.get_spaces_of_user(self.current_user.username)
 
         self.set_status(200)
         self.write(self.json_serialize_response({"success": True, "spaces": spaces}))
@@ -961,7 +1039,8 @@ class SpaceHandler(BaseHandler):
         if it is invisible, you need to be a member or an admin to be allowed to see it
         """
 
-        with Spaces() as space_manager:
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
             space = space_manager.get_space(space_name)
 
         if not space:
@@ -987,7 +1066,8 @@ class SpaceHandler(BaseHandler):
         get all pending invites into spaces for the current user
         """
 
-        with Spaces() as space_manager:
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
             pending_invites = space_manager.get_space_invites_of_user(
                 self.current_user.username
             )
@@ -1003,7 +1083,8 @@ class SpaceHandler(BaseHandler):
         """
         view invites for the given space (requires space admin or global admin privileges)
         """
-        with Spaces() as space_manager:
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
             space = space_manager.get_space(
                 space_name,
                 projection={"_id": False, "admins": True, "invites": True},
@@ -1034,7 +1115,8 @@ class SpaceHandler(BaseHandler):
         view join requests for the given space (requires space admin or global admin privileges)
         """
 
-        with Spaces() as space_manager:
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
             space = space_manager.get_space(
                 space_name,
                 projection={"_id": False, "admins": True, "requests": True},
@@ -1069,8 +1151,10 @@ class SpaceHandler(BaseHandler):
         file from the `StaticFileHandler` on the /uploads endpoint by using
         /uploads/<space_name>/<filename>
         """
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
+            acl = ACL(db)
 
-        with (Spaces() as space_manager, ACL() as acl):
             # reject if user is not a member or space doesnt exist at all
             try:
                 if not space_manager.check_user_is_member(
@@ -1104,8 +1188,11 @@ class SpaceHandler(BaseHandler):
         create a new space if it does not already exist and if the
         current user has sufficient permissions
         """
+        with util.get_mongodb() as db:
+            profile_manager = Profiles(db)
+            space_manager = Spaces(db)
+            acl = ACL(db)
 
-        with (Spaces() as space_manager, Profiles() as profile_manager, ACL() as acl):
             # check if the user has permission
             if not acl.global_acl.ask(self.get_current_user_role(), "create_space"):
                 self.set_status(403)
@@ -1126,6 +1213,8 @@ class SpaceHandler(BaseHandler):
                 "invites": [],
                 "requests": [],
                 "files": [],
+                "space_pic": "default_group_pic.jpg",
+                "space_description": "",
             }
 
             try:
@@ -1164,7 +1253,10 @@ class SpaceHandler(BaseHandler):
         if not, let him send a join request instead
         """
 
-        with (Spaces() as space_manager, ACL() as acl):
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
+            acl = ACL(db)
+
             try:
                 # reject if the user is already a space member
                 if space_manager.check_user_is_member(
@@ -1196,15 +1288,16 @@ class SpaceHandler(BaseHandler):
             # user has permission to join spaces, directly add him as member
             space_manager.join_space(space_name, self.current_user.username)
 
-            self.set_status(200)
-            self.write({"success": True, "join_type": "joined"})
+        self.set_status(200)
+        self.write({"success": True, "join_type": "joined"})
 
     def add_admin_to_space(self, space_name: str, username: str) -> None:
         """
         add another user as a space admin to the space, requires space admin or global admin to perform this operation
         """
 
-        with Spaces() as space_manager:
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
             space = space_manager.get_space(
                 space_name, projection={"_id": False, "members": True, "admins": True}
             )
@@ -1253,7 +1346,8 @@ class SpaceHandler(BaseHandler):
         requires space admin or global admin privileges
         """
 
-        with Spaces() as space_manager:
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
             # check if user is either space or global admin
             try:
                 if not (
@@ -1291,7 +1385,9 @@ class SpaceHandler(BaseHandler):
         """
         invite a user into the space
         """
-        with Spaces() as space_manager:
+
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
             space = space_manager.get_space(
                 space_name, projection={"_id": False, "members": True, "admins": True}
             )
@@ -1327,7 +1423,9 @@ class SpaceHandler(BaseHandler):
         """
         current user accept invite into space
         """
-        with Spaces() as space_manager:
+
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
             space = space_manager.get_space(
                 space_name, projection={"_id": False, "invites": True}
             )
@@ -1357,7 +1455,8 @@ class SpaceHandler(BaseHandler):
         current user declines invite into space
         """
 
-        with Spaces() as space_manager:
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
             space = space_manager.get_space(
                 space_name, projection={"_id": False, "invites": True}
             )
@@ -1387,7 +1486,8 @@ class SpaceHandler(BaseHandler):
         space admin or global admin accepts the request of a user to join the space
         """
 
-        with Spaces() as space_manager:
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
             space = space_manager.get_space(
                 space_name, projection={"_id": False, "requests": True, "admins": True}
             )
@@ -1424,7 +1524,8 @@ class SpaceHandler(BaseHandler):
         space admin or global admin rejects join request of a user
         """
 
-        with Spaces() as space_manager:
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
             space = space_manager.get_space(
                 space_name, projection={"_id": False, "requests": True, "admins": True}
             )
@@ -1461,7 +1562,8 @@ class SpaceHandler(BaseHandler):
         toggle invisible state of space depending on current state, i.e. true --> false, false --> true
         """
 
-        with Spaces() as space_manager:
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
             try:
                 # abort if user is neither space nor global admin
                 if not (
@@ -1484,6 +1586,35 @@ class SpaceHandler(BaseHandler):
             self.set_status(200)
             self.write({"success": True})
 
+    def toggle_space_joinability(self, space_name: str) -> None:
+        """
+        toggle joinable state of space depending on current state, i.e. true --> false, false --> true
+        """
+
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
+            try:
+                # abort if user is neither space nor global admin
+                if not (
+                    space_manager.check_user_is_space_admin(
+                        space_name, self.current_user.username
+                    )
+                    or self.is_current_user_lionet_admin()
+                ):
+                    self.set_status(403)
+                    self.write({"success": False, "reason": "insufficient_permission"})
+                    return
+            except SpaceDoesntExistError:
+                self.set_status(409)
+                self.write({"success": False, "reason": "space_doesnt_exist"})
+                return
+
+            # toggle joinability
+            space_manager.toggle_joinability(space_name)
+
+            self.set_status(200)
+            self.write({"success": True})
+
     def _create_or_join_discussion_space(self, wordpress_post_id: str) -> None:
         """
         helper function the create or join the discussion space about the wordpress post.
@@ -1498,12 +1629,15 @@ class SpaceHandler(BaseHandler):
         except Exception:
             raise
 
-        with Spaces() as space_manager:
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
+            profile_manager = Profiles(db)
+            acl = ACL(db)
+
             space_name = space_manager.create_or_join_discussion_space(
                 wp_post, self.current_user.username
             )
 
-        with (ACL() as acl, Profiles() as profile_manager):
             for role in profile_manager.get_distinct_roles():
                 if role == "admin":
                     acl.space_acl.insert_admin(space_name)
@@ -1565,8 +1699,10 @@ class SpaceHandler(BaseHandler):
         :param file_name: the name of the new file
         :param file_content: the body of the file as raw bytes
         """
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
+            acl = ACL(db)
 
-        with (Spaces() as space_manager, ACL() as acl):
             # reject if user is not a member or space doesnt exist at all
             try:
                 if not space_manager.check_user_is_member(
@@ -1596,15 +1732,16 @@ class SpaceHandler(BaseHandler):
                 self.current_user.username,
             )
 
-            self.set_status(200)
-            self.write({"success": True})
+        self.set_status(200)
+        self.write({"success": True})
 
     def user_leave(self, space_name: str) -> None:
         """
         let the current user leave the space
         """
 
-        with Spaces() as space_manager:
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
             try:
                 space_manager.leave_space(space_name, self.current_user.username)
             except SpaceDoesntExistError:
@@ -1626,10 +1763,13 @@ class SpaceHandler(BaseHandler):
         global admin privileges are required to prevent space admins from kicking each other
         """
 
-        with Spaces() as space_manager:
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
             try:
                 # in order to kick an admin from the space,
                 # you have to be global admin (prevents space admins from kicking each other)
+                # TODO reject kick if user is the only admin left, i.e. if he is the last admin
+                # he cannot be kicked unless another admin is added first
                 if space_manager.check_user_is_space_admin(space_name, user_name):
                     if not self.is_current_user_lionet_admin():
                         self.set_status(403)
@@ -1678,7 +1818,8 @@ class SpaceHandler(BaseHandler):
         to prevent space admins from degrading each other
         """
 
-        with Spaces() as space_manager:
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
             # abort if current user is no global admin
             if not (self.is_current_user_lionet_admin()):
                 self.set_status(403)
@@ -1697,12 +1838,19 @@ class SpaceHandler(BaseHandler):
                 self.set_status(409)
                 self.write({"success": False, "reason": "user_not_space_admin"})
                 return
+            except OnlyAdminError:
+                # TODO test this case
+                self.set_status(409)
+                self.write({"success": False, "reason": "no_other_admins_left"})
+                return
 
     def delete_space(self, space_name: str) -> None:
         """
         delete a space, requires space admin or global admin privileges
         """
-        with Spaces() as space_manager:
+
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
             try:
                 # abort if user is neither space nor global admin
                 if not (
@@ -1734,7 +1882,8 @@ class SpaceHandler(BaseHandler):
         if isinstance(file_id, str):
             file_id = ObjectId(file_id)
 
-        with Spaces() as space_manager:
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
             space = space_manager.get_space(
                 space_name, projection={"_id": False, "files": True, "admins": True}
             )

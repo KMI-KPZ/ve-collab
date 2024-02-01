@@ -5,8 +5,8 @@ interface Props {
 
 export default function MainLearningContentLayout({ previewChildren, contentChildren }: Props) {
     return (
-        <div className={'flex h-screen'}>
-            <div className={'w-1/4 pr-2 h-screen border-r border-gray-400 overflow-hidden'}>
+        <div className={'flex h-full'}>
+            <div className={'w-1/4 pr-2 h-full border-r border-gray-400 overflow-hidden'}>
                 <div className={'mx-4 mt-10 mb-4 text-5xl font-bold'}>
                     <h1>Inhalte</h1>
                 </div>
@@ -14,7 +14,7 @@ export default function MainLearningContentLayout({ previewChildren, contentChil
                     {previewChildren}
                 </ul>
             </div>
-            <div className={"w-3/4 h-screen border-r overflow-y-auto content-scrollbar"}>
+            <div className={"w-3/4 h-full border-r overflow-y-auto content-scrollbar"}>
                 <div className={"mt-10"}>
                     {contentChildren}
                 </div>

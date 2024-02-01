@@ -6,6 +6,7 @@ import tornado.web
 import global_vars
 from handlers.base_handler import BaseHandler
 from resources.network.profile import Profiles
+import util
 
 
 class LoginHandler(tornado.web.RequestHandler, metaclass=ABCMeta):
@@ -26,7 +27,7 @@ class LoginHandler(tornado.web.RequestHandler, metaclass=ABCMeta):
         self.redirect(url)
 
 
-class LoginCallbackHandler(BaseHandler, metaclass=ABCMeta):
+class LoginCallbackHandler(tornado.web.RequestHandler, metaclass=ABCMeta):
 
     async def get(self):
         # keycloak redirects you back here with this code
@@ -48,15 +49,18 @@ class LoginCallbackHandler(BaseHandler, metaclass=ABCMeta):
 
         # ensure that a profile exists for the user
         # if not, create one
-        with Profiles() as profile_manager:
+        with util.get_mongodb() as db:
+            profile_manager = Profiles(db)
             profile_manager.ensure_profile_exists(
                 token_info["preferred_username"],
                 token_info["given_name"],
                 token_info["family_name"],
             )
 
+        print(token)
+
         # dump token dict to str and store it in a secure cookie (BaseHandler will decode it later to validate a user is logged in)
-        self.set_secure_cookie("access_token", json.dumps(token))
+        self.set_secure_cookie("access_token", json.dumps(token["access_token"]))
 
         self.redirect("/main")
 
