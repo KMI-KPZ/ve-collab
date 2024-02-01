@@ -3999,6 +3999,40 @@ class SpaceResourceTest(BaseResourceTestCase):
             CURRENT_USER.username,
         )
 
+    def test_revoke_join_request(self):
+        """
+        expect: successfully remove user from requests list
+        """
+
+        # manually add user to requests list
+        self.db.spaces.update_one(
+            {"name": self.space_name},
+            {"$push": {"requests": CURRENT_USER.username}},
+        )
+
+        space_manager = Spaces(self.db)
+        space_manager.revoke_join_request(self.space_name, CURRENT_USER.username)
+
+        space = self.db.spaces.find_one({"name": self.space_name})
+        self.assertNotIn(CURRENT_USER.username, space["requests"])
+        # for sanity, check that user is not added elsewhere
+        self.assertNotIn(CURRENT_USER.username, space["invites"])
+        self.assertNotIn(CURRENT_USER.username, space["members"])
+
+    def test_revoke_join_request_error_space_doesnt_exist(self):
+        """
+        expect: SpaceDoesntExistError is raised because no
+        space with this name exists
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            SpaceDoesntExistError,
+            space_manager.revoke_join_request,
+            "non_existing_space",
+            CURRENT_USER.username,
+        )
+
     def test_toggle_visibility(self):
         """
         expect: set visibility attribute to True if it was False and False if it was True

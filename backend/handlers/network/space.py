@@ -796,6 +796,10 @@ class SpaceHandler(BaseHandler):
 
             self.reject_join_space_request(space_name, username)
             return
+        
+        elif slug == "revoke_request":
+            self.revoke_join_space_request(space_name)
+            return
 
         elif slug == "toggle_visibility":
             self.toggle_space_visibility(space_name)
@@ -1726,6 +1730,37 @@ class SpaceHandler(BaseHandler):
 
             # decline request
             space_manager.reject_join_request(space_name, username)
+
+            self.set_status(200)
+            self.write({"success": True})
+
+    def revoke_join_space_request(self, space_name: str) -> None:
+        """
+        current user revokes his own request to join a space
+        """
+
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
+            space = space_manager.get_space(
+                space_name, projection={"_id": False, "requests": True}
+            )
+
+            # abort if space doesnt exist
+            if not space:
+                self.set_status(409)
+                self.write({"success": False, "reason": "space_doesnt_exist"})
+                return
+
+            # abort if user didn't request to join
+            if self.current_user.username not in space["requests"]:
+                self.set_status(409)
+                self.write(
+                    {"success": False, "reason": "user_didnt_request_to_join"}
+                )
+                return
+            
+            # revoke request
+            space_manager.revoke_join_request(space_name, self.current_user.username)
 
             self.set_status(200)
             self.write({"success": True})

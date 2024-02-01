@@ -470,6 +470,20 @@ class Spaces:
             {"$addToSet": {"members": username}, "$pull": {"requests": username}},
         )
 
+    def _remove_user_from_requests_list(self, space_name: str, username: str) -> None:
+        """
+        helper function to remove a user from the requests list of a space
+        """
+
+        # pull user from pending requests
+        update_result = self.db.spaces.update_one(
+            {"name": space_name}, {"$pull": {"requests": username}}
+        )
+
+        # the filter didnt match any document, so the space doesnt exist
+        if update_result.matched_count != 1:
+            raise SpaceDoesntExistError()
+
     def reject_join_request(self, space_name: str, username: str) -> None:
         """
         the join request of the given user is declined (usually by an admin, but permissions
@@ -478,14 +492,15 @@ class Spaces:
         :param username: the user whose request is declined
         """
 
-        # pull user from request to decline (obviously dont add as member)
-        update_result = self.db.spaces.update_one(
-            {"name": space_name}, {"$pull": {"requests": username}}
-        )
+        self._remove_user_from_requests_list(space_name, username)
 
-        # the filter didnt match any document, so the space doesnt exist
-        if update_result.matched_count != 1:
-            raise SpaceDoesntExistError()
+    def revoke_join_request(self, space_name: str, username: str) -> None:
+        """
+        the join request of the given user is revoked (usually by the user himself, but permissions
+        are not checked here). Therefore the user will be removed from the requests list
+        """
+
+        self._remove_user_from_requests_list(space_name, username)
 
     def toggle_visibility(self, space_name: str) -> None:
         """

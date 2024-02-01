@@ -5634,6 +5634,78 @@ class SpaceHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
 
+    def test_post_space_revoke_request(self):
+        """
+        expect: current user revokes his own join request
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # pull user from members and set him as requested
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {
+                    "members": CURRENT_USER.username,
+                },
+                "$push": {"requests": CURRENT_USER.username},
+            },
+        )
+
+        self.base_checks(
+            "POST",
+            "/spaceadministration/revoke_request?name={}".format(self.test_space),
+            True,
+            200,
+        )
+
+        # expect user to be no longer requested and also not member
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertNotIn(CURRENT_USER.username, db_state["requests"])
+        self.assertNotIn(CURRENT_USER.username, db_state["members"])
+
+    def test_post_space_revoke_request_error_space_doesnt_exist(self):
+        """
+        expect: fail message because space doesnt exist
+        """
+
+        response = self.base_checks(
+            "POST",
+            "/spaceadministration/revoke_request?name={}".format("not_existing_space"),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], SPACE_DOESNT_EXIST_ERROR)
+
+    def test_post_space_revoke_request_error_user_didnt_request(self):
+        """
+        expect: fail message because user didnt even request to join
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # pull user from members and dont set him as requested
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {
+                    "members": CURRENT_USER.username,
+                },
+            },
+        )
+
+        response = self.base_checks(
+            "POST",
+            "/spaceadministration/revoke_request?name={}".format(self.test_space),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], USER_DIDNT_REQUEST_TO_JOIN_ERROR)
+
     def test_post_space_toggle_visibility_global_admin(self):
         """
         expect: successfully toggle visibility of space (false -> true, true -> false),
