@@ -1,62 +1,75 @@
 from typing import Dict, List, Optional
+from bson import ObjectId
 
 import gridfs
-from pymongo import MongoClient
+from pymongo import ReturnDocument
+from pymongo.database import Database
+from resources.elasticsearch_integration import ElasticsearchConnector
 
 from exceptions import (
     AlreadyFollowedException,
     NotFollowedException,
     ProfileDoesntExistException,
 )
-import global_vars
+import util
 
 
 class Profiles:
     """
-    implementation of Profiles in the DB as a context manager, usage::
+    to use this class, acquire a mongodb connection first via::
 
-        with Profiles() as db_manager:
-            db_manager.get_profiles()
+        with util.get_mongodb() as db:
+            profile_manager = Profiles(db)
             ...
 
     """
 
-    def __init__(self):
-        self.client = MongoClient(
-            global_vars.mongodb_host,
-            global_vars.mongodb_port,
-            username=global_vars.mongodb_username,
-            password=global_vars.mongodb_password,
-        )
-        self.db = self.client[global_vars.mongodb_db_name]
+    def __init__(self, db: Database):
+        self.db = db
 
         self.profile_attributes = {
-            "bio": str,
-            "institution": str,
-            "projects": list,
-            "first_name": str,
-            "last_name": str,
-            "gender": str,
-            "address": str,
-            "birthday": str,
+            "bio": (str, type(None)),
+            "institution": (str, type(None)),
+            "first_name": (str, type(None)),
+            "last_name": (str, type(None)),
+            "gender": (str, type(None)),
+            "address": (str, type(None)),
+            "birthday": (str, type(None)),
             "experience": list,
-            "education": list,
+            "expertise": (str, type(None)),
+            "languages": list,
+            "ve_ready": bool,
+            "excluded_from_matching": bool,
+            "ve_interests": list,
+            "ve_contents": list,
+            "ve_goals": list,
+            "interdisciplinary_exchange": bool,
+            "preferred_format": (str, type(None)),
+            "research_tags": list,
+            "courses": list,
+            "lms": list,
+            "tools": list,
+            "educations": list,
+            "work_experience": list,
+            "ve_window": list,
         }
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, exc_traceback):
-        self.client.close()
 
     def get_profile(self, username: str, projection: dict = None) -> Optional[Dict]:
         """
         get the profile data of the given user. optionally specify a projection
-        to reduce query to the necessary fields (increases performance)
+        to reduce query to the necessary fields (increases performance).
+
+        Raises `ProfileDoesntExistException` if no profile exists for the given username.
+
         :return: the profile data as a dict
         """
 
-        return self.db.profiles.find_one({"username": username}, projection=projection)
+        result = self.db.profiles.find_one(
+            {"username": username}, projection=projection
+        )
+        if not result:
+            raise ProfileDoesntExistException()
+        return result
 
     def get_all_profiles(self, projection: dict = None) -> List[Dict]:
         """
@@ -66,13 +79,35 @@ class Profiles:
 
         return list(self.db.profiles.find(projection=projection))
 
+    def get_bulk_profiles(
+        self, usernames: List[str], projection: dict = None
+    ) -> List[Dict]:
+        """
+        get the profiles of all the users specified in the `usernames` list.
+        If any of the usernames in this list does not exist, it is skipped,
+        meaning the length of the response list and the given list of usernames
+        can differ.
+        """
+
+        return list(
+            self.db.profiles.find(
+                {"username": {"$in": usernames}}, projection=projection
+            )
+        )
+
     def insert_default_profile(
-        self, username: str, first_name: str = None, last_name: str = None
+        self,
+        username: str,
+        first_name: str = "",
+        last_name: str = "",
+        elasticsearch_collection: str = "profiles",
     ) -> Dict:
         """
         insert a default profile into the db, initializing the role as 'guest' and the
         default profile picture and setting all other values to false.
         Optionally, if known, the first and last name can be already set.
+        You can also specify the elasticsearch collection in which the profile
+        should be replicated. The default is "profiles" just as in the mongodb.
         :param username: the username of the new user
         :return: the freshly created profile
         """
@@ -80,26 +115,56 @@ class Profiles:
             "username": username,
             "role": "guest",
             "follows": [],
-            "bio": None,
-            "institution": None,
-            "projects": [],
+            "bio": "",
+            "institution": "",
             "profile_pic": "default_profile_pic.jpg",
-            "first_name": None,
-            "last_name": None,
-            "gender": None,
-            "address": None,
-            "birthday": None,
-            "experience": [],
-            "education": [],
+            "first_name": first_name,
+            "last_name": last_name,
+            "gender": "",
+            "address": "",
+            "birthday": "",
+            "experience": [""],
+            "expertise": "",
+            "languages": [],
+            "ve_ready": True,
+            "excluded_from_matching": False,
+            "ve_interests": [""],
+            "ve_contents": [""],
+            "ve_goals": [""],
+            "interdisciplinary_exchange": True,
+            "preferred_format": "",
+            "research_tags": [],
+            "courses": [],
+            "lms": [],
+            "tools": [],
+            "educations": [],
+            "work_experience": [],
+            "ve_window": [],
         }
-        self.db.profiles.insert_one(profile)
+        result = self.db.profiles.insert_one(profile)
+
+        # replicate the insert to elasticsearch
+        ElasticsearchConnector().on_insert(
+            result.inserted_id, profile.copy(), elasticsearch_collection
+        )
+
+        profile["_id"] = result.inserted_id
         return profile
 
-    def insert_default_admin_profile(self, username: str) -> Dict:
+    def insert_default_admin_profile(
+        self,
+        username: str,
+        first_name: str = "",
+        last_name: str = "",
+        elasticsearch_collection: str = "profiles",
+    ) -> Dict:
         """
         insert a default admin profile into the db,
         initializing the role as 'admin' and the default profile picture and
-        setting all other values to false.
+        setting all other values to false or empty strings/lists.
+        Optionally, if known, the first and last name can be already set.
+        You can also specify the elasticsearch collection in which the profile
+        should be replicated. The default is "profiles" just as in the mongodb.
         :param username: the username of the new user
         :return: the freshly created profile
         """
@@ -108,26 +173,48 @@ class Profiles:
             "username": username,
             "role": "admin",
             "follows": [],
-            "bio": None,
-            "institution": None,
-            "projects": [],
+            "bio": "",
+            "institution": "",
             "profile_pic": "default_profile_pic.jpg",
-            "first_name": None,
-            "last_name": None,
-            "gender": None,
-            "address": None,
-            "birthday": None,
-            "experience": [],
-            "education": [],
+            "first_name": first_name,
+            "last_name": last_name,
+            "gender": "",
+            "address": "",
+            "birthday": "",
+            "experience": [""],
+            "expertise": "",
+            "languages": [],
+            "ve_ready": True,
+            "excluded_from_matching": False,
+            "ve_interests": [""],
+            "ve_contents": [""],
+            "ve_goals": [""],
+            "interdisciplinary_exchange": True,
+            "preferred_format": "",
+            "research_tags": [],
+            "courses": [],
+            "lms": [],
+            "tools": [],
+            "educations": [],
+            "work_experience": [],
+            "ve_window": [],
         }
-        self.db.profiles.insert_one(profile)
+        result = self.db.profiles.insert_one(profile)
+
+        # replicate the insert to elasticsearch
+        ElasticsearchConnector().on_insert(
+            result.inserted_id, profile, elasticsearch_collection
+        )
+
+        profile["_id"] = result.inserted_id
         return profile
 
     def ensure_profile_exists(
         self,
         username: str,
-        first_name: str = None,
-        last_name: str = None,
+        first_name: str = "",
+        last_name: str = "",
+        elasticsearch_collection: str = "profiles",
         projection: Dict = None,
     ) -> Dict:
         """
@@ -139,37 +226,50 @@ class Profiles:
                            (only used for creation, can be added later)
         :param last_name: optional, the last name of the user
                           (only used for creation, can be added later)
+        :param elasticsearch_collection: optional, the elasticsearch index in which the profile
+                                            should be replicated. The default is "profiles"
+                                            just as in the mongodb.
         :return: the profile of the user, either existing or created
         """
+        try:
+            profile = self.get_profile(username, projection=projection)
+        except ProfileDoesntExistException:
+            # create a profile since it does not exist
 
-        profile = self.get_profile(username, projection=projection)
-        # create a profile if it does not exist
-        if not profile:
-            profile = self.insert_default_profile(username, first_name, last_name)
+            profile = self.insert_default_profile(
+                username, first_name, last_name, elasticsearch_collection
+            )
 
             # check if the guest role exists, since we might do this for the very first time
             from resources.network.acl import ACL
 
-            with ACL() as acl_manager:
+            with util.get_mongodb() as db:
+                acl_manager = ACL(db)
                 acl_manager.ensure_acl_entries("guest")
 
         return profile
 
     def get_follows(self, username: str) -> List[str]:
         """
-        get the list of users the the given user follows
+        get the list of users the the given user follows.
+        Raises `ProfileDoesntExistException` if no profile exists for the given username.
         :param username: the user the data is requested from
-        :return: list of usernames the user follows, or an empty list
+        :return: list of usernames the user follows
         """
+        try:
+            result = self.get_profile(
+                username, projection={"_id": False, "follows": True}
+            )
+        except ProfileDoesntExistException:
+            raise
 
-        result = self.get_profile(username, projection={"_id": False, "follows": True})
-        return result["follows"] if result else []
+        return result["follows"]
 
     def add_follows(self, username: str, username_to_follow: str) -> None:
         """
         let the user behind 'username' follow the user behind 'username_to_follow'.
-        If the user is already following this person, an `AlreadyFollowedException`
-        is thrown.
+        Raises `ProfileDoesntExistException` if no profile exists for the given username.
+        Raises `AlreadyFollowedException` if the user is already following that person.
         :param username: the username of the user wanting to follow another one
         :param username_to_follow: the username the user wants to follow
         """
@@ -179,6 +279,10 @@ class Profiles:
             {"$addToSet": {"follows": username_to_follow}},
         )
 
+        # if no document was matched, the user profile doesnt exist
+        if update_result.matched_count != 1:
+            raise ProfileDoesntExistException()
+
         # if no document was modified, the username is already in the follows set
         if update_result.modified_count != 1:
             raise AlreadyFollowedException()
@@ -186,6 +290,7 @@ class Profiles:
     def remove_follows(self, username: str, username_to_unfollow: str) -> None:
         """
         let the user behind 'username' unfollow the user behind 'username_to_follow'.
+        Raises `ProfileDoesntExistException` if no profile exists for the given username.
         If the user is not following this person, a `NotFollowedException` is thrown.
         :param username: the username of the user wanting to unfollow another one
         :param username_to_follow: the username the user wants to unfollow
@@ -194,6 +299,10 @@ class Profiles:
         update_result = self.db.profiles.update_one(
             {"username": username}, {"$pull": {"follows": username_to_unfollow}}
         )
+
+        # if no document was matched, the user profile doesnt exist
+        if update_result.matched_count != 1:
+            raise ProfileDoesntExistException()
 
         # if no document was modified, the username was not in the follows set
         if update_result.modified_count != 1:
@@ -217,10 +326,10 @@ class Profiles:
         a `ProfileDoesntExistException` is thrown.
         """
 
-        role_result = self.get_profile(username, projection={"role": True})
-
-        if not role_result:
-            raise ProfileDoesntExistException()
+        try:
+            role_result = self.get_profile(username, projection={"role": True})
+        except ProfileDoesntExistException:
+            raise
 
         return role_result["role"]
 
@@ -233,8 +342,8 @@ class Profiles:
         update_result = self.db.profiles.update_one(
             {"username": username}, {"$set": {"role": role}}
         )
-        # if no document was modified, the user profile doesnt exist
-        if update_result.modified_count != 1:
+        # if no document was matched, the user profile doesnt exist
+        if update_result.matched_count != 1:
             raise ProfileDoesntExistException()
 
     def check_role_exists(self, role: str) -> bool:
@@ -249,14 +358,21 @@ class Profiles:
         else:
             return False
 
-    def get_all_roles(self, keycloak_user_list: List[Dict]) -> List[dict]:
+    def get_all_roles(
+        self,
+        keycloak_user_list: List[Dict],
+        auto_create_elastic_collection: str = "profiles",
+    ) -> List[dict]:
         """
         produce a list of dicts containing the following information:
         {"username": <username>, "role": <role>}
         by joining a list of keycloak user with our profile database on the username.
         This extra step is needed, because users are only recognized in our database
         when they first log in, but they should be referencable by other users before that.
-        To achieve that, we create a profile for them if it does not already exist
+        To achieve that, we create a profile for them if it does not already exist.
+        In this case, by setting `auto_create_elastic_collection` you can control in which
+        elasticsearch index the freshly created profile gets replicated. The default is
+        "profiles" just as in the mongodb.
         """
 
         existing_users_and_roles = self.get_all_profiles(
@@ -277,7 +393,10 @@ class Profiles:
                 continue
 
             # if the user does not already exist, add him with guest role
-            self.insert_default_profile(platform_user["username"])
+            self.insert_default_profile(
+                platform_user["username"],
+                elasticsearch_collection=auto_create_elastic_collection,
+            )
             # manually create return entry
             # because otherwise non-json-serializable ObjectId is in payload
             ret_list.append(
@@ -297,7 +416,8 @@ class Profiles:
             if not checked_guest_role_present:
                 from resources.network.acl import ACL
 
-                with ACL() as acl_manager:
+                with util.get_mongodb() as db:
+                    acl_manager = ACL(db)
                     acl_manager.ensure_acl_entries("guest")
                 checked_guest_role_present = True
 
@@ -310,25 +430,23 @@ class Profiles:
 
         return self.db.profiles.distinct("role")
 
-    def fulltext_search(self, query: str) -> List[Dict]:
-        """
-        do a fulltext search on the profile text index and return the matching profiles.
-        :param query: the full text search query
-        :return: List of profiles (as dicts) matching the query
-        """
-
-        return list(self.db.profiles.find({"$text": {"$search": query}}))
-
     def get_profile_pic(self, username: str) -> str:
         """
         get the profile pic of the given user, or the default value, if he has not set
         a custom profile picture
         """
 
-        profile = self.get_profile(
-            username, projection={"_id": False, "profile_pic": True}
-        )
-        return profile["profile_pic"] if profile else "default_profile_pic.jpg"
+        try:
+            profile = self.get_profile(
+                username, projection={"_id": False, "profile_pic": True}
+            )
+        except ProfileDoesntExistException:
+            raise
+
+        if "profile_pic" not in profile:
+            return "default_profile_pic.jpg"
+        else:
+            return profile["profile_pic"]
 
     def update_profile_information(
         self,
@@ -336,24 +454,29 @@ class Profiles:
         updated_profile: Dict,
         profile_pic: bytes = None,
         profile_pic_content_type: str = None,
-    ) -> None:
+        elasticsearch_collection: str = "profiles",
+    ) -> Optional[ObjectId]:
         """
         update the profile information including (optionally) the profile picture.
         The following keys are necessary in the `updated_profile` dict:
-        bio, institution, projects, first_name, last_name, gender, address, birthday,
-        experience, education.
+        see `self.profile_attributes` of class `Profiles`
         The following keys are optional:
-        profile_pic
+        profile_pic, profile_pic_content_type, elasticsearch_collection.
+
+        If a profile_pic was updated, its inserted _id is returned, otherwise (regular
+        update of profile data) None is returned.
         """
 
         # verify space has all the necessary attributes
-        if not all(attr in updated_profile for attr in self.profile_attributes.keys()):
-            raise ValueError("Profile misses required attribute")
+        # if not all(attr in updated_profile for attr in self.profile_attributes.keys()):
+        #    raise ValueError("Profile misses required attribute")
 
         # verify types of attributes
         for attr_key in updated_profile:
             if attr_key in self.profile_attributes:
-                if type(updated_profile[attr_key]) != self.profile_attributes[attr_key]:
+                if not isinstance(
+                    updated_profile[attr_key], self.profile_attributes[attr_key]
+                ):
                     raise TypeError(
                         "Type mismatch on attribute '{}'. expected type '{}', got '{}'".format(
                             attr_key,
@@ -381,7 +504,14 @@ class Profiles:
             )
             updated_profile["profile_pic"] = _id
 
-        self.db.profiles.update_one(
+        # ensure that plan_id inside a ve_window entry is an ObjectId
+        if "ve_window" in updated_profile:
+            for ve_window_entry in updated_profile["ve_window"]:
+                ve_window_entry["plan_id"] = util.parse_object_id(
+                    ve_window_entry["plan_id"]
+                )
+
+        result = self.db.profiles.find_one_and_update(
             {"username": username},
             {
                 "$set": updated_profile,
@@ -389,4 +519,86 @@ class Profiles:
                 "$setOnInsert": {"username": username, "role": "guest", "follows": []},
             },
             upsert=True,
+            return_document=ReturnDocument.AFTER,
+        )
+
+        # replicate the update to elasticsearch
+        updated_profile["username"] = username
+        ElasticsearchConnector().on_update(
+            result["_id"], elasticsearch_collection, result
+        )
+
+        return (
+            updated_profile["profile_pic"] if "profile_pic" in updated_profile else None
+        )
+
+    def get_profile_snippets(self, usernames: List[str]) -> List[Dict]:
+        """
+        request the profile snippet (i.e. username, first_name, last_name, institution
+        and profile_pic) for every given username in `usernames` and return them as
+        a Dict.
+        If any of the usernames has no profile, it is omitted from the response,
+        meaning the length of the response list and the given list of usernames
+        might differ.
+        """
+
+        if not isinstance(usernames, list):
+            raise TypeError(
+                "expected type 'list' for argument 'usernames', got {}".format(
+                    type(usernames)
+                )
+            )
+
+        if not usernames:
+            return []
+
+        profiles = self.get_bulk_profiles(
+            usernames,
+            projection={
+                "_id": False,
+                "username": True,
+                "first_name": True,
+                "last_name": True,
+                "institution": True,
+                "profile_pic": True,
+            },
+        )
+        return profiles
+
+    def get_matching_exclusion(self, username: str) -> bool:
+        """
+        Retrieve the information from the profile if a user given by its username
+        is currently excluded from matching.
+
+        Returns a boolean indication if the user is excluded or not.
+
+        If no profile exists for the user, a `ProfileDoesntExistException` is thrown.
+        """
+        try:
+            result = self.get_profile(
+                username, projection={"excluded_from_matching": True}
+            )
+        except ProfileDoesntExistException:
+            raise
+
+        # if somehow the field is missing in the profile, return False, as
+        # it also means that the user has not actively excluded himself
+        if "excluded_from_matching" not in result:
+            return False
+        else:
+            return result["excluded_from_matching"]
+
+    def remove_ve_windows_entry_by_plan_id(self, plan_id: str | ObjectId):
+        """
+        Remove all VE windows entries from all profiles that contain the given plan_id.
+
+        This function can be called as a side effect of deleting a VE plan.
+        """
+
+        # ensure valid ObjectId
+        plan_id = util.parse_object_id(plan_id)
+
+        self.db.profiles.update_many(
+            {"ve_window.plan_id": plan_id},
+            {"$pull": {"ve_window": {"plan_id": plan_id}}},
         )

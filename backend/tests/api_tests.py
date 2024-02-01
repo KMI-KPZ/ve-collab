@@ -2,9 +2,11 @@ from datetime import datetime, timedelta
 import io
 import json
 import logging
+import os
 from typing import List
 
 from bson import ObjectId
+from dotenv import load_dotenv
 import gridfs
 import pymongo
 import pymongo.errors
@@ -12,12 +14,11 @@ from requests_toolbelt import MultipartEncoder
 from tornado.options import options
 from tornado.testing import AsyncHTTPTestCase
 
+from resources.elasticsearch_integration import ElasticsearchConnector
 from resources.network.acl import ACL
 import global_vars
 from main import make_app
 from model import (
-    AcademicCourse,
-    Department,
     Institution,
     Lecture,
     Step,
@@ -26,6 +27,10 @@ from model import (
     User,
     VEPlan,
 )
+import util
+
+# load environment variables
+load_dotenv()
 
 # hack all loggers to not produce too much irrelevant (info) output here
 for logger_name in logging.root.manager.loggerDict:
@@ -58,6 +63,10 @@ PLAN_ALREADY_EXISTS_ERROR = "plan_already_exists"
 NON_UNIQUE_STEPS_ERROR = "non_unique_step_names"
 NON_UNIQUE_TASKS_ERROR = "non_unique_task_titles"
 
+INVITATION_DOESNT_EXIST_ERROR = "invitation_doesnt_exist"
+
+ROOM_DOESNT_EXIST_ERROR = "room_doesnt_exist"
+
 # don't change, these values match with the ones in BaseHandler
 CURRENT_ADMIN = User(
     "test_admin", "aaaaaaaa-bbbb-0000-cccc-dddddddddddd", "test_admin@mail.de"
@@ -81,19 +90,26 @@ def setUpModule():
     unittest will call this method itself.
     """
 
-    with open(options.config) as json_file:
-        config = json.load(json_file)
-
-    global_vars.keycloak_callback_url = config["keycloak_callback_url"]
-    global_vars.domain = config["domain"]
-    global_vars.keycloak_client_id = config["keycloak_client_id"]
-    global_vars.cookie_secret = config["cookie_secret"]
-
-    global_vars.mongodb_host = config["mongodb_host"]
-    global_vars.mongodb_port = config["mongodb_port"]
-    global_vars.mongodb_username = config["mongodb_username"]
-    global_vars.mongodb_password = config["mongodb_password"]
-    global_vars.mongodb_db_name = "test_db"
+    global_vars.port = int(os.getenv("PORT", "8888"))
+    global_vars.cookie_secret = os.getenv("COOKIE_SECRET")
+    global_vars.wordpress_url = os.getenv("WORDPRESS_URL")
+    global_vars.mongodb_host = os.getenv("MONGODB_HOST", "localhost")
+    global_vars.mongodb_port = int(os.getenv("MONGODB_PORT", "27017"))
+    global_vars.mongodb_username = os.getenv("MONGODB_USERNAME")
+    global_vars.mongodb_password = os.getenv("MONGODB_PASSWORD")
+    global_vars.mongodb_db_name = "ve-collab-unittest"
+    global_vars.etherpad_base_url = os.getenv("ETHERPAD_BASE_URL")
+    global_vars.etherpad_api_key = os.getenv("ETHERPAD_API_KEY")
+    global_vars.elasticsearch_base_url = os.getenv("ELASTICSEARCH_BASE_URL")
+    global_vars.elasticsearch_username = os.getenv("ELASTICSEARCH_USERNAME", "elastic")
+    global_vars.elasticsearch_password = os.getenv("ELASTICSEARCH_PASSWORD")
+    global_vars.dummy_personas_passcode = os.getenv("DUMMY_PERSONAS_PASSCODE")
+    global_vars.keycloak_base_url = os.getenv("KEYCLOAK_BASE_URL")
+    global_vars.keycloak_realm = os.getenv("KEYCLOAK_REALM")
+    global_vars.keycloak_client_id = os.getenv("KEYCLOAK_CLIENT_ID")
+    global_vars.keycloak_client_secret = os.getenv("KEYCLOAK_CLIENT_SECRET")
+    global_vars.keycloak_admin_username = os.getenv("KEYCLOAK_ADMIN_USERNAME")
+    global_vars.keycloak_admin_password = os.getenv("KEYCLOAK_ADMIN_PASSWORD")
 
 
 def tearDownModule():
@@ -102,21 +118,10 @@ def tearDownModule():
     in case any of the test cases missed to clean up.
     unittest will call this method itself.
     """
-    with pymongo.MongoClient(
-        global_vars.mongodb_host,
-        global_vars.mongodb_port,
-        username=global_vars.mongodb_username,
-        password=global_vars.mongodb_password,
-    ) as mongo_client:
-        db = mongo_client[global_vars.mongodb_db_name]
-        db.drop_collection("posts")
-        db.drop_collection("spaces")
-        db.drop_collection("profiles")
-        db.drop_collection("global_acl")
-        db.drop_collection("space_acl")
-        db.drop_collection("fs.files")
-        db.drop_collection("fs.chunks")
-        db.drop_collection("plans")
+
+    with util.get_mongodb() as db:
+        for collection_name in db.list_collection_names():
+            db.drop_collection(collection_name)
 
 
 class RenderHandlerTest(AsyncHTTPTestCase):
@@ -224,7 +229,6 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                 "follows": [],
                 "bio": None,
                 "institution": None,
-                "projects": None,
                 "profile_pic": "default_profile_pic.jpg",
                 "first_name": None,
                 "last_name": None,
@@ -232,7 +236,16 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                 "address": None,
                 "birthday": None,
                 "experience": None,
-                "education": None,
+                "expertise": None,
+                "languages": [],
+                "ve_interests": [],
+                "ve_goals": [],
+                "preferred_formats": [],
+                "research_tags": [],
+                "courses": [],
+                "educations": [],
+                "work_experience": [],
+                "ve_window": [],
             },
             CURRENT_USER.username: {
                 "username": CURRENT_USER.username,
@@ -240,7 +253,6 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                 "follows": [],
                 "bio": None,
                 "institution": None,
-                "projects": None,
                 "profile_pic": "default_profile_pic.jpg",
                 "first_name": None,
                 "last_name": None,
@@ -248,7 +260,16 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                 "address": None,
                 "birthday": None,
                 "experience": None,
-                "education": None,
+                "expertise": None,
+                "languages": [],
+                "ve_interests": [],
+                "ve_goals": [],
+                "preferred_formats": [],
+                "research_tags": [],
+                "courses": [],
+                "educations": [],
+                "work_experience": [],
+                "ve_window": [],
             },
         }
 
@@ -1182,8 +1203,9 @@ class RoleACLIntegrationTest(BaseApiTestCase):
 
         self.db.profiles.delete_many({})
 
-        with ACL() as acl_manager:
-            acl_manager._cleanup_unused_rules()
+        from resources.network.acl import cleanup_unused_rules
+
+        cleanup_unused_rules()
 
         # expect an empty global acl
         global_acl_db_state = list(self.db.global_acl.find())
@@ -1385,6 +1407,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "author": CURRENT_ADMIN.username,
                 "file_id": file._id,
+                "file_name": self.test_file_name,
                 "manually_uploaded": False,
             },
             space_state["files"],
@@ -3340,6 +3363,37 @@ class PinHandlerTest(BaseApiTestCase):
 
 
 class SearchHandlerTest(BaseApiTestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+
+        cls.profile = {
+            "username": CURRENT_ADMIN.username,
+            "role": "admin",
+            "follows": [],
+            "bio": "test",
+            "institution": "test",
+            "projects": "test",
+            "profile_pic": "test",
+            "first_name": "test",
+            "last_name": "test",
+            "gender": "test",
+            "address": "test",
+            "birthday": "test",
+            "experience": "test",
+            "education": "test",
+        }
+        # replicate to ES
+        ElasticsearchConnector().on_insert(str(ObjectId()), cls.profile, "profiles")
+
+        # there seems to be a problem over at ES, because when the insert request
+        # finishes, the data is not yet available for search, so tests would fail.
+        # there is no real solution i can think of other than just wait a little bit
+        # for ES to finish analyzing and indexing
+        import time
+
+        time.sleep(2)
+
     def setUp(self) -> None:
         super().setUp()
 
@@ -3348,47 +3402,9 @@ class SearchHandlerTest(BaseApiTestCase):
             [("text", pymongo.TEXT), ("tags", pymongo.TEXT), ("files", pymongo.TEXT)],
             name="posts",
         )
-        self.db.profiles.create_index(
-            [
-                ("bio", pymongo.TEXT),
-                ("institution", pymongo.TEXT),
-                ("projects", pymongo.TEXT),
-                ("first_name", pymongo.TEXT),
-                ("last_name", pymongo.TEXT),
-                ("gender", pymongo.TEXT),
-                ("address", pymongo.TEXT),
-                ("birthday", pymongo.TEXT),
-                ("experience", pymongo.TEXT),
-                ("education", pymongo.TEXT),
-                ("username", pymongo.TEXT),
-            ],
-            name="profiles",
-        )
 
         # setup basic environment of permissions
         self.base_permission_environment_setUp()
-
-        self.db.profiles.update_one(
-            {"username": CURRENT_ADMIN.username},
-            {
-                "$set": {
-                    "username": CURRENT_ADMIN.username,
-                    "role": "admin",
-                    "follows": [],
-                    "bio": "test",
-                    "institution": "test",
-                    "projects": "test",
-                    "profile_pic": "test",
-                    "first_name": "test",
-                    "last_name": "test",
-                    "gender": "test",
-                    "address": "test",
-                    "birthday": "test",
-                    "experience": "test",
-                    "education": "test",
-                }
-            },
-        )
 
         self.post_oid = ObjectId()
         self.comment_oid = ObjectId()
@@ -3728,6 +3744,46 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks("GET", "/spaceadministration/list_all", False, 403)
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_get_personal_spaces(self):
+        """
+        expect: list all spaces that user is member of
+        """
+
+        # insert 2 more spaces, in one user member and one not
+        self.db.spaces.insert_many(
+            [
+                {
+                    "name": "another1",
+                    "invisible": True,
+                    "joinable": False,
+                    "members": [CURRENT_ADMIN.username],
+                    "admins": [CURRENT_ADMIN.username],
+                    "invites": [],
+                    "requests": [],
+                    "files": [],
+                },
+                {
+                    "name": "another2",
+                    "invisible": False,
+                    "joinable": False,
+                    "members": [CURRENT_USER.username],
+                    "admins": [CURRENT_USER.username],
+                    "invites": [],
+                    "requests": [],
+                    "files": [],
+                },
+            ]
+        )
+
+        response = self.base_checks("GET", "/spaceadministration/my", True, 200)
+        self.assertIn("spaces", response)
+        self.assertTrue(
+            any(self.test_space == space["name"] for space in response["spaces"])
+        )
+        self.assertTrue(
+            any("another1" == space["name"] for space in response["spaces"])
+        )
 
     def test_get_space_info(self):
         """
@@ -5396,6 +5452,111 @@ class SpaceHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
 
+    def test_post_space_toggle_joinability_global_admin(self):
+        """
+        expect: successfully toggle joinability of space (false -> true, true -> false),
+        permission is granted because user is global admin
+        """
+
+        joinability = False
+
+        # pull user from space admins to trigger global admin
+        # and set joinability explicitely
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {
+                    "admins": CURRENT_ADMIN.username,
+                },
+                "$set": {"joinable": joinability},
+            },
+        )
+
+        self.base_checks(
+            "POST",
+            "/spaceadministration/toggle_joinability?name={}".format(self.test_space),
+            True,
+            200,
+        )
+
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertEqual(db_state["joinable"], not joinability)
+
+        # do the same thing once more to test the other toggle direction
+        joinability = not joinability
+        self.base_checks(
+            "POST",
+            "/spaceadministration/toggle_joinability?name={}".format(self.test_space),
+            True,
+            200,
+        )
+
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertEqual(db_state["joinable"], not joinability)
+
+    def test_post_space_toggle_joinability_space_admin(self):
+        """
+        expect: successfully toggle joinability of space, permission is granted
+        because user is space admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        joinability = False
+
+        # set user as space admin
+        # and set joinability explicitely
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$push": {
+                    "admins": CURRENT_USER.username,
+                },
+                "$set": {"joinable": joinability},
+            },
+        )
+
+        self.base_checks(
+            "POST",
+            "/spaceadministration/toggle_joinability?name={}".format(self.test_space),
+            True,
+            200,
+        )
+
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertEqual(db_state["joinable"], not joinability)
+
+        # do the same thing once more to test the other toggle direction
+        joinability = not joinability
+        self.base_checks(
+            "POST",
+            "/spaceadministration/toggle_joinability?name={}".format(self.test_space),
+            True,
+            200,
+        )
+
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertEqual(db_state["joinable"], not joinability)
+
+    def test_post_space_toggle_joinability_error_insufficient_permission(self):
+        """
+        expect: fail message because user is neither global admin nor space admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        response = self.base_checks(
+            "POST",
+            "/spaceadministration/toggle_joinability?name={}".format(self.test_space),
+            False,
+            403,
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
     def test_post_space_put_file(self):
         """
         expect: successfully add a new file
@@ -5431,6 +5592,7 @@ class SpaceHandlerTest(BaseApiTestCase):
             {
                 "author": CURRENT_ADMIN.username,
                 "file_id": file._id,
+                "file_name": file_name,
                 "manually_uploaded": True,
             },
             db_state["files"],
@@ -6637,6 +6799,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             academic_course="test",
             mother_tongue="test",
             foreign_languages={"test": "l1"},
+            learning_goal="test",
         )
 
     def create_institution(self, name: str = "test") -> Institution:
@@ -6648,7 +6811,8 @@ class VEPlanHandlerTest(BaseApiTestCase):
             name=name,
             school_type="test",
             country="test",
-            departments=[Department(name="test", academic_courses=[AcademicCourse()])],
+            departments=["test", "test"],
+            academic_courses=["test", "test"],
         )
 
     def create_lecture(self, name: str = "test") -> Lecture:
@@ -6672,7 +6836,13 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.lecture = self.create_lecture("test")
         self.default_plan = {
             "_id": self.plan_id,
+            "author": CURRENT_ADMIN.username,
+            "read_access": [CURRENT_ADMIN.username],
+            "write_access": [CURRENT_ADMIN.username],
+            "creation_timestamp": datetime.now(),
+            "last_modified": datetime.now(),
             "name": "test",
+            "partners": [CURRENT_USER.username],
             "institutions": [self.institution.to_dict()],
             "topic": "test",
             "lectures": [self.lecture.to_dict()],
@@ -6680,15 +6850,33 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "languages": ["test", "test"],
             "timestamp_from": self.step.timestamp_from,
             "timestamp_to": self.step.timestamp_to,
-            "goals": {"test": "test"},
             "involved_parties": ["test", "test"],
             "realization": "test",
             "learning_env": "test",
             "tools": ["test", "test"],
             "new_content": False,
+            "formalities": {
+                "technology": False,
+                "exam_regulations": False,
+            },
             "duration": self.step.duration.total_seconds(),
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
+            "progress": {
+                "name": "not_started",
+                "institutions": "not_started",
+                "topic": "not_started",
+                "lectures": "not_started",
+                "audience": "not_started",
+                "languages": "not_started",
+                "involved_parties": "not_started",
+                "realization": "not_started",
+                "learning_env": "not_started",
+                "tools": "not_started",
+                "new_content": "not_started",
+                "formalities": "not_started",
+                "steps": "not_started",
+            },
         }
         self.db.plans.insert_one(self.default_plan)
 
@@ -6737,7 +6925,30 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertIsInstance(response["plan"], dict)
 
         response_plan = VEPlan.from_dict(response["plan"])
-        self.assertEqual(response_plan, VEPlan.from_dict(self.default_plan))
+        default_plan = VEPlan.from_dict(self.default_plan)
+        self.assertEqual(response_plan._id, default_plan._id)
+        self.assertEqual(response_plan.author, default_plan.author)
+        self.assertEqual(response_plan.name, default_plan.name)
+        self.assertEqual(response_plan.partners, default_plan.partners)
+        self.assertEqual(response_plan.institutions, default_plan.institutions)
+        self.assertEqual(response_plan.topic, default_plan.topic)
+        self.assertEqual(response_plan.lectures, default_plan.lectures)
+        self.assertEqual(response_plan.audience, default_plan.audience)
+        self.assertEqual(response_plan.languages, default_plan.languages)
+        self.assertEqual(response_plan.timestamp_from, default_plan.timestamp_from)
+        self.assertEqual(response_plan.timestamp_to, default_plan.timestamp_to)
+        self.assertEqual(response_plan.involved_parties, default_plan.involved_parties)
+        self.assertEqual(response_plan.realization, default_plan.realization)
+        self.assertEqual(response_plan.learning_env, default_plan.learning_env)
+        self.assertEqual(response_plan.tools, default_plan.tools)
+        self.assertEqual(response_plan.new_content, default_plan.new_content)
+        self.assertEqual(response_plan.formalities, default_plan.formalities)
+        self.assertEqual(response_plan.duration, default_plan.duration)
+        self.assertEqual(response_plan.workload, default_plan.workload)
+        self.assertEqual(response_plan.steps, default_plan.steps)
+        self.assertEqual(response_plan.progress, default_plan.progress)
+        self.assertIsNotNone(response_plan.creation_timestamp)
+        self.assertIsNotNone(response_plan.last_modified)
 
     def test_get_plan_error_missing_key(self):
         """
@@ -6757,6 +6968,41 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], PLAN_DOESNT_EXIST_ERROR)
 
+    def test_get_plan_error_insufficient_permission(self):
+        """
+        expect: fail message because user has no read access to plan
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        response = self.base_checks(
+            "GET", "/planner/get?_id={}".format(str(self.plan_id)), False, 403
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_get_available_plans(self):
+        """
+        expect: successfully request all plans the user is allowed to view, i.e.
+        own and with read/write permissions
+        """
+
+        # add one more plan to db that is should not be viewable
+        self.db.plans.insert_one(VEPlan(author=CURRENT_USER.username).to_dict())
+
+        response = self.base_checks("GET", "/planner/get_available", True, 200)
+        self.assertIn("plans", response)
+        self.assertIsInstance(response["plans"], list)
+        self.assertEqual(len(response["plans"]), 1)
+        self.assertEqual(response["plans"][0]["_id"], str(self.plan_id))
+
+    def test_get_public_plans_of_user(self):
+        """
+        pass because public viewability is not yet implement
+        """
+        pass
+
     def test_get_all_plans(self):
         """
         expect: successfully request all plans (should be only the default plan)
@@ -6768,7 +7014,30 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(len(response["plans"]), 1)
 
         response_plan = VEPlan.from_dict(response["plans"][0])
-        self.assertEqual(response_plan, VEPlan.from_dict(self.default_plan))
+        default_plan = VEPlan.from_dict(self.default_plan)
+        self.assertEqual(response_plan._id, default_plan._id)
+        self.assertEqual(response_plan.author, default_plan.author)
+        self.assertEqual(response_plan.name, default_plan.name)
+        self.assertEqual(response_plan.partners, default_plan.partners)
+        self.assertEqual(response_plan.institutions, default_plan.institutions)
+        self.assertEqual(response_plan.topic, default_plan.topic)
+        self.assertEqual(response_plan.lectures, default_plan.lectures)
+        self.assertEqual(response_plan.audience, default_plan.audience)
+        self.assertEqual(response_plan.languages, default_plan.languages)
+        self.assertEqual(response_plan.timestamp_from, default_plan.timestamp_from)
+        self.assertEqual(response_plan.timestamp_to, default_plan.timestamp_to)
+        self.assertEqual(response_plan.involved_parties, default_plan.involved_parties)
+        self.assertEqual(response_plan.realization, default_plan.realization)
+        self.assertEqual(response_plan.learning_env, default_plan.learning_env)
+        self.assertEqual(response_plan.tools, default_plan.tools)
+        self.assertEqual(response_plan.new_content, default_plan.new_content)
+        self.assertEqual(response_plan.formalities, default_plan.formalities)
+        self.assertEqual(response_plan.duration, default_plan.duration)
+        self.assertEqual(response_plan.workload, default_plan.workload)
+        self.assertEqual(response_plan.steps, default_plan.steps)
+        self.assertEqual(response_plan.progress, default_plan.progress)
+        self.assertIsNotNone(response_plan.creation_timestamp)
+        self.assertIsNotNone(response_plan.last_modified)
 
     def test_get_all_plans_error_insufficient_permissions(self):
         """
@@ -6869,6 +7138,19 @@ class VEPlanHandlerTest(BaseApiTestCase):
         # expect plan to be in the db
         db_state = self.db.plans.find_one({"_id": ObjectId(response["inserted_id"])})
         self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["author"], CURRENT_ADMIN.username)
+        self.assertIsNotNone(db_state["creation_timestamp"])
+        self.assertIsNotNone(db_state["last_modified"])
+        self.assertEqual(db_state["creation_timestamp"], db_state["last_modified"])
+
+        # just update the field in the supplied plan for easier equality check below
+        plan["author"] = CURRENT_ADMIN.username
+        plan["creation_timestamp"] = plan["last_modified"] = db_state[
+            "creation_timestamp"
+        ]
+        plan["read_access"] = [CURRENT_ADMIN.username]
+        plan["write_access"] = [CURRENT_ADMIN.username]
+
         self.assertEqual(db_state, plan)
 
     def test_post_insert_plan_error_plan_already_exists(self):
@@ -6905,6 +7187,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertIsNotNone(db_state)
         self.assertEqual(db_state["name"], "updated_plan")
         self.assertEqual(db_state["topic"], None)
+        self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
     def test_post_upsert_plan(self):
         """
@@ -6928,7 +7211,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         db_state = self.db.plans.find_one({"_id": ObjectId(response["updated_id"])})
         self.assertIsNotNone(db_state)
         self.assertEqual(db_state["name"], plan["name"])
-
+        self.assertEqual(db_state["creation_timestamp"], db_state["last_modified"])
         # but also expect the other dummy plan to still be there
         default_plan = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(default_plan)
@@ -6963,6 +7246,26 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], PLAN_DOESNT_EXIST_ERROR)
 
+    def test_post_update_plan_error_insufficient_permission(self):
+        """
+        expect: fail message because user has no write access to the plan
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        plan = VEPlan(_id=self.plan_id, name="updated_plan")
+
+        response = self.base_checks(
+            "POST",
+            "/planner/update_full",
+            False,
+            403,
+            body=self.json_serialize(plan.to_dict()),
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
     def test_post_update_field_primitive_attribute(self):
         """
         expect: successfully update the value of an attribute that has a primitive type
@@ -6987,6 +7290,31 @@ class VEPlanHandlerTest(BaseApiTestCase):
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
         self.assertEqual(db_state["realization"], "updated_realization")
+        self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
+
+        # again with formalities dict attribute
+        payload = {
+            "plan_id": self.plan_id,
+            "field_name": "formalities",
+            "value": {"technology": True, "exam_regulations": True},
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/update_field",
+            True,
+            200,
+            body=self.json_serialize(payload),
+        )
+
+        self.assertEqual(response["updated_id"], str(self.plan_id))
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(
+            db_state["formalities"], {"technology": True, "exam_regulations": True}
+        )
+        self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
         # again, but this time upsert
         payload = {
@@ -7009,6 +7337,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(db_state["topic"], "updated_topic")
         self.assertEqual(db_state["realization"], None)
         self.assertEqual(db_state["steps"], [])
+        self.assertEqual(db_state["last_modified"], db_state["creation_timestamp"])
 
     def test_post_update_field_compound_attribute(self):
         """
@@ -7027,6 +7356,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "academic_course": "updated_academic_course",
                     "mother_tongue": "de",
                     "foreign_languages": {"en": "c1"},
+                    "learning_goal": "test",
                 }
             ],
         }
@@ -7046,14 +7376,16 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(len(db_state["audience"]), 1)
         self.assertIsInstance(db_state["audience"][0]["_id"], ObjectId)
         self.assertEqual(db_state["audience"][0]["name"], "updated_name")
-        self.assertEqual(db_state["audience"][0]["age_min"], 10)
-        self.assertEqual(db_state["audience"][0]["age_max"], 20)
+        self.assertEqual(db_state["audience"][0]["age_min"], "10")
+        self.assertEqual(db_state["audience"][0]["age_max"], "20")
         self.assertEqual(db_state["audience"][0]["experience"], "updated_experience")
         self.assertEqual(
             db_state["audience"][0]["academic_course"], "updated_academic_course"
         )
         self.assertEqual(db_state["audience"][0]["mother_tongue"], "de")
         self.assertEqual(db_state["audience"][0]["foreign_languages"], {"en": "c1"})
+        self.assertEqual(db_state["audience"][0]["learning_goal"], "test")
+        self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
         # again, but this time upsert
         payload = {
@@ -7068,6 +7400,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "academic_course": "updated_academic_course",
                     "mother_tongue": "de",
                     "foreign_languages": {"en": "c1"},
+                    "learning_goal": "test",
                 }
             ],
         }
@@ -7086,16 +7419,18 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(len(db_state["audience"]), 1)
         self.assertIsInstance(db_state["audience"][0]["_id"], ObjectId)
         self.assertEqual(db_state["audience"][0]["name"], "updated_name")
-        self.assertEqual(db_state["audience"][0]["age_min"], 10)
-        self.assertEqual(db_state["audience"][0]["age_max"], 20)
+        self.assertEqual(db_state["audience"][0]["age_min"], "10")
+        self.assertEqual(db_state["audience"][0]["age_max"], "20")
         self.assertEqual(db_state["audience"][0]["experience"], "updated_experience")
         self.assertEqual(
             db_state["audience"][0]["academic_course"], "updated_academic_course"
         )
         self.assertEqual(db_state["audience"][0]["mother_tongue"], "de")
         self.assertEqual(db_state["audience"][0]["foreign_languages"], {"en": "c1"})
+        self.assertEqual(db_state["audience"][0]["learning_goal"], "test")
         self.assertEqual(db_state["topic"], None)
         self.assertEqual(db_state["steps"], [])
+        self.assertEqual(db_state["last_modified"], db_state["creation_timestamp"])
 
     def test_post_update_field_error_missing_key(self):
         """
@@ -7175,6 +7510,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "academic_course": "updated_academic_course",
                     "mother_tongue": "de",
                     "foreign_languages": {"en": "c1"},
+                    "learning_goal": "test",
                 }
             ],
         }
@@ -7243,6 +7579,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "academic_course": "updated_academic_course",
                     "mother_tongue": "de",
                     "foreign_languages": {"en": "c1"},
+                    "learning_goal": "test",
                 }
             ],
         }
@@ -7272,6 +7609,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "academic_course": "updated_academic_course",
                     "mother_tongue": "de",
                     "foreign_languages": {"en": "c1"},
+                    "learning_goal": "test",
                 }
             ],
         }
@@ -7378,6 +7716,419 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], NON_UNIQUE_TASKS_ERROR)
 
+    def test_post_update_field_error_insufficient_permission(self):
+        """
+        expect: fail message because user has no write access to plan
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        payload = {
+            "plan_id": self.plan_id,
+            "field_name": "realization",
+            "value": "updated_realization",
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/update_field",
+            False,
+            403,
+            body=self.json_serialize(payload),
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_post_update_fields(self):
+        """
+        expect: successfully update multiple fields
+        """
+
+        payload = {
+            "update": [
+                {
+                    "plan_id": self.plan_id,
+                    "field_name": "realization",
+                    "value": "updated_realization",
+                },
+                {
+                    "plan_id": self.plan_id,
+                    "field_name": "topic",
+                    "value": "updated_topic",
+                },
+            ]
+        }
+
+        self.base_checks(
+            "POST",
+            "/planner/update_fields",
+            True,
+            200,
+            body=self.json_serialize(payload),
+        )
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["realization"], "updated_realization")
+        self.assertEqual(db_state["topic"], "updated_topic")
+        self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
+
+    def test_post_update_fields_errors(self):
+        """
+        expect: one query to be successfull and the other caused an error
+        """
+
+        payload = {
+            "update": [
+                {
+                    "plan_id": self.plan_id,
+                    "field_name": "realization",
+                    "value": "updated_realization",
+                },
+                {
+                    "plan_id": self.plan_id,
+                    "field_name": "topics",  # field name is wrong, should cause unexpected_attribute
+                    "value": "updated_topic",
+                },
+            ]
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/update_fields",
+            False,
+            409,
+            body=self.json_serialize(payload),
+        )
+
+        self.assertEqual(response["reason"], "operation_errors")
+        self.assertIn("errors", response)
+        self.assertEqual(1, len(response["errors"]))
+        error = response["errors"][0]
+        self.assertIn("update_instruction", error)
+        self.assertIn("error_status_code", error)
+        self.assertIn("error_reason", error)
+        self.assertEqual(error["error_status_code"], 400)
+        self.assertEqual(error["error_reason"], "unexpected_attribute")
+
+        # realization should be updated, but topic not
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["realization"], "updated_realization")
+        self.assertNotEqual(db_state["topic"], "updated_topic")
+
+    def test_post_grant_read_permission(self):
+        """
+        expect: successfully set read permissions for the user
+        """
+
+        payload = {
+            "plan_id": self.plan_id,
+            "username": "another_test_user",
+            "read": "true",
+            "write": "false",
+        }
+
+        self.base_checks(
+            "POST",
+            "/planner/grant_access",
+            True,
+            200,
+            body=self.json_serialize(payload),
+        )
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state)
+        self.assertIn("another_test_user", db_state["read_access"])
+        self.assertNotIn("another_test_user", db_state["write_access"])
+
+    def test_post_grant_read_permission_error_insufficient_permission(self):
+        """
+        expect: fail message because current user is not the author of the plan
+        and therefore cannot set access rights
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        payload = {
+            "plan_id": self.plan_id,
+            "username": "another_test_user",
+            "read": "true",
+            "write": "false",
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/grant_access",
+            False,
+            403,
+            body=self.json_serialize(payload),
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_post_grant_read_permission_error_plan_doesnt_exist(self):
+        """
+        expect: fail message because no plan with the id exists
+        """
+
+        payload = {
+            "plan_id": ObjectId(),
+            "username": "another_test_user",
+            "read": "true",
+            "write": "false",
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/grant_access",
+            False,
+            409,
+            body=self.json_serialize(payload),
+        )
+        self.assertEqual(response["reason"], PLAN_DOESNT_EXIST_ERROR)
+
+    def test_post_grant_write_permission(self):
+        """
+        expect: successfully set write permissions for the user, which includes
+        read permissions
+        """
+
+        payload = {
+            "plan_id": self.plan_id,
+            "username": "another_test_user",
+            "read": "true",
+            "write": "true",
+        }
+
+        self.base_checks(
+            "POST",
+            "/planner/grant_access",
+            True,
+            200,
+            body=self.json_serialize(payload),
+        )
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state)
+        self.assertIn("another_test_user", db_state["read_access"])
+        self.assertIn("another_test_user", db_state["write_access"])
+
+    def test_post_grant_write_permission_error_insufficient_permission(self):
+        """
+        expect: fail message because current user is not the author of the plan
+        and therefore cannot set access rights
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        payload = {
+            "plan_id": self.plan_id,
+            "username": "another_test_user",
+            "read": "true",
+            "write": "true",
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/grant_access",
+            False,
+            403,
+            body=self.json_serialize(payload),
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_post_grant_write_permission_error_plan_doesnt_exist(self):
+        """
+        expect: fail message because no plan with the id exists
+        """
+
+        payload = {
+            "plan_id": ObjectId(),
+            "username": "another_test_user",
+            "read": "true",
+            "write": "true",
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/grant_access",
+            False,
+            409,
+            body=self.json_serialize(payload),
+        )
+        self.assertEqual(response["reason"], PLAN_DOESNT_EXIST_ERROR)
+
+    def test_post_revoke_read_permission(self):
+        """
+        expect: sucessfully revoke read permission of the user, which includes write permission
+        """
+
+        # manually add another user
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$addToSet": {
+                    "read_access": "another_test_user",
+                    "write_access": "another_test_user",
+                }
+            },
+        )
+
+        payload = {
+            "plan_id": self.plan_id,
+            "username": "another_test_user",
+            "read": "true",
+            "write": "true",
+        }
+
+        self.base_checks(
+            "POST",
+            "/planner/revoke_access",
+            True,
+            200,
+            body=self.json_serialize(payload),
+        )
+
+        # expect the user not to be in the read_access nor write_access list
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state)
+        self.assertNotIn("another_test_user", db_state["read_access"])
+        self.assertNotIn("another_test_user", db_state["write_access"])
+
+    def test_post_revoke_read_permission_error_insufficient_permission(self):
+        """
+        expect: fail message because current user is not the author of the plan
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        payload = {
+            "plan_id": self.plan_id,
+            "username": "another_test_user",
+            "read": "true",
+            "write": "true",
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/revoke_access",
+            False,
+            403,
+            body=self.json_serialize(payload),
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_post_revoke_read_permission_error_plan_doesnt_exist(self):
+        """
+        expect: fail message because no plan with the id exists
+        """
+
+        payload = {
+            "plan_id": ObjectId(),
+            "username": "another_test_user",
+            "read": "true",
+            "write": "true",
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/revoke_access",
+            False,
+            409,
+            body=self.json_serialize(payload),
+        )
+        self.assertEqual(response["reason"], PLAN_DOESNT_EXIST_ERROR)
+
+    def test_post_revoke_write_permission(self):
+        """
+        expect: sucessfully revoke write permission, but not read
+        """
+
+        # manually add another user
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$addToSet": {
+                    "read_access": "another_test_user",
+                    "write_access": "another_test_user",
+                }
+            },
+        )
+
+        payload = {
+            "plan_id": self.plan_id,
+            "username": "another_test_user",
+            "read": "false",
+            "write": "true",
+        }
+
+        self.base_checks(
+            "POST",
+            "/planner/revoke_access",
+            True,
+            200,
+            body=self.json_serialize(payload),
+        )
+
+        # expect the user not to be in the write_access, but still in the read_access list
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state)
+        self.assertIn("another_test_user", db_state["read_access"])
+        self.assertNotIn("another_test_user", db_state["write_access"])
+
+    def test_post_revoke_write_permission_error_insufficient_permission(self):
+        """
+        expect: fail message because current user is not the author of the plan
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        payload = {
+            "plan_id": self.plan_id,
+            "username": "another_test_user",
+            "read": "false",
+            "write": "true",
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/revoke_access",
+            False,
+            403,
+            body=self.json_serialize(payload),
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_post_revoke_write_permission_error_plan_doesnt_exist(self):
+        """
+        expect: fail message because no plan with the id exists
+        """
+
+        payload = {
+            "plan_id": ObjectId(),
+            "username": "another_test_user",
+            "read": "false",
+            "write": "true",
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/revoke_access",
+            False,
+            409,
+            body=self.json_serialize(payload),
+        )
+        self.assertEqual(response["reason"], PLAN_DOESNT_EXIST_ERROR)
+
     def test_delete_plan(self):
         """
         expect: successfully delete plan
@@ -7389,6 +8140,83 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNone(db_state)
+
+    def test_delete_plan_side_effect_delete_from_ve_windows(self):
+        """
+        expect: successfully delete plan and also delete the plan from all VEWindows
+        that reference it
+        """
+
+        # insert a user with a ve_window entry that references the plan
+        self.db.profiles.insert_one(
+            {
+                "_id": ObjectId(),
+                "username": "some_other_user",
+                "role": "guest",
+                "follows": [],
+                "bio": "test",
+                "institution": "test",
+                "profile_pic": "default_profile_pic.jpg",
+                "first_name": "Test",
+                "last_name": "Admin",
+                "gender": "male",
+                "address": "test",
+                "birthday": "2023-01-01",
+                "experience": ["test", "test"],
+                "expertise": "test",
+                "languages": ["german", "english"],
+                "ve_ready": True,
+                "excluded_from_matching": False,
+                "ve_interests": ["test", "test"],
+                "ve_goals": ["test", "test"],
+                "preferred_formats": ["test"],
+                "research_tags": ["test"],
+                "courses": [
+                    {"title": "test", "academic_course": "test", "semester": "test"}
+                ],
+                "educations": [
+                    {
+                        "institution": "test",
+                        "degree": "test",
+                        "department": "test",
+                        "timestamp_from": "2023-01-01",
+                        "timestamp_to": "2023-02-01",
+                        "additional_info": "test",
+                    }
+                ],
+                "work_experience": [
+                    {
+                        "position": "test",
+                        "institution": "test",
+                        "department": "test",
+                        "timestamp_from": "2023-01-01",
+                        "timestamp_to": "2023-02-01",
+                        "city": "test",
+                        "country": "test",
+                        "additional_info": "test",
+                    }
+                ],
+                "ve_window": [
+                    {
+                        "plan_id": self.plan_id,
+                        "title": "test",
+                        "description": "test",
+                    }
+                ],
+            }
+        )
+
+        self.base_checks(
+            "DELETE", "/planner/delete?_id={}".format(str(self.plan_id)), True, 200
+        )
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNone(db_state)
+
+        # expect the plan to be deleted from the ve_window as well
+        db_state = self.db.profiles.find_one({"username": "some_other_user"})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(len(db_state["ve_window"]), 0)
 
     def test_delete_plan_error_missing_key(self):
         """
@@ -7407,3 +8235,632 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "DELETE", "/planner/delete?_id={}".format(str(ObjectId())), False, 409
         )
         self.assertEqual(response["reason"], PLAN_DOESNT_EXIST_ERROR)
+
+    def test_delete_plan_error_insufficient_permission(self):
+        """
+        expect: fail message because user is not the author of the plan
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        response = self.base_checks(
+            "DELETE", "/planner/delete?_id={}".format(str(self.plan_id)), False, 403
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_delete_step_by_id(self):
+        """
+        expect: successfully delete step from plan
+        """
+
+        self.base_checks(
+            "DELETE",
+            "/planner/delete_step?_id={}&step_id={}".format(
+                self.plan_id, self.step._id
+            ),
+            True,
+            200,
+        )
+
+        # expect no step in the plan after deletion
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertEqual(db_state["steps"], [])
+
+    def test_delete_step_by_name(self):
+        """
+        expect: successfully delete step from plan
+        """
+
+        self.base_checks(
+            "DELETE",
+            "/planner/delete_step?_id={}&step_name={}".format(
+                self.plan_id, self.step.name
+            ),
+            True,
+            200,
+        )
+
+        # expect no step in the plan after deletion
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertEqual(db_state["steps"], [])
+
+    def test_delete_step_error_missing_key(self):
+        """
+        fail message because _id or any of step_id or step_name is missing
+        """
+
+        response = self.base_checks("DELETE", "/planner/delete_step?", False, 400)
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "_id")
+
+        response2 = self.base_checks(
+            "DELETE", "/planner/delete_step?_id={}".format(ObjectId()), False, 400
+        )
+        self.assertEqual(
+            response2["reason"], MISSING_KEY_ERROR_SLUG + "step_id_or_step_name"
+        )
+
+    def test_delete_step_error_plan_doesnt_exist(self):
+        """
+        expect: fail message because plan doesnt exist
+        """
+
+        response = self.base_checks(
+            "DELETE",
+            "/planner/delete_step?_id={}&step_id={}".format(ObjectId(), ObjectId()),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], PLAN_DOESNT_EXIST_ERROR)
+
+        response2 = self.base_checks(
+            "DELETE",
+            "/planner/delete_step?_id={}&step_name={}".format(ObjectId(), "test"),
+            False,
+            409,
+        )
+        self.assertEqual(response2["reason"], PLAN_DOESNT_EXIST_ERROR)
+
+    def test_delete_step_error_insufficient_permission(self):
+        """
+        expect: fail message because user has no write access to plan
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        response = self.base_checks(
+            "DELETE",
+            "/planner/delete_step?_id={}&step_id={}".format(
+                str(self.plan_id), str(self.step._id)
+            ),
+            False,
+            403,
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+        response2 = self.base_checks(
+            "DELETE",
+            "/planner/delete_step?_id={}&step_name={}".format(
+                str(self.plan_id), self.step.name
+            ),
+            False,
+            403,
+        )
+        self.assertEqual(response2["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_delete_step_step_doesnt_exist(self):
+        """
+        expect: when an non-existing step_id or step_name is provided no error should appear
+        because it is technically a success that no such record exists
+        """
+
+        self.base_checks(
+            "DELETE",
+            "/planner/delete_step?_id={}&step_id={}".format(self.plan_id, ObjectId()),
+            True,
+            200,
+        )
+
+        # expect step to still be there
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertEqual(len(db_state["steps"]), 1)
+
+        self.base_checks(
+            "DELETE",
+            "/planner/delete_step?_id={}&step_name={}".format(
+                self.plan_id, "non_existing"
+            ),
+            True,
+            200,
+        )
+
+        # expect step to still be there
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertEqual(len(db_state["steps"]), 1)
+
+
+class VeInvitationHandlerTest(BaseApiTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+
+        self.base_permission_environment_setUp()
+        self.plan_id = ObjectId()
+        invitation_id = self.default_invitation_setup()
+        self.invitation_id = invitation_id
+
+    def tearDown(self) -> None:
+        super().tearDown()
+
+        self.base_permission_environments_tearDown()
+        self.db.invitations.delete_many({})
+        self.db.notifications.delete_many({})
+        self.db.plans.delete_many({})
+
+    def default_invitation_setup(self) -> ObjectId:
+        self.db.plans.insert_one(
+            VEPlan(self.plan_id, author=CURRENT_ADMIN.username).to_dict()
+        )
+        self.default_invitation = {
+            "plan_id": self.plan_id,
+            "message": "invitation",
+            "sender": CURRENT_ADMIN.username,
+            "recipient": CURRENT_USER.username,
+            "accepted": None,
+        }
+        result = self.db.invitations.insert_one(self.default_invitation)
+        return result.inserted_id
+
+    def test_post_send_ve_invitation(self):
+        """
+        expect: successfully send invitation
+        """
+
+        payload = {
+            "message": "this_is_an_invite",
+            "plan_id": str(self.plan_id),
+            "username": CURRENT_USER.username,
+        }
+
+        self.base_checks("POST", "/ve_invitation/send", True, 200, body=payload)
+
+        # expect invitation to be in db
+        db_state = self.db.invitations.find_one(
+            {"plan_id": self.plan_id, "message": "this_is_an_invite"}
+        )
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["sender"], CURRENT_ADMIN.username)
+        self.assertEqual(db_state["recipient"], CURRENT_USER.username)
+        self.assertIsNone(db_state["accepted"])
+
+        # expect invited user to have read permissions to the plan
+        plan = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIn(CURRENT_USER.username, plan["read_access"])
+
+        # expect notifiation to be stored for the invited user,
+        # but not yet dispatched (== receive_state = pending)
+        notification = self.db.notifications.find_one(
+            {
+                "payload.from": CURRENT_ADMIN.username,
+                "payload.message": "this_is_an_invite",
+            }
+        )
+        self.assertIsNotNone(notification)
+        self.assertEqual(notification["payload"]["plan_id"], str(self.plan_id))
+        self.assertEqual(notification["receive_state"], "pending")
+        self.assertEqual(notification["to"], CURRENT_USER.username)
+        self.assertEqual(notification["type"], "ve_invitation")
+
+        # again, but this time dont include a plan
+        payload2 = {
+            "message": "this_is_another_invite",
+            "username": CURRENT_USER.username,
+            "plan_id": None,
+        }
+        self.base_checks("POST", "/ve_invitation/send", True, 200, body=payload2)
+
+        # expect invitation to be in db
+        db_state2 = self.db.invitations.find_one({"message": "this_is_another_invite"})
+        self.assertIsNotNone(db_state2)
+        self.assertEqual(db_state2["sender"], CURRENT_ADMIN.username)
+        self.assertEqual(db_state2["recipient"], CURRENT_USER.username)
+        self.assertIsNone(db_state2["accepted"])
+        self.assertIsNone(db_state2["plan_id"])
+
+    def test_post_send_ve_invitation_error_missing_key(self):
+        """
+        expect: fail message because plan_id, message or username is missing
+        """
+
+        payload = {"message": "this_is_an_invite", "plan_id": str(self.plan_id)}
+        response = self.base_checks(
+            "POST", "/ve_invitation/send", False, 400, body=payload
+        )
+        self.assertEqual(
+            response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "username"
+        )
+
+        payload2 = {"message": "this_is_an_invite", "username": CURRENT_USER.username}
+        response2 = self.base_checks(
+            "POST", "/ve_invitation/send", False, 400, body=payload2
+        )
+        self.assertEqual(
+            response2["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "plan_id"
+        )
+
+        payload3 = {"plan_id": str(self.plan_id), "username": CURRENT_USER.username}
+        response3 = self.base_checks(
+            "POST", "/ve_invitation/send", False, 400, body=payload3
+        )
+        self.assertEqual(
+            response3["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "message"
+        )
+
+    def test_post_send_ve_invitation_error_insufficient_permissions(self):
+        """
+        expect: fail message because user is not the author of the appended plan
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        payload = {
+            "plan_id": str(self.plan_id),
+            "username": CURRENT_ADMIN.username,
+            "message": "invite",
+        }
+
+        response = self.base_checks(
+            "POST", "/ve_invitation/send", False, 403, body=payload
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_post_reply_ve_invitation(self):
+        """
+        expect: successfully reply to invitation
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        payload = {
+            "invitation_id": str(self.invitation_id),
+            "accepted": True,
+        }
+
+        self.base_checks("POST", "/ve_invitation/reply", True, 200, body=payload)
+
+        # expect invitation to be accepted
+        db_state = self.db.invitations.find_one({"_id": self.invitation_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["accepted"], True)
+
+        # expect notifcation to be stored for the origin sender of the invitation,
+        # but not yet dispatched (== receive_state = pending)
+        notification = self.db.notifications.find_one(
+            {
+                "payload.from": CURRENT_USER.username,
+                "payload.invitation_id": str(self.invitation_id),
+                "type": "ve_invitation_reply",
+            }
+        )
+        self.assertIsNotNone(notification)
+        self.assertEqual(notification["receive_state"], "pending")
+        self.assertEqual(notification["to"], self.default_invitation["sender"])
+        self.assertEqual(notification["payload"]["accepted"], True)
+        self.assertEqual(
+            notification["payload"]["message"], self.default_invitation["message"]
+        )
+
+        # again, but this time decline the invitation
+        payload2 = {
+            "invitation_id": str(self.invitation_id),
+            "accepted": False,
+        }
+        self.base_checks("POST", "/ve_invitation/reply", True, 200, body=payload2)
+
+        # expect invitation to be declined
+        db_state2 = self.db.invitations.find_one({"_id": self.invitation_id})
+        self.assertIsNotNone(db_state2)
+        self.assertEqual(db_state2["accepted"], False)
+
+        # this time also expect read access to the associated plan to be removed
+        plan = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertNotIn(CURRENT_USER.username, plan["read_access"])
+
+    def test_post_reply_ve_invitation_error_missing_key(self):
+        """
+        expect: fail message because invitation_id or accepted is missing
+        """
+
+        payload = {"invitation_id": str(self.invitation_id)}
+        response = self.base_checks(
+            "POST", "/ve_invitation/reply", False, 400, body=payload
+        )
+        self.assertEqual(
+            response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "accepted"
+        )
+
+        payload2 = {"accepted": True}
+        response2 = self.base_checks(
+            "POST", "/ve_invitation/reply", False, 400, body=payload2
+        )
+        self.assertEqual(
+            response2["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "invitation_id"
+        )
+
+    def test_post_reply_ve_invitation_error_invitation_doesnt_exist(self):
+        """
+        expect: fail message because invitation doesnt exist
+        """
+
+        payload = {
+            "invitation_id": str(ObjectId()),
+            "accepted": True,
+        }
+
+        response = self.base_checks(
+            "POST", "/ve_invitation/reply", False, 409, body=payload
+        )
+        self.assertEqual(response["reason"], INVITATION_DOESNT_EXIST_ERROR)
+
+    def test_post_reply_ve_invitation_error_insufficient_permissions(self):
+        """
+        expect: fail message because current user is not the recipient of the invitation
+        """
+
+        payload = {
+            "invitation_id": str(self.invitation_id),
+            "accepted": True,
+        }
+
+        response = self.base_checks(
+            "POST", "/ve_invitation/reply", False, 403, body=payload
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+
+class ChatHandlerTest(BaseApiTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+
+        self.base_permission_environment_setUp()
+
+        self.room_id = ObjectId()
+        self.message_id = ObjectId()
+        self.default_message = {
+            "_id": self.message_id,
+            "message": "test",
+            "sender": CURRENT_ADMIN.username,
+            "creation_date": datetime(2023, 1, 1, 8, 0, 0),
+            "send_states": {
+                CURRENT_ADMIN.username: "acknowledged",
+                "other_user": "sent",
+            },
+        }
+        self.default_room = {
+            "_id": self.room_id,
+            "name": "test_room",
+            "members": [CURRENT_ADMIN.username, "other_user"],
+            "messages": [self.default_message],
+        }
+        self.db.chatrooms.insert_one(self.default_room)
+
+    def tearDown(self) -> None:
+        self.base_permission_environments_tearDown()
+
+        self.db.chatrooms.delete_many({})
+
+        super().tearDown()
+
+    def test_get_get_mine(self):
+        """
+        expect: successfully get chatroom snippets for all rooms where
+        the current user is a member
+        """
+
+        # create two more rooms, one where the user is a member and one where not
+        room1 = {
+            "_id": ObjectId(),
+            "name": "room1",
+            "members": [CURRENT_ADMIN.username, CURRENT_USER.username],
+            "messages": [],
+        }
+        room2 = {
+            "_id": ObjectId(),
+            "name": "room2",
+            "members": [CURRENT_USER.username, "some_other_user"],
+            "messages": [],
+        }
+        self.db.chatrooms.insert_many([room1, room2])
+
+        response = self.base_checks("GET", "/chatroom/get_mine", True, 200)
+        self.assertIn("rooms", response)
+
+        snippets = response["rooms"]
+        self.assertEqual(len(snippets), 2)
+        self.assertIn(
+            str(self.default_room["_id"]), [snippet["_id"] for snippet in snippets]
+        )
+        self.assertIn(str(room1["_id"]), [snippet["_id"] for snippet in snippets])
+
+        # expect the snippet is of the correct form
+        for snippet in snippets:
+            if snippet["_id"] == self.room_id:
+                self.assertEqual(snippet["name"], self.default_room["name"])
+                self.assertEqual(snippet["members"], self.default_room["members"])
+                self.assertEqual(
+                    snippet["last_message"]["_id"], str(self.default_message["_id"])
+                )
+            elif snippet["_id"] == room1["_id"]:
+                self.assertEqual(snippet["name"], room1["name"])
+                self.assertEqual(snippet["members"], room1["members"])
+                self.assertEqual(snippet["last_message"], None)
+
+    def test_get_get_messages(self):
+        """
+        expect: successfully get all messages of the given room
+        """
+
+        # add one more message to the default room
+        message = {
+            "_id": ObjectId(),
+            "message": "test2",
+            "sender": "other_user",
+            "creation_date": datetime(2023, 1, 1, 9, 0, 0),
+            "send_states": {
+                CURRENT_ADMIN.username: "sent",
+                "other_user": "acknowledged",
+            },
+        }
+        self.db.chatrooms.update_one(
+            {"_id": self.room_id}, {"$push": {"messages": message}}
+        )
+
+        response = self.base_checks(
+            "GET",
+            "/chatroom/get_messages?room_id={}".format(str(self.room_id)),
+            True,
+            200,
+        )
+
+        self.assertIn("room_id", response)
+        self.assertIn("messages", response)
+        self.assertEqual(len(response["messages"]), 2)
+        self.assertIn(
+            str(self.default_message["_id"]),
+            [msg["_id"] for msg in response["messages"]],
+        )
+        self.assertIn(str(message["_id"]), [msg["_id"] for msg in response["messages"]])
+
+    def test_get_get_messages_error_missing_key(self):
+        """
+        expect: fail message because room_id is missing
+        """
+
+        response = self.base_checks("GET", "/chatroom/get_messages", False, 400)
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "room_id")
+
+    def test_get_get_messages_error_insufficient_permissions(self):
+        """
+        expect: fail message because user is not a member of the room
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        response = self.base_checks(
+            "GET",
+            "/chatroom/get_messages?room_id={}".format(str(self.room_id)),
+            False,
+            403,
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_get_get_messages_error_room_doesnt_exist(self):
+        """
+        expect: fail message because no room with this _id exists
+        """
+
+        response = self.base_checks(
+            "GET",
+            "/chatroom/get_messages?room_id={}".format(str(ObjectId())),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], ROOM_DOESNT_EXIST_ERROR)
+
+    def test_post_create_or_get(self):
+        """
+        expect: successfully create a new room or get an existing one
+        """
+
+        # this should create a new room, because there is a room with the same members,
+        # but is has a name
+        payload = {
+            "members": [CURRENT_ADMIN.username, "other_user"],
+        }
+        response = self.base_checks(
+            "POST", "/chatroom/create_or_get", True, 200, body=payload
+        )
+        self.assertIn("room_id", response)
+
+        # expect the room to be in the db
+        db_state = self.db.chatrooms.find_one({"_id": ObjectId(response["room_id"])})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["name"], None)
+        self.assertEqual(db_state["members"], payload["members"])
+        self.assertEqual(db_state["messages"], [])
+        self.assertNotEqual(db_state["_id"], self.room_id)
+
+        # this time, create a new room with a name, though again with the same members
+        payload2 = {
+            "members": [CURRENT_ADMIN.username, "other_user"],
+            "name": "another_test_room",
+        }
+        response2 = self.base_checks(
+            "POST", "/chatroom/create_or_get", True, 200, body=payload2
+        )
+        self.assertIn("room_id", response2)
+
+        # expect the room to be in the db
+        db_state2 = self.db.chatrooms.find_one({"_id": ObjectId(response2["room_id"])})
+        self.assertIsNotNone(db_state2)
+        self.assertEqual(db_state2["name"], payload2["name"])
+        self.assertEqual(db_state2["members"], payload2["members"])
+        self.assertEqual(db_state2["messages"], [])
+        self.assertNotEqual(db_state2["_id"], self.room_id)
+
+        # this time, create a room with an already existing name, but different members,
+        # which should also be an independent room
+        payload3 = {
+            "members": [CURRENT_ADMIN.username, "another_other_user"],
+            "name": self.default_room["name"],
+        }
+        response3 = self.base_checks(
+            "POST", "/chatroom/create_or_get", True, 200, body=payload3
+        )
+        self.assertIn("room_id", response3)
+
+        # expect the room to be in the db
+        db_state3 = self.db.chatrooms.find_one({"_id": ObjectId(response3["room_id"])})
+        self.assertIsNotNone(db_state3)
+        self.assertEqual(db_state3["name"], payload3["name"])
+        self.assertEqual(db_state3["members"], payload3["members"])
+        self.assertEqual(db_state3["messages"], [])
+        self.assertNotEqual(db_state3["_id"], self.room_id)
+
+        # and finally, get the already existing room
+        payload4 = {
+            "members": self.default_room["members"],
+            "name": self.default_room["name"],
+        }
+        response4 = self.base_checks(
+            "POST", "/chatroom/create_or_get", True, 200, body=payload4
+        )
+        self.assertIn("room_id", response4)
+
+        # expect the room to be in the db
+        db_state4 = self.db.chatrooms.find_one({"_id": ObjectId(response4["room_id"])})
+        self.assertIsNotNone(db_state4)
+        self.assertEqual(db_state4["name"], payload4["name"])
+        self.assertEqual(db_state4["members"], payload4["members"])
+        self.assertEqual(db_state4["messages"], [self.default_message])
+        self.assertEqual(db_state4["_id"], self.room_id)
+
+    def test_post_create_or_get_eroror_missing_key(self):
+        """
+        expect: fail message because members is missing
+        """
+
+        response = self.base_checks(
+            "POST", "/chatroom/create_or_get", False, 400, body={}
+        )
+        self.assertEqual(
+            response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "members"
+        )
