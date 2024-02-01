@@ -4,7 +4,11 @@ from tornado.options import define
 import tornado.testing
 
 
-TEST_MODULES = ["tests.model_tests", "tests.resource_tests", "tests.api_tests"]
+TEST_MODULES = [
+    "tests.model_tests",
+    "tests.resource_tests",
+    "tests.api_tests",
+]
 
 
 def all():

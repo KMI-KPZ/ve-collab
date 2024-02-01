@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            body {
+                margin: 0;
+            }
+
+            iframe {
+                display: block;
+                width: 100vw;
+                height: 100vh;
+                border: 0;
+            }
+        </style>
+    </head>
+    <body>
+        <iframe src="about:blank" id="iframe"></iframe>
+        <script>
+            document.getElementById('iframe').src = "viewer.html" + window.location.search;
+        </script>
+    </body>
+</html>
