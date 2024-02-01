@@ -3,35 +3,30 @@ from typing import Dict, List, Optional
 
 from bson.objectid import ObjectId
 import gridfs
-from pymongo import MongoClient
+from pymongo.database import Database
 
 from exceptions import (
     AlreadyLikerException,
     NotLikerException,
     PostNotExistingException,
 )
-import global_vars
+
 from resources.network.space import FileDoesntExistError, SpaceDoesntExistError, Spaces
+import util
 
 
 class Posts:
     """
-    implementation of Posts in the DB as a context manager, usage::
+    to use this class, acquire a mongodb connection first via::
 
-        with Posts() as db_manager:
-            db_manager.get_posts()
+        with util.get_mongodb() as db:
+            post_manager = Posts(db)
             ...
 
     """
 
-    def __init__(self):
-        self.client = MongoClient(
-            global_vars.mongodb_host,
-            global_vars.mongodb_port,
-            username=global_vars.mongodb_username,
-            password=global_vars.mongodb_password,
-        )
-        self.db = self.client[global_vars.mongodb_db_name]
+    def __init__(self, db: Database):
+        self.db = db
 
         self.post_attributes = [
             "author",
@@ -60,72 +55,51 @@ class Posts:
             "pinned",
         ]
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, exc_traceback):
-        self.client.close()
-
-    def _parse_object_id(self, obj_id: str | ObjectId) -> ObjectId:
-        """
-        parse a str-representation of a mongodb objectid into an
-        actual ObjectId-object. If the input id is already an ObjectId,
-        it is returned unchanged.
-        :param obj_id: the id to be transformed into a bson.ObjectId-object
-        :return: the id as a bson.ObjectId
-        """
-
-        if obj_id is None:
-            raise TypeError("_id cannot be None")
-        elif isinstance(obj_id, str):
-            return ObjectId(obj_id)
-        elif isinstance(obj_id, ObjectId):
-            return obj_id
-        else:
-            raise TypeError(
-                """invalid object_id type, 
-                can either be 'str' or 'bson.ObjectId', 
-                got: '{}'
-                """.format(
-                    type(obj_id)
-                )
-            )
-
-    def get_post(self, post_id: str, projection: dict = {}) -> Optional[Dict]:
+    def get_post(self, post_id: str, projection: dict = {}) -> Dict:
         """
         query a post from the database given its _id
+
+        Raises `PostNotExistingException` if no post with the given _id exists.
+
         :param post_id: str-representation of the post's _id (ObjectId)
         :param projection: optionally specify a projection to only return
                            a subset of the document's fields (limit your query
                            to only the necessary fields to increase performance)
-        :return: the post as a dictionary, or None, if no post matched
-                 the given id
+        :return: the post as a dictionary
         """
 
-        post_id = self._parse_object_id(post_id)
+        post_id = util.parse_object_id(post_id)
 
-        return self.db.posts.find_one({"_id": post_id}, projection=projection)
+        post = self.db.posts.find_one({"_id": post_id}, projection=projection)
+        if not post:
+            raise PostNotExistingException()
 
-    def get_post_by_comment_id(
-        self, comment_id: str, projection: dict = {}
-    ) -> Optional[Dict]:
+        return post
+
+    def get_post_by_comment_id(self, comment_id: str, projection: dict = {}) -> Dict:
         """
         query a post from the database given any of its comment's _id's.
         Since this operation does a full collection scan, it might be very slow
         and thus should be used sparingly.
+
+        Raises `PostNotExistingException` if no post with the given _id exists.
+
         :param comment_id: the _id of any of the comments belonging to the post
         :param projection: optionally specify a projection to only return
                            a subset of the document's fields (limit your query
                            to only the necessary fields to increase performance)
-        :return: the post as a dictionary, or None, if no comments of any post
-                 matched the given id
+        :return: the post as a dictionary
         """
 
-        comment_id = self._parse_object_id(comment_id)
+        comment_id = util.parse_object_id(comment_id)
 
-        return self.db.posts.find_one(
+        post = self.db.posts.find_one(
             {"comments._id": comment_id}, projection=projection
         )
+        if not post:
+            raise PostNotExistingException()
+
+        return post
 
     def get_posts_by_tags(self, tags: List[str], projection: dict = {}) -> List[Dict]:
         """
@@ -145,6 +119,8 @@ class Posts:
         :param query: the full text search query
         :return: List of posts (as dicts) matching the query
         """
+
+        # TODO deprecate and use elasticsearch instead
 
         return list(self.db.posts.find({"$text": {"$search": query}}))
 
@@ -172,7 +148,7 @@ class Posts:
         update the text of an existing post
         """
 
-        post_id = self._parse_object_id(post_id)
+        post_id = util.parse_object_id(post_id)
 
         # try to do the update
         update_result = self.db.posts.update_one(
@@ -189,11 +165,12 @@ class Posts:
         delete a post by specifying its id
         """
 
-        post_id = self._parse_object_id(post_id)
+        post_id = util.parse_object_id(post_id)
 
-        post = self.get_post(post_id, projection={"space": True, "files": True})
-        if not post:
-            raise PostNotExistingException()
+        try:
+            post = self.get_post(post_id, projection={"space": True, "files": True})
+        except PostNotExistingException:
+            raise
 
         # delete files from gridfs and - if post was in a space,
         # from the space's repository
@@ -202,22 +179,17 @@ class Posts:
             for file_id in post["files"]:
                 fs.delete(file_id)
             if post["space"]:
-                with Spaces() as space_manager:
-                    for file_id in post["files"]:
-                        try:
-                            space_manager.remove_post_file(post["space"], file_id)
-                        except SpaceDoesntExistError:
-                            pass
-                        except FileDoesntExistError:
-                            pass
+                space_manager = Spaces(self.db)
+                for file_id in post["files"]:
+                    try:
+                        space_manager.remove_post_file(post["space"], file_id)
+                    except SpaceDoesntExistError:
+                        pass
+                    except FileDoesntExistError:
+                        pass
 
         # finally delete the post itself
-        delete_result = self.db.posts.delete_one({"_id": post_id})
-
-        # if no documents have been removed by the delete
-        # we know that there was no post with the given _id
-        if delete_result.deleted_count != 1:
-            raise PostNotExistingException()
+        self.db.posts.delete_one({"_id": post_id})
 
     def delete_post_by_space(self, space_name: str) -> None:
         """
@@ -233,21 +205,18 @@ class Posts:
         :param username: the username of the user
         """
 
-        post_id = self._parse_object_id(post_id)
-
-        # this time we cannot use the modified_count of the update_result to check
-        # existence of the post, because since we will add to a set, the user might
-        # already be a liker, so nothing would change, even though the post does exist
-        post = self.get_post(post_id, projection={"_id": True})
-        if not post:
-            raise PostNotExistingException()
+        post_id = util.parse_object_id(post_id)
 
         update_result = self.db.posts.update_one(
             {"_id": post_id},
             {"$addToSet": {"likers": username}},
         )
 
-        # we know that the post existed, so if this time no document was updated
+        # no match was found --> post doesnt exist
+        if update_result.matched_count != 1:
+            raise PostNotExistingException()
+
+        # we know that the post existed, so if no document was updated
         # the user already had liked the post before
         if update_result.modified_count != 1:
             raise AlreadyLikerException()
@@ -259,19 +228,16 @@ class Posts:
         :param username: the username of the user
         """
 
-        post_id = self._parse_object_id(post_id)
-
-        # this time we cannot use the modified_count of the update_result to check
-        # existence of the post, because since we will add to a set, the user might
-        # already be a liker, so nothing would change, even though the post does exist
-        post = self.get_post(post_id, projection={"_id": True})
-        if not post:
-            raise PostNotExistingException()
+        post_id = util.parse_object_id(post_id)
 
         update_result = self.db.posts.update_one(
             {"_id": post_id},
             {"$pull": {"likers": username}},
         )
+
+        # no match was found --> post doesnt exist
+        if update_result.matched_count != 1:
+            raise PostNotExistingException()
 
         # we know that the post existed, so if no document was updated, the user hadn't
         # liked the post before
@@ -283,7 +249,7 @@ class Posts:
         add the given comment to the post, validating the attributes beforehand
         """
 
-        post_id = self._parse_object_id(post_id)
+        post_id = util.parse_object_id(post_id)
 
         # verify comment has all the necessary attributes
         if not all(attr in comment for attr in self.comment_attributes):
@@ -296,9 +262,9 @@ class Posts:
             {"_id": post_id}, {"$push": {"comments": comment}}
         )
 
-        # if no documents have been modified by the update
+        # if no documents have been matched by the update
         # we know that there was no post with the given post_id
-        if update_result.modified_count != 1:
+        if update_result.matched_count != 1:
             raise PostNotExistingException()
 
     def delete_comment(
@@ -313,11 +279,11 @@ class Posts:
                         to speed up the query
         """
 
-        comment_id = self._parse_object_id(comment_id)
+        comment_id = util.parse_object_id(comment_id)
 
         # use a faster query if the post_id is supplied, because it uses an index
         if post_id is not None:
-            post_id = self._parse_object_id(post_id)
+            post_id = util.parse_object_id(post_id)
             update_result = self.db.posts.update_one(
                 {"_id": post_id}, {"$pull": {"comments": {"_id": comment_id}}}
             )
@@ -331,7 +297,7 @@ class Posts:
 
         # if no documents have been removed by the delete
         # we know that there was no post with the given _id
-        if update_result.modified_count != 1:
+        if update_result.matched_count != 1:
             raise PostNotExistingException()
 
     def insert_repost(self, repost: dict) -> None:
@@ -361,7 +327,7 @@ class Posts:
         update the text of an existing repost
         """
 
-        repost_id = self._parse_object_id(repost_id)
+        repost_id = util.parse_object_id(repost_id)
 
         # do the update
         update_result = self.db.posts.update_one(
@@ -379,7 +345,7 @@ class Posts:
         :param post_id: the id of the post
         """
 
-        post_id = self._parse_object_id(post_id)
+        post_id = util.parse_object_id(post_id)
 
         update_result = self.db.posts.update_one(
             {"_id": post_id}, {"$set": {"pinned": True}}
@@ -387,7 +353,7 @@ class Posts:
 
         # if no documents have been modified by the update
         # we know that there was no post with the given _id
-        if update_result.modified_count != 1:
+        if update_result.matched_count != 1:
             raise PostNotExistingException()
 
     def unpin_post(self, post_id: str | ObjectId) -> None:
@@ -396,7 +362,7 @@ class Posts:
         :param post_id: the id of the post
         """
 
-        post_id = self._parse_object_id(post_id)
+        post_id = util.parse_object_id(post_id)
 
         update_result = self.db.posts.update_one(
             {"_id": post_id}, {"$set": {"pinned": False}}
@@ -404,7 +370,7 @@ class Posts:
 
         # if no documents have been modified by the update
         # we know that there was no post with the given _id
-        if update_result.modified_count != 1:
+        if update_result.matched_count != 1:
             raise PostNotExistingException()
 
     def pin_comment(self, comment_id: str | ObjectId) -> None:
@@ -413,7 +379,7 @@ class Posts:
         :param comment_id: the id of the comment
         """
 
-        comment_id = self._parse_object_id(comment_id)
+        comment_id = util.parse_object_id(comment_id)
 
         update_result = self.db.posts.update_one(
             {"comments._id": comment_id}, {"$set": {"comments.$.pinned": True}}
@@ -421,7 +387,10 @@ class Posts:
 
         # if no documents have been modified by the update
         # we know that there was no post with the given _id
-        if update_result.modified_count != 1:
+        # TODO actually this only tells us that the comment_id doesnt exist,
+        # but the post might still exist, either raise CommentNotExistingException
+        # or check for the post itself
+        if update_result.matched_count != 1:
             raise PostNotExistingException()
 
     def unpin_comment(self, comment_id: str | ObjectId) -> None:
@@ -430,7 +399,7 @@ class Posts:
         :param comment_id: the id of the comment
         """
 
-        comment_id = self._parse_object_id(comment_id)
+        comment_id = util.parse_object_id(comment_id)
 
         update_result = self.db.posts.update_one(
             {"comments._id": comment_id}, {"$set": {"comments.$.pinned": False}}
@@ -438,7 +407,10 @@ class Posts:
 
         # if no documents have been modified by the update
         # we know that there was no post with the given _id
-        if update_result.modified_count != 1:
+        # TODO actually this only tells us that the comment_id doesnt exist,
+        # but the post might still exist, either raise CommentNotExistingException
+        # or check for the post itself
+        if update_result.matched_count != 1:
             raise PostNotExistingException()
 
     def add_new_post_file(

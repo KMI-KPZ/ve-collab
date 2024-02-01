@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<tincan xmlns="http://projecttincan.com/tincan.xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <activities>
+        <activity id="https://coach.knowledgeworker.com/scenario/1268/version/c9c3f284d01e48d42b399a4f1b965f6b" type="http://adlnet.gov/expapi/activities/course">
+            <name lang="de">Neuwagenverkauf</name>
+            <description lang="de"></description>
+            <launch lang="de">index.html</launch>
+        </activity>
+    </activities>
+</tincan>
