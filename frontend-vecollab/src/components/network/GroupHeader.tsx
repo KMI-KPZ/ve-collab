@@ -1,6 +1,5 @@
-import Link from 'next/link';
 import AuthenticatedImage from '../AuthenticatedImage';
-import { RxDotFilled, RxDotsVertical, RxTrash } from 'react-icons/rx';
+import { RxDotsVertical, RxTrash } from 'react-icons/rx';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { fetchDELETE, fetchGET, fetchPOST, useGetSpace } from '@/lib/backend';
@@ -12,6 +11,7 @@ import AvatarEditor from '../profile/AvatarEditor';
 import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
 import LoadingAnimation from '../LoadingAnimation';
 import AsyncCreatableSelect from 'react-select/async-creatable';
+import Select from 'react-select';
 import { BackendSearchResponse } from '@/interfaces/api/apiInterfaces';
 
 export default function GroupHeader() {
@@ -25,6 +25,29 @@ export default function GroupHeader() {
     const [invitedUser, setInvitedUser] = useState<{ label: string; value: string }>({
         label: '',
         value: '',
+    });
+
+    const [chosenPermissionUser, setChosenPermissionUser] = useState<{
+        label: string;
+        value: string;
+    }>({
+        label: '',
+        value: '',
+    });
+
+    const [permissionsLoading, setPermissionsLoading] = useState(false);
+    const [currentPermissions, setCurrentPermissions] = useState<{
+        post: boolean;
+        read_timeline: boolean;
+        comment: boolean;
+        read_files: boolean;
+        write_files: boolean;
+    }>({
+        post: false,
+        read_timeline: true,
+        comment: false,
+        read_files: false,
+        write_files: false,
     });
 
     const [snippetsLoading, setSnippetsLoading] = useState(true);
@@ -143,30 +166,6 @@ export default function GroupHeader() {
         router.push('/spaces');
     };
 
-    useEffect(() => {
-        if (!isLoading) {
-            setToggleInvisible(space.invisible);
-
-            setSnippetsLoading(true);
-            fetchPOST(
-                '/profile_snippets',
-                { usernames: [...space.requests, ...space.invites] },
-                session?.accessToken
-            ).then((data) => {
-                console.log('get snippets');
-                setProfileSnippets(
-                    data.user_snippets.map((snippet: any) => ({
-                        name: snippet.first_name + ' ' + snippet.last_name,
-                        profilePicUrl: snippet.profile_pic,
-                        institution: snippet.institution,
-                        preferredUsername: snippet.username,
-                    }))
-                );
-                setSnippetsLoading(false);
-            });
-        }
-    }, [isLoading, space, session]);
-
     function acceptRequest(requestUser: string): void {
         fetchPOST(
             `/spaceadministration/accept_request?name=${space.name}&user=${requestUser}`,
@@ -226,6 +225,59 @@ export default function GroupHeader() {
             mutate();
         });
     }
+
+    function togglePermission(
+        permissionKey: 'read_timeline' | 'post' | 'comment' | 'read_files' | 'write_files'
+    ) {
+        const copy = { ...currentPermissions };
+        copy[permissionKey] = !copy[permissionKey];
+
+        fetchPOST(
+            `/space_acl/update?space=${space.name}&username=${chosenPermissionUser.value}`,
+            copy,
+            session?.accessToken
+        ).then((data) => {
+            setCurrentPermissions(copy);
+        });
+    }
+
+    useEffect(() => {
+        if (!isLoading) {
+            setToggleInvisible(space.invisible);
+
+            setSnippetsLoading(true);
+            fetchPOST(
+                '/profile_snippets',
+                { usernames: [...space.requests, ...space.invites, ...space.members] },
+                session?.accessToken
+            ).then((data) => {
+                console.log('get snippets');
+                setProfileSnippets(
+                    data.user_snippets.map((snippet: any) => ({
+                        name: snippet.first_name + ' ' + snippet.last_name,
+                        profilePicUrl: snippet.profile_pic,
+                        institution: snippet.institution,
+                        preferredUsername: snippet.username,
+                    }))
+                );
+                setSnippetsLoading(false);
+            });
+        }
+    }, [isLoading, space, session]);
+
+    useEffect(() => {
+        if (chosenPermissionUser.value !== '') {
+            setPermissionsLoading(true);
+            fetchGET(
+                `/space_acl/get?space=${space.name}&username=${chosenPermissionUser.value}`,
+                session?.accessToken
+            ).then((data) => {
+                console.log(data);
+                setCurrentPermissions(data.acl_entry);
+                setPermissionsLoading(false);
+            });
+        }
+    }, [chosenPermissionUser, session, space]);
 
     return (
         <>
@@ -387,12 +439,12 @@ export default function GroupHeader() {
                                     <div className="flex mx-4 my-4">
                                         <div className="mx-4">privat</div>
                                         <div
-                                            className="md:w-14 md:h-7 w-12 h-6 flex items-center bg-gray-400 rounded-full p-1 cursor-pointer"
+                                            className="md:w-14 md:h-7 w-12 h-6 flex items-center border border-gray-400 rounded-full p-1 cursor-pointer"
                                             onClick={toggleJoinability}
                                         >
                                             <div
                                                 className={
-                                                    'bg-black md:w-6 md:h-6 h-5 w-5 rounded-full shadow-md transform duration-300 ease-in-out ' +
+                                                    'bg-gray-400 md:w-6 md:h-6 h-5 w-5 rounded-full shadow-md transform duration-300 ease-in-out ' +
                                                     (toggleJoinable
                                                         ? null
                                                         : 'transform translate-x-6')
@@ -404,12 +456,12 @@ export default function GroupHeader() {
                                     <div className="flex mx-4 my-4">
                                         <div className="mx-4">unsichtbar</div>
                                         <div
-                                            className="md:w-14 md:h-7 w-12 h-6 flex items-center bg-gray-400 rounded-full p-1 cursor-pointer"
+                                            className="md:w-14 md:h-7 w-12 h-6 flex items-center border border-gray-400 rounded-full p-1 cursor-pointer"
                                             onClick={toggleVisibility}
                                         >
                                             <div
                                                 className={
-                                                    'bg-black md:w-6 md:h-6 h-5 w-5 rounded-full shadow-md transform duration-300 ease-in-out ' +
+                                                    'bg-gray-400 md:w-6 md:h-6 h-5 w-5 rounded-full shadow-md transform duration-300 ease-in-out ' +
                                                     (toggleInvisible
                                                         ? null
                                                         : 'transform translate-x-6')
@@ -595,7 +647,158 @@ export default function GroupHeader() {
                                         </div>
                                     </div>
                                 </div>
-                                <div tabname="Berechtigungen"></div>
+                                <div tabname="Berechtigungen">
+                                    {!snippetsLoading && (
+                                        <>
+                                            <div className="flex">
+                                                <Select
+                                                    className="w-3/4"
+                                                    options={space.members
+                                                        .filter(
+                                                            (member: string) =>
+                                                                !space.admins.includes(member)
+                                                        )
+                                                        .map((user: string) => {
+                                                            return {
+                                                                label:
+                                                                    profileSnipppets.find(
+                                                                        (snippet) =>
+                                                                            snippet.preferredUsername ===
+                                                                            user
+                                                                    )!.name +
+                                                                    ' - ' +
+                                                                    user,
+                                                                value: user,
+                                                            };
+                                                        })}
+                                                    onChange={(e) => setChosenPermissionUser(e!)}
+                                                    value={chosenPermissionUser}
+                                                    placeholder={'Suche nach Nutzer:innen...'}
+                                                    getOptionLabel={(option) => option.label}
+                                                />
+                                            </div>
+                                            <div className="my-4">
+                                                <div
+                                                    className={
+                                                        'mb-1 font-bold text-slate-900 text-lg'
+                                                    }
+                                                >
+                                                    Berechtigungen anpassen
+                                                </div>
+                                                {chosenPermissionUser.value === '' ? (
+                                                    <div className="mx-4 my-4 text-gray-600">
+                                                        kein User ausgewählt
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        {!permissionsLoading && (
+                                                            <>
+                                                                <div className="flex my-4 w-1/4 justify-between">
+                                                                    <div>Timeline lesen</div>
+                                                                    <div
+                                                                        className="md:w-14 md:h-7 w-12 h-6 flex items-center border border-gray-400 rounded-full p-1 cursor-pointer"
+                                                                        onClick={(e) =>
+                                                                            togglePermission(
+                                                                                'read_timeline'
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <div
+                                                                            className={
+                                                                                'bg-gray-400 md:w-6 md:h-6 h-5 w-5 rounded-full shadow-md transform duration-300 ease-in-out ' +
+                                                                                (currentPermissions.read_timeline
+                                                                                    ? 'transform translate-x-6 bg-green-500'
+                                                                                    : null)
+                                                                            }
+                                                                        ></div>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex my-4 w-1/4 justify-between">
+                                                                    <div>Posts verfassen</div>
+                                                                    <div
+                                                                        className="md:w-14 md:h-7 w-12 h-6 flex items-center border border-gray-400 rounded-full p-1 cursor-pointer"
+                                                                        onClick={(e) =>
+                                                                            togglePermission('post')
+                                                                        }
+                                                                    >
+                                                                        <div
+                                                                            className={
+                                                                                'bg-gray-400 md:w-6 md:h-6 h-5 w-5 rounded-full shadow-md transform duration-300 ease-in-out ' +
+                                                                                (currentPermissions.post
+                                                                                    ? 'transform translate-x-6 bg-green-500'
+                                                                                    : null)
+                                                                            }
+                                                                        ></div>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex my-4 w-1/4 justify-between">
+                                                                    <div>Kommentare verfassen</div>
+                                                                    <div
+                                                                        className="md:w-14 md:h-7 w-12 h-6 flex items-center border border-gray-400 rounded-full p-1 cursor-pointer"
+                                                                        onClick={(e) =>
+                                                                            togglePermission(
+                                                                                'comment'
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <div
+                                                                            className={
+                                                                                'bg-gray-400 md:w-6 md:h-6 h-5 w-5 rounded-full shadow-md transform duration-300 ease-in-out ' +
+                                                                                (currentPermissions.comment
+                                                                                    ? 'transform translate-x-6 bg-green-500'
+                                                                                    : null)
+                                                                            }
+                                                                        ></div>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex my-4 w-1/4 justify-between">
+                                                                    <div>Dateien herunterladen</div>
+                                                                    <div
+                                                                        className="md:w-14 md:h-7 w-12 h-6 flex items-center border border-gray-400 rounded-full p-1 cursor-pointer"
+                                                                        onClick={(e) =>
+                                                                            togglePermission(
+                                                                                'read_files'
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <div
+                                                                            className={
+                                                                                'bg-gray-400 md:w-6 md:h-6 h-5 w-5 rounded-full shadow-md transform duration-300 ease-in-out ' +
+                                                                                (currentPermissions.read_files
+                                                                                    ? 'transform translate-x-6 bg-green-500'
+                                                                                    : null)
+                                                                            }
+                                                                        ></div>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex my-4 w-1/4 justify-between">
+                                                                    <div>Dateien hochladen</div>
+                                                                    <div
+                                                                        className="md:w-14 md:h-7 w-12 h-6 flex items-center border border-gray-400 rounded-full p-1 cursor-pointer"
+                                                                        onClick={(e) =>
+                                                                            togglePermission(
+                                                                                'write_files'
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <div
+                                                                            className={
+                                                                                'bg-gray-400 md:w-6 md:h-6 h-5 w-5 rounded-full shadow-md transform duration-300 ease-in-out ' +
+                                                                                (currentPermissions.write_files
+                                                                                    ? 'transform translate-x-6 bg-green-500'
+                                                                                    : null)
+                                                                            }
+                                                                        ></div>
+                                                                    </div>
+                                                                </div>
+                                                            </>
+                                                        )}
+                                                    </>
+                                                )}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
                             </Tabs>
                         </div>
                     </Dialog>

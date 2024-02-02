@@ -411,13 +411,19 @@ class SpaceACLHandler(BaseHandler):
 
         with util.get_mongodb() as db:
             acl = ACL(db)
+            profile_manager = Profiles(db)
 
             # if the role is admin, set everything to true instead of false
             # technically this should never happen, but better safe than sorry
-            if self.is_current_user_lionet_admin():
-                return acl.space_acl.insert_admin(self.current_user.username, space)
+            if profile_manager.get_role(username) == "admin":
+                return acl.space_acl.insert_admin(username, space)
             else:
-                return acl.space_acl.insert_default(self.current_user.username, space)
+                return acl.space_acl.insert_default(username, space)
+            
+    
+    def options(self, slug):
+        self.set_status(204)
+        self.finish()
 
     @auth_needed
     async def get(self, slug):
