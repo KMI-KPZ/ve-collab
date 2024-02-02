@@ -1,0 +1,84 @@
+import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
+import { useRouter } from 'next/router';
+import { RxTrash } from 'react-icons/rx';
+import LoadingAnimation from '../LoadingAnimation';
+import AuthenticatedImage from '@/components/AuthenticatedImage';
+import BoxHeadline from '@/components/BoxHeadline';
+
+interface Props {
+    loading: boolean;
+    userSnippets: UserSnippet[];
+    closeCallback: () => void;
+    trashOption: boolean;
+    foreignUser?: boolean;
+    trashCallback?: (username: string) => void;
+}
+
+export default function DialogUserList({
+    loading,
+    userSnippets,
+    closeCallback,
+    trashOption,
+    foreignUser,
+    trashCallback,
+}: Props) {
+    const router = useRouter();
+    return (
+        <div className="w-[30rem] h-[28rem] overflow-y-auto content-scrollbar">
+            {loading ? (
+                <div className="flex w-full h-full justify-center items-center">
+                    <LoadingAnimation />
+                </div>
+            ) : (
+                <ul className="px-1 divide-y">
+                    {userSnippets.map((snippet, index) => (
+                        <li key={index} className="flex py-2">
+                            <div
+                                className="flex cursor-pointer"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    router.push(`/profile?username=${snippet.preferredUsername}`);
+                                    closeCallback();
+                                }}
+                            >
+                                <div>
+                                    <AuthenticatedImage
+                                        imageId={snippet.profilePicUrl}
+                                        alt={'Profilbild'}
+                                        width={60}
+                                        height={60}
+                                        className="rounded-full"
+                                    ></AuthenticatedImage>
+                                </div>
+                                <div>
+                                    <BoxHeadline title={snippet.name} />
+                                    <div className="mx-2 px-1 my-1 text-gray-600">
+                                        {snippet.institution}
+                                    </div>
+                                </div>
+                            </div>
+                            {trashOption && (
+                                <>
+                                    {!foreignUser && (
+                                        <div className="ml-auto flex items-center">
+                                            <RxTrash
+                                                size={20}
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    trashCallback !== undefined
+                                                        ? trashCallback(snippet.preferredUsername)
+                                                        : {};
+                                                }}
+                                                className="cursor-pointer"
+                                            />
+                                        </div>
+                                    )}
+                                </>
+                            )}
+                        </li>
+                    ))}
+                </ul>
+            )}
+        </div>
+    );
+}

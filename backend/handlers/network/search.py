@@ -1,15 +1,17 @@
 from typing import Dict, List
 
+import requests
 import tornado.web
 
+import global_vars
 from handlers.base_handler import BaseHandler, auth_needed
 from resources.network.post import Posts
 from resources.network.profile import Profiles
 from resources.network.space import Spaces
+import util
 
 
 class SearchHandler(BaseHandler):
-
     @auth_needed
     def get(self):
         """
@@ -106,15 +108,85 @@ class SearchHandler(BaseHandler):
 
     def _search_users(self, query: str) -> List[Dict]:
         """
-        full text search on user profiles
+        suggestion search on user profiles based on names
+        (i.e. first_name, last_name, username)
         :param query: search query
         :return: any users matching the query
         """
 
-        # TODO decide if user search should be limited to name, because like this it searches for anything on the profile
+        # the prefix queries allow for autocompletion,
+        # while fuzzy matches allow for typos, but only if the query
+        # is fully typed out
+        # TODO ideally prefix and fuzziness is combined somehow
+        query = {
+            "size": 5,
+            "query": {
+                "bool": {
+                    "should": [
+                        {
+                            "prefix": {
+                                "first_name": {"value": query, "case_insensitive": True}
+                            }
+                        },
+                        {
+                            "fuzzy": {
+                                "first_name": {
+                                    "value": query,
+                                    "fuzziness": 1,
+                                    "prefix_length": 1,
+                                }
+                            }
+                        },
+                        {
+                            "prefix": {
+                                "last_name": {"value": query, "case_insensitive": True}
+                            }
+                        },
+                        {
+                            "fuzzy": {
+                                "last_name": {
+                                    "value": query,
+                                    "fuzziness": 1,
+                                    "prefix_length": 1,
+                                }
+                            }
+                        },
+                        {
+                            "prefix": {
+                                "username": {"value": query, "case_insensitive": True}
+                            }
+                        },
+                        {
+                            "fuzzy": {
+                                "username": {
+                                    "value": query,
+                                    "fuzziness": 1,
+                                    "prefix_length": 1,
+                                }
+                            }
+                        },
+                    ],
+                }
+            },
+        }
 
-        with Profiles() as db_manager:
-            return db_manager.fulltext_search(query)
+        response = requests.post(
+            "{}/{}/_search?".format(global_vars.elasticsearch_base_url, "profiles"),
+            auth=(
+                global_vars.elasticsearch_username,
+                global_vars.elasticsearch_password,
+            ),
+            json=query,
+        )
+
+        # map usernames to exchange them for full profiles
+        usernames = [
+            elem["_source"]["username"] for elem in response.json()["hits"]["hits"]
+        ]
+
+        with util.get_mongodb() as db:
+            profile_manager = Profiles(db)
+            return profile_manager.get_bulk_profiles(usernames)
 
     def _search_tags(self, tags: List[str]) -> List[Dict]:
         """
@@ -127,7 +199,8 @@ class SearchHandler(BaseHandler):
         """
 
         # tags is an exact match query, therefore explicitely search without using index
-        with Posts() as post_manager:
+        with util.get_mongodb() as db:
+            post_manager = Posts(db)
             matched_posts = post_manager.get_posts_by_tags(tags)
 
         if matched_posts:
@@ -145,7 +218,8 @@ class SearchHandler(BaseHandler):
         """
 
         # full text search
-        with Posts() as post_manager:
+        with util.get_mongodb() as db:
+            post_manager = Posts(db)
             matched_posts = post_manager.fulltext_search(query)
 
         if matched_posts:
@@ -165,8 +239,10 @@ class SearchHandler(BaseHandler):
         """
 
         reduced = []
-        with (Spaces() as space_manager, Profiles() as profile_manager):
-            spaces_of_user = space_manager.get_spaces_of_user(
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
+            profile_manager = Profiles(db)
+            spaces_of_user = space_manager.get_space_names_of_user(
                 self.current_user.username
             )
             follows_of_user = profile_manager.get_follows(self.current_user.username)

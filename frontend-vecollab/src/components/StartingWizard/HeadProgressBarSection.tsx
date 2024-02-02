@@ -13,23 +13,28 @@ export interface HeadMenuProgressStep {
     image: string;
 }
 
-export default function HeadProgressBarSection() {
+interface HeadProgressBar {
+    stage: number;
+    linkFineStep: string;
+}
+
+export default function HeadProgressBarSection({ stage, linkFineStep }: HeadProgressBar) {
     const router = useRouter();
 
     const headMenuProgressSteps: HeadMenuProgressStep[] = [
         {
             description: 'Allgemeine Informationen',
-            link: '/startingWizard/generalInformation/essentialInformation',
+            link: '/startingWizard/generalInformation/projectName',
             image: imageGeneralInformation,
         },
         {
             description: 'Etappenplaner',
-            link: '/startingWizard/stagePlanner',
+            link: '/startingWizard/broadPlanner',
             image: imageStagePlanner,
         },
         {
             description: 'Feinplanner',
-            link: '/startingWizard/finePlanner',
+            link: linkFineStep,
             image: imageFinePlanner,
         },
         {
@@ -43,19 +48,18 @@ export default function HeadProgressBarSection() {
     const [stateActiveProgressStage, setStateActiveProgressStage] = useState<number>(0);
 
     useEffect(() => {
-        function calculateStepFromPathname(): number {
-            let stepNumber: number = 0;
-            stateMenuProgressData.forEach((item, index) => {
-                if (item.link.includes(router.pathname)) stepNumber = index;
-            });
-            return stepNumber;
-        }
-        setStateActiveProgressStage(calculateStepFromPathname());
-    }, [router.pathname, stateMenuProgressData]);
+        setStateActiveProgressStage(stage);
+    }, [router.pathname, stateMenuProgressData, stage]);
 
     function renderHeadProgressBar(headMenuSteps: HeadMenuProgressStep[]): JSX.Element[] {
         return headMenuSteps.map((step, index) => (
-            <Link key={index} href={step.link}>
+            <Link
+                key={index}
+                href={{
+                    pathname: step.link,
+                    query: { plannerId: router.query.plannerId },
+                }}
+            >
                 <div title={step.description} className="flex align-middle items-center">
                     <div
                         className={` w-10 h-10 border-4 rounded-full text-lg flex items-center justify-center
@@ -87,8 +91,28 @@ export default function HeadProgressBarSection() {
     }
 
     return (
-        <nav className="flex w-full justify-center py-6">
-            {renderHeadProgressBar(headMenuProgressSteps)}
-        </nav>
+        <>
+            <nav className="flex w-full justify-center py-6">
+                {renderHeadProgressBar(headMenuProgressSteps)}
+            </nav>
+            <div className="flex justify-center">
+                <Link href={`/etherpad?planID=${router.query.plannerId}`} target="_blank" className='mx-2'>
+                    <button
+                        type="submit"
+                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                    >
+                        kollaboratives Pad öffnen
+                    </button>
+                </Link>
+                <Link href={`/meeting?meetingId=${router.query.plannerId}`} target="_blank" className='mx-2'>
+                    <button
+                        type="submit"
+                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                    >
+                        Jitsi Raum betreten
+                    </button>
+                </Link>
+            </div>
+        </>
     );
 }
