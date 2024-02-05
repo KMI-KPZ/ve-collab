@@ -8,6 +8,9 @@ import { fetchDELETE, fetchPOST, useGetSpace } from '@/lib/backend';
 import DialogUserList from '../profile/DialogUserList';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '../LoadingAnimation';
+import AuthenticatedImage from '../AuthenticatedImage';
+import BoxHeadline from '../BoxHeadline';
+import { RxTrash } from 'react-icons/rx';
 
 interface Props {
     userIsAdmin: () => boolean;
@@ -103,14 +106,70 @@ export default function GroupBanner({ userIsAdmin }: Props) {
                 title={'Mitglieder'}
                 onClose={handleCloseMemberDialog}
             >
-                <DialogUserList
-                    loading={loading}
-                    userSnippets={memberSnippets}
-                    closeCallback={handleCloseMemberDialog}
-                    trashOption={userIsAdmin()}
-                    foreignUser={false}
-                    trashCallback={removeUserFromGroup}
-                />
+                <div className="w-[30rem] h-[28rem] overflow-y-auto content-scrollbar">
+                    {loading ? (
+                        <div className="flex w-full h-full justify-center items-center">
+                            <LoadingAnimation />
+                        </div>
+                    ) : (
+                        <ul className="px-1 divide-y">
+                            {memberSnippets.map((snippet, index) => (
+                                <li key={index} className="flex py-2">
+                                    <div
+                                        className="flex cursor-pointer"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            router.push(
+                                                `/profile?username=${snippet.preferredUsername}`
+                                            );
+                                            handleCloseMemberDialog();
+                                        }}
+                                    >
+                                        <div>
+                                            <AuthenticatedImage
+                                                imageId={snippet.profilePicUrl}
+                                                alt={'Profilbild'}
+                                                width={60}
+                                                height={60}
+                                                className="rounded-full"
+                                            ></AuthenticatedImage>
+                                        </div>
+                                        <div>
+                                            <BoxHeadline title={snippet.name} />
+                                            <div className="mx-2 px-1 my-1 text-gray-600">
+                                                {snippet.institution}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {userIsAdmin() && (
+                                        <>
+                                            {!(
+                                                session?.user?.preferred_username ===
+                                                    snippet.preferredUsername ||
+                                                space.admins.includes(snippet.preferredUsername)
+                                            ) && (
+                                                <div className="ml-auto flex items-center">
+                                                    <RxTrash
+                                                        size={20}
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            removeUserFromGroup !== undefined
+                                                                ? removeUserFromGroup(
+                                                                      snippet.preferredUsername
+                                                                  )
+                                                                : {};
+                                                        }}
+                                                        className="cursor-pointer"
+                                                    />
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
             </Dialog>
         </>
     );
