@@ -14,7 +14,11 @@ import AsyncCreatableSelect from 'react-select/async-creatable';
 import Select from 'react-select';
 import { BackendSearchResponse } from '@/interfaces/api/apiInterfaces';
 
-export default function GroupHeader() {
+interface Props {
+    userIsAdmin: () => boolean;
+}
+
+export default function GroupHeader({ userIsAdmin }: Props) {
     const { data: session, status } = useSession();
     const router = useRouter();
 
@@ -300,14 +304,16 @@ export default function GroupHeader() {
                         </div>
                         <div className={'mr-auto'}>
                             <div className="mt-2 min-h-[2rem]">
-                                <button
-                                    className={
-                                        'border border-white bg-black/75 text-white rounded-lg px-3 py-1'
-                                    }
-                                    onClick={() => handleOpenEditDialog()}
-                                >
-                                    <span>Gruppe bearbeiten</span>
-                                </button>
+                                {userIsAdmin() && (
+                                    <button
+                                        className={
+                                            'border border-white bg-black/75 text-white rounded-lg px-3 py-1'
+                                        }
+                                        onClick={() => handleOpenEditDialog()}
+                                    >
+                                        <span>Gruppe bearbeiten</span>
+                                    </button>
+                                )}
                             </div>
                             <div className={'mt-11 font-bold text-4xl text-slate-900'}>
                                 {space.name}

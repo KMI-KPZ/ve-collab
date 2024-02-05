@@ -230,6 +230,10 @@ export default function Spaces() {
                                                                 className={
                                                                     'h-10 bg-ve-collab-orange text-white px-4 mx-2 rounded-lg shadow-xl'
                                                                 }
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    sendJoinRequest(space.name);
+                                                                }}
                                                             >
                                                                 <span>Beitreten</span>
                                                             </button>

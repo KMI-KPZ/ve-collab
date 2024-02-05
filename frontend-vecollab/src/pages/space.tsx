@@ -3,6 +3,8 @@ import AuthenticatedImage from '@/components/AuthenticatedImage';
 import BoxHeadline from '@/components/BoxHeadline';
 import WhiteBox from '@/components/Layout/WhiteBox';
 import Container from '@/components/Layout/container';
+import LoadingAnimation from '@/components/LoadingAnimation';
+import { SpaceAccessDenied } from '@/components/network/SpaceAccessDenied';
 import GroupBanner from '@/components/network/GroupBanner';
 import GroupHeader from '@/components/network/GroupHeader';
 import Dialog from '@/components/profile/Dialog';
@@ -96,7 +98,7 @@ export default function Space() {
         );
     }, [space, isLoading, session]);
 
-    console.log(space)
+    console.log(space);
 
     function files() {
         return (
@@ -232,76 +234,98 @@ export default function Space() {
         return <div>Timeline</div>;
     }
 
+    // can only be called after space hook is loaded
+    function userIsMember() {
+        return space.members.includes(session?.user?.preferred_username as string);
+    }
+
+    // can only be called after space hook is loaded
+    function userIsAdmin() {
+        return space.admins.includes(session?.user?.preferred_username as string);
+    }
+
     return (
         <Container>
-            <GroupBanner />
-            <div className={'mx-20 mb-2 px-5 relative -mt-16'}>
-                <GroupHeader />
-            </div>
-            <Container>
-                <div className={'mx-20 flex'}>
-                    <div className={'w-3/4  mr-4'}>
-                        {(() => {
-                            switch (renderPicker) {
-                                case 'timeline':
-                                    return timeline();
-                                case 'members':
-                                    return members();
-                                case 'files':
-                                    return files();
-
-                                default:
-                                    return <div></div>;
-                            }
-                        })()}
-                    </div>
-                    <div className={'w-1/4  ml-4'}>
-                        <button
-                            className={
-                                'w-full h-12 mb-2 border py-3 px-6 rounded-lg shadow-xl ' +
-                                (renderPicker === 'timeline'
-                                    ? 'bg-ve-collab-blue text-white'
-                                    : 'bg-white text-gray-500 hover:border-ve-collab-blue hover:text-ve-collab-blue')
-                            }
-                            onClick={() => setRenderPicker('timeline')}
-                        >
-                            <span>Dashboard</span>
-                        </button>
-                        <button
-                            className={
-                                'w-full h-12 mb-2 border py-3 px-6 rounded-lg shadow-xl ' +
-                                (renderPicker === 'members'
-                                    ? 'bg-ve-collab-blue text-white'
-                                    : 'bg-white text-gray-500 hover:border-ve-collab-blue hover:text-ve-collab-blue')
-                            }
-                            onClick={() => setRenderPicker('members')}
-                        >
-                            <span>Mitglieder</span>
-                        </button>
-                        <button
-                            className={
-                                'w-full h-12 mb-2 border py-3 px-6 rounded-lg shadow-xl ' +
-                                (renderPicker === 'files'
-                                    ? 'bg-ve-collab-blue text-white'
-                                    : 'bg-white text-gray-500 hover:border-ve-collab-blue hover:text-ve-collab-blue')
-                            }
-                            onClick={() => setRenderPicker('files')}
-                        >
-                            <span>Dateiablage</span>
-                        </button>
-                        <WhiteBox>
-                            <BoxHeadline title={'Beschreibung'} />
-                            <div className="min-h-[20vh] mx-2 my-4 px-1">
-                                <div className={'text-gray-500'}>
-                                    {space?.space_description
-                                        ? space.space_description
-                                        : 'Keine Beschreibung vorhanden.'}
-                                </div>
+            {isLoading ? (
+                <LoadingAnimation />
+            ) : (
+                <>
+                    {!(userIsMember() || userIsAdmin()) ? (
+                        <SpaceAccessDenied />
+                    ) : (
+                        <>
+                            <GroupBanner userIsAdmin={userIsAdmin}/>
+                            <div className={'mx-20 mb-2 px-5 relative -mt-16'}>
+                                <GroupHeader userIsAdmin={userIsAdmin}/>
                             </div>
-                        </WhiteBox>
-                    </div>
-                </div>
-            </Container>
+                            <Container>
+                                <div className={'mx-20 flex'}>
+                                    <div className={'w-3/4  mr-4'}>
+                                        {(() => {
+                                            switch (renderPicker) {
+                                                case 'timeline':
+                                                    return timeline();
+                                                case 'members':
+                                                    return members();
+                                                case 'files':
+                                                    return files();
+
+                                                default:
+                                                    return <div></div>;
+                                            }
+                                        })()}
+                                    </div>
+                                    <div className={'w-1/4  ml-4'}>
+                                        <button
+                                            className={
+                                                'w-full h-12 mb-2 border py-3 px-6 rounded-lg shadow-xl ' +
+                                                (renderPicker === 'timeline'
+                                                    ? 'bg-ve-collab-blue text-white'
+                                                    : 'bg-white text-gray-500 hover:border-ve-collab-blue hover:text-ve-collab-blue')
+                                            }
+                                            onClick={() => setRenderPicker('timeline')}
+                                        >
+                                            <span>Dashboard</span>
+                                        </button>
+                                        <button
+                                            className={
+                                                'w-full h-12 mb-2 border py-3 px-6 rounded-lg shadow-xl ' +
+                                                (renderPicker === 'members'
+                                                    ? 'bg-ve-collab-blue text-white'
+                                                    : 'bg-white text-gray-500 hover:border-ve-collab-blue hover:text-ve-collab-blue')
+                                            }
+                                            onClick={() => setRenderPicker('members')}
+                                        >
+                                            <span>Mitglieder</span>
+                                        </button>
+                                        <button
+                                            className={
+                                                'w-full h-12 mb-2 border py-3 px-6 rounded-lg shadow-xl ' +
+                                                (renderPicker === 'files'
+                                                    ? 'bg-ve-collab-blue text-white'
+                                                    : 'bg-white text-gray-500 hover:border-ve-collab-blue hover:text-ve-collab-blue')
+                                            }
+                                            onClick={() => setRenderPicker('files')}
+                                        >
+                                            <span>Dateiablage</span>
+                                        </button>
+                                        <WhiteBox>
+                                            <BoxHeadline title={'Beschreibung'} />
+                                            <div className="min-h-[20vh] mx-2 my-4 px-1">
+                                                <div className={'text-gray-500'}>
+                                                    {space?.space_description
+                                                        ? space.space_description
+                                                        : 'Keine Beschreibung vorhanden.'}
+                                                </div>
+                                            </div>
+                                        </WhiteBox>
+                                    </div>
+                                </div>
+                            </Container>
+                        </>
+                    )}
+                </>
+            )}
         </Container>
     );
 }

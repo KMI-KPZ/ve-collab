@@ -9,7 +9,11 @@ import DialogUserList from '../profile/DialogUserList';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '../LoadingAnimation';
 
-export default function GroupBanner() {
+interface Props {
+    userIsAdmin: () => boolean;
+}
+
+export default function GroupBanner({ userIsAdmin }: Props) {
     const { data: session, status } = useSession();
     const router = useRouter();
 
@@ -103,7 +107,7 @@ export default function GroupBanner() {
                     loading={loading}
                     userSnippets={memberSnippets}
                     closeCallback={handleCloseMemberDialog}
-                    trashOption={true}
+                    trashOption={userIsAdmin()}
                     foreignUser={false}
                     trashCallback={removeUserFromGroup}
                 />
