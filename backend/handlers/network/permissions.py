@@ -419,8 +419,7 @@ class SpaceACLHandler(BaseHandler):
                 return acl.space_acl.insert_admin(username, space)
             else:
                 return acl.space_acl.insert_default(username, space)
-            
-    
+
     def options(self, slug):
         self.set_status(204)
         self.finish()
@@ -528,7 +527,9 @@ class SpaceACLHandler(BaseHandler):
                 # inconsistency problem: the username exists, but no acl entry.
                 # construct an acl entry that has all permissions set to false
                 if not acl_entry:
-                    acl_entry = self.resolve_inconsistency(username_to_query, space_name)
+                    acl_entry = self.resolve_inconsistency(
+                        username_to_query, space_name
+                    )
 
                 self.set_status(200)
                 self.write(
@@ -680,7 +681,9 @@ class SpaceACLHandler(BaseHandler):
                 # reject setting an entry of a user that does not exist to prevent dangling entries
                 profile_manager = Profiles(db)
                 try:
-                    profile_manager.get_profile(http_body["username"], projection={"_id": True})
+                    profile_manager.get_profile(
+                        http_body["username"], projection={"_id": True}
+                    )
                 except ProfileDoesntExistException:
                     self.set_status(409)
                     self.write(
@@ -693,7 +696,11 @@ class SpaceACLHandler(BaseHandler):
                     return
 
                 # forbid any modifications to admin users to avoid deadlocks
-                if profile_manager.get_role(http_body["username"]) == "admin":
+                # (both global and space admins are immutable in the space)
+                if (
+                    profile_manager.get_role(http_body["username"]) == "admin"
+                    or http_body["username"] in space["admins"]
+                ):
                     self.set_status(409)
                     self.write(
                         {

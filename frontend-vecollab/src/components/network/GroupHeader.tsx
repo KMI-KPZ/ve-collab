@@ -245,6 +245,16 @@ export default function GroupHeader({ userIsAdmin }: Props) {
         });
     }
 
+    function promoteToAdmin() {
+        fetchPOST(
+            `/spaceadministration/add_admin?name=${space.name}&user=${chosenPermissionUser.value}`,
+            {},
+            session?.accessToken
+        ).then((data) => {
+            mutate();
+        });
+    }
+
     useEffect(() => {
         if (!isLoading) {
             setToggleInvisible(space.invisible);
@@ -344,7 +354,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                         title={'Gruppe bearbeiten'}
                         onClose={handleCloseEditDialog}
                     >
-                        <div className="w-[70vw] h-[50vh]">
+                        <div className="w-[70vw] h-[60vh]">
                             <Tabs>
                                 <div tabname="Bild & Beschreibung">
                                     <div className="flex">
@@ -799,6 +809,30 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                                 </div>
                                                             </>
                                                         )}
+                                                        <div className="mt-10 p-2 w-1/2 rounded-xl border border-red-600">
+                                                            <div
+                                                                className={
+                                                                    'mb-1 font-bold text-slate-900 text-lg'
+                                                                }
+                                                            >
+                                                                Zum Space Admin ernennen
+                                                            </div>
+                                                            <div>
+                                                                Achtung: diese Aktion kann nicht
+                                                                rückgängig gemacht werden!
+                                                            </div>
+                                                            <button
+                                                                className={
+                                                                    'mt-2 bg-ve-collab-orange text-white py-2 px-5 rounded-lg'
+                                                                }
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    promoteToAdmin();
+                                                                }}
+                                                            >
+                                                                Befördern
+                                                            </button>
+                                                        </div>
                                                     </>
                                                 )}
                                             </div>

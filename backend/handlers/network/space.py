@@ -1407,6 +1407,11 @@ class SpaceHandler(BaseHandler):
             # therefore is allowed to add space admin
             try:
                 space_manager.add_space_admin(space_name, username)
+
+                # also elevate the users permissions in the acl
+                acl = ACL(db)
+                acl.space_acl.insert_admin(username, space_name)
+
                 self.set_status(200)
                 self.write({"success": True})
             except AlreadyAdminError:
