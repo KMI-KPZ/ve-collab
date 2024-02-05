@@ -2,6 +2,7 @@ import {
     BackendChatMessage,
     BackendChatroomSnippet,
     BackendSpace,
+    BackendSpaceACLEntry,
     BackendUserSnippet,
 } from '@/interfaces/api/apiInterfaces';
 import { Notification } from '@/interfaces/socketio';
@@ -272,6 +273,24 @@ export function useGetMySpaces(accessToken: string): {
     );
     return {
         data: isLoading || error ? [] : data.spaces,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
+export function useGetMySpaceACLEntry(accessToken: string, spaceName: string): {
+    data: BackendSpaceACLEntry;
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        [`/space_acl/get?space=${spaceName}`, accessToken],
+        ([url, token]) => GETfetcher(url, token)
+    );
+    return {
+        data: isLoading || error ? '' : data.acl_entry,
         isLoading,
         error,
         mutate,

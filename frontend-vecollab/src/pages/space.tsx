@@ -9,7 +9,7 @@ import GroupBanner from '@/components/network/GroupBanner';
 import GroupHeader from '@/components/network/GroupHeader';
 import Dialog from '@/components/profile/Dialog';
 import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
-import { fetchPOST, useGetSpace } from '@/lib/backend';
+import { fetchPOST, useGetMySpaceACLEntry, useGetSpace } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
@@ -37,6 +37,12 @@ export default function Space() {
     } = useGetSpace(session!.accessToken, router.query.name as string);
     console.log(space);
     console.log(memberSnippets);
+
+    const { data: spaceACLEntry, isLoading: spaceACLEntryLoading } = useGetMySpaceACLEntry(
+        session!.accessToken,
+        router.query.name as string
+    );
+    console.log(spaceACLEntry);
 
     const handleCloseUploadDialog = () => {
         setIsUploadDialogOpen(false);
@@ -104,35 +110,56 @@ export default function Space() {
         return (
             <>
                 <WhiteBox className="relative">
-                    <BoxHeadline title={'Dateiablage'} />
-                    <div className="absolute top-0 right-0 mx-2 p-4">
-                        <button
-                            className="bg-ve-collab-orange text-white rounded-lg p-1 flex justify-center items-center"
-                            onClick={() => {
-                                setIsUploadDialogOpen(true);
-                            }}
-                        >
-                            <RxPlus />
-                            <span className="mx-1">Hochladen</span>
-                        </button>
-                    </div>
-                    <hr className="h-px mt-2 mb-6 bg-gray-200 border-0" />
-                    <div className="mb-8 flex flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
-                        {space.files.map((file, index) => (
-                            <AuthenticatedFile
-                                key={index}
-                                url={`/uploads/${file.file_id}`}
-                                filename={file.file_name}
-                            >
-                                <div className="flex justify-center">
-                                    <RxFile size={80} /> {/* TODO preview for certain file types*/}
-                                </div>
-                                <div className="max-w-[150px] justify-center mx-2 px-1 my-1 font-bold text-slate-900 text-lg text-center truncate">
-                                    {file.file_name}
-                                </div>
-                            </AuthenticatedFile>
-                        ))}
-                    </div>
+                    {spaceACLEntryLoading ? (
+                        <LoadingAnimation />
+                    ) : (
+                        <>
+                            <BoxHeadline title={'Dateiablage'} />
+                            <div className="absolute top-0 right-0 mx-2 p-4">
+                                <button
+                                    className={
+                                        'bg-ve-collab-orange text-white rounded-lg p-1 flex justify-center items-center ' +
+                                        (!spaceACLEntry?.write_files
+                                            ? 'opacity-50 cursor-not-allowed'
+                                            : '')
+                                    }
+                                    disabled={!spaceACLEntry?.write_files}
+                                    onClick={() => {
+                                        setIsUploadDialogOpen(true);
+                                    }}
+                                >
+                                    <RxPlus />
+                                    <span className="mx-1">Hochladen</span>
+                                </button>
+                            </div>
+                            <hr className="h-px mt-2 mb-6 bg-gray-200 border-0" />
+                            <div className="mb-8 flex flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
+                                {spaceACLEntry.read_files ? (
+                                    <>
+                                        {space.files.map((file, index) => (
+                                            <AuthenticatedFile
+                                                key={index}
+                                                url={`/uploads/${file.file_id}`}
+                                                filename={file.file_name}
+                                            >
+                                                <div className="flex justify-center">
+                                                    <RxFile size={80} />{' '}
+                                                    {/* TODO preview for certain file types*/}
+                                                </div>
+                                                <div className="max-w-[150px] justify-center mx-2 px-1 my-1 font-bold text-slate-900 text-lg text-center truncate">
+                                                    {file.file_name}
+                                                </div>
+                                            </AuthenticatedFile>
+                                        ))}
+                                    </>
+                                ) : (
+                                    <div className="mx-4 text-gray-600">
+                                        keine Berechtigung, um die Dateiablage zu sehen
+                                    </div>
+                                )}
+                            </div>
+                        </>
+                    )}
                 </WhiteBox>
                 <Dialog
                     isOpen={isUploadDialogOpen}
@@ -254,9 +281,9 @@ export default function Space() {
                         <SpaceAccessDenied />
                     ) : (
                         <>
-                            <GroupBanner userIsAdmin={userIsAdmin}/>
+                            <GroupBanner userIsAdmin={userIsAdmin} />
                             <div className={'mx-20 mb-2 px-5 relative -mt-16'}>
-                                <GroupHeader userIsAdmin={userIsAdmin}/>
+                                <GroupHeader userIsAdmin={userIsAdmin} />
                             </div>
                             <Container>
                                 <div className={'mx-20 flex'}>

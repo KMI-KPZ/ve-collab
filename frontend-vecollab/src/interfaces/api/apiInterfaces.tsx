@@ -55,3 +55,13 @@ export interface BackendSpace {
     space_pic: string;
     space_description: string;
 }
+
+export interface BackendSpaceACLEntry {
+    username: string,
+    space: string,
+    read_timeline: boolean,
+    comment: boolean,
+    post: boolean,
+    read_files: boolean,
+    write_files: boolean,
+}
