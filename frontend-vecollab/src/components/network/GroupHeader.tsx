@@ -453,7 +453,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                 </div>
                                 <div tabname="Sichtbarkeit">
                                     <div className="flex mx-4 my-4">
-                                        <div className="mx-4">privat</div>
+                                        <div className="mx-4">öffentlich</div>
                                         <div
                                             className="md:w-14 md:h-7 w-12 h-6 flex items-center border border-gray-400 rounded-full p-1 cursor-pointer"
                                             onClick={toggleJoinability}
@@ -467,7 +467,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                 }
                                             ></div>
                                         </div>
-                                        <div className="mx-4">öffentlich</div>
+                                        <div className="mx-4">privat</div>
                                     </div>
                                     <div className="flex mx-4 my-4">
                                         <div className="mx-4">unsichtbar</div>

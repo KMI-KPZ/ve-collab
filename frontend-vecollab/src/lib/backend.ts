@@ -279,6 +279,42 @@ export function useGetMySpaces(accessToken: string): {
     };
 }
 
+export function useGetMySpaceInvites(accessToken: string): {
+    data: BackendSpace[];
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        ['/spaceadministration/pending_invites', accessToken],
+        ([url, token]) => GETfetcher(url, token)
+    );
+    return {
+        data: isLoading || error ? [] : data.pending_invites,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
+export function useGetMySpaceRequests(accessToken: string): {
+    data: BackendSpace[];
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        ['/spaceadministration/pending_requests', accessToken],
+        ([url, token]) => GETfetcher(url, token)
+    );
+    return {
+        data: isLoading || error ? [] : data.pending_requests,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
 export function useGetMySpaceACLEntry(accessToken: string, spaceName: string): {
     data: BackendSpaceACLEntry;
     isLoading: boolean;

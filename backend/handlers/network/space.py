@@ -98,7 +98,18 @@ class SpaceHandler(BaseHandler):
             returns:
                 200 OK
                 {"success": True,
-                 "pending_invites": ["space1", "space2", ...]}
+                 "pending_invites": [{...}, {...}, ...]}
+
+                401 Unauthorized
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
+        GET /spaceadministration/pending_requests
+            (get pending requests to join spaces for current user)
+            returns:
+                200 OK
+                {"success": True,
+                 "pending_requests": [{...}, {...}, ...]}
 
                 401 Unauthorized
                 {"success": False,
@@ -221,6 +232,10 @@ class SpaceHandler(BaseHandler):
 
         elif slug == "pending_invites":
             self.get_invites_for_current_user()
+            return
+        
+        elif slug == "pending_requests":
+            self.get_requests_for_current_user()
             return
 
         elif slug == "join_requests":
@@ -496,6 +511,40 @@ class SpaceHandler(BaseHandler):
                 {"success": False,
                  "reason": "user_is_not_invited_into_space"}
 
+        POST /spaceadministration/revoke_invite
+            (space admin or global admin revokes the sent invite to a user)
+            query param:
+                "name" space of which the invite should be declined
+                "user" username to revoke the invite from
+
+            returns:
+                200 OK,
+                {"success": True}
+
+                400 Bad Request
+                {"success": False,
+                 "reason": missing_key:name}
+
+                400 Bad Request
+                {"success": False,
+                 "reason": missing_key:user}
+
+                401 Unauthorized
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                {"success": False,
+                 "reason": "insufficient_permission"}
+
+                409 Conflict
+                {"success": False,
+                 "reason": "space_doesnt_exist"}
+
+                409 Conflict
+                {"success": False,
+                 "reason": "user_is_not_invited_into_space"}
+
         POST /spaceadministration/accept_request
             (space admin or global admin accept join request of a user)
             query param:
@@ -555,6 +604,31 @@ class SpaceHandler(BaseHandler):
                 403 Forbidden
                 {"success": False,
                  "reason": "insufficient_permission"}
+
+                409 Conflict
+                {"success": False,
+                 "reason": "space_doesnt_exist"}
+
+                409 Conflict
+                {"success": False,
+                 "reason": "user_didnt_request_to_join"}
+
+        POST /spaceadministration/revoke_request
+            (current user revokes his own join request to a space)
+            query param:
+                "name": space name of which the request will be rejected
+
+            returns:
+                200 OK,
+                {"success": True}
+
+                400 Bad Request
+                {"success": False,
+                 "reason": missing_key:name}
+
+                401 Unauthorized
+                {"success": False,
+                 "reason": "no_logged_in_user"}
 
                 409 Conflict
                 {"success": False,
@@ -1151,6 +1225,24 @@ class SpaceHandler(BaseHandler):
         self.write(
             self.json_serialize_response(
                 {"success": True, "pending_invites": pending_invites}
+            )
+        )
+
+    def get_requests_for_current_user(self) -> None:
+        """
+        get all pending requests to join spaces for the current user
+        """
+
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
+            pending_requests = space_manager.get_space_requests_of_user(
+                self.current_user.username
+            )
+
+        self.set_status(200)
+        self.write(
+            self.json_serialize_response(
+                {"success": True, "pending_requests": pending_requests}
             )
         )
 

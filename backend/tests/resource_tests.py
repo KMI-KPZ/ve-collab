@@ -3467,7 +3467,37 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.db.spaces.insert_one(additional_space)
 
         invites = space_manager.get_space_invites_of_user(CURRENT_ADMIN.username)
-        self.assertEqual(invites, ["test2"])
+        self.assertEqual(invites, [additional_space])
+
+    def test_get_space_requests_of_user(self):
+        """
+        expect: successfully get a list of all pending requests that the user has
+        """
+
+        space_manager = Spaces(self.db)
+
+        # as default, there should be no requests right now
+        requests = space_manager.get_space_requests_of_user(CURRENT_ADMIN.username)
+        self.assertEqual(requests, [])
+
+        # add a space and set the user as requested
+        additional_space = {
+            "_id": ObjectId(),
+            "name": "test2",
+            "invisible": False,
+            "joinable": True,
+            "members": [],
+            "admins": [],
+            "invites": [],
+            "requests": [CURRENT_ADMIN.username],
+            "files": [],
+            "space_pic": "default_space_pic.jpg",
+            "space_description": "test",
+        }
+        self.db.spaces.insert_one(additional_space)
+
+        requests = space_manager.get_space_requests_of_user(CURRENT_ADMIN.username)
+        self.assertEqual(requests, [additional_space])
 
     def test_create_space(self):
         """

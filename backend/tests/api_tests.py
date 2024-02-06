@@ -3913,7 +3913,33 @@ class SpaceHandlerTest(BaseApiTestCase):
             "GET", "/spaceadministration/pending_invites", True, 200
         )
         self.assertIn("pending_invites", response)
-        self.assertIn(self.test_space, response["pending_invites"])
+        self.assertEqual(len(response["pending_invites"]), 1)
+        self.assertEqual(self.test_space, response["pending_invites"][0]["name"])
+
+    def test_get_space_pending_requests(self):
+        """
+        expect: see pending requests into spaces for current user
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # remove user from members and set him as join requested
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {"members": CURRENT_USER.username},
+                "$push": {"requests": CURRENT_USER.username},
+            },
+        )
+
+        response = self.base_checks(
+            "GET", "/spaceadministration/pending_requests", True, 200
+        )
+        self.assertIn("pending_requests", response)
+        self.assertEqual(len(response["pending_requests"]), 1)
+        self.assertEqual(self.test_space, response["pending_requests"][0]["name"])
 
     def test_get_space_join_requests_global_admin(self):
         """

@@ -175,18 +175,21 @@ class Spaces:
             )
         ]
 
-    def get_space_invites_of_user(self, username: str) -> List[str]:
+    def get_space_invites_of_user(self, username: str) -> List[Space]:
         """
         get a list of pending invites into spaces for the given user
         :return: list of space names that the user is currently invited to (unanswered)
         """
 
-        return [
-            space["name"]
-            for space in self.db.spaces.find(
-                {"invites": username}, projection={"_id": False, "name": True}
-            )
-        ]
+        return list(self.db.spaces.find({"invites": username}))
+    
+    def get_space_requests_of_user(self, username: str) -> List[Space]:
+        """
+        get a list of pending join requests into spaces for the given user
+        :return: list of space names that the user has requested to join (unanswered)
+        """
+
+        return list(self.db.spaces.find({"requests": username}))
 
     def create_space(self, space: dict) -> None:
         """
