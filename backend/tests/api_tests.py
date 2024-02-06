@@ -1,3 +1,4 @@
+from base64 import b64encode
 from datetime import datetime, timedelta
 import io
 import json
@@ -286,7 +287,7 @@ class BaseApiTestCase(AsyncHTTPTestCase):
 
         self.test_space_acl_rules = {
             CURRENT_ADMIN.username: {
-                "role": "admin",
+                "username": CURRENT_ADMIN.username,
                 "space": self.test_space,
                 "join_space": True,
                 "read_timeline": True,
@@ -298,7 +299,7 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                 "write_files": True,
             },
             CURRENT_USER.username: {
-                "role": "user",
+                "username": CURRENT_USER.username,
                 "space": self.test_space,
                 "join_space": True,
                 "read_timeline": True,
@@ -326,7 +327,7 @@ class BaseApiTestCase(AsyncHTTPTestCase):
         self.db.profiles.insert_many(
             [value.copy() for value in self.test_profiles.values()]
         )
-        # pymongo modifies parameters in place (adds _id fields), like WHAT THE FUCK!? anyway, thats why we give it a copy...
+        # pymongo modifies parameters in place (adds _id fields), thats why we give it a copy...
         self.db.space_acl.insert_many(
             [value.copy() for value in self.test_space_acl_rules.values()]
         )
@@ -865,15 +866,15 @@ class SpaceACLHandlerTest(BaseApiTestCase):
             response["acl_entry"], self.test_space_acl_rules[CURRENT_ADMIN.username]
         )
 
-    def test_get_space_acl_other_role(self):
+    def test_get_space_acl_other_user(self):
         """
         expect: acl entry of CURRENT_USER instead of CURRENT_ADMIN
         """
 
         response = self.base_checks(
             "GET",
-            "/space_acl/get?space={}&role={}".format(
-                self.test_space, self.test_roles[CURRENT_USER.username]
+            "/space_acl/get?space={}&username={}".format(
+                self.test_space, CURRENT_USER.username
             ),
             True,
             200,
@@ -892,19 +893,6 @@ class SpaceACLHandlerTest(BaseApiTestCase):
         response = self.base_checks("GET", "/space_acl/get", False, 400)
 
         self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "space")
-
-    def test_get_space_acl_error_user_has_no_role(self):
-        """
-        expect: fail message because user has no role
-        """
-
-        self.db.profiles.delete_many({})
-
-        response = self.base_checks(
-            "GET", "/space_acl/get?space={}".format(self.test_space), False, 409
-        )
-
-        self.assertEqual(response["reason"], "user_has_no_role")
 
     def test_get_space_acl_all(self):
         """
@@ -960,7 +948,7 @@ class SpaceACLHandlerTest(BaseApiTestCase):
         """
 
         updated_acl_entry = {
-            "role": self.test_roles[CURRENT_USER.username],
+            "username": CURRENT_USER.username,
             "space": self.test_space,
             "join_space": True,
             "read_timeline": True,
@@ -975,13 +963,13 @@ class SpaceACLHandlerTest(BaseApiTestCase):
         self.base_checks("POST", "/space_acl/update", True, 200, body=updated_acl_entry)
 
         db_state = self.db.space_acl.find_one(
-            {"role": self.test_roles[CURRENT_USER.username]}
+            {"username": CURRENT_USER.username, "space": self.test_space}
         )
 
         # for equality checks, delete the id
         del db_state["_id"]
 
-        self.assertIn("role", db_state)
+        self.assertIn("username", db_state)
         self.assertEqual(db_state, updated_acl_entry)
 
     def test_post_space_acl_update_error_no_admin(self):
@@ -995,7 +983,7 @@ class SpaceACLHandlerTest(BaseApiTestCase):
 
         # have to include the update payload here, because acl checks for space admin, therefore space has to be included
         updated_acl_entry = {
-            "role": self.test_roles[CURRENT_USER.username],
+            "username": CURRENT_USER.username,
             "space": self.test_space,
             "join_space": True,
             "read_timeline": True,
@@ -1019,7 +1007,7 @@ class SpaceACLHandlerTest(BaseApiTestCase):
         """
 
         updated_acl_entry = {
-            "role": self.test_roles[CURRENT_USER.username],
+            "username": CURRENT_USER.username,
             "space": self.test_space,
             "join_space": True,
             "read_timeline": True,
@@ -1044,7 +1032,7 @@ class SpaceACLHandlerTest(BaseApiTestCase):
         """
 
         updated_acl_entry = {
-            "role": self.test_roles[CURRENT_USER.username],
+            "username": CURRENT_USER.username,
             "space": self.test_space,
             "join_space": "non_bool_value",
             "read_timeline": True,
@@ -1062,13 +1050,13 @@ class SpaceACLHandlerTest(BaseApiTestCase):
 
         self.assertEqual(response["reason"], NON_BOOL_VALUE_ERROR)
 
-    def test_post_space_acl_update_error_role_doesnt_exist(self):
+    def test_post_space_acl_update_error_username_doesnt_exist(self):
         """
-        expect: fail message because the role doesnt exist
+        expect: fail message because the username doesnt exist
         """
 
         updated_acl_entry = {
-            "role": "non_existent_role",
+            "username": "non_existent_username",
             "space": self.test_space,
             "join_space": True,
             "read_timeline": True,
@@ -1084,7 +1072,7 @@ class SpaceACLHandlerTest(BaseApiTestCase):
             "POST", "/space_acl/update", False, 409, body=updated_acl_entry
         )
 
-        self.assertEqual(response["reason"], "role_doesnt_exist")
+        self.assertEqual(response["reason"], "user_doesnt_exist")
 
     def test_post_space_acl_update_error_space_doesnt_exist(self):
         """
@@ -1092,7 +1080,7 @@ class SpaceACLHandlerTest(BaseApiTestCase):
         """
 
         updated_acl_entry = {
-            "role": self.test_roles[CURRENT_USER.username],
+            "username": CURRENT_USER.username,
             "space": "non_existing_space",
             "join_space": True,
             "read_timeline": True,
@@ -1112,11 +1100,11 @@ class SpaceACLHandlerTest(BaseApiTestCase):
 
     def test_post_space_acl_update_error_admin_immutable(self):
         """
-        expect: fail message because the admin role should not be modifiable
+        expect: fail message because the admin users should not be modifiable
         """
 
         updated_acl_entry = {
-            "role": "admin",
+            "username": CURRENT_ADMIN.username,
             "space": self.test_space,
             "join_space": True,
             "read_timeline": True,
@@ -1169,12 +1157,6 @@ class RoleACLIntegrationTest(BaseApiTestCase):
         global_acl_db_state = self.db.global_acl.find_one({"role": "guest"})
         self.assertNotEqual(global_acl_db_state, None)
 
-        # also expect a corresponding space acl entry to be created (in all spaces, i.e. only in the test space here)
-        space_acl_db_state = self.db.space_acl.find_one(
-            {"role": "guest", "space": self.test_space}
-        )
-        self.assertNotEqual(space_acl_db_state, None)
-
     def test_acl_entry_creation_on_role_creation(self):
         """
         expect: creating a new role via update/upsert should also create a corresponding acl entry
@@ -1188,17 +1170,11 @@ class RoleACLIntegrationTest(BaseApiTestCase):
         global_acl_db_state = self.db.global_acl.find_one({"role": "new_role"})
         self.assertNotEqual(global_acl_db_state, None)
 
-        # also expect a corresponding space acl entry to be created (in all spaces, i.e. only in the test space here)
-        space_acl_db_state = self.db.space_acl.find_one(
-            {"role": "new_role", "space": self.test_space}
-        )
-        self.assertNotEqual(space_acl_db_state, None)
-
     def test_cleanup_unused_acl_rules(self):
         """
         expect: removing all roles should cleanup the full acl
         according to the cleanup procedure removing any entries,
-        that no longer have a matching role or space
+        that no longer have a matching role or username/space
         """
 
         self.db.profiles.delete_many({})
@@ -2046,7 +2022,7 @@ class CommentHandlerTest(BaseApiTestCase):
 
         # revoke comment permission for this test
         self.db.space_acl.update_one(
-            {"role": self.test_roles[CURRENT_USER.username], "space": self.test_space},
+            {"username": CURRENT_USER.username, "space": self.test_space},
             {"$set": {"comment": False}},
         )
 
@@ -3937,7 +3913,33 @@ class SpaceHandlerTest(BaseApiTestCase):
             "GET", "/spaceadministration/pending_invites", True, 200
         )
         self.assertIn("pending_invites", response)
-        self.assertIn(self.test_space, response["pending_invites"])
+        self.assertEqual(len(response["pending_invites"]), 1)
+        self.assertEqual(self.test_space, response["pending_invites"][0]["name"])
+
+    def test_get_space_pending_requests(self):
+        """
+        expect: see pending requests into spaces for current user
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # remove user from members and set him as join requested
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {"members": CURRENT_USER.username},
+                "$push": {"requests": CURRENT_USER.username},
+            },
+        )
+
+        response = self.base_checks(
+            "GET", "/spaceadministration/pending_requests", True, 200
+        )
+        self.assertIn("pending_requests", response)
+        self.assertEqual(len(response["pending_requests"]), 1)
+        self.assertEqual(self.test_space, response["pending_requests"][0]["name"])
 
     def test_get_space_join_requests_global_admin(self):
         """
@@ -4280,9 +4282,9 @@ class SpaceHandlerTest(BaseApiTestCase):
         self.assertIn(CURRENT_ADMIN.username, db_state["admins"])
 
         # expect space_acl roles to be created
-        space_acl_records = self.db.space_acl.find({"space": new_space_name})
-        for role in self.test_roles.values():
-            self.assertTrue(any(role == record["role"] for record in space_acl_records))
+        space_acl_records = list(self.db.space_acl.find({"space": new_space_name}))
+        self.assertEqual((len(space_acl_records)), 1)
+        self.assertEqual(space_acl_records[0]["username"], CURRENT_ADMIN.username)
 
     def test_post_create_space_invisible(self):
         """
@@ -4401,12 +4403,6 @@ class SpaceHandlerTest(BaseApiTestCase):
             {"$pull": {"members": CURRENT_USER.username}, "$set": {"joinable": True}},
         )
 
-        # unset role permission to join any space
-        self.db.space_acl.update_one(
-            {"role": self.test_roles[CURRENT_USER.username], "space": self.test_space},
-            {"$set": {"join_space": False}},
-        )
-
         response = self.base_checks(
             "POST",
             "/spaceadministration/join?name={}".format(self.test_space),
@@ -4422,18 +4418,20 @@ class SpaceHandlerTest(BaseApiTestCase):
         db_state = self.db.spaces.find_one({"name": self.test_space})
         self.assertIn(CURRENT_USER.username, db_state["members"])
 
-    def test_post_join_space_role_permission(self):
-        """
-        expect: successfully join space because user has permission to join any space
-        """
+        # expect acl entry to be created
+        acl_entry = self.db.space_acl.find_one(
+            {"space": self.test_space, "username": CURRENT_USER.username}
+        )
+        self.assertIsNotNone(acl_entry)
 
-        # switch to user mode
-        options.test_admin = False
-        options.test_user = True
+    def test_post_join_space_admin(self):
+        """
+        expect: successfully join space because user is an admin and can join any space
+        """
 
         # remove user from member list first
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$pull": {"members": CURRENT_USER.username}}
+            {"name": self.test_space}, {"$pull": {"members": CURRENT_ADMIN.username}}
         )
 
         response = self.base_checks(
@@ -4449,7 +4447,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # expect user to be a member now
         db_state = self.db.spaces.find_one({"name": self.test_space})
-        self.assertIn(CURRENT_USER.username, db_state["members"])
+        self.assertIn(CURRENT_ADMIN.username, db_state["members"])
 
     def test_post_join_space_join_request(self):
         """
@@ -4464,12 +4462,6 @@ class SpaceHandlerTest(BaseApiTestCase):
         # remove user from member list first
         self.db.spaces.update_one(
             {"name": self.test_space}, {"$pull": {"members": CURRENT_USER.username}}
-        )
-
-        # revoke join permision for user
-        self.db.space_acl.update_one(
-            {"space": self.test_space, "role": self.test_roles[CURRENT_USER.username]},
-            {"$set": {"join_space": False}},
         )
 
         response = self.base_checks(
@@ -4642,7 +4634,168 @@ class SpaceHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
 
-    def test_post_space_description_global_admin(self):
+    def test_post_space_information_global_admin(self):
+        """
+        expect: successfully edit description and picture of space, permission is granted
+        because user is global admin
+        """
+
+        # pull user from space admins to trigger global admin privileges
+        self.db.spaces.update_one(
+            {"name": self.test_space}, {"$pull": {"admins": CURRENT_ADMIN.username}}
+        )
+
+        request_json = {
+            "picture": {
+                "payload": b64encode(b"test_picture").decode("utf-8"),
+                "type": "image/png",
+            },
+            "description": "updated_space_description",
+        }
+
+        self.base_checks(
+            "POST",
+            "/spaceadministration/space_information?name={}".format(self.test_space),
+            True,
+            200,
+            body=request_json,
+        )
+
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertEqual(db_state["space_description"], request_json["description"])
+
+        # check that the profile pic was also replicated to gridfs
+        fs = gridfs.GridFS(self.db)
+        fs_file = fs.get(db_state["space_pic"])
+        self.assertIsNotNone(fs_file)
+        self.assertEqual(fs_file.read(), b"test_picture")
+
+        # do another request, this time only updating the description
+        request_json2 = {
+            "description": "updated_space_description2",
+        }
+
+        self.base_checks(
+            "POST",
+            "/spaceadministration/space_information?name={}".format(self.test_space),
+            True,
+            200,
+            body=request_json2,
+        )
+
+        db_state2 = self.db.spaces.find_one({"name": self.test_space})
+        self.assertEqual(db_state2["space_description"], request_json2["description"])
+
+    def test_post_space_information_space_admin(self):
+        """
+        expect: successfully edit description and picture of space, permission is granted
+        because user is space admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        self.db.spaces.update_one(
+            {"name": self.test_space}, {"$push": {"admins": CURRENT_USER.username}}
+        )
+
+        request_json = {
+            "picture": {
+                "payload": b64encode(b"test_picture").decode("utf-8"),
+                "type": "image/png",
+            },
+            "description": "updated_space_description",
+        }
+
+        self.base_checks(
+            "POST",
+            "/spaceadministration/space_information?name={}".format(self.test_space),
+            True,
+            200,
+            body=request_json,
+        )
+
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertEqual(db_state["space_description"], request_json["description"])
+
+        # check that the profile pic was also replicated to gridfs
+        fs = gridfs.GridFS(self.db)
+        fs_file = fs.get(db_state["space_pic"])
+        self.assertIsNotNone(fs_file)
+        self.assertEqual(fs_file.read(), b"test_picture")
+
+        # do another request, this time only updating the description
+        request_json2 = {
+            "description": "updated_space_description2",
+        }
+
+        self.base_checks(
+            "POST",
+            "/spaceadministration/space_information?name={}".format(self.test_space),
+            True,
+            200,
+            body=request_json2,
+        )
+
+        db_state2 = self.db.spaces.find_one({"name": self.test_space})
+        self.assertEqual(db_state2["space_description"], request_json2["description"])
+
+    def test_post_space_information_error_space_doesnt_exist(self):
+        """
+        expect: fail message because space doesnt exist
+        """
+
+        request_json = {
+            "description": "updated_space_text",
+            "picture": {
+                "payload": b64encode(b"test_picture").decode("utf-8"),
+                "type": "image/png",
+            },
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/spaceadministration/space_information?name={}".format(
+                "not_existing_space"
+            ),
+            False,
+            409,
+            body=request_json,
+        )
+        self.assertEqual(response["reason"], SPACE_DOESNT_EXIST_ERROR)
+
+    def test_post_space_information_error_insufficient_permission(self):
+        """
+        expect: fail message because user is neither global admin nor space admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        self.db.spaces.update_one(
+            {"name": self.test_space}, {"$pull": {"admins": CURRENT_ADMIN.username}}
+        )
+
+        request_json = {
+            "description": "updated_space_text",
+            "picture": {
+                "payload": b64encode(b"test_picture").decode("utf-8"),
+                "type": "image/png",
+            },
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/spaceadministration/space_picture?name={}".format(self.test_space),
+            False,
+            403,
+            body=request_json,
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_post_space_description_legacy_global_admin(self):
         """
         expect: successfully edit description of space, permission is granted
         because user is global admin
@@ -4672,10 +4825,10 @@ class SpaceHandlerTest(BaseApiTestCase):
             db_state["space_description"], request_json["space_description"]
         )
 
-    def test_post_space_description_space_admin(self):
+    def test_post_space_description_legacy_space_admin(self):
         """
         expect: successfully edit description of space, permission is granted
-        because user is global admin
+        because user is space admin
         """
 
         # switch to user mode
@@ -5042,6 +5195,151 @@ class SpaceHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], USER_NOT_INVITED_ERROR)
 
+    def test_post_space_revoke_invite_global_admin(self):
+        """
+        expect: successfully revoke invite of a user, permission is granted
+        because user is global admin
+        """
+
+        # pull user from space admins to trigger global admin privileges
+        # and remove other user from space and set him as invited
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {
+                    "admins": CURRENT_ADMIN.username,
+                    "members": CURRENT_USER.username,
+                },
+                "$push": {"invites": CURRENT_USER.username},
+            },
+        )
+
+        self.base_checks(
+            "POST",
+            "/spaceadministration/revoke_invite?name={}&user={}".format(
+                self.test_space, CURRENT_USER.username
+            ),
+            True,
+            200,
+        )
+
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertNotIn(CURRENT_USER.username, db_state["invites"])
+        # for sanity, check that user is not added elsewhere
+        self.assertNotIn(CURRENT_USER.username, db_state["members"])
+        self.assertNotIn(CURRENT_USER.username, db_state["requests"])
+
+    def test_post_space_revoke_invite_space_admin(self):
+        """
+        expect: successfully revoke invite of a user, permission is granted
+        because user is space admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # remove other user from member and set him as invited
+        # and set current user as space admin
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$set": {"admins": [CURRENT_USER.username]},
+                "$pull": {"members": CURRENT_ADMIN.username},
+                "$push": {"invites": CURRENT_ADMIN.username},
+            },
+        )
+
+        self.base_checks(
+            "POST",
+            "/spaceadministration/revoke_invite?name={}&user={}".format(
+                self.test_space, CURRENT_ADMIN.username
+            ),
+            True,
+            200,
+        )
+
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertNotIn(CURRENT_ADMIN.username, db_state["invites"])
+        # for sanity, check that user is not added elsewhere
+        self.assertNotIn(CURRENT_ADMIN.username, db_state["members"])
+        self.assertNotIn(CURRENT_ADMIN.username, db_state["requests"])
+
+    def test_post_space_revoke_invite_error_space_doesnt_exist(self):
+        """
+        expect: fail message because space doesnt exist
+        """
+
+        # set user as invited
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {"members": CURRENT_USER.username},
+                "$push": {"invites": CURRENT_USER.username},
+            },
+        )
+
+        response = self.base_checks(
+            "POST",
+            "/spaceadministration/revoke_invite?name={}&user={}".format(
+                "not_existing_space", CURRENT_USER.username
+            ),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], SPACE_DOESNT_EXIST_ERROR)
+
+    def test_post_space_revoke_invite_error_user_not_invited(self):
+        """
+        expect: fail message because user wasnt event invited into the space
+        """
+
+        # pull user from members, but dont invite him either
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {"members": CURRENT_USER.username},
+            },
+        )
+
+        response = self.base_checks(
+            "POST",
+            "/spaceadministration/revoke_invite?name={}&user={}".format(
+                self.test_space, CURRENT_USER.username
+            ),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], USER_NOT_INVITED_ERROR)
+
+    def test_post_space_revoke_invite_error_insufficient_permission(self):
+        """
+        expect: fail message because user is neither global admin nor space admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # remove other user from member and set him as invited
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {"members": CURRENT_ADMIN.username},
+                "$push": {"invites": CURRENT_ADMIN.username},
+            },
+        )
+
+        response = self.base_checks(
+            "POST",
+            "/spaceadministration/revoke_invite?name={}&user={}".format(
+                self.test_space, CURRENT_ADMIN.username
+            ),
+            False,
+            403,
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
     def test_post_space_accept_request_global_admin(self):
         """
         expect: successfully accept join request of a user, making him a member
@@ -5346,6 +5644,78 @@ class SpaceHandlerTest(BaseApiTestCase):
             403,
         )
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_post_space_revoke_request(self):
+        """
+        expect: current user revokes his own join request
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # pull user from members and set him as requested
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {
+                    "members": CURRENT_USER.username,
+                },
+                "$push": {"requests": CURRENT_USER.username},
+            },
+        )
+
+        self.base_checks(
+            "POST",
+            "/spaceadministration/revoke_request?name={}".format(self.test_space),
+            True,
+            200,
+        )
+
+        # expect user to be no longer requested and also not member
+        db_state = self.db.spaces.find_one({"name": self.test_space})
+        self.assertNotIn(CURRENT_USER.username, db_state["requests"])
+        self.assertNotIn(CURRENT_USER.username, db_state["members"])
+
+    def test_post_space_revoke_request_error_space_doesnt_exist(self):
+        """
+        expect: fail message because space doesnt exist
+        """
+
+        response = self.base_checks(
+            "POST",
+            "/spaceadministration/revoke_request?name={}".format("not_existing_space"),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], SPACE_DOESNT_EXIST_ERROR)
+
+    def test_post_space_revoke_request_error_user_didnt_request(self):
+        """
+        expect: fail message because user didnt even request to join
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        # pull user from members and dont set him as requested
+        self.db.spaces.update_one(
+            {"name": self.test_space},
+            {
+                "$pull": {
+                    "members": CURRENT_USER.username,
+                },
+            },
+        )
+
+        response = self.base_checks(
+            "POST",
+            "/spaceadministration/revoke_request?name={}".format(self.test_space),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], USER_DIDNT_REQUEST_TO_JOIN_ERROR)
 
     def test_post_space_toggle_visibility_global_admin(self):
         """
@@ -6575,7 +6945,7 @@ class TimelineHandlerTest(BaseApiTestCase):
 
         # revoke permission to view the timeline
         self.db.space_acl.update_one(
-            {"space": self.test_space, "role": self.test_roles[CURRENT_USER.username]},
+            {"space": self.test_space, "username": CURRENT_USER.username},
             {"$set": {"read_timeline": False}},
         )
 

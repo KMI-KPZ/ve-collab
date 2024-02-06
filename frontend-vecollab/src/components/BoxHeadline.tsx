@@ -1,5 +1,5 @@
 interface Props {
-    title: string;
+    title?: string;
 }
 
 export default function BoxHeadline({ title }: Props) {
