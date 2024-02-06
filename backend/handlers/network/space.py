@@ -1634,12 +1634,6 @@ class SpaceHandler(BaseHandler):
                 self.write({"success": False, "reason": "space_doesnt_exist"})
                 return
 
-            # reject if user is already a member of the space
-            if username in space["members"]:
-                self.set_status(409)
-                self.write({"success": False, "reason": "user_already_member"})
-                return
-
             # abort if user wasn't even invited into space in first place
             if username not in space["invites"]:
                 self.set_status(409)

@@ -5263,21 +5263,6 @@ class SpaceHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], SPACE_DOESNT_EXIST_ERROR)
 
-    def test_post_space_revoke_invite_error_user_already_member(self):
-        """
-        expect: fail message because user is already a member of the space
-        """
-
-        response = self.base_checks(
-            "POST",
-            "/spaceadministration/revoke_invite?name={}&user={}".format(
-                self.test_space, CURRENT_USER.username
-            ),
-            False,
-            409,
-        )
-        self.assertEqual(response["reason"], USER_ALREADY_MEMBER_ERROR)
-
     def test_post_space_revoke_invite_error_user_not_invited(self):
         """
         expect: fail message because user wasnt event invited into the space
