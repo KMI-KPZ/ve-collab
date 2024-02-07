@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import veCollabLogo from '@/images/veCollabLogo.png';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation'
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { Notification } from '@/interfaces/socketio';
 
@@ -13,6 +14,9 @@ interface Props {
 export default function HeaderSection({ notificationEvents, headerBarMessageEvents }: Props) {
     const { data: session } = useSession();
     const [messageEventCount, setMessageEventCount] = useState<number>(0);
+    const currentPath = usePathname()
+    const inactiveClass = 'hover:ring hover:ring-ve-collab-orange rounded-lg'
+    const activeClass = "hover:ring hover:ring-ve-collab-orange rounded-lg bg-ve-collab-orange-light"
 
     useEffect(() => {
         //filter out the messages that the user sent himself --> they should not trigger a notification icon
@@ -21,6 +25,12 @@ export default function HeaderSection({ notificationEvents, headerBarMessageEven
         });
         setMessageEventCount(filteredMessageEvents.length);
     }, [headerBarMessageEvents, session]);
+
+    const isActivePath = (path: string) => {
+        return currentPath.startsWith(path)
+    }
+
+    const isFrontpage = () => currentPath == '/'
 
     return (
         <header className="bg-white px-4 lg:px-6 py-2.5 drop-shadow-lg">
@@ -34,31 +44,31 @@ export default function HeaderSection({ notificationEvents, headerBarMessageEven
                     ></Image>
                 </Link>
                 <ul className="flex items-center font-semibold space-x-14">
-                    <li>
-                        <Link href="/">Start</Link>
+                    <li className={isFrontpage() ? activeClass : inactiveClass}>
+                        <Link href="/" className='inline-block	px-2 py-3'>Start</Link>
                     </li>
-                    <li>
-                        <Link href="/content">Materialien</Link>
+                    <li className={isActivePath('/content') ? activeClass : inactiveClass}>
+                        <Link href="/content" className='inline-block	px-2 py-3'>Materialien</Link>
                     </li>
-                    <li>
-                        <Link href="/profile">Profil</Link>
+                    <li className={isActivePath('/editProfile') ? activeClass : inactiveClass}>
+                        <Link href="/profile" className='inline-block	px-2 py-3'>Profil</Link>
                     </li>
-                    <li>
-                        <Link href="/spaces">Gruppen</Link>
+                    <li className={isActivePath('/space') ? activeClass : inactiveClass}>
+                        <Link href="/spaces" className='inline-block	px-2 py-3'>Gruppen</Link>
                     </li>
-                    <li>
-                        <Link href="/overviewProjects">VE Designer</Link>
+                    <li className={isActivePath('/overviewProjects') ? activeClass : inactiveClass}>
+                        <Link href="/overviewProjects" className='inline-block	px-2 py-3'>VE Designer</Link>
                     </li>
-                    <li className="relative">
-                        <Link href="/messages">Chat</Link>
+                    <li className={isActivePath('/messages') ? `relative ${activeClass}` : `relative ${inactiveClass}`}>
+                        <Link href="/messages" className='inline-block	px-2 py-3'>Chat</Link>
                         {messageEventCount > 0 && (
                             <span className="absolute top-[-10px] right-[-20px] py-1 px-2 rounded-[50%] bg-red-600 text-xs">
                                 {messageEventCount}
                             </span>
                         )}
                     </li>
-                    <li className="relative">
-                        <Link href="/notifications">Benachrichtigungen</Link>
+                    <li className={isActivePath('/notifications') ? `relative ${activeClass}` : `relative ${inactiveClass}`}>
+                        <Link href="/notifications" className='inline-block	px-2 py-3'>Benachrichtigungen</Link>
                         {notificationEvents.length > 0 && (
                             <span className="absolute top-[-10px] right-[-20px] py-1 px-2 rounded-[50%] bg-red-600 text-xs">
                                 {notificationEvents.length}
