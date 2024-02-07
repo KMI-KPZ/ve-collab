@@ -1013,6 +1013,7 @@ class PostResourceTest(BaseResourceTestCase):
 
         self.db.posts.delete_many({})
         self.db.profiles.delete_many({})
+        self.db.spaces.delete_many({})
 
         # delete all created files in gridfs
         fs = gridfs.GridFS(self.db)
@@ -2178,6 +2179,145 @@ class PostResourceTest(BaseResourceTestCase):
             "likers": [],
         }
 
+        # add one post that is out of the time frame (lies in the future to check
+        # the time frame constraint, because backwards it would include up to <limit> posts)
+        post6 = {
+            "_id": ObjectId(),
+            "author": CURRENT_ADMIN.username,
+            "creation_date": datetime.now() + timedelta(days=1),
+            "text": "test",
+            "space": None,
+            "pinned": False,
+            "isRepost": False,
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "files": [],
+            "comments": [],
+            "likers": [],
+        }
+
+        self.db.posts.insert_many([post1, post2, post3, post4, post5, post6])
+
+        post_manager = Posts(self.db)
+        # this should include post1 because it is from a user that the user follows,
+        # post3 because it is from a space that the user is a member of,
+        # and post5 and the default post because it is the users own post
+        # but not the default post because it is out of time frame
+        posts = post_manager.get_personal_timeline(
+            CURRENT_ADMIN.username, datetime.now()
+        )
+        self.assertEqual(len(posts), 4)
+        post_ids = [post["_id"] for post in posts]
+        self.assertIn(post1["_id"], post_ids)
+        self.assertIn(post3["_id"], post_ids)
+        self.assertIn(post5["_id"], post_ids)
+        self.assertIn(self.post_id, post_ids)
+
+    def test_get_personal_timeline_legacy(self):
+        """
+        expect: successfully get all posts that are in the time frame and match the criteria (OR match):
+        - from people that the user follows,
+        - in spaces that the user is a member of
+        - the users own posts
+        """
+
+        # follow CURRENT_USER.username
+        self.db.profiles.update_one(
+            {"username": CURRENT_ADMIN.username},
+            {"$push": {"follows": CURRENT_USER.username}},
+        )
+
+        # add one post of CURRENT_USER.username and one of a different username
+        post1 = {
+            "_id": ObjectId(),
+            "author": CURRENT_USER.username,
+            "creation_date": datetime.now(),
+            "text": "test",
+            "space": None,
+            "pinned": False,
+            "isRepost": False,
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "files": [],
+            "comments": [],
+            "likers": [],
+        }
+        post2 = {
+            "_id": ObjectId(),
+            "author": "non_following_user",
+            "creation_date": datetime.now(),
+            "text": "test",
+            "space": None,
+            "pinned": False,
+            "isRepost": False,
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "files": [],
+            "comments": [],
+            "likers": [],
+        }
+
+        # create space test_space
+        space = {
+            "_id": ObjectId(),
+            "name": "test_space",
+            "invisible": False,
+            "joinable": True,
+            "members": [CURRENT_ADMIN.username],
+            "admins": [CURRENT_ADMIN.username],
+            "invites": [],
+            "requests": [],
+            "files": [],
+        }
+        self.db.spaces.insert_one(space)
+
+        # add one post in a space that CURRENT_USER.username is a member of and one in a space that
+        # he is not a member of
+        post3 = {
+            "_id": ObjectId(),
+            "author": "doesnt_matter",
+            "creation_date": datetime.now(),
+            "text": "testgydfgdfg",
+            "space": "test_space",
+            "pinned": False,
+            "isRepost": False,
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "files": [],
+            "comments": [],
+            "likers": [],
+        }
+        post4 = {
+            "_id": ObjectId(),
+            "author": "doesnt_matter",
+            "creation_date": datetime.now(),
+            "text": "test",
+            "space": "non_member_space",
+            "pinned": False,
+            "isRepost": False,
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "files": [],
+            "comments": [],
+            "likers": [],
+        }
+
+        # add one post by the user himself
+        post5 = {
+            "_id": ObjectId(),
+            "author": CURRENT_ADMIN.username,
+            "creation_date": datetime.now(),
+            "text": "test",
+            "space": None,
+            "pinned": False,
+            "isRepost": False,
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "files": [],
+            "comments": [],
+            "likers": [],
+        }
+
         self.db.posts.insert_many([post1, post2, post3, post4, post5])
 
         post_manager = Posts(self.db)
@@ -2185,7 +2325,7 @@ class PostResourceTest(BaseResourceTestCase):
         # post3 because it is from a space that the user is a member of,
         # and post5 because it is the users own post
         # but not the default post because it is out of time frame
-        posts = post_manager.get_personal_timeline(
+        posts = post_manager.get_personal_timeline_legacy(
             CURRENT_ADMIN.username, datetime.now() - timedelta(days=1), datetime.now()
         )
         self.assertEqual(len(posts), 3)
