@@ -107,6 +107,7 @@ def make_app(cookie_secret: str, debug: bool = False):
             (r"/timeline/space/(.+)", SpaceTimelineHandler),
             (r"/timeline/user/(.+)", UserTimelineHandler),
             (r"/timeline/you", PersonalTimelineHandler),
+            (r"/legacy/timeline/you", LegacyPersonalTimelineHandler),
             (r"/profileinformation", ProfileInformationHandler),
             (r"/profile_snippets", BulkProfileSnippets),
             (r"/users/(.+)", UserHandler),
