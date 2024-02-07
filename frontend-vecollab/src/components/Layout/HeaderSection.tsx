@@ -27,7 +27,7 @@ export default function HeaderSection({ notificationEvents, headerBarMessageEven
     }, [headerBarMessageEvents, session]);
 
     const isActivePath = (path: string) => {
-        return currentPath.startsWith(path)
+        return currentPath?.startsWith(path)
     }
 
     const isFrontpage = () => currentPath == '/'
