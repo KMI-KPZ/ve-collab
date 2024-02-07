@@ -680,6 +680,8 @@ class Posts:
                 },
                 # only include the last `limit` posts
                 {"$limit": limit},
+                # sort by creation date, descending
+                {"$sort": {"creation_date": -1}},
                 # last step, cleanup all the extra fields we had to use along
                 {
                     "$unset": [
