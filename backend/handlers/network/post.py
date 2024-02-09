@@ -43,7 +43,7 @@ class PostHandler(BaseHandler):
                 "_id": "optional, _id, if supplied, the post is updated instead of freshly inserted",
                 "text": "text_of_post",
                 "tags": ["tag1", "tag2"], (json encoded list)
-                "space": "optional, post this post into a space, not directly into your profile",
+                "space": "optional _id, post this post into a space, not directly into your profile",
                 "wordpress_post_id": "optional, id of associated wordpress post"
             }
         return:
@@ -92,13 +92,14 @@ class PostHandler(BaseHandler):
             except Exception:
                 pass
             # if space is set, this post belongs to a space (only visible inside)
-            space = self.get_body_argument("space", None)
+            space_id = self.get_body_argument("space", None)
 
             with util.get_mongodb() as db:
                 # check if space exists, if not, end with 400 Bad Request
                 space_manager = Spaces(db)
-                if space is not None:
-                    if not space_manager.check_space_exists(space):
+                if space_id is not None:
+                    space_id = util.parse_object_id(space_id)
+                    if not space_manager.check_space_exists(space_id):
                         self.set_status(400)
                         self.write(
                             {
@@ -113,7 +114,7 @@ class PostHandler(BaseHandler):
                     # to post into that space, if not end with 403 insufficient permission
                     acl = ACL(db)
                     user_can_post = acl.space_acl.ask(
-                        self.current_user.username, space, "post"
+                        self.current_user.username, space_id, "post"
                     )
                     if not user_can_post:
                         self.set_status(403)
@@ -146,10 +147,10 @@ class PostHandler(BaseHandler):
 
                         # if the post was in a space, also store the file in the repo,
                         # indicating it is part of a post by setting manually_uploaded to False
-                        if space:
+                        if space_id:
                             try:
                                 space_manager.add_new_post_file(
-                                    space,
+                                    space_id,
                                     self.current_user.username,
                                     stored_id,
                                     file_obj["filename"],
@@ -161,7 +162,7 @@ class PostHandler(BaseHandler):
                     "author": author,
                     "creation_date": creation_date,
                     "text": text,
-                    "space": space,
+                    "space": space_id,
                     "pinned": False,
                     "wordpress_post_id": wordpress_post_id,
                     "tags": tags,
@@ -207,6 +208,8 @@ class PostHandler(BaseHandler):
 
                 # if the post is in a space, enforce write permission
                 if post["space"]:
+                    post["space"] = util.parse_object_id(post["space"])
+
                     acl = ACL(db)
                     user_can_post = False
                     user_can_post = acl.space_acl.ask(
@@ -313,6 +316,7 @@ class PostHandler(BaseHandler):
             # 2. user is lionet global admin
             # 3. user is space admin
             if post_to_delete["space"]:
+                post_to_delete["space"] = util.parse_object_id(post_to_delete["space"])
                 if self.current_user.username != post_to_delete["author"]:
                     if not self.is_current_user_lionet_admin():
                         space_manager = Spaces(db)
@@ -452,6 +456,8 @@ class CommentHandler(BaseHandler):
 
             # if post is in a space, we have to check the permissions to comment
             if post["space"]:
+                post["space"] = util.parse_object_id(post["space"])
+
                 acl = ACL(db)
                 if not acl.space_acl.ask(
                     self.current_user.username, post["space"], "comment"
@@ -579,6 +585,8 @@ class CommentHandler(BaseHandler):
             # 2. user is lionet global admin
             # 3. user is space admin
             if post["space"]:
+                post["space"] = util.parse_object_id(post["space"])
+
                 if self.current_user.username != comment_author:
                     if not self.is_current_user_lionet_admin():
                         space_manager = Spaces(db)
@@ -800,7 +808,7 @@ class RepostHandler(BaseHandler):
                     {
                         "post_id": "id_of__original_post",
                         "text": "new text for the repost",
-                        "space": "the space where to post, None if no space"
+                        "space": "space _id, the space where to post, None if no space"
                     }
             or update existing repost:
                 http_body:
@@ -928,12 +936,13 @@ class RepostHandler(BaseHandler):
                     )
                     return
 
-                space_name = http_body["space"]
+                space_id = http_body["space"]
                 # user requested to post into space
                 # --> check if space exists
-                if space_name is not None:
+                if space_id is not None:
+                    space_id = util.parse_object_id(space_id)
                     space_manager = Spaces(db)
-                    if not space_manager.check_space_exists(space_name):
+                    if not space_manager.check_space_exists(space_id):
                         self.set_status(409)
                         self.write(
                             {
@@ -949,7 +958,7 @@ class RepostHandler(BaseHandler):
                     acl = ACL(db)
                     user_can_post = False
                     user_can_post = acl.space_acl.ask(
-                        self.current_user.username, space_name, "post"
+                        self.current_user.username, space_id, "post"
                     )
                     if not user_can_post:
                         self.set_status(403)
@@ -968,7 +977,7 @@ class RepostHandler(BaseHandler):
                 post["originalCreationDate"] = post["creation_date"]
                 post["creation_date"] = datetime.utcnow()
                 post["repostText"] = http_body["text"]
-                post["space"] = space_name
+                post["space"] = space_id
                 post["likers"] = []
                 post["comments"] = []
                 post["tags"] = []
@@ -987,7 +996,11 @@ class RepostHandler(BaseHandler):
                 try:
                     repost = post_manager.get_post(
                         http_body["_id"],
-                        projection={"isRepost": True, "repostAuthor": True, "space": True},
+                        projection={
+                            "isRepost": True,
+                            "repostAuthor": True,
+                            "space": True,
+                        },
                     )
                 except PostNotExistingException:
                     self.set_status(409)
@@ -1018,6 +1031,7 @@ class RepostHandler(BaseHandler):
 
                 # if repost is in a space, reject if the user has no posting permission
                 if repost["space"]:
+                    repost["space"] = util.parse_object_id(repost["space"])
                     acl = ACL(db)
                     user_can_post = False
                     user_can_post = acl.space_acl.ask(
@@ -1052,19 +1066,21 @@ class RepostHandler(BaseHandler):
 
 
 class PinHandler(BaseHandler):
-    def check_space_or_global_admin(self, space_name) -> bool:
+    def check_space_or_global_admin(self, space_id: str | ObjectId) -> bool:
         """
         check if the current user is either space admin or global admin
         :return: True if user is any of those admins, False otherwise
         :raises: ValueError, if space doesnt exist
         """
 
+        space_id = util.parse_object_id(space_id)
+
         with util.get_mongodb() as db:
             space_manager = Spaces(db)
             try:
                 if (
                     space_manager.check_user_is_space_admin(
-                        space_name, self.current_user.username
+                        space_id, self.current_user.username
                     )
                 ) or (self.get_current_user_role() == "admin"):
                     return True
@@ -1169,7 +1185,7 @@ class PinHandler(BaseHandler):
         if http_body["pin_type"] == "post":
             with util.get_mongodb() as db:
                 post_manager = Posts(db)
-                
+
                 try:
                     post = post_manager.get_post(
                         http_body["id"], projection={"space": True}
@@ -1190,6 +1206,8 @@ class PinHandler(BaseHandler):
                     return
 
                 try:
+                    post["space"] = util.parse_object_id(post["space"])
+
                     # check if user is either space admin or global admin
                     if not self.check_space_or_global_admin(post["space"]):
                         # user is no group admin nor global admin --> no permission to pin
@@ -1234,7 +1252,7 @@ class PinHandler(BaseHandler):
         elif http_body["pin_type"] == "comment":
             with util.get_mongodb() as db:
                 post_manager = Posts(db)
-                
+
                 try:
                     post = post_manager.get_post_by_comment_id(
                         http_body["id"], projection={"space": True, "author": True}
@@ -1248,6 +1266,8 @@ class PinHandler(BaseHandler):
 
                 # have to check if the post was in a space first, because then also the space admin may pin comments
                 if "space" in post and post["space"] is not None:
+                    post["space"] = util.parse_object_id(post["space"])
+
                     # deny pin if user is neither global admin, space admin nor post author
                     try:
                         if not (
@@ -1460,6 +1480,8 @@ class PinHandler(BaseHandler):
                     )
                     return
                 try:
+                    post["space"] = util.parse_object_id(post["space"])
+
                     # reject if the user is neither space nor global admin
                     if not self.check_space_or_global_admin(post["space"]):
                         self.set_status(403)
@@ -1517,6 +1539,8 @@ class PinHandler(BaseHandler):
 
                 # have to check if the post was in a space first, because then also the space admin may unpin comments
                 if "space" in post and post["space"] is not None:
+                    post["space"] = util.parse_object_id(post["space"])
+
                     # deny unpin if user is neither global admin, space admin nor post author
                     try:
                         if not (

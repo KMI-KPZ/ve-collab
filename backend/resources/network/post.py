@@ -191,12 +191,14 @@ class Posts:
         # finally delete the post itself
         self.db.posts.delete_one({"_id": post_id})
 
-    def delete_post_by_space(self, space_name: str) -> None:
+    def delete_post_by_space(self, space_id: str | ObjectId) -> None:
         """
-        delete all posts that were in the space given by its name
+        delete all posts that were in the space given by its _id
         """
 
-        self.db.posts.delete_many({"space": space_name})
+        space_id = util.parse_object_id(space_id)
+
+        self.db.posts.delete_many({"space": space_id})
 
     def like_post(self, post_id: str | ObjectId, username: str) -> None:
         """
@@ -446,20 +448,22 @@ class Posts:
         )
 
     def get_space_timeline(
-        self, space_name: str, time_from: datetime.datetime, time_to: datetime.datetime
+        self, space_id: str | ObjectId, time_from: datetime.datetime, time_to: datetime.datetime
     ) -> List[Dict]:
         """
         get the timeline of a space within the time window specified by time_from and time_to.
         This will always include posts that are pinned, no matter if they fit the timeframe.
-        :param space_name: the name of the space to view the timeline of
+        :param space_id: the _id of the space to view the timeline of
         :param time_from: the starting datetime of the window in utc time
         :param time_to: the end datetime of the window in utc time
         """
 
+        space_id = util.parse_object_id(space_id)
+
         return list(
             self.db.posts.find(
                 {
-                    "space": space_name,
+                    "space": space_id,
                     "$or": [
                         {"creation_date": {"$gte": time_from, "$lte": time_to}},
                         {"pinned": True},
@@ -525,7 +529,7 @@ class Posts:
                     "$lookup": {
                         "from": "spaces",
                         "localField": "space",
-                        "foreignField": "name",
+                        "foreignField": "_id",
                         "as": "space_obj",
                     }
                 },
@@ -726,7 +730,7 @@ class Posts:
                     "$lookup": {
                         "from": "spaces",
                         "localField": "space",
-                        "foreignField": "name",
+                        "foreignField": "_id",
                         "as": "space_obj",
                     }
                 },

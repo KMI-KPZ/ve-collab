@@ -217,6 +217,7 @@ class BaseApiTestCase(AsyncHTTPTestCase):
 
     def base_permission_environment_setUp(self) -> None:
         # insert test data
+        self.test_space_id = ObjectId()
         self.test_space = "unittest_space"
         self.test_roles = {
             CURRENT_ADMIN.username: "admin",
@@ -288,7 +289,7 @@ class BaseApiTestCase(AsyncHTTPTestCase):
         self.test_space_acl_rules = {
             CURRENT_ADMIN.username: {
                 "username": CURRENT_ADMIN.username,
-                "space": self.test_space,
+                "space": self.test_space_id,
                 "join_space": True,
                 "read_timeline": True,
                 "post": True,
@@ -300,7 +301,7 @@ class BaseApiTestCase(AsyncHTTPTestCase):
             },
             CURRENT_USER.username: {
                 "username": CURRENT_USER.username,
-                "space": self.test_space,
+                "space": self.test_space_id,
                 "join_space": True,
                 "read_timeline": True,
                 "post": False,
@@ -314,6 +315,7 @@ class BaseApiTestCase(AsyncHTTPTestCase):
 
         self.db.spaces.insert_one(
             {
+                "_id": self.test_space_id,
                 "name": self.test_space,
                 "invisible": False,
                 "joinable": False,
@@ -858,8 +860,11 @@ class SpaceACLHandlerTest(BaseApiTestCase):
         """
 
         response = self.base_checks(
-            "GET", "/space_acl/get?space={}".format(self.test_space), True, 200
+            "GET", "/space_acl/get?space={}".format(str(self.test_space_id)), True, 200
         )
+
+        # for quality checks, convert the id to ObjectId
+        response["acl_entry"]["space"] = ObjectId(response["acl_entry"]["space"])
 
         self.assertIn("acl_entry", response)
         self.assertEqual(
@@ -874,11 +879,14 @@ class SpaceACLHandlerTest(BaseApiTestCase):
         response = self.base_checks(
             "GET",
             "/space_acl/get?space={}&username={}".format(
-                self.test_space, CURRENT_USER.username
+                str(self.test_space_id), CURRENT_USER.username
             ),
             True,
             200,
         )
+
+        # for quality checks, convert the id to ObjectId
+        response["acl_entry"]["space"] = ObjectId(response["acl_entry"]["space"])
 
         self.assertIn("acl_entry", response)
         self.assertEqual(
@@ -900,8 +908,12 @@ class SpaceACLHandlerTest(BaseApiTestCase):
         """
 
         response = self.base_checks(
-            "GET", "/space_acl/get_all?space={}".format(self.test_space), True, 200
+            "GET", "/space_acl/get_all?space={}".format(str(self.test_space_id)), True, 200
         )
+
+        # for quality checks, convert the id to ObjectId
+        for entry in response["acl_entries"]:
+            entry["space"] = ObjectId(entry["space"])
 
         self.assertIn("acl_entries", response)
         self.assertEqual(
@@ -914,13 +926,14 @@ class SpaceACLHandlerTest(BaseApiTestCase):
         expect: fail message because space doesnt exist
         """
 
-        # explicitely switch to user mode for this test, because space existence is only checked if user is not global admin (--> might be space admin)
+        # explicitely switch to user mode for this test, 
+        # because space existence is only checked if user is not global admin (--> might be space admin)
         options.test_admin = False
         options.test_user = True
 
         response = self.base_checks(
             "GET",
-            "/space_acl/get_all?space={}".format("not_existing_space"),
+            "/space_acl/get_all?space={}".format(str(ObjectId())),
             False,
             400,
         )
@@ -937,7 +950,7 @@ class SpaceACLHandlerTest(BaseApiTestCase):
         options.test_user = True
 
         response = self.base_checks(
-            "GET", "/space_acl/get_all?space={}".format(self.test_space), False, 403
+            "GET", "/space_acl/get_all?space={}".format(str(self.test_space_id)), False, 403
         )
 
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
@@ -949,7 +962,7 @@ class SpaceACLHandlerTest(BaseApiTestCase):
 
         updated_acl_entry = {
             "username": CURRENT_USER.username,
-            "space": self.test_space,
+            "space": str(self.test_space_id),
             "join_space": True,
             "read_timeline": True,
             "post": False,
@@ -963,11 +976,13 @@ class SpaceACLHandlerTest(BaseApiTestCase):
         self.base_checks("POST", "/space_acl/update", True, 200, body=updated_acl_entry)
 
         db_state = self.db.space_acl.find_one(
-            {"username": CURRENT_USER.username, "space": self.test_space}
+            {"username": CURRENT_USER.username, "space": self.test_space_id}
         )
 
         # for equality checks, delete the id
+        # and convert the space id to ObjectId
         del db_state["_id"]
+        updated_acl_entry["space"] = ObjectId(updated_acl_entry["space"])
 
         self.assertIn("username", db_state)
         self.assertEqual(db_state, updated_acl_entry)
@@ -981,10 +996,11 @@ class SpaceACLHandlerTest(BaseApiTestCase):
         options.test_admin = False
         options.test_user = True
 
-        # have to include the update payload here, because acl checks for space admin, therefore space has to be included
+        # have to include the update payload here, 
+        # because acl checks for space admin, therefore space has to be included
         updated_acl_entry = {
             "username": CURRENT_USER.username,
-            "space": self.test_space,
+            "space": str(self.test_space_id),
             "join_space": True,
             "read_timeline": True,
             "post": False,
@@ -1008,7 +1024,7 @@ class SpaceACLHandlerTest(BaseApiTestCase):
 
         updated_acl_entry = {
             "username": CURRENT_USER.username,
-            "space": self.test_space,
+            "space": str(self.test_space_id),
             "join_space": True,
             "read_timeline": True,
             "post": False,
@@ -1033,7 +1049,7 @@ class SpaceACLHandlerTest(BaseApiTestCase):
 
         updated_acl_entry = {
             "username": CURRENT_USER.username,
-            "space": self.test_space,
+            "space": str(self.test_space_id),
             "join_space": "non_bool_value",
             "read_timeline": True,
             "post": False,
@@ -1057,7 +1073,7 @@ class SpaceACLHandlerTest(BaseApiTestCase):
 
         updated_acl_entry = {
             "username": "non_existent_username",
-            "space": self.test_space,
+            "space": str(self.test_space_id),
             "join_space": True,
             "read_timeline": True,
             "post": False,
@@ -1081,7 +1097,7 @@ class SpaceACLHandlerTest(BaseApiTestCase):
 
         updated_acl_entry = {
             "username": CURRENT_USER.username,
-            "space": "non_existing_space",
+            "space": str(ObjectId()),
             "join_space": True,
             "read_timeline": True,
             "post": False,
@@ -1105,7 +1121,7 @@ class SpaceACLHandlerTest(BaseApiTestCase):
 
         updated_acl_entry = {
             "username": CURRENT_ADMIN.username,
-            "space": self.test_space,
+            "space": str(self.test_space_id),
             "join_space": True,
             "read_timeline": True,
             "post": False,
@@ -1271,7 +1287,7 @@ class PostHandlerTest(BaseApiTestCase):
         request_json = {
             "text": "unittest_test_post",
             "tags": json.dumps(["tag1", "tag2"]),
-            "space": self.test_space,
+            "space": str(self.test_space_id),
         }
 
         request = MultipartEncoder(fields=request_json)
@@ -1307,7 +1323,7 @@ class PostHandlerTest(BaseApiTestCase):
         self.assertTrue(all(key in db_state for key in expected_keys))
         self.assertEqual(db_state["author"], CURRENT_ADMIN.username)
         self.assertEqual(db_state["text"], request_json["text"])
-        self.assertEqual(db_state["space"], self.test_space)
+        self.assertEqual(db_state["space"], self.test_space_id)
         self.assertFalse(db_state["pinned"])
         self.assertIsNone(db_state["wordpress_post_id"])
         self.assertEqual(db_state["tags"], json.loads(request_json["tags"]))
@@ -1326,7 +1342,7 @@ class PostHandlerTest(BaseApiTestCase):
         request_json = {
             "text": "unittest_test_post",
             "tags": json.dumps(["tag1", "tag2"]),
-            "space": self.test_space,
+            "space": str(self.test_space_id),
             "file_amount": "1",
             "file0": (self.test_file_name, file, "text/plain"),
         }
@@ -1369,7 +1385,7 @@ class PostHandlerTest(BaseApiTestCase):
         self.assertTrue(all(key in db_state for key in expected_keys))
         self.assertEqual(db_state["author"], CURRENT_ADMIN.username)
         self.assertEqual(db_state["text"], request_json["text"])
-        self.assertEqual(db_state["space"], self.test_space)
+        self.assertEqual(db_state["space"], self.test_space_id)
         self.assertFalse(db_state["pinned"])
         self.assertIsNone(db_state["wordpress_post_id"])
         self.assertEqual(db_state["tags"], json.loads(request_json["tags"]))
@@ -1377,7 +1393,7 @@ class PostHandlerTest(BaseApiTestCase):
 
         # expect file to be in space as well
 
-        space_state = self.db.spaces.find_one({"name": self.test_space})
+        space_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertIn("files", space_state)
         self.assertIn(
             {
@@ -1403,7 +1419,7 @@ class PostHandlerTest(BaseApiTestCase):
         request_json = {
             "text": "unittest_test_post",
             "tags": json.dumps(["tag1", "tag2"]),
-            "space": self.test_space,
+            "space": str(self.test_space_id),
         }
 
         request = MultipartEncoder(fields=request_json)
@@ -1427,7 +1443,7 @@ class PostHandlerTest(BaseApiTestCase):
         request_json = {
             "text": "unittest_test_post",
             "tags": json.dumps(["tag1", "tag2"]),
-            "space": "non_existent_space",
+            "space": str(ObjectId()),
         }
 
         request = MultipartEncoder(fields=request_json)
@@ -1501,7 +1517,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "author": CURRENT_ADMIN.username,
                 "creation_date": datetime.now(),
                 "text": "initial_post_text",
-                "space": self.test_space,
+                "space": self.test_space_id,
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
@@ -1551,7 +1567,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "author": CURRENT_USER.username,
                 "creation_date": datetime.now(),
                 "text": "initial_post_text",
-                "space": self.test_space,
+                "space": self.test_space_id,
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
@@ -1740,7 +1756,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "author": CURRENT_USER.username,
                 "creation_date": datetime.now(),
                 "text": "initial_post_text",
-                "space": self.test_space,
+                "space": self.test_space_id,
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
@@ -1766,7 +1782,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "author": CURRENT_USER.username,
                 "creation_date": datetime.now(),
                 "text": "initial_post_text",
-                "space": self.test_space,
+                "space": self.test_space_id,
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
@@ -1792,7 +1808,7 @@ class PostHandlerTest(BaseApiTestCase):
 
         # add test_user to space admins for this test
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$addToSet": {"admins": CURRENT_USER.username}}
+            {"_id": self.test_space_id}, {"$addToSet": {"admins": CURRENT_USER.username}}
         )
 
         # manually insert test post (into space this time)
@@ -1803,7 +1819,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "author": CURRENT_ADMIN.username,
                 "creation_date": datetime.now(),
                 "text": "initial_post_text",
-                "space": self.test_space,
+                "space": self.test_space_id,
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
@@ -1842,7 +1858,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "author": CURRENT_ADMIN.username,
                 "creation_date": datetime.now(),
                 "text": "initial_post_text",
-                "space": self.test_space,
+                "space": self.test_space_id,
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
@@ -1850,7 +1866,7 @@ class PostHandlerTest(BaseApiTestCase):
             }
         )
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$push": {
                     "files": {
@@ -1869,7 +1885,7 @@ class PostHandlerTest(BaseApiTestCase):
         # expect files to be removed from disk and from space
         self.assertIsNone(fs.find_one({"_id": _id}))
         self.assertEqual(
-            self.db.spaces.find_one({"name": self.test_space})["files"], []
+            self.db.spaces.find_one({"_id": self.test_space_id})["files"], []
         )
 
     def test_delete_post_error_post_doesnt_exist(self):
@@ -1936,7 +1952,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "author": CURRENT_ADMIN.username,
                 "creation_date": datetime.now(),
                 "text": "initial_post_text",
-                "space": self.test_space,
+                "space": self.test_space_id,
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
@@ -1963,7 +1979,7 @@ class CommentHandlerTest(BaseApiTestCase):
                 "author": CURRENT_ADMIN.username,
                 "creation_date": datetime.now(),
                 "text": "initial_post_text",
-                "space": self.test_space,
+                "space": self.test_space_id,
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
@@ -2022,7 +2038,7 @@ class CommentHandlerTest(BaseApiTestCase):
 
         # revoke comment permission for this test
         self.db.space_acl.update_one(
-            {"username": CURRENT_USER.username, "space": self.test_space},
+            {"username": CURRENT_USER.username, "space": self.test_space_id},
             {"$set": {"comment": False}},
         )
 
@@ -2177,7 +2193,7 @@ class CommentHandlerTest(BaseApiTestCase):
 
         # grant the user space admin permissions
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$addToSet": {"admins": CURRENT_USER.username}}
+            {"_id": self.test_space_id}, {"$addToSet": {"admins": CURRENT_USER.username}}
         )
 
         comment_id = ObjectId()
@@ -2290,7 +2306,7 @@ class LikePostHandlerTest(BaseApiTestCase):
                 "author": CURRENT_ADMIN.username,
                 "creation_date": datetime.now(),
                 "text": "initial_post_text",
-                "space": self.test_space,
+                "space": self.test_space_id,
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
@@ -2428,7 +2444,7 @@ class RepostHandlerTest(BaseApiTestCase):
             "author": CURRENT_ADMIN.username,
             "creation_date": datetime.now(),
             "text": "initial_post_text",
-            "space": self.test_space,
+            "space": self.test_space_id,
             "pinned": False,
             "wordpress_post_id": None,
             "tags": [],
@@ -2462,7 +2478,7 @@ class RepostHandlerTest(BaseApiTestCase):
         request = {
             "post_id": str(self.post_oid),
             "text": "test_repost",
-            "space": self.test_space,
+            "space": str(self.test_space_id),
         }
 
         self.base_checks("POST", "/repost", True, 200, body=request)
@@ -2541,7 +2557,7 @@ class RepostHandlerTest(BaseApiTestCase):
         request = {
             "post_id": str(self.post_oid),
             "text": "test_repost",
-            "space": self.test_space,
+            "space": str(self.test_space_id),
         }
 
         response = self.base_checks("POST", "/repost", False, 403, body=request)
@@ -2556,7 +2572,7 @@ class RepostHandlerTest(BaseApiTestCase):
         request = {
             "post_id": str(self.post_oid),
             "text": "test_repost",
-            "space": "non_existing_space",
+            "space": str(ObjectId()),
         }
 
         response = self.base_checks("POST", "/repost", False, 409, body=request)
@@ -2661,7 +2677,7 @@ class RepostHandlerTest(BaseApiTestCase):
         # manually insert repost
         post = self.post_json
         post["_id"] = ObjectId()
-        post["space"] = self.test_space
+        post["space"] = self.test_space_id
         post["isRepost"] = True
         post["repostAuthor"] = CURRENT_ADMIN.username
         post["repostText"] = "test_repost"
@@ -2690,7 +2706,7 @@ class RepostHandlerTest(BaseApiTestCase):
         # manually insert repost
         post = self.post_json
         post["_id"] = ObjectId()
-        post["space"] = self.test_space
+        post["space"] = self.test_space_id
         post["isRepost"] = True
         post["repostAuthor"] = CURRENT_USER.username
         post["repostText"] = "test_repost"
@@ -2718,7 +2734,7 @@ class PinHandlerTest(BaseApiTestCase):
             "author": CURRENT_ADMIN.username,
             "creation_date": datetime.now(),
             "text": "initial_post_text",
-            "space": self.test_space,
+            "space": self.test_space_id,
             "pinned": False,
             "wordpress_post_id": None,
             "tags": [],
@@ -2808,7 +2824,7 @@ class PinHandlerTest(BaseApiTestCase):
 
         # set user as space admin
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$push": {"admins": CURRENT_USER.username}}
+            {"_id": self.test_space_id}, {"$push": {"admins": CURRENT_USER.username}}
         )
 
         request = {"id": str(self.post_oid), "pin_type": "post"}
@@ -2824,7 +2840,7 @@ class PinHandlerTest(BaseApiTestCase):
         """
         # set space to a non-existing one
         self.db.posts.update_one(
-            {"_id": self.post_oid}, {"$set": {"space": "not_existing"}}
+            {"_id": self.post_oid}, {"$set": {"space": ObjectId()}}
         )
 
         request = {"id": str(self.post_oid), "pin_type": "post"}
@@ -2911,7 +2927,7 @@ class PinHandlerTest(BaseApiTestCase):
 
         # set user as space admin
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$push": {"admins": CURRENT_USER.username}}
+            {"_id": self.test_space_id}, {"$push": {"admins": CURRENT_USER.username}}
         )
 
         request = {"id": str(self.comment_oid), "pin_type": "comment"}
@@ -2950,7 +2966,7 @@ class PinHandlerTest(BaseApiTestCase):
 
         # set user as space admin
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$push": {"admins": CURRENT_USER.username}}
+            {"_id": self.test_space_id}, {"$push": {"admins": CURRENT_USER.username}}
         )
 
         request = {"id": str(self.comment_oid), "pin_type": "comment"}
@@ -2966,7 +2982,7 @@ class PinHandlerTest(BaseApiTestCase):
         """
         # set space to a non-existing one
         self.db.posts.update_one(
-            {"_id": self.post_oid}, {"$set": {"space": "not_existing"}}
+            {"_id": self.post_oid}, {"$set": {"space": ObjectId()}}
         )
 
         request = {"id": str(self.comment_oid), "pin_type": "comment"}
@@ -3039,7 +3055,7 @@ class PinHandlerTest(BaseApiTestCase):
 
         # pull user out of space admins to trigger global admin privilege
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$pull": {"admins": CURRENT_ADMIN.username}}
+            {"_id": self.test_space_id}, {"$pull": {"admins": CURRENT_ADMIN.username}}
         )
 
         # manually set pin
@@ -3063,7 +3079,7 @@ class PinHandlerTest(BaseApiTestCase):
 
         # set user as space admin
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$push": {"admins": CURRENT_USER.username}}
+            {"_id": self.test_space_id}, {"$push": {"admins": CURRENT_USER.username}}
         )
 
         # manually set pin
@@ -3098,7 +3114,7 @@ class PinHandlerTest(BaseApiTestCase):
 
         # set space as non existing
         self.db.posts.update_one(
-            {"_id": self.post_oid}, {"$set": {"space": "not_existing_space"}}
+            {"_id": self.post_oid}, {"$set": {"space": ObjectId()}}
         )
 
         request = {"id": str(self.post_oid), "pin_type": "post"}
@@ -3264,7 +3280,7 @@ class PinHandlerTest(BaseApiTestCase):
 
         # pull user out of space admins to trigger global admin privilege
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$pull": {"admins": CURRENT_ADMIN.username}}
+            {"_id": self.test_space_id}, {"$pull": {"admins": CURRENT_ADMIN.username}}
         )
 
         # manually set other user as author so that admin privileges trigger
@@ -3294,7 +3310,7 @@ class PinHandlerTest(BaseApiTestCase):
 
         # set user as space admin
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$push": {"admins": CURRENT_USER.username}}
+            {"_id": self.test_space_id}, {"$push": {"admins": CURRENT_USER.username}}
         )
 
         request = {"id": str(self.comment_oid), "pin_type": "comment"}
@@ -3313,7 +3329,7 @@ class PinHandlerTest(BaseApiTestCase):
 
         # set space to non-existing one
         self.db.posts.update_one(
-            {"_id": self.post_oid}, {"$set": {"space": "not_existing"}}
+            {"_id": self.post_oid}, {"$set": {"space": ObjectId()}}
         )
 
         request = {"id": str(self.comment_oid), "pin_type": "comment"}
@@ -3389,7 +3405,7 @@ class SearchHandlerTest(BaseApiTestCase):
             "author": CURRENT_ADMIN.username,
             "creation_date": datetime.now(),
             "text": "test",
-            "space": self.test_space,
+            "space": self.test_space_id,
             "pinned": False,
             "wordpress_post_id": None,
             "tags": ["test"],
@@ -3578,7 +3594,7 @@ class SpaceHandlerTest(BaseApiTestCase):
             "author": CURRENT_ADMIN.username,
             "creation_date": datetime.now(),
             "text": "test",
-            "space": self.test_space,
+            "space": self.test_space_id,
             "pinned": False,
             "wordpress_post_id": None,
             "tags": ["test"],
@@ -3699,6 +3715,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         # expect all three spaces to be returned, no matter visibilty/member setting
         # because user is a global admin
         self.assertIn("spaces", response)
+        self.assertEqual(len(response["spaces"]), 3)
         self.assertTrue(
             any(self.test_space == space["name"] for space in response["spaces"])
         )
@@ -3773,12 +3790,12 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # pull user from space
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$pull": {"members": CURRENT_USER.username}}
+            {"_id": self.test_space_id}, {"$pull": {"members": CURRENT_USER.username}}
         )
 
         response = self.base_checks(
             "GET",
-            "/spaceadministration/info?name={}".format(self.test_space),
+            "/spaceadministration/info?id={}".format(str(self.test_space_id)),
             True,
             200,
         )
@@ -3798,12 +3815,12 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # make space invisible
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$set": {"invisible": True}}
+            {"_id": self.test_space_id}, {"$set": {"invisible": True}}
         )
 
         response = self.base_checks(
             "GET",
-            "/spaceadministration/info?name={}".format(self.test_space),
+            "/spaceadministration/info?id={}".format(str(self.test_space_id)),
             True,
             200,
         )
@@ -3819,7 +3836,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # make space invisible and pull user from members
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$set": {"invisible": True},
                 "$pull": {
@@ -3831,7 +3848,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "GET",
-            "/spaceadministration/info?name={}".format(self.test_space),
+            "/spaceadministration/info?id={}".format(str(self.test_space_id)),
             True,
             200,
         )
@@ -3846,7 +3863,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         """
 
         response = self.base_checks("GET", "/spaceadministration/info?", False, 400)
-        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "name")
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "id")
 
     def test_get_space_infor_error_space_doesnt_exist(self):
         """
@@ -3855,7 +3872,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "GET",
-            "/spaceadministration/info?name={}".format("not_existing_space"),
+            "/spaceadministration/info?id={}".format(ObjectId()),
             False,
             409,
         )
@@ -3873,7 +3890,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # make space invisible and pull user from members
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$set": {"invisible": True},
                 "$pull": {
@@ -3885,7 +3902,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "GET",
-            "/spaceadministration/info?name={}".format(self.test_space),
+            "/spaceadministration/info?id={}".format(str(self.test_space_id)),
             False,
             403,
         )
@@ -3902,7 +3919,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # remove user from members and set an invite for him
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$pull": {"members": CURRENT_USER.username},
                 "$push": {"invites": CURRENT_USER.username},
@@ -3914,7 +3931,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         )
         self.assertIn("pending_invites", response)
         self.assertEqual(len(response["pending_invites"]), 1)
-        self.assertEqual(self.test_space, response["pending_invites"][0]["name"])
+        self.assertEqual(str(self.test_space_id), response["pending_invites"][0]["_id"])
 
     def test_get_space_pending_requests(self):
         """
@@ -3927,7 +3944,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # remove user from members and set him as join requested
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$pull": {"members": CURRENT_USER.username},
                 "$push": {"requests": CURRENT_USER.username},
@@ -3939,7 +3956,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         )
         self.assertIn("pending_requests", response)
         self.assertEqual(len(response["pending_requests"]), 1)
-        self.assertEqual(self.test_space, response["pending_requests"][0]["name"])
+        self.assertEqual(str(self.test_space_id), response["pending_requests"][0]["_id"])
 
     def test_get_space_join_requests_global_admin(self):
         """
@@ -3949,7 +3966,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # remove user from members and set him as join requested
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$pull": {"members": CURRENT_USER.username},
                 "$push": {"requests": CURRENT_USER.username},
@@ -3958,7 +3975,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "GET",
-            "/spaceadministration/join_requests?name={}".format(self.test_space),
+            "/spaceadministration/join_requests?id={}".format(str(self.test_space_id)),
             True,
             200,
         )
@@ -3978,7 +3995,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # remove other user from members and set him as join requested
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$pull": {"members": CURRENT_ADMIN.username},
                 "$push": {
@@ -3990,7 +4007,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "GET",
-            "/spaceadministration/join_requests?name={}".format(self.test_space),
+            "/spaceadministration/join_requests?id={}".format(str(self.test_space_id)),
             True,
             200,
         )
@@ -4006,7 +4023,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         response = self.base_checks(
             "GET", "/spaceadministration/join_requests", False, 400
         )
-        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "name")
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "id")
 
     def test_get_space_join_requests_error_space_doesnt_exist(self):
         """
@@ -4015,7 +4032,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "GET",
-            "/spaceadministration/join_requests?name={}".format("not_existing_space"),
+            "/spaceadministration/join_requests?id={}".format(ObjectId()),
             False,
             409,
         )
@@ -4032,7 +4049,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # remove other user from members and set him as join requested
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$pull": {"members": CURRENT_ADMIN.username},
                 "$push": {
@@ -4043,7 +4060,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "GET",
-            "/spaceadministration/join_requests?name={}".format(self.test_space),
+            "/spaceadministration/join_requests?id={}".format(str(self.test_space_id)),
             False,
             403,
         )
@@ -4058,7 +4075,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # remove other user from members and set him as invited
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$pull": {"members": CURRENT_USER.username},
                 "$push": {
@@ -4069,7 +4086,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "GET",
-            "/spaceadministration/invites?name={}".format(self.test_space),
+            "/spaceadministration/invites?id={}".format(str(self.test_space_id)),
             True,
             200,
         )
@@ -4089,7 +4106,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # remove other user from members and set him as invited
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$pull": {"members": CURRENT_ADMIN.username},
                 "$push": {
@@ -4101,7 +4118,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "GET",
-            "/spaceadministration/invites?name={}".format(self.test_space),
+            "/spaceadministration/invites?id={}".format(str(self.test_space_id)),
             True,
             200,
         )
@@ -4114,7 +4131,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         """
 
         response = self.base_checks("GET", "/spaceadministration/invites", False, 400)
-        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "name")
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "id")
 
     def test_get_space_invites_error_space_doesnt_exist(self):
         """
@@ -4123,7 +4140,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "GET",
-            "/spaceadministration/invites?name={}".format("not_existing_space"),
+            "/spaceadministration/invites?id={}".format(ObjectId()),
             False,
             409,
         )
@@ -4140,7 +4157,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # remove other user from members and set him as invited
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$pull": {"members": CURRENT_ADMIN.username},
                 "$push": {"invites": CURRENT_ADMIN.username},
@@ -4149,7 +4166,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "GET",
-            "/spaceadministration/invites?name={}".format(self.test_space),
+            "/spaceadministration/invites?id={}".format(str(self.test_space_id)),
             False,
             403,
         )
@@ -4162,7 +4179,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         # manually add file
         file_id = ObjectId()
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$set": {
                     "files": [{"author": CURRENT_ADMIN.username, "file_id": file_id}]
@@ -4172,7 +4189,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "GET",
-            "/spaceadministration/files?name={}".format(self.test_space),
+            "/spaceadministration/files?id={}".format(str(self.test_space_id)),
             True,
             200,
         )
@@ -4190,7 +4207,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "GET",
-            "/spaceadministration/files?name={}".format(self.test_space),
+            "/spaceadministration/files?id={}".format(str(self.test_space_id)),
             True,
             200,
         )
@@ -4206,7 +4223,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "GET",
-            "/spaceadministration/files?name={}".format("not_existing_space"),
+            "/spaceadministration/files?id={}".format(ObjectId()),
             False,
             409,
         )
@@ -4223,7 +4240,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # pull user from members
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$pull": {
                     "members": CURRENT_USER.username,
@@ -4234,7 +4251,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "GET",
-            "/spaceadministration/files?name={}".format(self.test_space),
+            "/spaceadministration/files?id={}".format(str(self.test_space_id)),
             False,
             409,
         )
@@ -4251,7 +4268,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "GET",
-            "/spaceadministration/files?name={}".format(self.test_space),
+            "/spaceadministration/files?id={}".format(str(self.test_space_id)),
             False,
             403,
         )
@@ -4264,7 +4281,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         new_space_name = "new_space"
 
-        self.base_checks(
+        response = self.base_checks(
             "POST",
             "/spaceadministration/create?name={}".format(new_space_name),
             True,
@@ -4272,7 +4289,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         )
 
         # expect record for the space to be created
-        db_state = self.db.spaces.find_one({"name": new_space_name})
+        db_state = self.db.spaces.find_one({"_id": ObjectId(response["space_id"])})
         self.assertIsNotNone(db_state)
 
         # expect user to be member and admin (because he created the space)
@@ -4282,7 +4299,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         self.assertIn(CURRENT_ADMIN.username, db_state["admins"])
 
         # expect space_acl roles to be created
-        space_acl_records = list(self.db.space_acl.find({"space": new_space_name}))
+        space_acl_records = list(self.db.space_acl.find({"space": ObjectId(response["space_id"])}))
         self.assertEqual((len(space_acl_records)), 1)
         self.assertEqual(space_acl_records[0]["username"], CURRENT_ADMIN.username)
 
@@ -4293,7 +4310,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         new_space_name = "new_space"
 
-        self.base_checks(
+        response = self.base_checks(
             "POST",
             "/spaceadministration/create?name={}&invisible=true".format(new_space_name),
             True,
@@ -4301,7 +4318,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         )
 
         # expect record for the space to be created
-        db_state = self.db.spaces.find_one({"name": new_space_name})
+        db_state = self.db.spaces.find_one({"_id": ObjectId(response["space_id"])})
         self.assertIsNotNone(db_state)
         self.assertTrue(db_state["invisible"])
 
@@ -4312,7 +4329,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         new_space_name = "new_space"
 
-        self.base_checks(
+        response = self.base_checks(
             "POST",
             "/spaceadministration/create?name={}&joinable=true".format(new_space_name),
             True,
@@ -4320,7 +4337,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         )
 
         # expect record for the space to be created
-        db_state = self.db.spaces.find_one({"name": new_space_name})
+        db_state = self.db.spaces.find_one({"_id": ObjectId(response["space_id"])})
         self.assertIsNotNone(db_state)
         self.assertTrue(db_state["joinable"])
 
@@ -4331,7 +4348,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         new_space_name = "new_space"
 
-        self.base_checks(
+        response = self.base_checks(
             "POST",
             "/spaceadministration/create?name={}&invisible=true&joinable=true".format(
                 new_space_name
@@ -4341,7 +4358,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         )
 
         # expect record for the space to be created
-        db_state = self.db.spaces.find_one({"name": new_space_name})
+        db_state = self.db.spaces.find_one({"_id": ObjectId(response["space_id"])})
         self.assertIsNotNone(db_state)
         self.assertTrue(db_state["invisible"])
         self.assertTrue(db_state["joinable"])
@@ -4373,19 +4390,6 @@ class SpaceHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
 
-    def test_post_create_space_error_space_name_already_exists(self):
-        """
-        expect: fail message because a space with the same name already exists
-        """
-
-        response = self.base_checks(
-            "POST",
-            "/spaceadministration/create?name={}".format(self.test_space),
-            False,
-            409,
-        )
-        self.assertEqual(response["reason"], "space_name_already_exists")
-
     def test_post_join_space_joinable(self):
         """
         expect: successfully join space because it is joinable
@@ -4399,13 +4403,13 @@ class SpaceHandlerTest(BaseApiTestCase):
         # remove user from member list first
         # and set space as joinable (=public)
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {"$pull": {"members": CURRENT_USER.username}, "$set": {"joinable": True}},
         )
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/join?name={}".format(self.test_space),
+            "/spaceadministration/join?id={}".format(str(self.test_space_id)),
             True,
             200,
         )
@@ -4415,12 +4419,12 @@ class SpaceHandlerTest(BaseApiTestCase):
         self.assertEqual(response["join_type"], "joined")
 
         # expect user to be a member now
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertIn(CURRENT_USER.username, db_state["members"])
 
         # expect acl entry to be created
         acl_entry = self.db.space_acl.find_one(
-            {"space": self.test_space, "username": CURRENT_USER.username}
+            {"space": self.test_space_id, "username": CURRENT_USER.username}
         )
         self.assertIsNotNone(acl_entry)
 
@@ -4431,12 +4435,12 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # remove user from member list first
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$pull": {"members": CURRENT_ADMIN.username}}
+            {"_id": self.test_space_id}, {"$pull": {"members": CURRENT_ADMIN.username}}
         )
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/join?name={}".format(self.test_space),
+            "/spaceadministration/join?id={}".format(str(self.test_space_id)),
             True,
             200,
         )
@@ -4446,7 +4450,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         self.assertEqual(response["join_type"], "joined")
 
         # expect user to be a member now
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertIn(CURRENT_ADMIN.username, db_state["members"])
 
     def test_post_join_space_join_request(self):
@@ -4461,12 +4465,12 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # remove user from member list first
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$pull": {"members": CURRENT_USER.username}}
+            {"_id": self.test_space_id}, {"$pull": {"members": CURRENT_USER.username}}
         )
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/join?name={}".format(self.test_space),
+            "/spaceadministration/join?id={}".format(str(self.test_space_id)),
             True,
             200,
         )
@@ -4476,7 +4480,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         self.assertEqual(response["join_type"], "requested_join")
 
         # expect user to be in the requests now
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertIn(CURRENT_USER.username, db_state["requests"])
 
     def test_post_join_space_error_no_name(self):
@@ -4485,7 +4489,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         """
 
         response = self.base_checks("POST", "/spaceadministration/join", False, 400)
-        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "name")
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "id")
 
     def test_post_join_space_error_space_doesnt_exist(self):
         """
@@ -4494,7 +4498,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/join?name={}".format("not_existing_space"),
+            "/spaceadministration/join?id={}".format(ObjectId()),
             False,
             409,
         )
@@ -4511,7 +4515,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/join?name={}".format(self.test_space),
+            "/spaceadministration/join?id={}".format(str(self.test_space_id)),
             False,
             409,
         )
@@ -4525,19 +4529,19 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # pull user from space admins to trigger global admin privilege
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$pull": {"admins": CURRENT_ADMIN.username}}
+            {"_id": self.test_space_id}, {"$pull": {"admins": CURRENT_ADMIN.username}}
         )
 
         self.base_checks(
             "POST",
-            "/spaceadministration/add_admin?name={}&user={}".format(
-                self.test_space, CURRENT_USER.username
+            "/spaceadministration/add_admin?id={}&user={}".format(
+                self.test_space_id, CURRENT_USER.username
             ),
             True,
             200,
         )
 
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertIn(CURRENT_USER.username, db_state["admins"])
 
     def test_post_space_add_admin_space_admin(self):
@@ -4552,19 +4556,19 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # set user as space admin
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$set": {"admins": [CURRENT_USER.username]}}
+            {"_id": self.test_space_id}, {"$set": {"admins": [CURRENT_USER.username]}}
         )
 
         self.base_checks(
             "POST",
-            "/spaceadministration/add_admin?name={}&user={}".format(
-                self.test_space, CURRENT_ADMIN.username
+            "/spaceadministration/add_admin?id={}&user={}".format(
+                self.test_space_id, CURRENT_ADMIN.username
             ),
             True,
             200,
         )
 
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertIn(CURRENT_ADMIN.username, db_state["admins"])
 
     def test_post_space_add_admin_error_no_user(self):
@@ -4574,7 +4578,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/add_admin?name={}".format(self.test_space),
+            "/spaceadministration/add_admin?id={}".format(str(self.test_space_id)),
             False,
             400,
         )
@@ -4587,8 +4591,8 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/add_admin?name={}&user={}".format(
-                "not_existing_space", CURRENT_ADMIN.username
+            "/spaceadministration/add_admin?id={}&user={}".format(
+                ObjectId(), CURRENT_ADMIN.username
             ),
             False,
             409,
@@ -4602,13 +4606,13 @@ class SpaceHandlerTest(BaseApiTestCase):
         """
 
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$pull": {"members": CURRENT_USER.username}}
+            {"_id": self.test_space_id}, {"$pull": {"members": CURRENT_USER.username}}
         )
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/add_admin?name={}&user={}".format(
-                self.test_space, CURRENT_USER.username
+            "/spaceadministration/add_admin?id={}&user={}".format(
+                self.test_space_id, CURRENT_USER.username
             ),
             False,
             409,
@@ -4626,8 +4630,8 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/add_admin?name={}&user={}".format(
-                self.test_space, CURRENT_ADMIN.username
+            "/spaceadministration/add_admin?id={}&user={}".format(
+                str(self.test_space_id), CURRENT_ADMIN.username
             ),
             False,
             403,
@@ -4642,7 +4646,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # pull user from space admins to trigger global admin privileges
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$pull": {"admins": CURRENT_ADMIN.username}}
+            {"_id": self.test_space_id}, {"$pull": {"admins": CURRENT_ADMIN.username}}
         )
 
         request_json = {
@@ -4655,13 +4659,13 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "POST",
-            "/spaceadministration/space_information?name={}".format(self.test_space),
+            "/spaceadministration/space_information?id={}".format(str(self.test_space_id)),
             True,
             200,
             body=request_json,
         )
 
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertEqual(db_state["space_description"], request_json["description"])
 
         # check that the profile pic was also replicated to gridfs
@@ -4677,13 +4681,13 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "POST",
-            "/spaceadministration/space_information?name={}".format(self.test_space),
+            "/spaceadministration/space_information?id={}".format(str(self.test_space_id)),
             True,
             200,
             body=request_json2,
         )
 
-        db_state2 = self.db.spaces.find_one({"name": self.test_space})
+        db_state2 = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertEqual(db_state2["space_description"], request_json2["description"])
 
     def test_post_space_information_space_admin(self):
@@ -4697,7 +4701,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         options.test_user = True
 
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$push": {"admins": CURRENT_USER.username}}
+            {"_id": self.test_space_id}, {"$push": {"admins": CURRENT_USER.username}}
         )
 
         request_json = {
@@ -4710,13 +4714,13 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "POST",
-            "/spaceadministration/space_information?name={}".format(self.test_space),
+            "/spaceadministration/space_information?id={}".format(str(self.test_space_id)),
             True,
             200,
             body=request_json,
         )
 
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertEqual(db_state["space_description"], request_json["description"])
 
         # check that the profile pic was also replicated to gridfs
@@ -4732,13 +4736,13 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "POST",
-            "/spaceadministration/space_information?name={}".format(self.test_space),
+            "/spaceadministration/space_information?id={}".format(str(self.test_space_id)),
             True,
             200,
             body=request_json2,
         )
 
-        db_state2 = self.db.spaces.find_one({"name": self.test_space})
+        db_state2 = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertEqual(db_state2["space_description"], request_json2["description"])
 
     def test_post_space_information_error_space_doesnt_exist(self):
@@ -4756,8 +4760,8 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/space_information?name={}".format(
-                "not_existing_space"
+            "/spaceadministration/space_information?id={}".format(
+                ObjectId()
             ),
             False,
             409,
@@ -4775,7 +4779,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         options.test_user = True
 
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$pull": {"admins": CURRENT_ADMIN.username}}
+            {"_id": self.test_space_id}, {"$pull": {"admins": CURRENT_ADMIN.username}}
         )
 
         request_json = {
@@ -4788,7 +4792,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/space_picture?name={}".format(self.test_space),
+            "/spaceadministration/space_picture?id={}".format(str(self.test_space_id)),
             False,
             403,
             body=request_json,
@@ -4803,7 +4807,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # pull user from space admins to trigger global admin privileges
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$pull": {"admins": CURRENT_ADMIN.username}}
+            {"_id": self.test_space_id}, {"$pull": {"admins": CURRENT_ADMIN.username}}
         )
 
         request_json = {
@@ -4813,14 +4817,14 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "POST",
-            "/spaceadministration/space_picture?name={}".format(self.test_space),
+            "/spaceadministration/space_picture?id={}".format(str(self.test_space_id)),
             True,
             200,
             headers={"Content-Type": request.content_type},
             body=request.to_string(),
         )
 
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertEqual(
             db_state["space_description"], request_json["space_description"]
         )
@@ -4836,7 +4840,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         options.test_user = True
 
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$push": {"admins": CURRENT_USER.username}}
+            {"_id": self.test_space_id}, {"$push": {"admins": CURRENT_USER.username}}
         )
 
         request_json = {
@@ -4846,14 +4850,14 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "POST",
-            "/spaceadministration/space_picture?name={}".format(self.test_space),
+            "/spaceadministration/space_picture?id={}".format(str(self.test_space_id)),
             True,
             200,
             headers={"Content-Type": request.content_type},
             body=request.to_string(),
         )
 
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertEqual(
             db_state["space_description"], request_json["space_description"]
         )
@@ -4870,7 +4874,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/space_picture?name={}".format("not_existing_space"),
+            "/spaceadministration/space_picture?id={}".format(ObjectId()),
             False,
             409,
             headers={"Content-Type": request.content_type},
@@ -4888,7 +4892,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         options.test_user = True
 
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$pull": {"admins": CURRENT_ADMIN.username}}
+            {"_id": self.test_space_id}, {"$pull": {"admins": CURRENT_ADMIN.username}}
         )
 
         request_json = {
@@ -4898,7 +4902,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/space_picture?name={}".format(self.test_space),
+            "/spaceadministration/space_picture?id={}".format(str(self.test_space_id)),
             False,
             403,
             headers={"Content-Type": request.content_type},
@@ -4915,7 +4919,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         # pull user from space admins to trigger global admin privileges
         # and remove other user from space
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$pull": {
                     "admins": CURRENT_ADMIN.username,
@@ -4926,14 +4930,14 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "POST",
-            "/spaceadministration/invite?name={}&user={}".format(
-                self.test_space, CURRENT_USER.username
+            "/spaceadministration/invite?id={}&user={}".format(
+                self.test_space_id, CURRENT_USER.username
             ),
             True,
             200,
         )
 
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertIn(CURRENT_USER.username, db_state["invites"])
 
     def test_post_space_invite_space_admin(self):
@@ -4948,7 +4952,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # remove other user from member and set current user as space admin
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$set": {"admins": [CURRENT_USER.username]},
                 "$pull": {"members": CURRENT_ADMIN.username},
@@ -4957,14 +4961,14 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "POST",
-            "/spaceadministration/invite?name={}&user={}".format(
-                self.test_space, CURRENT_ADMIN.username
+            "/spaceadministration/invite?id={}&user={}".format(
+                self.test_space_id, CURRENT_ADMIN.username
             ),
             True,
             200,
         )
 
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertIn(CURRENT_ADMIN.username, db_state["invites"])
 
     def test_post_space_invite_error_no_user(self):
@@ -4974,7 +4978,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/invite?name={}".format(self.test_space),
+            "/spaceadministration/invite?id={}".format(str(self.test_space_id)),
             False,
             400,
         )
@@ -4987,8 +4991,8 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/invite?name={}&user={}".format(
-                "not_existing_space", CURRENT_ADMIN.username
+            "/spaceadministration/invite?id={}&user={}".format(
+                ObjectId(), CURRENT_ADMIN.username
             ),
             False,
             409,
@@ -5002,8 +5006,8 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/invite?name={}&user={}".format(
-                self.test_space, CURRENT_USER.username
+            "/spaceadministration/invite?id={}&user={}".format(
+                self.test_space_id, CURRENT_USER.username
             ),
             False,
             409,
@@ -5021,7 +5025,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # remove other user from member
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$pull": {"members": CURRENT_ADMIN.username},
             },
@@ -5029,8 +5033,8 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/invite?name={}&user={}".format(
-                self.test_space, CURRENT_ADMIN.username
+            "/spaceadministration/invite?id={}&user={}".format(
+                self.test_space_id, CURRENT_ADMIN.username
             ),
             False,
             403,
@@ -5048,7 +5052,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # set user as invited
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$pull": {"members": CURRENT_USER.username},
                 "$push": {"invites": CURRENT_USER.username},
@@ -5057,12 +5061,12 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "POST",
-            "/spaceadministration/accept_invite?name={}".format(self.test_space),
+            "/spaceadministration/accept_invite?id={}".format(str(self.test_space_id)),
             True,
             200,
         )
 
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertIn(CURRENT_USER.username, db_state["members"])
 
     def test_post_space_accept_invite_error_space_doesnt_exist(self):
@@ -5076,7 +5080,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # set user as invited
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$pull": {"members": CURRENT_USER.username},
                 "$push": {"invites": CURRENT_USER.username},
@@ -5085,7 +5089,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/accept_invite?name={}".format("not_existing_space"),
+            "/spaceadministration/accept_invite?id={}".format(ObjectId()),
             False,
             409,
         )
@@ -5102,7 +5106,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # pull user from members, but dont invite him either
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$pull": {"members": CURRENT_USER.username},
             },
@@ -5110,7 +5114,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/accept_invite?name={}".format(self.test_space),
+            "/spaceadministration/accept_invite?id={}".format(str(self.test_space_id)),
             False,
             409,
         )
@@ -5127,7 +5131,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # set user as invited
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$pull": {"members": CURRENT_USER.username},
                 "$push": {"invites": CURRENT_USER.username},
@@ -5136,12 +5140,12 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "POST",
-            "/spaceadministration/decline_invite?name={}".format(self.test_space),
+            "/spaceadministration/decline_invite?id={}".format(str(self.test_space_id)),
             True,
             200,
         )
 
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertNotIn(CURRENT_USER.username, db_state["members"])
 
     def test_post_space_decline_invite_error_space_doesnt_exist(self):
@@ -5155,7 +5159,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # set user as invited
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$pull": {"members": CURRENT_USER.username},
                 "$push": {"invites": CURRENT_USER.username},
@@ -5164,7 +5168,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/decline_invite?name={}".format("not_existing_space"),
+            "/spaceadministration/decline_invite?id={}".format(ObjectId()),
             False,
             409,
         )
@@ -5181,7 +5185,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # pull user from members, but dont invite him either
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$pull": {"members": CURRENT_USER.username},
             },
@@ -5189,7 +5193,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/decline_invite?name={}".format(self.test_space),
+            "/spaceadministration/decline_invite?id={}".format(str(self.test_space_id)),
             False,
             409,
         )
@@ -5204,7 +5208,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         # pull user from space admins to trigger global admin privileges
         # and remove other user from space and set him as invited
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$pull": {
                     "admins": CURRENT_ADMIN.username,
@@ -5216,14 +5220,14 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "POST",
-            "/spaceadministration/revoke_invite?name={}&user={}".format(
-                self.test_space, CURRENT_USER.username
+            "/spaceadministration/revoke_invite?id={}&user={}".format(
+                self.test_space_id, CURRENT_USER.username
             ),
             True,
             200,
         )
 
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertNotIn(CURRENT_USER.username, db_state["invites"])
         # for sanity, check that user is not added elsewhere
         self.assertNotIn(CURRENT_USER.username, db_state["members"])
@@ -5242,7 +5246,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         # remove other user from member and set him as invited
         # and set current user as space admin
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$set": {"admins": [CURRENT_USER.username]},
                 "$pull": {"members": CURRENT_ADMIN.username},
@@ -5252,14 +5256,14 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "POST",
-            "/spaceadministration/revoke_invite?name={}&user={}".format(
-                self.test_space, CURRENT_ADMIN.username
+            "/spaceadministration/revoke_invite?id={}&user={}".format(
+                self.test_space_id, CURRENT_ADMIN.username
             ),
             True,
             200,
         )
 
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertNotIn(CURRENT_ADMIN.username, db_state["invites"])
         # for sanity, check that user is not added elsewhere
         self.assertNotIn(CURRENT_ADMIN.username, db_state["members"])
@@ -5272,7 +5276,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # set user as invited
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$pull": {"members": CURRENT_USER.username},
                 "$push": {"invites": CURRENT_USER.username},
@@ -5281,8 +5285,8 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/revoke_invite?name={}&user={}".format(
-                "not_existing_space", CURRENT_USER.username
+            "/spaceadministration/revoke_invite?id={}&user={}".format(
+                ObjectId(), CURRENT_USER.username
             ),
             False,
             409,
@@ -5296,7 +5300,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # pull user from members, but dont invite him either
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$pull": {"members": CURRENT_USER.username},
             },
@@ -5304,8 +5308,8 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/revoke_invite?name={}&user={}".format(
-                self.test_space, CURRENT_USER.username
+            "/spaceadministration/revoke_invite?id={}&user={}".format(
+                self.test_space_id, CURRENT_USER.username
             ),
             False,
             409,
@@ -5323,7 +5327,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # remove other user from member and set him as invited
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$pull": {"members": CURRENT_ADMIN.username},
                 "$push": {"invites": CURRENT_ADMIN.username},
@@ -5332,8 +5336,8 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/revoke_invite?name={}&user={}".format(
-                self.test_space, CURRENT_ADMIN.username
+            "/spaceadministration/revoke_invite?id={}&user={}".format(
+                self.test_space_id, CURRENT_ADMIN.username
             ),
             False,
             403,
@@ -5349,7 +5353,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         # pull user from members and set him as requested
         # also pull current user from admin to trigger global admin privileges
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$pull": {
                     "members": CURRENT_USER.username,
@@ -5361,14 +5365,14 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "POST",
-            "/spaceadministration/accept_request?name={}&user={}".format(
-                self.test_space, CURRENT_USER.username
+            "/spaceadministration/accept_request?id={}&user={}".format(
+                self.test_space_id, CURRENT_USER.username
             ),
             True,
             200,
         )
 
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertIn(CURRENT_USER.username, db_state["members"])
 
     def test_post_space_accept_request_space_admin(self):
@@ -5383,7 +5387,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # set user as space admin and other user as requested
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$set": {
                     "members": [CURRENT_USER.username],
@@ -5395,14 +5399,14 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "POST",
-            "/spaceadministration/accept_request?name={}&user={}".format(
-                self.test_space, CURRENT_ADMIN.username
+            "/spaceadministration/accept_request?id={}&user={}".format(
+                self.test_space_id, CURRENT_ADMIN.username
             ),
             True,
             200,
         )
 
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertIn(CURRENT_ADMIN.username, db_state["members"])
 
     def test_post_space_accept_request_error_no_user(self):
@@ -5412,7 +5416,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/accept_request?name={}".format(self.test_space),
+            "/spaceadministration/accept_request?id={}".format(str(self.test_space_id)),
             False,
             400,
         )
@@ -5425,8 +5429,8 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/accept_request?name={}&user={}".format(
-                "not_existing_space", CURRENT_ADMIN.username
+            "/spaceadministration/accept_request?id={}&user={}".format(
+                ObjectId(), CURRENT_ADMIN.username
             ),
             False,
             409,
@@ -5440,7 +5444,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # pull user from members, but dont set join request
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$pull": {
                     "members": CURRENT_USER.username,
@@ -5450,8 +5454,8 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/accept_request?name={}&user={}".format(
-                self.test_space, CURRENT_USER.username
+            "/spaceadministration/accept_request?id={}&user={}".format(
+                self.test_space_id, CURRENT_USER.username
             ),
             False,
             409,
@@ -5469,7 +5473,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # pull user from members and set him as requested
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$pull": {
                     "members": CURRENT_USER.username,
@@ -5480,8 +5484,8 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/accept_request?name={}&user={}".format(
-                self.test_space, CURRENT_USER.username
+            "/spaceadministration/accept_request?id={}&user={}".format(
+                self.test_space_id, CURRENT_USER.username
             ),
             False,
             403,
@@ -5497,7 +5501,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         # pull user from members and set him as requested,
         # also remove admin from space_admins to trigger global admin
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$pull": {
                     "members": CURRENT_USER.username,
@@ -5509,8 +5513,8 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "POST",
-            "/spaceadministration/reject_request?name={}&user={}".format(
-                self.test_space, CURRENT_USER.username  #
+            "/spaceadministration/reject_request?id={}&user={}".format(
+                self.test_space_id, CURRENT_USER.username  #
             ),
             True,
             200,
@@ -5518,7 +5522,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # expect user to be no longer requested and also not member
         # (because he was declined)
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertNotIn(CURRENT_USER.username, db_state["requests"])
         self.assertNotIn(CURRENT_USER.username, db_state["members"])
 
@@ -5535,7 +5539,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         # pull user as space admin and
         # pull other user from members and set him as requested,
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$set": {
                     "members": [CURRENT_USER.username],
@@ -5547,8 +5551,8 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "POST",
-            "/spaceadministration/reject_request?name={}&user={}".format(
-                self.test_space, CURRENT_ADMIN.username
+            "/spaceadministration/reject_request?id={}&user={}".format(
+                self.test_space_id, CURRENT_ADMIN.username
             ),
             True,
             200,
@@ -5556,7 +5560,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # expect user to be no longer requested and also not member
         # (because he was declined)
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertNotIn(CURRENT_ADMIN.username, db_state["requests"])
         self.assertNotIn(CURRENT_ADMIN.username, db_state["members"])
 
@@ -5567,7 +5571,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/reject_request?name={}".format(self.test_space),
+            "/spaceadministration/reject_request?id={}".format(str(self.test_space_id)),
             False,
             400,
         )
@@ -5580,8 +5584,8 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/reject_request?name={}&user={}".format(
-                "not_existing_space", CURRENT_USER.username
+            "/spaceadministration/reject_request?id={}&user={}".format(
+                ObjectId(), CURRENT_USER.username
             ),
             False,
             409,
@@ -5595,7 +5599,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # pull user from members and dont set him as requested
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$pull": {
                     "members": CURRENT_USER.username,
@@ -5605,8 +5609,8 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/reject_request?name={}&user={}".format(
-                self.test_space, CURRENT_USER.username
+            "/spaceadministration/reject_request?id={}&user={}".format(
+                self.test_space_id, CURRENT_USER.username
             ),
             False,
             409,
@@ -5625,7 +5629,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         # pull user from members and dont set him as requested
         # also dont set current user as space admin
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$pull": {
                     "members": CURRENT_ADMIN.username,
@@ -5637,8 +5641,8 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/reject_request?name={}&user={}".format(
-                self.test_space, CURRENT_ADMIN.username
+            "/spaceadministration/reject_request?id={}&user={}".format(
+                self.test_space_id, CURRENT_ADMIN.username
             ),
             False,
             403,
@@ -5656,7 +5660,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # pull user from members and set him as requested
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$pull": {
                     "members": CURRENT_USER.username,
@@ -5667,13 +5671,13 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "POST",
-            "/spaceadministration/revoke_request?name={}".format(self.test_space),
+            "/spaceadministration/revoke_request?id={}".format(str(self.test_space_id)),
             True,
             200,
         )
 
         # expect user to be no longer requested and also not member
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertNotIn(CURRENT_USER.username, db_state["requests"])
         self.assertNotIn(CURRENT_USER.username, db_state["members"])
 
@@ -5684,7 +5688,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/revoke_request?name={}".format("not_existing_space"),
+            "/spaceadministration/revoke_request?id={}".format(ObjectId()),
             False,
             409,
         )
@@ -5701,7 +5705,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # pull user from members and dont set him as requested
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$pull": {
                     "members": CURRENT_USER.username,
@@ -5711,7 +5715,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/revoke_request?name={}".format(self.test_space),
+            "/spaceadministration/revoke_request?id={}".format(str(self.test_space_id)),
             False,
             409,
         )
@@ -5728,7 +5732,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         # pull user from space admins to trigger global admin
         # and set visibility explicitely
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$pull": {
                     "admins": CURRENT_ADMIN.username,
@@ -5739,24 +5743,24 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "POST",
-            "/spaceadministration/toggle_visibility?name={}".format(self.test_space),
+            "/spaceadministration/toggle_visibility?id={}".format(str(self.test_space_id)),
             True,
             200,
         )
 
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertEqual(db_state["invisible"], not visibility)
 
         # do the same thing once more to test the other toggle direction
         visibility = not visibility
         self.base_checks(
             "POST",
-            "/spaceadministration/toggle_visibility?name={}".format(self.test_space),
+            "/spaceadministration/toggle_visibility?id={}".format(str(self.test_space_id)),
             True,
             200,
         )
 
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertEqual(db_state["invisible"], not visibility)
 
     def test_post_space_toggle_visibility_space_admin(self):
@@ -5774,7 +5778,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         # set user as space admin
         # and set visibility explicitely
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$push": {
                     "admins": CURRENT_USER.username,
@@ -5785,24 +5789,24 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "POST",
-            "/spaceadministration/toggle_visibility?name={}".format(self.test_space),
+            "/spaceadministration/toggle_visibility?id={}".format(str(self.test_space_id)),
             True,
             200,
         )
 
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertEqual(db_state["invisible"], not visibility)
 
         # do the same thing once more to test the other toggle direction
         visibility = not visibility
         self.base_checks(
             "POST",
-            "/spaceadministration/toggle_visibility?name={}".format(self.test_space),
+            "/spaceadministration/toggle_visibility?id={}".format(str(self.test_space_id)),
             True,
             200,
         )
 
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertEqual(db_state["invisible"], not visibility)
 
     def test_post_space_toggle_visibility_error_insufficient_permission(self):
@@ -5816,7 +5820,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/toggle_visibility?name={}".format(self.test_space),
+            "/spaceadministration/toggle_visibility?id={}".format(str(self.test_space_id)),
             False,
             403,
         )
@@ -5833,7 +5837,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         # pull user from space admins to trigger global admin
         # and set joinability explicitely
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$pull": {
                     "admins": CURRENT_ADMIN.username,
@@ -5844,24 +5848,24 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "POST",
-            "/spaceadministration/toggle_joinability?name={}".format(self.test_space),
+            "/spaceadministration/toggle_joinability?id={}".format(str(self.test_space_id)),
             True,
             200,
         )
 
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertEqual(db_state["joinable"], not joinability)
 
         # do the same thing once more to test the other toggle direction
         joinability = not joinability
         self.base_checks(
             "POST",
-            "/spaceadministration/toggle_joinability?name={}".format(self.test_space),
+            "/spaceadministration/toggle_joinability?id={}".format(str(self.test_space_id)),
             True,
             200,
         )
 
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertEqual(db_state["joinable"], not joinability)
 
     def test_post_space_toggle_joinability_space_admin(self):
@@ -5879,7 +5883,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         # set user as space admin
         # and set joinability explicitely
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$push": {
                     "admins": CURRENT_USER.username,
@@ -5890,24 +5894,24 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "POST",
-            "/spaceadministration/toggle_joinability?name={}".format(self.test_space),
+            "/spaceadministration/toggle_joinability?id={}".format(str(self.test_space_id)),
             True,
             200,
         )
 
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertEqual(db_state["joinable"], not joinability)
 
         # do the same thing once more to test the other toggle direction
         joinability = not joinability
         self.base_checks(
             "POST",
-            "/spaceadministration/toggle_joinability?name={}".format(self.test_space),
+            "/spaceadministration/toggle_joinability?id={}".format(str(self.test_space_id)),
             True,
             200,
         )
 
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertEqual(db_state["joinable"], not joinability)
 
     def test_post_space_toggle_joinability_error_insufficient_permission(self):
@@ -5921,7 +5925,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/toggle_joinability?name={}".format(self.test_space),
+            "/spaceadministration/toggle_joinability?id={}".format(str(self.test_space_id)),
             False,
             403,
         )
@@ -5943,7 +5947,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "POST",
-            "/spaceadministration/put_file?name={}".format(self.test_space),
+            "/spaceadministration/put_file?id={}".format(str(self.test_space_id)),
             True,
             200,
             headers={"Content-Type": request.content_type},
@@ -5956,7 +5960,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         self.assertIsNotNone(file)
 
         # assert that space now has this file attached
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertIn("files", db_state)
         self.assertIn(
             {
@@ -5990,7 +5994,7 @@ class SpaceHandlerTest(BaseApiTestCase):
             headers={"Content-Type": request.content_type},
             body=request.to_string(),
         )
-        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "name")
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "id")
 
     def test_post_space_put_file_error_no_file(self):
         """
@@ -6002,7 +6006,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/put_file?name={}".format(self.test_space),
+            "/spaceadministration/put_file?id={}".format(str(self.test_space_id)),
             False,
             400,
             headers={"Content-Type": request.content_type},
@@ -6015,7 +6019,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response2 = self.base_checks(
             "POST",
-            "/spaceadministration/put_file?name={}".format(self.test_space),
+            "/spaceadministration/put_file?id={}".format(str(self.test_space_id)),
             False,
             400,
             headers={"Content-Type": request2.content_type},
@@ -6039,7 +6043,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/put_file?name={}".format("not_existing_space"),
+            "/spaceadministration/put_file?id={}".format(ObjectId()),
             False,
             409,
             headers={"Content-Type": request.content_type},
@@ -6058,7 +6062,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # pull user from members
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$pull": {
                     "members": CURRENT_USER.username,
@@ -6078,7 +6082,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/put_file?name={}".format(self.test_space),
+            "/spaceadministration/put_file?id={}".format(str(self.test_space_id)),
             False,
             409,
             headers={"Content-Type": request.content_type},
@@ -6106,7 +6110,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/put_file?name={}".format(self.test_space),
+            "/spaceadministration/put_file?id={}".format(str(self.test_space_id)),
             False,
             403,
             headers={"Content-Type": request.content_type},
@@ -6120,7 +6124,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         """
 
         response = self.base_checks("DELETE", "/spaceadministration/leave", False, 400)
-        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "name")
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "id")
 
     def test_delete_space_error_space_doesnt_exist(self):
         """
@@ -6129,7 +6133,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "DELETE",
-            "/spaceadministration/leave?name={}".format("not_existing_space"),
+            "/spaceadministration/leave?id={}".format(ObjectId()),
             False,
             409,
         )
@@ -6146,12 +6150,12 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "DELETE",
-            "/spaceadministration/leave?name={}".format(self.test_space),
+            "/spaceadministration/leave?id={}".format(str(self.test_space_id)),
             True,
             200,
         )
 
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertNotIn(CURRENT_USER.username, db_state["members"])
 
     def test_delete_space_leave_space_space_admin(self):
@@ -6166,17 +6170,17 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # set user as space admin
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$push": {"admins": CURRENT_USER.username}}
+            {"_id": self.test_space_id}, {"$push": {"admins": CURRENT_USER.username}}
         )
 
         self.base_checks(
             "DELETE",
-            "/spaceadministration/leave?name={}".format(self.test_space),
+            "/spaceadministration/leave?id={}".format(str(self.test_space_id)),
             True,
             200,
         )
 
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertNotIn(CURRENT_USER.username, db_state["members"])
         self.assertNotIn(CURRENT_USER.username, db_state["admins"])
 
@@ -6187,7 +6191,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "DELETE",
-            "/spaceadministration/leave?name={}".format(self.test_space),
+            "/spaceadministration/leave?id={}".format(str(self.test_space_id)),
             False,
             409,
         )
@@ -6201,20 +6205,20 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # pull user from space admins to trigger global admin
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$pull": {"admins": CURRENT_ADMIN.username}}
+            {"_id": self.test_space_id}, {"$pull": {"admins": CURRENT_ADMIN.username}}
         )
 
         self.base_checks(
             "DELETE",
-            "/spaceadministration/kick?name={}&user={}".format(
-                self.test_space, CURRENT_USER.username
+            "/spaceadministration/kick?id={}&user={}".format(
+                self.test_space_id, CURRENT_USER.username
             ),
             True,
             200,
         )
 
         # expect other user to no longer be member
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertNotIn(CURRENT_USER.username, db_state["members"])
 
     def test_delete_space_kick_user_space_admin(self):
@@ -6225,15 +6229,15 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "DELETE",
-            "/spaceadministration/kick?name={}&user={}".format(
-                self.test_space, CURRENT_USER.username
+            "/spaceadministration/kick?id={}&user={}".format(
+                self.test_space_id, CURRENT_USER.username
             ),
             True,
             200,
         )
 
         # expect other user to no longer be member
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertNotIn(CURRENT_USER.username, db_state["members"])
 
     def test_delete_space_kick_space_admin_as_global_admin(self):
@@ -6244,20 +6248,20 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # set other user as space admin
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$push": {"admins": CURRENT_USER.username}}
+            {"_id": self.test_space_id}, {"$push": {"admins": CURRENT_USER.username}}
         )
 
         self.base_checks(
             "DELETE",
-            "/spaceadministration/kick?name={}&user={}".format(
-                self.test_space, CURRENT_USER.username
+            "/spaceadministration/kick?id={}&user={}".format(
+                self.test_space_id, CURRENT_USER.username
             ),
             True,
             200,
         )
 
         # expect other user to no longer be member
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertNotIn(CURRENT_USER.username, db_state["members"])
         self.assertNotIn(CURRENT_USER.username, db_state["admins"])
 
@@ -6267,13 +6271,13 @@ class SpaceHandlerTest(BaseApiTestCase):
         """
 
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$pull": {"members": CURRENT_USER.username}}
+            {"_id": self.test_space_id}, {"$pull": {"members": CURRENT_USER.username}}
         )
 
         response = self.base_checks(
             "DELETE",
-            "/spaceadministration/kick?name={}&user={}".format(
-                self.test_space, CURRENT_USER.username
+            "/spaceadministration/kick?id={}&user={}".format(
+                self.test_space_id, CURRENT_USER.username
             ),
             False,
             409,
@@ -6291,13 +6295,13 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # remove other user from admin, because kicking an admin is another case
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$pull": {"admins": CURRENT_ADMIN.username}}
+            {"_id": self.test_space_id}, {"$pull": {"admins": CURRENT_ADMIN.username}}
         )
 
         response = self.base_checks(
             "DELETE",
-            "/spaceadministration/kick?name={}&user={}".format(
-                self.test_space, CURRENT_ADMIN.username
+            "/spaceadministration/kick?id={}&user={}".format(
+                self.test_space_id, CURRENT_ADMIN.username
             ),
             False,
             403,
@@ -6317,13 +6321,13 @@ class SpaceHandlerTest(BaseApiTestCase):
         # set user as space admin, which would be enough to kick a normal user
         # but not another space admin
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$push": {"admins": CURRENT_USER.username}}
+            {"_id": self.test_space_id}, {"$push": {"admins": CURRENT_USER.username}}
         )
 
         response = self.base_checks(
             "DELETE",
-            "/spaceadministration/kick?name={}&user={}".format(
-                self.test_space, CURRENT_ADMIN.username
+            "/spaceadministration/kick?id={}&user={}".format(
+                self.test_space_id, CURRENT_ADMIN.username
             ),
             False,
             403,
@@ -6338,19 +6342,19 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # set other user as admin
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$push": {"admins": CURRENT_USER.username}}
+            {"_id": self.test_space_id}, {"$push": {"admins": CURRENT_USER.username}}
         )
 
         self.base_checks(
             "DELETE",
-            "/spaceadministration/remove_admin?name={}&user={}".format(
-                self.test_space, CURRENT_USER.username
+            "/spaceadministration/remove_admin?id={}&user={}".format(
+                self.test_space_id, CURRENT_USER.username
             ),
             True,
             200,
         )
 
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertNotIn(CURRENT_USER.username, db_state["admins"])
 
     def test_delete_space_remove_admin_error_no_user(self):
@@ -6360,12 +6364,12 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # set other user as admin
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$push": {"admins": CURRENT_USER.username}}
+            {"_id": self.test_space_id}, {"$push": {"admins": CURRENT_USER.username}}
         )
 
         response = self.base_checks(
             "DELETE",
-            "/spaceadministration/remove_admin?name={}".format(self.test_space),
+            "/spaceadministration/remove_admin?id={}".format(str(self.test_space_id)),
             False,
             400,
         )
@@ -6378,8 +6382,8 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "DELETE",
-            "/spaceadministration/remove_admin?name={}&user={}".format(
-                self.test_space, CURRENT_USER.username
+            "/spaceadministration/remove_admin?id={}&user={}".format(
+                self.test_space_id, CURRENT_USER.username
             ),
             False,
             409,
@@ -6398,13 +6402,13 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # set user as space admin
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$push": {"admins": CURRENT_USER.username}}
+            {"_id": self.test_space_id}, {"$push": {"admins": CURRENT_USER.username}}
         )
 
         response = self.base_checks(
             "DELETE",
-            "/spaceadministration/remove_admin?name={}&user={}".format(
-                self.test_space, CURRENT_ADMIN.username
+            "/spaceadministration/remove_admin?id={}&user={}".format(
+                self.test_space_id, CURRENT_ADMIN.username
             ),
             False,
             403,
@@ -6431,7 +6435,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # add file metadata
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$push": {
                     "files": {
@@ -6450,7 +6454,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         helper function to assert correct deletion of file
         """
 
-        db_state = self.db.spaces.find_one({"name": self.test_space})
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertIn("files", db_state)
         self.assertFalse(any(file["file_id"] == file_id for file in db_state["files"]))
         fs = gridfs.GridFS(self.db)
@@ -6469,8 +6473,8 @@ class SpaceHandlerTest(BaseApiTestCase):
         file_id = self._setup_space_file(CURRENT_USER.username)
         self.base_checks(
             "DELETE",
-            "/spaceadministration/delete_file?name={}&file_id={}".format(
-                self.test_space, str(file_id)
+            "/spaceadministration/delete_file?id={}&file_id={}".format(
+                self.test_space_id, str(file_id)
             ),
             True,
             200,
@@ -6490,7 +6494,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # set user as space admin
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$push": {"admins": CURRENT_USER.username}}
+            {"_id": self.test_space_id}, {"$push": {"admins": CURRENT_USER.username}}
         )
 
         # manually add file
@@ -6498,8 +6502,8 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "DELETE",
-            "/spaceadministration/delete_file?name={}&file_id={}".format(
-                self.test_space, str(file_id)
+            "/spaceadministration/delete_file?id={}&file_id={}".format(
+                self.test_space_id, str(file_id)
             ),
             True,
             200,
@@ -6515,7 +6519,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # pull user from space
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$pull": {"admins": CURRENT_ADMIN.username}}
+            {"_id": self.test_space_id}, {"$pull": {"admins": CURRENT_ADMIN.username}}
         )
 
         # manually add file
@@ -6523,8 +6527,8 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "DELETE",
-            "/spaceadministration/delete_file?name={}&file_id={}".format(
-                self.test_space, str(file_id)
+            "/spaceadministration/delete_file?id={}&file_id={}".format(
+                self.test_space_id, str(file_id)
             ),
             True,
             200,
@@ -6543,7 +6547,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "DELETE",
-            "/spaceadministration/delete_file?name={}".format(self.test_space),
+            "/spaceadministration/delete_file?id={}".format(str(self.test_space_id)),
             False,
             400,
         )
@@ -6559,8 +6563,8 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "DELETE",
-            "/spaceadministration/delete_file?name={}&file_id={}".format(
-                "not_existing_space", str(file_id)
+            "/spaceadministration/delete_file?id={}&file_id={}".format(
+                ObjectId(), str(file_id)
             ),
             False,
             409,
@@ -6577,8 +6581,8 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "DELETE",
-            "/spaceadministration/delete_file?name={}&file_id={}".format(
-                self.test_space, str(ObjectId())
+            "/spaceadministration/delete_file?id={}&file_id={}".format(
+                self.test_space_id, str(ObjectId())
             ),
             False,
             409,
@@ -6599,8 +6603,8 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "DELETE",
-            "/spaceadministration/delete_file?name={}&file_id={}".format(
-                self.test_space, str(file_id)
+            "/spaceadministration/delete_file?id={}&file_id={}".format(
+                self.test_space_id, str(file_id)
             ),
             False,
             403,
@@ -6629,7 +6633,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
             # add file metadata
             self.db.spaces.update_one(
-                {"name": self.test_space},
+                {"_id": self.test_space_id},
                 {
                     "$push": {
                         "files": {
@@ -6645,8 +6649,8 @@ class SpaceHandlerTest(BaseApiTestCase):
         file_id = __setup(self)
         response = self.base_checks(
             "DELETE",
-            "/spaceadministration/delete_file?name={}&file_id={}".format(
-                self.test_space, str(file_id)
+            "/spaceadministration/delete_file?id={}&file_id={}".format(
+                self.test_space_id, str(file_id)
             ),
             False,
             409,
@@ -6661,20 +6665,20 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # remove user from space admins to trigger global admin
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$pull": {"admins": CURRENT_ADMIN.username}}
+            {"_id": self.test_space_id}, {"$pull": {"admins": CURRENT_ADMIN.username}}
         )
 
         self.base_checks(
             "DELETE",
-            "/spaceadministration/delete_space?name={}".format(self.test_space),
+            "/spaceadministration/delete_space?id={}".format(str(self.test_space_id)),
             True,
             200,
         )
 
         # expect all associated data to be deleted
-        space = self.db.spaces.find_one({"name": self.test_space})
-        posts = list(self.db.posts.find({"space": self.test_space}))
-        space_acl = list(self.db.space_acl.find({"space": self.test_space}))
+        space = self.db.spaces.find_one({"_id": self.test_space_id})
+        posts = list(self.db.posts.find({"space": self.test_space_id}))
+        space_acl = list(self.db.space_acl.find({"space": self.test_space_id}))
         self.assertEqual(space, None)
         self.assertEqual(posts, [])
         self.assertEqual(space_acl, [])
@@ -6691,20 +6695,20 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         # set user as space admin
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$push": {"admins": CURRENT_USER.username}}
+            {"_id": self.test_space_id}, {"$push": {"admins": CURRENT_USER.username}}
         )
 
         self.base_checks(
             "DELETE",
-            "/spaceadministration/delete_space?name={}".format(self.test_space),
+            "/spaceadministration/delete_space?id={}".format(str(self.test_space_id)),
             True,
             200,
         )
 
         # expect all associated data to be deleted
-        space = self.db.spaces.find_one({"name": self.test_space})
-        posts = list(self.db.posts.find({"space": self.test_space}))
-        space_acl = list(self.db.space_acl.find({"space": self.test_space}))
+        space = self.db.spaces.find_one({"_id": self.test_space_id})
+        posts = list(self.db.posts.find({"space": self.test_space_id}))
+        space_acl = list(self.db.space_acl.find({"space": self.test_space_id}))
         self.assertEqual(space, None)
         self.assertEqual(posts, [])
         self.assertEqual(space_acl, [])
@@ -6719,15 +6723,15 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "DELETE",
-            "/spaceadministration/delete_space?name={}".format(self.test_space),
+            "/spaceadministration/delete_space?id={}".format(str(self.test_space_id)),
             True,
             200,
         )
 
         # expect all associated data to be deleted
-        space = self.db.spaces.find_one({"name": self.test_space})
-        posts = list(self.db.posts.find({"space": self.test_space}))
-        space_acl = list(self.db.space_acl.find({"space": self.test_space}))
+        space = self.db.spaces.find_one({"_id": self.test_space_id})
+        posts = list(self.db.posts.find({"space": self.test_space_id}))
+        space_acl = list(self.db.space_acl.find({"space": self.test_space_id}))
         self.assertEqual(space, None)
         self.assertEqual(posts, [])
         self.assertEqual(space_acl, [])
@@ -6745,7 +6749,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "DELETE",
-            "/spaceadministration/delete_space?name={}".format(self.test_space),
+            "/spaceadministration/delete_space?id={}".format(str(self.test_space_id)),
             False,
             403,
         )
@@ -6774,7 +6778,7 @@ class TimelineHandlerTest(BaseApiTestCase):
                 "author": CURRENT_ADMIN.username,
                 "creation_date": datetime.utcnow(),
                 "text": "space_post_admin",
-                "space": self.test_space,
+                "space": self.test_space_id,
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
@@ -6808,7 +6812,7 @@ class TimelineHandlerTest(BaseApiTestCase):
                 "author": CURRENT_USER.username,
                 "creation_date": datetime.utcnow(),
                 "text": "space_post_user",
-                "space": self.test_space,
+                "space": self.test_space_id,
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
@@ -6905,7 +6909,7 @@ class TimelineHandlerTest(BaseApiTestCase):
         """
 
         response = self.base_checks(
-            "GET", "/timeline/space/{}".format(self.test_space), True, 200
+            "GET", "/timeline/space/{}".format(str(self.test_space_id)), True, 200
         )
         self.assertIn("posts", response)
 
@@ -6926,11 +6930,11 @@ class TimelineHandlerTest(BaseApiTestCase):
 
         # pull user from members
         self.db.spaces.update_one(
-            {"name": self.test_space}, {"$pull": {"members": CURRENT_USER.username}}
+            {"_id": self.test_space_id}, {"$pull": {"members": CURRENT_USER.username}}
         )
 
         response = self.base_checks(
-            "GET", "/timeline/space/{}".format(self.test_space), False, 409
+            "GET", "/timeline/space/{}".format(str(self.test_space_id)), False, 409
         )
         self.assertEqual(response["reason"], USER_NOT_MEMBER_ERROR)
 
@@ -6945,12 +6949,12 @@ class TimelineHandlerTest(BaseApiTestCase):
 
         # revoke permission to view the timeline
         self.db.space_acl.update_one(
-            {"space": self.test_space, "username": CURRENT_USER.username},
+            {"space": self.test_space_id, "username": CURRENT_USER.username},
             {"$set": {"read_timeline": False}},
         )
 
         response = self.base_checks(
-            "GET", "/timeline/space/{}".format(self.test_space), False, 403
+            "GET", "/timeline/space/{}".format(str(self.test_space_id)), False, 403
         )
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
 
@@ -6977,7 +6981,7 @@ class TimelineHandlerTest(BaseApiTestCase):
 
         # pull user from space
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$pull": {
                     "members": CURRENT_ADMIN.username,
@@ -7033,7 +7037,7 @@ class TimelineHandlerTest(BaseApiTestCase):
 
         # pull user from space
         self.db.spaces.update_one(
-            {"name": self.test_space},
+            {"_id": self.test_space_id},
             {
                 "$pull": {
                     "members": CURRENT_ADMIN.username,

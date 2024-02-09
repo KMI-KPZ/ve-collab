@@ -152,9 +152,9 @@ class SpaceTimelineHandler(BaseTimelineHandler):
     """
 
     @auth_needed
-    def get(self, space_name):
+    def get(self, space_id):
         """
-        GET /timeline/space/[name]
+        GET /timeline/space/[_id]
             includes posts into that space that are either within the specified time frame
             or pinned
         query params:
@@ -185,7 +185,7 @@ class SpaceTimelineHandler(BaseTimelineHandler):
             space_manager = Spaces(db)
             try:
                 if not space_manager.check_user_is_member(
-                    space_name, self.current_user.username
+                    space_id, self.current_user.username
                 ):
                     self.set_status(409)
                     self.write({"success": False, "reason": "user_not_member_of_space"})
@@ -198,7 +198,7 @@ class SpaceTimelineHandler(BaseTimelineHandler):
             # ask for permission to read timeline
             acl = ACL(db)
             if not acl.space_acl.ask(
-                self.current_user.username, space_name, "read_timeline"
+                self.current_user.username, space_id, "read_timeline"
             ):
                 self.set_status(403)
                 self.write({"success": False, "reason": "insufficient_permission"})
@@ -206,7 +206,7 @@ class SpaceTimelineHandler(BaseTimelineHandler):
 
             # query space timeline
             post_manager = Posts(db)
-            result = post_manager.get_space_timeline(space_name, time_from, time_to)
+            result = post_manager.get_space_timeline(space_id, time_from, time_to)
 
         # postprocessing
         posts = self.add_profile_pic_to_author(result)

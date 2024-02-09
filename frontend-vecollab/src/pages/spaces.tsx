@@ -76,8 +76,8 @@ export default function Spaces() {
         mutateAllSpaces();
     };
 
-    function sendJoinRequest(spaceName: string): void {
-        fetchPOST(`/spaceadministration/join?name=${spaceName}`, {}, session!.accessToken).then(
+    function sendJoinRequest(spaceId: string): void {
+        fetchPOST(`/spaceadministration/join?id=${spaceId}`, {}, session!.accessToken).then(
             () => {
                 mutateMySpaces();
                 mutateAllSpaces();
@@ -86,9 +86,9 @@ export default function Spaces() {
         );
     }
 
-    function acceptInvite(spaceName: string): void {
+    function acceptInvite(spaceId: string): void {
         fetchPOST(
-            `/spaceadministration/accept_invite?name=${spaceName}`,
+            `/spaceadministration/accept_invite?id=${spaceId}`,
             {},
             session!.accessToken
         ).then(() => {
@@ -98,9 +98,9 @@ export default function Spaces() {
         });
     }
 
-    function declineInvite(spaceName: string): void {
+    function declineInvite(spaceId: string): void {
         fetchPOST(
-            `/spaceadministration/decline_invite?name=${spaceName}`,
+            `/spaceadministration/decline_invite?id=${spaceId}`,
             {},
             session!.accessToken
         ).then(() => {
@@ -110,9 +110,9 @@ export default function Spaces() {
         });
     }
 
-    function revokeRequest(spaceName: string) {
+    function revokeRequest(spaceId: string) {
         fetchPOST(
-            `/spaceadministration/revoke_request?name=${spaceName}`,
+            `/spaceadministration/revoke_request?id=${spaceId}`,
             {},
             session!.accessToken
         ).then(() => {
@@ -132,7 +132,7 @@ export default function Spaces() {
                                 {mySpaces.map((space, index) => (
                                     <div key={index} className="px-2 py-5">
                                         <Link
-                                            href={`/space?name=${space.name}`}
+                                            href={`/space?id=${space._id}`}
                                             className="flex cursor-pointer"
                                         >
                                             <div>
@@ -250,7 +250,7 @@ export default function Spaces() {
                                 {allSpaces.map((space, index) => (
                                     <div key={index} className="px-2 py-5">
                                         <Link
-                                            href={`/space?name=${space.name}`}
+                                            href={`/space?id=${space._id}`}
                                             className="flex cursor-pointer"
                                         >
                                             <div>
@@ -289,7 +289,7 @@ export default function Spaces() {
                                                                 }
                                                                 onClick={(e) => {
                                                                     e.preventDefault();
-                                                                    sendJoinRequest(space.name);
+                                                                    sendJoinRequest(space._id);
                                                                 }}
                                                             >
                                                                 <span>Beitreten</span>
@@ -314,7 +314,7 @@ export default function Spaces() {
                                                                 }
                                                                 onClick={(e) => {
                                                                     e.preventDefault();
-                                                                    sendJoinRequest(space.name);
+                                                                    sendJoinRequest(space._id);
                                                                 }}
                                                             >
                                                                 <span>Beitritt anfragen</span>
@@ -346,7 +346,7 @@ export default function Spaces() {
                                 {mySpaceInvites.map((space, index) => (
                                     <div key={index} className="px-2 py-5">
                                         <Link
-                                            href={`/space?name=${space.name}`}
+                                            href={`/space?id=${space._id}`}
                                             className="flex cursor-pointer"
                                         >
                                             <div>
@@ -374,7 +374,7 @@ export default function Spaces() {
                                                         }
                                                         onClick={(e) => {
                                                             e.preventDefault();
-                                                            acceptInvite(space.name);
+                                                            acceptInvite(space._id);
                                                         }}
                                                     >
                                                         <span>Annehmen</span>
@@ -385,7 +385,7 @@ export default function Spaces() {
                                                         }
                                                         onClick={(e) => {
                                                             e.preventDefault();
-                                                            declineInvite(space.name);
+                                                            declineInvite(space._id);
                                                         }}
                                                     >
                                                         <span>Ablehnen</span>
@@ -401,7 +401,7 @@ export default function Spaces() {
                                 {mySpaceRequests.map((space, index) => (
                                     <div key={index} className="px-2 py-5">
                                         <Link
-                                            href={`/space?name=${space.name}`}
+                                            href={`/space?id=${space._id}`}
                                             className="flex cursor-pointer"
                                         >
                                             <div>
@@ -429,7 +429,7 @@ export default function Spaces() {
                                                         }
                                                         onClick={(e) => {
                                                             e.preventDefault();
-                                                            revokeRequest(space.name);
+                                                            revokeRequest(space._id);
                                                         }}
                                                     >
                                                         <span>Anfrage zurückziehen</span>
