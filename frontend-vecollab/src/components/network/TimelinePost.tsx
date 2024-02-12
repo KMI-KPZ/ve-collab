@@ -1,4 +1,4 @@
-import { fetchPOST, useGetTimeline } from "@/lib/backend";
+import { fetchDELETE, fetchPOST, useGetTimeline } from "@/lib/backend";
 import { useSession } from "next-auth/react";
 import { HiDotsHorizontal, HiHeart, HiOutlineCalendar, HiOutlineHeart, HiOutlineShare } from "react-icons/hi";
 import Link from "next/link";
@@ -32,7 +32,7 @@ export default function Timeline({post, mutate}: Props) {
                     '/comment',
                     {
                         text: formData.get('text'),
-                        post_id: formData.get('post_id')
+                        post_id: post._id
                     },
                     session?.accessToken
                 )
@@ -45,10 +45,13 @@ export default function Timeline({post, mutate}: Props) {
         }
     }
 
-    const onClickLikeBtn = () => {
-        console.log('clicked like btn...');
+    const onClickLikeBtn = async () => {
+        if (likeIt) {
+            await fetchDELETE( '/like', { post_id: post._id }, session?.accessToken )
+        } else {
+            await fetchPOST( '/like', { post_id: post._id }, session?.accessToken )
+        }
         setLikeIt(!likeIt)
-
     }
 
     const onClickShareBtn = () => {
@@ -151,7 +154,6 @@ export default function Timeline({post, mutate}: Props) {
 
                 <div>
                     <form onSubmit={onSubmitCommentForm} ref={ref}>
-                        <input type='hidden' defaultValue={post._id} name='post_id' />
                         <input
                             className={'border border-[#cccccc] rounded-md px-2 py-[6px]'}
                             type="text"
