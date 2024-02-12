@@ -21,6 +21,19 @@ export default function Timeline({post, mutate}: Props) {
     // const [isLoading, setIsLoading] = useState<boolean>(false)
     const ref = useRef<HTMLFormElement>(null)
     const [likeIt, setLikeIt] = useState(post.likers.includes(session?.user.preferred_username as string))
+    const [comments, setComments] = useState(post.comments)
+    const [likers, setLikers] = useState(post.likers)
+
+    // TODO delete (own) post
+    // TODO edit (own) post
+    // TODO reshare a post
+    // TODO may set loadiungState on submit comment form
+
+    useEffect(() => {
+        const newComments = [...post.comments];
+        newComments.reverse()
+        setComments(newComments);
+    }, [post]);
 
     async function onSubmitCommentForm(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -46,27 +59,26 @@ export default function Timeline({post, mutate}: Props) {
     }
 
     const onClickLikeBtn = async () => {
-        if (likeIt) {
-            await fetchDELETE( '/like', { post_id: post._id }, session?.accessToken )
-        } else {
-            await fetchPOST( '/like', { post_id: post._id }, session?.accessToken )
+        let newLikers = [...likers];
+
+        try {
+            if (likeIt) {
+                await fetchDELETE( '/like', { post_id: post._id }, session?.accessToken )
+                newLikers = newLikers.filter(a => a != session?.user.preferred_username)
+            } else {
+                await fetchPOST( '/like', { post_id: post._id }, session?.accessToken )
+                newLikers.push(session?.user.preferred_username as string)
+            }
+            setLikeIt(!likeIt)
+            setLikers(newLikers)
+        } catch (error) {
+            console.log(error);
         }
-        setLikeIt(!likeIt)
     }
 
     const onClickShareBtn = () => {
         console.log('clicked shared btn...');
     }
-
-    const ProfileImage = (imageId: string) => (
-        <AuthenticatedImage
-            imageId={imageId}
-            alt={'Benutzerbild'}
-            width={40}
-            height={40}
-            className="rounded-full mr-3"
-        ></AuthenticatedImage>
-    )
 
     const PostAuthor = (imageId: string, authorName: string, date: string) => (
         <>
@@ -143,11 +155,11 @@ export default function Timeline({post, mutate}: Props) {
                     </div>
                  )}
 
-                {post.likers.length ? (
+                {likers.length ? (
                     <div className='my-5 text-sm'>
                         <span>Liked by </span>
-                        {post.likers.map((liker, li) => (
-                            <span className="font-bold" key={li}>{post.likers[li]}</span>
+                        {likers.map((liker, li) => (
+                            <span className="font-bold" key={li}>{likers[li]}</span>
                         ))}
                     </div>
                 ) : ( <></> )}
@@ -164,11 +176,11 @@ export default function Timeline({post, mutate}: Props) {
                     </form>
                 </div>
 
-                {post.comments.length ? (
+                {comments.length ? (
                     <div className='mt-5 pt-5 pl-5 border-t-2 border-ve-collab-blue'>
                         <div className="-ml-5 mb-5">Kommentare</div>
 
-                        {post.comments.map((comment, ci) => (
+                        {comments.map((comment, ci) => (
                             <div key={ci}>
                                 <div className="flex items-center">
                                     {PostAuthor(comment.author.profile_pic, comment.author.username, comment.creation_date)}
