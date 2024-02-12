@@ -12,8 +12,9 @@ import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
 import { fetchPOST, useGetMySpaceACLEntry, useGetSpace } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
-import { RxCross2, RxFile, RxPlus } from 'react-icons/rx';
+import { ChangeEvent, useEffect, useState } from 'react';
+import { RxFile, RxPlus } from 'react-icons/rx';
+import Timeline from '@/components/network/Timeline';
 
 Space.auth = true;
 export default function Space() {
@@ -35,8 +36,7 @@ export default function Space() {
         error,
         mutate,
     } = useGetSpace(session!.accessToken, router.query.name as string);
-    console.log(space);
-    console.log(memberSnippets);
+    console.log({space, memberSnippets});
 
     const { data: spaceACLEntry, isLoading: spaceACLEntryLoading } = useGetMySpaceACLEntry(
         session!.accessToken,
@@ -257,10 +257,6 @@ export default function Space() {
         );
     }
 
-    function timeline() {
-        return <div>Timeline</div>;
-    }
-
     // can only be called after space hook is loaded
     function userIsMember() {
         return space.members.includes(session?.user?.preferred_username as string);
@@ -291,7 +287,7 @@ export default function Space() {
                                         {(() => {
                                             switch (renderPicker) {
                                                 case 'timeline':
-                                                    return timeline();
+                                                    return <Timeline space={space.name} />;
                                                 case 'members':
                                                     return members();
                                                 case 'files':

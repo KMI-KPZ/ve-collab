@@ -341,9 +341,9 @@ export function useGetMyTimeline(
 
 export function useGetTimeline(
     accessToken: string,
-    space: string,
-    to?: string,
-    limit: number=10
+    spaceName: string,
+    fromDate: string,
+    toDate: string
 ): {
     data: BackendPosts[];
     isLoading: boolean;
@@ -351,7 +351,7 @@ export function useGetTimeline(
     mutate: KeyedMutator<any>;
 } {
     const { data, error, isLoading, mutate } = useSWR(
-        [`/timeline/space/${space}?to=${to}&limit=${limit}`, accessToken],
+        [`/timeline/space/${spaceName}?from=${fromDate}&to=${toDate}`, accessToken],
         ([url, token]) => GETfetcher(url, token)
     );
 
