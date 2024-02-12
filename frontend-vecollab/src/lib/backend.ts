@@ -1,6 +1,7 @@
 import {
     BackendChatMessage,
     BackendChatroomSnippet,
+    BackendPosts,
     BackendSpace,
     BackendSpaceACLEntry,
     BackendUserSnippet,
@@ -313,6 +314,53 @@ export function useGetMySpaceRequests(accessToken: string): {
         error,
         mutate,
     };
+}
+
+export function useGetMyTimeline(
+    accessToken: string,
+    to?: string,
+    limit: number=10
+): {
+    data: BackendPosts[];
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        [`/timeline/you?to=${to}&limit=${limit}`, accessToken],
+        ([url, token]) => GETfetcher(url, token)
+    );
+
+    return {
+        data: isLoading || error ? [] : data.posts,
+        isLoading,
+        error,
+        mutate,
+    }
+}
+
+export function useGetTimeline(
+    accessToken: string,
+    space: string,
+    to?: string,
+    limit: number=10
+): {
+    data: BackendPosts[];
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        [`/timeline/space/${space}?to=${to}&limit=${limit}`, accessToken],
+        ([url, token]) => GETfetcher(url, token)
+    );
+
+    return {
+        data: isLoading || error ? [] : data.posts,
+        isLoading,
+        error,
+        mutate,
+    }
 }
 
 export function useGetMySpaceACLEntry(accessToken: string, spaceName: string): {
