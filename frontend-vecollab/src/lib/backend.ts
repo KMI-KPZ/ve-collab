@@ -316,42 +316,24 @@ export function useGetMySpaceRequests(accessToken: string): {
     };
 }
 
-export function useGetMyTimeline(
-    accessToken: string,
-    to?: string,
-    limit: number=10
-): {
-    data: BackendPosts[];
-    isLoading: boolean;
-    error: any;
-    mutate: KeyedMutator<any>;
-} {
-    const { data, error, isLoading, mutate } = useSWR(
-        [`/timeline/you?to=${to}&limit=${limit}`, accessToken],
-        ([url, token]) => GETfetcher(url, token)
-    );
-
-    return {
-        data: isLoading || error ? [] : data.posts,
-        isLoading,
-        error,
-        mutate,
-    }
-}
-
 export function useGetTimeline(
     accessToken: string,
-    spaceName: string,
-    fromDate: string,
-    toDate: string
-): {
+    toDate?: string,
+    fromDate?: string,
+    limit?: number,
+    space?: string
+ ): {
     data: BackendPosts[];
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;
 } {
+    const endpointUrl = space
+        ? `/timeline/space/${space}?from=${fromDate}&to=${toDate}`
+        : `/timeline/you?to=${toDate}&limit=${limit}`
+
     const { data, error, isLoading, mutate } = useSWR(
-        [`/timeline/space/${spaceName}?from=${fromDate}&to=${toDate}`, accessToken],
+        [endpointUrl, accessToken],
         ([url, token]) => GETfetcher(url, token)
     );
 

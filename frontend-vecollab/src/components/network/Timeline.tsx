@@ -1,11 +1,12 @@
-import { useGetMyTimeline, useGetTimeline } from "@/lib/backend";
+import { useGetTimeline } from "@/lib/backend";
 import { useSession } from "next-auth/react";
 import LoadingAnimation from "../LoadingAnimation";
 import TimelinePost from "./TimelinePost";
 import { useState } from "react";
+import { access } from "fs";
 
 interface Props {
-    space?: string;
+    space?: string | undefined;
 }
 
 Timeline.auth = true
@@ -22,10 +23,17 @@ export default function Timeline({ space }: Props) {
         isLoading,
         error,
         mutate,
-    } = space
-        ? useGetTimeline(session!.accessToken, space, fromDate, toDate)
-        : useGetMyTimeline(session!.accessToken, toDate)
+    } = useGetTimeline(
+        session!.accessToken,
+        toDate,
+        fromDate,
+        10,
+        space
+    )
     console.log({timeline, space});
+
+    // TODO new post form
+    // TODO infinite scroll
 
     if (isLoading) {
         return (<><LoadingAnimation /></>)
