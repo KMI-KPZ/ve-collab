@@ -1,4 +1,4 @@
-import { fetchDELETE, fetchPOST, useGetTimeline } from "@/lib/backend";
+import { fetchDELETE, fetchPOST } from "@/lib/backend";
 import { useSession } from "next-auth/react";
 import { HiDotsHorizontal, HiHeart, HiOutlineCalendar, HiOutlineHeart, HiOutlineShare } from "react-icons/hi";
 import Link from "next/link";
@@ -37,24 +37,24 @@ export default function Timeline({post, mutate}: Props) {
 
     async function onSubmitCommentForm(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
+        const formData = new FormData(event.currentTarget)
+        const text = (formData.get('text') as string).trim()
+
+        if (text === '')  return
 
         try {
-            const formData = new FormData(event.currentTarget)
-            if (formData.get('text') !== '') {
-                await fetchPOST(
-                    '/comment',
-                    {
-                        text: formData.get('text'),
-                        post_id: post._id
-                    },
-                    session?.accessToken
-                )
-            }
-
+            await fetchPOST(
+                '/comment',
+                {
+                    text,
+                    post_id: post._id
+                },
+                session?.accessToken
+            )
             ref.current?.reset()
             mutate()
         } catch (error) {
-            console.log(error);
+            console.error(error);
         }
     }
 
@@ -140,7 +140,7 @@ export default function Timeline({post, mutate}: Props) {
                 {post.isRepost ? (
                     <>
                         <div className='my-5'>
-                            <div>{post.repostText}</div>
+                            <div className="whitespace-break-spaces">{post.repostText}</div>
                         </div>
                         <div className="my-5 ml-5 p-5 border-2 border-ve-collab-blue/25 rounded-lg">
                             <div className="flex items-center">
@@ -151,7 +151,7 @@ export default function Timeline({post, mutate}: Props) {
                     </>
                 ) : (
                     <div className='my-5'>
-                        <div>{post.text}</div>
+                        <div className="whitespace-break-spaces">{post.text}</div>
                     </div>
                  )}
 
