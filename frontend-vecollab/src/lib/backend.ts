@@ -388,7 +388,8 @@ export async function fetchGET(relativeUrl: string, accessToken?: string) {
 export async function fetchPOST(
     relativeUrl: string,
     payload?: Record<string, any>,
-    accessToken?: string
+    accessToken?: string,
+    asFormData: boolean=false
 ) {
     const headers: { Authorization?: string } = {};
 
@@ -396,11 +397,19 @@ export async function fetchPOST(
         headers['Authorization'] = 'Bearer ' + accessToken;
     }
 
+    function getFormData(payload: any) {
+        const formData = new FormData();
+        Object.keys(payload).forEach(key => formData.append(key, payload[key]));
+        return formData;
+    }
+
     try {
         let backendResponse = await fetch(BACKEND_BASE_URL + relativeUrl, {
             method: 'POST',
             headers: headers,
-            body: JSON.stringify(payload),
+            body: asFormData
+                ? getFormData(payload)
+                : JSON.stringify(payload),
         });
         if (backendResponse.status === 401) {
             console.log('forced new signIn by api call');
