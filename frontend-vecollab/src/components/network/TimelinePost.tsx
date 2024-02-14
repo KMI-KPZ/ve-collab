@@ -21,12 +21,12 @@ Timeline.auth = true
 export default function Timeline({post, mutate}: Props) {
     const { data: session } = useSession();
     // const [isLoading, setIsLoading] = useState<boolean>(false)
+    const [wbRemoved, setWbRemoved] = useState<boolean>(false)
     const ref = useRef<HTMLFormElement>(null)
     const [likeIt, setLikeIt] = useState(post.likers.includes(session?.user.preferred_username as string))
     const [comments, setComments] = useState(post.comments)
     const [likers, setLikers] = useState(post.likers)
 
-    // TODO delete (own) post
     // TODO edit (own) post
     // TODO reshare a post
     // TODO may set loadiungState on submit comment form
@@ -82,23 +82,38 @@ export default function Timeline({post, mutate}: Props) {
         console.log('clicked shared btn...');
     }
 
-    const onClickEditBtn = () => {
+    const editPost = () => {
         console.log('edit....');
 
     }
 
-    const onClickDeleteBtn = () => {
-        console.log('delete...');
+    const deletePost = async () => {
 
+        try {
+            await fetchDELETE(
+                '/posts',
+                {
+                    post_id: post._id
+                },
+                session?.accessToken
+            )
+            setWbRemoved(true)
+            // HACK wait until transition is done (TODO find a better solution...)
+            await new Promise(resolve => setTimeout(resolve, 450))
+            await mutate()
+            setWbRemoved(false)
+        } catch (error) {
+            console.error(error);
+        }
     }
 
     const handleSelectOption = (value: string) => {
         switch (value) {
             case 'remove':
-                onClickDeleteBtn()
+                deletePost()
                 break;
             case 'edit':
-                onClickEditBtn()
+                editPost()
                 break;
 
             default:
@@ -122,10 +137,16 @@ export default function Timeline({post, mutate}: Props) {
         </>
     )
 
-    const drOptions = [
-        { value: 'remove', label: 'löschen', icon: <MdDeleteOutline /> },
-        { value: 'edit', label: 'bearbeiten', icon: <MdModeEdit /> }
-    ]
+    let drOptions = []
+    if (
+        (!post.isRepost && post.author.username == session?.user.preferred_username)
+        || post.isRepost && post.repostAuthor == session?.user.preferred_username
+    ) {
+        drOptions.push(
+            { value: 'remove', label: 'löschen', icon: <MdDeleteOutline /> },
+            { value: 'edit', label: 'bearbeiten', icon: <MdModeEdit /> }
+        )
+    }
 
     return (
         <>
@@ -136,7 +157,7 @@ export default function Timeline({post, mutate}: Props) {
                 </div>
             </div> */}
 
-            <div className={'p-4 my-8 bg-white rounded-3xl shadow-2xl '}>
+            <div className={`${wbRemoved ? "opacity-0 transition-opacity ease-in-out delay-150 duration-300" : "opacity-100 transition-none" } p-4 my-8 bg-white rounded-3xl shadow-2xl`}>
                 <div className="flex items-center">
                     {post.isRepost ? (
                         <>
@@ -164,7 +185,9 @@ export default function Timeline({post, mutate}: Props) {
                             <button className="p-2" onClick={onClickLikeBtn} title="Click to like post"><HiOutlineHeart /></button>
                         )}
                         <button className="p-2" onClick={onClickShareBtn} title="Click to share post"><HiOutlineShare /></button>
-                        <Dropdown options={drOptions} onSelect={handleSelectOption} />
+                        {drOptions.length ? (
+                            <Dropdown options={drOptions} onSelect={handleSelectOption} />
+                        ) : ( <></> )}
                     </div>
                 </div>
 
