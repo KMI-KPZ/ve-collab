@@ -1,14 +1,16 @@
 import { fetchDELETE, fetchPOST } from "@/lib/backend";
 import { useSession } from "next-auth/react";
-import { HiDotsHorizontal, HiHeart, HiOutlineCalendar, HiOutlineHeart, HiOutlineShare } from "react-icons/hi";
+import { HiHeart, HiOutlineCalendar, HiOutlineHeart, HiOutlineShare } from "react-icons/hi";
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { IoIosSend } from "react-icons/io";
 import AuthenticatedImage from "../AuthenticatedImage";
 import SmallTimestamp from "../SmallTimestamp";
+import Dropdown from "../Dropdown";
 import { BackendPosts } from "@/interfaces/api/apiInterfaces";
 import { KeyedMutator } from "swr";
 import { useRef } from 'react'
+import { MdDeleteOutline, MdModeEdit } from "react-icons/md";
 
 interface Props {
     post: BackendPosts;
@@ -80,6 +82,30 @@ export default function Timeline({post, mutate}: Props) {
         console.log('clicked shared btn...');
     }
 
+    const onClickEditBtn = () => {
+        console.log('edit....');
+
+    }
+
+    const onClickDeleteBtn = () => {
+        console.log('delete...');
+
+    }
+
+    const handleSelectOption = (value: string) => {
+        switch (value) {
+            case 'remove':
+                onClickDeleteBtn()
+                break;
+            case 'edit':
+                onClickEditBtn()
+                break;
+
+            default:
+                break;
+        }
+    }
+
     const PostAuthor = (imageId: string, authorName: string, date: string) => (
         <>
             <AuthenticatedImage
@@ -95,6 +121,11 @@ export default function Timeline({post, mutate}: Props) {
             </div>
         </>
     )
+
+    const drOptions = [
+        { value: 'remove', label: 'löschen', icon: <MdDeleteOutline /> },
+        { value: 'edit', label: 'bearbeiten', icon: <MdModeEdit /> }
+    ]
 
     return (
         <>
@@ -133,7 +164,7 @@ export default function Timeline({post, mutate}: Props) {
                             <button className="p-2" onClick={onClickLikeBtn} title="Click to like post"><HiOutlineHeart /></button>
                         )}
                         <button className="p-2" onClick={onClickShareBtn} title="Click to share post"><HiOutlineShare /></button>
-                        <button className="p-2"><HiDotsHorizontal /></button>
+                        <Dropdown options={drOptions} onSelect={handleSelectOption} />
                     </div>
                 </div>
 
