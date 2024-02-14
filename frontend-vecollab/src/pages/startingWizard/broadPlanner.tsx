@@ -17,7 +17,6 @@ import {
 import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
-import { generateFineStepLinkTopMenu } from '@/pages/startingWizard/generalInformation/courseFormat';
 import {
     DragDropContext,
     Droppable,
@@ -69,10 +68,7 @@ export default function BroadPlanner() {
         initialSideProgressBarStates
     );
     const { validateAndRoute } = useValidation();
-    const [allSteps, setAllSteps] = useState<IFineStep[]>([defaultFineStepData]);
-    const [linkFineStepTopMenu, setLinkFineStepTopMenu] = useState<string>(
-        '/startingWizard/finePlanner'
-    );
+    const [steps, setSteps] = useState<IFineStep[]>([defaultFineStepData]);
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -112,7 +108,7 @@ export default function BroadPlanner() {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
                     setLoading(false);
-                    setAllSteps(data.plan.steps);
+                    setSteps(data.plan.steps);
                     setValue('broadSteps', [
                         {
                             from: '',
@@ -135,7 +131,6 @@ export default function BroadPlanner() {
                     if (data.plan.progress.length !== 0) {
                         setSideMenuStepsProgress(data.plan.progress);
                     }
-                    setLinkFineStepTopMenu(generateFineStepLinkTopMenu(data.plan.steps));
                 }
             );
         }
@@ -158,7 +153,7 @@ export default function BroadPlanner() {
         };
         const broadStepsData = broadSteps.map((broadStep) => {
             // TODO ids lieber vergleichen
-            const fineStepBackend = allSteps.find((fineStep) => fineStep.name === broadStep.name);
+            const fineStepBackend = steps.find((fineStep) => fineStep.name === broadStep.name);
             if (fineStepBackend !== undefined) {
                 payload = fineStepBackend;
             }
@@ -305,7 +300,7 @@ export default function BroadPlanner() {
 
     return (
         <>
-            <HeadProgressBarSection stage={1} linkFineStep={linkFineStepTopMenu} />
+            <HeadProgressBarSection stage={1} linkFineStep={steps[0]?.name} />
             <div className="flex justify-center bg-pattern-left-blue-small bg-no-repeat">
                 {loading ? (
                     <LoadingAnimation />

@@ -3,20 +3,18 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import { fetchGET, useGetPlanById } from '@/lib/backend';
-import { generateFineStepLinkTopMenu } from '@/pages/startingWizard/generalInformation/courseFormat';
 import { signIn, useSession } from 'next-auth/react';
 import { PlanOverview } from '@/components/planSummary/planOverview';
 import LoadingAnimation from '@/components/LoadingAnimation';
+import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 
 export default function Finished() {
     const router = useRouter();
     const { data: session, status } = useSession();
     const [, setLoading] = useState(false);
-    const [linkFineStepTopMenu, setLinkFineStepTopMenu] = useState<string>(
-        '/startingWizard/finePlanner'
-    );
 
     const { data: plan, isLoading } = useGetPlanById(router.query.plannerId as string);
+    const [steps, setSteps] = useState<IFineStep[]>([]);
 
     useEffect(() => {
         if (status !== 'loading') {
@@ -43,14 +41,14 @@ export default function Finished() {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
                     setLoading(false);
-                    setLinkFineStepTopMenu(generateFineStepLinkTopMenu(data.plan.steps));
+                    setSteps(data.plan.steps);
                 }
             );
         }
     }, [session, status, router]);
     return (
         <>
-            <HeadProgressBarSection stage={3} linkFineStep={linkFineStepTopMenu} />
+            <HeadProgressBarSection stage={3} linkFineStep={steps[0]?.name} />
             <div className="flex justify-center bg-pattern-left-blue-small bg-no-repeat">
                 <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                     <div>
@@ -64,7 +62,9 @@ export default function Finished() {
                         <div>
                             <Link
                                 href={{
-                                    pathname: linkFineStepTopMenu,
+                                    pathname: `/startingWizard/fineplanner/${encodeURIComponent(
+                                        steps[0]?.name
+                                    )}`,
                                     query: { plannerId: router.query.plannerId },
                                 }}
                             >

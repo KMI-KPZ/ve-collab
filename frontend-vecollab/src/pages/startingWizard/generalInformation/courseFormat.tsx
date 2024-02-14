@@ -28,16 +28,6 @@ interface PhysicalMobility {
     physicalMobilityTimeTo: string;
 }
 
-export function generateFineStepLinkTopMenu(fineSteps: IFineStep[]): string {
-    if (fineSteps.length > 0) {
-        fineSteps.sort((a: IFineStep, b: IFineStep) =>
-            a.timestamp_from > b.timestamp_from ? 1 : -1
-        );
-        return `/startingWizard/fineplanner/${encodeURIComponent(fineSteps[0].name)}`;
-    }
-    return '/startingWizard/finePlanner';
-}
-
 export default function Realization() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
@@ -45,9 +35,7 @@ export default function Realization() {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
-    const [linkFineStepTopMenu, setLinkFineStepTopMenu] = useState<string>(
-        '/startingWizard/finePlanner'
-    );
+    const [steps, setSteps] = useState<IFineStep[]>([]);
     const { validateAndRoute } = useValidation();
 
     // check for session errors and trigger the login flow if necessary
@@ -93,7 +81,7 @@ export default function Realization() {
                         setValue('courseFormat', data.plan.realization);
                     }
 
-                    setLinkFineStepTopMenu(generateFineStepLinkTopMenu(data.plan.steps));
+                    setSteps(data.plan.steps);
 
                     if (data.plan.progress.length !== 0) {
                         setSideMenuStepsProgress(data.plan.progress);
@@ -139,7 +127,7 @@ export default function Realization() {
 
     return (
         <>
-            <HeadProgressBarSection stage={0} linkFineStep={linkFineStepTopMenu} />
+            <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
             <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
                 {loading ? (
                     <LoadingAnimation />

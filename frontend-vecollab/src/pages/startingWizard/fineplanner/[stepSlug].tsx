@@ -220,7 +220,8 @@ export default function FinePlanner() {
     const getNextFineStepUrl = (): string => {
         const sideMenuStepsDataCopy: SideMenuStep[] = [...sideMenuStepsData];
         const currentSideMenuStepIndex: number = sideMenuStepsDataCopy.findIndex(
-            (item: SideMenuStep): boolean => item.text === currentFineStep.name
+            // courseFormat generate Finestep methode rausnehmen
+            (item: SideMenuStep): boolean => item.text === currentFineStep.name // with id (encode einfach)
         ); // -1 if not found
         if (
             currentSideMenuStepIndex < sideMenuStepsDataCopy.length - 1 &&
@@ -246,10 +247,7 @@ export default function FinePlanner() {
 
     return (
         <>
-            <HeadProgressBarSection
-                stage={2}
-                linkFineStep={`/startingWizard/fineplanner/${encodeURIComponent(steps[0]?.name)}`}
-            />
+            <HeadProgressBarSection stage={2} linkFineStep={steps[0]?.name} />
             <div className="flex justify-center bg-pattern-left-blue-small bg-no-repeat">
                 {loading ? (
                     <LoadingAnimation />

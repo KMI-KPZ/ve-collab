@@ -22,7 +22,7 @@ export default function HeadProgressBarSection({ stage, linkFineStep }: HeadProg
     const router = useRouter();
 
     if (linkFineStep === '' || linkFineStep === undefined) {
-        linkFineStep = '/startingWizard/finePlanner';
+        linkFineStep = '/startingWizard/fineplanner';
     }
 
     const headMenuProgressSteps: HeadMenuProgressStep[] = [
@@ -38,7 +38,7 @@ export default function HeadProgressBarSection({ stage, linkFineStep }: HeadProg
         },
         {
             description: 'Feinplanner',
-            link: linkFineStep,
+            link: `/startingWizard/fineplanner/${encodeURIComponent(linkFineStep)}`,
             image: imageFinePlanner,
         },
         {
