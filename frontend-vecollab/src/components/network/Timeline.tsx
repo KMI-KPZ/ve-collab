@@ -1,4 +1,4 @@
-import { fetchPOST, fetchPOSTAsFormdata, useGetTimeline } from "@/lib/backend";
+import { fetchPOST, useGetTimeline } from "@/lib/backend";
 import { useSession } from "next-auth/react";
 import LoadingAnimation from "../LoadingAnimation";
 import TimelinePost from "./TimelinePost";
