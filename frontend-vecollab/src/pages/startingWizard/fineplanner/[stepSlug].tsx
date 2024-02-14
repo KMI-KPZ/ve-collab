@@ -223,8 +223,8 @@ export default function FinePlanner() {
             (item: SideMenuStep): boolean => item.text === currentFineStep.name
         ); // -1 if not found
         if (
-            currentSideMenuStepIndex < sideMenuStepsDataCopy.length - 1 ||
-            currentSideMenuStepIndex !== -1
+            currentSideMenuStepIndex < sideMenuStepsDataCopy.length - 1 &&
+            currentSideMenuStepIndex >= 0
         ) {
             return sideMenuStepsDataCopy[currentSideMenuStepIndex + 1].link;
         } else {
