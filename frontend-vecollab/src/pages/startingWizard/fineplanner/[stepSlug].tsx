@@ -11,6 +11,7 @@ import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarS
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
+    ISideProgressBarStateSteps,
     ProgressState,
     SideMenuStep,
 } from '@/interfaces/startingWizard/sideProgressBar';
@@ -163,7 +164,6 @@ export default function FinePlanner() {
     }, [session, status, router, stepSlug, methods]);
 
     const onSubmit: SubmitHandler<IFineStepFrontend> = async (data: IFineStepFrontend) => {
-        const stepsWithoutCurrent = steps.filter((item: IFineStep) => item.name !== stepSlug);
         const currentStepTransformBackTools: ITask[] = data.tasks.map((task: ITaskFrontend) => {
             return {
                 ...task,
@@ -171,18 +171,28 @@ export default function FinePlanner() {
             };
         });
 
-        const stepCurrent: IFineStep = {
-            ...data,
-            workload: data.workload,
-            social_form: data.social_form,
-            learning_env: data.learning_env,
-            ve_approach: data.ve_approach,
-            tasks: currentStepTransformBackTools,
-        };
-        const stepSlugDecoded = decodeURI(stepSlug as string);
-        const stepsWithoutCurrentProgressState = sideMenuStepsProgress.steps.filter(
-            (step) => step[stepSlugDecoded] == undefined
+        const updateStepsData = steps.map((step) =>
+            step.name === stepSlug
+                ? {
+                      ...data,
+                      workload: data.workload,
+                      social_form: data.social_form,
+                      learning_env: data.learning_env,
+                      ve_approach: data.ve_approach,
+                      tasks: currentStepTransformBackTools,
+                  }
+                : step
         );
+
+        const stepSlugDecoded = decodeURI(stepSlug as string);
+
+        const updateStepsProgress = sideMenuStepsProgress.steps.map(
+            (step: ISideProgressBarStateSteps) =>
+                step[stepSlugDecoded] !== undefined
+                    ? { [stepSlugDecoded]: ProgressState.completed }
+                    : step
+        );
+
         await fetchPOST(
             '/planner/update_fields',
             {
@@ -190,17 +200,14 @@ export default function FinePlanner() {
                     {
                         plan_id: router.query.plannerId,
                         field_name: 'steps',
-                        value: [stepCurrent, ...stepsWithoutCurrent],
+                        value: [...updateStepsData],
                     },
                     {
                         plan_id: router.query.plannerId,
                         field_name: 'progress',
                         value: {
                             ...sideMenuStepsProgress,
-                            steps: [
-                                ...stepsWithoutCurrentProgressState,
-                                { [stepSlugDecoded]: ProgressState.completed },
-                            ],
+                            steps: [...updateStepsProgress],
                         },
                     },
                 ],
