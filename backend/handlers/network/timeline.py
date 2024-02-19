@@ -151,6 +151,10 @@ class SpaceTimelineHandler(BaseTimelineHandler):
     Timeline of a certain space
     """
 
+    def options(self, slug):
+        self.set_status(204)
+        self.finish()
+
     @auth_needed
     def get(self, space_name):
         """
