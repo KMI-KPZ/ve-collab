@@ -1235,13 +1235,33 @@ class PostHandlerTest(BaseApiTestCase):
             body=request.to_string(),
         )
 
-        db_state = list(self.db.posts.find(projection={"_id": False}))
+        db_state = list(self.db.posts.find())
 
         # expect exactly this one post in the db
         self.assertEqual(len(db_state), 1)
 
         # since we asserted len == 1, we can safely use the first (and only) element
         db_state = db_state[0]
+
+        # check if the response contains the inserted post and the db state is the same
+        self.assertIn("inserted_post", response)
+        self.assertEqual(ObjectId(response["inserted_post"]["_id"]), db_state["_id"])
+        self.assertEqual(response["inserted_post"]["text"], db_state["text"])
+        self.assertEqual(response["inserted_post"]["tags"], db_state["tags"])
+        self.assertEqual(response["inserted_post"]["author"], db_state["author"])
+        # for some odd reason, the ms in the timestamps jitter
+        self.assertAlmostEqual(
+            datetime.fromisoformat(response["inserted_post"]["creation_date"]),
+            db_state["creation_date"],
+            delta=timedelta(seconds=1),
+        )
+        self.assertEqual(response["inserted_post"]["space"], db_state["space"])
+        self.assertEqual(response["inserted_post"]["pinned"], db_state["pinned"])
+        self.assertEqual(
+            response["inserted_post"]["wordpress_post_id"],
+            db_state["wordpress_post_id"],
+        )
+        self.assertEqual(response["inserted_post"]["files"], db_state["files"])
 
         # expect content
         expected_keys = [
@@ -6904,16 +6924,37 @@ class TimelineHandlerTest(BaseApiTestCase):
         expect: only 2 posts (the one's in spaces the be returned)
         """
 
+        # add one more pinned space post out of time frame
+        self.db.posts.insert_one(
+            {
+                "_id": ObjectId(),
+                "author": CURRENT_ADMIN.username,
+                "creation_date": datetime.utcnow() + timedelta(days=1),
+                "text": "pinned_space_post_admin",
+                "space": self.test_space,
+                "pinned": True,
+                "wordpress_post_id": None,
+                "tags": [],
+                "files": [],
+                "comments": [],
+                "likers": [],
+            }
+        )
+
         response = self.base_checks(
             "GET", "/timeline/space/{}".format(self.test_space), True, 200
         )
         self.assertIn("posts", response)
+        self.assertIn("pinned_posts", response)
 
         # expect only the posts in spaces to be in the response
+        # as well as the pinned post
         self.assertEqual(len(response["posts"]), 2)
+        self.assertEqual(len(response["pinned_posts"]), 1)
 
         # expect the author to be enhanced with the correct profile picture
         self.assert_author_enhanced(response["posts"])
+        self.assert_author_enhanced(response["pinned_posts"])
 
     def test_get_space_timeline_error_user_not_member(self):
         """

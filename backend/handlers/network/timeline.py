@@ -151,34 +151,51 @@ class SpaceTimelineHandler(BaseTimelineHandler):
     Timeline of a certain space
     """
 
+    def options(self, slug):
+        self.set_status(204)
+        self.finish()
+
     @auth_needed
     def get(self, space_name):
         """
         GET /timeline/space/[name]
-            includes posts into that space that are either within the specified time frame
-            or pinned
-        query params:
-            "from" : ISO timestamp string (fetch posts not older than this), default: now-24h
-            "to" : ISO timestamp string (fetch posts younger than this), default: now
-        return:
-            200 OK,
-            {"posts": [post1, post2,...]}
+            Retrieve the timeline of a certain space (includes pinned posts).
 
-             401 Unauthorized,
-             {"success": False,
-              "reason": "no_logged_in_user"}
+            The timeline will always include `limit` number of posts, that are older than the
+            `time_to` timestamp. So, e.g. to achieve endless scrolling and retrieve the next `limit`
+            posts as kind of a pagination approach, use the oldest timestamp of your current
+            result set as the new starting point.
 
+            If there are not enough posts, the timeline will include as many
+            posts as possible. In turn, if there are less then `limit` posts returned,
+            this timeline does not contain any more posts, so further requests with an even
+            older timestamp will not yield any more results.
 
-            403 Forbidden,
-            {"success": False,
-             "reason": "insufficient_permission"}
+            query params:
+                "to" : ISO timestamp string (fetch posts younger than this), default: now
+                "limit": fetch the last n posts, default: 10
 
-            409 Conflict,
-            {"success": False,
-             "reason": "user_not_member_of_space"}
+            return:
+                200 OK,
+                {"success": True,
+                 "posts": [post1, post2,...],
+                 "pinned_posts": [post1, post2,...]}
+
+                401 Unauthorized,
+                {"success": False,
+                "reason": "no_logged_in_user"}
+
+                403 Forbidden,
+                {"success": False,
+                "reason": "insufficient_permission"}
+
+                409 Conflict,
+                {"success": False,
+                "reason": "user_not_member_of_space"}
         """
 
-        time_from, time_to = self.parse_timeframe_args()
+        _, time_to = self.parse_timeframe_args()
+        limit = int(self.get_argument("limit", "10"))
 
         # reject if user is not member of the space
         with util.get_mongodb() as db:
@@ -206,13 +223,20 @@ class SpaceTimelineHandler(BaseTimelineHandler):
 
             # query space timeline
             post_manager = Posts(db)
-            result = post_manager.get_space_timeline(space_name, time_from, time_to)
+            timeline_posts, pinned_posts = post_manager.get_space_timeline(
+                space_name, time_to, limit
+            )
 
         # postprocessing
-        posts = self.add_profile_pic_to_author(result)
+        timeline_posts = self.add_profile_pic_to_author(timeline_posts)
+        pinned_posts = self.add_profile_pic_to_author(pinned_posts)
 
         self.set_status(200)
-        self.write(self.json_serialize_response({"success": True, "posts": posts}))
+        self.write(
+            self.json_serialize_response(
+                {"success": True, "posts": timeline_posts, "pinned_posts": pinned_posts}
+            )
+        )
 
 
 class UserTimelineHandler(BaseTimelineHandler):
@@ -220,33 +244,52 @@ class UserTimelineHandler(BaseTimelineHandler):
     Timeline of a user (e.g. for his profile)
     """
 
+    def options(self, slug):
+        self.set_status(204)
+        self.finish()
+
     @auth_needed
     def get(self, author):
         """
         GET /timeline/user/[username]
-        query params:
-            "from" : ISO timestamp string (fetch posts not older than this), default: now-24h
-            "to" : ISO timestamp string (fetch posts younger than this), default: now
-        return:
-            200 OK,
-            {"posts": [post1, post2,...]}
+            Retrieve the timeline of a certain user (for their profile).
 
-            401 Unauthorized
-            {"status": 401,
-             "reason": "no_logged_in_user"}
+            The timeline will always include `limit` number of posts, that are older than the
+            `time_to` timestamp. So, e.g. to achieve endless scrolling and retrieve the next `limit`
+            posts as kind of a pagination approach, use the oldest timestamp of your current
+            result set as the new starting point.
+
+            If there are not enough posts, the timeline will include as many
+            posts as possible. In turn, if there are less then `limit` posts returned,
+            this timeline does not contain any more posts, so further requests with an even
+            older timestamp will not yield any more results.
+
+            query params:
+                "to" : ISO timestamp string (fetch posts younger than this), default: now
+                "limit": fetch the last n posts, default: 10
+
+            return:
+                200 OK,
+                {"posts": [post1, post2,...]}
+
+                401 Unauthorized
+                {"status": 401,
+                "reason": "no_logged_in_user"}
         """
 
-        time_from, time_to = self.parse_timeframe_args()
+        _, time_to = self.parse_timeframe_args()
+        limit = int(self.get_argument("limit", "10"))
 
         # query user timeline
         with util.get_mongodb() as db:
             post_manager = Posts(db)
-            result = post_manager.get_user_timeline(author, time_from, time_to)
+            result = post_manager.get_user_timeline(author, time_to, limit)
 
         posts = self.add_profile_pic_to_author(result)
 
         self.set_status(200)
         self.write(self.json_serialize_response({"success": True, "posts": posts}))
+
 
 class PersonalTimelineHandler(BaseTimelineHandler):
     """
@@ -258,14 +301,14 @@ class PersonalTimelineHandler(BaseTimelineHandler):
     def get(self):
         """
         GET /timeline/you
-            The timeline will always include `limit` number of posts, that are older than the 
-            `time_to` timestamp. So, e.g. to achieve endless scrolling and retrieve the next `limit` 
-            posts as kind of a pagination approach, use the oldest timestamp of your current 
+            The timeline will always include `limit` number of posts, that are older than the
+            `time_to` timestamp. So, e.g. to achieve endless scrolling and retrieve the next `limit`
+            posts as kind of a pagination approach, use the oldest timestamp of your current
             result set as the new starting point.
-            
+
             If there are not enough posts, the timeline will include as many
-            posts as possible. In turn, if there are less then `limit` posts returned, 
-            this timeline does not contain any more posts, so further requests with an even 
+            posts as possible. In turn, if there are less then `limit` posts returned,
+            this timeline does not contain any more posts, so further requests with an even
             older timestamp will not yield any more results.
 
             query params:

@@ -523,7 +523,9 @@ class SpaceACLResourceTest(BaseResourceTestCase):
         """
 
         acl_manager = ACL(self.db)
-        acl_manager.space_acl.insert_default_discussion(CURRENT_USER.username, self.space_name)
+        acl_manager.space_acl.insert_default_discussion(
+            CURRENT_USER.username, self.space_name
+        )
 
         # check if default rule was inserted
         acl_entry = self.db.space_acl.find_one(
@@ -898,7 +900,9 @@ class SpaceACLResourceTest(BaseResourceTestCase):
         """
 
         acl_manager = ACL(self.db)
-        acl_manager.space_acl.delete(self.default_acl_entry["username"], self.space_name)
+        acl_manager.space_acl.delete(
+            self.default_acl_entry["username"], self.space_name
+        )
 
         # check if entry was deleted
         acl_entry = self.db.space_acl.find_one(
@@ -1185,12 +1189,11 @@ class PostResourceTest(BaseResourceTestCase):
         }
 
         post_manager = Posts(self.db)
-        post_manager.insert_post(new_post)
+        post_id = post_manager.insert_post(new_post)
 
         # check if post was inserted
-        post = self.db.posts.find_one({"text": "new_test"})
+        post = self.db.posts.find_one({"_id": post_id})
         self.assertIsNotNone(post)
-        self.assertIsInstance(post["_id"], ObjectId)
         self.assertEqual(post["author"], new_post["author"])
         self.assertEqual(post["creation_date"], new_post["creation_date"])
         self.assertEqual(post["text"], new_post["text"])
@@ -2036,12 +2039,32 @@ class PostResourceTest(BaseResourceTestCase):
                 post["space"] = "test_space"
             self.db.posts.insert_one(post)
 
+        # add one more space post outside of the time frame (lies in the future to check)
+        # that is pinned
+        post = {
+            "author": CURRENT_ADMIN.username,
+            "creation_date": datetime.now() + timedelta(days=1),
+            "text": "test",
+            "space": "test_space",
+            "pinned": True,
+            "isRepost": False,
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "files": [],
+            "comments": [],
+            "likers": [],
+        }
+        self.db.posts.insert_one(post)
+
         post_manager = Posts(self.db)
+
         # this should include only the 3 posts in the space
-        posts = post_manager.get_space_timeline(
-            "test_space", datetime.now() - timedelta(days=1), datetime.now()
+        # and the pinned post should be in the pinned_posts list
+        timeline_posts, pinned_posts = post_manager.get_space_timeline(
+            "test_space", datetime.now(), 10
         )
-        self.assertEqual(len(posts), 3)
+        self.assertEqual(len(timeline_posts), 3)
+        self.assertEqual(len(pinned_posts), 1)
 
     def test_get_user_timeline(self):
         """
@@ -2070,7 +2093,7 @@ class PostResourceTest(BaseResourceTestCase):
         post_manager = Posts(self.db)
         # this should include only the 3 posts by the user
         posts = post_manager.get_user_timeline(
-            CURRENT_USER.username, datetime.now() - timedelta(days=1), datetime.now()
+            CURRENT_USER.username, datetime.now(), 10
         )
         self.assertEqual(len(posts), 3)
 

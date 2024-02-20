@@ -36,7 +36,7 @@ class PostHandler(BaseHandler):
         """
         POST /posts
         IF id is in body, update post
-        ELSE add new post
+        ELSE add new post (and return the inserted post)
 
         http body (as form data, json here is only for readability):
             {
@@ -49,7 +49,8 @@ class PostHandler(BaseHandler):
         return:
             200 OK,
             {"status": 200,
-             "success": True}
+             "success": True,
+             "inserted_post": {post}}
 
             400 Bad Request,
             {"status": 400,
@@ -170,10 +171,14 @@ class PostHandler(BaseHandler):
                     "likers": [],
                 }
 
-                post_manager.insert_post(post)
+                post_id = post_manager.insert_post(post)
+
+                post["_id"] = post_id
 
                 self.set_status(200)
-                self.write({"status": 200, "success": True})
+                self.serialize_and_write(
+                    {"status": 200, "success": True, "inserted_post": post}
+                )
 
         # _id field present in request, therefore update the existing post
         else:
@@ -987,7 +992,11 @@ class RepostHandler(BaseHandler):
                 try:
                     repost = post_manager.get_post(
                         http_body["_id"],
-                        projection={"isRepost": True, "repostAuthor": True, "space": True},
+                        projection={
+                            "isRepost": True,
+                            "repostAuthor": True,
+                            "space": True,
+                        },
                     )
                 except PostNotExistingException:
                     self.set_status(409)
@@ -1169,7 +1178,7 @@ class PinHandler(BaseHandler):
         if http_body["pin_type"] == "post":
             with util.get_mongodb() as db:
                 post_manager = Posts(db)
-                
+
                 try:
                     post = post_manager.get_post(
                         http_body["id"], projection={"space": True}
@@ -1234,7 +1243,7 @@ class PinHandler(BaseHandler):
         elif http_body["pin_type"] == "comment":
             with util.get_mongodb() as db:
                 post_manager = Posts(db)
-                
+
                 try:
                     post = post_manager.get_post_by_comment_id(
                         http_body["id"], projection={"space": True, "author": True}
