@@ -33,6 +33,7 @@ export default function FormalConditions() {
     );
     const { validateAndRoute } = useValidation();
     const [steps, setSteps] = useState<IFineStep[]>([]);
+    const [partners, setPartners] = useState<string[]>([]);
 
     const {
         register,
@@ -69,16 +70,24 @@ export default function FormalConditions() {
                         setSideMenuStepsProgress(data.plan.progress);
                     }
                     setSteps(data.plan.steps);
+                    if (session.user.name && data.plan.partners) {
+                        setPartners([session.user.name, ...data.plan.partners]);
+                    }
                 }
             );
         }
     }, [session, status, router]);
 
-    const onSubmit: SubmitHandler<FormValues> = async () => {
+    const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         await fetchPOST(
             '/planner/update_fields',
             {
                 update: [
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'name',
+                        value: data,
+                    },
                     {
                         plan_id: router.query.plannerId,
                         field_name: 'progress',
@@ -93,6 +102,56 @@ export default function FormalConditions() {
         );
     };
 
+    function renderCheckBoxes(partner: string): JSX.Element {
+        return (
+            <div className="w-4/5 space-y-3 py-8">
+                <div className="flex justify-center items-center font-bold text-lg mb-4">
+                    {partner}
+                </div>
+                <div className="flex justify-start items-center">
+                    <input
+                        type="checkbox"
+                        {...register(`place`)}
+                        className="border border-gray-500 rounded-lg w-4 h-4 p-3 mr-6"
+                    />
+                    <p> Ort / Raum</p>
+                </div>
+                <div className="flex justify-start items-center">
+                    <input
+                        type="checkbox"
+                        {...register(`technicalEquipment`)}
+                        className="border border-gray-500 rounded-lg w-4 h-4 p-3 mr-6"
+                    />
+                    <p>Technik</p>
+                </div>
+                <div className="flex justify-start items-center">
+                    <input
+                        type="checkbox"
+                        {...register(`institutionalRequirements`)}
+                        className="border border-gray-500 rounded-lg w-4 h-4 p-3 mr-6"
+                    />
+                    <p>Institutionelle Vorgaben</p>
+                </div>
+                <div className="flex justify-start items-center">
+                    <input
+                        type="checkbox"
+                        {...register(`examinationRegulations`)}
+                        className="border border-gray-500 rounded-lg w-4 h-4 p-3 mr-6"
+                    />
+                    <p>Prüfungsordnung (Prüfungsleistung, Anrechnung etc.)</p>
+                </div>
+                <div className="flex justify-start items-center">
+                    <input
+                        type="checkbox"
+                        {...register(`dataProtection`)}
+                        className="border border-gray-500 rounded-lg w-4 h-4 p-3 mr-6"
+                    />
+                    <p>Datenschutz</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <>
             <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
@@ -105,89 +164,16 @@ export default function FormalConditions() {
                             <div className={'text-center font-bold text-4xl mb-2'}>
                                 Formale Rahmenbedingungen
                             </div>
-                            <div className="text-center mb-20">
-                                Bevor es mit der inhaltlichen und didaktischen Planung losgeht: Sind
-                                die folgenden formalen Rahmenbedingungen bei allen Beteiligten
+                            <div className={'text-center mb-4'}>optional</div>
+                            <div className={'text-center'}>
+                                Bevor es mit der inhaltlichen und didaktischen Planung losgeht:
+                            </div>
+                            <div className="text-center mb-10">
+                                Sind die folgenden formalen Rahmenbedingungen bei allen Beteiligten
                                 erfüllt?
                             </div>
-                            <div className={'text-center mb-20'}>optional</div>
-                            <div className="mx-7 mt-7 flex justify-center">
-                                <div className="w-1/2">
-                                    <div className="flex my-3">
-                                        <div className="w-1/2">
-                                            <p className="px-2 py-2">Zeit</p>
-                                        </div>
-                                        <div className="w-1/2 flex justify-center items-center">
-                                            <input
-                                                type="checkbox"
-                                                {...register(`time`)}
-                                                className="border border-gray-500 rounded-lg w-4 h-4 p-2"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="flex my-3">
-                                        <div className="w-1/2">
-                                            <p className="px-2 py-2">Ort / Raum</p>
-                                        </div>
-                                        <div className="w-1/2 flex justify-center items-center">
-                                            <input
-                                                type="checkbox"
-                                                {...register(`place`)}
-                                                className="border border-gray-500 rounded-lg w-4 h-4 p-2"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="flex my-3">
-                                        <div className="w-1/2">
-                                            <p className="px-2 py-2">Technik</p>
-                                        </div>
-                                        <div className="w-1/2 flex justify-center items-center">
-                                            <input
-                                                type="checkbox"
-                                                {...register('technicalEquipment')}
-                                                className="border border-gray-500 rounded-lg w-4 h-4 p-2"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="flex my-3">
-                                        <div className="w-1/2">
-                                            <p className="px-2 py-2">Institutionelle Vorgaben</p>
-                                        </div>
-                                        <div className="w-1/2 flex justify-center items-center">
-                                            <input
-                                                type="checkbox"
-                                                {...register(`institutionalRequirements`)}
-                                                className="border border-gray-500 rounded-lg w-4 h-4 p-2"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="flex my-3">
-                                        <div className="w-1/2">
-                                            <p className="px-2 py-2">
-                                                Prüfungsordnung (Prüfungsleistung, Anrechnung etc.)
-                                            </p>
-                                        </div>
-                                        <div className="w-1/2 flex justify-center items-center">
-                                            <input
-                                                type="checkbox"
-                                                {...register(`examinationRegulations`)}
-                                                className="border border-gray-500 rounded-lg w-4 h-4 p-2"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="flex my-3">
-                                        <div className="w-1/2">
-                                            <p className="px-2 py-2">Datenschutz</p>
-                                        </div>
-                                        <div className="w-1/2 flex justify-center items-center">
-                                            <input
-                                                type="checkbox"
-                                                {...register(`dataProtection`)}
-                                                className="border border-gray-500 rounded-lg w-4 h-4 p-2"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
+                            <div className="grid grid-cols-2 gap-1 mt-7  mb-10">
+                                {partners.map((partner: string) => renderCheckBoxes(partner))}
                             </div>
                         </div>
                         <div className="flex justify-around w-full">
