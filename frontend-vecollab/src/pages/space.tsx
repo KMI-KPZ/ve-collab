@@ -3,15 +3,18 @@ import AuthenticatedImage from '@/components/AuthenticatedImage';
 import BoxHeadline from '@/components/BoxHeadline';
 import WhiteBox from '@/components/Layout/WhiteBox';
 import Container from '@/components/Layout/container';
+import LoadingAnimation from '@/components/LoadingAnimation';
+import { SpaceAccessDenied } from '@/components/network/SpaceAccessDenied';
 import GroupBanner from '@/components/network/GroupBanner';
 import GroupHeader from '@/components/network/GroupHeader';
 import Dialog from '@/components/profile/Dialog';
 import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
-import { fetchPOST, useGetSpace } from '@/lib/backend';
+import { fetchPOST, useGetMySpaceACLEntry, useGetSpace } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
-import { RxCross2, RxFile, RxPlus } from 'react-icons/rx';
+import { ChangeEvent, useEffect, useState } from 'react';
+import { RxFile, RxPlus } from 'react-icons/rx';
+import Timeline from '@/components/network/Timeline';
 
 Space.auth = true;
 export default function Space() {
@@ -33,8 +36,13 @@ export default function Space() {
         error,
         mutate,
     } = useGetSpace(session!.accessToken, router.query.name as string);
-    console.log(space);
-    console.log(memberSnippets);
+    console.log({space, memberSnippets});
+
+    const { data: spaceACLEntry, isLoading: spaceACLEntryLoading } = useGetMySpaceACLEntry(
+        session!.accessToken,
+        router.query.name as string
+    );
+    console.log(spaceACLEntry);
 
     const handleCloseUploadDialog = () => {
         setIsUploadDialogOpen(false);
@@ -94,41 +102,64 @@ export default function Space() {
                 );
             }
         );
-    }, [space, isLoading]);
+    }, [space, isLoading, session]);
+
+    console.log(space);
 
     function files() {
         return (
             <>
                 <WhiteBox className="relative">
-                    <BoxHeadline title={'Dateiablage'} />
-                    <div className="absolute top-0 right-0 mx-2 p-4">
-                        <button
-                            className="bg-ve-collab-orange text-white rounded-lg p-1 flex justify-center items-center"
-                            onClick={() => {
-                                setIsUploadDialogOpen(true);
-                            }}
-                        >
-                            <RxPlus />
-                            <span className="mx-1">Hochladen</span>
-                        </button>
-                    </div>
-                    <hr className="h-px mt-2 mb-6 bg-gray-200 border-0" />
-                    <div className="mb-8 flex flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
-                        {space.files.map((file, index) => (
-                            <AuthenticatedFile
-                                key={index}
-                                url={`/uploads/${file.file_id}`}
-                                filename={file.file_name}
-                            >
-                                <div className="flex justify-center">
-                                    <RxFile size={80} /> {/* TODO preview for certain file types*/}
-                                </div>
-                                <div className="max-w-[150px] justify-center mx-2 px-1 my-1 font-bold text-slate-900 text-lg text-center truncate">
-                                    {file.file_name}
-                                </div>
-                            </AuthenticatedFile>
-                        ))}
-                    </div>
+                    {spaceACLEntryLoading ? (
+                        <LoadingAnimation />
+                    ) : (
+                        <>
+                            <BoxHeadline title={'Dateiablage'} />
+                            <div className="absolute top-0 right-0 mx-2 p-4">
+                                <button
+                                    className={
+                                        'bg-ve-collab-orange text-white rounded-lg p-1 flex justify-center items-center ' +
+                                        (!spaceACLEntry?.write_files
+                                            ? 'opacity-50 cursor-not-allowed'
+                                            : '')
+                                    }
+                                    disabled={!spaceACLEntry?.write_files}
+                                    onClick={() => {
+                                        setIsUploadDialogOpen(true);
+                                    }}
+                                >
+                                    <RxPlus />
+                                    <span className="mx-1">Hochladen</span>
+                                </button>
+                            </div>
+                            <hr className="h-px mt-2 mb-6 bg-gray-200 border-0" />
+                            <div className="mb-8 flex flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
+                                {spaceACLEntry.read_files ? (
+                                    <>
+                                        {space.files.map((file, index) => (
+                                            <AuthenticatedFile
+                                                key={index}
+                                                url={`/uploads/${file.file_id}`}
+                                                filename={file.file_name}
+                                            >
+                                                <div className="flex justify-center">
+                                                    <RxFile size={80} />{' '}
+                                                    {/* TODO preview for certain file types*/}
+                                                </div>
+                                                <div className="max-w-[150px] justify-center mx-2 px-1 my-1 font-bold text-slate-900 text-lg text-center truncate">
+                                                    {file.file_name}
+                                                </div>
+                                            </AuthenticatedFile>
+                                        ))}
+                                    </>
+                                ) : (
+                                    <div className="mx-4 text-gray-600">
+                                        keine Berechtigung, um die Dateiablage zu sehen
+                                    </div>
+                                )}
+                            </div>
+                        </>
+                    )}
                 </WhiteBox>
                 <Dialog
                     isOpen={isUploadDialogOpen}
@@ -226,80 +257,98 @@ export default function Space() {
         );
     }
 
-    function timeline() {
-        return <div>Timeline</div>;
+    // can only be called after space hook is loaded
+    function userIsMember() {
+        return space.members.includes(session?.user?.preferred_username as string);
+    }
+
+    // can only be called after space hook is loaded
+    function userIsAdmin() {
+        return space.admins.includes(session?.user?.preferred_username as string);
     }
 
     return (
         <Container>
-            <GroupBanner />
-            <div className={'mx-20 mb-2 px-5 relative -mt-16'}>
-                <GroupHeader />
-            </div>
-            <Container>
-                <div className={'mx-20 flex'}>
-                    <div className={'w-3/4  mr-4'}>
-                        {(() => {
-                            switch (renderPicker) {
-                                case 'timeline':
-                                    return timeline();
-                                case 'members':
-                                    return members();
-                                case 'files':
-                                    return files();
-
-                                default:
-                                    return <div></div>;
-                            }
-                        })()}
-                    </div>
-                    <div className={'w-1/4  ml-4'}>
-                        <button
-                            className={
-                                'w-full h-12 mb-2 border py-3 px-6 rounded-lg shadow-xl ' +
-                                (renderPicker === 'timeline'
-                                    ? 'bg-ve-collab-blue text-white'
-                                    : 'bg-white text-gray-500 hover:border-ve-collab-blue hover:text-ve-collab-blue')
-                            }
-                            onClick={() => setRenderPicker('timeline')}
-                        >
-                            <span>Dashboard</span>
-                        </button>
-                        <button
-                            className={
-                                'w-full h-12 mb-2 border py-3 px-6 rounded-lg shadow-xl ' +
-                                (renderPicker === 'members'
-                                    ? 'bg-ve-collab-blue text-white'
-                                    : 'bg-white text-gray-500 hover:border-ve-collab-blue hover:text-ve-collab-blue')
-                            }
-                            onClick={() => setRenderPicker('members')}
-                        >
-                            <span>Mitglieder</span>
-                        </button>
-                        <button
-                            className={
-                                'w-full h-12 mb-2 border py-3 px-6 rounded-lg shadow-xl ' +
-                                (renderPicker === 'files'
-                                    ? 'bg-ve-collab-blue text-white'
-                                    : 'bg-white text-gray-500 hover:border-ve-collab-blue hover:text-ve-collab-blue')
-                            }
-                            onClick={() => setRenderPicker('files')}
-                        >
-                            <span>Dateiablage</span>
-                        </button>
-                        <WhiteBox>
-                            <BoxHeadline title={'Beschreibung'} />
-                            <div className="min-h-[20vh] mx-2 my-4 px-1">
-                                <div className={'text-gray-500'}>
-                                    {space?.space_description
-                                        ? space.space_description
-                                        : 'Keine Beschreibung vorhanden.'}
-                                </div>
+            {isLoading ? (
+                <LoadingAnimation />
+            ) : (
+                <>
+                    {!(userIsMember() || userIsAdmin()) ? (
+                        <SpaceAccessDenied />
+                    ) : (
+                        <>
+                            <GroupBanner userIsAdmin={userIsAdmin} />
+                            <div className={'mx-20 mb-2 px-5 relative -mt-16'}>
+                                <GroupHeader userIsAdmin={userIsAdmin} />
                             </div>
-                        </WhiteBox>
-                    </div>
-                </div>
-            </Container>
+                            <Container>
+                                <div className={'mx-20 flex'}>
+                                    <div className={'w-3/4  mr-4'}>
+                                        {(() => {
+                                            switch (renderPicker) {
+                                                case 'timeline':
+                                                    return <Timeline space={space.name} />;
+                                                case 'members':
+                                                    return members();
+                                                case 'files':
+                                                    return files();
+
+                                                default:
+                                                    return <div></div>;
+                                            }
+                                        })()}
+                                    </div>
+                                    <div className={'w-1/4  ml-4'}>
+                                        <button
+                                            className={
+                                                'w-full h-12 mb-2 border py-3 px-6 rounded-lg shadow-xl ' +
+                                                (renderPicker === 'timeline'
+                                                    ? 'bg-ve-collab-blue text-white'
+                                                    : 'bg-white text-gray-500 hover:border-ve-collab-blue hover:text-ve-collab-blue')
+                                            }
+                                            onClick={() => setRenderPicker('timeline')}
+                                        >
+                                            <span>Dashboard</span>
+                                        </button>
+                                        <button
+                                            className={
+                                                'w-full h-12 mb-2 border py-3 px-6 rounded-lg shadow-xl ' +
+                                                (renderPicker === 'members'
+                                                    ? 'bg-ve-collab-blue text-white'
+                                                    : 'bg-white text-gray-500 hover:border-ve-collab-blue hover:text-ve-collab-blue')
+                                            }
+                                            onClick={() => setRenderPicker('members')}
+                                        >
+                                            <span>Mitglieder</span>
+                                        </button>
+                                        <button
+                                            className={
+                                                'w-full h-12 mb-2 border py-3 px-6 rounded-lg shadow-xl ' +
+                                                (renderPicker === 'files'
+                                                    ? 'bg-ve-collab-blue text-white'
+                                                    : 'bg-white text-gray-500 hover:border-ve-collab-blue hover:text-ve-collab-blue')
+                                            }
+                                            onClick={() => setRenderPicker('files')}
+                                        >
+                                            <span>Dateiablage</span>
+                                        </button>
+                                        <WhiteBox>
+                                            <BoxHeadline title={'Beschreibung'} />
+                                            <div className="min-h-[20vh] mx-2 my-4 px-1">
+                                                <div className={'text-gray-500'}>
+                                                    {space?.space_description
+                                                        ? space.space_description
+                                                        : 'Keine Beschreibung vorhanden.'}
+                                                </div>
+                                            </div>
+                                        </WhiteBox>
+                                    </div>
+                                </div>
+                            </Container>
+                        </>
+                    )}
+                </>
+            )}
         </Container>
     );
 }

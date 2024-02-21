@@ -1,3 +1,5 @@
+from base64 import b64decode
+import json
 import logging
 from typing import Optional
 
@@ -96,7 +98,18 @@ class SpaceHandler(BaseHandler):
             returns:
                 200 OK
                 {"success": True,
-                 "pending_invites": ["space1", "space2", ...]}
+                 "pending_invites": [{...}, {...}, ...]}
+
+                401 Unauthorized
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
+        GET /spaceadministration/pending_requests
+            (get pending requests to join spaces for current user)
+            returns:
+                200 OK
+                {"success": True,
+                 "pending_requests": [{...}, {...}, ...]}
 
                 401 Unauthorized
                 {"success": False,
@@ -201,7 +214,7 @@ class SpaceHandler(BaseHandler):
         elif slug == "list_all":
             self.list_spaces()
             return
-        
+
         elif slug == "my":
             self.list_personal_spaces()
             return
@@ -219,6 +232,10 @@ class SpaceHandler(BaseHandler):
 
         elif slug == "pending_invites":
             self.get_invites_for_current_user()
+            return
+        
+        elif slug == "pending_requests":
+            self.get_requests_for_current_user()
             return
 
         elif slug == "join_requests":
@@ -350,9 +367,45 @@ class SpaceHandler(BaseHandler):
                  "reason": "space_doesnt_exist"}
 
         POST /spaceadministration/space_picture
+            LEGACY COMPATIBILITY ROUTE, use /spaceadministration/space_information instead
             (update space picture)
             query param:
                 "name" : space name of which space to update space picture, mandatory argument
+
+            returns:
+                200 OK,
+                {"success": True}
+
+                400 Bad Request
+                {"success": False,
+                 "reason": missing_key:name}
+
+                401 Unauthorized
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                {"success": False,
+                 "reason": "insufficient_permission"}
+
+                409 Conflict
+                {"success": False,
+                 "reason": "space_doesnt_exist"}
+
+        POST /spaceadministration/space_information
+            (update the space's description and/or picture,
+            requires space admin or global admin privileges)
+            query param:
+                "name" : space name of which space to update, mandatory argument
+
+            http body:
+                {
+                    "description": "<str>",
+                    "picture": {
+                        "payload": "<base64_encoded_image>",
+                        "type": "<image/jpeg|image/png|...>"
+                    }
+                }
 
             returns:
                 200 OK,
@@ -458,6 +511,40 @@ class SpaceHandler(BaseHandler):
                 {"success": False,
                  "reason": "user_is_not_invited_into_space"}
 
+        POST /spaceadministration/revoke_invite
+            (space admin or global admin revokes the sent invite to a user)
+            query param:
+                "name" space of which the invite should be declined
+                "user" username to revoke the invite from
+
+            returns:
+                200 OK,
+                {"success": True}
+
+                400 Bad Request
+                {"success": False,
+                 "reason": missing_key:name}
+
+                400 Bad Request
+                {"success": False,
+                 "reason": missing_key:user}
+
+                401 Unauthorized
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                {"success": False,
+                 "reason": "insufficient_permission"}
+
+                409 Conflict
+                {"success": False,
+                 "reason": "space_doesnt_exist"}
+
+                409 Conflict
+                {"success": False,
+                 "reason": "user_is_not_invited_into_space"}
+
         POST /spaceadministration/accept_request
             (space admin or global admin accept join request of a user)
             query param:
@@ -517,6 +604,31 @@ class SpaceHandler(BaseHandler):
                 403 Forbidden
                 {"success": False,
                  "reason": "insufficient_permission"}
+
+                409 Conflict
+                {"success": False,
+                 "reason": "space_doesnt_exist"}
+
+                409 Conflict
+                {"success": False,
+                 "reason": "user_didnt_request_to_join"}
+
+        POST /spaceadministration/revoke_request
+            (current user revokes his own join request to a space)
+            query param:
+                "name": space name of which the request will be rejected
+
+            returns:
+                200 OK,
+                {"success": True}
+
+                400 Bad Request
+                {"success": False,
+                 "reason": missing_key:name}
+
+                401 Unauthorized
+                {"success": False,
+                 "reason": "no_logged_in_user"}
 
                 409 Conflict
                 {"success": False,
@@ -682,8 +794,30 @@ class SpaceHandler(BaseHandler):
 
         elif slug == "space_picture":
             space_description = self.get_body_argument("space_description", None)
-            self.update_space_information(space_name, space_description)
+            self.update_space_information_legacy(space_name, space_description)
             return
+
+        elif slug == "space_information":
+            http_body = json.loads(self.request.body)
+            space_description = (
+                http_body["description"] if "description" in http_body else None
+            )
+
+            if "picture" in http_body:
+                space_pic_obj = {
+                    "body": b64decode(http_body["picture"]["payload"]),
+                    "content_type": http_body["picture"]["type"],
+                }
+                filename = "avatar_{}".format(space_name)
+                self.update_space_information(
+                    space_name,
+                    space_description,
+                    filename,
+                    space_pic_obj["body"],
+                    space_pic_obj["content_type"],
+                )
+            else:
+                self.update_space_information(space_name, space_description)
 
         elif slug == "invite":
             try:
@@ -702,6 +836,17 @@ class SpaceHandler(BaseHandler):
 
         elif slug == "decline_invite":
             self.decline_space_invite(space_name)
+            return
+
+        elif slug == "revoke_invite":
+            try:
+                username = self.get_argument("user")
+            except tornado.web.MissingArgumentError as e:
+                self.set_status(400)
+                self.write({"success": False, "reason": "missing_key:user"})
+                return
+
+            self.revoke_space_invite(space_name, username)
             return
 
         elif slug == "accept_request":
@@ -724,6 +869,10 @@ class SpaceHandler(BaseHandler):
                 return
 
             self.reject_join_space_request(space_name, username)
+            return
+        
+        elif slug == "revoke_request":
+            self.revoke_join_space_request(space_name)
             return
 
         elif slug == "toggle_visibility":
@@ -797,7 +946,7 @@ class SpaceHandler(BaseHandler):
                 409 Conflict
                 {"success": False,
                  "reason": "space_doesnt_exist"}
-                
+
                 409 Conflict
                 {"success": False,
                  "reason": "no_other_admins_left"}
@@ -1019,7 +1168,7 @@ class SpaceHandler(BaseHandler):
         self.set_status(200)
         self.write(self.json_serialize_response({"success": True, "spaces": spaces}))
         return
-    
+
     def list_personal_spaces(self) -> None:
         """
         list all spaces that the current user is a member of
@@ -1076,6 +1225,24 @@ class SpaceHandler(BaseHandler):
         self.write(
             self.json_serialize_response(
                 {"success": True, "pending_invites": pending_invites}
+            )
+        )
+
+    def get_requests_for_current_user(self) -> None:
+        """
+        get all pending requests to join spaces for the current user
+        """
+
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
+            pending_requests = space_manager.get_space_requests_of_user(
+                self.current_user.username
+            )
+
+        self.set_status(200)
+        self.write(
+            self.json_serialize_response(
+                {"success": True, "pending_requests": pending_requests}
             )
         )
 
@@ -1170,7 +1337,7 @@ class SpaceHandler(BaseHandler):
 
             # reject if user is not allowed to view files
             if not acl.space_acl.ask(
-                self.get_current_user_role(), space_name, "read_files"
+                self.current_user.username, space_name, "read_files"
             ):
                 self.set_status(403)
                 self.write({"success": False, "reason": "insufficient_permission"})
@@ -1238,11 +1405,11 @@ class SpaceHandler(BaseHandler):
                 self.write({"success": False, "reason": "space_name_already_exists"})
                 return
 
-            # also create default acl entry for all different roles
-            acl.space_acl.insert_admin(space_name)
-            for role in profile_manager.get_distinct_roles():
-                if role != "admin":
-                    acl.space_acl.insert_default(role, space_name)
+            # also create default acl entry for the space admin user
+            acl.space_acl.insert_admin(self.current_user.username, space_name)
+            # for role in profile_manager.get_distinct_roles():
+            #    if role != "admin":
+            #        acl.space_acl.insert_default(role, space_name)
 
         self.set_status(200)
         self.write({"success": True})
@@ -1274,9 +1441,7 @@ class SpaceHandler(BaseHandler):
             # or user doesnt have elevated permissions to join any space,
             # send join request instead of joining directly
             if not space_manager.is_space_directly_joinable(space_name):
-                if not acl.space_acl.ask(
-                    self.get_current_user_role(), space_name, "join_space"
-                ):
+                if not self.is_current_user_lionet_admin():
                     space_manager.join_space_request(
                         space_name, self.current_user.username
                     )
@@ -1287,6 +1452,10 @@ class SpaceHandler(BaseHandler):
 
             # user has permission to join spaces, directly add him as member
             space_manager.join_space(space_name, self.current_user.username)
+            if self.is_current_user_lionet_admin():
+                acl.space_acl.insert_admin(self.current_user.username, space_name)
+            else:
+                acl.space_acl.insert_default(self.current_user.username, space_name)
 
         self.set_status(200)
         self.write({"success": True, "join_type": "joined"})
@@ -1330,6 +1499,11 @@ class SpaceHandler(BaseHandler):
             # therefore is allowed to add space admin
             try:
                 space_manager.add_space_admin(space_name, username)
+
+                # also elevate the users permissions in the acl
+                acl = ACL(db)
+                acl.space_acl.insert_admin(username, space_name)
+
                 self.set_status(200)
                 self.write({"success": True})
             except AlreadyAdminError:
@@ -1339,9 +1513,56 @@ class SpaceHandler(BaseHandler):
                 return
 
     def update_space_information(
+        self,
+        space_name: str,
+        space_description: str = None,
+        space_pic_filename: str = None,
+        space_pic: bytes = None,
+        space_pic_content_type: str = None,
+    ):
+        """
+        update space information (description, picture)
+        requires space admin or global admin privileges
+        """
+
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
+            # check if user is either space or global admin
+            try:
+                if not (
+                    space_manager.check_user_is_space_admin(
+                        space_name, self.current_user.username
+                    )
+                    or self.is_current_user_lionet_admin()
+                ):
+                    self.set_status(403)
+                    self.write({"success": False, "reason": "insufficient_permission"})
+                    return
+            except SpaceDoesntExistError:
+                self.set_status(409)
+                self.write({"success": False, "reason": "space_doesnt_exist"})
+                return
+
+            if space_pic_filename and space_pic and space_pic_content_type:
+                space_manager.set_space_picture(
+                    space_name,
+                    space_pic_filename,
+                    space_pic,
+                    space_pic_content_type,
+                )
+
+            if space_description:
+                space_manager.set_space_description(space_name, space_description)
+
+            self.set_status(200)
+            self.write({"success": True})
+
+    def update_space_information_legacy(
         self, space_name: str, space_description: Optional[str]
     ) -> None:
         """
+        ONLY TO KEEP BACKWARDS COMPATIBILITY WITH OLD SYSTEM
+
         update space picture and space description,
         requires space admin or global admin privileges
         """
@@ -1365,6 +1586,7 @@ class SpaceHandler(BaseHandler):
                 return
 
             # save the new picture to disk and store the filename
+            # TODO transform to base64 in http body as in profile update request
             if "space_pic" in self.request.files:
                 space_pic_obj = self.request.files["space_pic"][0]
                 space_manager.set_space_picture(
@@ -1481,6 +1703,52 @@ class SpaceHandler(BaseHandler):
             self.set_status(200)
             self.write({"success": True})
 
+    def revoke_space_invite(self, space_name: str, username: str) -> None:
+        """
+        space admin or global admin revokes the invitation of a user
+        """
+
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
+            space = space_manager.get_space(
+                space_name,
+                projection={
+                    "_id": False,
+                    "invites": True,
+                    "admins": True,
+                    "members": True,
+                },
+            )
+
+            # abort if space doesnt exist
+            if not space:
+                self.set_status(409)
+                self.write({"success": False, "reason": "space_doesnt_exist"})
+                return
+
+            # abort if user wasn't even invited into space in first place
+            if username not in space["invites"]:
+                self.set_status(409)
+                self.write(
+                    {"success": False, "reason": "user_is_not_invited_into_space"}
+                )
+                return
+
+            # abort if user is neither space nor global admin
+            if not (
+                self.current_user.username in space["admins"]
+                or self.get_current_user_role() == "admin"
+            ):
+                self.set_status(403)
+                self.write({"success": False, "reason": "insufficient_permission"})
+                return
+
+            # revoke the invite, i.e. remove the user from the invites list
+            space_manager.revoke_space_invite(space_name, username)
+
+            self.set_status(200)
+            self.write({"success": True})
+
     def accept_join_space_request(self, space_name: str, username: str) -> None:
         """
         space admin or global admin accepts the request of a user to join the space
@@ -1553,6 +1821,37 @@ class SpaceHandler(BaseHandler):
 
             # decline request
             space_manager.reject_join_request(space_name, username)
+
+            self.set_status(200)
+            self.write({"success": True})
+
+    def revoke_join_space_request(self, space_name: str) -> None:
+        """
+        current user revokes his own request to join a space
+        """
+
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
+            space = space_manager.get_space(
+                space_name, projection={"_id": False, "requests": True}
+            )
+
+            # abort if space doesnt exist
+            if not space:
+                self.set_status(409)
+                self.write({"success": False, "reason": "space_doesnt_exist"})
+                return
+
+            # abort if user didn't request to join
+            if self.current_user.username not in space["requests"]:
+                self.set_status(409)
+                self.write(
+                    {"success": False, "reason": "user_didnt_request_to_join"}
+                )
+                return
+            
+            # revoke request
+            space_manager.revoke_join_request(space_name, self.current_user.username)
 
             self.set_status(200)
             self.write({"success": True})
@@ -1631,18 +1930,18 @@ class SpaceHandler(BaseHandler):
 
         with util.get_mongodb() as db:
             space_manager = Spaces(db)
-            profile_manager = Profiles(db)
             acl = ACL(db)
 
             space_name = space_manager.create_or_join_discussion_space(
                 wp_post, self.current_user.username
             )
 
-            for role in profile_manager.get_distinct_roles():
-                if role == "admin":
-                    acl.space_acl.insert_admin(space_name)
-                else:
-                    acl.space_acl.insert_default_discussion(role, space_name)
+            if self.is_current_user_lionet_admin():
+                acl.space_acl.insert_admin(self.current_user.username, space_name)
+            else:
+                acl.space_acl.insert_default_discussion(
+                    self.current_user.username, space_name
+                )
 
         return space_name
 
@@ -1718,7 +2017,7 @@ class SpaceHandler(BaseHandler):
 
             # reject if user is not allowed to add files
             if not acl.space_acl.ask(
-                self.get_current_user_role(), space_name, "write_files"
+                self.current_user.username, space_name, "write_files"
             ):
                 self.set_status(403)
                 self.write({"success": False, "reason": "insufficient_permission"})

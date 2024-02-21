@@ -763,7 +763,7 @@ function getTimeline(from, to) {
 function getPersonalTimeline(from, to) {
   $.ajax({
     type: 'GET',
-    url: '/timeline/you?from=' + from + '&to=' + to,
+    url: '/legacy/timeline/you?from=' + from + '&to=' + to,
     dataType: 'json',
     success: function (timeline) {
       displayTimeline(timeline);

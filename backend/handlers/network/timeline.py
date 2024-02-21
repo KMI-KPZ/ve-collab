@@ -151,6 +151,10 @@ class SpaceTimelineHandler(BaseTimelineHandler):
     Timeline of a certain space
     """
 
+    def options(self, slug):
+        self.set_status(204)
+        self.finish()
+
     @auth_needed
     def get(self, space_name):
         """
@@ -198,7 +202,7 @@ class SpaceTimelineHandler(BaseTimelineHandler):
             # ask for permission to read timeline
             acl = ACL(db)
             if not acl.space_acl.ask(
-                self.get_current_user_role(), space_name, "read_timeline"
+                self.current_user.username, space_name, "read_timeline"
             ):
                 self.set_status(403)
                 self.write({"success": False, "reason": "insufficient_permission"})
@@ -248,7 +252,6 @@ class UserTimelineHandler(BaseTimelineHandler):
         self.set_status(200)
         self.write(self.json_serialize_response({"success": True, "posts": posts}))
 
-
 class PersonalTimelineHandler(BaseTimelineHandler):
     """
     the timeline of the currently authenticated user.
@@ -259,6 +262,55 @@ class PersonalTimelineHandler(BaseTimelineHandler):
     def get(self):
         """
         GET /timeline/you
+            The timeline will always include `limit` number of posts, that are older than the 
+            `time_to` timestamp. So, e.g. to achieve endless scrolling and retrieve the next `limit` 
+            posts as kind of a pagination approach, use the oldest timestamp of your current 
+            result set as the new starting point.
+            
+            If there are not enough posts, the timeline will include as many
+            posts as possible. In turn, if there are less then `limit` posts returned, 
+            this timeline does not contain any more posts, so further requests with an even 
+            older timestamp will not yield any more results.
+
+            query params:
+                "to" : ISO timestamp string (fetch posts younger than this), default: now
+                "limit": fetch the last n posts, default: 10
+            return:
+                200 OK,
+                {"posts": [post1, post2,...]}
+
+                401 Unauthorized
+                {"status": 401,
+                 "reason": "no_logged_in_user"}
+        """
+
+        _, time_to = self.parse_timeframe_args()
+        limit = int(self.get_argument("limit", "10"))
+
+        # query personal timeline
+        with util.get_mongodb() as db:
+            post_manager = Posts(db)
+            result = post_manager.get_personal_timeline(
+                self.current_user.username, time_to, limit
+            )
+
+        posts = self.add_profile_pic_to_author(result)
+
+        self.set_status(200)
+        self.write(self.json_serialize_response({"success": True, "posts": posts}))
+
+
+class LegacyPersonalTimelineHandler(BaseTimelineHandler):
+    """
+    FOR BACKWARDS COMPATIBILITY ONLY
+    the timeline of the currently authenticated user.
+    i.e. your posts, posts of users you follow, posts in spaces you are in
+    """
+
+    @auth_needed
+    def get(self):
+        """
+        GET /legacy/timeline/you
             query params:
                 "from" : ISO timestamp string (fetch posts not older than this), default: now-24h
                 "to" : ISO timestamp string (fetch posts younger than this), default: now
@@ -276,7 +328,7 @@ class PersonalTimelineHandler(BaseTimelineHandler):
         # query personal timeline
         with util.get_mongodb() as db:
             post_manager = Posts(db)
-            result = post_manager.get_personal_timeline(
+            result = post_manager.get_personal_timeline_legacy(
                 self.current_user.username, time_from, time_to
             )
 
@@ -288,7 +340,9 @@ class PersonalTimelineHandler(BaseTimelineHandler):
 
 class NewPostsSinceTimestampHandler(BaseHandler):
     """
-    check for new posts
+    check if new posts have appeared since a certain timestamp
+    TODO: this checks for new posts in general, not for posts in the specific timelines,
+          include that
     """
 
     @auth_needed
