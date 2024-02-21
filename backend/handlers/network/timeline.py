@@ -158,7 +158,8 @@ class SpaceTimelineHandler(BaseTimelineHandler):
     @auth_needed
     def get(self, space_id):
         """
-        Retrieve the timeline of a certain space (includes pinned posts).
+        GET /timeline/space/[space_id]
+            Retrieve the timeline of a certain space (includes pinned posts).
 
             The timeline will always include `limit` number of posts, that are older than the
             `time_to` timestamp. So, e.g. to achieve endless scrolling and retrieve the next `limit`

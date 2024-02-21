@@ -6935,7 +6935,7 @@ class TimelineHandlerTest(BaseApiTestCase):
                 "author": CURRENT_ADMIN.username,
                 "creation_date": datetime.utcnow() + timedelta(days=1),
                 "text": "pinned_space_post_admin",
-                "space": self.test_space,
+                "space": self.test_space_id,
                 "pinned": True,
                 "wordpress_post_id": None,
                 "tags": [],

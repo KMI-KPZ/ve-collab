@@ -478,6 +478,8 @@ class Posts:
         :param limit: the maximum number of posts to be returned, default 10
         """
 
+        space_id = util.parse_object_id(space_id)
+
         posts_in_timeframe = list(
             self.db.posts.find(
                 {
