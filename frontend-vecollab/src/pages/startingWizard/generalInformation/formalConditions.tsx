@@ -1,21 +1,21 @@
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
 import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/startingWizard/sideProgressBar';
-import { SubmitHandler, useForm } from 'react-hook-form';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import LoadingAnimation from '@/components/LoadingAnimation';
-import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+import Link from 'next/link';
 
-interface FormValues {
+interface FormalConditionPartner {
+    partnerName: string;
     time: boolean;
     place: boolean;
     technicalEquipment: boolean;
@@ -31,25 +31,18 @@ export default function FormalConditions() {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
-    const { validateAndRoute } = useValidation();
     const [steps, setSteps] = useState<IFineStep[]>([]);
-    const [partners, setPartners] = useState<string[]>([]);
-
-    const {
-        register,
-        handleSubmit,
-        formState: { isValid },
-    } = useForm<FormValues>({
-        mode: 'onChange',
-        defaultValues: {
-            time: undefined,
-            place: undefined,
-            technicalEquipment: undefined,
-            institutionalRequirements: undefined,
-            examinationRegulations: undefined,
-            dataProtection: undefined,
+    const [formalConditions, setFormalConditions] = useState<FormalConditionPartner[]>([
+        {
+            partnerName: session!.user.name as string,
+            time: false,
+            place: false,
+            technicalEquipment: false,
+            institutionalRequirements: false,
+            examinationRegulations: false,
+            dataProtection: false,
         },
-    });
+    ]);
 
     useEffect(() => {
         // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
@@ -70,23 +63,24 @@ export default function FormalConditions() {
                         setSideMenuStepsProgress(data.plan.progress);
                     }
                     setSteps(data.plan.steps);
-                    if (session.user.name && data.plan.partners) {
-                        setPartners([session.user.name, ...data.plan.partners]);
+                    if (data.plan.formalities && Array.isArray(data.plan.formalities)) {
+                        setFormalConditions(data.plan.formalities);
                     }
                 }
             );
         }
     }, [session, status, router]);
 
-    const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
+    const handleSubmit = async () => {
+        console.log('Submitted data:', formalConditions);
         await fetchPOST(
             '/planner/update_fields',
             {
                 update: [
                     {
                         plan_id: router.query.plannerId,
-                        field_name: 'name',
-                        value: data,
+                        field_name: 'formalities',
+                        value: formalConditions,
                     },
                     {
                         plan_id: router.query.plannerId,
@@ -102,16 +96,30 @@ export default function FormalConditions() {
         );
     };
 
-    function renderCheckBoxes(partner: string): JSX.Element {
+    const handleCheckboxChange = (
+        partnerName: string,
+        key: keyof FormalConditionPartner,
+        value: boolean
+    ) => {
+        setFormalConditions((prevFormalCondition) =>
+            prevFormalCondition.map((formalCon) =>
+                formalCon.partnerName === partnerName ? { ...formalCon, [key]: value } : formalCon
+            )
+        );
+    };
+
+    function renderCheckBoxes(partnerName: string): JSX.Element {
         return (
             <div className="w-4/5 space-y-3 py-8">
                 <div className="flex justify-center items-center font-bold text-lg mb-4">
-                    {partner}
+                    {partnerName}
                 </div>
                 <div className="flex justify-start items-center">
                     <input
                         type="checkbox"
-                        {...register(`place`)}
+                        onChange={(e) =>
+                            handleCheckboxChange(partnerName, 'place', e.target.checked)
+                        }
                         className="border border-gray-500 rounded-lg w-4 h-4 p-3 mr-6"
                     />
                     <p> Ort / Raum</p>
@@ -119,7 +127,13 @@ export default function FormalConditions() {
                 <div className="flex justify-start items-center">
                     <input
                         type="checkbox"
-                        {...register(`technicalEquipment`)}
+                        onChange={(e) =>
+                            handleCheckboxChange(
+                                partnerName,
+                                'technicalEquipment',
+                                e.target.checked
+                            )
+                        }
                         className="border border-gray-500 rounded-lg w-4 h-4 p-3 mr-6"
                     />
                     <p>Technik</p>
@@ -127,7 +141,13 @@ export default function FormalConditions() {
                 <div className="flex justify-start items-center">
                     <input
                         type="checkbox"
-                        {...register(`institutionalRequirements`)}
+                        onChange={(e) =>
+                            handleCheckboxChange(
+                                partnerName,
+                                'institutionalRequirements',
+                                e.target.checked
+                            )
+                        }
                         className="border border-gray-500 rounded-lg w-4 h-4 p-3 mr-6"
                     />
                     <p>Institutionelle Vorgaben</p>
@@ -135,7 +155,13 @@ export default function FormalConditions() {
                 <div className="flex justify-start items-center">
                     <input
                         type="checkbox"
-                        {...register(`examinationRegulations`)}
+                        onChange={(e) =>
+                            handleCheckboxChange(
+                                partnerName,
+                                'examinationRegulations',
+                                e.target.checked
+                            )
+                        }
                         className="border border-gray-500 rounded-lg w-4 h-4 p-3 mr-6"
                     />
                     <p>Prüfungsordnung (Prüfungsleistung, Anrechnung etc.)</p>
@@ -143,7 +169,9 @@ export default function FormalConditions() {
                 <div className="flex justify-start items-center">
                     <input
                         type="checkbox"
-                        {...register(`dataProtection`)}
+                        onChange={(e) =>
+                            handleCheckboxChange(partnerName, 'dataProtection', e.target.checked)
+                        }
                         className="border border-gray-500 rounded-lg w-4 h-4 p-3 mr-6"
                     />
                     <p>Datenschutz</p>
@@ -173,49 +201,51 @@ export default function FormalConditions() {
                                 erfüllt?
                             </div>
                             <div className="grid grid-cols-2 gap-1 mt-7  mb-10">
-                                {partners.map((partner: string) => renderCheckBoxes(partner))}
+                                {formalConditions.map((formalConditionPartner) =>
+                                    renderCheckBoxes(formalConditionPartner.partnerName)
+                                )}
                             </div>
                         </div>
                         <div className="flex justify-around w-full">
                             <div>
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={() => {
-                                        validateAndRoute(
-                                            '/startingWizard/generalInformation/tools',
-                                            router.query.plannerId,
-                                            handleSubmit(onSubmit),
-                                            isValid
-                                        );
+                                <Link
+                                    href={{
+                                        pathname: '/startingWizard/generalInformation/tools',
+                                        query: { plannerId: router.query.plannerId },
                                     }}
                                 >
-                                    Zurück
-                                </button>
+                                    <button
+                                        type="button"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                        onClick={() => handleSubmit()}
+                                    >
+                                        Zurück
+                                    </button>
+                                </Link>
                             </div>
                             <div>
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={() => {
-                                        validateAndRoute(
-                                            '/startingWizard/broadPlanner',
-                                            router.query.plannerId,
-                                            handleSubmit(onSubmit),
-                                            isValid
-                                        );
+                                <Link
+                                    href={{
+                                        pathname: '/startingWizard/broadPlanner',
+                                        query: { plannerId: router.query.plannerId },
                                     }}
                                 >
-                                    Weiter
-                                </button>
+                                    <button
+                                        type="button"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                        onClick={() => handleSubmit()}
+                                    >
+                                        Weiter
+                                    </button>
+                                </Link>
                             </div>
                         </div>
                     </form>
                 )}
                 <SideProgressBarSection
                     progressState={sideMenuStepsProgress}
-                    handleValidation={handleSubmit(onSubmit)}
-                    isValid={isValid}
+                    handleValidation={() => {}}
+                    isValid={true}
                     sideMenuStepsData={sideMenuStepsData}
                 />
             </div>
