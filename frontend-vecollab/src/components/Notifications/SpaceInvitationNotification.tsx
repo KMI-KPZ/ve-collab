@@ -41,13 +41,13 @@ export default function SpaceInvitationNotification({
     const replyInvitation = (accept: boolean) => {
         if (accept) {
             fetchPOST(
-                `/spaceadministration/accept_invite?name=${notification.payload.space_name}`,
+                `/spaceadministration/accept_invite?id=${notification.payload.space_id}`,
                 {},
                 session?.accessToken
             );
         } else {
             fetchPOST(
-                `/spaceadministration/decline_invite?name=${notification.payload.space_name}`,
+                `/spaceadministration/decline_invite?id=${notification.payload.space_id}`,
                 {},
                 session?.accessToken
             );
@@ -113,7 +113,7 @@ export default function SpaceInvitationNotification({
                                 <b>{invitedFromUser?.name}</b>
                             </Link>{' '}
                             hat dich in die Gruppe{' '}
-                            <Link href={`/space?name=${notification.payload.space_name}`}>
+                            <Link href={`/space?id=${notification.payload.space_id}`}>
                                 <b>{notification.payload.space_name}</b>
                             </Link>{' '}
                             eingeladen.
