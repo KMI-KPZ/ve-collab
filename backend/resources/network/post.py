@@ -196,12 +196,14 @@ class Posts:
         # finally delete the post itself
         self.db.posts.delete_one({"_id": post_id})
 
-    def delete_post_by_space(self, space_name: str) -> None:
+    def delete_post_by_space(self, space_id: str | ObjectId) -> None:
         """
-        delete all posts that were in the space given by its name
+        delete all posts that were in the space given by its _id
         """
 
-        self.db.posts.delete_many({"space": space_name})
+        space_id = util.parse_object_id(space_id)
+
+        self.db.posts.delete_many({"space": space_id})
 
     def like_post(self, post_id: str | ObjectId, username: str) -> None:
         """
@@ -451,7 +453,7 @@ class Posts:
         )
 
     def get_space_timeline(
-        self, space_name: str, time_to: datetime.datetime, limit: int = 10
+        self, space_id: str | ObjectId, time_to: datetime.datetime, limit: int = 10
     ) -> Tuple[List[Dict], List[Dict]]:
         """
         get the timeline of a space (as well as pinned posts). 
@@ -470,16 +472,18 @@ class Posts:
         posts in the space (if any).
 
 
-        :param space_name: the name of the space to view the timeline of
+        :param space_id: the _id of the space to view the timeline of
         :param time_to: the maximum creation date of the posts to be returned (i.e. only
                         posts older than this date will be returned)
         :param limit: the maximum number of posts to be returned, default 10
         """
 
+        space_id = util.parse_object_id(space_id)
+
         posts_in_timeframe = list(
             self.db.posts.find(
                 {
-                    "space": space_name,
+                    "space": space_id,
                     "$or": [
                         {"creation_date": {"$lte": time_to}},
                     ],
@@ -490,7 +494,7 @@ class Posts:
         pinned_posts = list(
             self.db.posts.find(
                 {
-                    "space": space_name,
+                    "space": space_id,
                     "pinned": True,
                 }
             )
@@ -566,7 +570,7 @@ class Posts:
                     "$lookup": {
                         "from": "spaces",
                         "localField": "space",
-                        "foreignField": "name",
+                        "foreignField": "_id",
                         "as": "space_obj",
                     }
                 },
@@ -767,7 +771,7 @@ class Posts:
                     "$lookup": {
                         "from": "spaces",
                         "localField": "space",
-                        "foreignField": "name",
+                        "foreignField": "_id",
                         "as": "space_obj",
                     }
                 },

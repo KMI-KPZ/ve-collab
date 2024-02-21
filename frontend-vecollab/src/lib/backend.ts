@@ -224,7 +224,7 @@ export function useGetCheckAdminUser(accessToken: string): {
 
 export function useGetSpace(
     accessToken: string,
-    spaceName: string
+    spaceId: string
 ): {
     data: BackendSpace;
     isLoading: boolean;
@@ -232,7 +232,7 @@ export function useGetSpace(
     mutate: KeyedMutator<any>;
 } {
     const { data, error, isLoading, mutate } = useSWR(
-        [`/spaceadministration/info?name=${spaceName}`, accessToken],
+        [`/spaceadministration/info?id=${spaceId}`, accessToken],
         ([url, token]) => GETfetcher(url, token)
     );
     return {
@@ -315,14 +315,14 @@ export function useGetMySpaceRequests(accessToken: string): {
     };
 }
 
-export function useGetMySpaceACLEntry(accessToken: string, spaceName: string): {
+export function useGetMySpaceACLEntry(accessToken: string, spaceId: string): {
     data: BackendSpaceACLEntry;
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;
 } {
     const { data, error, isLoading, mutate } = useSWR(
-        [`/space_acl/get?space=${spaceName}`, accessToken],
+        [`/space_acl/get?space=${spaceId}`, accessToken],
         ([url, token]) => GETfetcher(url, token)
     );
     return {

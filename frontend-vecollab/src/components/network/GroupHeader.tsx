@@ -67,7 +67,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
         isLoading,
         error,
         mutate,
-    } = useGetSpace(session!.accessToken, router.query.name as string);
+    } = useGetSpace(session!.accessToken, router.query.id as string);
 
     const handleOpenEditDialog = () => {
         setIsEditDialogOpen(true);
@@ -114,7 +114,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
             // send to backend and update state with returned _id to be able
             // to retrieve image from uploads endpoint
             fetchPOST(
-                `/spaceadministration/space_information?name=${space.name}`,
+                `/spaceadministration/space_information?id=${space._id}`,
                 {
                     picture: {
                         type: blob.type,
@@ -130,7 +130,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
 
     const handleUpdateSpaceDescription = () => {
         fetchPOST(
-            `/spaceadministration/space_information?name=${space.name}`,
+            `/spaceadministration/space_information?id=${space._id}`,
             {
                 description: updatedSpaceDescription,
             },
@@ -142,7 +142,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
 
     const toggleVisibility = () => {
         fetchPOST(
-            `/spaceadministration/toggle_visibility?name=${space.name}`,
+            `/spaceadministration/toggle_visibility?id=${space._id}`,
             {},
             session!.accessToken
         );
@@ -152,7 +152,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
 
     const toggleJoinability = () => {
         fetchPOST(
-            `/spaceadministration/toggle_joinability?name=${space.name}`,
+            `/spaceadministration/toggle_joinability?id=${space._id}`,
             {},
             session!.accessToken
         );
@@ -161,7 +161,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
     };
 
     const leaveSpace = () => {
-        fetchDELETE(`/spaceadministration/leave?name=${space.name}`, {}, session!.accessToken).then(
+        fetchDELETE(`/spaceadministration/leave?id=${space._id}`, {}, session!.accessToken).then(
             (response) => {
                 console.log(response);
                 // TODO error handling
@@ -172,7 +172,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
 
     function acceptRequest(requestUser: string): void {
         fetchPOST(
-            `/spaceadministration/accept_request?name=${space.name}&user=${requestUser}`,
+            `/spaceadministration/accept_request?id=${space._id}&user=${requestUser}`,
             {},
             session!.accessToken
         ).then((response) => {
@@ -182,7 +182,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
 
     function declineRequest(requestUser: string): void {
         fetchPOST(
-            `/spaceadministration/reject_request?name=${space.name}&user=${requestUser}`,
+            `/spaceadministration/reject_request?id=${space._id}&user=${requestUser}`,
             {},
             session!.accessToken
         ).then((response) => {
@@ -212,7 +212,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
 
     function inviteUserToSpace(value: string) {
         fetchPOST(
-            `/spaceadministration/invite?name=${space.name}&user=${value}`,
+            `/spaceadministration/invite?id=${space._id}&user=${value}`,
             {},
             session!.accessToken
         ).then((response) => {
@@ -222,7 +222,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
 
     function revokeInvite(inviteUser: string) {
         fetchPOST(
-            `/spaceadministration/revoke_invite?name=${space.name}&user=${inviteUser}`,
+            `/spaceadministration/revoke_invite?id=${space._id}&user=${inviteUser}`,
             {},
             session!.accessToken
         ).then((response) => {
@@ -237,7 +237,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
         copy[permissionKey] = !copy[permissionKey];
 
         fetchPOST(
-            `/space_acl/update?space=${space.name}&username=${chosenPermissionUser.value}`,
+            `/space_acl/update`,
             copy,
             session?.accessToken
         ).then((data) => {
@@ -247,7 +247,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
 
     function promoteToAdmin() {
         fetchPOST(
-            `/spaceadministration/add_admin?name=${space.name}&user=${chosenPermissionUser.value}`,
+            `/spaceadministration/add_admin?id=${space._id}&user=${chosenPermissionUser.value}`,
             {},
             session?.accessToken
         ).then((data) => {
@@ -283,7 +283,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
         if (chosenPermissionUser.value !== '') {
             setPermissionsLoading(true);
             fetchGET(
-                `/space_acl/get?space=${space.name}&username=${chosenPermissionUser.value}`,
+                `/space_acl/get?space=${space._id}&username=${chosenPermissionUser.value}`,
                 session?.accessToken
             ).then((data) => {
                 console.log(data);

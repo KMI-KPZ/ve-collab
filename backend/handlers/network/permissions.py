@@ -1,5 +1,6 @@
 import json
 import logging
+from bson import ObjectId
 
 import tornado.web
 
@@ -397,7 +398,7 @@ class GlobalACLHandler(BaseHandler):
 
 
 class SpaceACLHandler(BaseHandler):
-    def resolve_inconsistency(self, username: str, space: str) -> dict:
+    def resolve_inconsistency(self, username: str, space_id: str | ObjectId) -> dict:
         """
         resolve inconsistency problem when the username exists,
         but no acl entry for it: insert the default rule and return it
@@ -409,6 +410,8 @@ class SpaceACLHandler(BaseHandler):
             )
         )
 
+        space_id = util.parse_object_id(space_id)
+
         with util.get_mongodb() as db:
             acl = ACL(db)
             profile_manager = Profiles(db)
@@ -416,9 +419,9 @@ class SpaceACLHandler(BaseHandler):
             # if the role is admin, set everything to true instead of false
             # technically this should never happen, but better safe than sorry
             if profile_manager.get_role(username) == "admin":
-                return acl.space_acl.insert_admin(username, space)
+                return acl.space_acl.insert_admin(username, space_id)
             else:
-                return acl.space_acl.insert_default(username, space)
+                return acl.space_acl.insert_default(username, space_id)
 
     def options(self, slug):
         self.set_status(204)
@@ -431,7 +434,7 @@ class SpaceACLHandler(BaseHandler):
             get the current user's acl entry
 
             query param:
-                space: name of space
+                space: _id of space
 
             optional query param:
                 username: name of user (get the entry of the specified user instead, requires admin privileges)
@@ -455,7 +458,7 @@ class SpaceACLHandler(BaseHandler):
             get the full set of rules from the acl for a given space (requires either global or space admin)
 
             query param:
-                space: name of space
+                space: _id of space
 
             returns:
                 200 OK,
@@ -473,11 +476,13 @@ class SpaceACLHandler(BaseHandler):
         """
         # since space query param is needed for both requests in this handler, check it first
         try:
-            space_name = self.get_argument("space")
+            space_id = self.get_argument("space")
         except tornado.web.MissingArgumentError:
             self.set_status(400)
             self.write({"status": 400, "success": False, "reason": "missing_key:space"})
             return
+
+        space_id = util.parse_object_id(space_id)
 
         if slug == "get":
             # if there is a role specified, query for this role
@@ -491,7 +496,7 @@ class SpaceACLHandler(BaseHandler):
                         if not (
                             self.is_current_user_lionet_admin()
                             or space_manager.check_user_is_space_admin(
-                                space_name, self.current_user.username
+                                space_id, self.current_user.username
                             )
                         ):
                             self.set_status(403)
@@ -522,14 +527,12 @@ class SpaceACLHandler(BaseHandler):
                 # after determining which user to query for, request the acl entry
                 acl_entry = None
                 acl = ACL(db)
-                acl_entry = acl.space_acl.get(username_to_query, space_name)
+                acl_entry = acl.space_acl.get(username_to_query, space_id)
 
                 # inconsistency problem: the username exists, but no acl entry.
                 # construct an acl entry that has all permissions set to false
                 if not acl_entry:
-                    acl_entry = self.resolve_inconsistency(
-                        username_to_query, space_name
-                    )
+                    acl_entry = self.resolve_inconsistency(username_to_query, space_id)
 
                 self.set_status(200)
                 self.write(
@@ -546,7 +549,7 @@ class SpaceACLHandler(BaseHandler):
                     if not (
                         self.is_current_user_lionet_admin()
                         or space_manager.check_user_is_space_admin(
-                            space_name, self.current_user.username
+                            space_id, self.current_user.username
                         )
                     ):
                         self.set_status(403)
@@ -571,7 +574,7 @@ class SpaceACLHandler(BaseHandler):
 
                 entries = None
                 acl = ACL(db)
-                entries = acl.space_acl.get_all(space_name)
+                entries = acl.space_acl.get_all(space_id)
 
                 self.set_status(200)
                 self.write(
@@ -592,7 +595,7 @@ class SpaceACLHandler(BaseHandler):
 
             {
                 "username": "<username>",
-                "space": "<space>",
+                "space": "<space_id>",
                 "join_space": True/False,
                 "read_timeline": True/False,
                 "post": True/False,

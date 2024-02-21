@@ -156,9 +156,9 @@ class SpaceTimelineHandler(BaseTimelineHandler):
         self.finish()
 
     @auth_needed
-    def get(self, space_name):
+    def get(self, space_id):
         """
-        GET /timeline/space/[name]
+        GET /timeline/space/[space_id]
             Retrieve the timeline of a certain space (includes pinned posts).
 
             The timeline will always include `limit` number of posts, that are older than the
@@ -202,7 +202,7 @@ class SpaceTimelineHandler(BaseTimelineHandler):
             space_manager = Spaces(db)
             try:
                 if not space_manager.check_user_is_member(
-                    space_name, self.current_user.username
+                    space_id, self.current_user.username
                 ):
                     self.set_status(409)
                     self.write({"success": False, "reason": "user_not_member_of_space"})
@@ -215,7 +215,7 @@ class SpaceTimelineHandler(BaseTimelineHandler):
             # ask for permission to read timeline
             acl = ACL(db)
             if not acl.space_acl.ask(
-                self.current_user.username, space_name, "read_timeline"
+                self.current_user.username, space_id, "read_timeline"
             ):
                 self.set_status(403)
                 self.write({"success": False, "reason": "insufficient_permission"})
@@ -224,7 +224,7 @@ class SpaceTimelineHandler(BaseTimelineHandler):
             # query space timeline
             post_manager = Posts(db)
             timeline_posts, pinned_posts = post_manager.get_space_timeline(
-                space_name, time_to, limit
+                space_id, time_to, limit
             )
 
         # postprocessing
