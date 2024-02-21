@@ -3,6 +3,7 @@ import { useSession } from 'next-auth/react';
 import VeInvitationNotification from './VeInvitationNotification';
 import { Socket } from 'socket.io-client';
 import VeInvitationReplyNotification from './VeInvitationReplyNotification';
+import SpaceInvitationNotification from './SpaceInvitationNotification';
 
 interface Props {
     socket: Socket;
@@ -12,7 +13,12 @@ AllNotifications.auth = true;
 export default function AllNotifications({ socket }: Props) {
     const { data: session, status } = useSession();
 
-    const {data: notifications, isLoading, error, mutate} = useGetNotifications(session!.accessToken)
+    const {
+        data: notifications,
+        isLoading,
+        error,
+        mutate,
+    } = useGetNotifications(session!.accessToken);
 
     console.log(notifications);
 
@@ -40,6 +46,16 @@ export default function AllNotifications({ socket }: Props) {
                             )}
                             {notification.type === 've_invitation_reply' && (
                                 <VeInvitationReplyNotification
+                                    key={index}
+                                    socket={socket}
+                                    notification={notification}
+                                    removeNotificationCallback={function (
+                                        notificationId: string
+                                    ): void {}}
+                                />
+                            )}
+                            {notification.type === 'space_invitation' && (
+                                <SpaceInvitationNotification
                                     key={index}
                                     socket={socket}
                                     notification={notification}
