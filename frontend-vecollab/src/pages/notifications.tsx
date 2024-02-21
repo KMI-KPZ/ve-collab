@@ -1,6 +1,7 @@
 import WhiteBox from '@/components/Layout/WhiteBox';
 import Container from '@/components/Layout/container';
 import AllNotifications from '@/components/Notifications/AllNotifications';
+import SpaceInvitationNotification from '@/components/Notifications/SpaceInvitationNotification';
 import VeInvitationNotification from '@/components/Notifications/VeInvitationNotification';
 import VeInvitationReplyNotification from '@/components/Notifications/VeInvitationReplyNotification';
 import Tabs from '@/components/profile/Tabs';
@@ -56,6 +57,16 @@ export default function Notifications({
                                             )}
                                             {notification.type === 've_invitation_reply' && (
                                                 <VeInvitationReplyNotification
+                                                    socket={socket}
+                                                    notification={notification}
+                                                    removeNotificationCallback={
+                                                        removeNotificationFromList
+                                                    }
+                                                />
+                                            )}
+                                            {notification.type === 'space_invitation' && (
+                                                <SpaceInvitationNotification
+                                                    key={index}
                                                     socket={socket}
                                                     notification={notification}
                                                     removeNotificationCallback={

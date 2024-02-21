@@ -36,7 +36,7 @@ class PostHandler(BaseHandler):
         """
         POST /posts
         IF id is in body, update post
-        ELSE add new post
+        ELSE add new post (and return the inserted post)
 
         http body (as form data, json here is only for readability):
             {
@@ -49,7 +49,8 @@ class PostHandler(BaseHandler):
         return:
             200 OK,
             {"status": 200,
-             "success": True}
+             "success": True,
+             "inserted_post": {post}}
 
             400 Bad Request,
             {"status": 400,
@@ -171,10 +172,14 @@ class PostHandler(BaseHandler):
                     "likers": [],
                 }
 
-                post_manager.insert_post(post)
+                post_id = post_manager.insert_post(post)
+
+                post["_id"] = post_id
 
                 self.set_status(200)
-                self.write({"status": 200, "success": True})
+                self.serialize_and_write(
+                    {"status": 200, "success": True, "inserted_post": post}
+                )
 
         # _id field present in request, therefore update the existing post
         else:

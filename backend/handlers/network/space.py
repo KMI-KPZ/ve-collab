@@ -20,6 +20,7 @@ from resources.network.space import (
     UserNotMemberError,
 )
 from resources.network.wordpress import Wordpress
+from resources.notifications import NotificationResource
 import util
 
 logger = logging.getLogger(__name__)
@@ -286,7 +287,7 @@ class SpaceHandler(BaseHandler):
             self.set_status(404)
 
     @auth_needed
-    def post(self, slug):
+    async def post(self, slug):
         """
         POST /spaceadministration/create
             query param:
@@ -830,7 +831,7 @@ class SpaceHandler(BaseHandler):
                 self.write({"success": False, "reason": "missing_key:user"})
                 return
 
-            self.invite_user_into_space(space_id, username)
+            await self.invite_user_into_space(space_id, username)
             return
 
         elif slug == "accept_invite":
@@ -1607,7 +1608,7 @@ class SpaceHandler(BaseHandler):
             self.set_status(200)
             self.write({"success": True})
 
-    def invite_user_into_space(self, space_id: str | ObjectId, username: str) -> None:
+    async def invite_user_into_space(self, space_id: str | ObjectId, username: str) -> None:
         """
         invite a user into the space
         """
@@ -1617,7 +1618,7 @@ class SpaceHandler(BaseHandler):
         with util.get_mongodb() as db:
             space_manager = Spaces(db)
             space = space_manager.get_space(
-                space_id, projection={"_id": False, "members": True, "admins": True}
+                space_id, projection={"members": True, "admins": True, "name": True}
             )
 
             # abort if space doesnt exist
@@ -1643,6 +1644,18 @@ class SpaceHandler(BaseHandler):
 
             # add username to invited users set
             space_manager.invite_user(space_id, username)
+
+            # trigger notification dispatch
+            notification_payload = {
+                "invitation_sender": self.current_user.username,
+                "invitation_recipient": username,
+                "space_name": space["name"],
+                "space_id": space_id
+            }
+            notification_manager = NotificationResource(db)
+            await notification_manager.send_notification(
+                username, "space_invitation", notification_payload
+            )
 
             self.set_status(200)
             self.write({"success": True})
