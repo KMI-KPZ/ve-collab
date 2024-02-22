@@ -13,7 +13,7 @@ import {
 } from '@/interfaces/startingWizard/sideProgressBar';
 import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 import { sideMenuStepsData } from '@/data/sideMenuSteps';
-import { generateFineStepLinkTopMenu } from '@/pages/startingWizard/generalInformation/courseFormat';
+import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 
 interface FormValues {
     globalGoals: string;
@@ -26,9 +26,7 @@ export default function GlobalGoals() {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
-    const [linkFineStepTopMenu, setLinkFineStepTopMenu] = useState<string>(
-        '/startingWizard/finePlanner'
-    );
+    const [steps, setSteps] = useState<IFineStep[]>([]);
     const { validateAndRoute } = useValidation();
 
     // check for session errors and trigger the login flow if necessary
@@ -72,8 +70,7 @@ export default function GlobalGoals() {
                     if (data.plan.globalGoals !== null) {
                         setValue('globalGoals', data.plan.globalGoals);
                     }
-
-                    setLinkFineStepTopMenu(generateFineStepLinkTopMenu(data.plan.steps));
+                    setSteps(data.plan.steps);
 
                     if (data.plan.progress.length !== 0) {
                         setSideMenuStepsProgress(data.plan.progress);
@@ -109,7 +106,7 @@ export default function GlobalGoals() {
 
     return (
         <>
-            <HeadProgressBarSection stage={0} linkFineStep={linkFineStepTopMenu} />
+            <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
             <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
                 {loading ? (
                     <LoadingAnimation />

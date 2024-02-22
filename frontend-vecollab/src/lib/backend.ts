@@ -1,7 +1,9 @@
 import {
     BackendChatMessage,
     BackendChatroomSnippet,
+    BackendPosts,
     BackendSpace,
+    BackendSpaceACLEntry,
     BackendUserSnippet,
 } from '@/interfaces/api/apiInterfaces';
 import { Notification } from '@/interfaces/socketio';
@@ -278,6 +280,89 @@ export function useGetMySpaces(accessToken: string): {
     };
 }
 
+export function useGetMySpaceInvites(accessToken: string): {
+    data: BackendSpace[];
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        ['/spaceadministration/pending_invites', accessToken],
+        ([url, token]) => GETfetcher(url, token)
+    );
+    return {
+        data: isLoading || error ? [] : data.pending_invites,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
+export function useGetMySpaceRequests(accessToken: string): {
+    data: BackendSpace[];
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        ['/spaceadministration/pending_requests', accessToken],
+        ([url, token]) => GETfetcher(url, token)
+    );
+    return {
+        data: isLoading || error ? [] : data.pending_requests,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
+export function useGetTimeline(
+    accessToken: string,
+    toDate?: string,
+    fromDate?: string,
+    limit?: number,
+    space?: string
+ ): {
+    data: BackendPosts[];
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const endpointUrl = space
+        ? `/timeline/space/${space}?from=${fromDate}&to=${toDate}`
+        : `/timeline/you?to=${toDate}&limit=${limit}`
+
+    const { data, error, isLoading, mutate } = useSWR(
+        [endpointUrl, accessToken],
+        ([url, token]) => GETfetcher(url, token)
+    );
+
+    return {
+        data: isLoading || error ? [] : data.posts,
+        isLoading,
+        error,
+        mutate,
+    }
+}
+
+export function useGetMySpaceACLEntry(accessToken: string, spaceName: string): {
+    data: BackendSpaceACLEntry;
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        [`/space_acl/get?space=${spaceName}`, accessToken],
+        ([url, token]) => GETfetcher(url, token)
+    );
+    return {
+        data: isLoading || error ? '' : data.acl_entry,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
 export async function fetchGET(relativeUrl: string, accessToken?: string) {
     const headers: { Authorization?: string } = {};
 
@@ -303,7 +388,8 @@ export async function fetchGET(relativeUrl: string, accessToken?: string) {
 export async function fetchPOST(
     relativeUrl: string,
     payload?: Record<string, any>,
-    accessToken?: string
+    accessToken?: string,
+    asFormData: boolean=false
 ) {
     const headers: { Authorization?: string } = {};
 
@@ -311,11 +397,19 @@ export async function fetchPOST(
         headers['Authorization'] = 'Bearer ' + accessToken;
     }
 
+    function getFormData(payload: any) {
+        const formData = new FormData();
+        Object.keys(payload).forEach(key => formData.append(key, payload[key]));
+        return formData;
+    }
+
     try {
         let backendResponse = await fetch(BACKEND_BASE_URL + relativeUrl, {
             method: 'POST',
             headers: headers,
-            body: JSON.stringify(payload),
+            body: asFormData
+                ? getFormData(payload)
+                : JSON.stringify(payload),
         });
         if (backendResponse.status === 401) {
             console.log('forced new signIn by api call');

@@ -5,7 +5,13 @@ import WhiteBox from '@/components/Layout/WhiteBox';
 import Container from '@/components/Layout/container';
 import Dialog from '@/components/profile/Dialog';
 import VerticalTabs from '@/components/profile/VerticalTabs';
-import { fetchPOST, useGetAllSpaces, useGetMySpaces } from '@/lib/backend';
+import {
+    fetchPOST,
+    useGetAllSpaces,
+    useGetMySpaceInvites,
+    useGetMySpaceRequests,
+    useGetMySpaces,
+} from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -28,13 +34,28 @@ export default function Spaces() {
         error: errorMySpaces,
         mutate: mutateMySpaces,
     } = useGetMySpaces(session!.accessToken);
-    console.log(mySpaces);
     const {
         data: allSpaces,
         isLoading: isLoadingAllSpaces,
         error: errorAllSpaces,
         mutate: mutateAllSpaces,
     } = useGetAllSpaces(session!.accessToken);
+
+    const {
+        data: mySpaceInvites,
+        isLoading: isLoadingMySpaceInvites,
+        error: errorMySpaceInvites,
+        mutate: mutateMySpaceInvites,
+    } = useGetMySpaceInvites(session!.accessToken);
+    console.log(mySpaceInvites);
+
+    const {
+        data: mySpaceRequests,
+        isLoading: isLoadingMySpaceRequests,
+        error: errorMySpaceRequests,
+        mutate: mutateMySpaceRequests,
+    } = useGetMySpaceRequests(session!.accessToken);
+    console.log(mySpaceRequests);
 
     const handleSearchSpaceInput = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSearchSpaceInput(event.target.value);
@@ -55,17 +76,65 @@ export default function Spaces() {
         mutateAllSpaces();
     };
 
+    function sendJoinRequest(spaceName: string): void {
+        fetchPOST(`/spaceadministration/join?name=${spaceName}`, {}, session!.accessToken).then(
+            () => {
+                mutateMySpaces();
+                mutateAllSpaces();
+                mutateMySpaceRequests();
+            }
+        );
+    }
+
+    function acceptInvite(spaceName: string): void {
+        fetchPOST(
+            `/spaceadministration/accept_invite?name=${spaceName}`,
+            {},
+            session!.accessToken
+        ).then(() => {
+            mutateMySpaces();
+            mutateAllSpaces();
+            mutateMySpaceInvites();
+        });
+    }
+
+    function declineInvite(spaceName: string): void {
+        fetchPOST(
+            `/spaceadministration/decline_invite?name=${spaceName}`,
+            {},
+            session!.accessToken
+        ).then(() => {
+            mutateMySpaces();
+            mutateAllSpaces();
+            mutateMySpaceInvites();
+        });
+    }
+
+    function revokeRequest(spaceName: string) {
+        fetchPOST(
+            `/spaceadministration/revoke_request?name=${spaceName}`,
+            {},
+            session!.accessToken
+        ).then(() => {
+            mutateAllSpaces();
+            mutateMySpaceRequests();
+        });
+    }
+
     return (
         <Container>
             <WhiteBox>
                 <VerticalTabs>
                     <div tabname="meine Gruppen">
-                        <div className="min-h-[50vh]">
+                        <div className="min-h-[63vh]">
                             <BoxHeadline title={'Du bist Mitglied in diesen Spaces'} />
                             <div className="divide-y my-4">
                                 {mySpaces.map((space, index) => (
                                     <div key={index} className="px-2 py-5">
-                                        <Link  href={`/space?name=${space.name}`} className="flex cursor-pointer">
+                                        <Link
+                                            href={`/space?name=${space.name}`}
+                                            className="flex cursor-pointer"
+                                        >
                                             <div>
                                                 <AuthenticatedImage
                                                     imageId={space.space_pic}
@@ -95,7 +164,7 @@ export default function Spaces() {
                         </div>
                     </div>
                     <div tabname="neue finden">
-                        <div className="min-h-[60vh]">
+                        <div className="min-h-[63vh]">
                             <div className="h-[50vh] overflow-y-auto content-scrollbar">
                                 <input
                                     className={
@@ -176,7 +245,7 @@ export default function Spaces() {
                         </div>
                     </div>
                     <div tabname="alle">
-                        <div className="min-h-[60vh]">
+                        <div className="min-h-[63vh]">
                             <div className="h-[50vh] overflow-y-auto content-scrollbar">
                                 {allSpaces.map((space, index) => (
                                     <div key={index} className="px-2 py-5">
@@ -218,6 +287,10 @@ export default function Spaces() {
                                                                 className={
                                                                     'h-10 bg-ve-collab-orange text-white px-4 mx-2 rounded-lg shadow-xl'
                                                                 }
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    sendJoinRequest(space.name);
+                                                                }}
                                                             >
                                                                 <span>Beitreten</span>
                                                             </button>
@@ -239,6 +312,10 @@ export default function Spaces() {
                                                                 className={
                                                                     'h-10 bg-transparent border border-ve-collab-orange text-ve-collab-orange  px-4 mx-2 rounded-lg shadow-xl'
                                                                 }
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    sendJoinRequest(space.name);
+                                                                }}
                                                             >
                                                                 <span>Beitritt anfragen</span>
                                                             </button>
@@ -259,6 +336,109 @@ export default function Spaces() {
                                 >
                                     <span>neuen Space erstellen</span>
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div tabname="meine Anfragen & Einladungen">
+                        <div className="min-h-[63vh]">
+                            <BoxHeadline title={'ausstehende Einladungen'} />
+                            <div className="h-[25vh] mb-10 overflow-y-auto content-scrollbar">
+                                {mySpaceInvites.map((space, index) => (
+                                    <div key={index} className="px-2 py-5">
+                                        <Link
+                                            href={`/space?name=${space.name}`}
+                                            className="flex cursor-pointer"
+                                        >
+                                            <div>
+                                                <AuthenticatedImage
+                                                    imageId={space.space_pic}
+                                                    alt={'Gruppenbild'}
+                                                    width={60}
+                                                    height={60}
+                                                    className="rounded-full"
+                                                ></AuthenticatedImage>
+                                            </div>
+                                            <div>
+                                                <BoxHeadline title={space.name} />
+                                                <div className="mx-2 px-1 my-1 text-gray-600">
+                                                    {space.space_description
+                                                        ? space.space_description
+                                                        : 'Keine Beschreibung vorhanden'}
+                                                </div>
+                                            </div>
+                                            <div className="flex ml-auto px-2 items-center justify-center">
+                                                <div className="flex items-center">
+                                                    <button
+                                                        className={
+                                                            'h-10 bg-transparent border border-green-600 text-green-600 px-4 mx-2 rounded-lg shadow-xl'
+                                                        }
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            acceptInvite(space.name);
+                                                        }}
+                                                    >
+                                                        <span>Annehmen</span>
+                                                    </button>
+                                                    <button
+                                                        className={
+                                                            'h-10 bg-transparent border border-red-600 text-red-600 px-4 mx-2 rounded-lg shadow-xl'
+                                                        }
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            declineInvite(space.name);
+                                                        }}
+                                                    >
+                                                        <span>Ablehnen</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </Link>
+                                    </div>
+                                ))}
+                            </div>
+                            <BoxHeadline title={'ausstehende Anfragen'} />
+                            <div className="h-[25vh] overflow-y-auto content-scrollbar">
+                                {mySpaceRequests.map((space, index) => (
+                                    <div key={index} className="px-2 py-5">
+                                        <Link
+                                            href={`/space?name=${space.name}`}
+                                            className="flex cursor-pointer"
+                                        >
+                                            <div>
+                                                <AuthenticatedImage
+                                                    imageId={space.space_pic}
+                                                    alt={'Gruppenbild'}
+                                                    width={60}
+                                                    height={60}
+                                                    className="rounded-full"
+                                                ></AuthenticatedImage>
+                                            </div>
+                                            <div>
+                                                <BoxHeadline title={space.name} />
+                                                <div className="mx-2 px-1 my-1 text-gray-600">
+                                                    {space.space_description
+                                                        ? space.space_description
+                                                        : 'Keine Beschreibung vorhanden'}
+                                                </div>
+                                            </div>
+                                            <div className="flex ml-auto px-2 items-center justify-center">
+                                                <div className="flex items-center">
+                                                    <button
+                                                        className={
+                                                            'h-10 bg-ve-collab-orange text-white px-4 mx-2 rounded-lg shadow-xl'
+                                                        }
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            revokeRequest(space.name);
+                                                        }}
+                                                    >
+                                                        <span>Anfrage zurückziehen</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </Link>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>

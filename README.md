@@ -4,7 +4,7 @@
 
 - Setup a Keycloak Instance and within that instance a realm and a client. Please refer to the [Keycloak Documentation](https://www.keycloak.org/documentation) for instructions.
 
-- Setup a Wordpress instance, install [this](https://www.wpgraphql.com/) plugin and create some posts.
+- Setup a Wordpress instance and create some pages (optional).
 
 ## Running the platform
 

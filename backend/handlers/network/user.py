@@ -234,8 +234,8 @@ class ProfileInformationHandler(BaseHandler):
                         }
                     ],
                     "profile_pic": {
-                        "body": "<base64_encoded_image>",
-                        "content_type": "<image/jpeg|image/png|...>"
+                        "payload": "<base64_encoded_image>",
+                        "type": "<image/jpeg|image/png|...>"
                     }
                 }
 

@@ -175,18 +175,21 @@ class Spaces:
             )
         ]
 
-    def get_space_invites_of_user(self, username: str) -> List[str]:
+    def get_space_invites_of_user(self, username: str) -> List[Space]:
         """
         get a list of pending invites into spaces for the given user
         :return: list of space names that the user is currently invited to (unanswered)
         """
 
-        return [
-            space["name"]
-            for space in self.db.spaces.find(
-                {"invites": username}, projection={"_id": False, "name": True}
-            )
-        ]
+        return list(self.db.spaces.find({"invites": username}))
+    
+    def get_space_requests_of_user(self, username: str) -> List[Space]:
+        """
+        get a list of pending join requests into spaces for the given user
+        :return: list of space names that the user has requested to join (unanswered)
+        """
+
+        return list(self.db.spaces.find({"requests": username}))
 
     def create_space(self, space: dict) -> None:
         """
@@ -410,13 +413,9 @@ class Spaces:
             },
         )
 
-    def decline_space_invite(self, space_name: str, username: str) -> None:
+    def _remove_user_from_invite_list(self, space_name: str, username: str) -> None:
         """
-        the given user declines his invite into the given space,
-        therefore he is removed from the invite list, but not added to the members
-        obviously.
-        :param space_name: the space in which the invitation is declined
-        :param username: the user who declines his invite
+        helper function to remove a user from the invite list of a space
         """
 
         # pull user from pending invites to decline (dont add to members obviously)
@@ -427,6 +426,29 @@ class Spaces:
         # the filter didnt match any document, so the space doesnt exist
         if update_result.matched_count != 1:
             raise SpaceDoesntExistError()
+
+    def decline_space_invite(self, space_name: str, username: str) -> None:
+        """
+        the given user declines his invite into the given space,
+        therefore he is removed from the invite list, but not added to the members
+        obviously.
+        :param space_name: the space in which the invitation is declined
+        :param username: the user who declines his invite
+        """
+
+        # pull user from pending invites to decline (dont add to members obviously)
+        self._remove_user_from_invite_list(space_name, username)
+
+    def revoke_space_invite(self, space_name: str, username: str) -> None:
+        """
+        the invitation that was initially sent to the given user is revoked,
+        removing him from the invites list as if nothing happened.
+        :param space_name: the space in which the invitation is revoked
+        :param username: the user whose invitation is revoked
+        """
+
+        # pull use from pending invites
+        self._remove_user_from_invite_list(space_name, username)
 
     def accept_join_request(self, space_name: str, username: str) -> None:
         """
@@ -451,6 +473,20 @@ class Spaces:
             {"$addToSet": {"members": username}, "$pull": {"requests": username}},
         )
 
+    def _remove_user_from_requests_list(self, space_name: str, username: str) -> None:
+        """
+        helper function to remove a user from the requests list of a space
+        """
+
+        # pull user from pending requests
+        update_result = self.db.spaces.update_one(
+            {"name": space_name}, {"$pull": {"requests": username}}
+        )
+
+        # the filter didnt match any document, so the space doesnt exist
+        if update_result.matched_count != 1:
+            raise SpaceDoesntExistError()
+
     def reject_join_request(self, space_name: str, username: str) -> None:
         """
         the join request of the given user is declined (usually by an admin, but permissions
@@ -459,14 +495,15 @@ class Spaces:
         :param username: the user whose request is declined
         """
 
-        # pull user from request to decline (obviously dont add as member)
-        update_result = self.db.spaces.update_one(
-            {"name": space_name}, {"$pull": {"requests": username}}
-        )
+        self._remove_user_from_requests_list(space_name, username)
 
-        # the filter didnt match any document, so the space doesnt exist
-        if update_result.matched_count != 1:
-            raise SpaceDoesntExistError()
+    def revoke_join_request(self, space_name: str, username: str) -> None:
+        """
+        the join request of the given user is revoked (usually by the user himself, but permissions
+        are not checked here). Therefore the user will be removed from the requests list
+        """
+
+        self._remove_user_from_requests_list(space_name, username)
 
     def toggle_visibility(self, space_name: str) -> None:
         """
