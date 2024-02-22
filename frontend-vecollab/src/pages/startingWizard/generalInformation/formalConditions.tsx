@@ -72,7 +72,6 @@ export default function FormalConditions() {
     }, [session, status, router]);
 
     const handleSubmit = async () => {
-        console.log('Submitted data:', formalConditions);
         await fetchPOST(
             '/planner/update_fields',
             {
