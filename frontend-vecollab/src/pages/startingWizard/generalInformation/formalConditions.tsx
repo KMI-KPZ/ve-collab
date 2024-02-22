@@ -14,7 +14,7 @@ import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import Link from 'next/link';
 
-interface FormalConditionPartner {
+export interface FormalConditionPartner {
     partnerName: string;
     time: boolean;
     place: boolean;
