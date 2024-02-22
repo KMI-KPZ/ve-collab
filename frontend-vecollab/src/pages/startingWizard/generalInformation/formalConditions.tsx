@@ -34,7 +34,7 @@ export default function FormalConditions() {
     const [steps, setSteps] = useState<IFineStep[]>([]);
     const [formalConditions, setFormalConditions] = useState<FormalConditionPartner[]>([
         {
-            partnerName: 'Sie',
+            partnerName: 'Du',
             time: false,
             place: false,
             technicalEquipment: false,
