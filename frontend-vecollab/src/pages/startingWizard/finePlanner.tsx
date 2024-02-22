@@ -5,15 +5,13 @@ import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
-import { generateFineStepLinkTopMenu } from '@/pages/startingWizard/generalInformation/courseFormat';
+import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 
 export default function FinePlanner() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
-    const [linkFineStepTopMenu, setLinkFineStepTopMenu] = useState<string>(
-        '/startingWizard/finePlanner'
-    );
+    const [steps, setSteps] = useState<IFineStep[]>([]);
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -41,7 +39,7 @@ export default function FinePlanner() {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
                     setLoading(false);
-                    setLinkFineStepTopMenu(generateFineStepLinkTopMenu(data.plan.steps));
+                    setSteps(data.plan.steps);
                 }
             );
         }
@@ -49,7 +47,7 @@ export default function FinePlanner() {
 
     return (
         <>
-            <HeadProgressBarSection stage={2} linkFineStep={linkFineStepTopMenu} />
+            <HeadProgressBarSection stage={2} linkFineStep={steps[0]?.name} />
             <div className="flex justify-center bg-pattern-left-blue-small bg-no-repeat">
                 {loading ? (
                     <LoadingAnimation />

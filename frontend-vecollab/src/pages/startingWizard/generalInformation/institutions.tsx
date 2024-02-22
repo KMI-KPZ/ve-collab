@@ -15,7 +15,7 @@ import {
 } from '@/interfaces/startingWizard/sideProgressBar';
 import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 import { sideMenuStepsData } from '@/data/sideMenuSteps';
-import { generateFineStepLinkTopMenu } from '@/pages/startingWizard/generalInformation/courseFormat';
+import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 
 export interface Institution {
     name: string;
@@ -37,9 +37,7 @@ export default function Institutions() {
         initialSideProgressBarStates
     );
     const { validateAndRoute } = useValidation();
-    const [linkFineStepTopMenu, setLinkFineStepTopMenu] = useState<string>(
-        '/startingWizard/finePlanner'
-    );
+    const [steps, setSteps] = useState<IFineStep[]>([]);
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -93,7 +91,7 @@ export default function Institutions() {
                     if (data.plan.progress.length !== 0) {
                         setSideMenuStepsProgress(data.plan.progress);
                     }
-                    setLinkFineStepTopMenu(generateFineStepLinkTopMenu(data.plan.steps));
+                    setSteps(data.plan.steps);
                 }
             );
         }
@@ -294,7 +292,7 @@ export default function Institutions() {
 
     return (
         <>
-            <HeadProgressBarSection stage={0} linkFineStep={linkFineStepTopMenu} />
+            <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
             <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
                 {loading ? (
                     <LoadingAnimation />
