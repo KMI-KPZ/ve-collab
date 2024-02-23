@@ -258,6 +258,28 @@ def create_initial_admin() -> None:
             "inserted admin user '{}' and corresponding ACL rules".format(username)
         )
 
+def load_default_taxonomy_if_exists() -> None:
+    """
+    If the db does not currently hold a taxonomy, load the default taxonomy from the assets folder
+    """
+
+    with util.get_mongodb() as db:
+        # db already has one, skip
+        if db.material_taxonomy.count_documents({}) > 0:
+            return
+        
+        # db is empty, but no default taxonomy file exists, skip
+        if not os.path.isfile("assets/default_taxonomy.json"):
+            logger.warning("tried to load default taxonomy from assets folder, but no file found")
+            return
+        
+        # db is empty and default taxonomy file exists, load it
+        with open("assets/default_taxonomy.json", "r") as f:
+            taxonomy = json.load(f)
+            if "taxonomy" in taxonomy:
+                db.material_taxonomy.insert_one(taxonomy)
+                logger.info("Loaded default taxonomy from assets folder")
+
 
 def set_global_vars() -> None:
     """
@@ -440,6 +462,9 @@ def main():
 
     # setup default group and profile pictures
     init_default_pictures()
+
+    # load default taxonomy if none exists
+    load_default_taxonomy_if_exists()
 
     # write tornado access log to separate logfile
     hook_tornado_access_log()

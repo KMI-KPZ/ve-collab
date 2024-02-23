@@ -65,3 +65,36 @@ export interface BackendSpaceACLEntry {
     read_files: boolean,
     write_files: boolean,
 }
+
+export interface BackendPostsAuthor {
+    username: string;
+    profile_pic: string;
+}
+
+export interface BackendPostsComment {
+    _id: string;
+    author: BackendPostsAuthor;
+    creation_date: string;
+    pinned: boolean
+    text: string;
+}
+
+export interface BackendPosts {
+    _id: string;
+    author: BackendPostsAuthor;
+    comments: BackendPostsComment[];
+    creation_date: string;
+    files: string[];
+    likers: string[];
+    pinned: boolean;
+    space: string;
+    tags: string[];
+    text: string;
+    // wordpress_post_id: string // deprecated
+
+    isRepost?: boolean;
+    originalCreationDate?: string;
+    repostAuthor?: string;
+    repostAuthorProfilePic?: string;
+    repostText?: string;
+}

@@ -18,17 +18,14 @@ import WhiteBox from '@/components/Layout/WhiteBox';
 
 interface FormValues {
     courseFormat: string;
-    physicalMobility: boolean;
+    physicalMobilityQuestion: PhysicalMobility;
 }
 
-export function generateFineStepLinkTopMenu(fineSteps: IFineStep[]): string {
-    if (fineSteps.length > 0) {
-        fineSteps.sort((a: IFineStep, b: IFineStep) =>
-            a.timestamp_from > b.timestamp_from ? 1 : -1
-        );
-        return `/startingWizard/fineplanner/${encodeURIComponent(fineSteps[0].name)}`;
-    }
-    return '/startingWizard/finePlanner';
+interface PhysicalMobility {
+    physicalMobility: string;
+    physicalMobilityLocation: string;
+    physicalMobilityTimeFrom: string;
+    physicalMobilityTimeTo: string;
 }
 
 export default function Realization() {
@@ -38,9 +35,7 @@ export default function Realization() {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
-    const [linkFineStepTopMenu, setLinkFineStepTopMenu] = useState<string>(
-        '/startingWizard/finePlanner'
-    );
+    const [steps, setSteps] = useState<IFineStep[]>([]);
     const { validateAndRoute } = useValidation();
 
     // check for session errors and trigger the login flow if necessary
@@ -58,6 +53,7 @@ export default function Realization() {
         formState: { errors, isValid },
         handleSubmit,
         setValue,
+        watch,
     } = useForm<FormValues>({
         mode: 'onChange',
         defaultValues: {
@@ -85,7 +81,7 @@ export default function Realization() {
                         setValue('courseFormat', data.plan.realization);
                     }
 
-                    setLinkFineStepTopMenu(generateFineStepLinkTopMenu(data.plan.steps));
+                    setSteps(data.plan.steps);
 
                     if (data.plan.progress.length !== 0) {
                         setSideMenuStepsProgress(data.plan.progress);
@@ -94,6 +90,16 @@ export default function Realization() {
             );
         }
     }, [session, status, router, setValue]);
+
+    const validateDateRange = (fromValue: string) => {
+        const fromDate = new Date(fromValue);
+        const toDate = new Date(watch(`physicalMobilityQuestion.physicalMobilityTimeTo`));
+        if (fromDate > toDate) {
+            return 'Das Startdatum muss vor dem Enddatum liegen';
+        } else {
+            return true;
+        }
+    };
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         await fetchPOST(
@@ -121,7 +127,7 @@ export default function Realization() {
 
     return (
         <>
-            <HeadProgressBarSection stage={0} linkFineStep={linkFineStepTopMenu} />
+            <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
             <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
                 {loading ? (
                     <LoadingAnimation />
@@ -149,44 +155,99 @@ export default function Realization() {
                         </div>
                         <h2 className="flex font-bold mt-16 "> Zusatzfrage: </h2>
                         <WhiteBox>
-                            <div className="flex gap-y-6 p-12 items-center justify-start">
-                                <p className="w-1/2">
-                                    Wird der VE durch eine physische Mobilität ergänzt / begleitet?
-                                </p>
-                                <div className="flex w-1/2 gap-x-5">
-                                    <div className="flex my-1">
-                                        <div>
-                                            <label className="px-2 py-2">Ja</label>
+                            <div className="p-10">
+                                <div className="flex items-center justify-start">
+                                    <p className="w-1/2">
+                                        Wird der VE durch eine physische Mobilität ergänzt /
+                                        begleitet?
+                                    </p>
+                                    <div className="flex w-1/2 gap-x-5">
+                                        <div className="flex my-1">
+                                            <div>
+                                                <label className="px-2 py-2">Ja</label>
+                                            </div>
+                                            <div>
+                                                <input
+                                                    {...register(
+                                                        `physicalMobilityQuestion.physicalMobility`
+                                                    )}
+                                                    type="radio"
+                                                    value="true"
+                                                    className="border border-gray-500 rounded-lg p-2"
+                                                />
+                                                <p className="text-red-600 pt-2">
+                                                    {
+                                                        errors.physicalMobilityQuestion
+                                                            ?.physicalMobility?.message
+                                                    }
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <input
-                                                {...register(`physicalMobility`)}
-                                                type="radio"
-                                                value="true"
-                                                className="border border-gray-500 rounded-lg p-2"
-                                            />
-                                            <p className="text-red-600 pt-2">
-                                                {errors.physicalMobility?.message}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="flex my-1">
-                                        <div>
-                                            <label className="px-2 py-2">Nein</label>
-                                        </div>
-                                        <div>
-                                            <input
-                                                {...register(`physicalMobility`)}
-                                                type="radio"
-                                                value="false"
-                                                className="border border-gray-500 rounded-lg p-2"
-                                            />
-                                            <p className="text-red-600 pt-2">
-                                                {errors.physicalMobility?.message}
-                                            </p>
+                                        <div className="flex my-1">
+                                            <div>
+                                                <label className="px-2 py-2">Nein</label>
+                                            </div>
+                                            <div>
+                                                <input
+                                                    {...register(
+                                                        `physicalMobilityQuestion.physicalMobility`
+                                                    )}
+                                                    type="radio"
+                                                    value="false"
+                                                    className="border border-gray-500 rounded-lg p-2"
+                                                />
+                                                <p className="text-red-600 pt-2">
+                                                    {
+                                                        errors.physicalMobilityQuestion
+                                                            ?.physicalMobility?.message
+                                                    }
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
+                                {watch('physicalMobilityQuestion.physicalMobility') === 'true' && (
+                                    <div className="w-full my-1 items-center justify-start pt-6">
+                                        <div className="flex items-center justify-start pb-2 gap-x-2">
+                                            <p>Ort:</p>
+                                            <input
+                                                type="text"
+                                                placeholder="Ort eingeben"
+                                                {...register(
+                                                    `physicalMobilityQuestion.physicalMobilityLocation`
+                                                )}
+                                                className="border border-gray-500 rounded-lg p-2"
+                                            />
+                                        </div>
+                                        <label htmlFor="from" className="">
+                                            von:
+                                        </label>
+                                        <input
+                                            type="date"
+                                            {...register(
+                                                `physicalMobilityQuestion.physicalMobilityTimeFrom`,
+                                                { validate: (v) => validateDateRange(v) }
+                                            )}
+                                            className="border border-gray-500 rounded-lg h-12 p-2 mx-2"
+                                        />
+                                        <label htmlFor="to" className="">
+                                            bis:
+                                        </label>
+                                        <input
+                                            type="date"
+                                            {...register(
+                                                `physicalMobilityQuestion.physicalMobilityTimeTo`
+                                            )}
+                                            className="border border-gray-500 rounded-lg h-12 p-2 mx-2"
+                                        />
+                                        <p className="text-red-600 pt-2">
+                                            {
+                                                errors.physicalMobilityQuestion
+                                                    ?.physicalMobilityTimeFrom?.message
+                                            }
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         </WhiteBox>
                         <div className="flex justify-around w-full mt-10">

@@ -13,29 +13,29 @@ import {
     BackendSearchResponse,
     BackendUserSnippet,
 } from '@/interfaces/api/apiInterfaces';
-import { generateFineStepLinkTopMenu } from '@/pages/startingWizard/generalInformation/courseFormat';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/startingWizard/sideProgressBar';
 import { sideMenuStepsData } from '@/data/sideMenuSteps';
+import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+import { FormalConditionPartner } from '@/pages/startingWizard/generalInformation/formalConditions';
 
 export default function Partners() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
-    const [partners, setPartners] = useState(['']);
+    const [formalConditions, setFormalConditions] = useState<FormalConditionPartner[]>([]);
+    const [partners, setPartners] = useState<string[]>(['']);
     const [partnerProfileSnippets, setPartnerProfileSnippets] = useState<{
         [Key: string]: BackendUserSnippet;
     }>({});
-    const [linkFineStepTopMenu, setLinkFineStepTopMenu] = useState<string>(
-        '/startingWizard/finePlanner'
-    );
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
+    const [steps, setSteps] = useState<IFineStep[]>([]);
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -63,6 +63,7 @@ export default function Partners() {
                 (data) => {
                     if (data.plan.partners.length !== 0) {
                         setPartners(data.plan.partners);
+
                         // fetch profile snippets to be able to display the full name instead of username only
                         fetchPOST(
                             '/profile_snippets',
@@ -82,7 +83,10 @@ export default function Partners() {
                     if (data.plan.progress.length !== 0) {
                         setSideMenuStepsProgress(data.plan.progress);
                     }
-                    setLinkFineStepTopMenu(generateFineStepLinkTopMenu(data.plan.steps));
+                    if (data.plan.formalities && Array.isArray(data.plan.formalities)) {
+                        setFormalConditions(data.plan.formalities);
+                    }
+                    setSteps(data.plan.steps);
                 }
             );
         }
@@ -107,6 +111,24 @@ export default function Partners() {
     };
 
     const onSubmit = async () => {
+        const updateFormalConditions = partners.map((partner) => {
+            const findFormalCondition = formalConditions.find(
+                (formalCondition) => formalCondition.partnerName === partner
+            );
+            if (findFormalCondition) {
+                return findFormalCondition;
+            } else {
+                return {
+                    partnerName: partner,
+                    time: false,
+                    place: false,
+                    technicalEquipment: false,
+                    institutionalRequirements: false,
+                    examinationRegulations: false,
+                    dataProtection: false,
+                };
+            }
+        });
         await fetchPOST(
             '/planner/update_fields',
             {
@@ -123,6 +145,11 @@ export default function Partners() {
                             ...sideMenuStepsProgress,
                             partners: ProgressState.completed,
                         },
+                    },
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'formalities',
+                        value: updateFormalConditions,
                     },
                 ],
             },
@@ -143,7 +170,6 @@ export default function Partners() {
         if (inputValue.length > 1) {
             fetchGET(`/search?users=true&query=${inputValue}`, session?.accessToken).then(
                 (data: BackendSearchResponse) => {
-                    console.log(data);
                     callback(
                         data.users.map((user) => ({
                             label: user.first_name + ' ' + user.last_name + ' - ' + user.username,
@@ -157,7 +183,7 @@ export default function Partners() {
 
     return (
         <>
-            <HeadProgressBarSection stage={0} linkFineStep={linkFineStepTopMenu} />
+            <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
             <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
                 {loading ? (
                     <LoadingAnimation />

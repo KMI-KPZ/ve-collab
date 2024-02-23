@@ -62,7 +62,7 @@ export const sideMenuStepsData: SideMenuStep[] = [
         link: '/startingWizard/generalInformation/tools',
     },
     {
-        text: 'formale Rahmenbedingungen',
+        text: 'Formale Rahmenbedingungen',
         id: 'formalities',
         link: '/startingWizard/generalInformation/formalConditions',
     },

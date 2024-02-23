@@ -11,10 +11,10 @@ import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarS
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
+    ISideProgressBarStateSteps,
     ProgressState,
     SideMenuStep,
 } from '@/interfaces/startingWizard/sideProgressBar';
-import { generateFineStepLinkTopMenu } from '@/pages/startingWizard/generalInformation/courseFormat';
 
 export interface ITask {
     title: string;
@@ -101,9 +101,6 @@ export default function FinePlanner() {
 
     const [steps, setSteps] = useState<IFineStep[]>([]);
     const [sideMenuStepsData, setSideMenuStepsData] = useState<SideMenuStep[]>([]);
-    const [linkFineStepTopMenu, setLinkFineStepTopMenu] = useState<string>(
-        '/startingWizard/finePlanner'
-    );
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
@@ -157,10 +154,7 @@ export default function FinePlanner() {
                             };
                             setCurrentFineStep(fineStepCopyTransformedTools);
                             methods.reset({ ...fineStepCopyTransformedTools });
-                            setSideMenuStepsData(
-                                generateSideMenuStepsDateSortedData(data.plan.steps)
-                            );
-                            setLinkFineStepTopMenu(generateFineStepLinkTopMenu(data.plan.steps));
+                            setSideMenuStepsData(generateSideMenuStepsData(data.plan.steps));
                             setSideMenuStepsProgress(data.plan.progress);
                         }
                     }
@@ -170,7 +164,6 @@ export default function FinePlanner() {
     }, [session, status, router, stepSlug, methods]);
 
     const onSubmit: SubmitHandler<IFineStepFrontend> = async (data: IFineStepFrontend) => {
-        const stepsWithoutCurrent = steps.filter((item: IFineStep) => item.name !== stepSlug);
         const currentStepTransformBackTools: ITask[] = data.tasks.map((task: ITaskFrontend) => {
             return {
                 ...task,
@@ -178,18 +171,28 @@ export default function FinePlanner() {
             };
         });
 
-        const stepCurrent: IFineStep = {
-            ...data,
-            workload: data.workload,
-            social_form: data.social_form,
-            learning_env: data.learning_env,
-            ve_approach: data.ve_approach,
-            tasks: currentStepTransformBackTools,
-        };
-        const stepSlugDecoded = decodeURI(stepSlug as string);
-        const stepsWithoutCurrentProgressState = sideMenuStepsProgress.steps.filter(
-            (step) => step[stepSlugDecoded] == undefined
+        const updateStepsData = steps.map((step) =>
+            step.name === stepSlug
+                ? {
+                      ...data,
+                      workload: data.workload,
+                      social_form: data.social_form,
+                      learning_env: data.learning_env,
+                      ve_approach: data.ve_approach,
+                      tasks: currentStepTransformBackTools,
+                  }
+                : step
         );
+
+        const stepSlugDecoded = decodeURI(stepSlug as string);
+
+        const updateStepsProgress = sideMenuStepsProgress.steps.map(
+            (step: ISideProgressBarStateSteps) =>
+                step[stepSlugDecoded] !== undefined
+                    ? { [stepSlugDecoded]: ProgressState.completed }
+                    : step
+        );
+
         await fetchPOST(
             '/planner/update_fields',
             {
@@ -197,17 +200,14 @@ export default function FinePlanner() {
                     {
                         plan_id: router.query.plannerId,
                         field_name: 'steps',
-                        value: [stepCurrent, ...stepsWithoutCurrent],
+                        value: [...updateStepsData],
                     },
                     {
                         plan_id: router.query.plannerId,
                         field_name: 'progress',
                         value: {
                             ...sideMenuStepsProgress,
-                            steps: [
-                                ...stepsWithoutCurrentProgressState,
-                                { [stepSlugDecoded]: ProgressState.completed },
-                            ],
+                            steps: [...updateStepsProgress],
                         },
                     },
                 ],
@@ -216,39 +216,37 @@ export default function FinePlanner() {
         );
     };
 
-    const generateSideMenuStepsDateSortedData = (steps: IFineStep[]): SideMenuStep[] => {
-        return steps
-            .sort((a: IFineStep, b: IFineStep) => (a.timestamp_from > b.timestamp_from ? 1 : -1))
-            .map((step: IFineStep) => ({
-                id: encodeURIComponent(step.name),
-                text: step.name,
-                link: `/startingWizard/fineplanner/${encodeURIComponent(step.name)}`,
-            }));
+    const generateSideMenuStepsData = (steps: IFineStep[]): SideMenuStep[] => {
+        return steps.map((step: IFineStep) => ({
+            id: encodeURIComponent(step.name),
+            text: step.name,
+            link: `/startingWizard/fineplanner/${encodeURIComponent(step.name)}`,
+        }));
     };
 
     const getNextFineStepUrl = (): string => {
-        const nextFineStepIndex =
-            sideMenuStepsData.findIndex((item: SideMenuStep) => item.text === stepSlug) + 1;
+        const sideMenuStepsDataCopy: SideMenuStep[] = [...sideMenuStepsData];
+        const currentSideMenuStepIndex: number = sideMenuStepsDataCopy.findIndex(
+            // courseFormat generate Finestep methode rausnehmen
+            (item: SideMenuStep): boolean => item.text === currentFineStep.name // with id (encode einfach)
+        ); // -1 if not found
         if (
-            sideMenuStepsData[nextFineStepIndex]?.link !== undefined &&
-            nextFineStepIndex <= sideMenuStepsData.length - 1 &&
-            nextFineStepIndex !== 0
+            currentSideMenuStepIndex < sideMenuStepsDataCopy.length - 1 &&
+            currentSideMenuStepIndex >= 0
         ) {
-            return sideMenuStepsData[nextFineStepIndex]?.link;
+            return sideMenuStepsDataCopy[currentSideMenuStepIndex + 1].link;
         } else {
             return '/startingWizard/finish';
         }
     };
 
     const getPreviousFineStepUrl = (): string => {
-        const nextFineStepIndex =
-            sideMenuStepsData.findIndex((item: SideMenuStep) => item.text === stepSlug) - 1;
-        if (
-            sideMenuStepsData[nextFineStepIndex]?.link !== undefined &&
-            nextFineStepIndex <= sideMenuStepsData.length - 1 &&
-            nextFineStepIndex > -1
-        ) {
-            return sideMenuStepsData[nextFineStepIndex]?.link;
+        const sideMenuStepsDataCopy: SideMenuStep[] = [...sideMenuStepsData];
+        const currentSideMenuStepIndex: number = sideMenuStepsDataCopy.findIndex(
+            (item: SideMenuStep): boolean => item.text === currentFineStep.name
+        );
+        if (currentSideMenuStepIndex > 0) {
+            return sideMenuStepsDataCopy[currentSideMenuStepIndex - 1].link;
         } else {
             return '/startingWizard/broadPlanner';
         }
@@ -256,7 +254,7 @@ export default function FinePlanner() {
 
     return (
         <>
-            <HeadProgressBarSection stage={2} linkFineStep={linkFineStepTopMenu} />
+            <HeadProgressBarSection stage={2} linkFineStep={steps[0]?.name} />
             <div className="flex justify-center bg-pattern-left-blue-small bg-no-repeat">
                 {loading ? (
                     <LoadingAnimation />
