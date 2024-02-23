@@ -1,25 +1,23 @@
-import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { RxDotsVertical } from 'react-icons/rx';
-import { Socket } from 'socket.io-client';
 import SmallTimestamp from '../SmallTimestamp';
 import Dialog from '../profile/Dialog';
-import { fetchPOST, fetchGET } from '@/lib/backend';
+import { fetchPOST } from '@/lib/backend';
 import { Notification } from '@/interfaces/socketio';
 import SuccessAlert from '../SuccessAlert';
 
 interface Props {
-    socket: Socket;
     notification: Notification;
+    acknowledgeNotificationCallback: (notificationId: string) => void;
     removeNotificationCallback: (notificationId: string) => void;
 }
 
 export default function VeInvitationReplyNotification({
-    socket,
     notification,
+    acknowledgeNotificationCallback,
     removeNotificationCallback,
 }: Props) {
     const { data: session } = useSession();
@@ -35,10 +33,6 @@ export default function VeInvitationReplyNotification({
 
     const handleCloseNotificationsDialog = () => {
         setIsNotificationsDialogOpen(false);
-    };
-
-    const acknowledgeNotification = () => {
-        socket.emit('acknowledge_notification', { notification_id: notification._id });
     };
 
     const grantWritePermission = () => {
@@ -82,7 +76,7 @@ export default function VeInvitationReplyNotification({
                 <div
                     className="px-2 cursor-pointer"
                     onClick={(e) => {
-                        acknowledgeNotification();
+                        acknowledgeNotificationCallback(notification._id);
                         handleOpenNotificationsDialog();
                     }}
                 >

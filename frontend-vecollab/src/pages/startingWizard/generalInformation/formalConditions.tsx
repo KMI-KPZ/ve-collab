@@ -14,7 +14,7 @@ import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import Link from 'next/link';
 
-interface FormalConditionPartner {
+export interface FormalConditionPartner {
     partnerName: string;
     time: boolean;
     place: boolean;
@@ -34,7 +34,7 @@ export default function FormalConditions() {
     const [steps, setSteps] = useState<IFineStep[]>([]);
     const [formalConditions, setFormalConditions] = useState<FormalConditionPartner[]>([
         {
-            partnerName: 'Sie',
+            partnerName: 'Du',
             time: false,
             place: false,
             technicalEquipment: false,
@@ -72,7 +72,6 @@ export default function FormalConditions() {
     }, [session, status, router]);
 
     const handleSubmit = async () => {
-        console.log('Submitted data:', formalConditions);
         await fetchPOST(
             '/planner/update_fields',
             {
