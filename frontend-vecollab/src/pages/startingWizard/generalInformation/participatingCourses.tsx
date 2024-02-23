@@ -222,6 +222,7 @@ export default function Lectures() {
                         <div className="w-1/2">
                             <input
                                 type="number"
+                                min={0}
                                 {...register(`lectures.${index}.participants_amount`, {
                                     maxLength: {
                                         value: 4,

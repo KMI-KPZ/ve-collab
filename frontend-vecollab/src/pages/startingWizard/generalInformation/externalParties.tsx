@@ -163,7 +163,7 @@ export default function ExternalPersons() {
                                 Gibt es externe Beteiligte?
                             </div>
                             <div className={'text-center mb-20'}>
-                                optional, falls ja, benenne diese, ansonsten einfach weiter
+                                optional
                             </div>
                             {renderExternalPartiesInputs()}
                             <div className={'w-3/4 mx-7 mt-3 flex justify-end'}>

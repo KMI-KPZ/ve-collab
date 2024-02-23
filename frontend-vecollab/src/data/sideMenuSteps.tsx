@@ -27,7 +27,7 @@ export const sideMenuStepsData: SideMenuStep[] = [
         link: '/startingWizard/generalInformation/participatingCourses',
     },
     {
-        text: 'Globale Lehr-/Lernziele',
+        text: 'Richtlernziele',
         id: 'globalGoals',
         link: '/startingWizard/generalInformation/globalGoals',
     },

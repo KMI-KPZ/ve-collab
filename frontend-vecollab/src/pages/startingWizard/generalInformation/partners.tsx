@@ -201,32 +201,12 @@ export default function Partners() {
                                 <div key={index} className="my-2">
                                     <AsyncCreatableSelect
                                         instanceId={index.toString()}
-                                        defaultOptions={[
-                                            {
-                                                label: `${
-                                                    partnerProfileSnippets[partner]
-                                                        ? partnerProfileSnippets[partner].first_name
-                                                        : ''
-                                                } ${
-                                                    partnerProfileSnippets[partner]
-                                                        ? partnerProfileSnippets[partner].last_name
-                                                        : ''
-                                                } - ${partner}`,
-                                                value: partner,
-                                            },
-                                        ]}
                                         loadOptions={loadOptions}
                                         onChange={(e) => modifyPartner(index, e!.value)}
                                         value={{
-                                            label: `${
-                                                partnerProfileSnippets[partner]
-                                                    ? partnerProfileSnippets[partner].first_name
-                                                    : ''
-                                            } ${
-                                                partnerProfileSnippets[partner]
-                                                    ? partnerProfileSnippets[partner].last_name
-                                                    : ''
-                                            } - ${partner}`,
+                                            label: partnerProfileSnippets[partner]
+                                                ? `${partnerProfileSnippets[partner].first_name} ${partnerProfileSnippets[partner].last_name} - ${partner}`
+                                                : `${partner}`,
                                             value: partner,
                                         }}
                                         placeholder={'Suche nach Nutzer:innen...'}

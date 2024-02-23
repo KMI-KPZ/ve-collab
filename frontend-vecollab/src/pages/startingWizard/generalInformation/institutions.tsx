@@ -131,12 +131,12 @@ export default function Institutions() {
             <div key={institution.id} className="mx-2">
                 <WhiteBox>
                     <div className="mt-4 flex">
-                        <div className="w-1/4 flex items-center">
+                        <div className="w-1/3 flex items-center">
                             <label htmlFor="name" className="px-2 py-2">
                                 Name
                             </label>
                         </div>
-                        <div className="w-3/4">
+                        <div className="w-2/3">
                             <input
                                 type="text"
                                 placeholder="Name eingeben"
@@ -160,12 +160,12 @@ export default function Institutions() {
                         </div>
                     </div>
                     <div className="mt-4 flex">
-                        <div className="w-1/4 flex items-center">
+                        <div className="w-1/3 flex items-center">
                             <label htmlFor="schoolType" className="px-2 py-2">
                                 Bildungseinrichtung
                             </label>
                         </div>
-                        <div className="w-3/4">
+                        <div className="w-2/3">
                             <select
                                 placeholder="Bildungseinrichtung eingeben"
                                 className="border border-gray-500 rounded-lg w-full h-12 p-2"
@@ -199,12 +199,12 @@ export default function Institutions() {
                         </div>
                     </div>
                     <div className="mt-4 flex">
-                        <div className="w-1/4 flex items-center">
+                        <div className="w-1/3 flex items-center">
                             <label htmlFor="country" className="px-2 py-2">
                                 Land
                             </label>
                         </div>
-                        <div className="w-3/4">
+                        <div className="w-2/3">
                             <input
                                 type="text"
                                 placeholder="Land eingeben"
@@ -230,13 +230,13 @@ export default function Institutions() {
                     <div className="mt-4 flex">
                         <div className="w-1/3 flex items-center">
                             <label htmlFor="department" className="px-2 py-2">
-                                Abteilungsname
+                                Fachbereich
                             </label>
                         </div>
                         <div className="w-2/3">
                             <input
                                 type="text"
-                                placeholder="Abteilungsname eingeben"
+                                placeholder="Fachbereich eingeben"
                                 className="border border-gray-500 rounded-lg w-full h-12 p-2"
                                 {...register(`institutions.${index}.departments.0`, {
                                     maxLength: {
