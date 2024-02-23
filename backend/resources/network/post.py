@@ -1,5 +1,5 @@
 import datetime
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from bson.objectid import ObjectId
 import gridfs
@@ -124,10 +124,11 @@ class Posts:
 
         return list(self.db.posts.find({"$text": {"$search": query}}))
 
-    def insert_post(self, post: dict) -> None:
+    def insert_post(self, post: dict) -> ObjectId:
         """
         insert a new post into the db, validating the attributes beforehand.
         If the supplied post has an _id field, update the existing post instead.
+        Returns the _id of the inserted (or updated) post.
         :param post: the post to save as a dict
         """
 
@@ -141,9 +142,11 @@ class Posts:
         if not all(attr in post for attr in self.post_attributes):
             raise ValueError("Post misses required attribute")
 
-        self.db.posts.insert_one(post)
+        result = self.db.posts.insert_one(post)
 
-    def update_post_text(self, post_id: str | ObjectId, text: str) -> None:
+        return result.inserted_id
+
+    def update_post_text(self, post_id: str | ObjectId, text: str) -> ObjectId:
         """
         update the text of an existing post
         """
@@ -159,6 +162,8 @@ class Posts:
         # we know that there was no post with the given _id
         if update_result.modified_count != 1:
             raise PostNotExistingException()
+        
+        return post_id
 
     def delete_post(self, post_id: str | ObjectId) -> None:
         """
@@ -191,12 +196,14 @@ class Posts:
         # finally delete the post itself
         self.db.posts.delete_one({"_id": post_id})
 
-    def delete_post_by_space(self, space_name: str) -> None:
+    def delete_post_by_space(self, space_id: str | ObjectId) -> None:
         """
-        delete all posts that were in the space given by its name
+        delete all posts that were in the space given by its _id
         """
 
-        self.db.posts.delete_many({"space": space_name})
+        space_id = util.parse_object_id(space_id)
+
+        self.db.posts.delete_many({"space": space_id})
 
     def like_post(self, post_id: str | ObjectId, username: str) -> None:
         """
@@ -446,37 +453,75 @@ class Posts:
         )
 
     def get_space_timeline(
-        self, space_name: str, time_from: datetime.datetime, time_to: datetime.datetime
-    ) -> List[Dict]:
+        self, space_id: str | ObjectId, time_to: datetime.datetime, limit: int = 10
+    ) -> Tuple[List[Dict], List[Dict]]:
         """
-        get the timeline of a space within the time window specified by time_from and time_to.
-        This will always include posts that are pinned, no matter if they fit the timeframe.
-        :param space_name: the name of the space to view the timeline of
-        :param time_from: the starting datetime of the window in utc time
-        :param time_to: the end datetime of the window in utc time
+        get the timeline of a space (as well as pinned posts). 
+        The timeline will always include `limit` number of posts, that are older than the 
+        `time_to` timestamp. So, e.g. achieve endless scrolling, retrieve the next `limit` 
+        posts as kind of a pagination approach, use the oldest timestamp of your current 
+        result set as the new starting point.
+        
+        If there are not enough posts, the timeline will include as many
+        posts as possible. In turn, if there are less then `limit` posts returned, 
+        this timeline does not contain any more posts, so further requests with an even 
+        older timestamp will not yield any more results.
+
+        Returns a tuple of two lists, the first one containing the posts that match the
+        time & limit constraints in newest-first order, the second one containing the pinned
+        posts in the space (if any).
+
+
+        :param space_id: the _id of the space to view the timeline of
+        :param time_to: the maximum creation date of the posts to be returned (i.e. only
+                        posts older than this date will be returned)
+        :param limit: the maximum number of posts to be returned, default 10
         """
 
-        return list(
+        space_id = util.parse_object_id(space_id)
+
+        posts_in_timeframe = list(
             self.db.posts.find(
                 {
-                    "space": space_name,
+                    "space": space_id,
                     "$or": [
-                        {"creation_date": {"$gte": time_from, "$lte": time_to}},
-                        {"pinned": True},
+                        {"creation_date": {"$lte": time_to}},
                     ],
+                }, limit=limit, sort=[("creation_date", -1)]
+            )
+        )
+
+        pinned_posts = list(
+            self.db.posts.find(
+                {
+                    "space": space_id,
+                    "pinned": True,
                 }
             )
         )
 
+        return (posts_in_timeframe, pinned_posts)
+
     def get_user_timeline(
-        self, username: str, time_from: datetime.datetime, time_to: datetime.datetime
+        self, username: str, time_to: datetime.datetime, limit: int = 10
     ) -> List[Dict]:
         """
-        get the timeline of the given user (aka the timeline on his profile) within
-        the time windows specified by `time_from` and `time_to`.
+        get the timeline of the given user (aka the timeline on his profile) 
+        
+        The timeline will always include `limit` number of posts, that are older than the 
+        `time_to` timestamp. So, e.g. achieve endless scrolling, retrieve the next `limit` 
+        posts as kind of a pagination approach, use the oldest timestamp of your current 
+        result set as the new starting point.
+        
+        If there are not enough posts, the timeline will include as many
+        posts as possible. In turn, if there are less then `limit` posts returned, 
+        this timeline does not contain any more posts, so further requests with an even 
+        older timestamp will not yield any more results.
+        
         :param username: the name of the user whose timeline is requested
-        :param time_from: the starting datetime of the window in utc time
-        :param time_to: the end datetime of the window in utc time
+        :param time_to: the maximum creation date of the posts to be returned (i.e. only
+                        posts older than this date will be returned)
+        :param limit: the maximum number of posts to be returned, default 10
         """
 
         # TODO what about posts in spaces? include? exclude?
@@ -484,9 +529,9 @@ class Posts:
         return list(
             self.db.posts.find(
                 {
-                    "creation_date": {"$gte": time_from, "$lte": time_to},
+                    "creation_date": {"$lte": time_to},
                     "author": username,
-                }
+                }, sort=[("creation_date", -1)], limit=limit
             )
         )
     
@@ -525,7 +570,7 @@ class Posts:
                     "$lookup": {
                         "from": "spaces",
                         "localField": "space",
-                        "foreignField": "name",
+                        "foreignField": "_id",
                         "as": "space_obj",
                     }
                 },
@@ -726,7 +771,7 @@ class Posts:
                     "$lookup": {
                         "from": "spaces",
                         "localField": "space",
-                        "foreignField": "name",
+                        "foreignField": "_id",
                         "as": "space_obj",
                     }
                 },

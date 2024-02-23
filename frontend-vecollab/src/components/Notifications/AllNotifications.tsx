@@ -3,6 +3,8 @@ import { useSession } from 'next-auth/react';
 import VeInvitationNotification from './VeInvitationNotification';
 import { Socket } from 'socket.io-client';
 import VeInvitationReplyNotification from './VeInvitationReplyNotification';
+import SpaceInvitationNotification from './SpaceInvitationNotification';
+import SpaceJoinRequestNotification from './SpaceJoinRequestNotification';
 
 interface Props {
     socket: Socket;
@@ -12,7 +14,12 @@ AllNotifications.auth = true;
 export default function AllNotifications({ socket }: Props) {
     const { data: session, status } = useSession();
 
-    const {data: notifications, isLoading, error, mutate} = useGetNotifications(session!.accessToken)
+    const {
+        data: notifications,
+        isLoading,
+        error,
+        mutate,
+    } = useGetNotifications(session!.accessToken);
 
     console.log(notifications);
 
@@ -30,9 +37,10 @@ export default function AllNotifications({ socket }: Props) {
                         <div key={index}>
                             {notification.type === 've_invitation' && (
                                 <VeInvitationNotification
-                                    key={index}
-                                    socket={socket}
                                     notification={notification}
+                                    acknowledgeNotificationCallback={function (
+                                        notificationId: string
+                                    ): void {}}
                                     removeNotificationCallback={function (
                                         notificationId: string
                                     ): void {}}
@@ -40,9 +48,32 @@ export default function AllNotifications({ socket }: Props) {
                             )}
                             {notification.type === 've_invitation_reply' && (
                                 <VeInvitationReplyNotification
-                                    key={index}
-                                    socket={socket}
                                     notification={notification}
+                                    acknowledgeNotificationCallback={function (
+                                        notificationId: string
+                                    ): void {}}
+                                    removeNotificationCallback={function (
+                                        notificationId: string
+                                    ): void {}}
+                                />
+                            )}
+                            {notification.type === 'space_invitation' && (
+                                <SpaceInvitationNotification
+                                    notification={notification}
+                                    acknowledgeNotificationCallback={function (
+                                        notificationId: string
+                                    ): void {}}
+                                    removeNotificationCallback={function (
+                                        notificationId: string
+                                    ): void {}}
+                                />
+                            )}
+                            {notification.type === 'space_join_request' && (
+                                <SpaceJoinRequestNotification
+                                    notification={notification}
+                                    acknowledgeNotificationCallback={function (
+                                        notificationId: string
+                                    ): void {}}
                                     removeNotificationCallback={function (
                                         notificationId: string
                                     ): void {}}

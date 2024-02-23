@@ -5,7 +5,6 @@ import { useState } from 'react';
 import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
 import { useSession } from 'next-auth/react';
 import { fetchDELETE, fetchPOST, useGetSpace } from '@/lib/backend';
-import DialogUserList from '../profile/DialogUserList';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '../LoadingAnimation';
 import AuthenticatedImage from '../AuthenticatedImage';
@@ -32,7 +31,7 @@ export default function GroupBanner({ userIsAdmin }: Props) {
         isLoading,
         error,
         mutate,
-    } = useGetSpace(session!.accessToken, router.query.name as string);
+    } = useGetSpace(session!.accessToken, router.query.id as string);
 
     const handleOpenMemberDialog = () => {
         setIsMemberDialogOpen(true);
@@ -58,7 +57,7 @@ export default function GroupBanner({ userIsAdmin }: Props) {
 
     const removeUserFromGroup = (username: string) => {
         fetchDELETE(
-            `/spaceadministration/kick?name=${space.name}&user=${username}`,
+            `/spaceadministration/kick?id=${space._id}&user=${username}`,
             {},
             session?.accessToken
         ).then(() => {
