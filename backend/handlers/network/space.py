@@ -782,7 +782,7 @@ class SpaceHandler(BaseHandler):
             return
 
         elif slug == "join":
-            self.join_space(space_id)
+            await self.join_space(space_id)
             return
 
         elif slug == "add_admin":
@@ -1413,7 +1413,7 @@ class SpaceHandler(BaseHandler):
         self.set_status(200)
         self.serialize_and_write({"success": True, "space_id": _id})
 
-    def join_space(self, space_id: str | ObjectId) -> None:
+    async def join_space(self, space_id: str | ObjectId) -> None:
         """
         let current user join the space, if he has sufficient permissions
         if not, let him send a join request instead
@@ -1441,11 +1441,25 @@ class SpaceHandler(BaseHandler):
             # if user is not allowed to join spaces directly,
             # or user doesnt have elevated permissions to join any space,
             # send join request instead of joining directly
+            # and notify the space admins about the request
             if not space_manager.is_space_directly_joinable(space_id):
                 if not self.is_current_user_lionet_admin():
                     space_manager.join_space_request(
                         space_id, self.current_user.username
                     )
+
+                    # notify space admins about the join request
+                    space = space_manager.get_space(space_id, projection={"admins": True, "name": True})
+                    for admin in space["admins"]:
+                        notification_payload = {
+                            "join_request_sender": self.current_user.username,
+                            "space_name": space["name"],
+                            "space_id": space_id
+                        }
+                        notification_manager = NotificationResource(db)
+                        await notification_manager.send_notification(
+                            admin, "space_join_request", notification_payload
+                        )
 
                     self.set_status(200)
                     self.write({"success": True, "join_type": "requested_join"})

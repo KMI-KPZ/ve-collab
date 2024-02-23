@@ -1,6 +1,5 @@
 import { RxDotsVertical } from 'react-icons/rx';
 import SmallTimestamp from '../SmallTimestamp';
-import { Socket } from 'socket.io-client';
 import { Notification } from '@/interfaces/socketio';
 import { useEffect, useState } from 'react';
 import { fetchGET, fetchPOST } from '@/lib/backend';
@@ -11,14 +10,14 @@ import Dialog from '../profile/Dialog';
 import Link from 'next/link';
 
 interface Props {
-    socket: Socket;
     notification: Notification;
+    acknowledgeNotificationCallback: (notificationId: string) => void;
     removeNotificationCallback: (notificationId: string) => void;
 }
 
 export default function VeInvitationNotification({
-    socket,
     notification,
+    acknowledgeNotificationCallback,
     removeNotificationCallback,
 }: Props) {
     const { data: session } = useSession();
@@ -34,10 +33,6 @@ export default function VeInvitationNotification({
 
     const handleCloseNotificationsDialog = () => {
         setIsNotificationsDialogOpen(false);
-    };
-
-    const acknowledgeNotification = () => {
-        socket.emit('acknowledge_notification', { notification_id: notification._id });
     };
 
     const replyInvitation = (accept: boolean) => {
@@ -76,7 +71,7 @@ export default function VeInvitationNotification({
                 <div
                     className="px-2 cursor-pointer"
                     onClick={(e) => {
-                        acknowledgeNotification();
+                        acknowledgeNotificationCallback(notification._id);
                         handleOpenNotificationsDialog();
                     }}
                 >

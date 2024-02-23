@@ -2,6 +2,7 @@ import WhiteBox from '@/components/Layout/WhiteBox';
 import Container from '@/components/Layout/container';
 import AllNotifications from '@/components/Notifications/AllNotifications';
 import SpaceInvitationNotification from '@/components/Notifications/SpaceInvitationNotification';
+import SpaceJoinRequestNotification from '@/components/Notifications/SpaceJoinRequestNotification';
 import VeInvitationNotification from '@/components/Notifications/VeInvitationNotification';
 import VeInvitationReplyNotification from '@/components/Notifications/VeInvitationReplyNotification';
 import Tabs from '@/components/profile/Tabs';
@@ -27,8 +28,8 @@ export default function Notifications({
         );
     };
 
-    const acknowledgeNotification = (notification: Notification) => {
-        socket.emit('acknowledge_notification', { notification_id: notification._id });
+    const acknowledgeNotification = (notificationId: string) => {
+        socket.emit('acknowledge_notification', { notification_id: notificationId });
     };
 
     useEffect(() => {
@@ -47,9 +48,8 @@ export default function Notifications({
                                         <div key={index}>
                                             {notification.type === 've_invitation' && (
                                                 <VeInvitationNotification
-                                                    key={index}
-                                                    socket={socket}
                                                     notification={notification}
+                                                    acknowledgeNotificationCallback={acknowledgeNotification}
                                                     removeNotificationCallback={
                                                         removeNotificationFromList
                                                     }
@@ -57,8 +57,8 @@ export default function Notifications({
                                             )}
                                             {notification.type === 've_invitation_reply' && (
                                                 <VeInvitationReplyNotification
-                                                    socket={socket}
                                                     notification={notification}
+                                                    acknowledgeNotificationCallback={acknowledgeNotification}
                                                     removeNotificationCallback={
                                                         removeNotificationFromList
                                                     }
@@ -66,9 +66,17 @@ export default function Notifications({
                                             )}
                                             {notification.type === 'space_invitation' && (
                                                 <SpaceInvitationNotification
-                                                    key={index}
-                                                    socket={socket}
                                                     notification={notification}
+                                                    acknowledgeNotificationCallback={acknowledgeNotification}
+                                                    removeNotificationCallback={
+                                                        removeNotificationFromList
+                                                    }
+                                                />
+                                            )}
+                                            {notification.type === 'space_join_request' && (
+                                                <SpaceJoinRequestNotification
+                                                    notification={notification}
+                                                    acknowledgeNotificationCallback={acknowledgeNotification}
                                                     removeNotificationCallback={
                                                         removeNotificationFromList
                                                     }

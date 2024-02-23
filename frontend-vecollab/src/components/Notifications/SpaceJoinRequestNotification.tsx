@@ -14,14 +14,14 @@ interface Props {
     removeNotificationCallback: (notificationId: string) => void;
 }
 
-export default function SpaceInvitationNotification({
+export default function SpaceJoinRequestNotification({
     notification,
     acknowledgeNotificationCallback,
     removeNotificationCallback,
 }: Props) {
     const { data: session } = useSession();
 
-    const [invitedFromUser, setInvitedFromUser] = useState<UserSnippet>();
+    const [requestedUser, setRequestedUser] = useState<UserSnippet>();
 
     const [isNotificationsDialogOpen, setIsNotificationsDialogOpen] = useState(false);
 
@@ -33,16 +33,16 @@ export default function SpaceInvitationNotification({
         setIsNotificationsDialogOpen(false);
     };
 
-    const replyInvitation = (accept: boolean) => {
+    const replyRequest = (accept: boolean) => {
         if (accept) {
             fetchPOST(
-                `/spaceadministration/accept_invite?id=${notification.payload.space_id}`,
+                `/spaceadministration/accept_request?id=${notification.payload.space_id}&user=${notification.payload.join_request_sender}`,
                 {},
                 session?.accessToken
             );
         } else {
             fetchPOST(
-                `/spaceadministration/decline_invite?id=${notification.payload.space_id}`,
+                `/spaceadministration/reject_request?id=${notification.payload.space_id}&user=${notification.payload.join_request_sender}`,
                 {},
                 session?.accessToken
             );
@@ -52,10 +52,10 @@ export default function SpaceInvitationNotification({
     useEffect(() => {
         fetchPOST(
             '/profile_snippets',
-            { usernames: [notification.payload.invitation_sender] },
+            { usernames: [notification.payload.join_request_sender] },
             session?.accessToken
         ).then((data) => {
-            setInvitedFromUser({
+            setRequestedUser({
                 profilePicUrl: data.user_snippets[0].profile_pic,
                 name: data.user_snippets[0].first_name + ' ' + data.user_snippets[0].last_name,
                 preferredUsername: data.user_snippets[0].username,
@@ -75,8 +75,8 @@ export default function SpaceInvitationNotification({
                     }}
                 >
                     <p>
-                        Du wurdest von <b>{invitedFromUser?.name}</b> in die Gruppe{' '}
-                        <b>{notification.payload.space_name}</b> eingeladen
+                        <b>{requestedUser?.name}</b> möchte deiner Gruppe{' '}
+                        <b>{notification.payload.space_name}</b> beitreten.
                     </p>
                     <SmallTimestamp
                         className="text-gray-500"
@@ -104,20 +104,20 @@ export default function SpaceInvitationNotification({
                 <div className="w-[30rem] min-h-[10rem] relative">
                     <div>
                         <p>
-                            <Link href={`/profile?username=${invitedFromUser?.preferredUsername}`}>
-                                <b>{invitedFromUser?.name}</b>
+                            <Link href={`/profile?username=${requestedUser?.preferredUsername}`}>
+                                <b>{requestedUser?.name}</b>
                             </Link>{' '}
-                            hat dich in die Gruppe{' '}
+                            möchte deiner Gruppe{' '}
                             <Link href={`/space?id=${notification.payload.space_id}`}>
                                 <b>{notification.payload.space_name}</b>
                             </Link>{' '}
-                            eingeladen.
+                            beitreten.
                         </p>
                         <p className="my-4">
-                            Du kannst die Einladung sofort beantworten, oder später in deinen{' '}
-                            <Link href={'/spaces'}>
-                                {/* TODO direct link to correct tab in spaces overview*/}
-                                <b>gesammelten Anfragen</b>
+                            Du kannst die Anfrage sofort beantworten, oder später in den Einstellungen der{' '}
+                            <Link href={`/space?id=${notification.payload.space_id}`}>
+                                {/* TODO direct link to correct tab in space settings*/}
+                                <b>Gruppe</b>
                             </Link>
                             .
                         </p>
@@ -129,7 +129,7 @@ export default function SpaceInvitationNotification({
                             }
                             onClick={(e) => {
                                 removeNotificationCallback(notification._id);
-                                replyInvitation(false);
+                                replyRequest(false);
                                 handleCloseNotificationsDialog();
                             }}
                         >
@@ -141,7 +141,7 @@ export default function SpaceInvitationNotification({
                             }
                             onClick={(e) => {
                                 removeNotificationCallback(notification._id);
-                                replyInvitation(true);
+                                replyRequest(true);
                                 handleCloseNotificationsDialog();
                             }}
                         >
