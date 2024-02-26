@@ -1,11 +1,10 @@
-import { fetchPOST, useGetTimeline } from "@/lib/backend";
+import { useGetTimeline } from "@/lib/backend";
 import { useSession } from "next-auth/react";
 import LoadingAnimation from "../LoadingAnimation";
 import TimelinePost from "./TimelinePost";
-import { FormEvent, useState } from "react";
-import { IoIosSend } from "react-icons/io";
-import AuthenticatedImage from "../AuthenticatedImage";
+import { useState } from "react";
 import { useRef } from 'react'
+import TimelinePostForm from "./TimelinePostForm";
 
 interface Props {
     space?: string | undefined;
@@ -40,43 +39,7 @@ export default function Timeline({ space }: Props) {
     // TODO user profile pic should be part of session?.user
 
     const reloadTimeline = () => {
-        setToDate(new Date().toISOString())
-    }
-
-    // TODO Form should be an own component (also for edit post)
-
-    const onSubmitForm = async (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        const formData = new FormData(event.currentTarget)
-        const text = (formData.get('text') as string).trim()
-
-        if (text === '')  return
-
-        const addNewPost = async () => {
-            const res = await fetchPOST(
-                '/posts',
-                Object.assign({}, {
-                    text,
-                    tags: []
-                }, space ? { space } : {}),
-                session?.accessToken,
-                true
-            )
-            return res.inserted_post
-        }
-
-        try {
-            await mutate(addNewPost, {
-                populateCache: (newPost, posts) => {
-                    return { success: true, posts: [newPost, ...posts.posts] };
-                },
-                revalidate: false,
-            });
-            ref.current?.reset()
-
-        } catch (error) {
-            console.error(error);
-        }
+        return setToDate(new Date().toISOString())
     }
 
     if (isLoadingTimeline) {
@@ -91,28 +54,7 @@ export default function Timeline({ space }: Props) {
     return (
         <>
             <div className={'p-4 my-8 bg-white rounded-3xl shadow-2xl '}>
-                <form onSubmit={onSubmitForm} ref={ref}>
-                    <div className="flex items-center mb-5">
-                        <AuthenticatedImage
-                            imageId={"default_profile_pic.jpg"}
-                            alt={'Benutzerbild'}
-                            width={40}
-                            height={40}
-                            className="rounded-full mr-3"
-                        ></AuthenticatedImage>
-                        <textarea
-                            className={'w-full border border-[#cccccc] rounded-md px-2 py-[6px]'}
-                            placeholder={'Beitrag schreiben ...'}
-                            name='text'
-                        />
-                    </div>
-                    <div className="flex justify-end">
-
-                    <button className="flex items-center bg-ve-collab-orange text-white py-2 px-5 rounded-lg" type='submit' title="Senden">
-                        <IoIosSend className="mx-2" />Senden
-                    </button>
-                    </div>
-                </form>
+                <TimelinePostForm reloadTimeline={reloadTimeline} />
             </div>
             {!posts.length ? ( <div>Timeline is Empty</div>) : (<></>)}
             {posts.map((post, i) =>
