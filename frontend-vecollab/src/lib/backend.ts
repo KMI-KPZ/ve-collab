@@ -1,7 +1,7 @@
 import {
     BackendChatMessage,
     BackendChatroomSnippet,
-    BackendPosts,
+    BackendPost,
     BackendSpace,
     BackendSpaceACLEntry,
     BackendUserSnippet,
@@ -341,7 +341,7 @@ export function useGetTimeline(
     limit?: number,
     space?: string
  ): {
-    data: BackendPosts[];
+    data: BackendPost[];
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;
