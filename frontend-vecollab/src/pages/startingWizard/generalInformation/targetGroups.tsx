@@ -25,7 +25,6 @@ export interface TargetGroup {
     academic_course: string;
     mother_tongue: string;
     foreign_languages: string;
-    learning_goal: string;
 }
 
 interface FormValues {
@@ -70,7 +69,6 @@ export default function TargetGroups() {
                     academic_course: '',
                     mother_tongue: '',
                     foreign_languages: '',
-                    learning_goal: '',
                 },
             ],
         },
@@ -326,35 +324,6 @@ export default function TargetGroups() {
                             </p>
                         </div>
                     </div>
-                    <div className="mt-4 flex">
-                        <div className="w-1/4 flex items-center">
-                            <label htmlFor="foreignLanguages" className="px-2 py-2">
-                                Lehr-/Lernziele
-                            </label>
-                        </div>
-                        <div className="w-3/4">
-                            <textarea
-                                rows={3}
-                                {...register(`targetGroups.${index}.learning_goal`, {
-                                    maxLength: {
-                                        value: 50,
-                                        message:
-                                            'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
-                                    },
-                                    pattern: {
-                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'".:,;&()!?-]*$/i,
-                                        message:
-                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
-                                    },
-                                })}
-                                placeholder="Welche"
-                                className="border border-gray-500 rounded-lg w-full p-2"
-                            />
-                            <p className="text-red-600 pt-2">
-                                {errors?.targetGroups?.[index]?.learning_goal?.message}
-                            </p>
-                        </div>
-                    </div>
                 </WhiteBox>
             </div>
         ));
@@ -390,7 +359,6 @@ export default function TargetGroups() {
                                             academic_course: '',
                                             mother_tongue: '',
                                             foreign_languages: '',
-                                            learning_goal: '',
                                         });
                                     }}
                                 >

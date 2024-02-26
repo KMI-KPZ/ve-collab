@@ -167,7 +167,6 @@ class BaseResourceTestCase(TestCase):
             academic_course="test",
             mother_tongue="test",
             foreign_languages={"test": "l1"},
-            learning_goal="test",
         )
 
     def create_institution(self, name: str = "test") -> Institution:
@@ -5503,7 +5502,6 @@ class PlanResourceTest(BaseResourceTestCase):
             academic_course="updated_academic_course",
             mother_tongue="de",
             foreign_languages={"en": "c1"},
-            learning_goal="test",
         )
         # we need to delay our execution here just a little bit, because otherwise
         # the updated would happen too fast relative to the setup, which would result
@@ -5523,7 +5521,6 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(
             db_state["audience"][0]["foreign_languages"], tg.foreign_languages
         )
-        self.assertEqual(db_state["audience"][0]["learning_goal"], tg.learning_goal)
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
         # same, but this time manually specify a _id
@@ -5536,7 +5533,6 @@ class PlanResourceTest(BaseResourceTestCase):
             academic_course="updated_academic_course2",
             mother_tongue="de2",
             foreign_languages={"en": "c1"},
-            learning_goal="test",
         )
         # we need to delay our execution here just a little bit, because otherwise
         # the updated would happen too fast relative to the setup, which would result
@@ -5558,7 +5554,6 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(
             db_state["audience"][0]["foreign_languages"], tg2.foreign_languages
         )
-        self.assertEqual(db_state["audience"][0]["learning_goal"], tg.learning_goal)
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
     def test_update_field_object_with_user(self):
@@ -5575,7 +5570,6 @@ class PlanResourceTest(BaseResourceTestCase):
             academic_course="updated_academic_course",
             mother_tongue="de",
             foreign_languages={"en": "c1"},
-            learning_goal="test",
         )
         # we need to delay our execution here just a little bit, because otherwise
         # the updated would happen too fast relative to the setup, which would result
@@ -5597,7 +5591,6 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(
             db_state["audience"][0]["foreign_languages"], tg.foreign_languages
         )
-        self.assertEqual(db_state["audience"][0]["learning_goal"], tg.learning_goal)
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
         # same, but this time manually specify a _id
@@ -5610,7 +5603,6 @@ class PlanResourceTest(BaseResourceTestCase):
             academic_course="updated_academic_course2",
             mother_tongue="de2",
             foreign_languages={"en": "c1"},
-            learning_goal="test",
         )
         # we need to delay our execution here just a little bit, because otherwise
         # the updated would happen too fast relative to the setup, which would result
@@ -5634,7 +5626,6 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(
             db_state["audience"][0]["foreign_languages"], tg2.foreign_languages
         )
-        self.assertEqual(db_state["audience"][0]["learning_goal"], tg.learning_goal)
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
     def test_update_field_upsert(self):

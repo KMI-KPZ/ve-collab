@@ -553,7 +553,6 @@ class TargetGroup:
         "academic_course": (str, type(None)),
         "mother_tongue": str,
         "foreign_languages": (dict, str, type(None)),
-        "learning_goal": str,
     }
 
     def __init__(
@@ -566,7 +565,6 @@ class TargetGroup:
         academic_course: str = None,
         mother_tongue: str = None,
         foreign_languages: Dict[str, str] | str = None,
-        learning_goal: str = None,
     ) -> None:
         """
         Initialization of a `TargetGroup` instance.
@@ -618,7 +616,6 @@ class TargetGroup:
         self.academic_course = academic_course
         self.mother_tongue = mother_tongue
         self.foreign_languages = foreign_languages
-        self.learning_goal = learning_goal
 
     def __str__(self) -> str:
         return str(self.__dict__)
@@ -646,7 +643,6 @@ class TargetGroup:
             "academic_course": self.academic_course,
             "mother_tongue": self.mother_tongue,
             "foreign_languages": self.foreign_languages,
-            "learning_goal": self.learning_goal,
         }
 
     @classmethod
@@ -655,9 +651,9 @@ class TargetGroup:
         initialize a `TargetGroup`-object from a dictionary (`params`).
         All of the followings keys have to be present in the dict:
         `"name"`, `"age_min"`, `"age_max"`, `"experience"`, `"academic_course"`,
-        `"mother_tongue"`, `"foreign_languages"`, `"learning_goal"`.
+        `"mother_tongue"`, `"foreign_languages"`.
         However values are not required, any attributes may be
-        initialized with None (name/experience/academic_course/mother_tongue/learning_goal),
+        initialized with None (name/experience/academic_course/mother_tongue),
         0 (age_min/age_max) or {} (foreign_languages).
 
         Optionally, a `"_id"` may be supplied, conveying the semantics that this TargetGroup
@@ -1375,7 +1371,6 @@ class VEPlan:
                         "academic_course": None,
                         "mother_tongue": None,
                         "foreign_languages": {},
-                        "learning_goal": None,
                     }
                 ],
                 "languages": [],

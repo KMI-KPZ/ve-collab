@@ -132,7 +132,6 @@ export default function ViewAttributes({ plan }: Props): JSX.Element {
                                         <li>{showDataOrEmptySign(studyGroup.academic_course)}</li>
                                         <li>{showDataOrEmptySign(studyGroup.mother_tongue)}</li>
                                         <li>{showDataOrEmptySign(studyGroup.foreign_languages)}</li>
-                                        <li>{showDataOrEmptySign(studyGroup.learning_goal)}</li>
                                     </ul>
                                 </div>
                             ))
