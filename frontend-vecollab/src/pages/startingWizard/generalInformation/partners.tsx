@@ -113,13 +113,13 @@ export default function Partners() {
     const onSubmit = async () => {
         const updateFormalConditions = partners.map((partner) => {
             const findFormalCondition = formalConditions.find(
-                (formalCondition) => formalCondition.partnerName === partner
+                (formalCondition) => formalCondition.username === partner
             );
             if (findFormalCondition) {
                 return findFormalCondition;
             } else {
                 return {
-                    partnerName: partner,
+                    username: partner,
                     time: false,
                     place: false,
                     technicalEquipment: false,

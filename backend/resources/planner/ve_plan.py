@@ -193,6 +193,29 @@ class VEPlanResource:
             raise PlanDoesntExistError()
 
         return username == result["author"]
+    
+    def _check_user_is_author_or_partner(self, plan_id: str | ObjectId, username: str) -> bool:
+        """
+        Determine if the user given by his `username` is the author of the plan given
+        by its _id or a partner of the plan.
+
+        Returns True if the user is the author or partner, False otherwise.
+
+        Raises `PlanDoesntExistError`if no such plan with the given `plan_id` is found in
+        the db.
+        """
+
+        try:
+            plan_id = util.parse_object_id(plan_id)
+        except InvalidId:
+            raise PlanDoesntExistError()
+
+        result = self.db.plans.find_one({"_id": plan_id}, {"author": True, "partners": True})
+
+        if not result:
+            raise PlanDoesntExistError()
+
+        return username == result["author"] or username in result["partners"]
 
     def update_full_plan(
         self, plan: VEPlan, upsert: bool = False, requesting_username: str = None
@@ -358,34 +381,32 @@ class VEPlanResource:
 
             # formalities is another special case that enforces keys in the dict
             if field_name == "formalities":
-                if "technology" not in value_copy:
-                    raise MissingKeyError(
-                        "Missing key {} in {} dictionary".format(
-                            "technology", "formalities"
-                        ),
-                        "technology",
-                        "formalities",
-                    )
-                if "exam_regulations" not in value_copy:
-                    raise MissingKeyError(
-                        "Missing key {} in {} dictionary".format(
-                            "technology", "exam_regulations"
-                        ),
-                        "technology",
-                        "exam_regulations",
-                    )
-                if not isinstance(value_copy["technology"], (bool, type(None))):
-                    raise TypeError(
-                        "expected type 'bool|None' for attribute 'formalitites['technology']', got {} instead".format(
-                            type(value_copy["technology"])
+                for formality in value_copy:
+                    # ensure that each formality entry is associated with a user
+                    if "username" not in formality:
+                        raise MissingKeyError(
+                            "Missing key 'username' in formalities dictionary",
+                            "username",
+                            "formalities",
                         )
-                    )
-                if not isinstance(value_copy["exam_regulations"], (bool, type(None))):
-                    raise TypeError(
-                        "expected type 'bool|None' for attribute 'formalitites['exam_regulations']', got {} instead".format(
-                            type(value_copy["exam_regulations"])
+
+                    # ensure that the username is also a partner of the plan
+                    if not self._check_user_is_author_or_partner(plan_id, formality["username"]):
+                        raise ValueError(
+                            "username '{}' in formalities is not a partner of the plan".format(
+                                formality["username"]
+                            )
                         )
-                    )
+
+                    # ensure that any other values are of type bool or None
+                    for attr, value in formality.items():
+                        if attr != "username":
+                            if not isinstance(value, (bool, type(None))):
+                                raise TypeError(
+                                    "expected type 'bool|None' for attribute 'formalitites[{}]', got {} instead".format(
+                                        attr, type(value)
+                                    )
+                                )
 
         # attribute is not expected in a VEPlan, so reject it
         else:

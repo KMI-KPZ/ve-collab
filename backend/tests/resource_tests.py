@@ -4761,10 +4761,15 @@ class PlanResourceTest(BaseResourceTestCase):
             "learning_env": "test",
             "tools": ["test", "test"],
             "new_content": False,
-            "formalities": {
+            "formalities": [{
+                "username": "test_user",
                 "technology": False,
                 "exam_regulations": False,
-            },
+            }, {
+                "username": "test_admin",
+                "technology": True,
+                "exam_regulations": True,
+            }],
             "duration": self.step.duration.total_seconds(),
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
@@ -4999,10 +5004,11 @@ class PlanResourceTest(BaseResourceTestCase):
                 "learning_env": "test",
                 "tools": ["test", "test"],
                 "new_content": False,
-                "formalities": {
+                "formalities": [{
+                    "username": "test_user",
                     "technology": False,
                     "exam_regulations": False,
-                },
+                }],
                 "duration": self.step.duration.total_seconds(),
                 "workload": self.step.workload,
                 "steps": [self.step.to_dict()],
@@ -5027,7 +5033,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "creation_timestamp": datetime.now(),
                 "last_modified": datetime.now(),
                 "name": "user",
-                "partners": [],
+                "partners": ["test_user"],
                 "institutions": [self.institution.to_dict()],
                 "topic": "test",
                 "lectures": [self.lecture.to_dict()],
@@ -5040,10 +5046,11 @@ class PlanResourceTest(BaseResourceTestCase):
                 "learning_env": "test",
                 "tools": ["test", "test"],
                 "new_content": False,
-                "formalities": {
+                "formalities": [{
+                    "username": "test_user",
                     "technology": False,
                     "exam_regulations": False,
-                },
+                }],
                 "duration": self.step.duration.total_seconds(),
                 "workload": self.step.workload,
                 "steps": [self.step.to_dict()],
@@ -5100,10 +5107,11 @@ class PlanResourceTest(BaseResourceTestCase):
             "learning_env": "test",
             "tools": ["test", "test"],
             "new_content": False,
-            "formalities": {
+            "formalities": [{
+                "username": "test_user",
                 "technology": False,
                 "exam_regulations": False,
-            },
+            }],
             "duration": self.step.duration.total_seconds(),
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
@@ -5158,10 +5166,11 @@ class PlanResourceTest(BaseResourceTestCase):
             "learning_env": "test",
             "tools": ["test", "test"],
             "new_content": False,
-            "formalities": {
+            "formalities": [{
+                "username": "test_user",
                 "technology": False,
                 "exam_regulations": False,
-            },
+            }],
             "duration": self.step.duration.total_seconds(),
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
@@ -5345,7 +5354,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.planner.update_field(self.plan_id, "tools", ["update1", "update2"])
         self.planner.update_field(self.plan_id, "new_content", True)
         self.planner.update_field(
-            self.plan_id, "formalities", {"technology": True, "exam_regulations": True}
+            self.plan_id, "formalities", [{"username": "test_user", "technology": True, "exam_regulations": True}]
         )
         self.planner.update_field(
             self.plan_id,
@@ -5376,7 +5385,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(db_state["tools"], ["update1", "update2"])
         self.assertEqual(db_state["new_content"], True)
         self.assertEqual(
-            db_state["formalities"], {"technology": True, "exam_regulations": True}
+            db_state["formalities"], [{"username": "test_user", "technology": True, "exam_regulations": True}]
         )
         self.assertEqual(db_state["progress"]["name"], "completed")
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
@@ -5419,7 +5428,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.planner.update_field(
             self.plan_id,
             "formalities",
-            {"technology": True, "exam_regulations": True},
+            [{"username": "test_user", "technology": True, "exam_regulations": True}],
             requesting_username="test_user",
         )
         self.planner.update_field(
@@ -5452,7 +5461,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(db_state["tools"], ["update1", "update2"])
         self.assertEqual(db_state["new_content"], True)
         self.assertEqual(
-            db_state["formalities"], {"technology": True, "exam_regulations": True}
+            db_state["formalities"], [{"username": "test_user", "technology": True, "exam_regulations": True}]
         )
         self.assertEqual(db_state["progress"]["name"], "completed")
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])

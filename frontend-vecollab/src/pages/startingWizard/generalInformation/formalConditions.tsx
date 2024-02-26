@@ -15,7 +15,7 @@ import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import Link from 'next/link';
 
 export interface FormalConditionPartner {
-    partnerName: string;
+    username: string;
     time: boolean;
     place: boolean;
     technicalEquipment: boolean;
@@ -34,7 +34,7 @@ export default function FormalConditions() {
     const [steps, setSteps] = useState<IFineStep[]>([]);
     const [formalConditions, setFormalConditions] = useState<FormalConditionPartner[]>([
         {
-            partnerName: 'Du',
+            username: 'Du',
             time: false,
             place: false,
             technicalEquipment: false,
@@ -59,6 +59,7 @@ export default function FormalConditions() {
         if (session) {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
+                    console.log(data.plan);
                     if (data.plan.progress.length !== 0) {
                         setSideMenuStepsProgress(data.plan.progress);
                     }
@@ -102,7 +103,7 @@ export default function FormalConditions() {
     ) => {
         setFormalConditions((prevFormalCondition) =>
             prevFormalCondition.map((formalCon) =>
-                formalCon.partnerName === partnerName ? { ...formalCon, [key]: value } : formalCon
+                formalCon.username === partnerName ? { ...formalCon, [key]: value } : formalCon
             )
         );
     };
@@ -201,7 +202,7 @@ export default function FormalConditions() {
                             </div>
                             <div className="grid grid-cols-2 gap-1 mt-7  mb-10">
                                 {formalConditions.map((formalConditionPartner) =>
-                                    renderCheckBoxes(formalConditionPartner.partnerName)
+                                    renderCheckBoxes(formalConditionPartner.username)
                                 )}
                             </div>
                         </div>

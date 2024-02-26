@@ -76,7 +76,7 @@ class Space(dict):
         self,
         params: Dict[str, Any] = {},
     ) -> None:
-        
+
         # init default values
         setattr(self, "_id", ObjectId())
         super().__setitem__("_id", ObjectId())
@@ -100,7 +100,6 @@ class Space(dict):
         super().__setitem__("space_pic", None)
         setattr(self, "space_description", None)
         super().__setitem__("space_description", None)
-
 
         # delete any keys from params that are not expected to avoid having
         # any other additional attributes that might cause trouble
@@ -953,9 +952,11 @@ class Lecture:
             "name": self.name,
             "lecture_type": self.lecture_type,
             "lecture_format": self.lecture_format,
-            "participants_amount": str(self.participants_amount)
-            if self.participants_amount != None
-            else None,
+            "participants_amount": (
+                str(self.participants_amount)
+                if self.participants_amount != None
+                else None
+            ),
         }
 
     @classmethod
@@ -1066,7 +1067,7 @@ class VEPlan:
         "learning_env": (str, type(None)),
         "tools": list,
         "new_content": (bool, type(None)),
-        "formalities": dict,
+        "formalities": list,
         "steps": list,
         "progress": dict,
     }
@@ -1091,7 +1092,7 @@ class VEPlan:
         learning_env: str = None,
         tools: List[str] = [],
         new_content: bool = None,
-        formalities: dict = {},
+        formalities: list = [],
         steps: List[Step] = [],
         progress: Dict = {},
     ) -> None:
@@ -1172,36 +1173,37 @@ class VEPlan:
 
         if formalities:
             self.formalities = formalities
-            if "technology" not in self.formalities:
-                raise MissingKeyError(
-                    "Missing key {} in {} dictionary".format(
-                        "technology", "formalities"
-                    ),
-                    "technology",
-                    "formalities",
-                )
-            if "exam_regulations" not in self.formalities:
-                raise MissingKeyError(
-                    "Missing key {} in {} dictionary".format(
-                        "technology", "exam_regulations"
-                    ),
-                    "exam_regulations",
-                    "formalities",
-                )
-            if not isinstance(self.formalities["technology"], (bool, type(None))):
-                raise TypeError(
-                    "expected type 'bool|None' for attribute 'formalitites['technology']', got {} instead".format(
-                        type(self.formalities["technology"])
+            for formality in self.formalities:
+                # ensure that each formality entry is associated with a user
+                if "username" not in formality:
+                    raise MissingKeyError(
+                        "Missing key 'username' in formalities dictionary",
+                        "username",
+                        "formalities",
                     )
-                )
-            if not isinstance(self.formalities["exam_regulations"], (bool, type(None))):
-                raise TypeError(
-                    "expected type 'bool|None' for attribute 'formalitites['exam_regulations']', got {} instead".format(
-                        type(self.formalities["exam_regulations"])
+
+                # ensure that the username is also a partner of the plan
+                if not (
+                    formality["username"] in self.partners
+                    or formality["username"] == self.author
+                ):
+                    raise ValueError(
+                        "username '{}' in formalities is not a partner of the plan".format(
+                            formality["username"]
+                        )
                     )
-                )
+
+                # ensure that any other values are of type bool or None
+                for attr, value in formality.items():
+                    if attr != "username":
+                        if not isinstance(value, (bool, type(None))):
+                            raise TypeError(
+                                "expected type 'bool|None' for attribute 'formalitites[{}]', got {} instead".format(
+                                    attr, type(value)
+                                )
+                            )
         else:
-            self.formalities = {"technology": None, "exam_regulations": None}
+            self.formalities = []
 
         self.workload = 0
 
@@ -1257,7 +1259,7 @@ class VEPlan:
             "learning_env": self.learning_env,
             "tools": self.tools,
             "new_content": self.new_content,
-            "formalities": self.formalities,
+            "formalities": [formality for formality in self.formalities],
             "duration": self.duration.total_seconds() if self.duration else None,
             "workload": self.workload,
             "steps": [step.to_dict() for step in self.steps],
@@ -1376,10 +1378,11 @@ class VEPlan:
                 "learning_env": None,
                 "tools": [],
                 "new_content": None,
-                "formalities": {
-                    "technology": None,
-                    "exam_regulations": None,
-                },
+                "formalities": [{
+                    "username": "partnerX",
+                    "technology": None|True|False,
+                    "exam_regulations": None|True|False,
+                }],
                 "steps": [
                     {
                         "_id": "object_id_str",
@@ -1483,34 +1486,38 @@ class VEPlan:
             params["last_modified"] = util.parse_datetime(params["last_modified"])
 
         # handle correct type of formalities
-        if "technology" not in params["formalities"]:
-            raise MissingKeyError(
-                "Missing key {} in {} dictionary".format("technology", "formalities"),
-                "technology",
-                "formalities",
-            )
-        if "exam_regulations" not in params["formalities"]:
-            raise MissingKeyError(
-                "Missing key {} in {} dictionary".format(
-                    "technology", "exam_regulations"
-                ),
-                "technology",
-                "exam_regulations",
-            )
-        if not isinstance(params["formalities"]["technology"], (bool, type(None))):
-            raise TypeError(
-                "expected type 'bool|None' for attribute 'formalitites['technology']', got {} instead".format(
-                    type(params["formalities"]["technology"])
-                )
-            )
-        if not isinstance(
-            params["formalities"]["exam_regulations"], (bool, type(None))
-        ):
-            raise TypeError(
-                "expected type 'bool|None' for attribute 'formalitites['exam_regulations']', got {} instead".format(
-                    type(params["formalities"]["exam_regulations"])
-                )
-            )
+        if "formalities" in params:
+            for formality in params["formalities"]:
+                # ensure that each formality entry is associated with a user
+                if "username" not in formality:
+                    raise MissingKeyError(
+                        "Missing key 'username' in formalities dictionary",
+                        "username",
+                        "formalities",
+                    )
+
+                # ensure that the username is also a partner of the plan
+                if "author" not in params:
+                    params["author"] = None
+                if not (
+                    formality["username"] in params["partners"]
+                    or formality["username"] == params["author"]
+                ):
+                    raise ValueError(
+                        "username '{}' in formalities is not a partner of the plan".format(
+                            formality["username"]
+                        )
+                    )
+
+                # ensure that any other values are of type bool or None
+                for attr, value in formality.items():
+                    if attr != "username":
+                        if not isinstance(value, (bool, type(None))):
+                            raise TypeError(
+                                "expected type 'bool|None' for attribute 'formalitites[{}]', got {} instead".format(
+                                    attr, type(value)
+                                )
+                            )
 
         # build step objects, asserting that the names of the steps are unique,
         # gotta do this manually, since __dict__.update doesn't initialize nested objects

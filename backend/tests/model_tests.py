@@ -1490,7 +1490,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.tools, [])
         self.assertEqual(plan.new_content, None)
         self.assertEqual(
-            plan.formalities, {"technology": None, "exam_regulations": None}
+            plan.formalities, []
         )
         self.assertEqual(plan.steps, [])
         self.assertEqual(plan.progress, self.default_progress)
@@ -1535,7 +1535,7 @@ class VEPlanModelTest(TestCase):
             read_access=["test"],
             write_access=["test"],
             name="test",
-            partners=["test"],
+            partners=["test2"],
             institutions=institutions,
             topic="test",
             lectures=lectures,
@@ -1546,7 +1546,7 @@ class VEPlanModelTest(TestCase):
             learning_env="test",
             tools=["test", "test"],
             new_content=True,
-            formalities={"technology": True, "exam_regulations": False},
+            formalities=[{"username": "test", "technology": True, "exam_regulations": False}],
             steps=steps,
             progress={
                 "name": "completed",
@@ -1570,7 +1570,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.read_access, ["test"])
         self.assertEqual(plan.write_access, ["test"])
         self.assertEqual(plan.name, "test")
-        self.assertEqual(plan.partners, ["test"])
+        self.assertEqual(plan.partners, ["test2"])
         self.assertEqual(plan.institutions, institutions)
         self.assertEqual(plan.topic, "test")
         self.assertEqual(plan.lectures, lectures)
@@ -1582,7 +1582,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.tools, ["test", "test"])
         self.assertEqual(plan.new_content, True)
         self.assertEqual(
-            plan.formalities, {"technology": True, "exam_regulations": False}
+            plan.formalities, [{"username": "test", "technology": True, "exam_regulations": False}]
         )
         self.assertEqual(plan.steps, steps)
         self.assertEqual(plan.progress["name"], "completed")
@@ -1600,7 +1600,8 @@ class VEPlanModelTest(TestCase):
         ]
         plan = VEPlan(
             name="test",
-            partners=["test"],
+            author="test",
+            partners=["test2"],
             institutions=institutions,
             topic="test",
             lectures=lectures,
@@ -1611,6 +1612,7 @@ class VEPlanModelTest(TestCase):
             learning_env="test",
             tools=["test", "test"],
             new_content=True,
+            formalities=[],
             steps=steps,
             progress={
                 "name": "completed",
@@ -1630,7 +1632,7 @@ class VEPlanModelTest(TestCase):
         )
         self.assertIsInstance(plan._id, ObjectId)
         self.assertEqual(plan.name, "test")
-        self.assertEqual(plan.partners, ["test"])
+        self.assertEqual(plan.partners, ["test2"])
         self.assertEqual(plan.institutions, institutions)
         self.assertEqual(plan.topic, "test")
         self.assertEqual(plan.lectures, lectures)
@@ -1642,7 +1644,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.tools, ["test", "test"])
         self.assertEqual(plan.new_content, True)
         self.assertEqual(
-            plan.formalities, {"technology": None, "exam_regulations": None}
+            plan.formalities, []
         )
         self.assertEqual(plan.steps, steps)
         self.assertIsInstance(plan.steps[0]._id, ObjectId)
@@ -1657,19 +1659,23 @@ class VEPlanModelTest(TestCase):
         check that, if specified, formalities are type-safe
         """
 
-        self.assertRaises(MissingKeyError, VEPlan, formalities={"technology": True})
+        # username is missing
+        self.assertRaises(MissingKeyError, VEPlan, formalities=[{"technology": True}])
+        
+        # ValueError because user is not a partner or author of the plan
         self.assertRaises(
-            MissingKeyError, VEPlan, formalities={"exam_regulations": True}
+            ValueError,
+            VEPlan,
+            author="test",
+            formalities=[{"username": "not_test", "technology": False, "exam_regulations": True}],
         )
+
+        # TypeError because technology is not a bool
         self.assertRaises(
             TypeError,
             VEPlan,
-            formalities={"technology": "test123", "exam_regulations": True},
-        )
-        self.assertRaises(
-            TypeError,
-            VEPlan,
-            formalities={"technology": None, "exam_regulations": 123},
+            author="test",
+            formalities=[{"username": "test", "technology": None, "exam_regulations": 123}],
         )
 
     def test_check_unique_steps(self):
@@ -1760,7 +1766,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan_dict["tools"], [])
         self.assertIsNone(plan_dict["new_content"])
         self.assertEqual(
-            plan_dict["formalities"], {"technology": None, "exam_regulations": None}
+            plan_dict["formalities"], []
         )
         self.assertEqual(plan_dict["workload"], 10)
         self.assertEqual(plan_dict["duration"], None)
@@ -1782,7 +1788,7 @@ class VEPlanModelTest(TestCase):
         plan_dict = {
             "_id": _id,
             "name": None,
-            "partners": [],
+            "partners": ["test"],
             "institutions": [
                 {
                     "_id": institution._id,
@@ -1822,10 +1828,11 @@ class VEPlanModelTest(TestCase):
             "learning_env": None,
             "tools": [],
             "new_content": False,
-            "formalities": {
+            "formalities": [{
+                "username": "test",
                 "technology": None,
                 "exam_regulations": None,
-            },
+            }],
             "steps": [
                 {
                     "_id": step._id,
@@ -1862,7 +1869,7 @@ class VEPlanModelTest(TestCase):
         plan = VEPlan.from_dict(plan_dict)
 
         self.assertIsNone(plan.name)
-        self.assertEqual(plan.partners, [])
+        self.assertEqual(plan.partners, ["test"])
         self.assertIsNone(plan.author)
         self.assertEqual(plan.read_access, [])
         self.assertEqual(plan.write_access, [])
@@ -1877,7 +1884,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.tools, [])
         self.assertEqual(plan.new_content, False)
         self.assertEqual(
-            plan.formalities, {"technology": None, "exam_regulations": None}
+            plan.formalities, [{"username": "test", "technology": None, "exam_regulations": None}]
         )
         self.assertEqual(plan._id, _id)
         self.assertEqual(plan.steps, [step])
@@ -1892,7 +1899,7 @@ class VEPlanModelTest(TestCase):
             "author": "test",
             "read_access": ["test"],
             "name": None,
-            "partners": [],
+            "partners": ["test"],
             "institutions": [
                 {
                     "name": institution.name,
@@ -1929,10 +1936,11 @@ class VEPlanModelTest(TestCase):
             "learning_env": None,
             "tools": [],
             "new_content": False,
-            "formalities": {
+            "formalities": [{
+                "username": "test",
                 "technology": None,
                 "exam_regulations": None,
-            },
+            }],
             "steps": [
                 {
                     "name": step.name,
@@ -1971,7 +1979,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.read_access, ["test"])
         self.assertEqual(plan.write_access, [])
         self.assertIsNone(plan.name)
-        self.assertEqual(plan.partners, [])
+        self.assertEqual(plan.partners, ["test"])
         self.assertEqual(len(plan.institutions), 1)
         self.assertIsInstance(plan.institutions[0], Institution)
         self.assertIsNone(plan.topic)
@@ -1984,7 +1992,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.tools, [])
         self.assertEqual(plan.new_content, False)
         self.assertEqual(
-            plan.formalities, {"technology": None, "exam_regulations": None}
+            plan.formalities, [{"username": "test", "technology": None, "exam_regulations": None}]
         )
         self.assertEqual(plan.duration, step.duration)
         self.assertEqual(plan.timestamp_from, step.timestamp_from)
@@ -2015,7 +2023,7 @@ class VEPlanModelTest(TestCase):
         plan_dict = {
             "_id": ObjectId(),
             "name": None,
-            "partners": [],
+            "partners": ["test"],
             "institutions": [],
             "topic": None,
             "lectures": [],
@@ -2026,10 +2034,11 @@ class VEPlanModelTest(TestCase):
             "learning_env": None,
             "tools": [],
             "new_content": None,
-            "formalities": {
+            "formalities": [{
+                "username": "test",
                 "technology": None,
                 "exam_regulations": None,
-            },
+            }],
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",
@@ -2057,7 +2066,7 @@ class VEPlanModelTest(TestCase):
         plan_dict = {
             "_id": ObjectId(),
             "name": None,
-            "partners": [],
+            "partners": ["test"],
             "institutions": [],
             "topic": None,
             "lectures": [],
@@ -2068,10 +2077,11 @@ class VEPlanModelTest(TestCase):
             "learning_env": None,
             "tools": [],
             "new_content": False,
-            "formalities": {
+            "formalities": [{
+                "username": "test",
                 "technology": None,
                 "exam_regulations": None,
-            },
+            }],
             "steps": [],
             "progress": {
                 "name": "not_started",
@@ -2164,7 +2174,7 @@ class VEPlanModelTest(TestCase):
         plan_dict = {
             "_id": ObjectId(),
             "name": None,
-            "partners": [],
+            "partners": ["test"],
             "institutions": [],
             "topic": None,
             "lectures": [],
@@ -2175,10 +2185,11 @@ class VEPlanModelTest(TestCase):
             "learning_env": None,
             "tools": [],
             "new_content": None,
-            "formalities": {
+            "formalities": [{
+                "username": "test",
                 "technology": None,
                 "exam_regulations": None,
-            },
+            }],
             "steps": [
                 self.create_step("test").to_dict(),
                 self.create_step("test").to_dict(),

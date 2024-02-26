@@ -7225,10 +7225,11 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "learning_env": "test",
             "tools": ["test", "test"],
             "new_content": False,
-            "formalities": {
+            "formalities": [{
+                "username": CURRENT_ADMIN.username,
                 "technology": False,
                 "exam_regulations": False,
-            },
+            }],
             "duration": self.step.duration.total_seconds(),
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
@@ -7666,7 +7667,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         payload = {
             "plan_id": self.plan_id,
             "field_name": "formalities",
-            "value": {"technology": True, "exam_regulations": True},
+            "value": [{"username": CURRENT_ADMIN.username, "technology": True, "exam_regulations": True}],
         }
 
         response = self.base_checks(
@@ -7682,7 +7683,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
         self.assertEqual(
-            db_state["formalities"], {"technology": True, "exam_regulations": True}
+            db_state["formalities"], [{"username": CURRENT_ADMIN.username, "technology": True, "exam_regulations": True}]
         )
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
