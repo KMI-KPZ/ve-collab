@@ -7216,6 +7216,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "institutions": [self.institution.to_dict()],
             "topic": "test",
             "lectures": [self.lecture.to_dict()],
+            "learning_goals": ["test", "test"],
             "audience": [self.target_group.to_dict()],
             "languages": ["test", "test"],
             "timestamp_from": self.step.timestamp_from,
@@ -7238,6 +7239,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 "institutions": "not_started",
                 "topic": "not_started",
                 "lectures": "not_started",
+                "learning_goals": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
                 "involved_parties": "not_started",
@@ -7304,6 +7306,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.institutions, default_plan.institutions)
         self.assertEqual(response_plan.topic, default_plan.topic)
         self.assertEqual(response_plan.lectures, default_plan.lectures)
+        self.assertEqual(response_plan.learning_goals, default_plan.learning_goals)
         self.assertEqual(response_plan.audience, default_plan.audience)
         self.assertEqual(response_plan.languages, default_plan.languages)
         self.assertEqual(response_plan.timestamp_from, default_plan.timestamp_from)
@@ -7393,6 +7396,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.institutions, default_plan.institutions)
         self.assertEqual(response_plan.topic, default_plan.topic)
         self.assertEqual(response_plan.lectures, default_plan.lectures)
+        self.assertEqual(response_plan.learning_goals, default_plan.learning_goals)
         self.assertEqual(response_plan.audience, default_plan.audience)
         self.assertEqual(response_plan.languages, default_plan.languages)
         self.assertEqual(response_plan.timestamp_from, default_plan.timestamp_from)

@@ -4,7 +4,6 @@ import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { useForm, SubmitHandler } from 'react-hook-form';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import {
     initialSideProgressBarStates,
@@ -16,6 +15,7 @@ import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import { MultiValue, ActionMeta } from 'react-select';
 import CreatableSelect from 'react-select/creatable';
+import Link from 'next/link';
 
 interface FormValues {
     globalGoals: string;
@@ -42,18 +42,6 @@ export default function GlobalGoals() {
         }
     }, [session, status]);
 
-    const {
-        register,
-        formState: { errors, isValid },
-        handleSubmit,
-        setValue,
-    } = useForm<FormValues>({
-        mode: 'onChange',
-        defaultValues: {
-            globalGoals: '',
-        },
-    });
-
     useEffect(() => {
         // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
         if (!router.isReady || status === 'loading') {
@@ -70,41 +58,44 @@ export default function GlobalGoals() {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
                     setLoading(false);
-                    if (data.plan.globalGoals !== null) {
-                        setValue('globalGoals', data.plan.globalGoals);
-                    }
-                    setSteps(data.plan.steps);
 
+                    setLearningGoals(data.plan.learning_goals);
+                    setSteps(data.plan.steps);
                     if (data.plan.progress.length !== 0) {
                         setSideMenuStepsProgress(data.plan.progress);
                     }
                 }
             );
         }
-    }, [session, status, router, setValue]);
+    }, [session, status, router]);
 
-    const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
+    const onSubmit = async () => {
         await fetchPOST(
             '/planner/update_fields',
             {
                 update: [
                     {
                         plan_id: router.query.plannerId,
-                        field_name: 'globalGoals',
-                        value: data.globalGoals,
+                        field_name: 'learning_goals',
+                        value: learningGoals,
                     },
                     {
                         plan_id: router.query.plannerId,
                         field_name: 'progress',
                         value: {
                             ...sideMenuStepsProgress,
-                            globalGoals: ProgressState.completed,
+                            learning_goals: ProgressState.completed,
                         },
                     },
                 ],
             },
             session?.accessToken
         );
+
+        await router.push({
+            pathname: '/startingWizard/generalInformation/targetGroups',
+            query: { plannerId: router.query.plannerId },
+        });
     };
 
     function handleChange(
@@ -176,49 +167,28 @@ export default function GlobalGoals() {
                                 onChange={handleChange}
                                 formatCreateLabel={(inputValue) => `Sonstige: ${inputValue}`}
                             />
-                            <div className="mx-7 mt-7 flex justify-center">
-                                <select
-                                    placeholder="Globalen Lehr-/Lernziele"
-                                    className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
-                                    {...register('globalGoals')}
-                                >
-                                    <option value="Test">Test</option>
-                                    <option value="A">A</option>
-                                    <option value="B">B</option>
-                                    <option value="C">C</option>
-                                </select>
-                                <p className="text-red-600 pt-2">{errors?.globalGoals?.message}</p>
-                            </div>
                         </div>
                         <div className="flex justify-around w-full">
                             <div>
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={() => {
-                                        validateAndRoute(
-                                            '/startingWizard/generalInformation/participatingCourses',
-                                            router.query.plannerId,
-                                            handleSubmit(onSubmit),
-                                            isValid
-                                        );
+                                <Link
+                                    href={{
+                                        pathname: '/startingWizard/generalInformation/participatingCourses',
+                                        query: { plannerId: router.query.plannerId },
                                     }}
                                 >
-                                    Zurück
-                                </button>
+                                    <button
+                                        type="button"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    >
+                                        Zurück
+                                    </button>
+                                </Link>
                             </div>
                             <div>
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={() => {
-                                        validateAndRoute(
-                                            '/startingWizard/generalInformation/targetGroups',
-                                            router.query.plannerId,
-                                            handleSubmit(onSubmit),
-                                            isValid
-                                        );
-                                    }}
+                                    onClick={onSubmit}
                                 >
                                     Weiter
                                 </button>
@@ -228,8 +198,8 @@ export default function GlobalGoals() {
                 )}
                 <SideProgressBarSection
                     progressState={sideMenuStepsProgress}
-                    handleValidation={handleSubmit(onSubmit)}
-                    isValid={isValid}
+                    handleValidation={() => {}}
+                    isValid={true}
                     sideMenuStepsData={sideMenuStepsData}
                 />
             </div>

@@ -4752,6 +4752,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "institutions": [self.institution.to_dict()],
             "topic": "test",
             "lectures": [self.lecture.to_dict()],
+            "learning_goals": ["test", "test"],
             "audience": [self.target_group.to_dict()],
             "languages": ["test", "test"],
             "timestamp_from": self.step.timestamp_from,
@@ -4778,6 +4779,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "institutions": "not_started",
                 "topic": "not_started",
                 "lectures": "not_started",
+                "learning_goals": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
                 "involved_parties": "not_started",
@@ -4823,6 +4825,7 @@ class PlanResourceTest(BaseResourceTestCase):
                     [lecture.to_dict() for lecture in plan.lectures],
                     self.default_plan["lectures"],
                 )
+                self.assertEqual(plan.learning_goals, self.default_plan["learning_goals"])
                 self.assertEqual(
                     [target_group.to_dict() for target_group in plan.audience],
                     self.default_plan["audience"],
@@ -4871,6 +4874,7 @@ class PlanResourceTest(BaseResourceTestCase):
                     [lecture.to_dict() for lecture in plan.lectures],
                     self.default_plan["lectures"],
                 )
+                self.assertEqual(plan.learning_goals, self.default_plan["learning_goals"])
                 self.assertEqual(
                     [target_group.to_dict() for target_group in plan.audience],
                     self.default_plan["audience"],
@@ -4955,6 +4959,7 @@ class PlanResourceTest(BaseResourceTestCase):
             [lecture.to_dict() for lecture in plan.lectures],
             self.default_plan["lectures"],
         )
+        self.assertEqual(plan.learning_goals, self.default_plan["learning_goals"])
         self.assertEqual(
             [target_group.to_dict() for target_group in plan.audience],
             self.default_plan["audience"],
@@ -4995,6 +5000,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "institutions": [self.institution.to_dict()],
                 "topic": "test",
                 "lectures": [self.lecture.to_dict()],
+                "learning_goals": ["test", "test"],
                 "audience": [self.target_group.to_dict()],
                 "languages": ["test", "test"],
                 "timestamp_from": self.step.timestamp_from,
@@ -5017,6 +5023,7 @@ class PlanResourceTest(BaseResourceTestCase):
                     "institutions": "not_started",
                     "topic": "not_started",
                     "lectures": "not_started",
+                    "learning_goals": "not_started",
                     "audience": "not_started",
                     "languages": "not_started",
                     "involved_parties": "not_started",
@@ -5037,6 +5044,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "institutions": [self.institution.to_dict()],
                 "topic": "test",
                 "lectures": [self.lecture.to_dict()],
+                "learning_goals": ["test", "test"],
                 "audience": [self.target_group.to_dict()],
                 "languages": ["test", "test"],
                 "timestamp_from": self.step.timestamp_from,
@@ -5059,6 +5067,7 @@ class PlanResourceTest(BaseResourceTestCase):
                     "institutions": "not_started",
                     "topic": "not_started",
                     "lectures": "not_started",
+                    "learning_goals": "not_started",
                     "audience": "not_started",
                     "languages": "not_started",
                     "involved_parties": "not_started",
@@ -5098,6 +5107,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "institutions": [self.institution.to_dict()],
             "topic": "test",
             "lectures": [self.lecture.to_dict()],
+            "learning_goals": ["test", "test"],
             "audience": [self.target_group.to_dict()],
             "languages": ["test", "test"],
             "timestamp_from": self.step.timestamp_from,
@@ -5120,6 +5130,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "institutions": "not_started",
                 "topic": "not_started",
                 "lectures": "not_started",
+                "learning_goals": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
                 "involved_parties": "not_started",
@@ -5157,6 +5168,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "institutions": [self.institution.to_dict()],
             "topic": "test",
             "lectures": [self.lecture.to_dict()],
+            "learning_goals": ["test", "test"],
             "audience": [self.target_group.to_dict()],
             "languages": ["test", "test"],
             "timestamp_from": self.step.timestamp_from,
@@ -5179,6 +5191,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "institutions": "not_started",
                 "topic": "not_started",
                 "lectures": "not_started",
+                "learning_goals": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
                 "involved_parties": "not_started",
@@ -5327,7 +5340,7 @@ class PlanResourceTest(BaseResourceTestCase):
 
         self.assertRaises(PlanDoesntExistError, self.planner.update_full_plan, VEPlan())
 
-    def test_update_plan_erro_no_write_access(self):
+    def test_update_plan_error_no_write_access(self):
         """
         expect: NoWriteAccessError is raised because user has no write permission
         """
@@ -5353,6 +5366,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.planner.update_field(self.plan_id, "learning_env", "updated_learning_env")
         self.planner.update_field(self.plan_id, "tools", ["update1", "update2"])
         self.planner.update_field(self.plan_id, "new_content", True)
+        self.planner.update_field(self.plan_id, "learning_goals", ["update1", "update2"])
         self.planner.update_field(
             self.plan_id, "formalities", [{"username": "test_user", "technology": True, "exam_regulations": True}]
         )
@@ -5384,6 +5398,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(db_state["learning_env"], "updated_learning_env")
         self.assertEqual(db_state["tools"], ["update1", "update2"])
         self.assertEqual(db_state["new_content"], True)
+        self.assertEqual(db_state["learning_goals"], ["update1", "update2"])
         self.assertEqual(
             db_state["formalities"], [{"username": "test_user", "technology": True, "exam_regulations": True}]
         )
@@ -5427,6 +5442,12 @@ class PlanResourceTest(BaseResourceTestCase):
         )
         self.planner.update_field(
             self.plan_id,
+            "learning_goals",
+            ["update1", "update2"],
+            requesting_username="test_user",
+        )
+        self.planner.update_field(
+            self.plan_id,
             "formalities",
             [{"username": "test_user", "technology": True, "exam_regulations": True}],
             requesting_username="test_user",
@@ -5439,6 +5460,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "institutions": "not_started",
                 "topic": "not_started",
                 "lectures": "not_started",
+                "learning_goals": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
                 "involved_parties": "not_started",
@@ -5460,6 +5482,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(db_state["learning_env"], "updated_learning_env")
         self.assertEqual(db_state["tools"], ["update1", "update2"])
         self.assertEqual(db_state["new_content"], True)
+        self.assertEqual(db_state["learning_goals"], ["update1", "update2"])
         self.assertEqual(
             db_state["formalities"], [{"username": "test_user", "technology": True, "exam_regulations": True}]
         )

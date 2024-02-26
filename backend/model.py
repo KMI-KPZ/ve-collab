@@ -1060,6 +1060,7 @@ class VEPlan:
         "institutions": list,
         "topic": (str, type(None)),
         "lectures": list,
+        "learning_goals": list,
         "audience": list,
         "languages": list,
         "involved_parties": list,
@@ -1085,6 +1086,7 @@ class VEPlan:
         institutions: List[Institution] = [],
         topic: str = None,
         lectures: List[Lecture] = [],
+        learning_goals: List[str] = [],
         audience: List[TargetGroup] = [],
         languages: List[str] = [],
         involved_parties: List[str] = [],
@@ -1135,6 +1137,7 @@ class VEPlan:
         self.institutions = institutions
         self.topic = topic
         self.lectures = lectures
+        self.learning_goals = learning_goals
         self.audience = audience
         self.languages = languages
         self.involved_parties = involved_parties
@@ -1153,6 +1156,7 @@ class VEPlan:
                 "institutions": "not_started",
                 "topic": "not_started",
                 "lectures": "not_started",
+                "learning_goals": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
                 "involved_parties": "not_started",
@@ -1250,6 +1254,7 @@ class VEPlan:
             ],
             "topic": self.topic,
             "lectures": [lecture.to_dict() for lecture in self.lectures],
+            "learning_goals": self.learning_goals,
             "audience": [target_group.to_dict() for target_group in self.audience],
             "languages": self.languages,
             "timestamp_from": self.timestamp_from,
@@ -1359,6 +1364,7 @@ class VEPlan:
                         "participants_amount": 0,
                     }
                 ],
+                "learning_goals": [],
                 "audience": [
                     {
                         "_id": "object_id_str",
@@ -1412,6 +1418,7 @@ class VEPlan:
                     "institutions": "<completed|uncompleted|not_started>",
                     "topic": "<completed|uncompleted|not_started>",
                     "lectures": "<completed|uncompleted|not_started>",
+                    "learning_goals": "<completed|uncompleted|not_started>",
                     "audience": "<completed|uncompleted|not_started>",
                     "languages": "<completed|uncompleted|not_started>",
                     "involved_parties": "<completed|uncompleted|not_started>",
