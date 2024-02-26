@@ -7,18 +7,17 @@ import { IoIosSend } from "react-icons/io";
 import AuthenticatedImage from "../AuthenticatedImage";
 import SmallTimestamp from "../SmallTimestamp";
 import Dropdown from "../Dropdown";
-import { BackendPosts } from "@/interfaces/api/apiInterfaces";
-import { KeyedMutator } from "swr";
+import { BackendPost } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
 import { MdDeleteOutline, MdModeEdit } from "react-icons/md";
 
 interface Props {
-    post: BackendPosts;
-    mutate: KeyedMutator<any>
+    post: BackendPost;
+    reloadTimeline: any
 }
 
 Timeline.auth = true
-export default function Timeline({post, mutate}: Props) {
+export default function Timeline({post, reloadTimeline: updateTimeline}: Props) {
     const { data: session } = useSession();
     // const [isLoading, setIsLoading] = useState<boolean>(false)
     const [wbRemoved, setWbRemoved] = useState<boolean>(false)
@@ -44,8 +43,8 @@ export default function Timeline({post, mutate}: Props) {
 
         if (text === '')  return
 
-        try {
-            await fetchPOST(
+        const addNewComment = async () => {
+            const res = await fetchPOST(
                 '/comment',
                 {
                     text,
@@ -53,8 +52,14 @@ export default function Timeline({post, mutate}: Props) {
                 },
                 session?.accessToken
             )
+            return res
+        }
+
+        try {
+            await addNewComment()
+            // TODO if /comment returns the new result we could use mutate() with 'populateCache'
             ref.current?.reset()
-            mutate()
+            updateTimeline()
         } catch (error) {
             console.error(error);
         }
@@ -100,7 +105,7 @@ export default function Timeline({post, mutate}: Props) {
             setWbRemoved(true)
             // HACK wait until transition is done (TODO find a better solution...)
             await new Promise(resolve => setTimeout(resolve, 450))
-            await mutate()
+            await updateTimeline()
             setWbRemoved(false)
         } catch (error) {
             console.error(error);

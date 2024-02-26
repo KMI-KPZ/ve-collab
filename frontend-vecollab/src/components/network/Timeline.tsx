@@ -5,6 +5,7 @@ import TimelinePost from "./TimelinePost";
 import { FormEvent, useState } from "react";
 import { IoIosSend } from "react-icons/io";
 import AuthenticatedImage from "../AuthenticatedImage";
+import { useRef } from 'react'
 
 interface Props {
     space?: string | undefined;
@@ -13,6 +14,8 @@ interface Props {
 Timeline.auth = true
 export default function Timeline({ space }: Props) {
     const { data: session } = useSession();
+    const ref = useRef<HTMLFormElement>(null)
+
     const [toDate, setToDate] = useState(new Date().toISOString());
 
     const now = new Date()
@@ -20,7 +23,7 @@ export default function Timeline({ space }: Props) {
     // TODO fromDate is just a dummy until /timline/[space] supports the 'limit' parameter
 
     const {
-        data: timeline,
+        data: posts,
         isLoading: isLoadingTimeline,
         error,
         mutate,
@@ -31,10 +34,16 @@ export default function Timeline({ space }: Props) {
         10,
         space
     )
-    console.log({timeline, space});
+    console.log({posts, space});
 
     // TODO infinite scroll
     // TODO user profile pic should be part of session?.user
+
+    const reloadTimeline = () => {
+        setToDate(new Date().toISOString())
+    }
+
+    // TODO Form should be an own component (also for edit post)
 
     const onSubmitForm = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -43,23 +52,28 @@ export default function Timeline({ space }: Props) {
 
         if (text === '')  return
 
-        // TODO currently we reload the whole timeline
-        //  to only load the new post the endpoint "/posts" may should return the newly added post which
-        //  we can append here
-        //  see https://blog.logrocket.com/handling-data-fetching-next-js-useswr/#mutation-revalidation
-        //  alternative we load posts fromDate (last toDate) toDate (new now) and append
-
-        try {
-            await fetchPOST(
+        const addNewPost = async () => {
+            const res = await fetchPOST(
                 '/posts',
-                {
+                Object.assign({}, {
                     text,
                     tags: []
-                },
+                }, space ? { space } : {}),
                 session?.accessToken,
                 true
             )
-            setToDate(new Date().toISOString())
+            return res.inserted_post
+        }
+
+        try {
+            await mutate(addNewPost, {
+                populateCache: (newPost, posts) => {
+                    return { success: true, posts: [newPost, ...posts.posts] };
+                },
+                revalidate: false,
+            });
+            ref.current?.reset()
+
         } catch (error) {
             console.error(error);
         }
@@ -77,7 +91,7 @@ export default function Timeline({ space }: Props) {
     return (
         <>
             <div className={'p-4 my-8 bg-white rounded-3xl shadow-2xl '}>
-                <form onSubmit={onSubmitForm}>
+                <form onSubmit={onSubmitForm} ref={ref}>
                     <div className="flex items-center mb-5">
                         <AuthenticatedImage
                             imageId={"default_profile_pic.jpg"}
@@ -94,17 +108,15 @@ export default function Timeline({ space }: Props) {
                     </div>
                     <div className="flex justify-end">
 
-
-
                     <button className="flex items-center bg-ve-collab-orange text-white py-2 px-5 rounded-lg" type='submit' title="Senden">
                         <IoIosSend className="mx-2" />Senden
                     </button>
                     </div>
                 </form>
             </div>
-            {!timeline.length ? ( <div>Timeline is Empty</div>) : (<></>)}
-            {timeline.map((post, i) =>
-                <TimelinePost key={i} post={post} mutate={mutate} />
+            {!posts.length ? ( <div>Timeline is Empty</div>) : (<></>)}
+            {posts.map((post, i) =>
+                <TimelinePost key={i} post={post} reloadTimeline={reloadTimeline} />
             )}
         </>
     );
