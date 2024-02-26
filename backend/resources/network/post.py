@@ -162,7 +162,6 @@ class Posts:
         # we know that there was no post with the given _id
         if update_result.modified_count != 1:
             raise PostNotExistingException()
-        
         return post_id
 
     def delete_post(self, post_id: str | ObjectId) -> None:
@@ -456,15 +455,15 @@ class Posts:
         self, space_id: str | ObjectId, time_to: datetime.datetime, limit: int = 10
     ) -> Tuple[List[Dict], List[Dict]]:
         """
-        get the timeline of a space (as well as pinned posts). 
-        The timeline will always include `limit` number of posts, that are older than the 
-        `time_to` timestamp. So, e.g. achieve endless scrolling, retrieve the next `limit` 
-        posts as kind of a pagination approach, use the oldest timestamp of your current 
+        get the timeline of a space (as well as pinned posts).
+        The timeline will always include `limit` number of posts, that are older than the
+        `time_to` timestamp. So, e.g. achieve endless scrolling, retrieve the next `limit`
+        posts as kind of a pagination approach, use the oldest timestamp of your current
         result set as the new starting point.
-        
+
         If there are not enough posts, the timeline will include as many
-        posts as possible. In turn, if there are less then `limit` posts returned, 
-        this timeline does not contain any more posts, so further requests with an even 
+        posts as possible. In turn, if there are less then `limit` posts returned,
+        this timeline does not contain any more posts, so further requests with an even
         older timestamp will not yield any more results.
 
         Returns a tuple of two lists, the first one containing the posts that match the
@@ -506,18 +505,18 @@ class Posts:
         self, username: str, time_to: datetime.datetime, limit: int = 10
     ) -> List[Dict]:
         """
-        get the timeline of the given user (aka the timeline on his profile) 
-        
-        The timeline will always include `limit` number of posts, that are older than the 
-        `time_to` timestamp. So, e.g. achieve endless scrolling, retrieve the next `limit` 
-        posts as kind of a pagination approach, use the oldest timestamp of your current 
+        get the timeline of the given user (aka the timeline on his profile)
+
+        The timeline will always include `limit` number of posts, that are older than the
+        `time_to` timestamp. So, e.g. achieve endless scrolling, retrieve the next `limit`
+        posts as kind of a pagination approach, use the oldest timestamp of your current
         result set as the new starting point.
-        
+
         If there are not enough posts, the timeline will include as many
-        posts as possible. In turn, if there are less then `limit` posts returned, 
-        this timeline does not contain any more posts, so further requests with an even 
+        posts as possible. In turn, if there are less then `limit` posts returned,
+        this timeline does not contain any more posts, so further requests with an even
         older timestamp will not yield any more results.
-        
+
         :param username: the name of the user whose timeline is requested
         :param time_to: the maximum creation date of the posts to be returned (i.e. only
                         posts older than this date will be returned)
@@ -534,7 +533,7 @@ class Posts:
                 }, sort=[("creation_date", -1)], limit=limit
             )
         )
-    
+
     def get_personal_timeline(
         self, username: str, time_to: datetime.datetime, limit: int = 10
     ) -> List[Dict]:
@@ -544,16 +543,16 @@ class Posts:
         - posts of people that you follow,
         - posts in spaces that you are a member of
 
-        The timeline will always include `limit` number of posts, that are older than the 
-        `time_to` timestamp. So, e.g. achieve endless scrolling, retrieve the next `limit` 
-        posts as kind of a pagination approach, use the oldest timestamp of your current 
+        The timeline will always include `limit` number of posts, that are older than the
+        `time_to` timestamp. So, e.g. achieve endless scrolling, retrieve the next `limit`
+        posts as kind of a pagination approach, use the oldest timestamp of your current
         result set as the new starting point.
-        
+
         If there are not enough posts, the timeline will include as many
-        posts as possible. In turn, if there are less then `limit` posts returned, 
-        this timeline does not contain any more posts, so further requests with an even 
+        posts as possible. In turn, if there are less then `limit` posts returned,
+        this timeline does not contain any more posts, so further requests with an even
         older timestamp will not yield any more results.
-        
+
         :param username: the name of the user whose personal timeline is requested
         :param time_to: the maximum creation date of the posts to be returned (i.e. only
                         posts older than this date will be returned)
@@ -723,10 +722,10 @@ class Posts:
                         },
                     }
                 },
-                # only include the last `limit` posts
-                {"$limit": limit},
                 # sort by creation date, descending
                 {"$sort": {"creation_date": -1}},
+                # only include the last `limit` posts
+                {"$limit": limit},
                 # last step, cleanup all the extra fields we had to use along
                 {
                     "$unset": [
