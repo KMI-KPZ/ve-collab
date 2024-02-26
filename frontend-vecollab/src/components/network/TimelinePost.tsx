@@ -10,14 +10,15 @@ import Dropdown from "../Dropdown";
 import { BackendPost } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
 import { MdDeleteOutline, MdModeEdit } from "react-icons/md";
+import TimelinePostForm from "./TimelinePostForm";
 
 interface Props {
     post: BackendPost;
-    reloadTimeline: any
+    reloadTimeline: Function
 }
 
-Timeline.auth = true
-export default function Timeline({post, reloadTimeline: updateTimeline}: Props) {
+TimelinePost.auth = true
+export default function TimelinePost({post, reloadTimeline}: Props) {
     const { data: session } = useSession();
     // const [isLoading, setIsLoading] = useState<boolean>(false)
     const [wbRemoved, setWbRemoved] = useState<boolean>(false)
@@ -25,6 +26,7 @@ export default function Timeline({post, reloadTimeline: updateTimeline}: Props) 
     const [likeIt, setLikeIt] = useState(post.likers.includes(session?.user.preferred_username as string))
     const [comments, setComments] = useState(post.comments)
     const [likers, setLikers] = useState(post.likers)
+    const [editForm, setEditForm] = useState(false)
 
     // TODO edit (own) post
     // TODO reshare a post
@@ -59,7 +61,7 @@ export default function Timeline({post, reloadTimeline: updateTimeline}: Props) 
             await addNewComment()
             // TODO if /comment returns the new result we could use mutate() with 'populateCache'
             ref.current?.reset()
-            updateTimeline()
+            reloadTimeline()
         } catch (error) {
             console.error(error);
         }
@@ -87,11 +89,6 @@ export default function Timeline({post, reloadTimeline: updateTimeline}: Props) 
         console.log('clicked shared btn...');
     }
 
-    const editPost = () => {
-        console.log('edit....');
-
-    }
-
     const deletePost = async () => {
 
         try {
@@ -105,7 +102,7 @@ export default function Timeline({post, reloadTimeline: updateTimeline}: Props) 
             setWbRemoved(true)
             // HACK wait until transition is done (TODO find a better solution...)
             await new Promise(resolve => setTimeout(resolve, 450))
-            await updateTimeline()
+            await reloadTimeline()
             setWbRemoved(false)
         } catch (error) {
             console.error(error);
@@ -118,7 +115,7 @@ export default function Timeline({post, reloadTimeline: updateTimeline}: Props) 
                 deletePost()
                 break;
             case 'edit':
-                editPost()
+                setEditForm(true)
                 break;
 
             default:
@@ -141,6 +138,22 @@ export default function Timeline({post, reloadTimeline: updateTimeline}: Props) 
             </div>
         </>
     )
+
+    const PostText = () => {
+
+        if (editForm) return (
+            <TimelinePostForm onSubmitForm={reloadTimeline} onCancelForm={() => setEditForm(false)} post={post} />
+        )
+
+        return (
+            <div className="whitespace-break-spaces">
+                {post.isRepost
+                    ? ( <>{post.repostText}</> )
+                    : ( <>{post.text}</> )
+                }
+            </div>
+        )
+    }
 
     let drOptions = []
     if (
@@ -199,7 +212,7 @@ export default function Timeline({post, reloadTimeline: updateTimeline}: Props) 
                 {post.isRepost ? (
                     <>
                         <div className='my-5'>
-                            <div className="whitespace-break-spaces">{post.repostText}</div>
+                            <PostText />
                         </div>
                         <div className="my-5 ml-5 p-5 border-2 border-ve-collab-blue/25 rounded-lg">
                             <div className="flex items-center">
@@ -210,7 +223,7 @@ export default function Timeline({post, reloadTimeline: updateTimeline}: Props) 
                     </>
                 ) : (
                     <div className='my-5'>
-                        <div className="whitespace-break-spaces">{post.text}</div>
+                        <PostText />
                     </div>
                  )}
 

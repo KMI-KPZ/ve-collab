@@ -9,7 +9,8 @@ import { useRef } from 'react'
 interface Props {
     post?: BackendPost | undefined;
     space?: string | undefined;
-    reloadTimeline: () => void;
+    onCancelForm?: Function;
+    onSubmitForm?: Function;
 }
 
 TimelinePostForm.auth = true
@@ -17,7 +18,8 @@ export default function TimelinePostForm(
 {
     post,
     space,
-    reloadTimeline
+    onSubmitForm,
+    onCancelForm
 }: Props) {
     const { data: session } = useSession();
     const ref = useRef<HTMLFormElement>(null)
@@ -29,27 +31,33 @@ export default function TimelinePostForm(
 
         if (text === '')  return
 
-        const addNewPost = async () => {
-            const res = await fetchPOST(
+        const data = Object.assign({},
+            post ? post : { tags: [] },
+            space ? { space } : {},
+            { text },
+        )
+
+        const createOrUpdatePost = async () => {
+            return await fetchPOST(
                 '/posts',
-                Object.assign({}, {
-                    text,
-                    tags: []
-                }, space ? { space } : {}),
+                data,
                 session?.accessToken,
                 true
             )
-            return res.inserted_post
         }
 
         try {
-            await addNewPost()
-            reloadTimeline()
+            await createOrUpdatePost()
             ref.current?.reset()
-
+            if (onSubmitForm) onSubmitForm()
         } catch (error) {
             console.error(error);
         }
+    }
+
+    const onCancel = () => {
+        ref.current?.reset()
+        if (onCancelForm) onCancelForm()
     }
 
     return (
@@ -60,18 +68,22 @@ export default function TimelinePostForm(
                     alt={'Benutzerbild'}
                     width={40}
                     height={40}
-                    className="rounded-full mr-3"
+                    className={`${post ? "hidden" : ""} rounded-full mr-3`}
                 ></AuthenticatedImage>
                 <textarea
                     className={'w-full border border-[#cccccc] rounded-md px-2 py-[6px]'}
                     placeholder={'Beitrag schreiben ...'}
                     name='text'
+                    defaultValue={post ? (post.isRepost ? post.repostText : post.text) : ''}
                 />
             </div>
             <div className="flex justify-end">
 
+            <button className={`${!post ? "hidden" : ""} mx-4 py-2 px-5 border border-ve-collab-orange rounded-lg`} title="Abbrechen" onClick={onCancel}>
+                Abbrechen
+            </button>
             <button className="flex items-center bg-ve-collab-orange text-white py-2 px-5 rounded-lg" type='submit' title="Senden">
-                <IoIosSend className="mx-2" />Senden
+                <IoIosSend className="mx-2" />{post ? ( <>Aktualisieren</> ) : ( <>Senden</> )}
             </button>
             </div>
         </form>

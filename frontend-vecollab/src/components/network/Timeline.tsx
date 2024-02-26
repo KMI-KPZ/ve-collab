@@ -54,9 +54,9 @@ export default function Timeline({ space }: Props) {
     return (
         <>
             <div className={'p-4 my-8 bg-white rounded-3xl shadow-2xl '}>
-                <TimelinePostForm reloadTimeline={reloadTimeline} />
+                <TimelinePostForm onSubmitForm={reloadTimeline} space={space} />
             </div>
-            {!posts.length ? ( <div>Timeline is Empty</div>) : (<></>)}
+            {!posts.length ? ( <div className="m-10 flex justify-center">Bisher keine Beiträge ...</div>) : (<></>)}
             {posts.map((post, i) =>
                 <TimelinePost key={i} post={post} reloadTimeline={reloadTimeline} />
             )}
