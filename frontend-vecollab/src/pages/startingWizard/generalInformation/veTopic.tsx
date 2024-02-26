@@ -62,7 +62,7 @@ export default function Topic() {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
                     setLoading(false);
-                    setValue('topic', data.plan.topic);
+                    setValue('topic', data.plan.topics[0]);
                     if (data.plan.progress.length !== 0) {
                         setSideMenuStepsProgress(data.plan.progress);
                     }
@@ -77,13 +77,13 @@ export default function Topic() {
             '/planner/update_fields',
             {
                 update: [
-                    { plan_id: router.query.plannerId, field_name: 'topic', value: data.topic },
+                    { plan_id: router.query.plannerId, field_name: 'topics', value: [data.topic] },
                     {
                         plan_id: router.query.plannerId,
                         field_name: 'progress',
                         value: {
                             ...sideMenuStepsProgress,
-                            topic: ProgressState.completed,
+                            topics: ProgressState.completed,
                         },
                     },
                 ],

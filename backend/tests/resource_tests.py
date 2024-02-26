@@ -4749,7 +4749,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "name": "test",
             "partners": ["test_admin"],
             "institutions": [self.institution.to_dict()],
-            "topic": "test",
+            "topics": ["test", "test"],
             "lectures": [self.lecture.to_dict()],
             "learning_goals": ["test", "test"],
             "audience": [self.target_group.to_dict()],
@@ -4776,7 +4776,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",
-                "topic": "not_started",
+                "topics": "not_started",
                 "lectures": "not_started",
                 "learning_goals": "not_started",
                 "audience": "not_started",
@@ -4819,7 +4819,7 @@ class PlanResourceTest(BaseResourceTestCase):
                     [institution.to_dict() for institution in plan.institutions],
                     self.default_plan["institutions"],
                 )
-                self.assertEqual(plan.topic, self.default_plan["topic"])
+                self.assertEqual(plan.topics, self.default_plan["topics"])
                 self.assertEqual(
                     [lecture.to_dict() for lecture in plan.lectures],
                     self.default_plan["lectures"],
@@ -4868,7 +4868,7 @@ class PlanResourceTest(BaseResourceTestCase):
                     [institution.to_dict() for institution in plan.institutions],
                     self.default_plan["institutions"],
                 )
-                self.assertEqual(plan.topic, self.default_plan["topic"])
+                self.assertEqual(plan.topics, self.default_plan["topics"])
                 self.assertEqual(
                     [lecture.to_dict() for lecture in plan.lectures],
                     self.default_plan["lectures"],
@@ -4953,7 +4953,7 @@ class PlanResourceTest(BaseResourceTestCase):
             [institution.to_dict() for institution in plan.institutions],
             self.default_plan["institutions"],
         )
-        self.assertEqual(plan.topic, self.default_plan["topic"])
+        self.assertEqual(plan.topics, self.default_plan["topics"])
         self.assertEqual(
             [lecture.to_dict() for lecture in plan.lectures],
             self.default_plan["lectures"],
@@ -4997,7 +4997,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "name": "admin",
                 "partners": ["test_user"],
                 "institutions": [self.institution.to_dict()],
-                "topic": "test",
+                "topics": ["test"],
                 "lectures": [self.lecture.to_dict()],
                 "learning_goals": ["test", "test"],
                 "audience": [self.target_group.to_dict()],
@@ -5020,7 +5020,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "progress": {
                     "name": "not_started",
                     "institutions": "not_started",
-                    "topic": "not_started",
+                    "topics": "not_started",
                     "lectures": "not_started",
                     "learning_goals": "not_started",
                     "audience": "not_started",
@@ -5041,7 +5041,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "name": "user",
                 "partners": ["test_user"],
                 "institutions": [self.institution.to_dict()],
-                "topic": "test",
+                "topics": ["test"],
                 "lectures": [self.lecture.to_dict()],
                 "learning_goals": ["test", "test"],
                 "audience": [self.target_group.to_dict()],
@@ -5064,7 +5064,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "progress": {
                     "name": "not_started",
                     "institutions": "not_started",
-                    "topic": "not_started",
+                    "topics": "not_started",
                     "lectures": "not_started",
                     "learning_goals": "not_started",
                     "audience": "not_started",
@@ -5104,7 +5104,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "read_access": ["test_user"],
             "write_access": ["test_user"],
             "institutions": [self.institution.to_dict()],
-            "topic": "test",
+            "topics": ["test"],
             "lectures": [self.lecture.to_dict()],
             "learning_goals": ["test", "test"],
             "audience": [self.target_group.to_dict()],
@@ -5127,7 +5127,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",
-                "topic": "not_started",
+                "topics": "not_started",
                 "lectures": "not_started",
                 "learning_goals": "not_started",
                 "audience": "not_started",
@@ -5165,7 +5165,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "name": "new plan",
             "partners": ["test_admin"],
             "institutions": [self.institution.to_dict()],
-            "topic": "test",
+            "topics": ["test"],
             "lectures": [self.lecture.to_dict()],
             "learning_goals": ["test", "test"],
             "audience": [self.target_group.to_dict()],
@@ -5188,7 +5188,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",
-                "topic": "not_started",
+                "topics": "not_started",
                 "lectures": "not_started",
                 "learning_goals": "not_started",
                 "audience": "not_started",
@@ -5241,7 +5241,7 @@ class PlanResourceTest(BaseResourceTestCase):
         # use the default plan, but change its name and topic
         existing_plan = VEPlan.from_dict(self.default_plan)
         existing_plan.name = "updated_name"
-        existing_plan.topic = "new_topic"
+        existing_plan.topics = ["new_topic", "test"]
 
         # expect an "updated" response
         result = self.planner.update_full_plan(existing_plan)
@@ -5253,7 +5253,7 @@ class PlanResourceTest(BaseResourceTestCase):
         db_state = self.db.plans.find_one({"_id": existing_plan._id})
         self.assertIsNotNone(db_state)
         self.assertEqual(db_state["name"], existing_plan.name)
-        self.assertEqual(db_state["topic"], existing_plan.topic)
+        self.assertEqual(db_state["topics"], existing_plan.topics)
         self.assertEqual(db_state["realization"], self.default_plan["realization"])
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
@@ -5272,7 +5272,7 @@ class PlanResourceTest(BaseResourceTestCase):
         # use the default plan, but change its name and topic
         existing_plan = VEPlan.from_dict(self.default_plan)
         existing_plan.name = "updated_name"
-        existing_plan.topic = "new_topic"
+        existing_plan.topics = ["new_topic", "test"]
 
         # expect an "updated" response
         result = self.planner.update_full_plan(
@@ -5286,7 +5286,7 @@ class PlanResourceTest(BaseResourceTestCase):
         db_state = self.db.plans.find_one({"_id": existing_plan._id})
         self.assertIsNotNone(db_state)
         self.assertEqual(db_state["name"], existing_plan.name)
-        self.assertEqual(db_state["topic"], existing_plan.topic)
+        self.assertEqual(db_state["topics"], existing_plan.topics)
         self.assertEqual(db_state["realization"], self.default_plan["realization"])
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
@@ -5357,7 +5357,7 @@ class PlanResourceTest(BaseResourceTestCase):
         expect: successfully update a single field of a VEPlan
         """
 
-        self.planner.update_field(self.plan_id, "topic", "updated_topic")
+        self.planner.update_field(self.plan_id, "topics", ["updated_topic"])
         self.planner.update_field(
             self.plan_id, "involved_parties", ["update1", "update2"]
         )
@@ -5375,7 +5375,7 @@ class PlanResourceTest(BaseResourceTestCase):
             {
                 "name": "completed",
                 "institutions": "not_started",
-                "topic": "not_started",
+                "topics": "not_started",
                 "lectures": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
@@ -5391,7 +5391,7 @@ class PlanResourceTest(BaseResourceTestCase):
 
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
-        self.assertEqual(db_state["topic"], "updated_topic")
+        self.assertEqual(db_state["topics"], ["updated_topic"])
         self.assertEqual(db_state["involved_parties"], ["update1", "update2"])
         self.assertEqual(db_state["realization"], "updated_realization")
         self.assertEqual(db_state["learning_env"], "updated_learning_env")
@@ -5410,7 +5410,7 @@ class PlanResourceTest(BaseResourceTestCase):
         """
 
         self.planner.update_field(
-            self.plan_id, "topic", "updated_topic", requesting_username="test_user"
+            self.plan_id, "topics", ["updated_topic"], requesting_username="test_user"
         )
         self.planner.update_field(
             self.plan_id,
@@ -5457,7 +5457,7 @@ class PlanResourceTest(BaseResourceTestCase):
             {
                 "name": "completed",
                 "institutions": "not_started",
-                "topic": "not_started",
+                "topics": "not_started",
                 "lectures": "not_started",
                 "learning_goals": "not_started",
                 "audience": "not_started",
@@ -5475,7 +5475,7 @@ class PlanResourceTest(BaseResourceTestCase):
 
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
-        self.assertEqual(db_state["topic"], "updated_topic")
+        self.assertEqual(db_state["topics"], ["updated_topic"])
         self.assertEqual(db_state["involved_parties"], ["update1", "update2"])
         self.assertEqual(db_state["realization"], "updated_realization")
         self.assertEqual(db_state["learning_env"], "updated_learning_env")

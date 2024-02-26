@@ -1360,7 +1360,7 @@ class VEPlanModelTest(TestCase):
         self.default_progress = {
             "name": "not_started",
             "institutions": "not_started",
-            "topic": "not_started",
+            "topics": "not_started",
             "lectures": "not_started",
             "learning_goals": "not_started",
             "audience": "not_started",
@@ -1454,7 +1454,7 @@ class VEPlanModelTest(TestCase):
         self.assertIsNone(plan.name)
         self.assertEqual(plan.partners, [])
         self.assertEqual(plan.institutions, [])
-        self.assertIsNone(plan.topic)
+        self.assertEqual(plan.topics, [])
         self.assertEqual(plan.lectures, [])
         self.assertEqual(plan.learning_goals, [])
         self.assertEqual(plan.audience, [])
@@ -1512,7 +1512,7 @@ class VEPlanModelTest(TestCase):
             name="test",
             partners=["test2"],
             institutions=institutions,
-            topic="test",
+            topics=["test"],
             lectures=lectures,
             learning_goals=["test", "test"],
             audience=target_groups,
@@ -1527,7 +1527,7 @@ class VEPlanModelTest(TestCase):
             progress={
                 "name": "completed",
                 "institutions": "not_started",
-                "topic": "not_started",
+                "topics": "not_started",
                 "lectures": "not_started",
                 "learning_goals": "not_started",
                 "audience": "not_started",
@@ -1549,7 +1549,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.name, "test")
         self.assertEqual(plan.partners, ["test2"])
         self.assertEqual(plan.institutions, institutions)
-        self.assertEqual(plan.topic, "test")
+        self.assertEqual(plan.topics, ["test"])
         self.assertEqual(plan.lectures, lectures)
         self.assertEqual(plan.learning_goals, ["test", "test"])
         self.assertEqual(plan.audience, target_groups)
@@ -1581,7 +1581,7 @@ class VEPlanModelTest(TestCase):
             author="test",
             partners=["test2"],
             institutions=institutions,
-            topic="test",
+            topics=["test"],
             lectures=lectures,
             learning_goals=["test", "test"],
             audience=target_groups,
@@ -1596,7 +1596,7 @@ class VEPlanModelTest(TestCase):
             progress={
                 "name": "completed",
                 "institutions": "not_started",
-                "topic": "not_started",
+                "topics": "not_started",
                 "lectures": "not_started",
                 "learning_goals": "not_started",
                 "audience": "not_started",
@@ -1614,7 +1614,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.name, "test")
         self.assertEqual(plan.partners, ["test2"])
         self.assertEqual(plan.institutions, institutions)
-        self.assertEqual(plan.topic, "test")
+        self.assertEqual(plan.topics, ["test"])
         self.assertEqual(plan.lectures, lectures)
         self.assertEqual(plan.learning_goals, ["test", "test"])
         self.assertEqual(plan.audience, target_groups)
@@ -1714,7 +1714,7 @@ class VEPlanModelTest(TestCase):
         self.assertIn("name", plan_dict)
         self.assertIn("partners", plan_dict)
         self.assertIn("institutions", plan_dict)
-        self.assertIn("topic", plan_dict)
+        self.assertIn("topics", plan_dict)
         self.assertIn("lectures", plan_dict)
         self.assertIn("learning_goals", plan_dict)
         self.assertIn("audience", plan_dict)
@@ -1738,7 +1738,7 @@ class VEPlanModelTest(TestCase):
         self.assertIsNone(plan_dict["name"])
         self.assertEqual(plan_dict["partners"], [])
         self.assertEqual(plan_dict["institutions"], [institution.to_dict()])
-        self.assertIsNone(plan_dict["topic"])
+        self.assertEqual(plan_dict["topics"], [])
         self.assertEqual(plan_dict["lectures"], [lecture.to_dict()])
         self.assertEqual(plan_dict["learning_goals"], [])
         self.assertEqual(plan_dict["audience"], [])
@@ -1782,7 +1782,7 @@ class VEPlanModelTest(TestCase):
                     "academic_courses": institution.academic_courses,
                 }
             ],
-            "topic": None,
+            "topics": [],
             "lectures": [
                 {
                     "_id": lecture._id,
@@ -1835,7 +1835,7 @@ class VEPlanModelTest(TestCase):
             "progress": {
                 "name": "completed",
                 "institutions": "not_started",
-                "topic": "not_started",
+                "topics": "not_started",
                 "lectures": "not_started",
                 "learning_goals": "not_started",
                 "audience": "not_started",
@@ -1858,7 +1858,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.read_access, [])
         self.assertEqual(plan.write_access, [])
         self.assertEqual(plan.institutions, [institution])
-        self.assertIsNone(plan.topic)
+        self.assertEqual(plan.topics, [])
         self.assertEqual(plan.lectures, [lecture])
         self.assertEqual(plan.learning_goals, ["test", "test"])
         self.assertEqual(plan.audience, [target_group])
@@ -1894,7 +1894,7 @@ class VEPlanModelTest(TestCase):
                     "academic_courses": institution.academic_courses,
                 }
             ],
-            "topic": None,
+            "topics": [],
             "lectures": [
                 {
                     "name": lecture.name,
@@ -1944,7 +1944,7 @@ class VEPlanModelTest(TestCase):
             "progress": {
                 "name": "completed",
                 "institutions": "not_started",
-                "topic": "not_started",
+                "topics": "not_started",
                 "lectures": "not_started",
                 "learning_goals": "not_started",
                 "audience": "not_started",
@@ -1968,7 +1968,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.partners, ["test"])
         self.assertEqual(len(plan.institutions), 1)
         self.assertIsInstance(plan.institutions[0], Institution)
-        self.assertIsNone(plan.topic)
+        self.assertEqual(plan.topics, [])
         self.assertEqual(len(plan.lectures), 1)
         self.assertIsInstance(plan.lectures[0], Lecture)
         self.assertEqual(plan.learning_goals, ["test", "test"])
@@ -2012,7 +2012,7 @@ class VEPlanModelTest(TestCase):
             "name": None,
             "partners": ["test"],
             "institutions": [],
-            "topic": None,
+            "topics": [],
             "lectures": [],
             "learning_goals": [],
             "audience": [],
@@ -2057,7 +2057,7 @@ class VEPlanModelTest(TestCase):
             "name": None,
             "partners": ["test"],
             "institutions": [],
-            "topic": None,
+            "topics": [],
             "lectures": [],
             "learning_goals": [],
             "audience": [],
@@ -2076,7 +2076,7 @@ class VEPlanModelTest(TestCase):
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",
-                "topic": "not_started",
+                "topics": "not_started",
                 "lectures": "not_started",
                 "learning_goals": "not_started",
                 "audience": "not_started",
@@ -2108,9 +2108,9 @@ class VEPlanModelTest(TestCase):
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
         plan_dict["institutions"] = list()
 
-        plan_dict["topic"] = list()
+        plan_dict["topics"] = 123
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
-        plan_dict["topic"] = None
+        plan_dict["topics"] = []
 
         plan_dict["lectures"] = 123
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
@@ -2171,7 +2171,7 @@ class VEPlanModelTest(TestCase):
             "name": None,
             "partners": ["test"],
             "institutions": [],
-            "topic": None,
+            "topics": [],
             "lectures": [],
             "learning_goals": [],
             "audience": [],
@@ -2193,7 +2193,7 @@ class VEPlanModelTest(TestCase):
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",
-                "topic": "not_started",
+                "topics": "not_started",
                 "lectures": "not_started",
                 "learning_goals": "not_started",
                 "audience": "not_started",

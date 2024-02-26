@@ -7213,7 +7213,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "name": "test",
             "partners": [CURRENT_USER.username],
             "institutions": [self.institution.to_dict()],
-            "topic": "test",
+            "topics": ["test", "test"],
             "lectures": [self.lecture.to_dict()],
             "learning_goals": ["test", "test"],
             "audience": [self.target_group.to_dict()],
@@ -7236,7 +7236,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",
-                "topic": "not_started",
+                "topics": "not_started",
                 "lectures": "not_started",
                 "learning_goals": "not_started",
                 "audience": "not_started",
@@ -7303,7 +7303,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.name, default_plan.name)
         self.assertEqual(response_plan.partners, default_plan.partners)
         self.assertEqual(response_plan.institutions, default_plan.institutions)
-        self.assertEqual(response_plan.topic, default_plan.topic)
+        self.assertEqual(response_plan.topics, default_plan.topics)
         self.assertEqual(response_plan.lectures, default_plan.lectures)
         self.assertEqual(response_plan.learning_goals, default_plan.learning_goals)
         self.assertEqual(response_plan.audience, default_plan.audience)
@@ -7393,7 +7393,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.name, default_plan.name)
         self.assertEqual(response_plan.partners, default_plan.partners)
         self.assertEqual(response_plan.institutions, default_plan.institutions)
-        self.assertEqual(response_plan.topic, default_plan.topic)
+        self.assertEqual(response_plan.topics, default_plan.topics)
         self.assertEqual(response_plan.lectures, default_plan.lectures)
         self.assertEqual(response_plan.learning_goals, default_plan.learning_goals)
         self.assertEqual(response_plan.audience, default_plan.audience)
@@ -7560,7 +7560,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         db_state = self.db.plans.find_one({"_id": ObjectId(response["updated_id"])})
         self.assertIsNotNone(db_state)
         self.assertEqual(db_state["name"], "updated_plan")
-        self.assertEqual(db_state["topic"], None)
+        self.assertEqual(db_state["topics"], [])
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
     def test_post_upsert_plan(self):
@@ -7693,8 +7693,8 @@ class VEPlanHandlerTest(BaseApiTestCase):
         # again, but this time upsert
         payload = {
             "plan_id": ObjectId(),
-            "field_name": "topic",
-            "value": "updated_topic",
+            "field_name": "topics",
+            "value": ["updated_topic", "test"],
         }
 
         response = self.base_checks(
@@ -7708,7 +7708,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         db_state = self.db.plans.find_one({"_id": ObjectId(payload["plan_id"])})
         self.assertIsNotNone(db_state)
-        self.assertEqual(db_state["topic"], "updated_topic")
+        self.assertEqual(db_state["topics"], ["updated_topic", "test"])
         self.assertEqual(db_state["realization"], None)
         self.assertEqual(db_state["steps"], [])
         self.assertEqual(db_state["last_modified"], db_state["creation_timestamp"])
@@ -7798,7 +7798,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(db_state["audience"][0]["mother_tongue"], "de")
         self.assertEqual(db_state["audience"][0]["foreign_languages"], {"en": "c1"})
-        self.assertEqual(db_state["topic"], None)
+        self.assertEqual(db_state["topics"], [])
         self.assertEqual(db_state["steps"], [])
         self.assertEqual(db_state["last_modified"], db_state["creation_timestamp"])
 
@@ -8124,8 +8124,8 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 },
                 {
                     "plan_id": self.plan_id,
-                    "field_name": "topic",
-                    "value": "updated_topic",
+                    "field_name": "topics",
+                    "value": ["updated_topic", "test"],
                 },
             ]
         }
@@ -8141,7 +8141,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
         self.assertEqual(db_state["realization"], "updated_realization")
-        self.assertEqual(db_state["topic"], "updated_topic")
+        self.assertEqual(db_state["topics"], ["updated_topic", "test"])
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
     def test_post_update_fields_errors(self):
@@ -8158,8 +8158,8 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 },
                 {
                     "plan_id": self.plan_id,
-                    "field_name": "topics",  # field name is wrong, should cause unexpected_attribute
-                    "value": "updated_topic",
+                    "field_name": "topics123",  # field name is wrong, should cause unexpected_attribute
+                    "value": ["updated_topic", "test"],
                 },
             ]
         }
@@ -8186,7 +8186,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
         self.assertEqual(db_state["realization"], "updated_realization")
-        self.assertNotEqual(db_state["topic"], "updated_topic")
+        self.assertNotEqual(db_state["topics"], ["updated_topic", "test"])
 
     def test_post_grant_read_permission(self):
         """

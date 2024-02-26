@@ -1054,7 +1054,7 @@ class VEPlan:
         "name": (str, type(None)),
         "partners": list,
         "institutions": list,
-        "topic": (str, type(None)),
+        "topics": list,
         "lectures": list,
         "learning_goals": list,
         "audience": list,
@@ -1080,7 +1080,7 @@ class VEPlan:
         name: str = None,
         partners: List[str] = [],
         institutions: List[Institution] = [],
-        topic: str = None,
+        topics: List[str] = [],
         lectures: List[Lecture] = [],
         learning_goals: List[str] = [],
         audience: List[TargetGroup] = [],
@@ -1131,7 +1131,7 @@ class VEPlan:
         self.name = name
         self.partners = partners
         self.institutions = institutions
-        self.topic = topic
+        self.topics = topics
         self.lectures = lectures
         self.learning_goals = learning_goals
         self.audience = audience
@@ -1150,7 +1150,7 @@ class VEPlan:
             self.progress = {
                 "name": "not_started",
                 "institutions": "not_started",
-                "topic": "not_started",
+                "topics": "not_started",
                 "lectures": "not_started",
                 "learning_goals": "not_started",
                 "audience": "not_started",
@@ -1248,7 +1248,7 @@ class VEPlan:
             "institutions": [
                 institution.to_dict() for institution in self.institutions
             ],
-            "topic": self.topic,
+            "topics": self.topics,
             "lectures": [lecture.to_dict() for lecture in self.lectures],
             "learning_goals": self.learning_goals,
             "audience": [target_group.to_dict() for target_group in self.audience],
@@ -1350,7 +1350,7 @@ class VEPlan:
                         "academic_courses": [],
                     }
                 ],
-                "topic": None,
+                "topics": [],
                 "lectures": [
                     {
                         "_id": "object_id_str",
@@ -1411,7 +1411,7 @@ class VEPlan:
                 "progress": {
                     "name": "<completed|uncompleted|not_started>",
                     "institutions": "<completed|uncompleted|not_started>",
-                    "topic": "<completed|uncompleted|not_started>",
+                    "topics": "<completed|uncompleted|not_started>",
                     "lectures": "<completed|uncompleted|not_started>",
                     "learning_goals": "<completed|uncompleted|not_started>",
                     "audience": "<completed|uncompleted|not_started>",
