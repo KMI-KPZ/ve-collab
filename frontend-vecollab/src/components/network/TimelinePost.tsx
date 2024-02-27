@@ -7,18 +7,19 @@ import { IoIosSend } from "react-icons/io";
 import AuthenticatedImage from "../AuthenticatedImage";
 import SmallTimestamp from "../SmallTimestamp";
 import Dropdown from "../Dropdown";
-import { BackendPost } from "@/interfaces/api/apiInterfaces";
+import { BackendPost, BackendSpace } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
 import { MdDeleteOutline, MdModeEdit } from "react-icons/md";
 import TimelinePostForm from "./TimelinePostForm";
 
 interface Props {
     post: BackendPost;
+    spaces?: BackendSpace[],
     reloadTimeline: Function
 }
 
 TimelinePost.auth = true
-export default function TimelinePost({post, reloadTimeline}: Props) {
+export default function TimelinePost({post, spaces, reloadTimeline}: Props) {
     const { data: session } = useSession();
     // const [isLoading, setIsLoading] = useState<boolean>(false)
     const [wbRemoved, setWbRemoved] = useState<boolean>(false)
@@ -38,7 +39,7 @@ export default function TimelinePost({post, reloadTimeline}: Props) {
         setComments(newComments);
     }, [post]);
 
-    async function onSubmitCommentForm(event: FormEvent<HTMLFormElement>) {
+    const onSubmitCommentForm = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget)
         const text = (formData.get('text') as string).trim()
@@ -123,6 +124,16 @@ export default function TimelinePost({post, reloadTimeline}: Props) {
         }
     }
 
+    const SpacenameById = (spaceId: string) => {
+        if (!spaces) return (<>{spaceId}</>)
+        const space = spaces.find(space => space._id == spaceId)
+        return (
+            <>
+                {space?.name}
+            </>
+        )
+    }
+
     const PostAuthor = (imageId: string, authorName: string, date: string) => (
         <>
             <AuthenticatedImage
@@ -132,7 +143,7 @@ export default function TimelinePost({post, reloadTimeline}: Props) {
                 height={40}
                 className="rounded-full mr-3"
             ></AuthenticatedImage>
-            <div>
+            <div className="flex flex-col">
                 <div className='font-bold'>{authorName}</div>
                 <SmallTimestamp timestamp={date} className='text-xs text-gray-500' />
             </div>
@@ -140,7 +151,6 @@ export default function TimelinePost({post, reloadTimeline}: Props) {
     )
 
     const PostText = () => {
-
         if (editForm) return (
             <TimelinePostForm onSubmitForm={reloadTimeline} onCancelForm={() => setEditForm(false)} post={post} />
         )
@@ -192,7 +202,8 @@ export default function TimelinePost({post, reloadTimeline}: Props) {
 
                     {post.space ? (
                         <div className='self-end text-xs text-gray-500 mx-2'>
-                            in <Link href={'#'}>{post.space}</Link>
+                            {/* in <Link href={`/space/?id=${post.space._id}`}>{post.space.name}</Link> */}
+                            in <Link href={`/space/?id=${post.space}`}>{SpacenameById(post.space)}</Link>
                         </div>
                     ) : ( <></> )}
 

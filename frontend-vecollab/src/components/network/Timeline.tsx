@@ -1,10 +1,10 @@
-import { useGetTimeline } from "@/lib/backend";
+import { useGetAllSpaces, useGetTimeline } from "@/lib/backend";
 import { useSession } from "next-auth/react";
 import LoadingAnimation from "../LoadingAnimation";
 import TimelinePost from "./TimelinePost";
-import { useState } from "react";
-import { useRef } from 'react'
+import { useEffect, useState } from "react";
 import TimelinePostForm from "./TimelinePostForm";
+import { BackendPost } from "@/interfaces/api/apiInterfaces";
 
 interface Props {
     space?: string | undefined;
@@ -13,7 +13,8 @@ interface Props {
 Timeline.auth = true
 export default function Timeline({ space }: Props) {
     const { data: session } = useSession();
-    const ref = useRef<HTMLFormElement>(null)
+
+    const [displayPosts, setDisplayPosts] = useState<BackendPost[]>([]);
 
     const [toDate, setToDate] = useState(new Date().toISOString());
 
@@ -35,8 +36,28 @@ export default function Timeline({ space }: Props) {
     )
     console.log({posts, space});
 
-    // TODO infinite scroll
-    // TODO user profile pic should be part of session?.user
+    const {
+        data: allSpaces,
+        isLoading: isLoadingAllSpaces,
+        error: errorAllSpaces,
+        mutate: mutateAllSpaces,
+    } = useGetAllSpaces(session!.accessToken);
+    console.log({allSpaces});
+
+    // useEffect(() => {
+    //     if (!posts.length || !allSpaces.length) return;
+
+    //     const postsFixed = posts.map(post => {
+    //         if (post.space) {
+    //             post.space = allSpaces.find(space => space._id == post.space)
+    //         }
+    //         return post
+    //     })
+    //     setDisplayPosts(postsFixed)
+    //     // console.log({postsFixed});
+
+    // }, [posts, allSpaces]);
+    // console.log({displayPosts});
 
     const reloadTimeline = () => {
         return setToDate(new Date().toISOString())
@@ -58,7 +79,7 @@ export default function Timeline({ space }: Props) {
             </div>
             {!posts.length ? ( <div className="m-10 flex justify-center">Bisher keine Beiträge ...</div>) : (<></>)}
             {posts.map((post, i) =>
-                <TimelinePost key={i} post={post} reloadTimeline={reloadTimeline} />
+                <TimelinePost key={i} post={post} spaces={allSpaces} reloadTimeline={reloadTimeline} />
             )}
         </>
     );
