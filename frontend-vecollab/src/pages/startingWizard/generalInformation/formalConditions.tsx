@@ -210,7 +210,7 @@ export default function FormalConditions() {
                             <div>
                                 <Link
                                     href={{
-                                        pathname: '/startingWizard/generalInformation/tools',
+                                        pathname: '/startingWizard/generalInformation/learningPlatform',
                                         query: { plannerId: router.query.plannerId },
                                     }}
                                 >

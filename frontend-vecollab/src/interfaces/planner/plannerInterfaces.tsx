@@ -3,7 +3,6 @@ import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import { TargetGroup } from '@/pages/startingWizard/generalInformation/targetGroups';
 import { Institution } from '@/pages/startingWizard/generalInformation/institutions';
 import { Lecture } from '@/pages/startingWizard/generalInformation/participatingCourses';
-import { Tool } from '@/pages/startingWizard/generalInformation/tools';
 
 export interface PlanPreview {
     _id: string;
@@ -40,7 +39,6 @@ export interface IPlan {
     steps: IFineStep[];
     timestamp_from: string | null;
     timestamp_to: string | null;
-    tools: Tool[];
     topic: string | null;
     workload: number;
     write_access: string[];

@@ -175,18 +175,6 @@ export default function ViewAttributes({ plan }: Props): JSX.Element {
                             {showDataOrEmptySign(plan.learning_env)}
                         </li>
                     </ul>
-                    <span className="font-semibold pr-5">Tools:</span>
-                    <ul className="flex flex-col space-y-2 col-span-3 ">
-                        {plan.tools.length !== 0 ? (
-                            plan.tools.map((toolObject, index) => (
-                                <li className="flex w-fit bg-slate-200 rounded-lg p-2" key={index}>
-                                    {showDataOrEmptySign(toolObject.tool)}
-                                </li>
-                            ))
-                        ) : (
-                            <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
-                        )}
-                    </ul>
                 </section>
             ) : (
                 <section className="grid grid-cols-4 gap-8 border-2 border-gray-400 rounded-3xl p-4">

@@ -1368,7 +1368,6 @@ class VEPlanModelTest(TestCase):
             "involved_parties": "not_started",
             "realization": "not_started",
             "learning_env": "not_started",
-            "tools": "not_started",
             "new_content": "not_started",
             "formalities": "not_started",
             "steps": [],
@@ -1462,7 +1461,6 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.involved_parties, [])
         self.assertIsNone(plan.realization)
         self.assertIsNone(plan.learning_env)
-        self.assertEqual(plan.tools, [])
         self.assertEqual(plan.new_content, None)
         self.assertEqual(
             plan.formalities, []
@@ -1520,7 +1518,6 @@ class VEPlanModelTest(TestCase):
             involved_parties=["test", "test"],
             realization="test",
             learning_env="test",
-            tools=["test", "test"],
             new_content=True,
             formalities=[{"username": "test", "technology": True, "exam_regulations": False}],
             steps=steps,
@@ -1535,7 +1532,6 @@ class VEPlanModelTest(TestCase):
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
-                "tools": "not_started",
                 "new_content": "not_started",
                 "formalities": "not_started",
                 "steps": "not_started",
@@ -1557,7 +1553,6 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.involved_parties, ["test", "test"])
         self.assertEqual(plan.realization, "test")
         self.assertEqual(plan.learning_env, "test")
-        self.assertEqual(plan.tools, ["test", "test"])
         self.assertEqual(plan.new_content, True)
         self.assertEqual(
             plan.formalities, [{"username": "test", "technology": True, "exam_regulations": False}]
@@ -1589,7 +1584,6 @@ class VEPlanModelTest(TestCase):
             involved_parties=["test", "test"],
             realization="test",
             learning_env="test",
-            tools=["test", "test"],
             new_content=True,
             formalities=[],
             steps=steps,
@@ -1604,7 +1598,6 @@ class VEPlanModelTest(TestCase):
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
-                "tools": "not_started",
                 "new_content": "not_started",
                 "formalities": "not_started",
                 "steps": "not_started",
@@ -1622,7 +1615,6 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.involved_parties, ["test", "test"])
         self.assertEqual(plan.realization, "test")
         self.assertEqual(plan.learning_env, "test")
-        self.assertEqual(plan.tools, ["test", "test"])
         self.assertEqual(plan.new_content, True)
         self.assertEqual(
             plan.formalities, []
@@ -1724,7 +1716,6 @@ class VEPlanModelTest(TestCase):
         self.assertIn("involved_parties", plan_dict)
         self.assertIn("realization", plan_dict)
         self.assertIn("learning_env", plan_dict)
-        self.assertIn("tools", plan_dict)
         self.assertIn("new_content", plan_dict)
         self.assertIn("formalities", plan_dict)
         self.assertIn("duration", plan_dict)
@@ -1746,7 +1737,6 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan_dict["involved_parties"], [])
         self.assertIsNone(plan_dict["realization"])
         self.assertIsNone(plan_dict["learning_env"])
-        self.assertEqual(plan_dict["tools"], [])
         self.assertIsNone(plan_dict["new_content"])
         self.assertEqual(
             plan_dict["formalities"], []
@@ -1809,7 +1799,6 @@ class VEPlanModelTest(TestCase):
             "involved_parties": [],
             "realization": None,
             "learning_env": None,
-            "tools": [],
             "new_content": False,
             "formalities": [{
                 "username": "test",
@@ -1843,7 +1832,6 @@ class VEPlanModelTest(TestCase):
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
-                "tools": "not_started",
                 "new_content": "not_started",
                 "formalities": "not_started",
                 "steps": "not_started",
@@ -1866,7 +1854,6 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.involved_parties, [])
         self.assertIsNone(plan.realization)
         self.assertIsNone(plan.learning_env)
-        self.assertEqual(plan.tools, [])
         self.assertEqual(plan.new_content, False)
         self.assertEqual(
             plan.formalities, [{"username": "test", "technology": None, "exam_regulations": None}]
@@ -1919,7 +1906,6 @@ class VEPlanModelTest(TestCase):
             "involved_parties": [],
             "realization": None,
             "learning_env": None,
-            "tools": [],
             "new_content": False,
             "formalities": [{
                 "username": "test",
@@ -1952,7 +1938,6 @@ class VEPlanModelTest(TestCase):
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
-                "tools": "not_started",
                 "new_content": "not_started",
                 "formalities": "not_started",
                 "steps": "not_started",
@@ -1976,7 +1961,6 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.involved_parties, [])
         self.assertIsNone(plan.realization)
         self.assertIsNone(plan.learning_env)
-        self.assertEqual(plan.tools, [])
         self.assertEqual(plan.new_content, False)
         self.assertEqual(
             plan.formalities, [{"username": "test", "technology": None, "exam_regulations": None}]
@@ -2020,7 +2004,6 @@ class VEPlanModelTest(TestCase):
             "involved_parties": [],
             "realization": None,
             "learning_env": None,
-            "tools": [],
             "new_content": None,
             "formalities": [{
                 "username": "test",
@@ -2038,7 +2021,6 @@ class VEPlanModelTest(TestCase):
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
-                "tools": "not_started",
                 "new_content": "not_started",
                 "formalities": "not_started",
                 "steps": "not_started",
@@ -2065,7 +2047,6 @@ class VEPlanModelTest(TestCase):
             "involved_parties": [],
             "realization": None,
             "learning_env": None,
-            "tools": [],
             "new_content": False,
             "formalities": [{
                 "username": "test",
@@ -2084,7 +2065,6 @@ class VEPlanModelTest(TestCase):
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
-                "tools": "not_started",
                 "new_content": "not_started",
                 "formalities": "not_started",
                 "steps": "not_started",
@@ -2140,10 +2120,6 @@ class VEPlanModelTest(TestCase):
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
         plan_dict["learning_env"] = None
 
-        plan_dict["tools"] = "test"
-        self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
-        plan_dict["tools"] = list()
-
         plan_dict["new_content"] = list()
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
         plan_dict["new_content"] = True
@@ -2179,7 +2155,6 @@ class VEPlanModelTest(TestCase):
             "involved_parties": [],
             "realization": None,
             "learning_env": None,
-            "tools": [],
             "new_content": None,
             "formalities": [{
                 "username": "test",
@@ -2201,7 +2176,6 @@ class VEPlanModelTest(TestCase):
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
-                "tools": "not_started",
                 "new_content": "not_started",
                 "formalities": "not_started",
                 "steps": "not_started",

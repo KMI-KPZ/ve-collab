@@ -7223,7 +7223,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "involved_parties": ["test", "test"],
             "realization": "test",
             "learning_env": "test",
-            "tools": ["test", "test"],
             "new_content": False,
             "formalities": [{
                 "username": CURRENT_ADMIN.username,
@@ -7244,7 +7243,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
-                "tools": "not_started",
                 "new_content": "not_started",
                 "formalities": "not_started",
                 "steps": "not_started",
@@ -7313,7 +7311,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.involved_parties, default_plan.involved_parties)
         self.assertEqual(response_plan.realization, default_plan.realization)
         self.assertEqual(response_plan.learning_env, default_plan.learning_env)
-        self.assertEqual(response_plan.tools, default_plan.tools)
         self.assertEqual(response_plan.new_content, default_plan.new_content)
         self.assertEqual(response_plan.formalities, default_plan.formalities)
         self.assertEqual(response_plan.duration, default_plan.duration)
@@ -7403,7 +7400,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.involved_parties, default_plan.involved_parties)
         self.assertEqual(response_plan.realization, default_plan.realization)
         self.assertEqual(response_plan.learning_env, default_plan.learning_env)
-        self.assertEqual(response_plan.tools, default_plan.tools)
         self.assertEqual(response_plan.new_content, default_plan.new_content)
         self.assertEqual(response_plan.formalities, default_plan.formalities)
         self.assertEqual(response_plan.duration, default_plan.duration)

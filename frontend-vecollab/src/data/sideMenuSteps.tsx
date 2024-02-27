@@ -57,11 +57,6 @@ export const sideMenuStepsData: SideMenuStep[] = [
         link: '/startingWizard/generalInformation/learningPlatform',
     },
     {
-        text: 'Tools',
-        id: 'tools',
-        link: '/startingWizard/generalInformation/tools',
-    },
-    {
         text: 'Formale Rahmenbedingungen',
         id: 'formalities',
         link: '/startingWizard/generalInformation/formalConditions',

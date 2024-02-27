@@ -1062,7 +1062,6 @@ class VEPlan:
         "involved_parties": list,
         "realization": (str, type(None)),
         "learning_env": (str, type(None)),
-        "tools": list,
         "new_content": (bool, type(None)),
         "formalities": list,
         "steps": list,
@@ -1088,7 +1087,6 @@ class VEPlan:
         involved_parties: List[str] = [],
         realization: str = None,
         learning_env: str = None,
-        tools: List[str] = [],
         new_content: bool = None,
         formalities: list = [],
         steps: List[Step] = [],
@@ -1139,7 +1137,6 @@ class VEPlan:
         self.involved_parties = involved_parties
         self.realization = realization
         self.learning_env = learning_env
-        self.tools = tools
         self.new_content = new_content
         self.steps = steps
 
@@ -1158,7 +1155,6 @@ class VEPlan:
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
-                "tools": "not_started",
                 "new_content": "not_started",
                 "formalities": "not_started",
                 "steps": [
@@ -1258,7 +1254,6 @@ class VEPlan:
             "involved_parties": self.involved_parties,
             "realization": self.realization,
             "learning_env": self.learning_env,
-            "tools": self.tools,
             "new_content": self.new_content,
             "formalities": [formality for formality in self.formalities],
             "duration": self.duration.total_seconds() if self.duration else None,
@@ -1377,7 +1372,6 @@ class VEPlan:
                 "involved_parties": [],
                 "realization": None,
                 "learning_env": None,
-                "tools": [],
                 "new_content": None,
                 "formalities": [{
                     "username": "partnerX",
@@ -1419,7 +1413,6 @@ class VEPlan:
                     "involved_parties": "<completed|uncompleted|not_started>",
                     "realization": "<completed|uncompleted|not_started>",
                     "learning_env": "<completed|uncompleted|not_started>",
-                    "tools": "<completed|uncompleted|not_started>",
                     "new_content": "<completed|uncompleted|not_started>",
                     "formalities": "<completed|uncompleted|not_started>",
                     "steps": "<completed|uncompleted|not_started>",

@@ -4759,7 +4759,6 @@ class PlanResourceTest(BaseResourceTestCase):
             "involved_parties": ["test", "test"],
             "realization": "test",
             "learning_env": "test",
-            "tools": ["test", "test"],
             "new_content": False,
             "formalities": [{
                 "username": "test_user",
@@ -4784,7 +4783,6 @@ class PlanResourceTest(BaseResourceTestCase):
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
-                "tools": "not_started",
                 "new_content": "not_started",
                 "formalities": "not_started",
                 "steps": "not_started",
@@ -4835,7 +4833,6 @@ class PlanResourceTest(BaseResourceTestCase):
                 )
                 self.assertEqual(plan.realization, self.default_plan["realization"])
                 self.assertEqual(plan.learning_env, self.default_plan["learning_env"])
-                self.assertEqual(plan.tools, self.default_plan["tools"])
                 self.assertEqual(plan.new_content, self.default_plan["new_content"])
                 self.assertEqual(plan.formalities, self.default_plan["formalities"])
                 self.assertEqual(
@@ -4884,7 +4881,6 @@ class PlanResourceTest(BaseResourceTestCase):
                 )
                 self.assertEqual(plan.realization, self.default_plan["realization"])
                 self.assertEqual(plan.learning_env, self.default_plan["learning_env"])
-                self.assertEqual(plan.tools, self.default_plan["tools"])
                 self.assertEqual(plan.new_content, self.default_plan["new_content"])
                 self.assertEqual(plan.formalities, self.default_plan["formalities"])
                 self.assertEqual(
@@ -4967,7 +4963,6 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(plan.involved_parties, self.default_plan["involved_parties"])
         self.assertEqual(plan.realization, self.default_plan["realization"])
         self.assertEqual(plan.learning_env, self.default_plan["learning_env"])
-        self.assertEqual(plan.tools, self.default_plan["tools"])
         self.assertEqual(plan.new_content, self.default_plan["new_content"])
         self.assertEqual(plan.formalities, self.default_plan["formalities"])
         self.assertEqual(
@@ -5007,7 +5002,6 @@ class PlanResourceTest(BaseResourceTestCase):
                 "involved_parties": ["test", "test"],
                 "realization": "test",
                 "learning_env": "test",
-                "tools": ["test", "test"],
                 "new_content": False,
                 "formalities": [{
                     "username": "test_user",
@@ -5028,7 +5022,6 @@ class PlanResourceTest(BaseResourceTestCase):
                     "involved_parties": "not_started",
                     "realization": "not_started",
                     "learning_env": "not_started",
-                    "tools": "not_started",
                     "new_content": "not_started",
                     "formalities": "not_started",
                     "steps": "not_started",
@@ -5051,7 +5044,6 @@ class PlanResourceTest(BaseResourceTestCase):
                 "involved_parties": ["test", "test"],
                 "realization": "test",
                 "learning_env": "test",
-                "tools": ["test", "test"],
                 "new_content": False,
                 "formalities": [{
                     "username": "test_user",
@@ -5072,7 +5064,6 @@ class PlanResourceTest(BaseResourceTestCase):
                     "involved_parties": "not_started",
                     "realization": "not_started",
                     "learning_env": "not_started",
-                    "tools": "not_started",
                     "new_content": "not_started",
                     "formalities": "not_started",
                     "steps": "not_started",
@@ -5114,7 +5105,6 @@ class PlanResourceTest(BaseResourceTestCase):
             "involved_parties": ["test", "test"],
             "realization": "test",
             "learning_env": "test",
-            "tools": ["test", "test"],
             "new_content": False,
             "formalities": [{
                 "username": "test_user",
@@ -5135,7 +5125,6 @@ class PlanResourceTest(BaseResourceTestCase):
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
-                "tools": "not_started",
                 "new_content": "not_started",
                 "formalities": "not_started",
                 "steps": "not_started",
@@ -5175,7 +5164,6 @@ class PlanResourceTest(BaseResourceTestCase):
             "involved_parties": ["test", "test"],
             "realization": "test",
             "learning_env": "test",
-            "tools": ["test", "test"],
             "new_content": False,
             "formalities": [{
                 "username": "test_user",
@@ -5196,7 +5184,6 @@ class PlanResourceTest(BaseResourceTestCase):
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
-                "tools": "not_started",
                 "new_content": "not_started",
                 "formalities": "not_started",
                 "steps": "not_started",
@@ -5363,7 +5350,6 @@ class PlanResourceTest(BaseResourceTestCase):
         )
         self.planner.update_field(self.plan_id, "realization", "updated_realization")
         self.planner.update_field(self.plan_id, "learning_env", "updated_learning_env")
-        self.planner.update_field(self.plan_id, "tools", ["update1", "update2"])
         self.planner.update_field(self.plan_id, "new_content", True)
         self.planner.update_field(self.plan_id, "learning_goals", ["update1", "update2"])
         self.planner.update_field(
@@ -5382,7 +5368,6 @@ class PlanResourceTest(BaseResourceTestCase):
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
-                "tools": "not_started",
                 "new_content": "not_started",
                 "formalities": "not_started",
                 "steps": "not_started",
@@ -5395,7 +5380,6 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(db_state["involved_parties"], ["update1", "update2"])
         self.assertEqual(db_state["realization"], "updated_realization")
         self.assertEqual(db_state["learning_env"], "updated_learning_env")
-        self.assertEqual(db_state["tools"], ["update1", "update2"])
         self.assertEqual(db_state["new_content"], True)
         self.assertEqual(db_state["learning_goals"], ["update1", "update2"])
         self.assertEqual(
@@ -5431,12 +5415,6 @@ class PlanResourceTest(BaseResourceTestCase):
             requesting_username="test_user",
         )
         self.planner.update_field(
-            self.plan_id,
-            "tools",
-            ["update1", "update2"],
-            requesting_username="test_user",
-        )
-        self.planner.update_field(
             self.plan_id, "new_content", True, requesting_username="test_user"
         )
         self.planner.update_field(
@@ -5465,7 +5443,6 @@ class PlanResourceTest(BaseResourceTestCase):
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
-                "tools": "not_started",
                 "new_content": "not_started",
                 "formalities": "not_started",
                 "steps": "not_started",
@@ -5479,7 +5456,6 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(db_state["involved_parties"], ["update1", "update2"])
         self.assertEqual(db_state["realization"], "updated_realization")
         self.assertEqual(db_state["learning_env"], "updated_learning_env")
-        self.assertEqual(db_state["tools"], ["update1", "update2"])
         self.assertEqual(db_state["new_content"], True)
         self.assertEqual(db_state["learning_goals"], ["update1", "update2"])
         self.assertEqual(
@@ -5644,7 +5620,6 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertIsNotNone(db_state)
         self.assertEqual(db_state["realization"], "updated_realization")
         self.assertIsNone(db_state["name"])
-        self.assertEqual(db_state["tools"], [])
         self.assertEqual(db_state["creation_timestamp"], db_state["last_modified"])
 
         # now same test, but with a complex attribute
@@ -5694,7 +5669,6 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertIsNotNone(db_state)
         self.assertEqual(db_state["realization"], "updated_realization")
         self.assertIsNone(db_state["name"])
-        self.assertEqual(db_state["tools"], [])
         self.assertEqual(db_state["creation_timestamp"], db_state["last_modified"])
 
         # now same test, but with a complex attribute
@@ -5738,7 +5712,7 @@ class PlanResourceTest(BaseResourceTestCase):
 
         # primitive attribute
         self.assertRaises(
-            TypeError, self.planner.update_field, self.plan_id, "tools", "123"
+            TypeError, self.planner.update_field, self.plan_id, "topics", "123"
         )
 
         # object_like_attribute
