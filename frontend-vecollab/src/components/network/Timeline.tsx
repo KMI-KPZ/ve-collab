@@ -14,7 +14,8 @@ Timeline.auth = true
 export default function Timeline({ space }: Props) {
     const { data: session } = useSession();
 
-    const [displayPosts, setDisplayPosts] = useState<BackendPost[]>([]);
+    // const [displayPosts, setDisplayPosts] = useState<BackendPost[]>([]);
+    const [sharedPost, setSharedPost] = useState<BackendPost|null>(null);
 
     const [toDate, setToDate] = useState(new Date().toISOString());
 
@@ -36,6 +37,7 @@ export default function Timeline({ space }: Props) {
     )
     console.log({posts, space});
 
+    // TODO my get all spaces from parent
     const {
         data: allSpaces,
         isLoading: isLoadingAllSpaces,
@@ -44,23 +46,20 @@ export default function Timeline({ space }: Props) {
     } = useGetAllSpaces(session!.accessToken);
     console.log({allSpaces});
 
-    // useEffect(() => {
-    //     if (!posts.length || !allSpaces.length) return;
-
-    //     const postsFixed = posts.map(post => {
-    //         if (post.space) {
-    //             post.space = allSpaces.find(space => space._id == post.space)
-    //         }
-    //         return post
-    //     })
-    //     setDisplayPosts(postsFixed)
-    //     // console.log({postsFixed});
-
-    // }, [posts, allSpaces]);
-    // console.log({displayPosts});
-
     const reloadTimeline = () => {
-        return setToDate(new Date().toISOString())
+        setToDate(new Date().toISOString())
+    }
+
+    const onSubmitForm = () => {
+        if (sharedPost) setSharedPost(null)
+        reloadTimeline()
+    }
+
+    const sharePost = (post: BackendPost) => {
+        console.log('share post ...', {post});
+
+        setSharedPost(post)
+
     }
 
     if (isLoadingTimeline) {
@@ -75,11 +74,20 @@ export default function Timeline({ space }: Props) {
     return (
         <>
             <div className={'p-4 my-8 bg-white rounded-3xl shadow-2xl '}>
-                <TimelinePostForm onSubmitForm={reloadTimeline} space={space} />
+                <TimelinePostForm
+                    space={space}
+                    sharedPost={sharedPost}
+                    onSubmitForm={onSubmitForm}
+                />
             </div>
             {!posts.length ? ( <div className="m-10 flex justify-center">Bisher keine Beiträge ...</div>) : (<></>)}
             {posts.map((post, i) =>
-                <TimelinePost key={i} post={post} spaces={allSpaces} reloadTimeline={reloadTimeline} />
+                <TimelinePost key={i}
+                    post={post}
+                    spaces={allSpaces}
+                    sharePost={sharePost}
+                    reloadTimeline={reloadTimeline}
+                />
             )}
         </>
     );

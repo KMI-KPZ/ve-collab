@@ -13,25 +13,27 @@ import { MdDeleteOutline, MdModeEdit } from "react-icons/md";
 import TimelinePostForm from "./TimelinePostForm";
 
 interface Props {
-    post: BackendPost;
-    spaces?: BackendSpace[],
+    post: BackendPost
+    spaces?: BackendSpace[]
+    sharePost?: (post: BackendPost) => void
     reloadTimeline: Function
 }
 
 TimelinePost.auth = true
-export default function TimelinePost({post, spaces, reloadTimeline}: Props) {
+export default function TimelinePost(
+{
+    post,
+    spaces,
+    sharePost,
+    reloadTimeline
+}: Props) {
     const { data: session } = useSession();
-    // const [isLoading, setIsLoading] = useState<boolean>(false)
     const [wbRemoved, setWbRemoved] = useState<boolean>(false)
     const ref = useRef<HTMLFormElement>(null)
     const [likeIt, setLikeIt] = useState(post.likers.includes(session?.user.preferred_username as string))
     const [comments, setComments] = useState(post.comments)
     const [likers, setLikers] = useState(post.likers)
     const [editForm, setEditForm] = useState(false)
-
-    // TODO edit (own) post
-    // TODO reshare a post
-    // TODO may set loadiungState on submit comment form
 
     useEffect(() => {
         const newComments = [...post.comments];
@@ -88,6 +90,7 @@ export default function TimelinePost({post, spaces, reloadTimeline}: Props) {
 
     const onClickShareBtn = () => {
         console.log('clicked shared btn...');
+        if (sharePost) sharePost(post)
     }
 
     const deletePost = async () => {
