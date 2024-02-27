@@ -117,7 +117,7 @@ export default function Languages() {
 
     const renderLanguagesInputs = (): JSX.Element[] => {
         return fields.map((language, index) => (
-            <div key={language.id} className="mx-7 mt-4 flex flex-col justify-center">
+            <div key={language.id} className="mx-7 mt-4 flex justify-center">
                 <input
                     type="text"
                     placeholder="Sprache eingeben"
@@ -151,8 +151,10 @@ export default function Languages() {
                                 In welchen Sprachen findet der VE (hauptsächlich) statt?
                             </div>
                             <div className={'text-center mb-20'}>optional</div>
-                            {renderLanguagesInputs()}
-                            <div className={'w-3/4 mx-7 mt-3 flex justify-end'}>
+                            <div className="flex justify-center">
+                                <div className="w-full">{renderLanguagesInputs()}</div>
+                            </div>
+                            <div className={'mx-7 mt-3 flex justify-end'}>
                                 <button type="button" onClick={() => remove(fields.length - 1)}>
                                     <RxMinus size={20} />
                                 </button>
