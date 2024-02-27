@@ -4,37 +4,26 @@ import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { useForm, SubmitHandler } from 'react-hook-form';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/startingWizard/sideProgressBar';
-import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+import { RxMinus, RxPlus } from 'react-icons/rx';
+import Link from 'next/link';
 
-interface FormData {
-    topic: string;
-}
-
-export default function Topic() {
+export default function Topics() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
-    const { validateAndRoute } = useValidation();
+    const [topics, setTopics] = useState<string[]>(['']);
     const [steps, setSteps] = useState<IFineStep[]>([]);
-
-    const {
-        register,
-        handleSubmit,
-        formState: { errors, isValid },
-        setValue,
-    } = useForm<FormData>({ mode: 'onChange' });
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -61,8 +50,15 @@ export default function Topic() {
         if (session) {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
+                    console.log(data.plan);
                     setLoading(false);
-                    setValue('topic', data.plan.topics[0]);
+
+                    if (data.plan.topics.length > 0) {
+                        setTopics(data.plan.topics);
+                    } else {
+                        setTopics(['']);
+                    }
+
                     if (data.plan.progress.length !== 0) {
                         setSideMenuStepsProgress(data.plan.progress);
                     }
@@ -70,14 +66,14 @@ export default function Topic() {
                 }
             );
         }
-    }, [session, status, setValue, router]);
+    }, [session, status, router]);
 
-    const onSubmit: SubmitHandler<FormData> = async (data: FormData) => {
+    const onSubmit = async () => {
         await fetchPOST(
             '/planner/update_fields',
             {
                 update: [
-                    { plan_id: router.query.plannerId, field_name: 'topics', value: [data.topic] },
+                    { plan_id: router.query.plannerId, field_name: 'topics', value: topics },
                     {
                         plan_id: router.query.plannerId,
                         field_name: 'progress',
@@ -90,7 +86,30 @@ export default function Topic() {
             },
             session?.accessToken
         );
+
+        await router.push({
+            pathname: '/startingWizard/generalInformation/languages',
+            query: { plannerId: router.query.plannerId },
+        });
     };
+
+    function modifyTopics(index: number, value: string): void {
+        const newTopics = [...topics];
+        newTopics[index] = value;
+        setTopics(newTopics);
+    }
+
+    function addTopicInputField() {
+        setTopics([...topics, '']);
+    }
+
+    function removeTopicInputField() {
+        if (topics.length > 1) {
+            const newTopics = [...topics];
+            newTopics.pop();
+            setTopics(newTopics);
+        }
+    }
 
     return (
         <>
@@ -102,61 +121,66 @@ export default function Topic() {
                     <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                         <div>
                             <div className={'text-center font-bold text-4xl mb-2'}>
-                                Zu welchem Thema findet der VE statt?
+                                Zu welchem Thema / welchen Themen findet der VE statt?
                             </div>
                             <div className={'text-center mb-20'}>optional</div>
                             <div className="m-7 flex justify-center">
-                                <div>
-                                    <input
-                                        type="text"
-                                        placeholder="Thema eingeben"
-                                        className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
-                                        {...register('topic', {
-                                            maxLength: {
-                                                value: 50,
-                                                message:
-                                                    'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
-                                            },
-                                            pattern: {
-                                                value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
-                                                message:
-                                                    'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?-',
-                                            },
-                                        })}
-                                    />
-                                    <p className="text-red-600 pt-2">{errors.topic?.message}</p>
+                                <div className="w-full">
+                                    {topics.map((topic, index) => (
+                                        <div key={index} className="flex justify-center mt-4">
+                                            <input
+                                                type="text"
+                                                placeholder="Thema eingeben"
+                                                className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
+                                                value={topic}
+                                                onChange={(e) =>
+                                                    modifyTopics(index, e.target.value)
+                                                }
+                                            />
+                                        </div>
+                                    ))}
                                 </div>
+                            </div>
+                            <div className={'mx-2 flex justify-end'}>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        removeTopicInputField();
+                                    }}
+                                >
+                                    <RxMinus size={20} />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        addTopicInputField();
+                                    }}
+                                >
+                                    <RxPlus size={20} />
+                                </button>
                             </div>
                         </div>
                         <div className="flex justify-around w-full">
                             <div>
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={() => {
-                                        validateAndRoute(
-                                            '/startingWizard/generalInformation/targetGroups',
-                                            router.query.plannerId,
-                                            handleSubmit(onSubmit),
-                                            isValid
-                                        );
+                                <Link
+                                    href={{
+                                        pathname: '/startingWizard/generalInformation/targetGroups',
+                                        query: { plannerId: router.query.plannerId },
                                     }}
                                 >
-                                    Zurück
-                                </button>
+                                    <button
+                                        type="button"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    >
+                                        Zurück
+                                    </button>
+                                </Link>
                             </div>
                             <div>
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={() => {
-                                        validateAndRoute(
-                                            '/startingWizard/generalInformation/languages',
-                                            router.query.plannerId,
-                                            handleSubmit(onSubmit),
-                                            isValid
-                                        );
-                                    }}
+                                    onClick={onSubmit}
                                 >
                                     Weiter
                                 </button>
@@ -166,8 +190,8 @@ export default function Topic() {
                 )}
                 <SideProgressBarSection
                     progressState={sideMenuStepsProgress}
-                    handleValidation={handleSubmit(onSubmit)}
-                    isValid={isValid}
+                    handleValidation={() => {}}
+                    isValid={true}
                     sideMenuStepsData={sideMenuStepsData}
                 />
             </div>

@@ -17,7 +17,7 @@ import { z } from 'zod';
 const vaidationSchema = z
     .string()
     .max(40, { message: 'Der Name darf maximal 40 Zeichen lang sein' })
-    .min(1, { message: 'Bitte gib den Plan einen Namen' });
+    .min(1, { message: 'Bitte gib dem Plan einen Namen' });
 
 export default function EssentialInformation() {
     const { data: session, status } = useSession();
