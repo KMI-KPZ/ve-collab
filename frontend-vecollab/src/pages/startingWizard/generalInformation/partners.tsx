@@ -21,6 +21,8 @@ import {
 import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import { FormalConditionPartner } from '@/pages/startingWizard/generalInformation/formalConditions';
+import { FiInfo } from 'react-icons/fi';
+import { Tooltip } from '@/components/Tooltip';
 
 export default function Partners() {
     const { data: session, status } = useSession();
@@ -193,8 +195,15 @@ export default function Partners() {
                         className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
                     >
                         <div>
-                            <div className={'text-center font-bold text-4xl mb-2'}>
-                                Wer ist am Projekt beteiligt?
+                            <div className="flex">
+                                <div className={'text-center font-bold text-4xl mb-2'}>
+                                    Wer ist am Projekt beteiligt?
+                                </div>
+                                <Tooltip tooltipsText="Tipps für die Partnersuche findest du hier in den Selbstlernmaterialien …">
+                                    <Link target="_blank" href={'/content'}>
+                                        <FiInfo size={30} />
+                                    </Link>
+                                </Tooltip>
                             </div>
                             <div className={'text-center mb-20'}>optional</div>
                             {partners.map((partner, index) => (
