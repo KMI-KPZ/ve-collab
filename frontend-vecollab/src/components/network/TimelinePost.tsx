@@ -7,7 +7,7 @@ import { IoIosSend } from "react-icons/io";
 import AuthenticatedImage from "../AuthenticatedImage";
 import SmallTimestamp from "../SmallTimestamp";
 import Dropdown from "../Dropdown";
-import { BackendPost, BackendSpace } from "@/interfaces/api/apiInterfaces";
+import { BackendPost, BackendPostComment, BackendSpace } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
 import { MdDeleteOutline, MdModeEdit } from "react-icons/md";
 import TimelinePostForm from "./TimelinePostForm";
@@ -30,10 +30,10 @@ export default function TimelinePost(
     const { data: session } = useSession();
     const [wbRemoved, setWbRemoved] = useState<boolean>(false)
     const ref = useRef<HTMLFormElement>(null)
-    const [likeIt, setLikeIt] = useState(post.likers.includes(session?.user.preferred_username as string))
-    const [comments, setComments] = useState(post.comments)
-    const [likers, setLikers] = useState(post.likers)
-    const [editForm, setEditForm] = useState(false)
+    const [likeIt, setLikeIt] = useState<boolean>(post.likers.includes(session?.user.preferred_username as string))
+    const [comments, setComments] = useState<BackendPostComment[]>(post.comments)
+    const [likers, setLikers] = useState<string[]>(post.likers)
+    const [editPost, setEditPost] = useState<boolean>(false)
 
     useEffect(() => {
         const newComments = [...post.comments];
@@ -119,9 +119,8 @@ export default function TimelinePost(
                 deletePost()
                 break;
             case 'edit':
-                setEditForm(true)
+                setEditPost(true)
                 break;
-
             default:
                 break;
         }
@@ -130,11 +129,7 @@ export default function TimelinePost(
     const SpacenameById = (spaceId: string) => {
         if (!spaces) return (<>{spaceId}</>)
         const space = spaces.find(space => space._id == spaceId)
-        return (
-            <>
-                {space?.name}
-            </>
-        )
+        return ( <>{ space?.name }</> )
     }
 
     const PostAuthor = (imageId: string, authorName: string, date: string) => (
@@ -154,8 +149,8 @@ export default function TimelinePost(
     )
 
     const PostText = () => {
-        if (editForm) return (
-            <TimelinePostForm onSubmitForm={reloadTimeline} onCancelForm={() => setEditForm(false)} post={post} />
+        if (editPost) return (
+            <TimelinePostForm onSubmitForm={reloadTimeline} onCancelForm={() => setEditPost(false)} post={post} />
         )
 
         return (
@@ -205,7 +200,6 @@ export default function TimelinePost(
 
                     {post.space ? (
                         <div className='self-end text-xs text-gray-500 mx-2'>
-                            {/* in <Link href={`/space/?id=${post.space._id}`}>{post.space.name}</Link> */}
                             in <Link href={`/space/?id=${post.space}`}>{SpacenameById(post.space)}</Link>
                         </div>
                     ) : ( <></> )}
