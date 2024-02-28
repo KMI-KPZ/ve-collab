@@ -47,6 +47,7 @@ import global_vars
 from model import (
     Institution,
     Lecture,
+    PhysicalMobility,
     Step,
     TargetGroup,
     Task,
@@ -192,6 +193,17 @@ class BaseResourceTestCase(TestCase):
             lecture_format="test",
             lecture_type="test",
             participants_amount=10,
+        )
+    
+    def create_physical_mobility(slef, location: str = "test") -> PhysicalMobility:
+        """
+        convenience method to create a physical mobility with non-default values
+        """
+
+        return PhysicalMobility(
+            location=location,
+            timestamp_from=datetime(2023, 1, 1),
+            timestamp_to=datetime(2023, 1, 8),
         )
 
 
@@ -4739,6 +4751,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.target_group = self.create_target_group("test")
         self.institution = self.create_institution("test")
         self.lecture = self.create_lecture("test")
+        self.physical_mobility = self.create_physical_mobility("test")
         self.default_plan = {
             "_id": self.plan_id,
             "author": "test_user",
@@ -4758,6 +4771,8 @@ class PlanResourceTest(BaseResourceTestCase):
             "timestamp_to": self.step.timestamp_to,
             "involved_parties": ["test", "test"],
             "realization": "test",
+            "physical_mobility": True,
+            "physical_mobilities": [self.physical_mobility.to_dict()],
             "learning_env": "test",
             "new_content": False,
             "formalities": [{
@@ -4832,6 +4847,11 @@ class PlanResourceTest(BaseResourceTestCase):
                     plan.involved_parties, self.default_plan["involved_parties"]
                 )
                 self.assertEqual(plan.realization, self.default_plan["realization"])
+                self.assertEqual(plan.physical_mobility, self.default_plan["physical_mobility"])
+                self.assertEqual(
+                    [mobility.to_dict() for mobility in plan.physical_mobilities],
+                    self.default_plan["physical_mobilities"],
+                )
                 self.assertEqual(plan.learning_env, self.default_plan["learning_env"])
                 self.assertEqual(plan.new_content, self.default_plan["new_content"])
                 self.assertEqual(plan.formalities, self.default_plan["formalities"])
@@ -4880,6 +4900,11 @@ class PlanResourceTest(BaseResourceTestCase):
                     plan.involved_parties, self.default_plan["involved_parties"]
                 )
                 self.assertEqual(plan.realization, self.default_plan["realization"])
+                self.assertEqual(plan.physical_mobility, self.default_plan["physical_mobility"])
+                self.assertEqual(
+                    [mobility.to_dict() for mobility in plan.physical_mobilities],
+                    self.default_plan["physical_mobilities"],
+                )
                 self.assertEqual(plan.learning_env, self.default_plan["learning_env"])
                 self.assertEqual(plan.new_content, self.default_plan["new_content"])
                 self.assertEqual(plan.formalities, self.default_plan["formalities"])
@@ -4962,6 +4987,11 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(plan.languages, self.default_plan["languages"])
         self.assertEqual(plan.involved_parties, self.default_plan["involved_parties"])
         self.assertEqual(plan.realization, self.default_plan["realization"])
+        self.assertEqual(plan.physical_mobility, self.default_plan["physical_mobility"])
+        self.assertEqual(
+            [mobility.to_dict() for mobility in plan.physical_mobilities],
+            self.default_plan["physical_mobilities"],
+        )
         self.assertEqual(plan.learning_env, self.default_plan["learning_env"])
         self.assertEqual(plan.new_content, self.default_plan["new_content"])
         self.assertEqual(plan.formalities, self.default_plan["formalities"])
@@ -5001,6 +5031,8 @@ class PlanResourceTest(BaseResourceTestCase):
                 "timestamp_to": self.step.timestamp_to,
                 "involved_parties": ["test", "test"],
                 "realization": "test",
+                "physical_mobility": True,
+                "physical_mobilities": [self.physical_mobility.to_dict()],
                 "learning_env": "test",
                 "new_content": False,
                 "formalities": [{
@@ -5043,6 +5075,8 @@ class PlanResourceTest(BaseResourceTestCase):
                 "timestamp_to": self.step.timestamp_to,
                 "involved_parties": ["test", "test"],
                 "realization": "test",
+                "physical_mobility": True,
+                "physical_mobilities": [self.physical_mobility.to_dict()],
                 "learning_env": "test",
                 "new_content": False,
                 "formalities": [{
@@ -5104,6 +5138,8 @@ class PlanResourceTest(BaseResourceTestCase):
             "timestamp_to": self.step.timestamp_to,
             "involved_parties": ["test", "test"],
             "realization": "test",
+            "physical_mobility": True,
+            "physical_mobilities": [self.physical_mobility.to_dict()],
             "learning_env": "test",
             "new_content": False,
             "formalities": [{
@@ -5163,6 +5199,8 @@ class PlanResourceTest(BaseResourceTestCase):
             "timestamp_to": self.step.timestamp_to,
             "involved_parties": ["test", "test"],
             "realization": "test",
+            "physical_mobility": True,
+            "physical_mobilities": [self.physical_mobility.to_dict()],
             "learning_env": "test",
             "new_content": False,
             "formalities": [{
@@ -5349,6 +5387,8 @@ class PlanResourceTest(BaseResourceTestCase):
             self.plan_id, "involved_parties", ["update1", "update2"]
         )
         self.planner.update_field(self.plan_id, "realization", "updated_realization")
+        self.planner.update_field(self.plan_id, "physical_mobility", False)
+        self.planner.update_field(self.plan_id, "physical_mobilities", [])
         self.planner.update_field(self.plan_id, "learning_env", "updated_learning_env")
         self.planner.update_field(self.plan_id, "new_content", True)
         self.planner.update_field(self.plan_id, "learning_goals", ["update1", "update2"])
@@ -5379,6 +5419,8 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(db_state["topics"], ["updated_topic"])
         self.assertEqual(db_state["involved_parties"], ["update1", "update2"])
         self.assertEqual(db_state["realization"], "updated_realization")
+        self.assertEqual(db_state["physical_mobility"], False)
+        self.assertEqual(db_state["physical_mobilities"], [])
         self.assertEqual(db_state["learning_env"], "updated_learning_env")
         self.assertEqual(db_state["new_content"], True)
         self.assertEqual(db_state["learning_goals"], ["update1", "update2"])

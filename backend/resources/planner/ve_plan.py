@@ -16,7 +16,7 @@ from exceptions import (
     PlanAlreadyExistsError,
     PlanDoesntExistError,
 )
-from model import Institution, Lecture, Step, TargetGroup, VEPlan
+from model import Institution, Lecture, PhysicalMobility, Step, TargetGroup, VEPlan
 import util
 
 
@@ -193,8 +193,10 @@ class VEPlanResource:
             raise PlanDoesntExistError()
 
         return username == result["author"]
-    
-    def _check_user_is_author_or_partner(self, plan_id: str | ObjectId, username: str) -> bool:
+
+    def _check_user_is_author_or_partner(
+        self, plan_id: str | ObjectId, username: str
+    ) -> bool:
         """
         Determine if the user given by his `username` is the author of the plan given
         by its _id or a partner of the plan.
@@ -210,7 +212,9 @@ class VEPlanResource:
         except InvalidId:
             raise PlanDoesntExistError()
 
-        result = self.db.plans.find_one({"_id": plan_id}, {"author": True, "partners": True})
+        result = self.db.plans.find_one(
+            {"_id": plan_id}, {"author": True, "partners": True}
+        )
 
         if not result:
             raise PlanDoesntExistError()
@@ -323,7 +327,13 @@ class VEPlanResource:
         # any of these attributes is of type List[Object], therefore
         # we typecheck by parsing each list element into its object form
         # and listen for errors
-        if field_name in ["institutions", "lectures", "audience", "steps"]:
+        if field_name in [
+            "institutions",
+            "lectures",
+            "audience",
+            "physical_mobilities",
+            "steps",
+        ]:
             value_copy = []
 
             # object-like attributes are always in lists, because there can be
@@ -335,6 +345,7 @@ class VEPlanResource:
                 "institutions": Institution,
                 "lectures": Lecture,
                 "audience": TargetGroup,
+                "physical_mobilities": PhysicalMobility,
                 "steps": Step,
             }
 
@@ -391,7 +402,9 @@ class VEPlanResource:
                         )
 
                     # ensure that the username is also a partner of the plan
-                    if not self._check_user_is_author_or_partner(plan_id, formality["username"]):
+                    if not self._check_user_is_author_or_partner(
+                        plan_id, formality["username"]
+                    ):
                         raise ValueError(
                             "username '{}' in formalities is not a partner of the plan".format(
                                 formality["username"]
@@ -786,8 +799,8 @@ class VEPlanResource:
         return result.inserted_id
 
     def get_plan_invitation(self, _id: str | ObjectId) -> Dict:
-        """ 
-        Request a VE invitation record by specifying it's _id in 
+        """
+        Request a VE invitation record by specifying it's _id in
         either a `str` or `ObjectId` representation.
 
         Returns the VE invitation as a dict.

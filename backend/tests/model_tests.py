@@ -11,6 +11,7 @@ from exceptions import (
 from model import (
     Institution,
     Lecture,
+    PhysicalMobility,
     Space,
     Step,
     TargetGroup,
@@ -127,18 +128,20 @@ class SpaceModelTest(TestCase):
         attributes
         """
 
-        space = Space({
-            "name": "test",
-            "invisible": False,
-            "joinable": True,
-            "members": ["test"],
-            "admins": ["test"],
-            "invites": ["test"],
-            "requests": ["test"],
-            "files": ["test"],
-            "space_pic": "test",
-            "space_description": "test",
-        })
+        space = Space(
+            {
+                "name": "test",
+                "invisible": False,
+                "joinable": True,
+                "members": ["test"],
+                "admins": ["test"],
+                "invites": ["test"],
+                "requests": ["test"],
+                "files": ["test"],
+                "space_pic": "test",
+                "space_description": "test",
+            }
+        )
 
         self.assertEqual(space.name, "test")
         self.assertEqual(space.invisible, False)
@@ -162,24 +165,23 @@ class SpaceModelTest(TestCase):
         self.assertEqual(space["space_pic"], "test")
         self.assertEqual(space["space_description"], "test")
 
-
         # again, but omit some values to let them be default created
-        space2 = Space({
-            "name": "test",
-            "invisible": False,
-            "joinable": True,
-            "admins": ["test"],
-            "invites": ["test"],
-            "requests": ["test"],
-            "files": ["test"],
-        })
+        space2 = Space(
+            {
+                "name": "test",
+                "invisible": False,
+                "joinable": True,
+                "admins": ["test"],
+                "invites": ["test"],
+                "requests": ["test"],
+                "files": ["test"],
+            }
+        )
 
         self.assertEqual(space2.name, "test")
         self.assertEqual(space2.invisible, False)
         self.assertEqual(space2.joinable, True)
         self.assertEqual(space2.members, [])
-
-
 
 
 class TaskModelTest(TestCase):
@@ -788,9 +790,7 @@ class TargetGroupModelTest(TestCase):
         self.assertEqual(target_group_dict["mother_tongue"], None)
         self.assertEqual(target_group_dict["foreign_languages"], None)
 
-        target_group = TargetGroup(
-            age_min=10, age_max=20, foreign_languages="test: c1"
-        )
+        target_group = TargetGroup(age_min=10, age_max=20, foreign_languages="test: c1")
         target_group_dict = target_group.to_dict()
 
         self.assertIsInstance(target_group_dict, dict)
@@ -974,6 +974,7 @@ class TargetGroupModelTest(TestCase):
         target_group_dict["foreign_languages"] = list()
         self.assertRaises(TypeError, TargetGroup.from_dict, target_group_dict)
         target_group_dict["foreign_languages"] = dict()
+
 
 class InstitutionModelTest(TestCase):
     def setUp(self) -> None:
@@ -1440,6 +1441,17 @@ class VEPlanModelTest(TestCase):
             participants_amount=10,
         )
 
+    def create_physical_mobility(self, location: str = "test") -> PhysicalMobility:
+        """
+        convenience method to create a PhysicalMobility object with non-default values
+        """
+
+        return PhysicalMobility(
+            location=location,
+            timestamp_from=datetime(2023, 1, 1),
+            timestamp_to=datetime(2023, 1, 8),
+        )
+
     def test_init_default(self):
         """
         expect: successful creation of a minimal VEPlan object (default values)
@@ -1460,11 +1472,11 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.languages, [])
         self.assertEqual(plan.involved_parties, [])
         self.assertIsNone(plan.realization)
+        self.assertIsNone(plan.physical_mobility)
+        self.assertEqual(plan.physical_mobilities, [])
         self.assertIsNone(plan.learning_env)
         self.assertEqual(plan.new_content, None)
-        self.assertEqual(
-            plan.formalities, []
-        )
+        self.assertEqual(plan.formalities, [])
         self.assertEqual(plan.steps, [])
         self.assertEqual(plan.progress, self.default_progress)
         self.assertEqual(plan.duration, None)
@@ -1501,6 +1513,10 @@ class VEPlanModelTest(TestCase):
             self.create_institution("test2"),
         ]
         lectures = [self.create_lecture("test1"), self.create_lecture("test2")]
+        physical_mobilities = [
+            self.create_physical_mobility(),
+            self.create_physical_mobility(),
+        ]
 
         plan = VEPlan(
             _id=_id,
@@ -1517,9 +1533,13 @@ class VEPlanModelTest(TestCase):
             languages=["test", "test"],
             involved_parties=["test", "test"],
             realization="test",
+            physical_mobility=True,
+            physical_mobilities=physical_mobilities,
             learning_env="test",
             new_content=True,
-            formalities=[{"username": "test", "technology": True, "exam_regulations": False}],
+            formalities=[
+                {"username": "test", "technology": True, "exam_regulations": False}
+            ],
             steps=steps,
             progress={
                 "name": "completed",
@@ -1552,10 +1572,13 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.languages, ["test", "test"])
         self.assertEqual(plan.involved_parties, ["test", "test"])
         self.assertEqual(plan.realization, "test")
+        self.assertEqual(plan.physical_mobility, True)
+        self.assertEqual(plan.physical_mobilities, physical_mobilities)
         self.assertEqual(plan.learning_env, "test")
         self.assertEqual(plan.new_content, True)
         self.assertEqual(
-            plan.formalities, [{"username": "test", "technology": True, "exam_regulations": False}]
+            plan.formalities,
+            [{"username": "test", "technology": True, "exam_regulations": False}],
         )
         self.assertEqual(plan.steps, steps)
         self.assertEqual(plan.progress["name"], "completed")
@@ -1583,6 +1606,8 @@ class VEPlanModelTest(TestCase):
             languages=["test", "test"],
             involved_parties=["test", "test"],
             realization="test",
+            physical_mobility=True,
+            physical_mobilities=physical_mobilities,
             learning_env="test",
             new_content=True,
             formalities=[],
@@ -1614,11 +1639,11 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.languages, ["test", "test"])
         self.assertEqual(plan.involved_parties, ["test", "test"])
         self.assertEqual(plan.realization, "test")
+        self.assertEqual(plan.physical_mobility, True)
+        self.assertEqual(plan.physical_mobilities, physical_mobilities)
         self.assertEqual(plan.learning_env, "test")
         self.assertEqual(plan.new_content, True)
-        self.assertEqual(
-            plan.formalities, []
-        )
+        self.assertEqual(plan.formalities, [])
         self.assertEqual(plan.steps, steps)
         self.assertIsInstance(plan.steps[0]._id, ObjectId)
         self.assertEqual(plan.progress["name"], "completed")
@@ -1634,13 +1659,15 @@ class VEPlanModelTest(TestCase):
 
         # username is missing
         self.assertRaises(MissingKeyError, VEPlan, formalities=[{"technology": True}])
-        
+
         # ValueError because user is not a partner or author of the plan
         self.assertRaises(
             ValueError,
             VEPlan,
             author="test",
-            formalities=[{"username": "not_test", "technology": False, "exam_regulations": True}],
+            formalities=[
+                {"username": "not_test", "technology": False, "exam_regulations": True}
+            ],
         )
 
         # TypeError because technology is not a bool
@@ -1648,7 +1675,9 @@ class VEPlanModelTest(TestCase):
             TypeError,
             VEPlan,
             author="test",
-            formalities=[{"username": "test", "technology": None, "exam_regulations": 123}],
+            formalities=[
+                {"username": "test", "technology": None, "exam_regulations": 123}
+            ],
         )
 
     def test_check_unique_steps(self):
@@ -1693,10 +1722,15 @@ class VEPlanModelTest(TestCase):
         )
         institution = self.create_institution()
         lecture = self.create_lecture()
+        physical_mobility = self.create_physical_mobility()
         expected_progress = self.default_progress
         expected_progress["steps"] = [{"step_id": step._id, "progress": "not_started"}]
         plan_dict = VEPlan(
-            steps=[step], institutions=[institution], lectures=[lecture]
+            steps=[step],
+            institutions=[institution],
+            lectures=[lecture],
+            physical_mobility=True,
+            physical_mobilities=[physical_mobility],
         ).to_dict()
 
         self.assertIn("_id", plan_dict)
@@ -1715,6 +1749,8 @@ class VEPlanModelTest(TestCase):
         self.assertIn("timestamp_to", plan_dict)
         self.assertIn("involved_parties", plan_dict)
         self.assertIn("realization", plan_dict)
+        self.assertIn("physical_mobility", plan_dict)
+        self.assertIn("physical_mobilities", plan_dict)
         self.assertIn("learning_env", plan_dict)
         self.assertIn("new_content", plan_dict)
         self.assertIn("formalities", plan_dict)
@@ -1736,11 +1772,11 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan_dict["languages"], [])
         self.assertEqual(plan_dict["involved_parties"], [])
         self.assertIsNone(plan_dict["realization"])
+        self.assertEqual(plan_dict["physical_mobility"], True)
+        self.assertEqual(plan_dict["physical_mobilities"], [physical_mobility.to_dict()])
         self.assertIsNone(plan_dict["learning_env"])
         self.assertIsNone(plan_dict["new_content"])
-        self.assertEqual(
-            plan_dict["formalities"], []
-        )
+        self.assertEqual(plan_dict["formalities"], [])
         self.assertEqual(plan_dict["workload"], 10)
         self.assertEqual(plan_dict["duration"], None)
         self.assertEqual(plan_dict["steps"], [step.to_dict()])
@@ -1758,6 +1794,7 @@ class VEPlanModelTest(TestCase):
         target_group = self.create_target_group("test")
         institution = self.create_institution("test")
         lecture = self.create_lecture("test")
+        physical_mobility = self.create_physical_mobility("test")
         plan_dict = {
             "_id": _id,
             "name": None,
@@ -1798,13 +1835,22 @@ class VEPlanModelTest(TestCase):
             "languages": [],
             "involved_parties": [],
             "realization": None,
+            "physical_mobility": True,
+            "physical_mobilities": [{
+                "_id": physical_mobility._id,
+                "location": physical_mobility.location,
+                "timestamp_from": physical_mobility.timestamp_from,
+                "timestamp_to": physical_mobility.timestamp_to,
+            }],
             "learning_env": None,
             "new_content": False,
-            "formalities": [{
-                "username": "test",
-                "technology": None,
-                "exam_regulations": None,
-            }],
+            "formalities": [
+                {
+                    "username": "test",
+                    "technology": None,
+                    "exam_regulations": None,
+                }
+            ],
             "steps": [
                 {
                     "_id": step._id,
@@ -1853,10 +1899,13 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.languages, [])
         self.assertEqual(plan.involved_parties, [])
         self.assertIsNone(plan.realization)
+        self.assertEqual(plan.physical_mobility, True)
+        self.assertEqual(plan.physical_mobilities, [physical_mobility])
         self.assertIsNone(plan.learning_env)
         self.assertEqual(plan.new_content, False)
         self.assertEqual(
-            plan.formalities, [{"username": "test", "technology": None, "exam_regulations": None}]
+            plan.formalities,
+            [{"username": "test", "technology": None, "exam_regulations": None}],
         )
         self.assertEqual(plan._id, _id)
         self.assertEqual(plan.steps, [step])
@@ -1905,13 +1954,21 @@ class VEPlanModelTest(TestCase):
             "languages": [],
             "involved_parties": [],
             "realization": None,
+            "physical_mobility": True,
+            "physical_mobilities": [{
+                "location": physical_mobility.location,
+                "timestamp_from": physical_mobility.timestamp_from,
+                "timestamp_to": physical_mobility.timestamp_to,
+            }],
             "learning_env": None,
             "new_content": False,
-            "formalities": [{
-                "username": "test",
-                "technology": None,
-                "exam_regulations": None,
-            }],
+            "formalities": [
+                {
+                    "username": "test",
+                    "technology": None,
+                    "exam_regulations": None,
+                }
+            ],
             "steps": [
                 {
                     "name": step.name,
@@ -1960,10 +2017,14 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.languages, [])
         self.assertEqual(plan.involved_parties, [])
         self.assertIsNone(plan.realization)
+        self.assertEqual(plan.physical_mobility, True)
+        self.assertEqual(len(plan.physical_mobilities), 1)
+        self.assertIsInstance(plan.physical_mobilities[0], PhysicalMobility)
         self.assertIsNone(plan.learning_env)
         self.assertEqual(plan.new_content, False)
         self.assertEqual(
-            plan.formalities, [{"username": "test", "technology": None, "exam_regulations": None}]
+            plan.formalities,
+            [{"username": "test", "technology": None, "exam_regulations": None}],
         )
         self.assertEqual(plan.duration, step.duration)
         self.assertEqual(plan.timestamp_from, step.timestamp_from)
@@ -2003,13 +2064,17 @@ class VEPlanModelTest(TestCase):
             "languages": [],
             "involved_parties": [],
             "realization": None,
+            "physical_mobility": None,
+            "physical_mobilities": [],
             "learning_env": None,
             "new_content": None,
-            "formalities": [{
-                "username": "test",
-                "technology": None,
-                "exam_regulations": None,
-            }],
+            "formalities": [
+                {
+                    "username": "test",
+                    "technology": None,
+                    "exam_regulations": None,
+                }
+            ],
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",
@@ -2046,13 +2111,17 @@ class VEPlanModelTest(TestCase):
             "languages": [],
             "involved_parties": [],
             "realization": None,
+            "physical_mobility": None,
+            "physical_mobilities": [],
             "learning_env": None,
             "new_content": False,
-            "formalities": [{
-                "username": "test",
-                "technology": None,
-                "exam_regulations": None,
-            }],
+            "formalities": [
+                {
+                    "username": "test",
+                    "technology": None,
+                    "exam_regulations": None,
+                }
+            ],
             "steps": [],
             "progress": {
                 "name": "not_started",
@@ -2116,6 +2185,14 @@ class VEPlanModelTest(TestCase):
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
         plan_dict["realization"] = None
 
+        plan_dict["physical_mobility"] = 123
+        self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
+        plan_dict["physical_mobility"] = None
+
+        plan_dict["physical_mobilities"] = 123
+        self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
+        plan_dict["physical_mobilities"] = list()
+
         plan_dict["learning_env"] = list()
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
         plan_dict["learning_env"] = None
@@ -2154,13 +2231,17 @@ class VEPlanModelTest(TestCase):
             "languages": [],
             "involved_parties": [],
             "realization": None,
+            "physical_mobility": None,
+            "physical_mobilities": [],
             "learning_env": None,
             "new_content": None,
-            "formalities": [{
-                "username": "test",
-                "technology": None,
-                "exam_regulations": None,
-            }],
+            "formalities": [
+                {
+                    "username": "test",
+                    "technology": None,
+                    "exam_regulations": None,
+                }
+            ],
             "steps": [
                 self.create_step("test").to_dict(),
                 self.create_step("test").to_dict(),

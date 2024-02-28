@@ -47,7 +47,7 @@ export const sideMenuStepsData: SideMenuStep[] = [
         link: '/startingWizard/generalInformation/languages',
     },
     {
-        text: '(Digitale) Umsetzung',
+        text: '(Digitale) Formate',
         id: 'realization',
         link: '/startingWizard/generalInformation/courseFormat',
     },

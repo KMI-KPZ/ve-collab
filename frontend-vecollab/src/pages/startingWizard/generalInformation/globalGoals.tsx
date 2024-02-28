@@ -166,6 +166,7 @@ export default function GlobalGoals() {
                                 })}
                                 onChange={handleChange}
                                 formatCreateLabel={(inputValue) => `Sonstige: ${inputValue}`}
+                                placeholder="Richtlernziele auswählen oder neue hinzufügen"
                             />
                         </div>
                         <div className="flex justify-around w-full">

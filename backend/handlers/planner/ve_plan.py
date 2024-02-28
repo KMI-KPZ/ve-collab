@@ -204,6 +204,14 @@ class VEPlanHandler(BaseHandler):
                         "languages": ["test"],
                         "involved_parties": ["test"],
                         "realization": "test",
+                        "physical_mobility": True,
+                        "physical_mobilities": [
+                            {
+                                "location": "test",
+                                "timestamp_from": "2000-01-01",
+                                "timestamp_to": "2000-01-08",
+                            }
+                        ],
                         "learning_env": "test",
                         "tools": ["test"],
                         "new_content": False,
@@ -396,6 +404,14 @@ class VEPlanHandler(BaseHandler):
                         "languages": ["test"],
                         "involved_parties": ["test"],
                         "realization": "test",
+                        "physical_mobility": True,
+                        "physical_mobilities": [
+                            {
+                                "location": "test",
+                                "timestamp_from": "2000-01-01",
+                                "timestamp_to": "2000-01-08",
+                            }
+                        ],
                         "learning_env": "test",
                         "tools": ["test"],
                         "new_content": False,

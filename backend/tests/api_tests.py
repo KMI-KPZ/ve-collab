@@ -22,6 +22,7 @@ from main import make_app
 from model import (
     Institution,
     Lecture,
+    PhysicalMobility,
     Step,
     TargetGroup,
     Task,
@@ -7195,6 +7196,17 @@ class VEPlanHandlerTest(BaseApiTestCase):
             lecture_type="test",
             participants_amount=10,
         )
+    
+    def create_physical_mobility(self, location: str = "test") -> PhysicalMobility:
+        """
+        convenience method to create a physical mobility with non-default values
+        """
+
+        return PhysicalMobility(
+            location=location,
+            timestamp_from=datetime(2023, 1, 1),
+            timestamp_to=datetime(2023, 1, 8),
+        )
 
     def default_plan_setup(self):
         # manually set up a VEPlan in the db
@@ -7203,6 +7215,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.target_group = self.create_target_group("test")
         self.institution = self.create_institution("test")
         self.lecture = self.create_lecture("test")
+        self.physical_mobility = self.create_physical_mobility("test")
         self.default_plan = {
             "_id": self.plan_id,
             "author": CURRENT_ADMIN.username,
@@ -7222,6 +7235,8 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "timestamp_to": self.step.timestamp_to,
             "involved_parties": ["test", "test"],
             "realization": "test",
+            "physical_mobility": True,
+            "physical_mobilities": [self.physical_mobility.to_dict()],
             "learning_env": "test",
             "new_content": False,
             "formalities": [{
@@ -7310,6 +7325,8 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.timestamp_to, default_plan.timestamp_to)
         self.assertEqual(response_plan.involved_parties, default_plan.involved_parties)
         self.assertEqual(response_plan.realization, default_plan.realization)
+        self.assertEqual(response_plan.physical_mobility, default_plan.physical_mobility)
+        self.assertEqual(response_plan.physical_mobilities, default_plan.physical_mobilities)
         self.assertEqual(response_plan.learning_env, default_plan.learning_env)
         self.assertEqual(response_plan.new_content, default_plan.new_content)
         self.assertEqual(response_plan.formalities, default_plan.formalities)
@@ -7399,6 +7416,8 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.timestamp_to, default_plan.timestamp_to)
         self.assertEqual(response_plan.involved_parties, default_plan.involved_parties)
         self.assertEqual(response_plan.realization, default_plan.realization)
+        self.assertEqual(response_plan.physical_mobility, default_plan.physical_mobility)
+        self.assertEqual(response_plan.physical_mobilities, default_plan.physical_mobilities)
         self.assertEqual(response_plan.learning_env, default_plan.learning_env)
         self.assertEqual(response_plan.new_content, default_plan.new_content)
         self.assertEqual(response_plan.formalities, default_plan.formalities)
