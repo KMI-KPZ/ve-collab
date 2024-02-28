@@ -19,10 +19,6 @@ export default function Timeline({ space }: Props) {
 
     const [toDate, setToDate] = useState(new Date().toISOString());
 
-    const now = new Date()
-    const [fromDate] = useState( new Date(now.setFullYear( now.getFullYear() - 1 )).toISOString());
-    // TODO fromDate is just a dummy until /timline/[space] supports the 'limit' parameter
-
     const {
         data: posts,
         isLoading: isLoadingTimeline,
@@ -31,13 +27,12 @@ export default function Timeline({ space }: Props) {
     } = useGetTimeline(
         session!.accessToken,
         toDate,
-        fromDate,
         10,
         space
     )
     console.log({posts, space});
 
-    // TODO my get all spaces from parent
+    // TODO may get all spaces from parent
     const {
         data: allSpaces,
         isLoading: isLoadingAllSpaces,
@@ -56,10 +51,7 @@ export default function Timeline({ space }: Props) {
     }
 
     const sharePost = (post: BackendPost) => {
-        console.log('share post ...', {post});
-
         setSharedPost(post)
-
     }
 
     if (isLoadingTimeline) {
@@ -87,7 +79,6 @@ export default function Timeline({ space }: Props) {
                     space={space}
                     allSpaces={allSpaces}
                     sharePost={sharePost}
-                    reloadTimeline={reloadTimeline}
                 />
             )}
         </>
