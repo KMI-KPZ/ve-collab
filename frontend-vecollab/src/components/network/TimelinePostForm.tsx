@@ -12,7 +12,7 @@ interface Props {
     space?: string | undefined;
     sharedPost?: BackendPost | null
     onCancelForm?: Function;
-    onSubmitForm?: Function;
+    afterSubmitForm?: Function;
 }
 
 TimelinePostForm.auth = true
@@ -21,7 +21,7 @@ export default function TimelinePostForm(
     post,
     space,
     sharedPost,
-    onSubmitForm,
+    afterSubmitForm,
     onCancelForm
 }: Props) {
     const { data: session } = useSession();
@@ -77,7 +77,7 @@ export default function TimelinePostForm(
                 await createOrUpdatePost()
             }
             ref.current?.reset()
-            if (onSubmitForm) onSubmitForm()
+            if (afterSubmitForm) afterSubmitForm()
         } catch (error) {
             console.error(error);
         }

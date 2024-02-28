@@ -14,7 +14,8 @@ import TimelinePostForm from "./TimelinePostForm";
 
 interface Props {
     post: BackendPost
-    spaces?: BackendSpace[]
+    space?: string
+    allSpaces?: BackendSpace[]
     sharePost?: (post: BackendPost) => void
     reloadTimeline: Function
 }
@@ -23,7 +24,8 @@ TimelinePost.auth = true
 export default function TimelinePost(
 {
     post,
-    spaces,
+    space,
+    allSpaces,
     sharePost,
     reloadTimeline
 }: Props) {
@@ -89,20 +91,12 @@ export default function TimelinePost(
     }
 
     const onClickShareBtn = () => {
-        console.log('clicked shared btn...');
         if (sharePost) sharePost(post)
     }
 
     const deletePost = async () => {
-
         try {
-            await fetchDELETE(
-                '/posts',
-                {
-                    post_id: post._id
-                },
-                session?.accessToken
-            )
+            await fetchDELETE( '/posts', { post_id: post._id }, session?.accessToken )
             setWbRemoved(true)
             // HACK wait until transition is done (TODO find a better solution...)
             await new Promise(resolve => setTimeout(resolve, 450))
@@ -127,8 +121,8 @@ export default function TimelinePost(
     }
 
     const SpacenameById = (spaceId: string) => {
-        if (!spaces) return (<>{spaceId}</>)
-        const space = spaces.find(space => space._id == spaceId)
+        if (!allSpaces) return (<>{spaceId}</>)
+        const space = allSpaces.find(space => space._id == spaceId)
         return ( <>{ space?.name }</> )
     }
 
@@ -150,7 +144,7 @@ export default function TimelinePost(
 
     const PostText = () => {
         if (editPost) return (
-            <TimelinePostForm onSubmitForm={reloadTimeline} onCancelForm={() => setEditPost(false)} post={post} />
+            <TimelinePostForm afterSubmitForm={reloadTimeline} onCancelForm={() => setEditPost(false)} post={post} />
         )
 
         return (
@@ -188,8 +182,8 @@ export default function TimelinePost(
                     {post.isRepost ? (
                         <>
                             {PostAuthor(post.repostAuthorProfilePic as string, post.repostAuthor as string, post.creation_date)}
-                            <div className='self-end text-xs text-gray-500 mx-2'>
-                                teilte einen Post
+                            <div className='self-start leading-[1.6rem] text-xs text-gray-500 ml-1'>
+                                teilte einen Beitrag
                             </div>
                         </>
                     ) : (
@@ -198,9 +192,9 @@ export default function TimelinePost(
                         </>
                      )}
 
-                    {post.space ? (
-                        <div className='self-end text-xs text-gray-500 mx-2'>
-                            in <Link href={`/space/?id=${post.space}`}>{SpacenameById(post.space)}</Link>
+                    {(!space && post.space) ? (
+                        <div className='self-start leading-[1.6rem] text-xs text-gray-500 ml-1'>
+                            in der Gruppe <Link href={`/space/?id=${post.space}`} className="font-bold">{SpacenameById(post.space)}</Link>
                         </div>
                     ) : ( <></> )}
 

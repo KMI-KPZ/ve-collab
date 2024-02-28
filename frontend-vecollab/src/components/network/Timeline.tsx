@@ -77,14 +77,15 @@ export default function Timeline({ space }: Props) {
                 <TimelinePostForm
                     space={space}
                     sharedPost={sharedPost}
-                    onSubmitForm={onSubmitForm}
+                    afterSubmitForm={onSubmitForm}
                 />
             </div>
             {!posts.length ? ( <div className="m-10 flex justify-center">Bisher keine Beiträge ...</div>) : (<></>)}
             {posts.map((post, i) =>
                 <TimelinePost key={i}
                     post={post}
-                    spaces={allSpaces}
+                    space={space}
+                    allSpaces={allSpaces}
                     sharePost={sharePost}
                     reloadTimeline={reloadTimeline}
                 />
