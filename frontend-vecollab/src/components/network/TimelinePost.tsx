@@ -7,45 +7,70 @@ import { IoIosSend } from "react-icons/io";
 import AuthenticatedImage from "../AuthenticatedImage";
 import SmallTimestamp from "../SmallTimestamp";
 import Dropdown from "../Dropdown";
-import { BackendPosts } from "@/interfaces/api/apiInterfaces";
-import { KeyedMutator } from "swr";
+import { BackendPost, BackendPostComment, BackendSpace } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
 import { MdDeleteOutline, MdModeEdit } from "react-icons/md";
+import TimelinePostForm from "./TimelinePostForm";
 
 interface Props {
-    post: BackendPosts;
-    mutate: KeyedMutator<any>
+    post: BackendPost
+    space?: string
+    isLast: boolean
+    allSpaces?: BackendSpace[]
+    sharePost?: (post: BackendPost) => void
+    reloadTimeline: Function
+    fetchNextPosts: Function
 }
 
-Timeline.auth = true
-export default function Timeline({post, mutate}: Props) {
+TimelinePost.auth = true
+export default function TimelinePost(
+{
+    post,
+    space,
+    isLast,
+    allSpaces,
+    sharePost,
+    reloadTimeline,
+    fetchNextPosts
+}: Props) {
     const { data: session } = useSession();
-    // const [isLoading, setIsLoading] = useState<boolean>(false)
     const [wbRemoved, setWbRemoved] = useState<boolean>(false)
     const ref = useRef<HTMLFormElement>(null)
-    const [likeIt, setLikeIt] = useState(post.likers.includes(session?.user.preferred_username as string))
-    const [comments, setComments] = useState(post.comments)
-    const [likers, setLikers] = useState(post.likers)
+    const [likeIt, setLikeIt] = useState<boolean>(post.likers.includes(session?.user.preferred_username as string))
+    const [comments, setComments] = useState<BackendPostComment[]>(post.comments)
+    const [likers, setLikers] = useState<string[]>(post.likers)
+    const [editPost, setEditPost] = useState<boolean>(false)
 
-    // TODO edit (own) post
-    // TODO reshare a post
-    // TODO may set loadiungState on submit comment form
-
+    // reverse comments order
     useEffect(() => {
         const newComments = [...post.comments];
         newComments.reverse()
         setComments(newComments);
     }, [post]);
 
-    async function onSubmitCommentForm(event: FormEvent<HTMLFormElement>) {
+    // implement infinity scroll (detect intersection of window viewport with last post)
+    useEffect(() => {
+        if (!ref?.current) return;
+
+        const observer = new IntersectionObserver(([entry]) => {
+            if (isLast && entry.isIntersecting) {
+                fetchNextPosts()
+                observer.unobserve(entry.target);
+            }
+        });
+
+        observer.observe(ref.current);
+    }, [isLast])
+
+    const onSubmitCommentForm = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget)
         const text = (formData.get('text') as string).trim()
 
         if (text === '')  return
 
-        try {
-            await fetchPOST(
+        const addNewComment = async () => {
+            const res = await fetchPOST(
                 '/comment',
                 {
                     text,
@@ -53,8 +78,14 @@ export default function Timeline({post, mutate}: Props) {
                 },
                 session?.accessToken
             )
+            return res
+        }
+
+        try {
+            await addNewComment()
+            // TODO if /comment returns the new result we could use mutate() with 'populateCache'
             ref.current?.reset()
-            mutate()
+            reloadTimeline()
         } catch (error) {
             console.error(error);
         }
@@ -79,28 +110,16 @@ export default function Timeline({post, mutate}: Props) {
     }
 
     const onClickShareBtn = () => {
-        console.log('clicked shared btn...');
-    }
-
-    const editPost = () => {
-        console.log('edit....');
-
+        if (sharePost) sharePost(post)
     }
 
     const deletePost = async () => {
-
         try {
-            await fetchDELETE(
-                '/posts',
-                {
-                    post_id: post._id
-                },
-                session?.accessToken
-            )
+            await fetchDELETE( '/posts', { post_id: post._id }, session?.accessToken )
             setWbRemoved(true)
             // HACK wait until transition is done (TODO find a better solution...)
             await new Promise(resolve => setTimeout(resolve, 450))
-            await mutate()
+            await reloadTimeline()
             setWbRemoved(false)
         } catch (error) {
             console.error(error);
@@ -113,12 +132,17 @@ export default function Timeline({post, mutate}: Props) {
                 deletePost()
                 break;
             case 'edit':
-                editPost()
+                setEditPost(true)
                 break;
-
             default:
                 break;
         }
+    }
+
+    const SpacenameById = (spaceId: string) => {
+        if (!allSpaces) return (<>{spaceId}</>)
+        const space = allSpaces.find(space => space._id == spaceId)
+        return ( <>{ space?.name }</> )
     }
 
     const PostAuthor = (imageId: string, authorName: string, date: string) => (
@@ -130,12 +154,27 @@ export default function Timeline({post, mutate}: Props) {
                 height={40}
                 className="rounded-full mr-3"
             ></AuthenticatedImage>
-            <div>
+            <div className="flex flex-col">
                 <div className='font-bold'>{authorName}</div>
                 <SmallTimestamp timestamp={date} className='text-xs text-gray-500' />
             </div>
         </>
     )
+
+    const PostText = () => {
+        if (editPost) return (
+            <TimelinePostForm afterSubmitForm={reloadTimeline} onCancelForm={() => setEditPost(false)} post={post} />
+        )
+
+        return (
+            <div className="whitespace-break-spaces">
+                {post.isRepost
+                    ? ( <>{post.repostText}</> )
+                    : ( <>{post.text}</> )
+                }
+            </div>
+        )
+    }
 
     let drOptions = []
     if (
@@ -162,8 +201,8 @@ export default function Timeline({post, mutate}: Props) {
                     {post.isRepost ? (
                         <>
                             {PostAuthor(post.repostAuthorProfilePic as string, post.repostAuthor as string, post.creation_date)}
-                            <div className='self-end text-xs text-gray-500 mx-2'>
-                                teilte einen Post
+                            <div className='self-start leading-[1.6rem] text-xs text-gray-500 ml-1'>
+                                teilte einen Beitrag
                             </div>
                         </>
                     ) : (
@@ -172,9 +211,9 @@ export default function Timeline({post, mutate}: Props) {
                         </>
                      )}
 
-                    {post.space ? (
-                        <div className='self-end text-xs text-gray-500 mx-2'>
-                            in <Link href={'#'}>{post.space}</Link>
+                    {(!space && post.space) ? (
+                        <div className='self-start leading-[1.6rem] text-xs text-gray-500 ml-1'>
+                            in der Gruppe <Link href={`/space/?id=${post.space}`} className="font-bold">{SpacenameById(post.space)}</Link>
                         </div>
                     ) : ( <></> )}
 
@@ -194,7 +233,7 @@ export default function Timeline({post, mutate}: Props) {
                 {post.isRepost ? (
                     <>
                         <div className='my-5'>
-                            <div className="whitespace-break-spaces">{post.repostText}</div>
+                            <PostText />
                         </div>
                         <div className="my-5 ml-5 p-5 border-2 border-ve-collab-blue/25 rounded-lg">
                             <div className="flex items-center">
@@ -205,7 +244,7 @@ export default function Timeline({post, mutate}: Props) {
                     </>
                 ) : (
                     <div className='my-5'>
-                        <div className="whitespace-break-spaces">{post.text}</div>
+                        <PostText />
                     </div>
                  )}
 
