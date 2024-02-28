@@ -337,7 +337,6 @@ export function useGetMySpaceACLEntry(accessToken: string, spaceId: string): {
 export function useGetTimeline(
     accessToken: string,
     toDate?: string,
-    fromDate?: string,
     limit?: number,
     space?: string
  ): {
@@ -347,7 +346,7 @@ export function useGetTimeline(
     mutate: KeyedMutator<any>;
 } {
     const endpointUrl = space
-        ? `/timeline/space/${space}?from=${fromDate}&to=${toDate}`
+        ? `/timeline/space/${space}?to=${toDate}&limit=${limit}`
         : `/timeline/you?to=${toDate}&limit=${limit}`
 
     const { data, error, isLoading, mutate } = useSWR(
