@@ -15,9 +15,11 @@ import TimelinePostForm from "./TimelinePostForm";
 interface Props {
     post: BackendPost
     space?: string
+    isLast: boolean
     allSpaces?: BackendSpace[]
     sharePost?: (post: BackendPost) => void
     reloadTimeline: Function
+    fetchNextPosts: Function
 }
 
 TimelinePost.auth = true
@@ -25,9 +27,11 @@ export default function TimelinePost(
 {
     post,
     space,
+    isLast,
     allSpaces,
     sharePost,
-    reloadTimeline
+    reloadTimeline,
+    fetchNextPosts
 }: Props) {
     const { data: session } = useSession();
     const [wbRemoved, setWbRemoved] = useState<boolean>(false)
@@ -37,11 +41,26 @@ export default function TimelinePost(
     const [likers, setLikers] = useState<string[]>(post.likers)
     const [editPost, setEditPost] = useState<boolean>(false)
 
+    // reverse comments order
     useEffect(() => {
         const newComments = [...post.comments];
         newComments.reverse()
         setComments(newComments);
     }, [post]);
+
+    // implement infinity scroll (detect intersection of window viewport with last post)
+    useEffect(() => {
+        if (!ref?.current) return;
+
+        const observer = new IntersectionObserver(([entry]) => {
+            if (isLast && entry.isIntersecting) {
+                fetchNextPosts()
+                observer.unobserve(entry.target);
+            }
+        });
+
+        observer.observe(ref.current);
+    }, [isLast])
 
     const onSubmitCommentForm = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();

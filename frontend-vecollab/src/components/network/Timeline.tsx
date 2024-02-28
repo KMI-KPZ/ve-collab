@@ -13,24 +13,21 @@ interface Props {
 Timeline.auth = true
 export default function Timeline({ space }: Props) {
     const { data: session } = useSession();
-
-    // const [displayPosts, setDisplayPosts] = useState<BackendPost[]>([]);
+    const [toDate, setToDate] = useState<Date>(new Date());
     const [sharedPost, setSharedPost] = useState<BackendPost|null>(null);
-
-    const [toDate, setToDate] = useState(new Date().toISOString());
+    const [allPosts, setAllPosts] = useState<BackendPost[]>([]);
 
     const {
-        data: posts,
+        data: currentPosts,
         isLoading: isLoadingTimeline,
         error,
         mutate,
     } = useGetTimeline(
         session!.accessToken,
-        toDate,
+        toDate.toISOString(),
         10,
         space
     )
-    console.log({posts, space});
 
     // TODO may get all spaces from parent
     const {
@@ -39,10 +36,28 @@ export default function Timeline({ space }: Props) {
         error: errorAllSpaces,
         mutate: mutateAllSpaces,
     } = useGetAllSpaces(session!.accessToken);
-    console.log({allSpaces});
+
+    useEffect(() => {
+        if (!currentPosts.length) return
+
+        setAllPosts((prev) => [...prev, ...currentPosts]);
+
+    }, [currentPosts])
+    console.log({allPosts});
 
     const reloadTimeline = () => {
-        setToDate(new Date().toISOString())
+        // TODO may improve by update prev state with deleted or edited posts ...
+        setAllPosts([]);
+        setToDate(new Date())
+    }
+
+    const fetchNextPosts = () => {
+        if (!allPosts.length) return
+
+        const newToDate = new Date(allPosts[allPosts.length - 1].creation_date)
+        newToDate.setMilliseconds(newToDate.getMilliseconds()+1)
+
+        setToDate(newToDate)
     }
 
     const onSubmitForm = () => {
@@ -72,13 +87,16 @@ export default function Timeline({ space }: Props) {
                     afterSubmitForm={onSubmitForm}
                 />
             </div>
-            {!posts.length ? ( <div className="m-10 flex justify-center">Bisher keine Beiträge ...</div>) : (<></>)}
-            {posts.map((post, i) =>
+            {!allPosts.length ? ( <div className="m-10 flex justify-center">Bisher keine Beiträge ...</div>) : (<></>)}
+            {allPosts.map((post, i) =>
                 <TimelinePost key={i}
                     post={post}
                     space={space}
+                    isLast={i === allPosts.length - 1}
                     allSpaces={allSpaces}
                     sharePost={sharePost}
+                    reloadTimeline={reloadTimeline}
+                    fetchNextPosts={fetchNextPosts}
                 />
             )}
         </>
