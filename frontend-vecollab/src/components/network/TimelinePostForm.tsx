@@ -13,7 +13,6 @@ interface Props {
     sharedPost?: BackendPost | null
     onCancelForm?: Function;
     onCancelRepost?: MouseEventHandler;
-    afterSubmitForm?: Function;
     onUpdatedPost?: (text: string) => void
     onCreatedPost?: (post: BackendPost) => void
 }
@@ -26,7 +25,6 @@ export default function TimelinePostForm(
     sharedPost,
     onCancelForm,
     onCancelRepost,
-    afterSubmitForm,
     onCreatedPost,
     onUpdatedPost,
 }: Props) {
@@ -82,7 +80,6 @@ export default function TimelinePostForm(
             ref.current?.reset()
             if (post && onUpdatedPost) onUpdatedPost(text)
             if (!post && onCreatedPost) onCreatedPost((await res).inserted_post)
-            if (afterSubmitForm) afterSubmitForm()
         } catch (error) {
             console.error(error);
         }

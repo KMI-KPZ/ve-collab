@@ -45,12 +45,6 @@ export default function Timeline({ space }: Props) {
     }, [currentPosts])
     console.log({allPosts});
 
-    const reloadTimeline = () => {
-        // TODO may improve by update prev state with deleted or edited posts ...
-        setAllPosts([]);
-        setToDate(new Date())
-    }
-
     const fetchNextPosts = () => {
         if (!allPosts.length) return
 
@@ -98,7 +92,6 @@ export default function Timeline({ space }: Props) {
                     allSpaces={allSpaces}
                     removePost={removePost}
                     sharePost={post => setSharedPost(post)}
-                    reloadTimeline={reloadTimeline}
                     fetchNextPosts={fetchNextPosts}
                 />
             )}

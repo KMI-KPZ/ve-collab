@@ -19,7 +19,6 @@ interface Props {
     allSpaces?: BackendSpace[]
     removePost: (post: BackendPost) => void
     sharePost?: (post: BackendPost) => void
-    reloadTimeline: Function
     fetchNextPosts: Function
 }
 
@@ -32,7 +31,6 @@ export default function TimelinePost(
     allSpaces,
     removePost,
     sharePost,
-    reloadTimeline,
     fetchNextPosts
 }: Props) {
     const { data: session } = useSession();
