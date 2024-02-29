@@ -64,6 +64,21 @@ export default function TimelinePost(
         observer.observe(ref.current);
     }, [isLast])
 
+    const onAddedNewComment = (text: string) => {
+        console.log('TODO: use result from /comment api endpoint to add new comment');
+        const newComment: BackendPostComment = {
+            _id: Math.random().toString(),
+            author: {
+                username: post.author.username,
+                profile_pic: post.author.profile_pic
+            },
+            creation_date: (new Date).toISOString(),
+            pinned: false,
+            text: text
+        }
+        setComments(prev => [newComment, ...prev]);
+    }
+
     const onSubmitCommentForm = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget)
@@ -85,9 +100,8 @@ export default function TimelinePost(
 
         try {
             await addNewComment()
-            // TODO if /comment returns the new result we could use mutate() with 'populateCache'
             ref.current?.reset()
-            reloadTimeline()
+            onAddedNewComment(text)
         } catch (error) {
             console.error(error);
         }
