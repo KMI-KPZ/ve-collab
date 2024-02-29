@@ -27,12 +27,12 @@ export default function TimelinePostForm(
     const { data: session } = useSession();
     const ref = useRef<HTMLFormElement>(null)
 
+    // scroll up to the form if user clicked to re-post a post
     useEffect(() => {
         if (sharedPost && ref.current) {
             window.scrollTo({ behavior: 'smooth', top: ref.current.offsetTop - 75 })
         }
     }, [ref, sharedPost])
-
 
     const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -41,22 +41,20 @@ export default function TimelinePostForm(
 
         if (text === '')  return
 
-        const data = Object.assign({},
-            post ? post : { tags: [] },
-            space ? { space } : {},
-            { text },
-        )
-
         const createOrUpdatePost = async () => {
             return await fetchPOST(
                 '/posts',
-                data,
+                Object.assign({},
+                    post ? post : { tags: [] },
+                    space ? { space } : {},
+                    { text },
+                ),
                 session?.accessToken,
                 true
             )
         }
 
-        const sharePost = async () => {
+        const rePost = async () => {
             return await fetchPOST(
                 '/repost',
                 Object.assign({},
@@ -64,18 +62,17 @@ export default function TimelinePostForm(
                         post_id: sharedPost?._id,
                         text
                     },
-                    space ? { space } : {}
+                    space ? { space } : { space: null }
                 ),
                 session?.accessToken
             )
         }
 
         try {
-            if (sharedPost) {
-                await sharePost()
-            } else {
-                await createOrUpdatePost()
-            }
+            await sharedPost
+                ? rePost()
+                : createOrUpdatePost()
+
             ref.current?.reset()
             if (afterSubmitForm) afterSubmitForm()
         } catch (error) {
