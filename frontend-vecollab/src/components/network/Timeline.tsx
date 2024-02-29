@@ -65,10 +65,6 @@ export default function Timeline({ space }: Props) {
         reloadTimeline()
     }
 
-    const sharePost = (post: BackendPost) => {
-        setSharedPost(post)
-    }
-
     if (isLoadingTimeline) {
         return (<><LoadingAnimation /></>)
     }
@@ -84,6 +80,7 @@ export default function Timeline({ space }: Props) {
                 <TimelinePostForm
                     space={space}
                     sharedPost={sharedPost}
+                    onCancelRepost={() => setSharedPost(null)}
                     afterSubmitForm={afterSubmitForm}
                 />
             </div>
@@ -94,7 +91,7 @@ export default function Timeline({ space }: Props) {
                     space={space}
                     isLast={i === allPosts.length - 1}
                     allSpaces={allSpaces}
-                    sharePost={sharePost}
+                    sharePost={post => setSharedPost(post)}
                     reloadTimeline={reloadTimeline}
                     fetchNextPosts={fetchNextPosts}
                 />

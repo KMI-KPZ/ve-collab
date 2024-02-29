@@ -12,6 +12,7 @@ interface Props {
     space?: string | undefined;
     sharedPost?: BackendPost | null
     onCancelForm?: Function;
+    onCancelRepost?: Function;
     afterSubmitForm?: Function;
 }
 
@@ -21,8 +22,9 @@ export default function TimelinePostForm(
     post,
     space,
     sharedPost,
+    onCancelForm,
+    onCancelRepost,
     afterSubmitForm,
-    onCancelForm
 }: Props) {
     const { data: session } = useSession();
     const ref = useRef<HTMLFormElement>(null)
@@ -119,7 +121,7 @@ export default function TimelinePostForm(
                                     <div className='font-bold'>{sharedPost.author.username}</div>
                                     <SmallTimestamp timestamp={sharedPost.creation_date} className='text-xs text-gray-500' />
                                 </div>
-                                <button onClick={() => {}} className="ml-auto self-start">
+                                <button onClick={onCancelRepost} className="ml-auto self-start">
                                     <IoMdClose />
                                 </button>
                             </div>
