@@ -75,7 +75,7 @@ export default function Timeline({ space }: Props) {
 
     return (
         <>
-            <div className={'p-4 my-8 bg-white rounded-3xl shadow-2xl '}>
+            <div className={'p-4 my-8 bg-white rounded shadow '}>
                 <TimelinePostForm
                     space={space}
                     sharedPost={sharedPost}

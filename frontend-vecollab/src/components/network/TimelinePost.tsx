@@ -223,7 +223,7 @@ export default function TimelinePost(
                 </div>
             </div> */}
 
-            <div className={`${wbRemoved ? "opacity-0 transition-opacity ease-in-out delay-50 duration-300" : "opacity-100 transition-none" } p-4 my-8 bg-white rounded-3xl shadow-2xl`}>
+            <div className={`${wbRemoved ? "opacity-0 transition-opacity ease-in-out delay-50 duration-300" : "opacity-100 transition-none" } p-4 my-8 bg-white rounded shadow`}>
                 <div className="flex items-center">
                     {post.isRepost ? (
                         <>
@@ -298,7 +298,7 @@ export default function TimelinePost(
                 </div>
 
                 {comments.length ? (
-                    <div className='mt-5 pt-5 pl-5 border-t-2 border-ve-collab-blue'>
+                    <div className='mt-5 pt-5 pl-5 border-t-2 border-ve-collab-blue/25'>
                         <div className="-ml-5 mb-5">Kommentare</div>
 
                         {comments.map((comment, ci) => (
