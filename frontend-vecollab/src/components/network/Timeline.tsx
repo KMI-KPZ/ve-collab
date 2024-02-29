@@ -60,7 +60,7 @@ export default function Timeline({ space }: Props) {
         setToDate(newToDate)
     }
 
-    const onSubmitForm = () => {
+    const afterSubmitForm = () => {
         if (sharedPost) setSharedPost(null)
         reloadTimeline()
     }
@@ -84,7 +84,7 @@ export default function Timeline({ space }: Props) {
                 <TimelinePostForm
                     space={space}
                     sharedPost={sharedPost}
-                    afterSubmitForm={onSubmitForm}
+                    afterSubmitForm={afterSubmitForm}
                 />
             </div>
             {!allPosts.length ? ( <div className="m-10 flex justify-center">Bisher keine Beiträge ...</div>) : (<></>)}
