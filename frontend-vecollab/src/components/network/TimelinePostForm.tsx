@@ -1,6 +1,6 @@
 import { fetchPOST } from "@/lib/backend";
 import { useSession } from "next-auth/react";
-import { FormEvent, useEffect } from "react";
+import { FormEvent, MouseEventHandler, useEffect } from "react";
 import { IoIosSend, IoMdClose } from "react-icons/io";
 import AuthenticatedImage from "../AuthenticatedImage";
 import { BackendPost } from "@/interfaces/api/apiInterfaces";
@@ -12,8 +12,9 @@ interface Props {
     space?: string | undefined;
     sharedPost?: BackendPost | null
     onCancelForm?: Function;
-    onCancelRepost?: Function;
+    onCancelRepost?: MouseEventHandler;
     afterSubmitForm?: Function;
+    updatePost?: (text: string) => void
 }
 
 TimelinePostForm.auth = true
@@ -25,6 +26,7 @@ export default function TimelinePostForm(
     onCancelForm,
     onCancelRepost,
     afterSubmitForm,
+    updatePost,
 }: Props) {
     const { data: session } = useSession();
     const ref = useRef<HTMLFormElement>(null)
@@ -76,6 +78,7 @@ export default function TimelinePostForm(
                 : createOrUpdatePost()
 
             ref.current?.reset()
+            if (post && updatePost) updatePost(text)
             if (afterSubmitForm) afterSubmitForm()
         } catch (error) {
             console.error(error);

@@ -141,6 +141,15 @@ export default function TimelinePost(
         }
     }
 
+    const updatePost = (newText: string) => {
+            if (post.isRepost) {
+                post.repostText = newText
+            } else {
+                post.text = newText
+            }
+            setEditPost(false)
+    }
+
     const SpacenameById = (spaceId: string) => {
         if (!allSpaces) return (<>{spaceId}</>)
         const space = allSpaces.find(space => space._id == spaceId)
@@ -165,7 +174,11 @@ export default function TimelinePost(
 
     const PostText = () => {
         if (editPost) return (
-            <TimelinePostForm afterSubmitForm={reloadTimeline} onCancelForm={() => setEditPost(false)} post={post} />
+            <TimelinePostForm
+                post={post}
+                onCancelForm={() => setEditPost(false)}
+                updatePost={updatePost}
+            />
         )
 
         return (
