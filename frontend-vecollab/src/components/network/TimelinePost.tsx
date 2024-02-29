@@ -17,6 +17,7 @@ interface Props {
     space?: string
     isLast: boolean
     allSpaces?: BackendSpace[]
+    removePost: (post: BackendPost) => void
     sharePost?: (post: BackendPost) => void
     reloadTimeline: Function
     fetchNextPosts: Function
@@ -29,6 +30,7 @@ export default function TimelinePost(
     space,
     isLast,
     allSpaces,
+    removePost,
     sharePost,
     reloadTimeline,
     fetchNextPosts
@@ -119,7 +121,7 @@ export default function TimelinePost(
             setWbRemoved(true)
             // HACK wait until transition is done (TODO find a better solution...)
             await new Promise(resolve => setTimeout(resolve, 450))
-            await reloadTimeline()
+            removePost(post)
             setWbRemoved(false)
         } catch (error) {
             console.error(error);
@@ -196,7 +198,7 @@ export default function TimelinePost(
                 </div>
             </div> */}
 
-            <div className={`${wbRemoved ? "opacity-0 transition-opacity ease-in-out delay-150 duration-300" : "opacity-100 transition-none" } p-4 my-8 bg-white rounded-3xl shadow-2xl`}>
+            <div className={`${wbRemoved ? "opacity-0 transition-opacity ease-in-out delay-50 duration-300" : "opacity-100 transition-none" } p-4 my-8 bg-white rounded-3xl shadow-2xl`}>
                 <div className="flex items-center">
                     {post.isRepost ? (
                         <>
@@ -264,6 +266,7 @@ export default function TimelinePost(
                             type="text"
                             placeholder={'Kommentar schreiben ...'}
                             name='text'
+                            autoComplete="false"
                         />
                         <button className="p-2" type='submit' title="Senden"><IoIosSend /></button>
                     </form>

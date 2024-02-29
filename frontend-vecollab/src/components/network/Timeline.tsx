@@ -60,6 +60,10 @@ export default function Timeline({ space }: Props) {
         setToDate(newToDate)
     }
 
+    const removePost = (post: BackendPost) => {
+        setAllPosts((prev) => prev.filter(a => a._id != post._id));
+    }
+
     const afterSubmitForm = () => {
         if (sharedPost) setSharedPost(null)
         reloadTimeline()
@@ -91,6 +95,7 @@ export default function Timeline({ space }: Props) {
                     space={space}
                     isLast={i === allPosts.length - 1}
                     allSpaces={allSpaces}
+                    removePost={removePost}
                     sharePost={post => setSharedPost(post)}
                     reloadTimeline={reloadTimeline}
                     fetchNextPosts={fetchNextPosts}
