@@ -64,9 +64,10 @@ export default function Timeline({ space }: Props) {
         setAllPosts((prev) => prev.filter(a => a._id != post._id));
     }
 
-    const afterSubmitForm = () => {
-        if (sharedPost) setSharedPost(null)
-        reloadTimeline()
+    const afterCreatePost = (post: BackendPost) => {
+        // TODO may use mutate->populateCache instead ?!
+        // https://github.com/KMI-KPZ/ve-collab/blob/a791a2ed9d68e71b6968488fe33dbf8bac000d4c/frontend-vecollab/src/components/network/Timeline.tsx
+        setAllPosts((prev) => [post, ...prev]);
     }
 
     if (isLoadingTimeline) {
@@ -85,7 +86,7 @@ export default function Timeline({ space }: Props) {
                     space={space}
                     sharedPost={sharedPost}
                     onCancelRepost={() => setSharedPost(null)}
-                    afterSubmitForm={afterSubmitForm}
+                    onCreatedPost={afterCreatePost}
                 />
             </div>
             {!allPosts.length ? ( <div className="m-10 flex justify-center">Bisher keine Beiträge ...</div>) : (<></>)}

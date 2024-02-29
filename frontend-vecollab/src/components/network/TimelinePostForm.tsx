@@ -14,7 +14,8 @@ interface Props {
     onCancelForm?: Function;
     onCancelRepost?: MouseEventHandler;
     afterSubmitForm?: Function;
-    updatePost?: (text: string) => void
+    onUpdatedPost?: (text: string) => void
+    onCreatedPost?: (post: BackendPost) => void
 }
 
 TimelinePostForm.auth = true
@@ -26,7 +27,8 @@ export default function TimelinePostForm(
     onCancelForm,
     onCancelRepost,
     afterSubmitForm,
-    updatePost,
+    onCreatedPost,
+    onUpdatedPost,
 }: Props) {
     const { data: session } = useSession();
     const ref = useRef<HTMLFormElement>(null)
@@ -73,12 +75,13 @@ export default function TimelinePostForm(
         }
 
         try {
-            await sharedPost
+            const res = await sharedPost
                 ? rePost()
                 : createOrUpdatePost()
 
             ref.current?.reset()
-            if (post && updatePost) updatePost(text)
+            if (post && onUpdatedPost) onUpdatedPost(text)
+            if (!post && onCreatedPost) onCreatedPost((await res).inserted_post)
             if (afterSubmitForm) afterSubmitForm()
         } catch (error) {
             console.error(error);

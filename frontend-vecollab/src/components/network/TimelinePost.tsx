@@ -177,7 +177,7 @@ export default function TimelinePost(
             <TimelinePostForm
                 post={post}
                 onCancelForm={() => setEditPost(false)}
-                updatePost={updatePost}
+                onUpdatedPost={updatePost}
             />
         )
 
