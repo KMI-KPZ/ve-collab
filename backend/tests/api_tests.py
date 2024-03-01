@@ -1264,7 +1264,22 @@ class PostHandlerTest(BaseApiTestCase):
         self.assertEqual(ObjectId(response["inserted_post"]["_id"]), db_state["_id"])
         self.assertEqual(response["inserted_post"]["text"], db_state["text"])
         self.assertEqual(response["inserted_post"]["tags"], db_state["tags"])
-        self.assertEqual(response["inserted_post"]["author"], db_state["author"])
+        # the author has enhanced profile information to check for
+        self.assertIn("author", response["inserted_post"])
+        self.assertIn("username", response["inserted_post"]["author"])
+        self.assertIn("first_name", response["inserted_post"]["author"])
+        self.assertIn("last_name", response["inserted_post"]["author"])
+        self.assertIn("profile_pic", response["inserted_post"]["author"])
+        self.assertIn("institution", response["inserted_post"]["author"])
+        db_author_profile = self.db.profiles.find_one(
+            {"username": CURRENT_ADMIN.username}
+        )
+        self.assertEqual(response["inserted_post"]["author"]["username"], db_author_profile["username"])
+        self.assertEqual(response["inserted_post"]["author"]["first_name"], db_author_profile["first_name"])
+        self.assertEqual(response["inserted_post"]["author"]["last_name"], db_author_profile["last_name"])
+        self.assertEqual(response["inserted_post"]["author"]["profile_pic"], db_author_profile["profile_pic"])
+        self.assertEqual(response["inserted_post"]["author"]["institution"], db_author_profile["institution"])
+        
         # for some odd reason, the ms in the timestamps jitter
         self.assertAlmostEqual(
             datetime.fromisoformat(response["inserted_post"]["creation_date"]),

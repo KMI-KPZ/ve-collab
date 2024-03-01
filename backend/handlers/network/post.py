@@ -13,6 +13,7 @@ from resources.network.post import (
     Posts,
     PostNotExistingException,
 )
+from resources.network.profile import Profiles
 from resources.network.space import (
     FileAlreadyInRepoError,
     Spaces,
@@ -175,6 +176,10 @@ class PostHandler(BaseHandler):
                 post_id = post_manager.insert_post(post)
 
                 post["_id"] = post_id
+
+                profile_manager = Profiles(db)
+                author_profile_snippet = profile_manager.get_profile_snippets([author])[0]
+                post["author"] = author_profile_snippet
 
                 self.set_status(200)
                 self.serialize_and_write(
