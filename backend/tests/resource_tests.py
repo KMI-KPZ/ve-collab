@@ -1580,14 +1580,16 @@ class PostResourceTest(BaseResourceTestCase):
         }
 
         post_manager = Posts(self.db)
-        post_manager.add_comment(self.post_id, comment)
+        comment_id = post_manager.add_comment(self.post_id, comment)
 
         # check if comment was added
         post = self.db.posts.find_one({"_id": self.post_id})
         self.assertIsNotNone(post)
         self.assertEqual(len(post["comments"]), 2)
+        comment_ids = [comment["_id"] for comment in post["comments"]]
         comment_text = [comment["text"] for comment in post["comments"]]
         self.assertIn(comment["text"], comment_text)
+        self.assertIn(comment_id, comment_ids)
 
     def test_add_comment_error_post_doesnt_exist(self):
         """

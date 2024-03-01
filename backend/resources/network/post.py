@@ -250,9 +250,10 @@ class Posts:
         if update_result.modified_count != 1:
             raise NotLikerException()
 
-    def add_comment(self, post_id: str | ObjectId, comment: dict) -> None:
+    def add_comment(self, post_id: str | ObjectId, comment: dict) -> ObjectId:
         """
-        add the given comment to the post, validating the attributes beforehand
+        add the given comment to the post, validating the attributes beforehand 
+        and returning the comment _id
         """
 
         post_id = util.parse_object_id(post_id)
@@ -272,6 +273,8 @@ class Posts:
         # we know that there was no post with the given post_id
         if update_result.matched_count != 1:
             raise PostNotExistingException()
+
+        return comment["_id"]
 
     def delete_comment(
         self, comment_id: str | ObjectId, post_id: str | ObjectId = None

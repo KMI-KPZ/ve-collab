@@ -178,7 +178,9 @@ class PostHandler(BaseHandler):
                 post["_id"] = post_id
 
                 profile_manager = Profiles(db)
-                author_profile_snippet = profile_manager.get_profile_snippets([author])[0]
+                author_profile_snippet = profile_manager.get_profile_snippets([author])[
+                    0
+                ]
                 post["author"] = author_profile_snippet
 
                 self.set_status(200)
@@ -404,7 +406,20 @@ class CommentHandler(BaseHandler):
         return:
             200 OK
             {"status": 200,
-             "success": True}
+             "success": True, 
+             "inserted_comment": {
+                    "author": {
+                        "username": "string",
+                        "first_name": "string",
+                        "last_name": "string",
+                        "profile_pic": "string",
+                        "institution": "string",
+                    },
+                    "creation_date": "string",
+                    "text": "string",
+                    "pinned": "bool",
+                },
+             }
 
             400 Bad Request
             {"status": 400,
@@ -489,8 +504,9 @@ class CommentHandler(BaseHandler):
                 "text": http_body["text"],
                 "pinned": False,
             }
+
             try:
-                post_manager.add_comment(post["_id"], comment)
+                comment_id = post_manager.add_comment(post["_id"], comment)
             except PostNotExistingException:
                 self.set_status(409)
                 self.write(
@@ -498,8 +514,19 @@ class CommentHandler(BaseHandler):
                 )
                 return
 
+            comment["_id"] = comment_id
+
+            # enhance comment author with profile details to return
+            profile_manager = Profiles(db)
+            author_profile_snippet = profile_manager.get_profile_snippets(
+                [comment["author"]]
+            )[0]
+            comment["author"] = author_profile_snippet
+
         self.set_status(200)
-        self.write({"status": 200, "success": True})
+        self.serialize_and_write(
+            {"status": 200, "success": True, "inserted_comment": comment}
+        )
 
     @auth_needed
     async def delete(self):
