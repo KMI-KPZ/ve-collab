@@ -6864,10 +6864,13 @@ class TimelineHandlerTest(BaseApiTestCase):
 
     def assert_author_enhanced(self, posts: List[dict]):
         for post in posts:
-            # expect author to be enhanced with profile pic
+            # expect author to be enhanced with profile details
             self.assertIn("author", post)
             self.assertIn("username", post["author"])
             self.assertIn("profile_pic", post["author"])
+            self.assertIn("first_name", post["author"])
+            self.assertIn("last_name", post["author"])
+            self.assertIn("institution", post["author"])
 
             # admin has a profile pic set,
             # therefore expect his pic to not be the default one
