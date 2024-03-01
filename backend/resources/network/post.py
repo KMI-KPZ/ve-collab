@@ -309,11 +309,12 @@ class Posts:
         if update_result.matched_count != 1:
             raise PostNotExistingException()
 
-    def insert_repost(self, repost: dict) -> None:
+    def insert_repost(self, repost: dict) -> ObjectId:
         """
         insert a repost, validating the attributes beforehand.
         If the supplied repost has an _id field,
         update the existing repost text instead.
+        Returns the _id of the inserted (or updated) repost.
         :param repost: the repost to save as a dict
         """
 
@@ -329,9 +330,11 @@ class Posts:
         ):
             raise ValueError("Post misses required attribute")
 
-        self.db.posts.insert_one(repost)
+        result = self.db.posts.insert_one(repost)
 
-    def update_repost_text(self, repost_id: str | ObjectId, text: str) -> None:
+        return result.inserted_id
+
+    def update_repost_text(self, repost_id: str | ObjectId, text: str) -> ObjectId:
         """
         update the text of an existing repost
         """
@@ -347,6 +350,8 @@ class Posts:
         # we know that there was no post with the given _id
         if update_result.modified_count != 1:
             raise PostNotExistingException()
+        
+        return repost_id
 
     def pin_post(self, post_id: str | ObjectId) -> None:
         """

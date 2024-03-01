@@ -1692,10 +1692,10 @@ class PostResourceTest(BaseResourceTestCase):
         }
 
         post_manager = Posts(self.db)
-        post_manager.insert_repost(repost)
+        repost_id = post_manager.insert_repost(repost)
 
         # check if repost was added
-        post = self.db.posts.find_one({"repostText": "test_repost"})
+        post = self.db.posts.find_one({"_id": repost_id})
         self.assertIsNotNone(post)
         self.assertEqual(post["author"], repost["author"])
         self.assertEqual(post["creation_date"], repost["creation_date"])
@@ -1758,7 +1758,9 @@ class PostResourceTest(BaseResourceTestCase):
             "repostText": "updated_test_repost",
         }
         post_manager = Posts(self.db)
-        post_manager.insert_repost(repost)
+        returned_repost_id = post_manager.insert_repost(repost)
+
+        self.assertEqual(returned_repost_id, repost["_id"])
 
         # check if repost was updated, but only the repostText is updateable
         post = self.db.posts.find_one({"_id": repost["_id"]})

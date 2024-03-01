@@ -2558,9 +2558,74 @@ class RepostHandlerTest(BaseApiTestCase):
 
         request = {"post_id": str(self.post_oid), "text": "test_repost", "space": None}
 
-        self.base_checks("POST", "/repost", True, 200, body=request)
+        response = self.base_checks("POST", "/repost", True, 200, body=request)
 
-        db_state = self.db.posts.find_one({"repostText": request["text"]})
+        # expect the repost to be in the response
+        self.assertIn("inserted_repost", response)
+        self.assertEqual(response["inserted_repost"]["repostText"], request["text"])
+        self.assertEqual(response["inserted_repost"]["isRepost"], True)
+        self.assertIn("originalCreationDate", response["inserted_repost"])
+        self.assertIn("creation_date", response["inserted_repost"])
+        self.assertEqual(response["inserted_repost"]["space"], None)
+
+        # expect the author and repostAuther to be enhanced with profile information
+        self.assertIn("author", response["inserted_repost"])
+        self.assertIn("username", response["inserted_repost"]["author"])
+        self.assertIn("first_name", response["inserted_repost"]["author"])
+        self.assertIn("last_name", response["inserted_repost"]["author"])
+        self.assertIn("profile_pic", response["inserted_repost"]["author"])
+        self.assertIn("institution", response["inserted_repost"]["author"])
+        db_author_profile = self.db.profiles.find_one(
+            {"username": CURRENT_ADMIN.username}
+        )
+        self.assertEqual(
+            response["inserted_repost"]["author"]["username"],
+            db_author_profile["username"],
+        )
+        self.assertEqual(
+            response["inserted_repost"]["author"]["first_name"],
+            db_author_profile["first_name"],
+        )
+        self.assertEqual(
+            response["inserted_repost"]["author"]["last_name"],
+            db_author_profile["last_name"],
+        )
+        self.assertEqual(
+            response["inserted_repost"]["author"]["profile_pic"],
+            db_author_profile["profile_pic"],
+        )
+        self.assertEqual(
+            response["inserted_repost"]["author"]["institution"],
+            db_author_profile["institution"],
+        )
+        self.assertIn("repostAuthor", response["inserted_repost"])
+        self.assertIn("username", response["inserted_repost"]["repostAuthor"])
+        self.assertIn("first_name", response["inserted_repost"]["repostAuthor"])
+        self.assertIn("last_name", response["inserted_repost"]["repostAuthor"])
+        self.assertIn("profile_pic", response["inserted_repost"]["repostAuthor"])
+        self.assertIn("institution", response["inserted_repost"]["repostAuthor"])
+        self.assertEqual(
+            response["inserted_repost"]["repostAuthor"]["username"],
+            db_author_profile["username"],
+        )
+        self.assertEqual(
+            response["inserted_repost"]["repostAuthor"]["first_name"],
+            db_author_profile["first_name"],
+        )
+        self.assertEqual(
+            response["inserted_repost"]["repostAuthor"]["last_name"],
+            db_author_profile["last_name"],
+        )
+        self.assertEqual(
+            response["inserted_repost"]["repostAuthor"]["profile_pic"],
+            db_author_profile["profile_pic"],
+        )
+        self.assertEqual(
+            response["inserted_repost"]["repostAuthor"]["institution"],
+            db_author_profile["institution"],
+        )
+
+        db_state = self.db.posts.find_one({"_id": ObjectId(response["inserted_repost"]["_id"])})
         self.assertNotEqual(db_state, None)
 
     def test_post_create_repost_space(self):

@@ -406,7 +406,7 @@ class CommentHandler(BaseHandler):
         return:
             200 OK
             {"status": 200,
-             "success": True, 
+             "success": True,
              "inserted_comment": {
                     "author": {
                         "username": "string",
@@ -1020,10 +1020,30 @@ class RepostHandler(BaseHandler):
                 post["tags"] = []
                 del post["_id"]
 
-                post_manager.insert_repost(post)
+                repost_id = post_manager.insert_repost(post)
+
+                post["_id"] = repost_id
+
+                # ennhance original author and repost author with profile details to return
+                profile_manager = Profiles(db)
+                author_profile_snippets = profile_manager.get_profile_snippets(
+                    [post["author"], post["repostAuthor"]]
+                )
+                post["author"] = [
+                    author_profile_snippet
+                    for author_profile_snippet in author_profile_snippets
+                    if author_profile_snippet["username"] == post["author"]
+                ][0]
+                post["repostAuthor"] = [
+                    author_profile_snippet
+                    for author_profile_snippet in author_profile_snippets
+                    if author_profile_snippet["username"] == post["repostAuthor"]
+                ][0]
 
                 self.set_status(200)
-                self.write({"status": 200, "success": True})
+                self.serialize_and_write(
+                    {"status": 200, "success": True, "inserted_repost": post}
+                )
 
         # _id was specified in the request: update the existing repost
         else:
