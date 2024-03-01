@@ -857,7 +857,8 @@ class RepostHandler(BaseHandler):
             returns:
                 200 OK,
                 {"status": 200,
-                 "success": True}
+                 "success": True, 
+                 "inserted_repost": {repost}}
 
                 400 Bad Request
                 {"status": 400,
