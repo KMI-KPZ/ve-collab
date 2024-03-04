@@ -8,10 +8,11 @@ import { BackendPost } from "@/interfaces/api/apiInterfaces";
 
 interface Props {
     space?: string | undefined;
+    user?: string | undefined;
 }
 
 Timeline.auth = true
-export default function Timeline({ space }: Props) {
+export default function Timeline({ space, user }: Props) {
     const { data: session } = useSession();
     const [toDate, setToDate] = useState<Date>(new Date());
     const [sharedPost, setSharedPost] = useState<BackendPost|null>(null);
@@ -26,7 +27,8 @@ export default function Timeline({ space }: Props) {
         session!.accessToken,
         toDate.toISOString(),
         10,
-        space
+        space,
+        user
     )
 
     // TODO may get all spaces from parent

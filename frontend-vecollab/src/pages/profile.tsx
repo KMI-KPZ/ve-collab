@@ -208,7 +208,10 @@ export default function Profile() {
                                 />
                             </WhiteBox>
                             <BoxHeadline title='Timeline' />
-                            <Timeline />
+                            {foreignUser
+                                ? ( <Timeline user={router.query.username as string} /> )
+                                : ( <Timeline /> )
+                            }
                         </div>
                         <div className={'w-1/4  ml-4'}>
                             <WhiteBox>

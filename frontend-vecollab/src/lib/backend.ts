@@ -338,16 +338,25 @@ export function useGetTimeline(
     accessToken: string,
     toDate?: string,
     limit?: number,
-    space?: string
+    space?: string,
+    user?: string
  ): {
     data: BackendPost[];
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;
 } {
-    const endpointUrl = space
-        ? `/timeline/space/${space}?to=${toDate}&limit=${limit}`
-        : `/timeline/you?to=${toDate}&limit=${limit}`
+    let endpointUrl = "/timeline"
+    if (space) {
+        endpointUrl += `/space/${space}`
+    }
+    else if (user) {
+        endpointUrl += `/user/${user}`
+    }
+    else {
+        endpointUrl += `/you`
+    }
+    endpointUrl += `?to=${toDate}&limit=${limit}`
 
     const { data, error, isLoading, mutate } = useSWR(
         [endpointUrl, accessToken],
