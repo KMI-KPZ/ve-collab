@@ -63,18 +63,8 @@ export default function TimelinePost(
         observer.observe(ref.current);
     }, [isLast])
 
-    const onAddedNewComment = (text: string) => {
-        console.log('TODO: use result from /comment api endpoint to add new comment');
-        const newComment: BackendPostComment = {
-            _id: Math.random().toString(),
-            author: {
-                username: post.author.username,
-                profile_pic: post.author.profile_pic
-            },
-            creation_date: (new Date).toISOString(),
-            pinned: false,
-            text: text
-        }
+    const onAddedNewComment = (newComment: BackendPostComment) => {
+        if (!newComment) return
         setComments(prev => [newComment, ...prev]);
     }
 
@@ -98,9 +88,9 @@ export default function TimelinePost(
         }
 
         try {
-            await addNewComment()
+            const newComment = await addNewComment()
+            onAddedNewComment(newComment.inserted_comment)
             ref.current?.reset()
-            onAddedNewComment(text)
         } catch (error) {
             console.error(error);
         }
@@ -276,7 +266,7 @@ export default function TimelinePost(
                             type="text"
                             placeholder={'Kommentar schreiben ...'}
                             name='text'
-                            autoComplete="false"
+                            autoComplete="off"
                         />
                         <button className="p-2" type='submit' title="Senden"><IoIosSend /></button>
                     </form>
