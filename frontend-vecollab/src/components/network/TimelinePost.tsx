@@ -7,7 +7,8 @@ import { IoIosSend } from "react-icons/io";
 import Dropdown from "../Dropdown";
 import { BackendPost, BackendPostAuthor, BackendPostComment, BackendSpace } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
-import { MdDeleteOutline, MdModeEdit, MdThumbUp } from "react-icons/md";
+import { MdDeleteOutline, MdModeEdit, MdOutlineAddComment, MdThumbUp } from "react-icons/md";
+import { TiArrowForward } from "react-icons/ti";
 import TimelinePostForm from "./TimelinePostForm";
 import PostHeader from "./PostHeader";
 
@@ -29,12 +30,13 @@ export default function TimelinePost(
     isLast,
     allSpaces,
     removePost,
-    sharePost,
+    sharePost: replyPost,
     fetchNextPosts
 }: Props) {
     const { data: session } = useSession();
     const [wbRemoved, setWbRemoved] = useState<boolean>(false)
     const ref = useRef<HTMLFormElement>(null)
+    const [showCommentForm, setShowCommentForm] = useState<boolean>(false)
     const [comments, setComments] = useState<BackendPostComment[]>([])
     const [likeIt, setLikeIt] = useState<boolean>(false)
     const [likers, setLikers] = useState<string[]>([])
@@ -115,8 +117,8 @@ export default function TimelinePost(
         }
     }
 
-    const onClickShareBtn = () => {
-        if (sharePost) sharePost(post)
+    const onClickReplyBtn = () => {
+        if (replyPost) replyPost(post)
     }
 
     const deletePost = async () => {
@@ -189,13 +191,9 @@ export default function TimelinePost(
         else hoverMsg += `${likers.slice(0, 3).join(", ")} and others`
 
         return (
-            <>
-                <div className='my-5 text-sm' >
-                    <span className="hover:cursor-pointer" title={hoverMsg}>
-                        <MdThumbUp className="inline" /> {likers.length}
-                    </span>
-                </div>
-            </>
+            <span className="hover:cursor-pointer text-sm" title={hoverMsg}>
+                <MdThumbUp className="inline" /> {likers.length}
+            </span>
         )
     }
 
@@ -246,58 +244,65 @@ export default function TimelinePost(
                         ) : (
                             <button className="p-2" onClick={onClickLikeBtn} title="Click to like post"><HiOutlineHeart /></button>
                         )}
-                        <button className="p-2" onClick={onClickShareBtn} title="Click to share post"><HiOutlineShare /></button>
+                        <button className="p-2" onClick={onClickReplyBtn} title="Click to reply post"><TiArrowForward /></button>
                         {drOptions.length > 0 && (
                             <Dropdown options={drOptions} onSelect={handleSelectOption} />
                         )}
                     </div>
                 </div>
 
-                {post.isRepost ? (
+                {post.isRepost && (
                     <>
-                        <div className='my-5'>
-                            <PostText />
-                        </div>
-                        <div className="my-5 ml-5 p-5 border-2 border-ve-collab-blue/25 rounded">
+                        <div className="my-5 ml-5 p-4 border-2 border-ve-collab-blue/25 rounded">
                             <div className="flex items-center">
                                 <PostHeader author={post.repostAuthor as BackendPostAuthor} date={post.originalCreationDate as string} />
                             </div>
                             <div className='mt-5'>{post.text}</div>
                         </div>
                     </>
-                ) : (
-                    <div className='my-5'>
-                        <PostText />
-                    </div>
-                 )}
+                )}
 
-                <Likes />
-
-                <div>
-                    <form onSubmit={onSubmitCommentForm} ref={ref}>
-                        <input
-                            className={'border border-[#cccccc] rounded-md px-2 py-[6px]'}
-                            type="text"
-                            placeholder={'Kommentar schreiben ...'}
-                            name='text'
-                            autoComplete="off"
-                        />
-                        <button className="p-2" type='submit' title="Senden"><IoIosSend /></button>
-                    </form>
+                <div className='my-5'>
+                    <PostText />
                 </div>
 
-                {comments.length > 0 && (
-                    <div className='mt-5 pt-5 pl-5 border-t-2 border-ve-collab-blue/25'>
-                        <div className="-ml-5 mb-5">Kommentare</div>
+                <Likes />
+                {(comments.length == 0 && !showCommentForm) && (
+                    <button onClick={() => {setShowCommentForm(!showCommentForm)}} title="Add comment" className="m-3 align-middle">
+                        <MdOutlineAddComment />
+                    </button>
+                )}
 
-                        {comments.map((comment, ci) => (
-                            <div key={ci}>
-                                <div className="flex items-center">
-                                <PostHeader author={comment.author} date={comment.creation_date} />
-                                </div>
-                                <div className='my-5'>{comment.text}</div>
+                {(comments.length > 0 || showCommentForm)&& (
+                    <div className='mt-4 pt-4 border-t-2 border-ve-collab-blue/25'>
+                        <div className="mb-4 font-slate-900">
+                            {/* <MdComment className="inline" />&nbsp; */}
+                            Kommentare
+                        </div>
+
+                        <form onSubmit={onSubmitCommentForm} ref={ref}>
+                            <input
+                                className={'border border-[#cccccc] rounded-md px-2 py-[6px]'}
+                                type="text"
+                                placeholder={'Kommentar schreiben ...'}
+                                name='text'
+                                autoComplete="off"
+                            />
+                            <button className="p-2" type='submit' title="Senden"><IoIosSend /></button>
+                        </form>
+
+                        {comments.length > 0 && (
+                            <div className="pl-5 mt-5">
+                                {comments.map((comment, ci) => (
+                                    <div key={ci}>
+                                        <div className="flex items-center">
+                                        <PostHeader author={comment.author} date={comment.creation_date} />
+                                        </div>
+                                        <div className='my-5'>{comment.text}</div>
+                                    </div>
+                                ))}
                             </div>
-                        ))}
+                        )}
                     </div>
                 )}
             </div>
