@@ -15,17 +15,19 @@ interface Props {
     onCancelRepost?: MouseEventHandler;
     onUpdatedPost?: (text: string) => void
     onCreatedPost?: (post: BackendPost) => void
+    onCreatedRepost?: (post: BackendPost) => void
 }
 
 TimelinePostForm.auth = true
 export default function TimelinePostForm(
 {
-    post,
+    post: postToEdit,
     space,
-    sharedPost,
+    sharedPost: postToRepost,
     onCancelForm,
     onCancelRepost,
     onCreatedPost,
+    onCreatedRepost,
     onUpdatedPost,
 }: Props) {
     const { data: session } = useSession();
@@ -33,10 +35,10 @@ export default function TimelinePostForm(
 
     // scroll up to the form if user clicked to re-post a post
     useEffect(() => {
-        if (sharedPost && ref.current) {
+        if (postToRepost && ref.current) {
             window.scrollTo({ behavior: 'smooth', top: ref.current.offsetTop - 75 })
         }
-    }, [ref, sharedPost])
+    }, [ref, postToRepost])
 
     const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -49,7 +51,7 @@ export default function TimelinePostForm(
             return await fetchPOST(
                 '/posts',
                 Object.assign({},
-                    post ? post : { tags: [] },
+                    postToEdit ? postToEdit : { tags: [] },
                     space ? { space } : {},
                     { text },
                 ),
@@ -59,11 +61,13 @@ export default function TimelinePostForm(
         }
 
         const rePost = async () => {
+            console.log('repost', {sharedPost: postToRepost, post: postToEdit});
+
             return await fetchPOST(
                 '/repost',
                 Object.assign({},
                     {
-                        post_id: sharedPost?._id,
+                        post_id: postToRepost?._id,
                         text
                     },
                     space ? { space } : { space: null }
@@ -73,13 +77,15 @@ export default function TimelinePostForm(
         }
 
         try {
-            const res = await sharedPost
+            const res = await postToRepost
                 ? rePost()
                 : createOrUpdatePost()
 
             ref.current?.reset()
-            if (post && onUpdatedPost) onUpdatedPost(text)
-            if (!post && onCreatedPost) onCreatedPost((await res).inserted_post)
+            if (postToEdit && onUpdatedPost) onUpdatedPost(text)
+            // if (postToRepost && onCreatedRepost) onCreatedRepost((await res).inserted_post)
+            // if (!postToEdit && !postToRepost && onCreatedPost) onCreatedPost((await res).inserted_post)
+            if (!postToEdit && onCreatedPost) onCreatedPost((await res).inserted_post)
         } catch (error) {
             console.error(error);
         }
@@ -99,46 +105,46 @@ export default function TimelinePostForm(
                         alt={'Benutzerbild'}
                         width={40}
                         height={40}
-                        className={`${post ? "hidden" : ""} rounded-full mr-3`}
+                        className={`${postToEdit ? "hidden" : ""} rounded-full mr-3`}
                     ></AuthenticatedImage>
                     <textarea
                         className={'w-full border border-[#cccccc] rounded-md px-2 py-2'}
                         placeholder={'Beitrag schreiben ...'}
                         name='text'
-                        defaultValue={post ? (post.isRepost ? post.repostText : post.text) : ''}
+                        defaultValue={postToEdit ? (postToEdit.isRepost ? postToEdit.repostText : postToEdit.text) : ''}
                     />
                 </div>
 
-                {sharedPost
+                {postToRepost
                     ? (
                         <div className="my-5 ml-[50px] p-3 border-2 border-ve-collab-blue/25 rounded-lg">
                             <div className="flex items-center">
                                 <AuthenticatedImage
-                                    imageId={sharedPost.author.profile_pic}
+                                    imageId={postToRepost.author.profile_pic}
                                     alt={'Benutzerbild'}
                                     width={40}
                                     height={40}
                                     className="rounded-full mr-3"
                                 ></AuthenticatedImage>
                                 <div className="flex flex-col">
-                                    <div className='font-bold'>{sharedPost.author.username}</div>
-                                    <SmallTimestamp timestamp={sharedPost.creation_date} className='text-xs text-gray-500' />
+                                    <div className='font-bold'>{postToRepost.author.username}</div>
+                                    <SmallTimestamp timestamp={postToRepost.creation_date} className='text-xs text-gray-500' />
                                 </div>
                                 <button onClick={onCancelRepost} className="ml-auto self-start">
                                     <IoMdClose />
                                 </button>
                             </div>
-                            <div className='mt-5'>{sharedPost.text}</div>
+                            <div className='mt-5'>{postToRepost.text}</div>
                         </div>
                     ) : ( <></> )
                 }
 
                 <div className="flex justify-end">
-                    <button className={`${!post ? "hidden" : ""} mx-4 py-2 px-5 border border-ve-collab-orange rounded-lg`} title="Abbrechen" onClick={onCancel}>
+                    <button className={`${!postToEdit ? "hidden" : ""} mx-4 py-2 px-5 border border-ve-collab-orange rounded-lg`} title="Abbrechen" onClick={onCancel}>
                         Abbrechen
                     </button>
                     <button className="flex items-center bg-ve-collab-orange text-white py-2 px-5 rounded-lg" type='submit' title="Senden">
-                        <IoIosSend className="mx-2" />{post ? ( <>Aktualisieren</> ) : ( <>Senden</> )}
+                        <IoIosSend className="mx-2" />{postToEdit ? ( <>Aktualisieren</> ) : ( <>Senden</> )}
                     </button>
                 </div>
             </form>
