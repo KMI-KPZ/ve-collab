@@ -137,7 +137,7 @@ export default function Partners() {
                 };
             }
         });
-        
+
         // sanity check: if the author (i.e. creator of the plan) was not
         // manually added as a partner by the users, add their formal conditions
         // entry nonetheless, because otherwise he would not be included on the
@@ -223,14 +223,14 @@ export default function Partners() {
                     >
                         <div>
                             <div className="flex">
-                                <div className={'text-center font-bold text-4xl mb-2'}>
+                                <div className={'text-center font-bold text-4xl mb-2 relative'}>
                                     Wer ist am Projekt beteiligt?
+                                    <Tooltip tooltipsText="Tipps für die Partnersuche findest du hier in den Selbstlernmaterialien …">
+                                        <Link target="_blank" href={'/content'}>
+                                            <FiInfo size={30} color="#00748f" />
+                                        </Link>
+                                    </Tooltip>
                                 </div>
-                                <Tooltip tooltipsText="Tipps für die Partnersuche findest du hier in den Selbstlernmaterialien …">
-                                    <Link target="_blank" href={'/content'}>
-                                        <FiInfo size={30} />
-                                    </Link>
-                                </Tooltip>
                             </div>
                             <div className={'text-center mb-20'}>optional</div>
                             {partners.map((partner, index) => (

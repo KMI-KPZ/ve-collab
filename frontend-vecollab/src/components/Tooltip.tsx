@@ -7,7 +7,7 @@ interface Props {
 
 export const Tooltip = ({ children, tooltipsText }: Props) => {
     return (
-        <div className="px-4">
+        <div className="px-4 absolute top-0 left-full">
             <div className="group relative inline-block">
                 <div className="inline-flex rounded bg-primary px-[18px] py-2 text-base font-semibold">
                     {children}
