@@ -225,9 +225,9 @@ export default function TimelinePost(
 
             <div className={`${wbRemoved ? "opacity-0 transition-opacity ease-in-out delay-50 duration-300" : "opacity-100 transition-none" } p-4 my-8 bg-white rounded shadow`}>
                 <div className="flex items-center">
-                    {post.isRepost ? (
+                    {(post.isRepost && post.repostAuthor) ? (
                         <>
-                            {PostAuthor(post.repostAuthorProfilePic as string, post.repostAuthor as string, post.creation_date)}
+                            {PostAuthor(post.repostAuthor.profile_pic, post.repostAuthor.username, post.creation_date)}
                             <div className='self-start leading-[1.6rem] text-xs text-gray-500 ml-1'>
                                 teilte einen Beitrag
                             </div>

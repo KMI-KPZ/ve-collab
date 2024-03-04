@@ -94,7 +94,6 @@ export interface BackendPost {
 
     isRepost?: boolean;
     originalCreationDate?: string;
-    repostAuthor?: string;
-    repostAuthorProfilePic?: string;
+    repostAuthor?: BackendPostAuthor;
     repostText?: string;
 }
