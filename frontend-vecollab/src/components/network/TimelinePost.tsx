@@ -7,7 +7,7 @@ import { IoIosSend } from "react-icons/io";
 import Dropdown from "../Dropdown";
 import { BackendPost, BackendPostAuthor, BackendPostComment, BackendSpace } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
-import { MdDeleteOutline, MdModeEdit, MdOutlineAddComment, MdThumbUp } from "react-icons/md";
+import { MdDeleteOutline, MdModeEdit, MdOutlineAddComment, MdOutlineKeyboardDoubleArrowDown, MdThumbUp } from "react-icons/md";
 import { TiArrowForward } from "react-icons/ti";
 import TimelinePostForm from "./TimelinePostForm";
 import PostHeader from "./PostHeader";
@@ -36,13 +36,14 @@ export default function TimelinePost(
     const { data: session } = useSession();
     const [wbRemoved, setWbRemoved] = useState<boolean>(false)
     const ref = useRef<any>(null)
+    const [repostExpand, setRepostExpand] = useState<boolean>(false)
     const [showCommentForm, setShowCommentForm] = useState<boolean>(false)
     const [comments, setComments] = useState<BackendPostComment[]>([])
     const [likeIt, setLikeIt] = useState<boolean>(false)
     const [likers, setLikers] = useState<string[]>([])
     const [editPost, setEditPost] = useState<boolean>(false)
 
-    // reverse comments order
+    // reverse comments order, set likers, calc repost-size
     useEffect(() => {
         const newComments = [...post.comments];
         newComments.reverse()
@@ -50,7 +51,14 @@ export default function TimelinePost(
 
         setLikeIt(post.likers.includes(session?.user.preferred_username as string))
         setLikers(post.likers)
-    }, [post]);
+
+
+        if (ref.current && post.isRepost) {
+            // TODO update on resize window ?!
+            const repostEl = ref.current.querySelector(".repost-text")
+            setRepostExpand( repostEl.scrollHeight <= repostEl.clientHeight )
+        }
+    }, [post, ref]);
 
     // implement infinity scroll (detect intersection of window viewport with last post)
     useEffect(() => {
@@ -191,7 +199,7 @@ export default function TimelinePost(
         else hoverMsg += `${likers.slice(0, 3).join(", ")} and others`
 
         return (
-            <span className="hover:cursor-pointer text-sm" title={hoverMsg}>
+            <span className="hover:cursor-pointer text-sm mr-3" title={hoverMsg}>
                 <MdThumbUp className="inline" /> {likers.length}
             </span>
         )
@@ -257,7 +265,13 @@ export default function TimelinePost(
                             <div className="flex items-center">
                                 <PostHeader author={post.repostAuthor as BackendPostAuthor} date={post.originalCreationDate as string} />
                             </div>
-                            <div className='mt-5'>{post.text}</div>
+                            <div className={`${repostExpand ? "" : "max-h-40 overflow-hidden"} mt-5 whitespace-break-spaces relative repost-text`}>
+                                {post.text}
+                                <span className={`${repostExpand ? "hidden" : ""} absolute left-0 bottom-0 w-full h-20 bg-gradient-to-b from-transparent to-white`}>
+                                    <button className="absolute bottom-0 left-10 p-1" onClick={() => setRepostExpand(true)} title="Click to expand"><MdOutlineKeyboardDoubleArrowDown />
+</button>
+                                </span>
+                            </div>
                         </div>
                     </>
                 )}
@@ -268,7 +282,7 @@ export default function TimelinePost(
 
                 <Likes />
                 {(comments.length == 0 && !showCommentForm) && (
-                    <button onClick={() => {setShowCommentForm(!showCommentForm)}} title="Add comment" className="m-3 align-middle">
+                    <button onClick={() => {setShowCommentForm(!showCommentForm)}} title="Add comment" className="align-middle">
                         <MdOutlineAddComment />
                     </button>
                 )}
