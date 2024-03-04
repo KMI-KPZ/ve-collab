@@ -4,12 +4,10 @@ import { HiHeart, HiOutlineCalendar, HiOutlineHeart, HiOutlineShare } from "reac
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { IoIosSend } from "react-icons/io";
-import AuthenticatedImage from "../AuthenticatedImage";
-import SmallTimestamp from "../SmallTimestamp";
 import Dropdown from "../Dropdown";
 import { BackendPost, BackendPostComment, BackendSpace } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
-import { MdDeleteOutline, MdModeEdit } from "react-icons/md";
+import { MdDeleteOutline, MdModeEdit, MdThumbUp } from "react-icons/md";
 import TimelinePostForm from "./TimelinePostForm";
 import PostHeader from "./PostHeader";
 
@@ -37,9 +35,9 @@ export default function TimelinePost(
     const { data: session } = useSession();
     const [wbRemoved, setWbRemoved] = useState<boolean>(false)
     const ref = useRef<HTMLFormElement>(null)
-    const [likeIt, setLikeIt] = useState<boolean>(post.likers.includes(session?.user.preferred_username as string))
-    const [comments, setComments] = useState<BackendPostComment[]>(post.comments)
-    const [likers, setLikers] = useState<string[]>(post.likers)
+    const [comments, setComments] = useState<BackendPostComment[]>([])
+    const [likeIt, setLikeIt] = useState<boolean>(false)
+    const [likers, setLikers] = useState<string[]>([])
     const [editPost, setEditPost] = useState<boolean>(false)
 
     // reverse comments order
@@ -47,6 +45,9 @@ export default function TimelinePost(
         const newComments = [...post.comments];
         newComments.reverse()
         setComments(newComments);
+
+        setLikeIt(post.likers.includes(session?.user.preferred_username as string))
+        setLikers(post.likers)
     }, [post]);
 
     // implement infinity scroll (detect intersection of window viewport with last post)
@@ -178,6 +179,26 @@ export default function TimelinePost(
         )
     }
 
+    const Likes = () => {
+        if (!likers.length) return ( <></> )
+
+        let hoverMsg = "By "
+        if (likers.length == 1) hoverMsg += `${likers[0]}`
+        else if (likers.length == 2) hoverMsg += `${likers[0]} and ${likers[1]}`
+        else if (likers.length == 3) hoverMsg += `${likers.slice(0, 2).join(", ")} and ${likers[2]}`
+        else hoverMsg += `${likers.slice(0, 3).join(", ")} and others`
+
+        return (
+            <>
+                <div className='my-5 text-sm' >
+                    <span className="hover:cursor-pointer" title={hoverMsg}>
+                        <MdThumbUp className="inline" /> {likers.length}
+                    </span>
+                </div>
+            </>
+        )
+    }
+
     let drOptions = []
     if (
         (!post.isRepost && post.author.username == session?.user.preferred_username)
@@ -250,14 +271,7 @@ export default function TimelinePost(
                     </div>
                  )}
 
-                {likers.length ? (
-                    <div className='my-5 text-sm'>
-                        <span>Liked by </span>
-                        {likers.map((liker, li) => (
-                            <span className="font-bold" key={li}>{likers[li]}</span>
-                        ))}
-                    </div>
-                ) : ( <></> )}
+                <Likes />
 
                 <div>
                     <form onSubmit={onSubmitCommentForm} ref={ref}>
