@@ -908,7 +908,10 @@ class SpaceACLHandlerTest(BaseApiTestCase):
         """
 
         response = self.base_checks(
-            "GET", "/space_acl/get_all?space={}".format(str(self.test_space_id)), True, 200
+            "GET",
+            "/space_acl/get_all?space={}".format(str(self.test_space_id)),
+            True,
+            200,
         )
 
         # for quality checks, convert the id to ObjectId
@@ -926,7 +929,7 @@ class SpaceACLHandlerTest(BaseApiTestCase):
         expect: fail message because space doesnt exist
         """
 
-        # explicitely switch to user mode for this test, 
+        # explicitely switch to user mode for this test,
         # because space existence is only checked if user is not global admin (--> might be space admin)
         options.test_admin = False
         options.test_user = True
@@ -950,7 +953,10 @@ class SpaceACLHandlerTest(BaseApiTestCase):
         options.test_user = True
 
         response = self.base_checks(
-            "GET", "/space_acl/get_all?space={}".format(str(self.test_space_id)), False, 403
+            "GET",
+            "/space_acl/get_all?space={}".format(str(self.test_space_id)),
+            False,
+            403,
         )
 
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
@@ -996,7 +1002,7 @@ class SpaceACLHandlerTest(BaseApiTestCase):
         options.test_admin = False
         options.test_user = True
 
-        # have to include the update payload here, 
+        # have to include the update payload here,
         # because acl checks for space admin, therefore space has to be included
         updated_acl_entry = {
             "username": CURRENT_USER.username,
@@ -1264,7 +1270,37 @@ class PostHandlerTest(BaseApiTestCase):
         self.assertEqual(ObjectId(response["inserted_post"]["_id"]), db_state["_id"])
         self.assertEqual(response["inserted_post"]["text"], db_state["text"])
         self.assertEqual(response["inserted_post"]["tags"], db_state["tags"])
-        self.assertEqual(response["inserted_post"]["author"], db_state["author"])
+        # the author has enhanced profile information to check for
+        self.assertIn("author", response["inserted_post"])
+        self.assertIn("username", response["inserted_post"]["author"])
+        self.assertIn("first_name", response["inserted_post"]["author"])
+        self.assertIn("last_name", response["inserted_post"]["author"])
+        self.assertIn("profile_pic", response["inserted_post"]["author"])
+        self.assertIn("institution", response["inserted_post"]["author"])
+        db_author_profile = self.db.profiles.find_one(
+            {"username": CURRENT_ADMIN.username}
+        )
+        self.assertEqual(
+            response["inserted_post"]["author"]["username"],
+            db_author_profile["username"],
+        )
+        self.assertEqual(
+            response["inserted_post"]["author"]["first_name"],
+            db_author_profile["first_name"],
+        )
+        self.assertEqual(
+            response["inserted_post"]["author"]["last_name"],
+            db_author_profile["last_name"],
+        )
+        self.assertEqual(
+            response["inserted_post"]["author"]["profile_pic"],
+            db_author_profile["profile_pic"],
+        )
+        self.assertEqual(
+            response["inserted_post"]["author"]["institution"],
+            db_author_profile["institution"],
+        )
+
         # for some odd reason, the ms in the timestamps jitter
         self.assertAlmostEqual(
             datetime.fromisoformat(response["inserted_post"]["creation_date"]),
@@ -1828,7 +1864,8 @@ class PostHandlerTest(BaseApiTestCase):
 
         # add test_user to space admins for this test
         self.db.spaces.update_one(
-            {"_id": self.test_space_id}, {"$addToSet": {"admins": CURRENT_USER.username}}
+            {"_id": self.test_space_id},
+            {"$addToSet": {"admins": CURRENT_USER.username}},
         )
 
         # manually insert test post (into space this time)
@@ -2025,7 +2062,42 @@ class CommentHandlerTest(BaseApiTestCase):
 
         request = {"post_id": str(self.post_oid), "text": "test_comment"}
 
-        self.base_checks("POST", "/comment", True, 200, body=request)
+        response = self.base_checks("POST", "/comment", True, 200, body=request)
+
+        # expect the inserted comment to be in the response
+        self.assertIn("inserted_comment", response)
+        self.assertEqual(response["inserted_comment"]["text"], request["text"])
+
+        # expect the author of the comment to be enhanced with profile information
+        self.assertIn("author", response["inserted_comment"])
+        self.assertIn("username", response["inserted_comment"]["author"])
+        self.assertIn("first_name", response["inserted_comment"]["author"])
+        self.assertIn("last_name", response["inserted_comment"]["author"])
+        self.assertIn("profile_pic", response["inserted_comment"]["author"])
+        self.assertIn("institution", response["inserted_comment"]["author"])
+        db_author_profile = self.db.profiles.find_one(
+            {"username": CURRENT_ADMIN.username}
+        )
+        self.assertEqual(
+            response["inserted_comment"]["author"]["username"],
+            db_author_profile["username"],
+        )
+        self.assertEqual(
+            response["inserted_comment"]["author"]["first_name"],
+            db_author_profile["first_name"],
+        )
+        self.assertEqual(
+            response["inserted_comment"]["author"]["last_name"],
+            db_author_profile["last_name"],
+        )
+        self.assertEqual(
+            response["inserted_comment"]["author"]["profile_pic"],
+            db_author_profile["profile_pic"],
+        )
+        self.assertEqual(
+            response["inserted_comment"]["author"]["institution"],
+            db_author_profile["institution"],
+        )
 
         db_state = self.db.posts.find_one({"_id": self.post_oid})
 
@@ -2213,7 +2285,8 @@ class CommentHandlerTest(BaseApiTestCase):
 
         # grant the user space admin permissions
         self.db.spaces.update_one(
-            {"_id": self.test_space_id}, {"$addToSet": {"admins": CURRENT_USER.username}}
+            {"_id": self.test_space_id},
+            {"$addToSet": {"admins": CURRENT_USER.username}},
         )
 
         comment_id = ObjectId()
@@ -2485,9 +2558,74 @@ class RepostHandlerTest(BaseApiTestCase):
 
         request = {"post_id": str(self.post_oid), "text": "test_repost", "space": None}
 
-        self.base_checks("POST", "/repost", True, 200, body=request)
+        response = self.base_checks("POST", "/repost", True, 200, body=request)
 
-        db_state = self.db.posts.find_one({"repostText": request["text"]})
+        # expect the repost to be in the response
+        self.assertIn("inserted_repost", response)
+        self.assertEqual(response["inserted_repost"]["repostText"], request["text"])
+        self.assertEqual(response["inserted_repost"]["isRepost"], True)
+        self.assertIn("originalCreationDate", response["inserted_repost"])
+        self.assertIn("creation_date", response["inserted_repost"])
+        self.assertEqual(response["inserted_repost"]["space"], None)
+
+        # expect the author and repostAuther to be enhanced with profile information
+        self.assertIn("author", response["inserted_repost"])
+        self.assertIn("username", response["inserted_repost"]["author"])
+        self.assertIn("first_name", response["inserted_repost"]["author"])
+        self.assertIn("last_name", response["inserted_repost"]["author"])
+        self.assertIn("profile_pic", response["inserted_repost"]["author"])
+        self.assertIn("institution", response["inserted_repost"]["author"])
+        db_author_profile = self.db.profiles.find_one(
+            {"username": CURRENT_ADMIN.username}
+        )
+        self.assertEqual(
+            response["inserted_repost"]["author"]["username"],
+            db_author_profile["username"],
+        )
+        self.assertEqual(
+            response["inserted_repost"]["author"]["first_name"],
+            db_author_profile["first_name"],
+        )
+        self.assertEqual(
+            response["inserted_repost"]["author"]["last_name"],
+            db_author_profile["last_name"],
+        )
+        self.assertEqual(
+            response["inserted_repost"]["author"]["profile_pic"],
+            db_author_profile["profile_pic"],
+        )
+        self.assertEqual(
+            response["inserted_repost"]["author"]["institution"],
+            db_author_profile["institution"],
+        )
+        self.assertIn("repostAuthor", response["inserted_repost"])
+        self.assertIn("username", response["inserted_repost"]["repostAuthor"])
+        self.assertIn("first_name", response["inserted_repost"]["repostAuthor"])
+        self.assertIn("last_name", response["inserted_repost"]["repostAuthor"])
+        self.assertIn("profile_pic", response["inserted_repost"]["repostAuthor"])
+        self.assertIn("institution", response["inserted_repost"]["repostAuthor"])
+        self.assertEqual(
+            response["inserted_repost"]["repostAuthor"]["username"],
+            db_author_profile["username"],
+        )
+        self.assertEqual(
+            response["inserted_repost"]["repostAuthor"]["first_name"],
+            db_author_profile["first_name"],
+        )
+        self.assertEqual(
+            response["inserted_repost"]["repostAuthor"]["last_name"],
+            db_author_profile["last_name"],
+        )
+        self.assertEqual(
+            response["inserted_repost"]["repostAuthor"]["profile_pic"],
+            db_author_profile["profile_pic"],
+        )
+        self.assertEqual(
+            response["inserted_repost"]["repostAuthor"]["institution"],
+            db_author_profile["institution"],
+        )
+
+        db_state = self.db.posts.find_one({"_id": ObjectId(response["inserted_repost"]["_id"])})
         self.assertNotEqual(db_state, None)
 
     def test_post_create_repost_space(self):
@@ -3976,7 +4114,9 @@ class SpaceHandlerTest(BaseApiTestCase):
         )
         self.assertIn("pending_requests", response)
         self.assertEqual(len(response["pending_requests"]), 1)
-        self.assertEqual(str(self.test_space_id), response["pending_requests"][0]["_id"])
+        self.assertEqual(
+            str(self.test_space_id), response["pending_requests"][0]["_id"]
+        )
 
     def test_get_space_join_requests_global_admin(self):
         """
@@ -4319,7 +4459,9 @@ class SpaceHandlerTest(BaseApiTestCase):
         self.assertIn(CURRENT_ADMIN.username, db_state["admins"])
 
         # expect space_acl roles to be created
-        space_acl_records = list(self.db.space_acl.find({"space": ObjectId(response["space_id"])}))
+        space_acl_records = list(
+            self.db.space_acl.find({"space": ObjectId(response["space_id"])})
+        )
         self.assertEqual((len(space_acl_records)), 1)
         self.assertEqual(space_acl_records[0]["username"], CURRENT_ADMIN.username)
 
@@ -4679,7 +4821,9 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "POST",
-            "/spaceadministration/space_information?id={}".format(str(self.test_space_id)),
+            "/spaceadministration/space_information?id={}".format(
+                str(self.test_space_id)
+            ),
             True,
             200,
             body=request_json,
@@ -4701,7 +4845,9 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "POST",
-            "/spaceadministration/space_information?id={}".format(str(self.test_space_id)),
+            "/spaceadministration/space_information?id={}".format(
+                str(self.test_space_id)
+            ),
             True,
             200,
             body=request_json2,
@@ -4734,7 +4880,9 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "POST",
-            "/spaceadministration/space_information?id={}".format(str(self.test_space_id)),
+            "/spaceadministration/space_information?id={}".format(
+                str(self.test_space_id)
+            ),
             True,
             200,
             body=request_json,
@@ -4756,7 +4904,9 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "POST",
-            "/spaceadministration/space_information?id={}".format(str(self.test_space_id)),
+            "/spaceadministration/space_information?id={}".format(
+                str(self.test_space_id)
+            ),
             True,
             200,
             body=request_json2,
@@ -4780,9 +4930,7 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/space_information?id={}".format(
-                ObjectId()
-            ),
+            "/spaceadministration/space_information?id={}".format(ObjectId()),
             False,
             409,
             body=request_json,
@@ -5763,7 +5911,9 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "POST",
-            "/spaceadministration/toggle_visibility?id={}".format(str(self.test_space_id)),
+            "/spaceadministration/toggle_visibility?id={}".format(
+                str(self.test_space_id)
+            ),
             True,
             200,
         )
@@ -5775,7 +5925,9 @@ class SpaceHandlerTest(BaseApiTestCase):
         visibility = not visibility
         self.base_checks(
             "POST",
-            "/spaceadministration/toggle_visibility?id={}".format(str(self.test_space_id)),
+            "/spaceadministration/toggle_visibility?id={}".format(
+                str(self.test_space_id)
+            ),
             True,
             200,
         )
@@ -5809,7 +5961,9 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "POST",
-            "/spaceadministration/toggle_visibility?id={}".format(str(self.test_space_id)),
+            "/spaceadministration/toggle_visibility?id={}".format(
+                str(self.test_space_id)
+            ),
             True,
             200,
         )
@@ -5821,7 +5975,9 @@ class SpaceHandlerTest(BaseApiTestCase):
         visibility = not visibility
         self.base_checks(
             "POST",
-            "/spaceadministration/toggle_visibility?id={}".format(str(self.test_space_id)),
+            "/spaceadministration/toggle_visibility?id={}".format(
+                str(self.test_space_id)
+            ),
             True,
             200,
         )
@@ -5840,7 +5996,9 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/toggle_visibility?id={}".format(str(self.test_space_id)),
+            "/spaceadministration/toggle_visibility?id={}".format(
+                str(self.test_space_id)
+            ),
             False,
             403,
         )
@@ -5868,7 +6026,9 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "POST",
-            "/spaceadministration/toggle_joinability?id={}".format(str(self.test_space_id)),
+            "/spaceadministration/toggle_joinability?id={}".format(
+                str(self.test_space_id)
+            ),
             True,
             200,
         )
@@ -5880,7 +6040,9 @@ class SpaceHandlerTest(BaseApiTestCase):
         joinability = not joinability
         self.base_checks(
             "POST",
-            "/spaceadministration/toggle_joinability?id={}".format(str(self.test_space_id)),
+            "/spaceadministration/toggle_joinability?id={}".format(
+                str(self.test_space_id)
+            ),
             True,
             200,
         )
@@ -5914,7 +6076,9 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         self.base_checks(
             "POST",
-            "/spaceadministration/toggle_joinability?id={}".format(str(self.test_space_id)),
+            "/spaceadministration/toggle_joinability?id={}".format(
+                str(self.test_space_id)
+            ),
             True,
             200,
         )
@@ -5926,7 +6090,9 @@ class SpaceHandlerTest(BaseApiTestCase):
         joinability = not joinability
         self.base_checks(
             "POST",
-            "/spaceadministration/toggle_joinability?id={}".format(str(self.test_space_id)),
+            "/spaceadministration/toggle_joinability?id={}".format(
+                str(self.test_space_id)
+            ),
             True,
             200,
         )
@@ -5945,7 +6111,9 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks(
             "POST",
-            "/spaceadministration/toggle_joinability?id={}".format(str(self.test_space_id)),
+            "/spaceadministration/toggle_joinability?id={}".format(
+                str(self.test_space_id)
+            ),
             False,
             403,
         )
@@ -6864,10 +7032,13 @@ class TimelineHandlerTest(BaseApiTestCase):
 
     def assert_author_enhanced(self, posts: List[dict]):
         for post in posts:
-            # expect author to be enhanced with profile pic
+            # expect author to be enhanced with profile details
             self.assertIn("author", post)
             self.assertIn("username", post["author"])
             self.assertIn("profile_pic", post["author"])
+            self.assertIn("first_name", post["author"])
+            self.assertIn("last_name", post["author"])
+            self.assertIn("institution", post["author"])
 
             # admin has a profile pic set,
             # therefore expect his pic to not be the default one
