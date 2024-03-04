@@ -35,7 +35,7 @@ export default function TimelinePost(
 }: Props) {
     const { data: session } = useSession();
     const [wbRemoved, setWbRemoved] = useState<boolean>(false)
-    const ref = useRef<HTMLFormElement>(null)
+    const ref = useRef<any>(null)
     const [showCommentForm, setShowCommentForm] = useState<boolean>(false)
     const [comments, setComments] = useState<BackendPostComment[]>([])
     const [likeIt, setLikeIt] = useState<boolean>(false)
@@ -217,7 +217,7 @@ export default function TimelinePost(
                 </div>
             </div> */}
 
-            <div className={`${wbRemoved ? "opacity-0 transition-opacity ease-in-out delay-50 duration-300" : "opacity-100 transition-none" } p-4 my-8 bg-white rounded shadow`}>
+            <div ref={ref} className={`${wbRemoved ? "opacity-0 transition-opacity ease-in-out delay-50 duration-300" : "opacity-100 transition-none" } p-4 my-8 bg-white rounded shadow`}>
                 <div className="flex items-center">
                     {(post.isRepost && post.repostAuthor) ? (
                         <>
@@ -280,7 +280,7 @@ export default function TimelinePost(
                             Kommentare
                         </div>
 
-                        <form onSubmit={onSubmitCommentForm} ref={ref}>
+                        <form onSubmit={onSubmitCommentForm}>
                             <input
                                 className={'border border-[#cccccc] rounded-md px-2 py-[6px]'}
                                 type="text"
