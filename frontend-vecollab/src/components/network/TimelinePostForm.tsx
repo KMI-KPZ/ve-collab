@@ -5,7 +5,7 @@ import { IoIosSend, IoMdClose } from "react-icons/io";
 import AuthenticatedImage from "../AuthenticatedImage";
 import { BackendPost } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
-import SmallTimestamp from "../SmallTimestamp";
+import PostHeader from "./PostHeader";
 
 interface Props {
     post?: BackendPost | undefined;
@@ -100,13 +100,15 @@ export default function TimelinePostForm(
         <>
             <form onSubmit={onSubmit} ref={ref}>
                 <div className="flex items-center mb-5">
-                    <AuthenticatedImage
-                        imageId={"default_profile_pic.jpg"}
-                        alt={'Benutzerbild'}
-                        width={40}
-                        height={40}
-                        className={`${postToEdit ? "hidden" : ""} rounded-full mr-3`}
-                    ></AuthenticatedImage>
+                    {!postToEdit ? (
+                        <AuthenticatedImage
+                            imageId={"default_profile_pic.jpg"}
+                            alt={'Benutzerbild'}
+                            width={40}
+                            height={40}
+                            className={`rounded-full mr-3`}
+                        ></AuthenticatedImage>
+                    ) : ( <></>)}
                     <textarea
                         className={'w-full border border-[#cccccc] rounded-md px-2 py-2'}
                         placeholder={'Beitrag schreiben ...'}
@@ -119,17 +121,7 @@ export default function TimelinePostForm(
                     ? (
                         <div className="my-5 ml-[50px] p-3 border-2 border-ve-collab-blue/25 rounded-lg">
                             <div className="flex items-center">
-                                <AuthenticatedImage
-                                    imageId={postToRepost.author.profile_pic}
-                                    alt={'Benutzerbild'}
-                                    width={40}
-                                    height={40}
-                                    className="rounded-full mr-3"
-                                ></AuthenticatedImage>
-                                <div className="flex flex-col">
-                                    <div className='font-bold'>{postToRepost.author.username}</div>
-                                    <SmallTimestamp timestamp={postToRepost.creation_date} className='text-xs text-gray-500' />
-                                </div>
+                                <PostHeader author={postToRepost.author} date={postToRepost.creation_date} />
                                 <button onClick={onCancelRepost} className="ml-auto self-start">
                                     <IoMdClose />
                                 </button>

@@ -69,6 +69,8 @@ export interface BackendSpaceACLEntry {
 export interface BackendPostAuthor {
     username: string;
     profile_pic: string;
+    first_name: string;
+    last_name: string;
 }
 
 export interface BackendPostComment {

@@ -11,6 +11,7 @@ import { BackendPost, BackendPostComment, BackendSpace } from "@/interfaces/api/
 import { useRef } from 'react'
 import { MdDeleteOutline, MdModeEdit } from "react-icons/md";
 import TimelinePostForm from "./TimelinePostForm";
+import PostHeader from "./PostHeader";
 
 interface Props {
     post: BackendPost
@@ -168,22 +169,6 @@ export default function TimelinePost(
         return ( <>{ space?.name }</> )
     }
 
-    const PostAuthor = (imageId: string, authorName: string, date: string) => (
-        <>
-            <AuthenticatedImage
-                imageId={imageId}
-                alt={'Benutzerbild'}
-                width={40}
-                height={40}
-                className="rounded-full mr-3"
-            ></AuthenticatedImage>
-            <div className="flex flex-col">
-                <div className='font-bold'>{authorName}</div>
-                <SmallTimestamp timestamp={date} className='text-xs text-gray-500' />
-            </div>
-        </>
-    )
-
     const PostText = () => {
         if (editPost) return (
             <TimelinePostForm
@@ -227,14 +212,14 @@ export default function TimelinePost(
                 <div className="flex items-center">
                     {(post.isRepost && post.repostAuthor) ? (
                         <>
-                            {PostAuthor(post.repostAuthor.profile_pic, post.repostAuthor.username, post.creation_date)}
+                            <PostHeader author={post.repostAuthor} date={post.creation_date} />
                             <div className='self-start leading-[1.6rem] text-xs text-gray-500 ml-1'>
                                 teilte einen Beitrag
                             </div>
                         </>
                     ) : (
                         <>
-                            {PostAuthor(post.author.profile_pic, post.author.username, post.creation_date)}
+                            <PostHeader author={post.author} date={post.creation_date} />
                         </>
                      )}
 
@@ -264,7 +249,7 @@ export default function TimelinePost(
                         </div>
                         <div className="my-5 ml-5 p-5 border-2 border-ve-collab-blue/25 rounded-lg">
                             <div className="flex items-center">
-                                {PostAuthor(post.author.profile_pic, post.author.username, post.creation_date)}
+                                <PostHeader author={post.author} date={post.creation_date} />
                             </div>
                             <div className='mt-5'>{post.text}</div>
                         </div>
@@ -304,7 +289,7 @@ export default function TimelinePost(
                         {comments.map((comment, ci) => (
                             <div key={ci}>
                                 <div className="flex items-center">
-                                    {PostAuthor(comment.author.profile_pic, comment.author.username, comment.creation_date)}
+                                <PostHeader author={comment.author} date={comment.creation_date} />
                                 </div>
                                 <div className='my-5'>{comment.text}</div>
                             </div>
