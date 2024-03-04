@@ -154,12 +154,12 @@ export default function TimelinePost(
     }
 
     const updatePost = (newText: string) => {
-            if (post.isRepost) {
-                post.repostText = newText
-            } else {
-                post.text = newText
-            }
-            setEditPost(false)
+        if (post.isRepost) {
+            post.repostText = newText
+        } else {
+            post.text = newText
+        }
+        setEditPost(false)
     }
 
     const SpacenameById = (spaceId: string) => {
