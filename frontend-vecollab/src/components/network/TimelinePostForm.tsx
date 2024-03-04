@@ -15,7 +15,6 @@ interface Props {
     onCancelRepost?: MouseEventHandler;
     onUpdatedPost?: (text: string) => void
     onCreatedPost?: (post: BackendPost) => void
-    onCreatedRepost?: (post: BackendPost) => void
 }
 
 TimelinePostForm.auth = true
@@ -27,7 +26,6 @@ export default function TimelinePostForm(
     onCancelForm,
     onCancelRepost,
     onCreatedPost,
-    onCreatedRepost,
     onUpdatedPost,
 }: Props) {
     const { data: session } = useSession();
@@ -61,9 +59,7 @@ export default function TimelinePostForm(
         }
 
         const rePost = async () => {
-            console.log('repost', {sharedPost: postToRepost, post: postToEdit});
-
-            return await fetchPOST(
+            const res = await fetchPOST(
                 '/repost',
                 Object.assign({},
                     {
@@ -74,18 +70,18 @@ export default function TimelinePostForm(
                 ),
                 session?.accessToken
             )
+            return res
         }
 
         try {
-            const res = await postToRepost
-                ? rePost()
-                : createOrUpdatePost()
+            const res = postToRepost
+                ? await rePost()
+                : await createOrUpdatePost()
 
             ref.current?.reset()
             if (postToEdit && onUpdatedPost) onUpdatedPost(text)
-            // if (postToRepost && onCreatedRepost) onCreatedRepost((await res).inserted_post)
-            // if (!postToEdit && !postToRepost && onCreatedPost) onCreatedPost((await res).inserted_post)
-            if (!postToEdit && onCreatedPost) onCreatedPost((await res).inserted_post)
+            if (!postToEdit && !postToRepost && onCreatedPost) onCreatedPost(res.inserted_post)
+            if (!postToEdit && postToRepost && onCreatedPost) onCreatedPost(res.inserted_repost)
         } catch (error) {
             console.error(error);
         }
@@ -121,12 +117,18 @@ export default function TimelinePostForm(
                     ? (
                         <div className="my-5 ml-[50px] p-3 border-2 border-ve-collab-blue/25 rounded-lg">
                             <div className="flex items-center">
-                                <PostHeader author={postToRepost.author} date={postToRepost.creation_date} />
+                                {postToRepost.isRepost
+                                    ? ( <PostHeader author={postToRepost.repostAuthor} date={postToRepost.creation_date} /> )
+                                    : ( <PostHeader author={postToRepost.author} date={postToRepost.creation_date} /> )
+                                }
                                 <button onClick={onCancelRepost} className="ml-auto self-start">
                                     <IoMdClose />
                                 </button>
                             </div>
-                            <div className='mt-5'>{postToRepost.text}</div>
+                            {postToRepost.isRepost
+                                ? ( <div className='mt-5'>{postToRepost.repostText}</div> )
+                                : ( <div className='mt-5'>{postToRepost.text}</div> )
+                            }
                         </div>
                     ) : ( <></> )
                 }

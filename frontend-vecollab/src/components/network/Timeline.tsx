@@ -59,10 +59,8 @@ export default function Timeline({ space }: Props) {
     }
 
     const afterCreatePost = (post: BackendPost) => {
-        console.log('TODO: after created re-post ', {post});
-
-
         if (!post) return
+        if (post.isRepost) setSharedPost(null)
 
         // TODO may use mutate->populateCache instead ?!
         // https://github.com/KMI-KPZ/ve-collab/blob/a791a2ed9d68e71b6968488fe33dbf8bac000d4c/frontend-vecollab/src/components/network/Timeline.tsx

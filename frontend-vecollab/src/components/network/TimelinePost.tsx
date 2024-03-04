@@ -181,7 +181,7 @@ export default function TimelinePost(
     let drOptions = []
     if (
         (!post.isRepost && post.author.username == session?.user.preferred_username)
-        || post.isRepost && post.repostAuthor == session?.user.preferred_username
+        || post.isRepost && post.repostAuthor?.username == session?.user.preferred_username
     ) {
         drOptions.push(
             { value: 'remove', label: 'löschen', icon: <MdDeleteOutline /> },
@@ -237,9 +237,9 @@ export default function TimelinePost(
                         <div className='my-5'>
                             <PostText />
                         </div>
-                        <div className="my-5 ml-5 p-5 border-2 border-ve-collab-blue/25 rounded-lg">
+                        <div className="my-5 ml-5 p-5 border-2 border-ve-collab-blue/25 rounded">
                             <div className="flex items-center">
-                                <PostHeader author={post.author} date={post.creation_date} />
+                                <PostHeader author={post.repostAuthor} date={post.originalCreationDate} />
                             </div>
                             <div className='mt-5'>{post.text}</div>
                         </div>
