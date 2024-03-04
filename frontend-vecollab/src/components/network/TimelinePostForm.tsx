@@ -3,7 +3,7 @@ import { useSession } from "next-auth/react";
 import { FormEvent, MouseEventHandler, useEffect } from "react";
 import { IoIosSend, IoMdClose } from "react-icons/io";
 import AuthenticatedImage from "../AuthenticatedImage";
-import { BackendPost } from "@/interfaces/api/apiInterfaces";
+import { BackendPost, BackendPostAuthor } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
 import PostHeader from "./PostHeader";
 
@@ -96,7 +96,7 @@ export default function TimelinePostForm(
         <>
             <form onSubmit={onSubmit} ref={ref}>
                 <div className="flex items-center mb-5">
-                    {!postToEdit ? (
+                    {!postToEdit && (
                         <AuthenticatedImage
                             imageId={"default_profile_pic.jpg"}
                             alt={'Benutzerbild'}
@@ -104,7 +104,7 @@ export default function TimelinePostForm(
                             height={40}
                             className={`rounded-full mr-3`}
                         ></AuthenticatedImage>
-                    ) : ( <></>)}
+                    )}
                     <textarea
                         className={'w-full border border-[#cccccc] rounded-md px-2 py-2'}
                         placeholder={'Beitrag schreiben ...'}
@@ -113,25 +113,23 @@ export default function TimelinePostForm(
                     />
                 </div>
 
-                {postToRepost
-                    ? (
-                        <div className="my-5 ml-[50px] p-3 border-2 border-ve-collab-blue/25 rounded-lg">
-                            <div className="flex items-center">
-                                {postToRepost.isRepost
-                                    ? ( <PostHeader author={postToRepost.repostAuthor} date={postToRepost.creation_date} /> )
-                                    : ( <PostHeader author={postToRepost.author} date={postToRepost.creation_date} /> )
-                                }
-                                <button onClick={onCancelRepost} className="ml-auto self-start">
-                                    <IoMdClose />
-                                </button>
-                            </div>
+                {postToRepost && (
+                    <div className="my-5 ml-[50px] p-3 border-2 border-ve-collab-blue/25 rounded-lg">
+                        <div className="flex items-center">
                             {postToRepost.isRepost
-                                ? ( <div className='mt-5'>{postToRepost.repostText}</div> )
-                                : ( <div className='mt-5'>{postToRepost.text}</div> )
+                                ? ( <PostHeader author={postToRepost.repostAuthor as BackendPostAuthor} date={postToRepost.creation_date} /> )
+                                : ( <PostHeader author={postToRepost.author} date={postToRepost.creation_date} /> )
                             }
+                            <button onClick={onCancelRepost} className="ml-auto self-start">
+                                <IoMdClose />
+                            </button>
                         </div>
-                    ) : ( <></> )
-                }
+                        {postToRepost.isRepost
+                            ? ( <div className='mt-5'>{postToRepost.repostText}</div> )
+                            : ( <div className='mt-5'>{postToRepost.text}</div> )
+                        }
+                    </div>
+                )}
 
                 <div className="flex justify-end">
                     <button className={`${!postToEdit ? "hidden" : ""} mx-4 py-2 px-5 border border-ve-collab-orange rounded-lg`} title="Abbrechen" onClick={onCancel}>

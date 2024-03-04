@@ -86,7 +86,7 @@ export default function Timeline({ space }: Props) {
                     onCreatedPost={afterCreatePost}
                 />
             </div>
-            {!allPosts.length ? ( <div className="m-10 flex justify-center">Bisher keine Beiträge ...</div>) : (<></>)}
+            {allPosts.length == 0 && ( <div className="m-10 flex justify-center">Bisher keine Beiträge ...</div>)}
             {allPosts.map((post, i) =>
                 <TimelinePost key={i}
                     post={post}

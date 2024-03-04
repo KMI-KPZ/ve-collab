@@ -5,7 +5,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { IoIosSend } from "react-icons/io";
 import Dropdown from "../Dropdown";
-import { BackendPost, BackendPostComment, BackendSpace } from "@/interfaces/api/apiInterfaces";
+import { BackendPost, BackendPostAuthor, BackendPostComment, BackendSpace } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
 import { MdDeleteOutline, MdModeEdit, MdThumbUp } from "react-icons/md";
 import TimelinePostForm from "./TimelinePostForm";
@@ -234,11 +234,11 @@ export default function TimelinePost(
                         </>
                      )}
 
-                    {(!space && post.space) ? (
+                    {(!space && post.space) && (
                         <div className='self-start leading-[1.6rem] text-xs text-gray-500 ml-1'>
                             in der Gruppe <Link href={`/space/?id=${post.space}`} className="font-bold">{SpacenameById(post.space)}</Link>
                         </div>
-                    ) : ( <></> )}
+                    )}
 
                     <div className='ml-auto'>
                         {likeIt ? (
@@ -247,9 +247,9 @@ export default function TimelinePost(
                             <button className="p-2" onClick={onClickLikeBtn} title="Click to like post"><HiOutlineHeart /></button>
                         )}
                         <button className="p-2" onClick={onClickShareBtn} title="Click to share post"><HiOutlineShare /></button>
-                        {drOptions.length ? (
+                        {drOptions.length > 0 && (
                             <Dropdown options={drOptions} onSelect={handleSelectOption} />
-                        ) : ( <></> )}
+                        )}
                     </div>
                 </div>
 
@@ -260,7 +260,7 @@ export default function TimelinePost(
                         </div>
                         <div className="my-5 ml-5 p-5 border-2 border-ve-collab-blue/25 rounded">
                             <div className="flex items-center">
-                                <PostHeader author={post.repostAuthor} date={post.originalCreationDate} />
+                                <PostHeader author={post.repostAuthor as BackendPostAuthor} date={post.originalCreationDate as string} />
                             </div>
                             <div className='mt-5'>{post.text}</div>
                         </div>
@@ -286,7 +286,7 @@ export default function TimelinePost(
                     </form>
                 </div>
 
-                {comments.length ? (
+                {comments.length > 0 && (
                     <div className='mt-5 pt-5 pl-5 border-t-2 border-ve-collab-blue/25'>
                         <div className="-ml-5 mb-5">Kommentare</div>
 
@@ -299,7 +299,7 @@ export default function TimelinePost(
                             </div>
                         ))}
                     </div>
-                ) : ( <></> )}
+                )}
             </div>
         </>
     );
