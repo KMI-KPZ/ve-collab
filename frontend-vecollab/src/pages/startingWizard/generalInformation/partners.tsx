@@ -30,6 +30,7 @@ export default function Partners() {
     const router = useRouter();
 
     const [formalConditions, setFormalConditions] = useState<FormalConditionPartner[]>([]);
+    const [author, setAuthor] = useState<string>('');
     const [partners, setPartners] = useState<string[]>(['']);
     const [partnerProfileSnippets, setPartnerProfileSnippets] = useState<{
         [Key: string]: BackendUserSnippet;
@@ -88,6 +89,7 @@ export default function Partners() {
                     if (data.plan.formalities && Array.isArray(data.plan.formalities)) {
                         setFormalConditions(data.plan.formalities);
                     }
+                    setAuthor(data.plan.author);
                     setSteps(data.plan.steps);
                 }
             );
@@ -123,14 +125,39 @@ export default function Partners() {
                 return {
                     username: partner,
                     time: false,
-                    place: false,
+                    format: false,
+                    topic: false,
+                    goals: false,
+                    languages: false,
+                    media: false,
                     technicalEquipment: false,
+                    evaluation: false,
                     institutionalRequirements: false,
-                    examinationRegulations: false,
                     dataProtection: false,
                 };
             }
         });
+        
+        // sanity check: if the author (i.e. creator of the plan) was not
+        // manually added as a partner by the users, add their formal conditions
+        // entry nonetheless, because otherwise he would not be included on the
+        // formal conditions page, even though he has to fulfill them as well
+        if (!partners.includes(author)) {
+            updateFormalConditions.push({
+                username: author,
+                time: false,
+                format: false,
+                topic: false,
+                goals: false,
+                languages: false,
+                media: false,
+                technicalEquipment: false,
+                evaluation: false,
+                institutionalRequirements: false,
+                dataProtection: false,
+            });
+        }
+
         await fetchPOST(
             '/planner/update_fields',
             {
