@@ -69,10 +69,6 @@ export default function Timeline({ space, user }: Props) {
         setAllPosts((prev) => [post, ...prev]);
     }
 
-    if (isLoadingTimeline) {
-        return (<><LoadingAnimation /></>)
-    }
-
     if (error) {
         console.error(error);
         return (<>Error loading timeline. See console for details</>)
@@ -100,6 +96,7 @@ export default function Timeline({ space, user }: Props) {
                     fetchNextPosts={fetchNextPosts}
                 />
             )}
+            {isLoadingTimeline && (<LoadingAnimation />)}
         </>
     );
 }
