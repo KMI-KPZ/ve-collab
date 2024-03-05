@@ -6,7 +6,6 @@ import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarS
 import LoadingAnimation from '@/components/LoadingAnimation';
 import Stage from '@/components/StartingWizard/FinePlanner/Stage';
 import { SubmitHandler, useForm, FormProvider } from 'react-hook-form';
-import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
@@ -14,6 +13,7 @@ import {
     ProgressState,
     SideMenuStep,
 } from '@/interfaces/startingWizard/sideProgressBar';
+import SideProgressbarSectionFinePlanner from '@/components/StartingWizard/SideProgressbarSectionFinePlanner';
 
 export interface ITask {
     title: string;
@@ -306,7 +306,7 @@ export default function FinePlanner() {
                         </form>
                     </FormProvider>
                 )}
-                <SideProgressBarSection
+                <SideProgressbarSectionFinePlanner
                     progressState={sideMenuStepsProgress}
                     handleValidation={methods.handleSubmit(onSubmit)}
                     isValid={methods.formState.isValid}

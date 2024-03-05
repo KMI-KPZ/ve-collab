@@ -17,7 +17,7 @@ interface SideProgressBarSectionProps {
     sideMenuStepsData: SideMenuStep[];
 }
 
-export default function SideProgressBarSection({
+export default function SideProgressbarSectionFinePlanner({
     progressState,
     handleValidation,
     isValid,

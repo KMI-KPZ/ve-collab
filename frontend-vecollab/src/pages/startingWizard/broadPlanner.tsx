@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react';
 import { RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
-import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
+import SideProgressBarSectionBroadPlanner from '@/components/StartingWizard/SideProgressBarSectionBroadPlanner';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import {
     initialSideProgressBarStates,
@@ -351,11 +351,20 @@ export default function BroadPlanner() {
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={handleSubmit((data) =>
-                                        combinedSubmitRouteAndUpdate(
-                                            data,
-                                            '/startingWizard/generalInformation/formalConditions'
-                                        )
+                                    onClick={handleSubmit(
+                                        async (data) => {
+                                            await combinedSubmitRouteAndUpdate(
+                                                data,
+                                                '/startingWizard/generalInformation/formalConditions'
+                                            );
+                                        },
+                                        async () => {
+                                            await router.push({
+                                                pathname:
+                                                    '/startingWizard/generalInformation/formalConditions',
+                                                query: { plannerId: router.query.plannerId },
+                                            });
+                                        }
                                     )}
                                 >
                                     Zurück
@@ -380,7 +389,7 @@ export default function BroadPlanner() {
                         </div>
                     </form>
                 )}
-                <SideProgressBarSection
+                <SideProgressBarSectionBroadPlanner
                     progressState={sideMenuStepsProgress}
                     handleValidation={handleSubmit(onSubmit)}
                     isValid={isValid}
