@@ -41,10 +41,8 @@ export default function AuthenticatedImage({ imageId, alt, width, height, classN
 
     return (
         <>
-            {image !== '' ? (
+            {image !== '' && (
                 <Image src={image} alt={alt} width={width} height={height} className={className} />
-            ) : (
-                <></>
             )}
         </>
     );

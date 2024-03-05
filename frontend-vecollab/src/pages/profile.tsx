@@ -18,6 +18,7 @@ import {
     VEWindowItem,
     ResearchAndTeachingInformation,
 } from '@/interfaces/profile/profileInterfaces';
+import Timeline from '@/components/network/Timeline';
 
 Profile.auth = true;
 export default function Profile() {
@@ -206,13 +207,11 @@ export default function Profile() {
                                     cvInfo={{ educations, workExperience }}
                                 />
                             </WhiteBox>
-                            <WhiteBox>
-                                <div className={'h-96'}>
-                                    {' '}
-                                    {/* remove height once content is implemented to avoid unexpected overflow */}
-                                    <BoxHeadline title={'Timeline?'} />
-                                </div>
-                            </WhiteBox>
+                            <BoxHeadline title='Timeline' />
+                            {foreignUser
+                                ? ( <Timeline user={router.query.username as string} /> )
+                                : ( <Timeline /> )
+                            }
                         </div>
                         <div className={'w-1/4  ml-4'}>
                             <WhiteBox>

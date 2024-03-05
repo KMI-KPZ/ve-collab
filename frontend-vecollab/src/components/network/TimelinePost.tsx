@@ -4,21 +4,21 @@ import { HiHeart, HiOutlineCalendar, HiOutlineHeart, HiOutlineShare } from "reac
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { IoIosSend } from "react-icons/io";
-import AuthenticatedImage from "../AuthenticatedImage";
-import SmallTimestamp from "../SmallTimestamp";
 import Dropdown from "../Dropdown";
-import { BackendPost, BackendPostComment, BackendSpace } from "@/interfaces/api/apiInterfaces";
+import { BackendPost, BackendPostAuthor, BackendPostComment, BackendSpace } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
-import { MdDeleteOutline, MdModeEdit } from "react-icons/md";
+import { MdDeleteOutline, MdModeEdit, MdOutlineAddComment, MdOutlineKeyboardDoubleArrowDown, MdThumbUp } from "react-icons/md";
+import { TiArrowForward } from "react-icons/ti";
 import TimelinePostForm from "./TimelinePostForm";
+import PostHeader from "./PostHeader";
 
 interface Props {
     post: BackendPost
     space?: string
     isLast: boolean
     allSpaces?: BackendSpace[]
+    removePost: (post: BackendPost) => void
     sharePost?: (post: BackendPost) => void
-    reloadTimeline: Function
     fetchNextPosts: Function
 }
 
@@ -29,24 +29,36 @@ export default function TimelinePost(
     space,
     isLast,
     allSpaces,
-    sharePost,
-    reloadTimeline,
+    removePost,
+    sharePost: replyPost,
     fetchNextPosts
 }: Props) {
     const { data: session } = useSession();
     const [wbRemoved, setWbRemoved] = useState<boolean>(false)
-    const ref = useRef<HTMLFormElement>(null)
-    const [likeIt, setLikeIt] = useState<boolean>(post.likers.includes(session?.user.preferred_username as string))
-    const [comments, setComments] = useState<BackendPostComment[]>(post.comments)
-    const [likers, setLikers] = useState<string[]>(post.likers)
+    const ref = useRef<any>(null)
+    const [repostExpand, setRepostExpand] = useState<boolean>(false)
+    const [showCommentForm, setShowCommentForm] = useState<boolean>(false)
+    const [comments, setComments] = useState<BackendPostComment[]>([])
+    const [likeIt, setLikeIt] = useState<boolean>(false)
+    const [likers, setLikers] = useState<string[]>([])
     const [editPost, setEditPost] = useState<boolean>(false)
 
-    // reverse comments order
+    // reverse comments order, set likers, calc repost-size
     useEffect(() => {
         const newComments = [...post.comments];
         newComments.reverse()
         setComments(newComments);
-    }, [post]);
+
+        setLikeIt(post.likers.includes(session?.user.preferred_username as string))
+        setLikers(post.likers)
+
+
+        if (ref.current && post.isRepost) {
+            // TODO update on resize window ?!
+            const repostEl = ref.current.querySelector(".repost-text")
+            setRepostExpand( repostEl.scrollHeight <= repostEl.clientHeight )
+        }
+    }, [post, ref]);
 
     // implement infinity scroll (detect intersection of window viewport with last post)
     useEffect(() => {
@@ -61,6 +73,11 @@ export default function TimelinePost(
 
         observer.observe(ref.current);
     }, [isLast])
+
+    const onAddedNewComment = (newComment: BackendPostComment) => {
+        if (!newComment) return
+        setComments(prev => [newComment, ...prev]);
+    }
 
     const onSubmitCommentForm = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -82,10 +99,9 @@ export default function TimelinePost(
         }
 
         try {
-            await addNewComment()
-            // TODO if /comment returns the new result we could use mutate() with 'populateCache'
+            const newComment = await addNewComment()
+            onAddedNewComment(newComment.inserted_comment)
             ref.current?.reset()
-            reloadTimeline()
         } catch (error) {
             console.error(error);
         }
@@ -109,8 +125,8 @@ export default function TimelinePost(
         }
     }
 
-    const onClickShareBtn = () => {
-        if (sharePost) sharePost(post)
+    const onClickReplyBtn = () => {
+        if (replyPost) replyPost(post)
     }
 
     const deletePost = async () => {
@@ -119,7 +135,7 @@ export default function TimelinePost(
             setWbRemoved(true)
             // HACK wait until transition is done (TODO find a better solution...)
             await new Promise(resolve => setTimeout(resolve, 450))
-            await reloadTimeline()
+            removePost(post)
             setWbRemoved(false)
         } catch (error) {
             console.error(error);
@@ -139,31 +155,28 @@ export default function TimelinePost(
         }
     }
 
+    const updatePost = (newText: string) => {
+        if (post.isRepost) {
+            post.repostText = newText
+        } else {
+            post.text = newText
+        }
+        setEditPost(false)
+    }
+
     const SpacenameById = (spaceId: string) => {
         if (!allSpaces) return (<>{spaceId}</>)
         const space = allSpaces.find(space => space._id == spaceId)
         return ( <>{ space?.name }</> )
     }
 
-    const PostAuthor = (imageId: string, authorName: string, date: string) => (
-        <>
-            <AuthenticatedImage
-                imageId={imageId}
-                alt={'Benutzerbild'}
-                width={40}
-                height={40}
-                className="rounded-full mr-3"
-            ></AuthenticatedImage>
-            <div className="flex flex-col">
-                <div className='font-bold'>{authorName}</div>
-                <SmallTimestamp timestamp={date} className='text-xs text-gray-500' />
-            </div>
-        </>
-    )
-
     const PostText = () => {
         if (editPost) return (
-            <TimelinePostForm afterSubmitForm={reloadTimeline} onCancelForm={() => setEditPost(false)} post={post} />
+            <TimelinePostForm
+                post={post}
+                onCancelForm={() => setEditPost(false)}
+                onUpdatedPost={updatePost}
+            />
         )
 
         return (
@@ -176,10 +189,26 @@ export default function TimelinePost(
         )
     }
 
+    const Likes = () => {
+        if (!likers.length) return ( <></> )
+
+        let hoverMsg = "By "
+        if (likers.length == 1) hoverMsg += `${likers[0]}`
+        else if (likers.length == 2) hoverMsg += `${likers[0]} and ${likers[1]}`
+        else if (likers.length == 3) hoverMsg += `${likers.slice(0, 2).join(", ")} and ${likers[2]}`
+        else hoverMsg += `${likers.slice(0, 3).join(", ")} and others`
+
+        return (
+            <span className="hover:cursor-pointer text-sm mr-3" title={hoverMsg}>
+                <MdThumbUp className="inline" /> {likers.length}
+            </span>
+        )
+    }
+
     let drOptions = []
     if (
         (!post.isRepost && post.author.username == session?.user.preferred_username)
-        || post.isRepost && post.repostAuthor == session?.user.preferred_username
+        || post.isRepost && post.repostAuthor?.username == session?.user.preferred_username
     ) {
         drOptions.push(
             { value: 'remove', label: 'löschen', icon: <MdDeleteOutline /> },
@@ -196,26 +225,26 @@ export default function TimelinePost(
                 </div>
             </div> */}
 
-            <div className={`${wbRemoved ? "opacity-0 transition-opacity ease-in-out delay-150 duration-300" : "opacity-100 transition-none" } p-4 my-8 bg-white rounded-3xl shadow-2xl`}>
+            <div ref={ref} className={`${wbRemoved ? "opacity-0 transition-opacity ease-in-out delay-50 duration-300" : "opacity-100 transition-none" } p-4 my-8 bg-white rounded shadow`}>
                 <div className="flex items-center">
-                    {post.isRepost ? (
+                    {(post.isRepost && post.repostAuthor) ? (
                         <>
-                            {PostAuthor(post.repostAuthorProfilePic as string, post.repostAuthor as string, post.creation_date)}
+                            <PostHeader author={post.repostAuthor} date={post.creation_date} />
                             <div className='self-start leading-[1.6rem] text-xs text-gray-500 ml-1'>
                                 teilte einen Beitrag
                             </div>
                         </>
                     ) : (
                         <>
-                            {PostAuthor(post.author.profile_pic, post.author.username, post.creation_date)}
+                            <PostHeader author={post.author} date={post.creation_date} />
                         </>
                      )}
 
-                    {(!space && post.space) ? (
+                    {(!space && post.space) && (
                         <div className='self-start leading-[1.6rem] text-xs text-gray-500 ml-1'>
                             in der Gruppe <Link href={`/space/?id=${post.space}`} className="font-bold">{SpacenameById(post.space)}</Link>
                         </div>
-                    ) : ( <></> )}
+                    )}
 
                     <div className='ml-auto'>
                         {likeIt ? (
@@ -223,66 +252,73 @@ export default function TimelinePost(
                         ) : (
                             <button className="p-2" onClick={onClickLikeBtn} title="Click to like post"><HiOutlineHeart /></button>
                         )}
-                        <button className="p-2" onClick={onClickShareBtn} title="Click to share post"><HiOutlineShare /></button>
-                        {drOptions.length ? (
+                        <button className="p-2" onClick={onClickReplyBtn} title="Click to reply post"><TiArrowForward /></button>
+                        {drOptions.length > 0 && (
                             <Dropdown options={drOptions} onSelect={handleSelectOption} />
-                        ) : ( <></> )}
+                        )}
                     </div>
                 </div>
 
-                {post.isRepost ? (
+                {post.isRepost && (
                     <>
-                        <div className='my-5'>
-                            <PostText />
-                        </div>
-                        <div className="my-5 ml-5 p-5 border-2 border-ve-collab-blue/25 rounded-lg">
+                        <div className="my-5 ml-5 p-4 border-2 border-ve-collab-blue/25 rounded">
                             <div className="flex items-center">
-                                {PostAuthor(post.author.profile_pic, post.author.username, post.creation_date)}
+                                <PostHeader author={post.repostAuthor as BackendPostAuthor} date={post.originalCreationDate as string} />
                             </div>
-                            <div className='mt-5'>{post.text}</div>
+                            <div className={`${repostExpand ? "" : "max-h-40 overflow-hidden"} mt-5 whitespace-break-spaces relative repost-text`}>
+                                {post.text}
+                                <span className={`${repostExpand ? "hidden" : ""} absolute left-0 bottom-0 w-full h-20 bg-gradient-to-b from-transparent to-white`}>
+                                    <button className="absolute bottom-0 left-10 p-1" onClick={() => setRepostExpand(true)} title="Click to expand"><MdOutlineKeyboardDoubleArrowDown />
+</button>
+                                </span>
+                            </div>
                         </div>
                     </>
-                ) : (
-                    <div className='my-5'>
-                        <PostText />
-                    </div>
-                 )}
+                )}
 
-                {likers.length ? (
-                    <div className='my-5 text-sm'>
-                        <span>Liked by </span>
-                        {likers.map((liker, li) => (
-                            <span className="font-bold" key={li}>{likers[li]}</span>
-                        ))}
-                    </div>
-                ) : ( <></> )}
-
-                <div>
-                    <form onSubmit={onSubmitCommentForm} ref={ref}>
-                        <input
-                            className={'border border-[#cccccc] rounded-md px-2 py-[6px]'}
-                            type="text"
-                            placeholder={'Kommentar schreiben ...'}
-                            name='text'
-                        />
-                        <button className="p-2" type='submit' title="Senden"><IoIosSend /></button>
-                    </form>
+                <div className='my-5'>
+                    <PostText />
                 </div>
 
-                {comments.length ? (
-                    <div className='mt-5 pt-5 pl-5 border-t-2 border-ve-collab-blue'>
-                        <div className="-ml-5 mb-5">Kommentare</div>
+                <Likes />
+                {(comments.length == 0 && !showCommentForm) && (
+                    <button onClick={() => {setShowCommentForm(!showCommentForm)}} title="Add comment" className="align-middle">
+                        <MdOutlineAddComment />
+                    </button>
+                )}
 
-                        {comments.map((comment, ci) => (
-                            <div key={ci}>
-                                <div className="flex items-center">
-                                    {PostAuthor(comment.author.profile_pic, comment.author.username, comment.creation_date)}
-                                </div>
-                                <div className='my-5'>{comment.text}</div>
+                {(comments.length > 0 || showCommentForm)&& (
+                    <div className='mt-4 pt-4 border-t-2 border-ve-collab-blue/25'>
+                        <div className="mb-4 font-slate-900">
+                            {/* <MdComment className="inline" />&nbsp; */}
+                            Kommentare
+                        </div>
+
+                        <form onSubmit={onSubmitCommentForm}>
+                            <input
+                                className={'border border-[#cccccc] rounded-md px-2 py-[6px]'}
+                                type="text"
+                                placeholder={'Kommentar schreiben ...'}
+                                name='text'
+                                autoComplete="off"
+                            />
+                            <button className="p-2" type='submit' title="Senden"><IoIosSend /></button>
+                        </form>
+
+                        {comments.length > 0 && (
+                            <div className="pl-5 mt-5">
+                                {comments.map((comment, ci) => (
+                                    <div key={ci}>
+                                        <div className="flex items-center">
+                                        <PostHeader author={comment.author} date={comment.creation_date} />
+                                        </div>
+                                        <div className='my-5'>{comment.text}</div>
+                                    </div>
+                                ))}
                             </div>
-                        ))}
+                        )}
                     </div>
-                ) : ( <></> )}
+                )}
             </div>
         </>
     );

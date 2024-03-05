@@ -8,10 +8,11 @@ import { BackendPost } from "@/interfaces/api/apiInterfaces";
 
 interface Props {
     space?: string | undefined;
+    user?: string | undefined;
 }
 
 Timeline.auth = true
-export default function Timeline({ space }: Props) {
+export default function Timeline({ space, user }: Props) {
     const { data: session } = useSession();
     const [toDate, setToDate] = useState<Date>(new Date());
     const [sharedPost, setSharedPost] = useState<BackendPost|null>(null);
@@ -26,7 +27,8 @@ export default function Timeline({ space }: Props) {
         session!.accessToken,
         toDate.toISOString(),
         10,
-        space
+        space,
+        user
     )
 
     // TODO may get all spaces from parent
@@ -45,12 +47,6 @@ export default function Timeline({ space }: Props) {
     }, [currentPosts])
     console.log({allPosts});
 
-    const reloadTimeline = () => {
-        // TODO may improve by update prev state with deleted or edited posts ...
-        setAllPosts([]);
-        setToDate(new Date())
-    }
-
     const fetchNextPosts = () => {
         if (!allPosts.length) return
 
@@ -60,17 +56,17 @@ export default function Timeline({ space }: Props) {
         setToDate(newToDate)
     }
 
-    const onSubmitForm = () => {
-        if (sharedPost) setSharedPost(null)
-        reloadTimeline()
+    const removePost = (post: BackendPost) => {
+        setAllPosts((prev) => prev.filter(a => a._id != post._id));
     }
 
-    const sharePost = (post: BackendPost) => {
-        setSharedPost(post)
-    }
+    const afterCreatePost = (post: BackendPost) => {
+        if (!post) return
+        if (post.isRepost) setSharedPost(null)
 
-    if (isLoadingTimeline) {
-        return (<><LoadingAnimation /></>)
+        // TODO may use mutate->populateCache instead ?!
+        // https://github.com/KMI-KPZ/ve-collab/blob/a791a2ed9d68e71b6968488fe33dbf8bac000d4c/frontend-vecollab/src/components/network/Timeline.tsx
+        setAllPosts((prev) => [post, ...prev]);
     }
 
     if (error) {
@@ -80,25 +76,27 @@ export default function Timeline({ space }: Props) {
 
     return (
         <>
-            <div className={'p-4 my-8 bg-white rounded-3xl shadow-2xl '}>
+            <div className={'p-4 my-8 bg-white rounded shadow '}>
                 <TimelinePostForm
                     space={space}
                     sharedPost={sharedPost}
-                    afterSubmitForm={onSubmitForm}
+                    onCancelRepost={() => setSharedPost(null)}
+                    onCreatedPost={afterCreatePost}
                 />
             </div>
-            {!allPosts.length ? ( <div className="m-10 flex justify-center">Bisher keine Beiträge ...</div>) : (<></>)}
+            {allPosts.length == 0 && ( <div className="m-10 flex justify-center">Bisher keine Beiträge ...</div>)}
             {allPosts.map((post, i) =>
                 <TimelinePost key={i}
                     post={post}
                     space={space}
                     isLast={i === allPosts.length - 1}
                     allSpaces={allSpaces}
-                    sharePost={sharePost}
-                    reloadTimeline={reloadTimeline}
+                    removePost={removePost}
+                    sharePost={post => setSharedPost(post)}
                     fetchNextPosts={fetchNextPosts}
                 />
             )}
+            {isLoadingTimeline && (<LoadingAnimation />)}
         </>
     );
 }
