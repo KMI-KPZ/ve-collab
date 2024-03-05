@@ -79,7 +79,7 @@ export default function Topics() {
                         field_name: 'progress',
                         value: {
                             ...sideMenuStepsProgress,
-                            topics: ProgressState.completed,
+                            topic: ProgressState.completed,
                         },
                     },
                 ],
