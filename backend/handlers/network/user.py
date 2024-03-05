@@ -118,6 +118,7 @@ class ProfileInformationHandler(BaseHandler):
         # doesnt exist there
         try:
             keycloak_info = self.get_keycloak_user(username)
+            print(keycloak_info)
         except KeycloakGetError as e:
             error_response = json.loads(e.error_message.decode())
             if error_response["error"] == "User not found":
@@ -137,7 +138,9 @@ class ProfileInformationHandler(BaseHandler):
             # grab and add profile details, putting role and follows out of
             # the nested profile dict
             profile = {}
-            profile = profile_manager.ensure_profile_exists(username)
+            profile = profile_manager.ensure_profile_exists(
+                username, keycloak_info["firstName"], keycloak_info["lastName"]
+            )
             role = profile["role"]
             follows = profile["follows"]
             # remove unnecessary (duplicate) keys from nested dict
