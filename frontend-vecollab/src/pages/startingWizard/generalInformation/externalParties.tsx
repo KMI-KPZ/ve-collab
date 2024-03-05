@@ -1,6 +1,5 @@
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
 import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
-import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
@@ -116,8 +115,12 @@ export default function ExternalPersons() {
             },
             session?.accessToken
         );
+    };
+
+    const combinedSubmitRouteAndUpdate = async (data: FormValues, url: string) => {
+        onSubmit(data);
         await router.push({
-            pathname: '/startingWizard/generalInformation/institutions',
+            pathname: url,
             query: { plannerId: router.query.plannerId },
         });
     };
@@ -162,9 +165,7 @@ export default function ExternalPersons() {
                             <div className={'text-center font-bold text-4xl mb-2'}>
                                 Gibt es externe Beteiligte?
                             </div>
-                            <div className={'text-center mb-20'}>
-                                optional
-                            </div>
+                            <div className={'text-center mb-20'}>optional</div>
                             {renderExternalPartiesInputs()}
                             <div className={'w-3/4 mx-7 mt-3 flex justify-end'}>
                                 <button type="button" onClick={() => remove(fields.length - 1)}>
@@ -184,24 +185,29 @@ export default function ExternalPersons() {
                         </div>
                         <div className="flex justify-around w-full">
                             <div>
-                                <Link
-                                    href={{
-                                        pathname: '/startingWizard/generalInformation/partners',
-                                        query: { plannerId: router.query.plannerId },
-                                    }}
+                                <button
+                                    type="button"
+                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    onClick={handleSubmit((data) =>
+                                        combinedSubmitRouteAndUpdate(
+                                            data,
+                                            '/startingWizard/generalInformation/partners'
+                                        )
+                                    )}
                                 >
-                                    <button
-                                        type="button"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    >
-                                        Zurück
-                                    </button>
-                                </Link>
+                                    Zurück
+                                </button>
                             </div>
                             <div>
                                 <button
-                                    type="submit"
+                                    type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    onClick={handleSubmit((data) =>
+                                        combinedSubmitRouteAndUpdate(
+                                            data,
+                                            '/startingWizard/generalInformation/institutions'
+                                        )
+                                    )}
                                 >
                                     Weiter
                                 </button>

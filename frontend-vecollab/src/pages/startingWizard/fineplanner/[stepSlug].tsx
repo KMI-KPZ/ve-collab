@@ -6,7 +6,6 @@ import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarS
 import LoadingAnimation from '@/components/LoadingAnimation';
 import Stage from '@/components/StartingWizard/FinePlanner/Stage';
 import { SubmitHandler, useForm, FormProvider } from 'react-hook-form';
-import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
 import {
     initialSideProgressBarStates,
@@ -87,7 +86,6 @@ export default function FinePlanner() {
     const [loading, setLoading] = useState(false);
     const router = useRouter();
     const { stepSlug } = router.query;
-    const { validateAndRoute } = useValidation();
     const methods = useForm<IFineStepFrontend>({
         mode: 'onChange',
         defaultValues: {
@@ -216,6 +214,14 @@ export default function FinePlanner() {
         );
     };
 
+    const combinedSubmitRouteAndUpdate = async (data: IFineStepFrontend, url: string) => {
+        onSubmit(data);
+        await router.push({
+            pathname: url,
+            query: { plannerId: router.query.plannerId },
+        });
+    };
+
     const generateSideMenuStepsData = (steps: IFineStep[]): SideMenuStep[] => {
         return steps.map((step: IFineStep) => ({
             id: encodeURIComponent(step.name),
@@ -275,14 +281,12 @@ export default function FinePlanner() {
                                     <button
                                         type="button"
                                         className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                        onClick={() => {
-                                            validateAndRoute(
-                                                getPreviousFineStepUrl(),
-                                                router.query.plannerId,
-                                                methods.handleSubmit(onSubmit),
-                                                methods.formState.isValid
-                                            );
-                                        }}
+                                        onClick={methods.handleSubmit((data) =>
+                                            combinedSubmitRouteAndUpdate(
+                                                data,
+                                                getPreviousFineStepUrl()
+                                            )
+                                        )}
                                     >
                                         Zurück
                                     </button>
@@ -291,14 +295,9 @@ export default function FinePlanner() {
                                     <button
                                         type="button"
                                         className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                        onClick={() => {
-                                            validateAndRoute(
-                                                getNextFineStepUrl(),
-                                                router.query.plannerId,
-                                                methods.handleSubmit(onSubmit),
-                                                methods.formState.isValid
-                                            );
-                                        }}
+                                        onClick={methods.handleSubmit((data) =>
+                                            combinedSubmitRouteAndUpdate(data, getNextFineStepUrl())
+                                        )}
                                     >
                                         Weiter
                                     </button>

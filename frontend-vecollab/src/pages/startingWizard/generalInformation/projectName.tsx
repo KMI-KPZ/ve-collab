@@ -12,10 +12,9 @@ import {
 } from '@/interfaces/startingWizard/sideProgressBar';
 import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
-import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 import { SubmitHandler, useForm } from 'react-hook-form';
 
-interface FormData {
+interface FormValues {
     name: string;
 }
 
@@ -27,7 +26,6 @@ export default function EssentialInformation() {
         initialSideProgressBarStates
     );
     const [steps, setSteps] = useState<IFineStep[]>([]);
-    const { validateAndRoute } = useValidation();
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -44,7 +42,7 @@ export default function EssentialInformation() {
         handleSubmit,
         formState: { errors, isValid },
         setValue,
-    } = useForm<FormData>({ mode: 'onChange' });
+    } = useForm<FormValues>({ mode: 'onChange' });
 
     useEffect(() => {
         // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
@@ -72,7 +70,7 @@ export default function EssentialInformation() {
         }
     }, [session, status, router, setValue]);
 
-    const onSubmit: SubmitHandler<FormData> = async (data: FormData) => {
+    const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         await fetchPOST(
             '/planner/update_fields',
             {
@@ -94,6 +92,14 @@ export default function EssentialInformation() {
             },
             session?.accessToken
         );
+    };
+
+    const combinedSubmitRouteAndUpdate = async (data: FormValues, url: string) => {
+        onSubmit(data);
+        await router.push({
+            pathname: url,
+            query: { plannerId: router.query.plannerId },
+        });
     };
 
     return (
@@ -148,14 +154,12 @@ export default function EssentialInformation() {
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={() => {
-                                        validateAndRoute(
-                                            '/startingWizard/generalInformation/partners',
-                                            router.query.plannerId,
-                                            handleSubmit(onSubmit),
-                                            isValid
-                                        );
-                                    }}
+                                    onClick={handleSubmit((data) =>
+                                        combinedSubmitRouteAndUpdate(
+                                            data,
+                                            '/startingWizard/generalInformation/partners'
+                                        )
+                                    )}
                                 >
                                     Weiter
                                 </button>

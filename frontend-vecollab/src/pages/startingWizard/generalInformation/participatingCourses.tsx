@@ -13,7 +13,6 @@ import {
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/startingWizard/sideProgressBar';
-import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 
@@ -35,7 +34,6 @@ export default function Lectures() {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
-    const { validateAndRoute } = useValidation();
     const [steps, setSteps] = useState<IFineStep[]>([]);
 
     // check for session errors and trigger the login flow if necessary
@@ -123,6 +121,14 @@ export default function Lectures() {
             },
             session?.accessToken
         );
+    };
+
+    const combinedSubmitRouteAndUpdate = async (data: FormValues, url: string) => {
+        onSubmit(data);
+        await router.push({
+            pathname: url,
+            query: { plannerId: router.query.plannerId },
+        });
     };
 
     const renderLecturesInputs = (): JSX.Element[] => {
@@ -286,14 +292,12 @@ export default function Lectures() {
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={() => {
-                                        validateAndRoute(
-                                            '/startingWizard/generalInformation/institutions',
-                                            router.query.plannerId,
-                                            handleSubmit(onSubmit),
-                                            isValid
-                                        );
-                                    }}
+                                    onClick={handleSubmit((data) =>
+                                        combinedSubmitRouteAndUpdate(
+                                            data,
+                                            '/startingWizard/generalInformation/institutions'
+                                        )
+                                    )}
                                 >
                                     Zurück
                                 </button>
@@ -302,14 +306,12 @@ export default function Lectures() {
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={() => {
-                                        validateAndRoute(
-                                            '/startingWizard/generalInformation/globalGoals',
-                                            router.query.plannerId,
-                                            handleSubmit(onSubmit),
-                                            isValid
-                                        );
-                                    }}
+                                    onClick={handleSubmit((data) =>
+                                        combinedSubmitRouteAndUpdate(
+                                            data,
+                                            '/startingWizard/generalInformation/globalGoals'
+                                        )
+                                    )}
                                 >
                                     Weiter
                                 </button>
