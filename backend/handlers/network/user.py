@@ -118,7 +118,6 @@ class ProfileInformationHandler(BaseHandler):
         # doesnt exist there
         try:
             keycloak_info = self.get_keycloak_user(username)
-            print(keycloak_info)
         except KeycloakGetError as e:
             error_response = json.loads(e.error_message.decode())
             if error_response["error"] == "User not found":

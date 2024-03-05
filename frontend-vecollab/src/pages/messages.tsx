@@ -48,7 +48,6 @@ export default function Messages({
 
         // filter a distinct list of usernames from the room snippets
         const usernames = Array.from(new Set(roomSnippets.map((room) => room.members).flat()));
-        console.log(usernames);
 
         // fetch profile snippets
         fetchPOST('/profile_snippets', { usernames: usernames }, session?.accessToken).then(
