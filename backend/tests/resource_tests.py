@@ -240,7 +240,7 @@ class GlobalACLRessourceTest(BaseResourceTestCase):
         acl_entry = self.db.global_acl.find_one({"role": "another_role"})
         self.assertIsNotNone(acl_entry)
         self.assertEqual(acl_entry["role"], "another_role")
-        self.assertEqual(acl_entry["create_space"], False)
+        self.assertEqual(acl_entry["create_space"], True)
 
     def test_insert_admin(self):
         """
@@ -958,7 +958,7 @@ class ACLResourceTest(BaseResourceTestCase):
         acl_entry = self.db.global_acl.find_one({"role": "guest"})
         self.assertIsNotNone(acl_entry)
         self.assertEqual(acl_entry["role"], "guest")
-        self.assertEqual(acl_entry["create_space"], False)
+        self.assertEqual(acl_entry["create_space"], True)
 
 
 class PostResourceTest(BaseResourceTestCase):
