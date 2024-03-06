@@ -95,36 +95,39 @@ export default function HeadProgressBarSection({ stage, linkFineStep }: HeadProg
     }
 
     return (
-        <>
-            <nav className="flex w-full justify-center py-6">
-                {renderHeadProgressBar(headMenuProgressSteps)}
-            </nav>
-            <div className="flex justify-center">
-                <Link
-                    href={`/etherpad?planID=${router.query.plannerId}`}
-                    target="_blank"
-                    className="mx-2"
-                >
-                    <button
-                        type="submit"
-                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+        <div className='flex'>
+            <div className='w-full'>
+                <nav className="flex w-full justify-center py-6">
+                    {renderHeadProgressBar(headMenuProgressSteps)}
+                </nav>
+                <div className="flex justify-center">
+                    <Link
+                        href={`/etherpad?planID=${router.query.plannerId}`}
+                        target="_blank"
+                        className="mx-2"
                     >
-                        kollaboratives Pad öffnen
-                    </button>
-                </Link>
-                <Link
-                    href={`/meeting?meetingId=${router.query.plannerId}`}
-                    target="_blank"
-                    className="mx-2"
-                >
-                    <button
-                        type="submit"
-                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                        <button
+                            type="submit"
+                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg w-60"
+                        >
+                            kollaboratives Pad öffnen
+                        </button>
+                    </Link>
+                    <Link
+                        href={`/meeting?meetingId=${router.query.plannerId}`}
+                        target="_blank"
+                        className="mx-2"
                     >
-                        Jitsi Raum betreten
-                    </button>
-                </Link>
+                        <button
+                            type="submit"
+                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg w-60"
+                        >
+                            Jitsi Raum betreten
+                        </button>
+                    </Link>
+                </div>
             </div>
-        </>
+            <div className="w-80"></div>
+        </div>
     );
 }
