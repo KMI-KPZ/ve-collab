@@ -59,11 +59,11 @@ export default function ViewAttributes({ plan }: Props): JSX.Element {
                                     className="grid grid-cols-2 p-5 mr-3 mb-3 bg-slate-200 rounded-lg space-x-2"
                                 >
                                     <ul className="space-y-1 mr-2">
-                                        <li className="font-medium"> Name </li>
-                                        <li className="font-medium"> Schulform </li>
-                                        <li className="font-medium"> Land </li>
-                                        <li className="font-medium">Abteilungsname</li>
-                                        <li className="font-medium">Beteidigte Studiengänge</li>
+                                        <li className="font-medium">Name</li>
+                                        <li className="font-medium">Bildungseinrichtung</li>
+                                        <li className="font-medium">Land</li>
+                                        <li className="font-medium">Fachbereich</li>
+                                        <li className="font-medium">beteiligte Studiengänge</li>
                                     </ul>
                                     <ul className="space-y-1">
                                         <li>{showDataOrEmptySign(institution.name)}</li>
@@ -87,10 +87,10 @@ export default function ViewAttributes({ plan }: Props): JSX.Element {
                                     className="grid grid-cols-2 p-5 mr-3 mb-3 bg-slate-200 rounded-lg space-x-2"
                                 >
                                     <ul className="space-y-1 mr-2">
-                                        <li className="font-medium"> Name </li>
-                                        <li className="font-medium"> Typ </li>
-                                        <li className="font-medium"> Format </li>
-                                        <li className="font-medium">Teilnehmerzahl</li>
+                                        <li className="font-medium">Name</li>
+                                        <li className="font-medium">Typ</li>
+                                        <li className="font-medium">Format</li>
+                                        <li className="font-medium">Teilnehmendenzahl</li>
                                     </ul>
                                     <ul className="space-y-1">
                                         <li>{showDataOrEmptySign(lecture.name)} </li>
@@ -104,6 +104,18 @@ export default function ViewAttributes({ plan }: Props): JSX.Element {
                             <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
                         )}
                     </div>
+                    <span className="font-semibold pr-5">Richtlernziele:</span>
+                    <ul className="flex flex-col space-y-2 col-span-3">
+                        {plan.learning_goals.length !== 0 ? (
+                            plan.learning_goals.map((goal, index) => (
+                                <li className="flex w-fit bg-slate-200 rounded-lg p-2" key={index}>
+                                    {showDataOrEmptySign(goal)}
+                                </li>
+                            ))
+                        ) : (
+                            <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
+                        )}
+                    </ul>
                     <span className="font-semibold pr-5">Zielgruppen:</span>
                     <div className="grid grid-cols-2 space-y-2 col-span-3">
                         {plan.audience.length !== 0 ? (
@@ -113,13 +125,12 @@ export default function ViewAttributes({ plan }: Props): JSX.Element {
                                     className="grid grid-cols-2 p-5 mr-3 mb-3 bg-slate-200 rounded-lg space-x-2"
                                 >
                                     <ul className="space-y-1 mr-2">
-                                        <li className="font-medium"> Name </li>
-                                        <li className="font-medium"> Alter </li>
-                                        <li className="font-medium"> Erfahrung </li>
+                                        <li className="font-medium">Name</li>
+                                        <li className="font-medium">Alter</li>
+                                        <li className="font-medium">VE-Erfahrung</li>
                                         <li className="font-medium">Studiengang</li>
-                                        <li className="font-medium">Muttersprache</li>
-                                        <li className="font-medium">Fremdsprachen</li>
-                                        <li className="font-medium">Lernziele</li>
+                                        <li className="font-medium">Erstsprache</li>
+                                        <li className="font-medium">weitere Sprachen</li>
                                     </ul>
                                     <ul className="space-y-1">
                                         <li>{showDataOrEmptySign(studyGroup.name)} </li>
@@ -139,13 +150,19 @@ export default function ViewAttributes({ plan }: Props): JSX.Element {
                             <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
                         )}
                     </div>
-                    <span className="font-semibold pr-5">Thema:</span>
+                    <span className="font-semibold pr-5">Thema / Themen:</span>
                     <ul className="flex flex-col space-y-2  col-span-3">
-                        <li className="flex w-fit bg-slate-200 rounded-lg p-2">
-                            {showDataOrEmptySign(plan.topic)}
-                        </li>
+                        {plan.topics.length !== 0 ? (
+                            plan.topics.map((topic, index) => (
+                                <li className="flex w-fit bg-slate-200 rounded-lg p-2" key={index}>
+                                    {showDataOrEmptySign(topic)}
+                                </li>
+                            ))
+                        ) : (
+                            <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
+                        )}
                     </ul>
-                    <span className="font-semibold pr-5">Sprachen:</span>
+                    <span className="font-semibold pr-5">Sprache(n):</span>
                     <ul className="flex flex-col space-y-2 col-span-3">
                         {plan.languages.length !== 0 ? (
                             plan.languages.map((language, index) => (
@@ -157,18 +174,56 @@ export default function ViewAttributes({ plan }: Props): JSX.Element {
                             <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
                         )}
                     </ul>
-                    <span className="font-semibold pr-5">Neue Inhalte:</span>
-                    <ul className="flex flex-col space-y-2  col-span-3">
-                        <li className="flex w-fit bg-slate-200 rounded-lg p-2">
-                            {plan.new_content ? (plan.new_content ? 'Ja' : 'Nein') : '/'}
-                        </li>
-                    </ul>
-                    <span className="font-semibold pr-5">Digitale Umsetzung:</span>
-                    <ul className="flex flex-col col-span-3 space-y-2 ">
+                    <span className="font-semibold pr-5">(Digitale) Formate:</span>
+                    <ul className="flex flex-col space-y-2 col-span-3">
                         <li className="flex w-fit bg-slate-200 rounded-lg p-2">
                             {showDataOrEmptySign(plan.realization)}
                         </li>
                     </ul>
+                    <span className="font-semibold pr-5">begleitende physische Mobilität:</span>
+                    <ul className="flex flex-col space-y-2 col-span-3">
+                        <li className="flex w-fit bg-slate-200 rounded-lg p-2">
+                            {showDataOrEmptySign(plan.physical_mobility ? 'Ja' : 'Nein')}
+                        </li>
+                    </ul>
+                    {plan.physical_mobility && plan.physical_mobilities.length > 0 && (
+                        <>
+                            <span className="font-semibold pr-5">geplante Treffen:</span>
+                            <div className="grid grid-cols-2 space-y-2 col-span-3">
+                                {plan.physical_mobilities.length !== 0 ? (
+                                    plan.physical_mobilities.map((mobility, index) => (
+                                        <div
+                                            key={index}
+                                            className="grid grid-cols-2 p-5 mr-3 mb-3 bg-slate-200 rounded-lg space-x-2"
+                                        >
+                                            <ul className="space-y-1 mr-2">
+                                                <li className="font-medium">Ort</li>
+                                                <li className="font-medium">Datum</li>
+                                            </ul>
+                                            <ul className="space-y-1">
+                                                <li>{showDataOrEmptySign(mobility.location)} </li>
+                                                <li>
+                                                    {showDataOrEmptySign(
+                                                        mobility.timestamp_from
+                                                            ? mobility.timestamp_from.split('T')[0]
+                                                            : ''
+                                                    )}
+                                                    {' - '}
+                                                    {showDataOrEmptySign(
+                                                        mobility.timestamp_to
+                                                            ? mobility.timestamp_to.split('T')[0]
+                                                            : ''
+                                                    )}
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
+                                )}
+                            </div>
+                        </>
+                    )}
                     <span className="font-semibold pr-5">Digitale Lernumgebung:</span>
                     <ul className="flex flex-col col-span-3 space-y-2 ">
                         <li className="flex w-fit bg-slate-200 rounded-lg p-2">

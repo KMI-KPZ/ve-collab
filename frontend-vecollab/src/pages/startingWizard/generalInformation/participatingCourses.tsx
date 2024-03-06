@@ -183,9 +183,7 @@ export default function Lectures() {
                                 className="border border-gray-500 rounded-lg w-full h-12 p-2"
                             >
                                 <option value="Pflichtveranstaltung">Pflichtveranstaltung</option>
-                                <option value="Fachhochschule/University of Applied Sciences">
-                                    Wahlveranstaltung
-                                </option>
+                                <option value="Wahlveranstaltung">Wahlveranstaltung</option>
                             </select>
                             <p className="text-red-600 pt-2">
                                 {errors?.lectures?.[index]?.lecture_type?.message}

@@ -21,7 +21,7 @@ import { set } from 'date-fns';
 import { Tooltip } from '@/components/Tooltip';
 import { FiInfo } from 'react-icons/fi';
 
-interface PhysicalMobility {
+export interface PhysicalMobility {
     location: string;
     timestamp_from: string;
     timestamp_to: string;

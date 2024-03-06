@@ -38,7 +38,7 @@ export const sideMenuStepsData: SideMenuStep[] = [
     },
     {
         text: 'Thema/Themen',
-        id: 'topic',
+        id: 'topics',
         link: '/startingWizard/generalInformation/veTopic',
     },
     {
