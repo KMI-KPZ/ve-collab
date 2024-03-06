@@ -95,8 +95,8 @@ export default function HeadProgressBarSection({ stage, linkFineStep }: HeadProg
     }
 
     return (
-        <div className='flex'>
-            <div className='w-full'>
+        <div className="flex">
+            <div className="w-full">
                 <nav className="flex w-full justify-center py-6">
                     {renderHeadProgressBar(headMenuProgressSteps)}
                 </nav>
@@ -108,7 +108,7 @@ export default function HeadProgressBarSection({ stage, linkFineStep }: HeadProg
                     >
                         <button
                             type="submit"
-                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg w-60"
+                            className="items-end border border-ve-collab-orange text-ve-collab-orange py-3 px-5 rounded-lg w-60"
                         >
                             kollaboratives Pad öffnen
                         </button>
@@ -120,7 +120,7 @@ export default function HeadProgressBarSection({ stage, linkFineStep }: HeadProg
                     >
                         <button
                             type="submit"
-                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg w-60"
+                            className="items-end border border-ve-collab-orange text-ve-collab-orange py-3 px-5 rounded-lg w-60"
                         >
                             Jitsi Raum betreten
                         </button>
