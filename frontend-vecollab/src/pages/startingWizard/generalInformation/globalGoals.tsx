@@ -1,10 +1,9 @@
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
-import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
+import SideProgressBarSectionBroadPlanner from '@/components/StartingWizard/SideProgressBarSectionBroadPlanner';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { useForm, SubmitHandler } from 'react-hook-form';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import {
     initialSideProgressBarStates,
@@ -14,6 +13,11 @@ import {
 import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+import { MultiValue, ActionMeta } from 'react-select';
+import CreatableSelect from 'react-select/creatable';
+import Link from 'next/link';
+import { Tooltip } from '@/components/Tooltip';
+import { FiInfo } from 'react-icons/fi';
 
 interface FormValues {
     globalGoals: string;
@@ -28,6 +32,7 @@ export default function GlobalGoals() {
     );
     const [steps, setSteps] = useState<IFineStep[]>([]);
     const { validateAndRoute } = useValidation();
+    const [learningGoals, setLearningGoals] = useState<string[]>([]);
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -38,18 +43,6 @@ export default function GlobalGoals() {
             }
         }
     }, [session, status]);
-
-    const {
-        register,
-        formState: { errors, isValid },
-        handleSubmit,
-        setValue,
-    } = useForm<FormValues>({
-        mode: 'onChange',
-        defaultValues: {
-            globalGoals: '',
-        },
-    });
 
     useEffect(() => {
         // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
@@ -67,42 +60,54 @@ export default function GlobalGoals() {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
                     setLoading(false);
-                    if (data.plan.globalGoals !== null) {
-                        setValue('globalGoals', data.plan.globalGoals);
-                    }
-                    setSteps(data.plan.steps);
 
+                    setLearningGoals(data.plan.learning_goals);
+                    setSteps(data.plan.steps);
                     if (data.plan.progress.length !== 0) {
                         setSideMenuStepsProgress(data.plan.progress);
                     }
                 }
             );
         }
-    }, [session, status, router, setValue]);
+    }, [session, status, router]);
 
-    const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
+    const onSubmit = async () => {
         await fetchPOST(
             '/planner/update_fields',
             {
                 update: [
                     {
                         plan_id: router.query.plannerId,
-                        field_name: 'globalGoals',
-                        value: data.globalGoals,
+                        field_name: 'learning_goals',
+                        value: learningGoals,
                     },
                     {
                         plan_id: router.query.plannerId,
                         field_name: 'progress',
                         value: {
                             ...sideMenuStepsProgress,
-                            globalGoals: ProgressState.completed,
+                            learning_goals: ProgressState.completed,
                         },
                     },
                 ],
             },
             session?.accessToken
         );
+
+        await router.push({
+            pathname: '/startingWizard/generalInformation/targetGroups',
+            query: { plannerId: router.query.plannerId },
+        });
     };
+
+    function handleChange(
+        newValue: MultiValue<{ value: string; label: string }>,
+        actionMeta: ActionMeta<{ value: string; label: string }>
+    ): void {
+        setLearningGoals(newValue.map((chosenOptions) => chosenOptions.value));
+    }
+
+    console.log(learningGoals);
 
     return (
         <>
@@ -113,53 +118,86 @@ export default function GlobalGoals() {
                 ) : (
                     <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                         <div>
-                            <div className={'text-center font-bold text-4xl mb-2'}>
-                                Welche globalen Lehr-/Lernziele sollen im VE erreicht werden?
+                            <div className={'text-center font-bold text-4xl mb-2 relative'}>
+                                Welche Richtlernziele sollen im VE erreicht werden?
+                                <Tooltip tooltipsText="Mehr zu Richtlernzielen findest du hier in den Selbstlernmaterialien …">
+                                    <Link target="_blank" href={'/content/Potenziale'}>
+                                        <FiInfo size={30} color="#00748f" />
+                                    </Link>
+                                </Tooltip>
                             </div>
                             <div className={'text-center mb-20'}>optional</div>
-                            <div className="mx-7 mt-7 flex justify-center">
-                                <select
-                                    placeholder="Globalen Lehr-/Lernziele"
-                                    className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
-                                    {...register('globalGoals')}
-                                >
-                                    <option value="Test">Test</option>
-                                    <option value="A">A</option>
-                                    <option value="B">B</option>
-                                    <option value="C">C</option>
-                                </select>
-                                <p className="text-red-600 pt-2">{errors?.globalGoals?.message}</p>
-                            </div>
+                            <CreatableSelect
+                                isMulti
+                                closeMenuOnSelect={false}
+                                options={[
+                                    {
+                                        value: 'Förderung kritischen Denkens',
+                                        label: 'Förderung kritischen Denkens',
+                                    },
+                                    {
+                                        value: 'Förderung kreativen Denkens',
+                                        label: 'Förderung kreativen Denkens',
+                                    },
+                                    {
+                                        value: 'Förderung kollaborativen Arbeitens',
+                                        label: 'Förderung kollaborativen Arbeitens',
+                                    },
+                                    {
+                                        value: 'Förderung kommunikativer Fähigkeiten',
+                                        label: 'Förderung kommunikativer Fähigkeiten',
+                                    },
+                                    {
+                                        value: 'Förderung digitaler Kompetenzen',
+                                        label: 'Förderung digitaler Kompetenzen',
+                                    },
+                                    {
+                                        value: 'Förderung sozialer Kompetenzen',
+                                        label: 'Förderung sozialer Kompetenzen',
+                                    },
+                                    {
+                                        value: 'Förderung der kulturellen Kompetenz',
+                                        label: 'Förderung der kulturellen Kompetenz',
+                                    },
+                                    {
+                                        value: 'Förderung der Sprachkompetenz',
+                                        label: 'Förderung der Sprachkompetenz',
+                                    },
+                                    {
+                                        value: 'Förderung fachlicher Kompetenzen (Wissen, Fertigkeiten)',
+                                        label: 'Förderung fachlicher Kompetenzen (Wissen, Fertigkeiten)',
+                                    },
+                                ]}
+                                value={learningGoals.map((goal) => {
+                                    return { value: goal, label: goal };
+                                })}
+                                onChange={handleChange}
+                                formatCreateLabel={(inputValue) => `Sonstige: ${inputValue}`}
+                                placeholder="Richtlernziele auswählen oder neue hinzufügen"
+                            />
                         </div>
                         <div className="flex justify-around w-full">
                             <div>
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={() => {
-                                        validateAndRoute(
+                                <Link
+                                    href={{
+                                        pathname:
                                             '/startingWizard/generalInformation/participatingCourses',
-                                            router.query.plannerId,
-                                            handleSubmit(onSubmit),
-                                            isValid
-                                        );
+                                        query: { plannerId: router.query.plannerId },
                                     }}
                                 >
-                                    Zurück
-                                </button>
+                                    <button
+                                        type="button"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    >
+                                        Zurück
+                                    </button>
+                                </Link>
                             </div>
                             <div>
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={() => {
-                                        validateAndRoute(
-                                            '/startingWizard/generalInformation/targetGroups',
-                                            router.query.plannerId,
-                                            handleSubmit(onSubmit),
-                                            isValid
-                                        );
-                                    }}
+                                    onClick={onSubmit}
                                 >
                                     Weiter
                                 </button>
@@ -167,10 +205,10 @@ export default function GlobalGoals() {
                         </div>
                     </form>
                 )}
-                <SideProgressBarSection
+                <SideProgressBarSectionBroadPlanner
                     progressState={sideMenuStepsProgress}
-                    handleValidation={handleSubmit(onSubmit)}
-                    isValid={isValid}
+                    handleValidation={() => {}}
+                    isValid={true}
                     sideMenuStepsData={sideMenuStepsData}
                 />
             </div>

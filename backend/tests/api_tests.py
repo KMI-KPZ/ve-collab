@@ -22,6 +22,7 @@ from main import make_app
 from model import (
     Institution,
     Lecture,
+    PhysicalMobility,
     Step,
     TargetGroup,
     Task,
@@ -7385,7 +7386,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
             academic_course="test",
             mother_tongue="test",
             foreign_languages={"test": "l1"},
-            learning_goal="test",
         )
 
     def create_institution(self, name: str = "test") -> Institution:
@@ -7412,6 +7412,17 @@ class VEPlanHandlerTest(BaseApiTestCase):
             lecture_type="test",
             participants_amount=10,
         )
+    
+    def create_physical_mobility(self, location: str = "test") -> PhysicalMobility:
+        """
+        convenience method to create a physical mobility with non-default values
+        """
+
+        return PhysicalMobility(
+            location=location,
+            timestamp_from=datetime(2023, 1, 1),
+            timestamp_to=datetime(2023, 1, 8),
+        )
 
     def default_plan_setup(self):
         # manually set up a VEPlan in the db
@@ -7420,6 +7431,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.target_group = self.create_target_group("test")
         self.institution = self.create_institution("test")
         self.lecture = self.create_lecture("test")
+        self.physical_mobility = self.create_physical_mobility("test")
         self.default_plan = {
             "_id": self.plan_id,
             "author": CURRENT_ADMIN.username,
@@ -7430,35 +7442,38 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "name": "test",
             "partners": [CURRENT_USER.username],
             "institutions": [self.institution.to_dict()],
-            "topic": "test",
+            "topics": ["test", "test"],
             "lectures": [self.lecture.to_dict()],
+            "learning_goals": ["test", "test"],
             "audience": [self.target_group.to_dict()],
             "languages": ["test", "test"],
             "timestamp_from": self.step.timestamp_from,
             "timestamp_to": self.step.timestamp_to,
             "involved_parties": ["test", "test"],
             "realization": "test",
+            "physical_mobility": True,
+            "physical_mobilities": [self.physical_mobility.to_dict()],
             "learning_env": "test",
-            "tools": ["test", "test"],
             "new_content": False,
-            "formalities": {
+            "formalities": [{
+                "username": CURRENT_ADMIN.username,
                 "technology": False,
                 "exam_regulations": False,
-            },
+            }],
             "duration": self.step.duration.total_seconds(),
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",
-                "topic": "not_started",
+                "topics": "not_started",
                 "lectures": "not_started",
+                "learning_goals": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
-                "tools": "not_started",
                 "new_content": "not_started",
                 "formalities": "not_started",
                 "steps": "not_started",
@@ -7517,16 +7532,18 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.name, default_plan.name)
         self.assertEqual(response_plan.partners, default_plan.partners)
         self.assertEqual(response_plan.institutions, default_plan.institutions)
-        self.assertEqual(response_plan.topic, default_plan.topic)
+        self.assertEqual(response_plan.topics, default_plan.topics)
         self.assertEqual(response_plan.lectures, default_plan.lectures)
+        self.assertEqual(response_plan.learning_goals, default_plan.learning_goals)
         self.assertEqual(response_plan.audience, default_plan.audience)
         self.assertEqual(response_plan.languages, default_plan.languages)
         self.assertEqual(response_plan.timestamp_from, default_plan.timestamp_from)
         self.assertEqual(response_plan.timestamp_to, default_plan.timestamp_to)
         self.assertEqual(response_plan.involved_parties, default_plan.involved_parties)
         self.assertEqual(response_plan.realization, default_plan.realization)
+        self.assertEqual(response_plan.physical_mobility, default_plan.physical_mobility)
+        self.assertEqual(response_plan.physical_mobilities, default_plan.physical_mobilities)
         self.assertEqual(response_plan.learning_env, default_plan.learning_env)
-        self.assertEqual(response_plan.tools, default_plan.tools)
         self.assertEqual(response_plan.new_content, default_plan.new_content)
         self.assertEqual(response_plan.formalities, default_plan.formalities)
         self.assertEqual(response_plan.duration, default_plan.duration)
@@ -7606,16 +7623,18 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.name, default_plan.name)
         self.assertEqual(response_plan.partners, default_plan.partners)
         self.assertEqual(response_plan.institutions, default_plan.institutions)
-        self.assertEqual(response_plan.topic, default_plan.topic)
+        self.assertEqual(response_plan.topics, default_plan.topics)
         self.assertEqual(response_plan.lectures, default_plan.lectures)
+        self.assertEqual(response_plan.learning_goals, default_plan.learning_goals)
         self.assertEqual(response_plan.audience, default_plan.audience)
         self.assertEqual(response_plan.languages, default_plan.languages)
         self.assertEqual(response_plan.timestamp_from, default_plan.timestamp_from)
         self.assertEqual(response_plan.timestamp_to, default_plan.timestamp_to)
         self.assertEqual(response_plan.involved_parties, default_plan.involved_parties)
         self.assertEqual(response_plan.realization, default_plan.realization)
+        self.assertEqual(response_plan.physical_mobility, default_plan.physical_mobility)
+        self.assertEqual(response_plan.physical_mobilities, default_plan.physical_mobilities)
         self.assertEqual(response_plan.learning_env, default_plan.learning_env)
-        self.assertEqual(response_plan.tools, default_plan.tools)
         self.assertEqual(response_plan.new_content, default_plan.new_content)
         self.assertEqual(response_plan.formalities, default_plan.formalities)
         self.assertEqual(response_plan.duration, default_plan.duration)
@@ -7772,7 +7791,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         db_state = self.db.plans.find_one({"_id": ObjectId(response["updated_id"])})
         self.assertIsNotNone(db_state)
         self.assertEqual(db_state["name"], "updated_plan")
-        self.assertEqual(db_state["topic"], None)
+        self.assertEqual(db_state["topics"], [])
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
     def test_post_upsert_plan(self):
@@ -7882,7 +7901,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         payload = {
             "plan_id": self.plan_id,
             "field_name": "formalities",
-            "value": {"technology": True, "exam_regulations": True},
+            "value": [{"username": CURRENT_ADMIN.username, "technology": True, "exam_regulations": True}],
         }
 
         response = self.base_checks(
@@ -7898,15 +7917,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
         self.assertEqual(
-            db_state["formalities"], {"technology": True, "exam_regulations": True}
+            db_state["formalities"], [{"username": CURRENT_ADMIN.username, "technology": True, "exam_regulations": True}]
         )
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
         # again, but this time upsert
         payload = {
             "plan_id": ObjectId(),
-            "field_name": "topic",
-            "value": "updated_topic",
+            "field_name": "topics",
+            "value": ["updated_topic", "test"],
         }
 
         response = self.base_checks(
@@ -7920,7 +7939,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         db_state = self.db.plans.find_one({"_id": ObjectId(payload["plan_id"])})
         self.assertIsNotNone(db_state)
-        self.assertEqual(db_state["topic"], "updated_topic")
+        self.assertEqual(db_state["topics"], ["updated_topic", "test"])
         self.assertEqual(db_state["realization"], None)
         self.assertEqual(db_state["steps"], [])
         self.assertEqual(db_state["last_modified"], db_state["creation_timestamp"])
@@ -7942,7 +7961,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "academic_course": "updated_academic_course",
                     "mother_tongue": "de",
                     "foreign_languages": {"en": "c1"},
-                    "learning_goal": "test",
                 }
             ],
         }
@@ -7970,7 +7988,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(db_state["audience"][0]["mother_tongue"], "de")
         self.assertEqual(db_state["audience"][0]["foreign_languages"], {"en": "c1"})
-        self.assertEqual(db_state["audience"][0]["learning_goal"], "test")
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
         # again, but this time upsert
@@ -7986,7 +8003,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "academic_course": "updated_academic_course",
                     "mother_tongue": "de",
                     "foreign_languages": {"en": "c1"},
-                    "learning_goal": "test",
                 }
             ],
         }
@@ -8013,8 +8029,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(db_state["audience"][0]["mother_tongue"], "de")
         self.assertEqual(db_state["audience"][0]["foreign_languages"], {"en": "c1"})
-        self.assertEqual(db_state["audience"][0]["learning_goal"], "test")
-        self.assertEqual(db_state["topic"], None)
+        self.assertEqual(db_state["topics"], [])
         self.assertEqual(db_state["steps"], [])
         self.assertEqual(db_state["last_modified"], db_state["creation_timestamp"])
 
@@ -8340,8 +8355,8 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 },
                 {
                     "plan_id": self.plan_id,
-                    "field_name": "topic",
-                    "value": "updated_topic",
+                    "field_name": "topics",
+                    "value": ["updated_topic", "test"],
                 },
             ]
         }
@@ -8357,7 +8372,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
         self.assertEqual(db_state["realization"], "updated_realization")
-        self.assertEqual(db_state["topic"], "updated_topic")
+        self.assertEqual(db_state["topics"], ["updated_topic", "test"])
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
     def test_post_update_fields_errors(self):
@@ -8374,8 +8389,8 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 },
                 {
                     "plan_id": self.plan_id,
-                    "field_name": "topics",  # field name is wrong, should cause unexpected_attribute
-                    "value": "updated_topic",
+                    "field_name": "topics123",  # field name is wrong, should cause unexpected_attribute
+                    "value": ["updated_topic", "test"],
                 },
             ]
         }
@@ -8402,7 +8417,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
         self.assertEqual(db_state["realization"], "updated_realization")
-        self.assertNotEqual(db_state["topic"], "updated_topic")
+        self.assertNotEqual(db_state["topics"], ["updated_topic", "test"])
 
     def test_post_grant_read_permission(self):
         """

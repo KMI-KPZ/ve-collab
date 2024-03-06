@@ -76,7 +76,7 @@ class Space(dict):
         self,
         params: Dict[str, Any] = {},
     ) -> None:
-        
+
         # init default values
         setattr(self, "_id", ObjectId())
         super().__setitem__("_id", ObjectId())
@@ -100,7 +100,6 @@ class Space(dict):
         super().__setitem__("space_pic", None)
         setattr(self, "space_description", None)
         super().__setitem__("space_description", None)
-
 
         # delete any keys from params that are not expected to avoid having
         # any other additional attributes that might cause trouble
@@ -554,7 +553,6 @@ class TargetGroup:
         "academic_course": (str, type(None)),
         "mother_tongue": str,
         "foreign_languages": (dict, str, type(None)),
-        "learning_goal": str,
     }
 
     def __init__(
@@ -567,7 +565,6 @@ class TargetGroup:
         academic_course: str = None,
         mother_tongue: str = None,
         foreign_languages: Dict[str, str] | str = None,
-        learning_goal: str = None,
     ) -> None:
         """
         Initialization of a `TargetGroup` instance.
@@ -619,7 +616,6 @@ class TargetGroup:
         self.academic_course = academic_course
         self.mother_tongue = mother_tongue
         self.foreign_languages = foreign_languages
-        self.learning_goal = learning_goal
 
     def __str__(self) -> str:
         return str(self.__dict__)
@@ -647,7 +643,6 @@ class TargetGroup:
             "academic_course": self.academic_course,
             "mother_tongue": self.mother_tongue,
             "foreign_languages": self.foreign_languages,
-            "learning_goal": self.learning_goal,
         }
 
     @classmethod
@@ -656,9 +651,9 @@ class TargetGroup:
         initialize a `TargetGroup`-object from a dictionary (`params`).
         All of the followings keys have to be present in the dict:
         `"name"`, `"age_min"`, `"age_max"`, `"experience"`, `"academic_course"`,
-        `"mother_tongue"`, `"foreign_languages"`, `"learning_goal"`.
+        `"mother_tongue"`, `"foreign_languages"`.
         However values are not required, any attributes may be
-        initialized with None (name/experience/academic_course/mother_tongue/learning_goal),
+        initialized with None (name/experience/academic_course/mother_tongue),
         0 (age_min/age_max) or {} (foreign_languages).
 
         Optionally, a `"_id"` may be supplied, conveying the semantics that this TargetGroup
@@ -953,9 +948,11 @@ class Lecture:
             "name": self.name,
             "lecture_type": self.lecture_type,
             "lecture_format": self.lecture_format,
-            "participants_amount": str(self.participants_amount)
-            if self.participants_amount != None
-            else None,
+            "participants_amount": (
+                str(self.participants_amount)
+                if self.participants_amount != None
+                else None
+            ),
         }
 
     @classmethod
@@ -1048,6 +1045,144 @@ class Lecture:
         return instance
 
 
+class PhysicalMobility:
+    EXPECTED_DICT_ENTRIES = {
+        "location": (str, type(None)),
+        "timestamp_from": (str, datetime, type(None)),
+        "timestamp_to": (str, datetime, type(None)),
+    }
+
+    def __init__(
+        self,
+        _id: str | ObjectId = None,
+        location: str = None,
+        timestamp_from: str | datetime = None,
+        timestamp_to: str | datetime = None,
+    ) -> None:
+        # ensure _id becomes type ObjectId, either using the given value or
+        # creating a fresh ID
+        self._id = util.parse_object_id(_id) if _id != None else ObjectId()
+
+        self.location = location
+
+        # ensure type of timestamps, parsing them from str where required
+        self.timestamp_from = util.parse_datetime(timestamp_from)
+        self.timestamp_to = util.parse_datetime(timestamp_to)
+
+    def __str__(self) -> str:
+        return str(self.__dict__)
+
+    def __repr__(self) -> str:
+        return str(self)
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, self.__class__):
+            return self.__dict__ == other.__dict__
+        else:
+            return False
+
+    def to_dict(self) -> Dict:
+        """
+        serialize all attributes of this instance into a dictionary
+        """
+
+        return {
+            "_id": self._id,
+            "location": self.location,
+            "timestamp_from": self.timestamp_from,
+            "timestamp_to": self.timestamp_to,
+        }
+
+    @classmethod
+    def from_dict(cls, params: Dict[str, Any]) -> PhysicalMobility:
+        """
+        initialize a `PhysicalMobility`-object from a dictionary (`params`).
+        All of the followings keys have to be present in the dict:
+        `"location"`, `"timestamp_from"`, `"timestamp_to"`.
+        However values are not required, any attributes may be
+        initialized with None (location/timestamp_from/timestamp_to).
+
+        Optionally, a `"_id"` may be supplied, conveying the semantics that this PhysicalMobility
+        already exists. However, true existence is handled by the database itself and
+        not by this model.
+        If no "_id" is supplied, a fresh one will be generated by the system.
+
+        Any other entries in `params` that do not represent an attribute
+        of a PhysicalMobility will be ignored and deleted from the dictionary
+        (keep in mind for further use of the `params`-dict).
+
+        Returns an instance of `PhysicalMobility`.
+
+        Raises `TypeError` if params is not a dictionary, or any of the values in the
+        dict have the wrong type.
+
+        Raises `MissingKeyError` if any of the required keys is missing
+        in the `params`-dict.
+
+        Usage example::
+
+            physical_mobility = PhysicalMobility.from_dict(params)
+        """
+
+        if not isinstance(params, dict):
+            raise TypeError(
+                "expected type 'dict' for argument 'params', got {}".format(
+                    type(params)
+                )
+            )
+
+        # ensure all necessary keys are in the dict
+        for expected_key in cls.EXPECTED_DICT_ENTRIES.keys():
+            if expected_key not in params:
+                raise MissingKeyError(
+                    "Missing key {} in {} dictionary".format(
+                        expected_key, cls.__name__
+                    ),
+                    expected_key,
+                    cls.__name__,
+                )
+
+        # delete any keys from params that are not expected to avoid having
+        # any other additional attributes that might cause trouble
+        # (e.g. on serialization)
+        for key in list(params.keys()):
+            if key not in [*cls.EXPECTED_DICT_ENTRIES.keys(), *["_id"]]:
+                del params[key]
+
+        # ensure types of attributes are correct
+        for key in params:
+            if key in cls.EXPECTED_DICT_ENTRIES:
+                if not isinstance(params[key], cls.EXPECTED_DICT_ENTRIES[key]):
+                    raise TypeError(
+                        "expected type '{}' for key '{}', got '{}'".format(
+                            cls.EXPECTED_DICT_ENTRIES[key],
+                            key,
+                            type(params[key]),
+                        )
+                    )
+
+        # handle existence and correct type of object id's
+        if "_id" in params:
+            params["_id"] = util.parse_object_id(params["_id"])
+        else:
+            params["_id"] = ObjectId()
+
+        # handle correct type of timestamps
+        if "timestamp_from" in params:
+            params["timestamp_from"] = util.parse_datetime(params["timestamp_from"])
+        else:
+            params["timestamp_from"] = None
+        if "timestamp_to" in params:
+            params["timestamp_to"] = util.parse_datetime(params["timestamp_to"])
+        else:
+            params["timestamp_to"] = None
+
+        # create and return object
+        instance = cls()
+        instance.__dict__.update(params)
+        return instance
+
+
 class VEPlan:
     """
     Model class to represent a VE-Plan
@@ -1057,16 +1192,18 @@ class VEPlan:
         "name": (str, type(None)),
         "partners": list,
         "institutions": list,
-        "topic": (str, type(None)),
+        "topics": list,
         "lectures": list,
+        "learning_goals": list,
         "audience": list,
         "languages": list,
         "involved_parties": list,
         "realization": (str, type(None)),
+        "physical_mobility": (bool, type(None)),
+        "physical_mobilities": list,
         "learning_env": (str, type(None)),
-        "tools": list,
         "new_content": (bool, type(None)),
-        "formalities": dict,
+        "formalities": list,
         "steps": list,
         "progress": dict,
     }
@@ -1082,16 +1219,18 @@ class VEPlan:
         name: str = None,
         partners: List[str] = [],
         institutions: List[Institution] = [],
-        topic: str = None,
+        topics: List[str] = [],
         lectures: List[Lecture] = [],
+        learning_goals: List[str] = [],
         audience: List[TargetGroup] = [],
         languages: List[str] = [],
         involved_parties: List[str] = [],
         realization: str = None,
+        physical_mobility: bool = None,
+        physical_mobilities: List[PhysicalMobility] = [],
         learning_env: str = None,
-        tools: List[str] = [],
         new_content: bool = None,
-        formalities: dict = {},
+        formalities: list = [],
         steps: List[Step] = [],
         progress: Dict = {},
     ) -> None:
@@ -1132,16 +1271,18 @@ class VEPlan:
         self.name = name
         self.partners = partners
         self.institutions = institutions
-        self.topic = topic
+        self.topics = topics
         self.lectures = lectures
+        self.learning_goals = learning_goals
         self.audience = audience
         self.languages = languages
         self.involved_parties = involved_parties
         self.realization = realization
         self.learning_env = learning_env
-        self.tools = tools
         self.new_content = new_content
         self.steps = steps
+        self.physical_mobility = physical_mobility
+        self.physical_mobilities = physical_mobilities
 
         if progress:
             # TODO check every expected key is inside as well
@@ -1150,14 +1291,14 @@ class VEPlan:
             self.progress = {
                 "name": "not_started",
                 "institutions": "not_started",
-                "topic": "not_started",
+                "topics": "not_started",
                 "lectures": "not_started",
+                "learning_goals": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
-                "tools": "not_started",
                 "new_content": "not_started",
                 "formalities": "not_started",
                 "steps": [
@@ -1172,36 +1313,37 @@ class VEPlan:
 
         if formalities:
             self.formalities = formalities
-            if "technology" not in self.formalities:
-                raise MissingKeyError(
-                    "Missing key {} in {} dictionary".format(
-                        "technology", "formalities"
-                    ),
-                    "technology",
-                    "formalities",
-                )
-            if "exam_regulations" not in self.formalities:
-                raise MissingKeyError(
-                    "Missing key {} in {} dictionary".format(
-                        "technology", "exam_regulations"
-                    ),
-                    "exam_regulations",
-                    "formalities",
-                )
-            if not isinstance(self.formalities["technology"], (bool, type(None))):
-                raise TypeError(
-                    "expected type 'bool|None' for attribute 'formalitites['technology']', got {} instead".format(
-                        type(self.formalities["technology"])
+            for formality in self.formalities:
+                # ensure that each formality entry is associated with a user
+                if "username" not in formality:
+                    raise MissingKeyError(
+                        "Missing key 'username' in formalities dictionary",
+                        "username",
+                        "formalities",
                     )
-                )
-            if not isinstance(self.formalities["exam_regulations"], (bool, type(None))):
-                raise TypeError(
-                    "expected type 'bool|None' for attribute 'formalitites['exam_regulations']', got {} instead".format(
-                        type(self.formalities["exam_regulations"])
+
+                # ensure that the username is also a partner of the plan
+                if not (
+                    formality["username"] in self.partners
+                    or formality["username"] == self.author
+                ):
+                    raise ValueError(
+                        "username '{}' in formalities is not a partner of the plan".format(
+                            formality["username"]
+                        )
                     )
-                )
+
+                # ensure that any other values are of type bool or None
+                for attr, value in formality.items():
+                    if attr != "username":
+                        if not isinstance(value, (bool, type(None))):
+                            raise TypeError(
+                                "expected type 'bool|None' for attribute 'formalitites[{}]', got {} instead".format(
+                                    attr, type(value)
+                                )
+                            )
         else:
-            self.formalities = {"technology": None, "exam_regulations": None}
+            self.formalities = []
 
         self.workload = 0
 
@@ -1246,18 +1388,23 @@ class VEPlan:
             "institutions": [
                 institution.to_dict() for institution in self.institutions
             ],
-            "topic": self.topic,
+            "topics": self.topics,
             "lectures": [lecture.to_dict() for lecture in self.lectures],
+            "learning_goals": self.learning_goals,
             "audience": [target_group.to_dict() for target_group in self.audience],
             "languages": self.languages,
             "timestamp_from": self.timestamp_from,
             "timestamp_to": self.timestamp_to,
             "involved_parties": self.involved_parties,
             "realization": self.realization,
+            "physical_mobility": self.physical_mobility,
+            "physical_mobilities": [
+                physical_mobility.to_dict()
+                for physical_mobility in self.physical_mobilities
+            ],
             "learning_env": self.learning_env,
-            "tools": self.tools,
             "new_content": self.new_content,
-            "formalities": self.formalities,
+            "formalities": [formality for formality in self.formalities],
             "duration": self.duration.total_seconds() if self.duration else None,
             "workload": self.workload,
             "steps": [step.to_dict() for step in self.steps],
@@ -1347,7 +1494,7 @@ class VEPlan:
                         "academic_courses": [],
                     }
                 ],
-                "topic": None,
+                "topics": [],
                 "lectures": [
                     {
                         "_id": "object_id_str",
@@ -1357,6 +1504,7 @@ class VEPlan:
                         "participants_amount": 0,
                     }
                 ],
+                "learning_goals": [],
                 "audience": [
                     {
                         "_id": "object_id_str",
@@ -1367,19 +1515,27 @@ class VEPlan:
                         "academic_course": None,
                         "mother_tongue": None,
                         "foreign_languages": {},
-                        "learning_goal": None,
                     }
                 ],
                 "languages": [],
                 "involved_parties": [],
                 "realization": None,
+                "physical_mobility": True,
+                "physical_mobilities": [
+                    {
+                        "_id": "object_id_str",
+                        "location": None,
+                        "timestamp_from": None,
+                        "timestamp_to": None,
+                    }
+                ],
                 "learning_env": None,
-                "tools": [],
                 "new_content": None,
-                "formalities": {
-                    "technology": None,
-                    "exam_regulations": None,
-                },
+                "formalities": [{
+                    "username": "partnerX",
+                    "technology": None|True|False,
+                    "exam_regulations": None|True|False,
+                }],
                 "steps": [
                     {
                         "_id": "object_id_str",
@@ -1407,14 +1563,14 @@ class VEPlan:
                 "progress": {
                     "name": "<completed|uncompleted|not_started>",
                     "institutions": "<completed|uncompleted|not_started>",
-                    "topic": "<completed|uncompleted|not_started>",
+                    "topics": "<completed|uncompleted|not_started>",
                     "lectures": "<completed|uncompleted|not_started>",
+                    "learning_goals": "<completed|uncompleted|not_started>",
                     "audience": "<completed|uncompleted|not_started>",
                     "languages": "<completed|uncompleted|not_started>",
                     "involved_parties": "<completed|uncompleted|not_started>",
                     "realization": "<completed|uncompleted|not_started>",
                     "learning_env": "<completed|uncompleted|not_started>",
-                    "tools": "<completed|uncompleted|not_started>",
                     "new_content": "<completed|uncompleted|not_started>",
                     "formalities": "<completed|uncompleted|not_started>",
                     "steps": "<completed|uncompleted|not_started>",
@@ -1483,34 +1639,38 @@ class VEPlan:
             params["last_modified"] = util.parse_datetime(params["last_modified"])
 
         # handle correct type of formalities
-        if "technology" not in params["formalities"]:
-            raise MissingKeyError(
-                "Missing key {} in {} dictionary".format("technology", "formalities"),
-                "technology",
-                "formalities",
-            )
-        if "exam_regulations" not in params["formalities"]:
-            raise MissingKeyError(
-                "Missing key {} in {} dictionary".format(
-                    "technology", "exam_regulations"
-                ),
-                "technology",
-                "exam_regulations",
-            )
-        if not isinstance(params["formalities"]["technology"], (bool, type(None))):
-            raise TypeError(
-                "expected type 'bool|None' for attribute 'formalitites['technology']', got {} instead".format(
-                    type(params["formalities"]["technology"])
-                )
-            )
-        if not isinstance(
-            params["formalities"]["exam_regulations"], (bool, type(None))
-        ):
-            raise TypeError(
-                "expected type 'bool|None' for attribute 'formalitites['exam_regulations']', got {} instead".format(
-                    type(params["formalities"]["exam_regulations"])
-                )
-            )
+        if "formalities" in params:
+            for formality in params["formalities"]:
+                # ensure that each formality entry is associated with a user
+                if "username" not in formality:
+                    raise MissingKeyError(
+                        "Missing key 'username' in formalities dictionary",
+                        "username",
+                        "formalities",
+                    )
+
+                # ensure that the username is also a partner of the plan
+                if "author" not in params:
+                    params["author"] = None
+                if not (
+                    formality["username"] in params["partners"]
+                    or formality["username"] == params["author"]
+                ):
+                    raise ValueError(
+                        "username '{}' in formalities is not a partner of the plan".format(
+                            formality["username"]
+                        )
+                    )
+
+                # ensure that any other values are of type bool or None
+                for attr, value in formality.items():
+                    if attr != "username":
+                        if not isinstance(value, (bool, type(None))):
+                            raise TypeError(
+                                "expected type 'bool|None' for attribute 'formalitites[{}]', got {} instead".format(
+                                    attr, type(value)
+                                )
+                            )
 
         # build step objects, asserting that the names of the steps are unique,
         # gotta do this manually, since __dict__.update doesn't initialize nested objects
@@ -1531,6 +1691,13 @@ class VEPlan:
             Institution.from_dict(institution) for institution in params["institutions"]
         ]
         del params["institutions"]
+
+        # also build the physical_mobilities
+        physical_mobilities = [
+            PhysicalMobility.from_dict(physical_mobility)
+            for physical_mobility in params["physical_mobilities"]
+        ]
+        del params["physical_mobilities"]
 
         # last but not least, build lectures
         lectures = [Lecture.from_dict(lecture) for lecture in params["lectures"]]
@@ -1571,7 +1738,11 @@ class VEPlan:
 
         # build VEPlan and set remaining values
         instance = cls(
-            steps=steps, audience=audience, institutions=institutions, lectures=lectures
+            steps=steps,
+            audience=audience,
+            institutions=institutions,
+            lectures=lectures,
+            physical_mobilities=physical_mobilities,
         )
         instance.__dict__.update(params)
         return instance

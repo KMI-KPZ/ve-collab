@@ -27,8 +27,8 @@ export const sideMenuStepsData: SideMenuStep[] = [
         link: '/startingWizard/generalInformation/participatingCourses',
     },
     {
-        text: 'Globale Lehr-/Lernziele',
-        id: 'globalGoals',
+        text: 'Richtlernziele',
+        id: 'learning_goals',
         link: '/startingWizard/generalInformation/globalGoals',
     },
     {
@@ -38,7 +38,7 @@ export const sideMenuStepsData: SideMenuStep[] = [
     },
     {
         text: 'Thema/Themen',
-        id: 'topic',
+        id: 'topics',
         link: '/startingWizard/generalInformation/veTopic',
     },
     {
@@ -47,7 +47,7 @@ export const sideMenuStepsData: SideMenuStep[] = [
         link: '/startingWizard/generalInformation/languages',
     },
     {
-        text: '(Digitale) Umsetzung',
+        text: '(Digitale) Formate',
         id: 'realization',
         link: '/startingWizard/generalInformation/courseFormat',
     },
@@ -55,11 +55,6 @@ export const sideMenuStepsData: SideMenuStep[] = [
         text: 'Digitale Lernumgebung',
         id: 'learning_env',
         link: '/startingWizard/generalInformation/learningPlatform',
-    },
-    {
-        text: 'Tools',
-        id: 'tools',
-        link: '/startingWizard/generalInformation/tools',
     },
     {
         text: 'Formale Rahmenbedingungen',

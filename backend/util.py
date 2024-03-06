@@ -59,6 +59,8 @@ def parse_object_id(obj_id: str | ObjectId) -> ObjectId:
 def parse_datetime(timestamp: str | datetime) -> Optional[datetime]:
     if timestamp is None or isinstance(timestamp, datetime):
         return timestamp
+    elif timestamp == "":
+        return None
     else:
         # dateutil parses guesses format, best bet is to use ISO8601 despite
         return dateutil.parser.parse(timestamp)

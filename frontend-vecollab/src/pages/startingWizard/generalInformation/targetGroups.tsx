@@ -1,6 +1,6 @@
 import WhiteBox from '@/components/Layout/WhiteBox';
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
-import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
+import SideProgressBarSectionBroadPlanner from '@/components/StartingWizard/SideProgressBarSectionBroadPlanner';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
@@ -13,7 +13,6 @@ import {
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/startingWizard/sideProgressBar';
-import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 
@@ -25,7 +24,6 @@ export interface TargetGroup {
     academic_course: string;
     mother_tongue: string;
     foreign_languages: string;
-    learning_goal: string;
 }
 
 interface FormValues {
@@ -39,7 +37,6 @@ export default function TargetGroups() {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
-    const { validateAndRoute } = useValidation();
     const [steps, setSteps] = useState<IFineStep[]>([]);
 
     // check for session errors and trigger the login flow if necessary
@@ -70,7 +67,6 @@ export default function TargetGroups() {
                     academic_course: '',
                     mother_tongue: '',
                     foreign_languages: '',
-                    learning_goal: '',
                 },
             ],
         },
@@ -131,6 +127,14 @@ export default function TargetGroups() {
             },
             session?.accessToken
         );
+    };
+
+    const combinedSubmitRouteAndUpdate = async (data: FormValues, url: string) => {
+        onSubmit(data);
+        await router.push({
+            pathname: url,
+            query: { plannerId: router.query.plannerId },
+        });
     };
 
     const rendertargetGroupsInputs = (): JSX.Element[] => {
@@ -326,35 +330,6 @@ export default function TargetGroups() {
                             </p>
                         </div>
                     </div>
-                    <div className="mt-4 flex">
-                        <div className="w-1/4 flex items-center">
-                            <label htmlFor="foreignLanguages" className="px-2 py-2">
-                                Lehr-/Lernziele
-                            </label>
-                        </div>
-                        <div className="w-3/4">
-                            <textarea
-                                rows={3}
-                                {...register(`targetGroups.${index}.learning_goal`, {
-                                    maxLength: {
-                                        value: 50,
-                                        message:
-                                            'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
-                                    },
-                                    pattern: {
-                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'".:,;&()!?-]*$/i,
-                                        message:
-                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
-                                    },
-                                })}
-                                placeholder="Welche"
-                                className="border border-gray-500 rounded-lg w-full p-2"
-                            />
-                            <p className="text-red-600 pt-2">
-                                {errors?.targetGroups?.[index]?.learning_goal?.message}
-                            </p>
-                        </div>
-                    </div>
                 </WhiteBox>
             </div>
         ));
@@ -390,7 +365,6 @@ export default function TargetGroups() {
                                             academic_course: '',
                                             mother_tongue: '',
                                             foreign_languages: '',
-                                            learning_goal: '',
                                         });
                                     }}
                                 >
@@ -403,14 +377,12 @@ export default function TargetGroups() {
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={() => {
-                                        validateAndRoute(
-                                            '/startingWizard/generalInformation/globalGoals',
-                                            router.query.plannerId,
-                                            handleSubmit(onSubmit),
-                                            isValid
-                                        );
-                                    }}
+                                    onClick={handleSubmit((data) =>
+                                        combinedSubmitRouteAndUpdate(
+                                            data,
+                                            '/startingWizard/generalInformation/globalGoals'
+                                        )
+                                    )}
                                 >
                                     Zurück
                                 </button>
@@ -419,14 +391,12 @@ export default function TargetGroups() {
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={() => {
-                                        validateAndRoute(
-                                            '/startingWizard/generalInformation/veTopic',
-                                            router.query.plannerId,
-                                            handleSubmit(onSubmit),
-                                            isValid
-                                        );
-                                    }}
+                                    onClick={handleSubmit((data) =>
+                                        combinedSubmitRouteAndUpdate(
+                                            data,
+                                            '/startingWizard/generalInformation/veTopic'
+                                        )
+                                    )}
                                 >
                                     Weiter
                                 </button>
@@ -434,7 +404,7 @@ export default function TargetGroups() {
                         </div>
                     </form>
                 )}
-                <SideProgressBarSection
+                <SideProgressBarSectionBroadPlanner
                     progressState={sideMenuStepsProgress}
                     handleValidation={handleSubmit(onSubmit)}
                     isValid={isValid}

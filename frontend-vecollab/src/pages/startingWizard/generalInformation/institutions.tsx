@@ -1,6 +1,6 @@
 import WhiteBox from '@/components/Layout/WhiteBox';
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
-import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
+import SideProgressBarSectionBroadPlanner from '@/components/StartingWizard/SideProgressBarSectionBroadPlanner';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
@@ -13,7 +13,6 @@ import {
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/startingWizard/sideProgressBar';
-import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 
@@ -36,7 +35,6 @@ export default function Institutions() {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
-    const { validateAndRoute } = useValidation();
     const [steps, setSteps] = useState<IFineStep[]>([]);
 
     // check for session errors and trigger the login flow if necessary
@@ -126,17 +124,25 @@ export default function Institutions() {
         );
     };
 
+    const combinedSubmitRouteAndUpdate = async (data: FormValues, url: string) => {
+        onSubmit(data);
+        await router.push({
+            pathname: url,
+            query: { plannerId: router.query.plannerId },
+        });
+    };
+
     const renderInstitutionsInputs = (): JSX.Element[] => {
         return fields.map((institution, index) => (
             <div key={institution.id} className="mx-2">
                 <WhiteBox>
                     <div className="mt-4 flex">
-                        <div className="w-1/4 flex items-center">
+                        <div className="w-1/3 flex items-center">
                             <label htmlFor="name" className="px-2 py-2">
                                 Name
                             </label>
                         </div>
-                        <div className="w-3/4">
+                        <div className="w-2/3">
                             <input
                                 type="text"
                                 placeholder="Name eingeben"
@@ -160,12 +166,12 @@ export default function Institutions() {
                         </div>
                     </div>
                     <div className="mt-4 flex">
-                        <div className="w-1/4 flex items-center">
+                        <div className="w-1/3 flex items-center">
                             <label htmlFor="schoolType" className="px-2 py-2">
                                 Bildungseinrichtung
                             </label>
                         </div>
-                        <div className="w-3/4">
+                        <div className="w-2/3">
                             <select
                                 placeholder="Bildungseinrichtung eingeben"
                                 className="border border-gray-500 rounded-lg w-full h-12 p-2"
@@ -199,12 +205,12 @@ export default function Institutions() {
                         </div>
                     </div>
                     <div className="mt-4 flex">
-                        <div className="w-1/4 flex items-center">
+                        <div className="w-1/3 flex items-center">
                             <label htmlFor="country" className="px-2 py-2">
                                 Land
                             </label>
                         </div>
-                        <div className="w-3/4">
+                        <div className="w-2/3">
                             <input
                                 type="text"
                                 placeholder="Land eingeben"
@@ -230,13 +236,13 @@ export default function Institutions() {
                     <div className="mt-4 flex">
                         <div className="w-1/3 flex items-center">
                             <label htmlFor="department" className="px-2 py-2">
-                                Abteilungsname
+                                Fachbereich
                             </label>
                         </div>
                         <div className="w-2/3">
                             <input
                                 type="text"
-                                placeholder="Abteilungsname eingeben"
+                                placeholder="Fachbereich eingeben"
                                 className="border border-gray-500 rounded-lg w-full h-12 p-2"
                                 {...register(`institutions.${index}.departments.0`, {
                                     maxLength: {
@@ -331,14 +337,12 @@ export default function Institutions() {
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={() => {
-                                        validateAndRoute(
-                                            '/startingWizard/generalInformation/externalParties',
-                                            router.query.plannerId,
-                                            handleSubmit(onSubmit),
-                                            isValid
-                                        );
-                                    }}
+                                    onClick={handleSubmit((data) =>
+                                        combinedSubmitRouteAndUpdate(
+                                            data,
+                                            '/startingWizard/generalInformation/externalParties'
+                                        )
+                                    )}
                                 >
                                     Zurück
                                 </button>
@@ -347,14 +351,12 @@ export default function Institutions() {
                                 <button
                                     type="button"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={() => {
-                                        validateAndRoute(
-                                            '/startingWizard/generalInformation/participatingCourses',
-                                            router.query.plannerId,
-                                            handleSubmit(onSubmit),
-                                            isValid
-                                        );
-                                    }}
+                                    onClick={handleSubmit((data) =>
+                                        combinedSubmitRouteAndUpdate(
+                                            data,
+                                            '/startingWizard/generalInformation/participatingCourses'
+                                        )
+                                    )}
                                 >
                                     Weiter
                                 </button>
@@ -362,7 +364,7 @@ export default function Institutions() {
                         </div>
                     </form>
                 )}
-                <SideProgressBarSection
+                <SideProgressBarSectionBroadPlanner
                     progressState={sideMenuStepsProgress}
                     handleValidation={handleSubmit(onSubmit)}
                     isValid={isValid}

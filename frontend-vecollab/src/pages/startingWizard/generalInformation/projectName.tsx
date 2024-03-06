@@ -1,6 +1,6 @@
 import LoadingAnimation from '@/components/LoadingAnimation';
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
-import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
+import SideProgressBarSectionBroadPlanner from '@/components/StartingWizard/SideProgressBarSectionBroadPlanner';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
@@ -12,12 +12,11 @@ import {
 } from '@/interfaces/startingWizard/sideProgressBar';
 import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
-import { z } from 'zod';
+import { SubmitHandler, useForm } from 'react-hook-form';
 
-const vaidationSchema = z
-    .string()
-    .max(40, { message: 'Der Name darf maximal 40 Zeichen lang sein' })
-    .min(1, { message: 'Bitte gib den Plan einen Namen' });
+interface FormValues {
+    name: string;
+}
 
 export default function EssentialInformation() {
     const { data: session, status } = useSession();
@@ -27,8 +26,6 @@ export default function EssentialInformation() {
         initialSideProgressBarStates
     );
     const [steps, setSteps] = useState<IFineStep[]>([]);
-    const [planName, setPlanName] = useState<string>('');
-    const [errors, setErrors] = useState<string[]>();
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -39,6 +36,13 @@ export default function EssentialInformation() {
             }
         }
     }, [session, status]);
+
+    const {
+        register,
+        handleSubmit,
+        formState: { errors, isValid },
+        setValue,
+    } = useForm<FormValues>({ mode: 'onChange' });
 
     useEffect(() => {
         // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
@@ -60,47 +64,42 @@ export default function EssentialInformation() {
                         setSideMenuStepsProgress(data.plan.progress);
                     }
                     setSteps(data.plan.steps);
-                    setPlanName(data.plan.name);
+                    setValue('name', data.plan.name, { shouldValidate: true });
                 }
             );
         }
-    }, [session, status, router]);
+    }, [session, status, router, setValue]);
 
-    const handleSubmit = async (e: React.MouseEvent, routePath: string) => {
-        e.preventDefault();
-        setLoading(true);
-        const validated = vaidationSchema.safeParse(planName);
-        if (validated.success) {
-            await fetchPOST(
-                '/planner/update_fields',
-                {
-                    update: [
-                        {
-                            plan_id: router.query.plannerId,
-                            field_name: 'name',
-                            value: planName,
+    const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
+        await fetchPOST(
+            '/planner/update_fields',
+            {
+                update: [
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'name',
+                        value: data.name,
+                    },
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'progress',
+                        value: {
+                            ...sideMenuStepsProgress,
+                            name: ProgressState.completed,
                         },
-                        {
-                            plan_id: router.query.plannerId,
-                            field_name: 'progress',
-                            value: {
-                                ...sideMenuStepsProgress,
-                                name: ProgressState.completed,
-                            },
-                        },
-                    ],
-                },
-                session?.accessToken
-            );
-            await router.push({
-                pathname: routePath,
-                query: { plannerId: router.query.plannerId },
-            });
-        } else {
-            const formatted = validated.error.format();
-            setErrors(formatted._errors);
-        }
-        setLoading(false);
+                    },
+                ],
+            },
+            session?.accessToken
+        );
+    };
+
+    const combinedSubmitRouteAndUpdate = async (data: FormValues, url: string) => {
+        onSubmit(data);
+        await router.push({
+            pathname: url,
+            query: { plannerId: router.query.plannerId },
+        });
     };
 
     return (
@@ -121,42 +120,57 @@ export default function EssentialInformation() {
                                         type="text"
                                         placeholder="Name eingeben"
                                         className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
-                                        value={planName}
-                                        onChange={(e) => setPlanName(e.target.value)}
+                                        {...register('name', {
+                                            required: {
+                                                value: true,
+                                                message: 'Bitte gebe deiner VE einen Namen.',
+                                            },
+                                            maxLength: {
+                                                value: 50,
+                                                message:
+                                                    'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                            },
+                                            pattern: {
+                                                value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
+                                                message:
+                                                    'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?-',
+                                            },
+                                        })}
                                     />
-                                    {errors && (
-                                        <div className="text-red-500 text-sm">
-                                            {errors.map((error, index) => (
-                                                <div key={index}>{error}</div>
-                                            ))}
-                                        </div>
-                                    )}
+                                    <p className="text-red-600 pt-2">{errors.name?.message}</p>
                                 </div>
                             </div>
                         </div>
                         <div className="flex justify-around w-full">
-                            <button
-                                type="button"
-                                className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg invisible"
-                            >
-                                Zurück
-                            </button>
-                            <button
-                                type="submit"
-                                className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                onClick={(e: React.MouseEvent) =>
-                                    handleSubmit(e, '/startingWizard/generalInformation/partners')
-                                }
-                            >
-                                Weiter
-                            </button>
+                            <div>
+                                <button
+                                    type="button"
+                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg invisible"
+                                >
+                                    Zurück
+                                </button>
+                            </div>
+                            <div>
+                                <button
+                                    type="button"
+                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    onClick={handleSubmit((data) =>
+                                        combinedSubmitRouteAndUpdate(
+                                            data,
+                                            '/startingWizard/generalInformation/partners'
+                                        )
+                                    )}
+                                >
+                                    Weiter
+                                </button>
+                            </div>
                         </div>
                     </form>
                 )}
-                <SideProgressBarSection
+                <SideProgressBarSectionBroadPlanner
                     progressState={sideMenuStepsProgress}
-                    handleValidation={() => {}}
-                    isValid={true}
+                    handleValidation={handleSubmit(onSubmit)}
+                    isValid={isValid}
                     sideMenuStepsData={sideMenuStepsData}
                 />
             </div>

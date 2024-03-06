@@ -191,6 +191,7 @@ class VEPlanHandler(BaseHandler):
                                 "participants_amount": 0,
                             }
                         ],
+                        "learning_goals": ["test"],
                         "audience": [
                             {
                                 "name": "test",
@@ -206,13 +207,22 @@ class VEPlanHandler(BaseHandler):
                         "languages": ["test"],
                         "involved_parties": ["test"],
                         "realization": "test",
+                        "physical_mobility": True,
+                        "physical_mobilities": [
+                            {
+                                "location": "test",
+                                "timestamp_from": "2000-01-01",
+                                "timestamp_to": "2000-01-08",
+                            }
+                        ],
                         "learning_env": "test",
                         "tools": ["test"],
                         "new_content": False,
-                        "formalities": {
+                        "formalities": {{
+                            "username": "username1",
                             "technology": False,
                             "exam_regulations": False,
-                        },
+                        }},
                         "steps": [
                             {
                                 "name": "test",
@@ -240,6 +250,7 @@ class VEPlanHandler(BaseHandler):
                             "institutions": "<completed|uncompleted|not_started>",
                             "topic": "<completed|uncompleted|not_started>",
                             "lectures": "<completed|uncompleted|not_started>",
+                            "learning_goals": "<completed|uncompleted|not_started>",
                             "audience": "<completed|uncompleted|not_started>",
                             "languages": "<completed|uncompleted|not_started>",
                             "involved_parties": "<completed|uncompleted|not_started>",
@@ -380,6 +391,7 @@ class VEPlanHandler(BaseHandler):
                                 "participants_amount": 0,
                             }
                         ],
+                        "learning_goals": ["test"],
                         "audience": [
                             {
                                 "name": "test",
@@ -395,13 +407,22 @@ class VEPlanHandler(BaseHandler):
                         "languages": ["test"],
                         "involved_parties": ["test"],
                         "realization": "test",
+                        "physical_mobility": True,
+                        "physical_mobilities": [
+                            {
+                                "location": "test",
+                                "timestamp_from": "2000-01-01",
+                                "timestamp_to": "2000-01-08",
+                            }
+                        ],
                         "learning_env": "test",
                         "tools": ["test"],
                         "new_content": False,
-                        "formalities": {
+                        "formalities": [{
+                            "username": "username1",
                             "technology": False,
                             "exam_regulations": False,
-                        },
+                        }],
                         "steps": [
                             {
                                 "name": "test",
@@ -429,6 +450,7 @@ class VEPlanHandler(BaseHandler):
                             "institutions": "<completed|uncompleted|not_started>",
                             "topic": "<completed|uncompleted|not_started>",
                             "lectures": "<completed|uncompleted|not_started>",
+                            "learning_goals": "<completed|uncompleted|not_started>",
                             "audience": "<completed|uncompleted|not_started>",
                             "languages": "<completed|uncompleted|not_started>",
                             "involved_parties": "<completed|uncompleted|not_started>",
