@@ -62,6 +62,12 @@ export const defaultFineStepData: IFineStep = {
     custom_attributes: {},
 };
 
+const emptyBroadStep: BroadStep = {
+    from: '',
+    to: '',
+    name: '',
+};
+
 export default function BroadPlanner() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
@@ -110,13 +116,7 @@ export default function BroadPlanner() {
                 (data) => {
                     setLoading(false);
                     setSteps(data.plan.steps);
-                    setValue('broadSteps', [
-                        {
-                            from: '',
-                            to: '',
-                            name: '',
-                        },
-                    ]);
+                    setValue('broadSteps', [emptyBroadStep]);
                     if (data.plan.steps?.length > 0) {
                         const steps: IFineStep[] = data.plan.steps;
                         const broadSteps: BroadStep[] = steps.map((step) => {
@@ -137,7 +137,7 @@ export default function BroadPlanner() {
         }
     }, [session, status, router, setValue]);
 
-    const { fields, append, remove, move } = useFieldArray({
+    const { fields, append, remove, move, update } = useFieldArray({
         name: 'broadSteps',
         control,
     });
@@ -210,6 +210,14 @@ export default function BroadPlanner() {
         }
     };
 
+    const handleDelete = (index: number): void => {
+        if (fields.length > 1) {
+            remove(index);
+        } else {
+            update(index, emptyBroadStep);
+        }
+    };
+
     const renderBroadStepsInputs = (): JSX.Element[] => {
         return fields.map((step, index) => (
             <Draggable key={`broadSteps.${index}`} draggableId={`step-${index}`} index={index}>
@@ -271,7 +279,7 @@ export default function BroadPlanner() {
                                     ></Image>
                                     <Image
                                         className="mx-2 cursor-pointer"
-                                        onClick={() => remove(index)}
+                                        onClick={() => handleDelete(index)}
                                         src={trash}
                                         width={20}
                                         height={20}
