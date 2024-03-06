@@ -27,6 +27,9 @@ import {
 import iconUpAndDown from '@/images/icons/startingWizard/upAndDownArrow.png';
 import trash from '@/images/icons/startingWizard/trash.png';
 import Image from 'next/image';
+import { Tooltip } from '@/components/Tooltip';
+import Link from 'next/link';
+import { FiInfo } from 'react-icons/fi';
 
 interface BroadStep {
     from: string;
@@ -313,8 +316,17 @@ export default function BroadPlanner() {
                 ) : (
                     <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                         <div>
-                            <div className={'text-center font-bold text-4xl mb-2'}>
-                                Plane den groben Ablauf
+                            <div className="flex justify-center">
+                                <div
+                                    className={'text-center font-bold text-4xl mb-2 relative w-fit'}
+                                >
+                                    Plane den groben Ablauf
+                                    <Tooltip tooltipsText="Ausführliche Informationen zur Etappenplanung und verschiedenen Typen und Modellen von VA findest du hier in den Selbstlernmaterialien …">
+                                        <Link target="_blank" href={'/content/VE-Planung'}>
+                                            <FiInfo size={30} color="#00748f" />
+                                        </Link>
+                                    </Tooltip>
+                                </div>
                             </div>
                             <div className={'text-center mb-20'}>
                                 erstelle beliebig viele Etappen, setze deren Daten und vergib für

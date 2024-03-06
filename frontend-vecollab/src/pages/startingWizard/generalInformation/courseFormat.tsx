@@ -18,6 +18,8 @@ import { SingleValue, ActionMeta } from 'react-select';
 import Link from 'next/link';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { set } from 'date-fns';
+import { Tooltip } from '@/components/Tooltip';
+import { FiInfo } from 'react-icons/fi';
 
 interface PhysicalMobility {
     location: string;
@@ -205,8 +207,13 @@ export default function Realization() {
                 ) : (
                     <form className="flex flex-col w-full p-12 max-w-screen-2xl items-center justify-start">
                         <div>
-                            <div className={'text-center font-bold text-4xl mb-2'}>
+                            <div className={'text-center font-bold text-4xl mb-2 relative'}>
                                 In welchem Format / welchen Formaten wird der VE umgesetzt?
+                                <Tooltip tooltipsText="Mehr zu Formaten findest du hier in den Selbstlernmaterialien …">
+                                    <Link target="_blank" href={'/content/Digitale%20Medien%20&%20Werkzeuge'}>
+                                        <FiInfo size={30} color="#00748f" />
+                                    </Link>
+                                </Tooltip>
                             </div>
                             <div className={'text-center mb-20'}>optional</div>
                             <div className="mx-7 mt-7 flex justify-center">

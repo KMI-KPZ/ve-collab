@@ -14,6 +14,8 @@ import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import Link from 'next/link';
+import { Tooltip } from '@/components/Tooltip';
+import { FiInfo } from 'react-icons/fi';
 
 export default function Topics() {
     const { data: session, status } = useSession();
@@ -120,8 +122,13 @@ export default function Topics() {
                 ) : (
                     <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                         <div>
-                            <div className={'text-center font-bold text-4xl mb-2'}>
+                            <div className={'text-center font-bold text-4xl mb-2 relative'}>
                                 Zu welchem Thema / welchen Themen findet der VE statt?
+                                <Tooltip tooltipsText="Inspiration zu fachbezogenen Themen verschiedener Disziplinen findest du hier in den Selbstlernmaterialien …">
+                                    <Link target="_blank" href={'/content/Beispiele%20aus%20der%20Praxis'}>
+                                        <FiInfo size={30} color="#00748f" />
+                                    </Link>
+                                </Tooltip>
                             </div>
                             <div className={'text-center mb-20'}>optional</div>
                             <div className="m-7 flex justify-center">

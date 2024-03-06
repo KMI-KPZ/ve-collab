@@ -226,7 +226,7 @@ export default function Partners() {
                                 <div className={'text-center font-bold text-4xl mb-2 relative'}>
                                     Wer ist am Projekt beteiligt?
                                     <Tooltip tooltipsText="Tipps für die Partnersuche findest du hier in den Selbstlernmaterialien …">
-                                        <Link target="_blank" href={'/content'}>
+                                        <Link target="_blank" href={'/content/Partnersuche'}>
                                             <FiInfo size={30} color="#00748f" />
                                         </Link>
                                     </Tooltip>

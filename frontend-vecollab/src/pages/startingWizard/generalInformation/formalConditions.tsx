@@ -14,6 +14,8 @@ import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import Link from 'next/link';
 import { TooltipList } from '@/components/TooltipList';
+import { Tooltip } from '@/components/Tooltip';
+import { FiInfo } from 'react-icons/fi';
 
 export interface FormalConditionPartner {
     username: string;
@@ -332,10 +334,15 @@ export default function FormalConditions() {
                 {loading ? (
                     <LoadingAnimation />
                 ) : (
-                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
+                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-center">
                         <div>
-                            <div className={'text-center font-bold text-4xl mb-2'}>
+                            <div className={'text-center font-bold text-4xl mb-2 relative'}>
                                 Formale Rahmenbedingungen
+                                <Tooltip tooltipsText="Mehr zu formalen Rahmenbedingungen findest du hier in den Selbstlernmaterialien …">
+                                    <Link target="_blank" href={'/content/Herausforderungen'}>
+                                        <FiInfo size={30} color="#00748f" />
+                                    </Link>
+                                </Tooltip>
                             </div>
                             <div className={'text-center mb-4'}>optional</div>
                             <div className={'text-center'}>

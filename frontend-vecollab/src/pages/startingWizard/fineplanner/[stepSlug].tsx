@@ -14,6 +14,9 @@ import {
     SideMenuStep,
 } from '@/interfaces/startingWizard/sideProgressBar';
 import SideProgressbarSectionFinePlanner from '@/components/StartingWizard/SideProgressbarSectionFinePlanner';
+import { Tooltip } from '@/components/Tooltip';
+import Link from 'next/link';
+import { FiInfo } from 'react-icons/fi';
 
 export interface ITask {
     title: string;
@@ -268,8 +271,19 @@ export default function FinePlanner() {
                     <FormProvider {...methods}>
                         <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                             <div>
-                                <div className={'text-center font-bold text-4xl mb-2'}>
-                                    Feinplanung
+                                <div className="flex justify-center">
+                                    <div
+                                        className={
+                                            'text-center font-bold text-4xl mb-2 relative w-fit'
+                                        }
+                                    >
+                                        Feinplanung
+                                        <Tooltip tooltipsText="Mehr Aspekte der Feinplanung findest du hier in den Selbstlernmaterialien …">
+                                            <Link target="_blank" href={'/content/VE-Planung'}>
+                                                <FiInfo size={30} color="#00748f" />
+                                            </Link>
+                                        </Tooltip>
+                                    </div>
                                 </div>
                                 <div className={'text-center mb-20'}>
                                     erweitere die Informationen zu jeder Etappe

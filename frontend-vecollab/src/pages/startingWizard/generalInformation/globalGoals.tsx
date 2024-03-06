@@ -16,6 +16,8 @@ import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import { MultiValue, ActionMeta } from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 import Link from 'next/link';
+import { Tooltip } from '@/components/Tooltip';
+import { FiInfo } from 'react-icons/fi';
 
 interface FormValues {
     globalGoals: string;
@@ -116,8 +118,13 @@ export default function GlobalGoals() {
                 ) : (
                     <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                         <div>
-                            <div className={'text-center font-bold text-4xl mb-2'}>
+                            <div className={'text-center font-bold text-4xl mb-2 relative'}>
                                 Welche Richtlernziele sollen im VE erreicht werden?
+                                <Tooltip tooltipsText="Mehr zu Richtlernzielen findest du hier in den Selbstlernmaterialien …">
+                                    <Link target="_blank" href={'/content/Potenziale'}>
+                                        <FiInfo size={30} color="#00748f" />
+                                    </Link>
+                                </Tooltip>
                             </div>
                             <div className={'text-center mb-20'}>optional</div>
                             <CreatableSelect
