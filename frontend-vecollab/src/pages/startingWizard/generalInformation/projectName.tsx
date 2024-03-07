@@ -131,9 +131,9 @@ export default function EssentialInformation() {
                                                     'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
                                             },
                                             pattern: {
-                                                value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
+                                                value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
                                                 message:
-                                                    'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?-',
+                                                    'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?,-',
                                             },
                                         })}
                                     />
