@@ -213,14 +213,14 @@ export default function Partners() {
     return (
         <div className="flex bg-pattern-left-blue-small bg-no-repeat">
             <div className="flex flex-grow justify-center">
-                <div>
+                <div className='flex flex-col'>
                     <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
                     {loading ? (
                         <LoadingAnimation />
                     ) : (
                         <form
                             onSubmit={onSubmit}
-                            className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
+                            className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between"
                         >
                             <div>
                                 <div className="flex">
@@ -257,7 +257,7 @@ export default function Partners() {
                                         />
                                     </div>
                                 ))}
-                                <div className={'w-3/4 mx-7 mt-3 flex justify-end'}>
+                                <div className={'mt-3 flex justify-end'}>
                                     <button onClick={removeInputField}>
                                         <RxMinus size={20} />
                                     </button>
@@ -266,7 +266,7 @@ export default function Partners() {
                                     </button>
                                 </div>
                             </div>
-                            <div className="flex justify-around w-full">
+                            <div className="flex justify-between w-full max-w-xl">
                                 <div>
                                     <Link
                                         href={{

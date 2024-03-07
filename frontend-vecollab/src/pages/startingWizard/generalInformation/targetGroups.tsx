@@ -163,7 +163,7 @@ export default function TargetGroups() {
                                     },
                                 })}
                                 placeholder="Name eingeben"
-                                className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                className="border border-gray-400 rounded-lg w-full p-2"
                             />
                             <p className="text-red-600 pt-2">
                                 {errors?.targetGroups?.[index]?.name?.message}
@@ -179,7 +179,7 @@ export default function TargetGroups() {
                         <div className="w-3/4 flex">
                             <div>
                                 <input
-                                    type="text"
+                                    type="number"
                                     {...register(`targetGroups.${index}.age_min`, {
                                         maxLength: {
                                             value: 4,
@@ -191,7 +191,7 @@ export default function TargetGroups() {
                                         },
                                     })}
                                     placeholder="von"
-                                    className="border border-gray-500 rounded-lg w-1/2 h-12 p-2 mr-2"
+                                    className="border border-gray-400 rounded-lg w-1/2 p-2 mr-2"
                                 />
                                 <p className="text-red-600 pt-2">
                                     {errors?.targetGroups?.[index]?.age_min?.message}
@@ -199,7 +199,7 @@ export default function TargetGroups() {
                             </div>
                             <div>
                                 <input
-                                    type="text"
+                                    type="number"
                                     {...register(`targetGroups.${index}.age_max`, {
                                         maxLength: {
                                             value: 4,
@@ -211,7 +211,7 @@ export default function TargetGroups() {
                                         },
                                     })}
                                     placeholder="bis"
-                                    className="border border-gray-500 rounded-lg w-1/2 h-12 p-2 ml-2"
+                                    className="border border-gray-400 rounded-lg w-1/2 p-2 ml-2"
                                 />
                                 <p className="text-red-600 pt-2">
                                     {errors?.targetGroups?.[index]?.age_max?.message}
@@ -241,7 +241,7 @@ export default function TargetGroups() {
                                     },
                                 })}
                                 placeholder=" z.B. Sprachkenntnisse, bisherige Seminare zum Thema, etc."
-                                className="border border-gray-500 rounded-lg w-full p-2"
+                                className="border border-gray-400 rounded-lg w-full p-2"
                             />
                             <p className="text-red-600 pt-2">
                                 {errors?.targetGroups?.[index]?.experience?.message}
@@ -270,7 +270,7 @@ export default function TargetGroups() {
                                     },
                                 })}
                                 placeholder="Studiengang eingeben, mehrere durch Komma trennen"
-                                className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                className="border border-gray-400 rounded-lg w-full p-2"
                             />
                             <p className="text-red-600 pt-2">
                                 {errors?.targetGroups?.[index]?.academic_course?.message}
@@ -294,7 +294,7 @@ export default function TargetGroups() {
                                     },
                                 })}
                                 placeholder="Erstsprachen eingeben, mehrere durch Komma trennen"
-                                className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                className="border border-gray-400 rounded-lg w-full p-2"
                             />
                             <p className="text-red-600 pt-2">
                                 {errors?.targetGroups?.[index]?.mother_tongue?.message}
@@ -323,7 +323,7 @@ export default function TargetGroups() {
                                     },
                                 })}
                                 placeholder="Weitere Sprachen eingeben, mehrere durch Komma trennen"
-                                className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                className="border border-gray-400 rounded-lg w-full p-2"
                             />
                             <p className="text-red-600 pt-2">
                                 {errors?.targetGroups?.[index]?.foreign_languages?.message}
@@ -337,12 +337,12 @@ export default function TargetGroups() {
     return (
         <div className="flex bg-pattern-left-blue-small bg-no-repeat">
             <div className="flex flex-grow justify-center">
-                <div>
+                <div className='flex flex-col'>
                     <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
                     {loading ? (
                         <LoadingAnimation />
                     ) : (
-                        <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
+                        <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between">
                             <div>
                                 <div className={'text-center font-bold text-4xl mb-2'}>
                                     An welche Zielgruppen richtet sich der VE?
@@ -373,7 +373,7 @@ export default function TargetGroups() {
                                     </button>
                                 </div>
                             </div>
-                            <div className="flex justify-around w-full">
+                            <div className="flex justify-between w-full max-w-xl">
                                 <div>
                                     <button
                                         type="button"

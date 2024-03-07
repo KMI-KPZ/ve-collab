@@ -135,8 +135,8 @@ export default function FormalConditions() {
 
     function renderCheckBoxes(partnerName: string): JSX.Element {
         return (
-            <div className="w-4/5 space-y-3 py-8">
-                <div className="flex justify-center items-center font-bold text-lg mb-4">
+            <div className="w-4/5 space-y-3 py-8 flex flex-col justify-center">
+                <div className="flex justify-start items-center font-bold text-lg mb-4">
                     {partnerName}
                 </div>
                 <div className="flex justify-start items-center">
@@ -330,12 +330,12 @@ export default function FormalConditions() {
     return (
         <div className="flex bg-pattern-left-blue-small bg-no-repeat">
             <div className="flex flex-grow justify-center">
-                <div>
+                <div className="flex flex-col">
                     <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
                     {loading ? (
                         <LoadingAnimation />
                     ) : (
-                        <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-center">
+                        <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-center">
                             <div>
                                 <div className={'text-center font-bold text-4xl mb-2 relative'}>
                                     Formale Rahmenbedingungen
@@ -353,15 +353,16 @@ export default function FormalConditions() {
                                     Sind die folgenden formalen Rahmenbedingungen bei allen
                                     Beteiligten erfüllt?
                                 </div>
-                                <div className="grid grid-cols-2 gap-1 mt-7  mb-10">
+
+                                <div className="grid grid-cols-2 gap-1 mt-7 mb-10">
                                     {formalConditions.map((formalConditionPartner, index) => (
-                                        <div key={index}>
+                                        <div key={index} className="flex justify-center">
                                             {renderCheckBoxes(formalConditionPartner.username)}
                                         </div>
                                     ))}
                                 </div>
                             </div>
-                            <div className="flex justify-around w-full">
+                            <div className="flex justify-between w-full max-w-xl">
                                 <div>
                                     <Link
                                         href={{

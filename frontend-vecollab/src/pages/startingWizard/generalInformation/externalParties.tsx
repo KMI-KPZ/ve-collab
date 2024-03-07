@@ -127,11 +127,11 @@ export default function ExternalPersons() {
 
     const renderExternalPartiesInputs = (): JSX.Element[] => {
         return fields.map((externalParty, index) => (
-            <div key={externalParty.id} className="mx-7 mt-7 flex flex-col justify-center">
+            <div key={externalParty.id} className="mt-2 flex flex-col justify-center">
                 <input
                     type="text"
                     placeholder="Externen eingeben"
-                    className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
+                    className="border border-gray-300 rounded-lg p-2"
                     {...register(`externalParties.${index}.externalParty`, {
                         maxLength: {
                             value: 50,
@@ -153,14 +153,14 @@ export default function ExternalPersons() {
     return (
         <div className="flex bg-pattern-left-blue-small bg-no-repeat">
             <div className="flex flex-grow justify-center">
-                <div>
+                <div className='flex flex-col'>
                     <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
                     {loading ? (
                         <LoadingAnimation />
                     ) : (
                         <form
                             onSubmit={handleSubmit(onSubmit)}
-                            className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
+                            className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between"
                         >
                             <div>
                                 <div className={'text-center font-bold text-4xl mb-2'}>
@@ -168,7 +168,7 @@ export default function ExternalPersons() {
                                 </div>
                                 <div className={'text-center mb-20'}>optional</div>
                                 {renderExternalPartiesInputs()}
-                                <div className={'w-3/4 mx-7 mt-3 flex justify-end'}>
+                                <div className={'mt-3 flex justify-end'}>
                                     <button type="button" onClick={() => remove(fields.length - 1)}>
                                         <RxMinus size={20} />
                                     </button>
@@ -184,7 +184,7 @@ export default function ExternalPersons() {
                                     </button>
                                 </div>
                             </div>
-                            <div className="flex justify-around w-full">
+                            <div className="flex justify-between w-full max-w-xl">
                                 <div>
                                     <button
                                         type="button"

@@ -116,12 +116,12 @@ export default function Topics() {
     return (
         <div className="flex bg-pattern-left-blue-small bg-no-repeat">
             <div className="flex flex-grow justify-center">
-                <div>
+                <div className="flex flex-col">
                     <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
                     {loading ? (
                         <LoadingAnimation />
                     ) : (
-                        <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
+                        <form className="gap-y-6 w-full p-12 max-w-7xl items-center flex flex-col flex-grow justify-between">
                             <div>
                                 <div className={'text-center font-bold text-4xl mb-2 relative'}>
                                     Zu welchem Thema / welchen Themen findet der VE statt?
@@ -135,43 +135,43 @@ export default function Topics() {
                                     </Tooltip>
                                 </div>
                                 <div className={'text-center mb-20'}>optional</div>
-                                <div className="m-7 flex justify-center">
-                                    <div className="w-full">
-                                        {topics.map((topic, index) => (
-                                            <div key={index} className="flex justify-center mt-4">
-                                                <input
-                                                    type="text"
-                                                    placeholder="Thema eingeben"
-                                                    className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
-                                                    value={topic}
-                                                    onChange={(e) =>
-                                                        modifyTopics(index, e.target.value)
-                                                    }
-                                                />
-                                            </div>
-                                        ))}
+                                <div className="flex flex-col justify-center">
+                                    {topics.map((topic, index) => (
+                                        <div key={index} className="flex justify-center mt-2">
+                                            <input
+                                                type="text"
+                                                placeholder="Thema eingeben"
+                                                className="border border-gray-300 rounded-lg w-3/4 p-2"
+                                                value={topic}
+                                                onChange={(e) =>
+                                                    modifyTopics(index, e.target.value)
+                                                }
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="w-full flex justify-center">
+                                    <div className={'mt-3 mx-2 flex justify-end w-3/4'}>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                removeTopicInputField();
+                                            }}
+                                        >
+                                            <RxMinus size={20} />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                addTopicInputField();
+                                            }}
+                                        >
+                                            <RxPlus size={20} />
+                                        </button>
                                     </div>
                                 </div>
-                                <div className={'mx-2 flex justify-end'}>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            removeTopicInputField();
-                                        }}
-                                    >
-                                        <RxMinus size={20} />
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            addTopicInputField();
-                                        }}
-                                    >
-                                        <RxPlus size={20} />
-                                    </button>
-                                </div>
                             </div>
-                            <div className="flex justify-around w-full">
+                            <div className="flex justify-between w-full max-w-xl">
                                 <div>
                                     <Link
                                         href={{

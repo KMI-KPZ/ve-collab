@@ -115,12 +115,12 @@ export default function LearningEnvironment() {
     return (
         <div className="flex bg-pattern-left-blue-small bg-no-repeat">
             <div className="flex flex-grow justify-center">
-                <div>
+                <div className='flex flex-col'>
                     <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
                     {loading ? (
                         <LoadingAnimation />
                     ) : (
-                        <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
+                        <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between">
                             <div>
                                 <div className={'text-center font-bold text-4xl mb-2 relative'}>
                                     In welcher digitalen Lernumgebung findet der VE statt?
@@ -133,15 +133,12 @@ export default function LearningEnvironment() {
                                         </Link>
                                     </Tooltip>
                                 </div>
-                                <div className={'text-center '}>optional</div>
-                                <div className={'text-center mb-20'}>
-                                    Weitere mögliche digitale Lernumgebungen finden Sie hier.
-                                </div>
+                                <div className={'text-center mb-20'}>optional</div>
                                 <div className="mt-4 flex justify-center">
                                     <textarea
                                         rows={5}
                                         placeholder="Freitextfeld für manuelle Eingabe eines LMS"
-                                        className="border border-gray-500 rounded-lg w-3/4 p-2"
+                                        className="border border-gray-300 rounded-lg w-3/4 p-2"
                                         {...register('learningEnv', {
                                             maxLength: {
                                                 value: 500,
@@ -155,7 +152,7 @@ export default function LearningEnvironment() {
                                     </p>
                                 </div>
                             </div>
-                            <div className="flex justify-around w-full">
+                            <div className="flex justify-between w-full max-w-xl">
                                 <div>
                                     <button
                                         type="button"
