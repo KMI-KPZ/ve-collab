@@ -114,7 +114,7 @@ export default function TimelinePostForm(
                 </div>
 
                 {postToRepost && (
-                    <div className="my-5 ml-[50px] p-3 border-2 border-ve-collab-blue/25 rounded-lg">
+                    <div className="my-5 ml-[50px] p-3 rounded bg-ve-collab-blue/10">
                         <div className="flex items-center">
                             {postToRepost.isRepost
                                 ? ( <PostHeader author={postToRepost.repostAuthor as BackendPostAuthor} date={postToRepost.creation_date} /> )
@@ -124,10 +124,9 @@ export default function TimelinePostForm(
                                 <IoMdClose />
                             </button>
                         </div>
-                        {postToRepost.isRepost
-                            ? ( <div className='mt-5'>{postToRepost.repostText}</div> )
-                            : ( <div className='mt-5'>{postToRepost.text}</div> )
-                        }
+                        <div className='mt-5  whitespace-break-spaces'>
+                            {postToRepost.isRepost ? postToRepost.repostText : postToRepost.text}
+                        </div>
                     </div>
                 )}
 
