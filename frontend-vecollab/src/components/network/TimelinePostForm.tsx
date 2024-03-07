@@ -35,6 +35,7 @@ export default function TimelinePostForm(
     useEffect(() => {
         if (postToRepost && ref.current) {
             window.scrollTo({ behavior: 'smooth', top: ref.current.offsetTop - 75 })
+            ref.current.querySelector("textarea")?.focus()
         }
     }, [ref, postToRepost])
 
