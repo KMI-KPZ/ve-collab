@@ -262,71 +262,76 @@ export default function FinePlanner() {
     };
 
     return (
-        <>
-            <HeadProgressBarSection stage={2} linkFineStep={steps[0]?.name} />
-            <div className="flex justify-center bg-pattern-left-blue-small bg-no-repeat">
-                {loading ? (
-                    <LoadingAnimation />
-                ) : (
-                    <FormProvider {...methods}>
-                        <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
-                            <div>
-                                <div className="flex justify-center">
-                                    <div
-                                        className={
-                                            'text-center font-bold text-4xl mb-2 relative w-fit'
-                                        }
-                                    >
-                                        Feinplanung
-                                        <Tooltip tooltipsText="Mehr Aspekte der Feinplanung findest du hier in den Selbstlernmaterialien …">
-                                            <Link target="_blank" href={'/content/VE-Planung'}>
-                                                <FiInfo size={30} color="#00748f" />
-                                            </Link>
-                                        </Tooltip>
+        <div className="flex bg-pattern-left-blue-small bg-no-repeat">
+            <div className="flex flex-grow justify-center">
+                <div className='flex flex-col'>
+                    <HeadProgressBarSection stage={2} linkFineStep={steps[0]?.name} />
+                    {loading ? (
+                        <LoadingAnimation />
+                    ) : (
+                        <FormProvider {...methods}>
+                            <form className="gap-y-6 w-full p-12 max-w-7xl items-center flex flex-col flex-grow justify-between">
+                                <div>
+                                    <div className="flex justify-center">
+                                        <div
+                                            className={
+                                                'text-center font-bold text-4xl mb-2 relative w-fit'
+                                            }
+                                        >
+                                            Feinplanung
+                                            <Tooltip tooltipsText="Mehr Aspekte der Feinplanung findest du hier in den Selbstlernmaterialien …">
+                                                <Link target="_blank" href={'/content/VE-Planung'}>
+                                                    <FiInfo size={30} color="#00748f" />
+                                                </Link>
+                                            </Tooltip>
+                                        </div>
+                                    </div>
+                                    <div className={'text-center mb-20'}>
+                                        erweitere die Informationen zu jeder Etappe
+                                    </div>
+                                    <Stage fineStep={currentFineStep} />
+                                </div>
+                                <div className="flex justify-between w-full max-w-xl">
+                                    <div>
+                                        <button
+                                            type="button"
+                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                            onClick={methods.handleSubmit((data) =>
+                                                combinedSubmitRouteAndUpdate(
+                                                    data,
+                                                    getPreviousFineStepUrl()
+                                                )
+                                            )}
+                                        >
+                                            Zurück
+                                        </button>
+                                    </div>
+                                    <div>
+                                        <button
+                                            type="button"
+                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                            onClick={methods.handleSubmit((data) =>
+                                                combinedSubmitRouteAndUpdate(
+                                                    data,
+                                                    getNextFineStepUrl()
+                                                )
+                                            )}
+                                        >
+                                            Weiter
+                                        </button>
                                     </div>
                                 </div>
-                                <div className={'text-center mb-20'}>
-                                    erweitere die Informationen zu jeder Etappe
-                                </div>
-                                <Stage fineStep={currentFineStep} />
-                            </div>
-                            <div className="flex justify-around w-full">
-                                <div>
-                                    <button
-                                        type="button"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                        onClick={methods.handleSubmit((data) =>
-                                            combinedSubmitRouteAndUpdate(
-                                                data,
-                                                getPreviousFineStepUrl()
-                                            )
-                                        )}
-                                    >
-                                        Zurück
-                                    </button>
-                                </div>
-                                <div>
-                                    <button
-                                        type="button"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                        onClick={methods.handleSubmit((data) =>
-                                            combinedSubmitRouteAndUpdate(data, getNextFineStepUrl())
-                                        )}
-                                    >
-                                        Weiter
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    </FormProvider>
-                )}
-                <SideProgressbarSectionFinePlanner
-                    progressState={sideMenuStepsProgress}
-                    handleValidation={methods.handleSubmit(onSubmit)}
-                    isValid={methods.formState.isValid}
-                    sideMenuStepsData={sideMenuStepsData}
-                />
+                            </form>
+                        </FormProvider>
+                    )}
+                </div>
             </div>
-        </>
+            <SideProgressbarSectionFinePlanner
+                progressState={sideMenuStepsProgress}
+                handleValidation={methods.handleSubmit(onSubmit)}
+                isValid={methods.formState.isValid}
+                sideMenuStepsData={sideMenuStepsData}
+            />
+        </div>
     );
 }

@@ -146,7 +146,7 @@ export default function Institutions() {
                             <input
                                 type="text"
                                 placeholder="Name eingeben"
-                                className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                className="border border-gray-400 rounded-lg w-full p-2"
                                 {...register(`institutions.${index}.name`, {
                                     maxLength: {
                                         value: 50,
@@ -174,7 +174,7 @@ export default function Institutions() {
                         <div className="w-2/3">
                             <select
                                 placeholder="Bildungseinrichtung eingeben"
-                                className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                className="border border-gray-400 rounded-lg w-full px-1 py-2"
                                 {...register(`institutions.${index}.school_type`, {
                                     maxLength: {
                                         value: 50,
@@ -214,7 +214,7 @@ export default function Institutions() {
                             <input
                                 type="text"
                                 placeholder="Land eingeben"
-                                className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                className="border border-gray-400 rounded-lg w-full p-2"
                                 {...register(`institutions.${index}.country`, {
                                     maxLength: {
                                         value: 50,
@@ -243,7 +243,7 @@ export default function Institutions() {
                             <input
                                 type="text"
                                 placeholder="Fachbereich eingeben"
-                                className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                className="border border-gray-400 rounded-lg w-full p-2"
                                 {...register(`institutions.${index}.departments.0`, {
                                     maxLength: {
                                         value: 50,
@@ -272,7 +272,7 @@ export default function Institutions() {
                             <input
                                 type="text"
                                 placeholder="mehrere durch Komma trennen"
-                                className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                className="border border-gray-400 rounded-lg w-full p-2"
                                 {...register(`institutions.${index}.academic_courses.0`, {
                                     maxLength: {
                                         value: 50,
@@ -297,80 +297,82 @@ export default function Institutions() {
     };
 
     return (
-        <>
-            <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
-            <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
-                {loading ? (
-                    <LoadingAnimation />
-                ) : (
-                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
-                        <div>
-                            <div className={'text-center font-bold text-4xl mb-2'}>
-                                In welchen Institutionen wird der VE umgesetzt?
-                            </div>
-                            <div className={'text-center mb-20'}>optional</div>
-                            <div className={'flex flex-wrap justify-center'}>
-                                {renderInstitutionsInputs()}
-                            </div>
-                            <div className={'mx-2 flex justify-end'}>
-                                <button type="button" onClick={() => remove(fields.length - 1)}>
-                                    <RxMinus size={20} />
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        append({
-                                            name: '',
-                                            school_type: '',
-                                            country: '',
-                                            departments: [],
-                                            academic_courses: [],
-                                        });
-                                    }}
-                                >
-                                    <RxPlus size={20} />
-                                </button>
-                            </div>
-                        </div>
-                        <div className="flex justify-around w-full">
+        <div className="flex bg-pattern-left-blue-small bg-no-repeat">
+            <div className="flex flex-grow justify-center">
+                <div className='flex flex-col'>
+                    <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
+                    {loading ? (
+                        <LoadingAnimation />
+                    ) : (
+                        <form className="gap-y-6 w-full p-12 max-w-7xl items-center flex flex-col flex-grow justify-between">
                             <div>
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={handleSubmit((data) =>
-                                        combinedSubmitRouteAndUpdate(
-                                            data,
-                                            '/startingWizard/generalInformation/externalParties'
-                                        )
-                                    )}
-                                >
-                                    Zurück
-                                </button>
+                                <div className={'text-center font-bold text-4xl mb-2'}>
+                                    In welchen Institutionen wird der VE umgesetzt?
+                                </div>
+                                <div className={'text-center mb-20'}>optional</div>
+                                <div className={'flex flex-wrap justify-center'}>
+                                    {renderInstitutionsInputs()}
+                                </div>
+                                <div className={'mx-1 flex justify-end'}>
+                                    <button type="button" onClick={() => remove(fields.length - 1)}>
+                                        <RxMinus size={20} />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            append({
+                                                name: '',
+                                                school_type: '',
+                                                country: '',
+                                                departments: [],
+                                                academic_courses: [],
+                                            });
+                                        }}
+                                    >
+                                        <RxPlus size={20} />
+                                    </button>
+                                </div>
                             </div>
-                            <div>
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={handleSubmit((data) =>
-                                        combinedSubmitRouteAndUpdate(
-                                            data,
-                                            '/startingWizard/generalInformation/participatingCourses'
-                                        )
-                                    )}
-                                >
-                                    Weiter
-                                </button>
+                            <div className="flex justify-between w-full max-w-xl">
+                                <div>
+                                    <button
+                                        type="button"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                        onClick={handleSubmit((data) =>
+                                            combinedSubmitRouteAndUpdate(
+                                                data,
+                                                '/startingWizard/generalInformation/externalParties'
+                                            )
+                                        )}
+                                    >
+                                        Zurück
+                                    </button>
+                                </div>
+                                <div>
+                                    <button
+                                        type="button"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                        onClick={handleSubmit((data) =>
+                                            combinedSubmitRouteAndUpdate(
+                                                data,
+                                                '/startingWizard/generalInformation/participatingCourses'
+                                            )
+                                        )}
+                                    >
+                                        Weiter
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    </form>
-                )}
-                <SideProgressBarSectionBroadPlanner
-                    progressState={sideMenuStepsProgress}
-                    handleValidation={handleSubmit(onSubmit)}
-                    isValid={isValid}
-                    sideMenuStepsData={sideMenuStepsData}
-                />
+                        </form>
+                    )}
+                </div>
             </div>
-        </>
+            <SideProgressBarSectionBroadPlanner
+                progressState={sideMenuStepsProgress}
+                handleValidation={handleSubmit(onSubmit)}
+                isValid={isValid}
+                sideMenuStepsData={sideMenuStepsData}
+            />
+        </div>
     );
 }

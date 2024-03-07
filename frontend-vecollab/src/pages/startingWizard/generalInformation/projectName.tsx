@@ -103,23 +103,23 @@ export default function EssentialInformation() {
     };
 
     return (
-        <>
-            <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
-            <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
-                {loading ? (
-                    <LoadingAnimation />
-                ) : (
-                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
-                        <div>
-                            <div className={'text-center font-bold text-4xl mb-20'}>
-                                Wie soll das Projekt heißen?
-                            </div>
-                            <div className="m-7 flex justify-center">
-                                <div>
+        <div className="flex bg-pattern-left-blue-small bg-no-repeat">
+            <div className="flex flex-grow justify-center">
+                <div className="flex flex-col">
+                    <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
+                    {loading ? (
+                        <LoadingAnimation />
+                    ) : (
+                        <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between">
+                            <div className="flex-grow">
+                                <div className={'text-center font-bold text-4xl mb-24'}>
+                                    Wie soll das Projekt heißen?
+                                </div>
+                                <div className="flex flex-col justify-center">
                                     <input
                                         type="text"
                                         placeholder="Name eingeben"
-                                        className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
+                                        className="border border-gray-300 rounded-md p-2 w-full"
                                         {...register('name', {
                                             required: {
                                                 value: true,
@@ -140,40 +140,40 @@ export default function EssentialInformation() {
                                     <p className="text-red-600 pt-2">{errors.name?.message}</p>
                                 </div>
                             </div>
-                        </div>
-                        <div className="flex justify-around w-full">
-                            <div>
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg invisible"
-                                >
-                                    Zurück
-                                </button>
+                            <div className="flex w-full justify-between">
+                                <div>
+                                    <button
+                                        type="button"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg invisible"
+                                    >
+                                        Zurück
+                                    </button>
+                                </div>
+                                <div>
+                                    <button
+                                        type="button"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                        onClick={handleSubmit((data) =>
+                                            combinedSubmitRouteAndUpdate(
+                                                data,
+                                                '/startingWizard/generalInformation/partners'
+                                            )
+                                        )}
+                                    >
+                                        Weiter
+                                    </button>
+                                </div>
                             </div>
-                            <div>
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={handleSubmit((data) =>
-                                        combinedSubmitRouteAndUpdate(
-                                            data,
-                                            '/startingWizard/generalInformation/partners'
-                                        )
-                                    )}
-                                >
-                                    Weiter
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                )}
-                <SideProgressBarSectionBroadPlanner
-                    progressState={sideMenuStepsProgress}
-                    handleValidation={handleSubmit(onSubmit)}
-                    isValid={isValid}
-                    sideMenuStepsData={sideMenuStepsData}
-                />
+                        </form>
+                    )}
+                </div>
             </div>
-        </>
+            <SideProgressBarSectionBroadPlanner
+                progressState={sideMenuStepsProgress}
+                handleValidation={handleSubmit(onSubmit)}
+                isValid={isValid}
+                sideMenuStepsData={sideMenuStepsData}
+            />
+        </div>
     );
 }

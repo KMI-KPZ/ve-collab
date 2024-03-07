@@ -114,31 +114,34 @@ export default function Topics() {
     }
 
     return (
-        <>
-            <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
-            <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
-                {loading ? (
-                    <LoadingAnimation />
-                ) : (
-                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
-                        <div>
-                            <div className={'text-center font-bold text-4xl mb-2 relative'}>
-                                Zu welchem Thema / welchen Themen findet der VE statt?
-                                <Tooltip tooltipsText="Inspiration zu fachbezogenen Themen verschiedener Disziplinen findest du hier in den Selbstlernmaterialien …">
-                                    <Link target="_blank" href={'/content/Beispiele%20aus%20der%20Praxis'}>
-                                        <FiInfo size={30} color="#00748f" />
-                                    </Link>
-                                </Tooltip>
-                            </div>
-                            <div className={'text-center mb-20'}>optional</div>
-                            <div className="m-7 flex justify-center">
-                                <div className="w-full">
+        <div className="flex bg-pattern-left-blue-small bg-no-repeat">
+            <div className="flex flex-grow justify-center">
+                <div className="flex flex-col">
+                    <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
+                    {loading ? (
+                        <LoadingAnimation />
+                    ) : (
+                        <form className="gap-y-6 w-full p-12 max-w-7xl items-center flex flex-col flex-grow justify-between">
+                            <div>
+                                <div className={'text-center font-bold text-4xl mb-2 relative'}>
+                                    Zu welchem Thema / welchen Themen findet der VE statt?
+                                    <Tooltip tooltipsText="Inspiration zu fachbezogenen Themen verschiedener Disziplinen findest du hier in den Selbstlernmaterialien …">
+                                        <Link
+                                            target="_blank"
+                                            href={'/content/Beispiele%20aus%20der%20Praxis'}
+                                        >
+                                            <FiInfo size={30} color="#00748f" />
+                                        </Link>
+                                    </Tooltip>
+                                </div>
+                                <div className={'text-center mb-20'}>optional</div>
+                                <div className="flex flex-col justify-center">
                                     {topics.map((topic, index) => (
-                                        <div key={index} className="flex justify-center mt-4">
+                                        <div key={index} className="flex justify-center mt-2">
                                             <input
                                                 type="text"
                                                 placeholder="Thema eingeben"
-                                                className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
+                                                className="border border-gray-300 rounded-lg w-3/4 p-2"
                                                 value={topic}
                                                 onChange={(e) =>
                                                     modifyTopics(index, e.target.value)
@@ -147,61 +150,64 @@ export default function Topics() {
                                         </div>
                                     ))}
                                 </div>
+                                <div className="w-full flex justify-center">
+                                    <div className={'mt-3 mx-2 flex justify-end w-3/4'}>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                removeTopicInputField();
+                                            }}
+                                        >
+                                            <RxMinus size={20} />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                addTopicInputField();
+                                            }}
+                                        >
+                                            <RxPlus size={20} />
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                            <div className={'mx-2 flex justify-end'}>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        removeTopicInputField();
-                                    }}
-                                >
-                                    <RxMinus size={20} />
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        addTopicInputField();
-                                    }}
-                                >
-                                    <RxPlus size={20} />
-                                </button>
-                            </div>
-                        </div>
-                        <div className="flex justify-around w-full">
-                            <div>
-                                <Link
-                                    href={{
-                                        pathname: '/startingWizard/generalInformation/targetGroups',
-                                        query: { plannerId: router.query.plannerId },
-                                    }}
-                                >
+                            <div className="flex justify-between w-full max-w-xl">
+                                <div>
+                                    <Link
+                                        href={{
+                                            pathname:
+                                                '/startingWizard/generalInformation/targetGroups',
+                                            query: { plannerId: router.query.plannerId },
+                                        }}
+                                    >
+                                        <button
+                                            type="button"
+                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                        >
+                                            Zurück
+                                        </button>
+                                    </Link>
+                                </div>
+                                <div>
                                     <button
                                         type="button"
                                         className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                        onClick={onSubmit}
                                     >
-                                        Zurück
+                                        Weiter
                                     </button>
-                                </Link>
+                                </div>
                             </div>
-                            <div>
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={onSubmit}
-                                >
-                                    Weiter
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                )}
-                <SideProgressBarSectionBroadPlanner
-                    progressState={sideMenuStepsProgress}
-                    handleValidation={() => {}}
-                    isValid={true}
-                    sideMenuStepsData={sideMenuStepsData}
-                />
+                        </form>
+                    )}
+                </div>
             </div>
-        </>
+            <SideProgressBarSectionBroadPlanner
+                progressState={sideMenuStepsProgress}
+                handleValidation={() => {}}
+                isValid={true}
+                sideMenuStepsData={sideMenuStepsData}
+            />
+        </div>
     );
 }
