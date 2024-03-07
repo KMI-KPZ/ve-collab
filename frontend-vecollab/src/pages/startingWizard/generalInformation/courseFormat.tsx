@@ -248,7 +248,7 @@ export default function Realization() {
                                             Wird der VE durch eine physische Mobilität ergänzt /
                                             begleitet?
                                         </p>
-                                        <div className="flex gap-x-5">
+                                        <div className="flex w-40 justify-end gap-x-5">
                                             <div className="flex my-1">
                                                 <div>
                                                     <label className="px-2 py-2">Ja</label>

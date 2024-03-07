@@ -264,13 +264,13 @@ export default function FinePlanner() {
     return (
         <div className="flex bg-pattern-left-blue-small bg-no-repeat">
             <div className="flex flex-grow justify-center">
-                <div>
+                <div className='flex flex-col'>
                     <HeadProgressBarSection stage={2} linkFineStep={steps[0]?.name} />
                     {loading ? (
                         <LoadingAnimation />
                     ) : (
                         <FormProvider {...methods}>
-                            <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
+                            <form className="gap-y-6 w-full p-12 max-w-7xl items-center flex flex-col flex-grow justify-between">
                                 <div>
                                     <div className="flex justify-center">
                                         <div
@@ -291,7 +291,7 @@ export default function FinePlanner() {
                                     </div>
                                     <Stage fineStep={currentFineStep} />
                                 </div>
-                                <div className="flex justify-around w-full">
+                                <div className="flex justify-between w-full max-w-xl">
                                     <div>
                                         <button
                                             type="button"

@@ -126,7 +126,7 @@ export default function Languages() {
 
     const renderLanguagesInputs = (): JSX.Element[] => {
         return fields.map((language, index) => (
-            <div key={language.id} className="mt-2 flex justify-center">
+            <div key={language.id} className="mt-2 flex flex-col items-center">
                 <input
                     type="text"
                     placeholder="Sprache eingeben"
@@ -142,7 +142,11 @@ export default function Languages() {
                         },
                     })}
                 />
-                <p className="text-red-600 pt-2">{errors?.languages?.[index]?.language?.message}</p>
+                {errors?.languages?.[index]?.language?.message && (
+                    <p className="text-red-600 pt-2">
+                        {errors?.languages?.[index]?.language?.message}
+                    </p>
+                )}
             </div>
         ));
     };

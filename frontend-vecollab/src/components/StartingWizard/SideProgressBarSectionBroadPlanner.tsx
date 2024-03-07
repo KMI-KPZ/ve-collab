@@ -90,7 +90,7 @@ export default function SideProgressBarSectionBroadPlanner({
     }
 
     return (
-        <div className="flex flex-col text-center max-w-xs">
+        <div className="flex flex-col text-center w-80">
             <div className="h-36" /> {/* apply same vertical spacing as header bar*/}
             <div className="flex flex-col flex-grow shadow-inner my-3 bg-white rounded-xl">
                 <div className="shadow-sm mb-3 rounded">

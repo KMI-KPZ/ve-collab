@@ -115,7 +115,7 @@ export default function EssentialInformation() {
                                 <div className={'text-center font-bold text-4xl mb-24'}>
                                     Wie soll das Projekt heißen?
                                 </div>
-                                <div className="flex justify-center">
+                                <div className="flex flex-col justify-center">
                                     <input
                                         type="text"
                                         placeholder="Name eingeben"

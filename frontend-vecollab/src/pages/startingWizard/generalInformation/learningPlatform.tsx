@@ -137,7 +137,7 @@ export default function LearningEnvironment() {
                                 <div className="mt-4 flex justify-center">
                                     <textarea
                                         rows={5}
-                                        placeholder="Freitextfeld für manuelle Eingabe eines LMS"
+                                        placeholder="Lernumgebung beschreiben"
                                         className="border border-gray-300 rounded-lg w-3/4 p-2"
                                         {...register('learningEnv', {
                                             maxLength: {

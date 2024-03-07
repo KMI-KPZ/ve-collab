@@ -292,6 +292,11 @@ export default function TargetGroups() {
                                         message:
                                             'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
                                     },
+                                    pattern: {
+                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
+                                        message:
+                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
+                                    },
                                 })}
                                 placeholder="Erstsprachen eingeben, mehrere durch Komma trennen"
                                 className="border border-gray-400 rounded-lg w-full p-2"

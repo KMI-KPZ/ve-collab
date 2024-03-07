@@ -236,7 +236,7 @@ export default function BroadPlanner() {
                                             },
                                             validate: (v) => validateDateRange(v, index),
                                         })}
-                                        className="border border-gray-500 rounded-lg h-12 p-2 mx-2"
+                                        className="border border-gray-400 rounded-lg p-2 mx-2"
                                     />
                                     <label>bis:</label>
                                     <input
@@ -247,7 +247,7 @@ export default function BroadPlanner() {
                                                 message: 'Bitte fülle das Felde "bis" aus',
                                             },
                                         })}
-                                        className="border border-gray-500 rounded-lg h-12 p-2 mx-2"
+                                        className="border border-gray-400 rounded-lg p-2 mx-2"
                                     />
                                     <input
                                         type="text"
@@ -267,7 +267,7 @@ export default function BroadPlanner() {
                                             },
                                         })}
                                         placeholder="Name, z.B. Kennenlernphase"
-                                        className="border border-gray-500 rounded-lg h-12 p-2 mx-2"
+                                        className="border border-gray-400 rounded-lg p-2 mx-2"
                                     />
                                     <Image
                                         className="mx-2"

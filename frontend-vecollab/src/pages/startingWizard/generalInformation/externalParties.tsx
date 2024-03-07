@@ -127,7 +127,7 @@ export default function ExternalPersons() {
 
     const renderExternalPartiesInputs = (): JSX.Element[] => {
         return fields.map((externalParty, index) => (
-            <div key={externalParty.id} className="mt-2 flex flex-col justify-center">
+            <div key={externalParty.id} className="my-2 flex flex-col">
                 <input
                     type="text"
                     placeholder="Externen eingeben"
@@ -143,9 +143,11 @@ export default function ExternalPersons() {
                         },
                     })}
                 />
-                <p className="text-red-600 pt-2">
-                    {errors?.externalParties?.[index]?.externalParty?.message}
-                </p>
+                {errors?.externalParties?.[index]?.externalParty?.message && (
+                    <p className="text-red-600 pt-2">
+                        {errors?.externalParties?.[index]?.externalParty?.message}
+                    </p>
+                )}
             </div>
         ));
     };
@@ -153,7 +155,7 @@ export default function ExternalPersons() {
     return (
         <div className="flex bg-pattern-left-blue-small bg-no-repeat">
             <div className="flex flex-grow justify-center">
-                <div className='flex flex-col'>
+                <div className="flex flex-col">
                     <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
                     {loading ? (
                         <LoadingAnimation />

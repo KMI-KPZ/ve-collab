@@ -135,7 +135,7 @@ export default function FormalConditions() {
 
     function renderCheckBoxes(partnerName: string): JSX.Element {
         return (
-            <div className="w-4/5 space-y-3 py-8 flex flex-col justify-center">
+            <div className="w-4/5 space-y-3 py-8 flex flex-col">
                 <div className="flex justify-start items-center font-bold text-lg mb-4">
                     {partnerName}
                 </div>
@@ -353,8 +353,7 @@ export default function FormalConditions() {
                                     Sind die folgenden formalen Rahmenbedingungen bei allen
                                     Beteiligten erfüllt?
                                 </div>
-
-                                <div className="grid grid-cols-2 gap-1 mt-7 mb-10">
+                                <div className="grid grid-cols-3 gap-1 mt-7 mb-10">
                                     {formalConditions.map((formalConditionPartner, index) => (
                                         <div key={index} className="flex justify-center">
                                             {renderCheckBoxes(formalConditionPartner.username)}
