@@ -44,18 +44,6 @@ export default function TimelinePost(
     const [showXComments, setShowXComments] = useState<number>(3)
     const [editPost, setEditPost] = useState<boolean>(false)
 
-    // reverse comments order, set likers
-    useEffect(() => {
-
-        setShowCommentForm(false)
-        console.log('Updated Post ', {post, showCommentForm});
-
-        setRepostExpand(false)
-        setShowXComments(3)
-        setEditPost(false)
-
-    }, [post]);
-
     // implement infinity scroll (detect intersection of window viewport with last post)
     useEffect(() => {
         if (!ref?.current) return;
@@ -102,8 +90,7 @@ export default function TimelinePost(
 
         try {
             const newComment = await addNewComment()
-            post.comments.push(newComment.inserted_comment)
-            updatePost( post )
+            updatePost( {...post, comments: [...post.comments, newComment.inserted_comment] } )
             commentFormref.current?.reset()
         } catch (error) {
             console.error(error);
@@ -122,8 +109,7 @@ export default function TimelinePost(
                 await fetchPOST( '/like', { post_id: post._id }, session?.accessToken )
                 newLikers.push(session?.user.preferred_username as string)
             }
-            post.likers = newLikers
-            updatePost( post )
+            updatePost( {...post, likers: newLikers} )
         } catch (error) {
             console.log(error);
         }
@@ -161,11 +147,18 @@ export default function TimelinePost(
 
     const updatePostText = (newText: string) => {
         if (post.isRepost) {
-            post.repostText = newText
+            updatePost( {...post, repostText: newText} )
         } else {
-            post.text = newText
+            updatePost( {...post, text: newText} )
         }
         setEditPost(false)
+    }
+
+    const openCommentForm = () => {
+        setShowCommentForm(true)
+        setTimeout(() => {
+            commentFormref.current?.querySelector("input")?.focus()
+        }, 1);
     }
 
     const SpacenameById = (spaceId: string) => {
@@ -288,7 +281,7 @@ export default function TimelinePost(
                 <Likes />
                 {(post.comments.length == 0 && !showCommentForm)
                     ? (
-                        <button onClick={() => {setShowCommentForm(!showCommentForm)}} title="Add comment" className="align-middle">
+                        <button onClick={openCommentForm} title="Add comment" className="align-middle">
                             <MdOutlineAddComment />
                         </button>
                     ) : (

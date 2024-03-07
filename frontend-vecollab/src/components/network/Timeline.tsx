@@ -41,7 +41,14 @@ export default function Timeline({ space, user }: Props) {
 
     useEffect(() => {
         if (!newFetchedPosts.length) return
-        setAllPosts((prev) => [...prev, ...newFetchedPosts]);
+
+        if (newFetchedPosts[0]._id == allPosts[0]?._id) {
+            // TODO sometimes this happens -> WHY????
+            console.log('ERROR: fetched posts are the same as current', {allPosts, newFetchedPosts});
+
+        } else {
+            setAllPosts((prev) => [...prev, ...newFetchedPosts]);
+        }
     }, [newFetchedPosts])
     console.log({allPosts});
 
@@ -91,7 +98,8 @@ export default function Timeline({ space, user }: Props) {
                 />
             </div>
             {allPosts.map((post, i) =>
-                <TimelinePost key={i}
+                <TimelinePost
+                    key={post._id}
                     post={post}
                     updatePost={updatePost}
                     space={space}
