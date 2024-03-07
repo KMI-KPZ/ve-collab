@@ -19,7 +19,7 @@ export default function Timeline({ space, user }: Props) {
     const [allPosts, setAllPosts] = useState<BackendPost[]>([]);
 
     const {
-        data: currentPosts,
+        data: newFetchedPosts,
         isLoading: isLoadingTimeline,
         error,
         mutate,
@@ -40,11 +40,9 @@ export default function Timeline({ space, user }: Props) {
     } = useGetAllSpaces(session!.accessToken);
 
     useEffect(() => {
-        if (!currentPosts.length) return
-
-        setAllPosts((prev) => [...prev, ...currentPosts]);
-
-    }, [currentPosts])
+        if (!newFetchedPosts.length) return
+        setAllPosts((prev) => [...prev, ...newFetchedPosts]);
+    }, [newFetchedPosts])
     console.log({allPosts});
 
     const fetchNextPosts = () => {
@@ -54,6 +52,14 @@ export default function Timeline({ space, user }: Props) {
         newToDate.setMilliseconds(newToDate.getMilliseconds()+1)
 
         setToDate(newToDate)
+    }
+
+    const updatePost = (newPost: BackendPost) => {
+        setAllPosts(allPosts.map(post => {
+            return post._id == newPost._id
+                ? { ...post, ...newPost }
+                : post
+        }))
     }
 
     const removePost = (post: BackendPost) => {
@@ -84,10 +90,10 @@ export default function Timeline({ space, user }: Props) {
                     onCreatedPost={afterCreatePost}
                 />
             </div>
-            {allPosts.length == 0 && ( <div className="m-10 flex justify-center">Bisher keine Beiträge ...</div>)}
             {allPosts.map((post, i) =>
                 <TimelinePost key={i}
                     post={post}
+                    updatePost={updatePost}
                     space={space}
                     isLast={i === allPosts.length - 1}
                     allSpaces={allSpaces}
@@ -97,6 +103,7 @@ export default function Timeline({ space, user }: Props) {
                 />
             )}
             {isLoadingTimeline && (<LoadingAnimation />)}
+            {!isLoadingTimeline && allPosts.length == 0 && ( <div className="m-10 flex justify-center">Bisher keine Beiträge ...</div>)}
         </>
     );
 }
