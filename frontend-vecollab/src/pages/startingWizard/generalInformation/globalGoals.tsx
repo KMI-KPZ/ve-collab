@@ -110,108 +110,110 @@ export default function GlobalGoals() {
     console.log(learningGoals);
 
     return (
-        <>
-            <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
-            <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
-                {loading ? (
-                    <LoadingAnimation />
-                ) : (
-                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
-                        <div>
-                            <div className={'text-center font-bold text-4xl mb-2 relative'}>
-                                Welche Richtlernziele sollen im VE erreicht werden?
-                                <Tooltip tooltipsText="Mehr zu Richtlernzielen findest du hier in den Selbstlernmaterialien …">
-                                    <Link target="_blank" href={'/content/Potenziale'}>
-                                        <FiInfo size={30} color="#00748f" />
-                                    </Link>
-                                </Tooltip>
-                            </div>
-                            <div className={'text-center mb-20'}>optional</div>
-                            <CreatableSelect
-                                isMulti
-                                closeMenuOnSelect={false}
-                                options={[
-                                    {
-                                        value: 'Förderung kritischen Denkens',
-                                        label: 'Förderung kritischen Denkens',
-                                    },
-                                    {
-                                        value: 'Förderung kreativen Denkens',
-                                        label: 'Förderung kreativen Denkens',
-                                    },
-                                    {
-                                        value: 'Förderung kollaborativen Arbeitens',
-                                        label: 'Förderung kollaborativen Arbeitens',
-                                    },
-                                    {
-                                        value: 'Förderung kommunikativer Fähigkeiten',
-                                        label: 'Förderung kommunikativer Fähigkeiten',
-                                    },
-                                    {
-                                        value: 'Förderung digitaler Kompetenzen',
-                                        label: 'Förderung digitaler Kompetenzen',
-                                    },
-                                    {
-                                        value: 'Förderung sozialer Kompetenzen',
-                                        label: 'Förderung sozialer Kompetenzen',
-                                    },
-                                    {
-                                        value: 'Förderung der kulturellen Kompetenz',
-                                        label: 'Förderung der kulturellen Kompetenz',
-                                    },
-                                    {
-                                        value: 'Förderung der Sprachkompetenz',
-                                        label: 'Förderung der Sprachkompetenz',
-                                    },
-                                    {
-                                        value: 'Förderung fachlicher Kompetenzen (Wissen, Fertigkeiten)',
-                                        label: 'Förderung fachlicher Kompetenzen (Wissen, Fertigkeiten)',
-                                    },
-                                ]}
-                                value={learningGoals.map((goal) => {
-                                    return { value: goal, label: goal };
-                                })}
-                                onChange={handleChange}
-                                formatCreateLabel={(inputValue) => `Sonstige: ${inputValue}`}
-                                placeholder="Richtlernziele auswählen oder neue hinzufügen"
-                            />
-                        </div>
-                        <div className="flex justify-around w-full">
+        <div className="flex bg-pattern-left-blue-small bg-no-repeat">
+            <div className="flex flex-grow justify-center">
+                <div>
+                    <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
+                    {loading ? (
+                        <LoadingAnimation />
+                    ) : (
+                        <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                             <div>
-                                <Link
-                                    href={{
-                                        pathname:
-                                            '/startingWizard/generalInformation/participatingCourses',
-                                        query: { plannerId: router.query.plannerId },
-                                    }}
-                                >
+                                <div className={'text-center font-bold text-4xl mb-2 relative'}>
+                                    Welche Richtlernziele sollen im VE erreicht werden?
+                                    <Tooltip tooltipsText="Mehr zu Richtlernzielen findest du hier in den Selbstlernmaterialien …">
+                                        <Link target="_blank" href={'/content/Potenziale'}>
+                                            <FiInfo size={30} color="#00748f" />
+                                        </Link>
+                                    </Tooltip>
+                                </div>
+                                <div className={'text-center mb-20'}>optional</div>
+                                <CreatableSelect
+                                    isMulti
+                                    closeMenuOnSelect={false}
+                                    options={[
+                                        {
+                                            value: 'Förderung kritischen Denkens',
+                                            label: 'Förderung kritischen Denkens',
+                                        },
+                                        {
+                                            value: 'Förderung kreativen Denkens',
+                                            label: 'Förderung kreativen Denkens',
+                                        },
+                                        {
+                                            value: 'Förderung kollaborativen Arbeitens',
+                                            label: 'Förderung kollaborativen Arbeitens',
+                                        },
+                                        {
+                                            value: 'Förderung kommunikativer Fähigkeiten',
+                                            label: 'Förderung kommunikativer Fähigkeiten',
+                                        },
+                                        {
+                                            value: 'Förderung digitaler Kompetenzen',
+                                            label: 'Förderung digitaler Kompetenzen',
+                                        },
+                                        {
+                                            value: 'Förderung sozialer Kompetenzen',
+                                            label: 'Förderung sozialer Kompetenzen',
+                                        },
+                                        {
+                                            value: 'Förderung der kulturellen Kompetenz',
+                                            label: 'Förderung der kulturellen Kompetenz',
+                                        },
+                                        {
+                                            value: 'Förderung der Sprachkompetenz',
+                                            label: 'Förderung der Sprachkompetenz',
+                                        },
+                                        {
+                                            value: 'Förderung fachlicher Kompetenzen (Wissen, Fertigkeiten)',
+                                            label: 'Förderung fachlicher Kompetenzen (Wissen, Fertigkeiten)',
+                                        },
+                                    ]}
+                                    value={learningGoals.map((goal) => {
+                                        return { value: goal, label: goal };
+                                    })}
+                                    onChange={handleChange}
+                                    formatCreateLabel={(inputValue) => `Sonstige: ${inputValue}`}
+                                    placeholder="Richtlernziele auswählen oder neue hinzufügen"
+                                />
+                            </div>
+                            <div className="flex justify-around w-full">
+                                <div>
+                                    <Link
+                                        href={{
+                                            pathname:
+                                                '/startingWizard/generalInformation/participatingCourses',
+                                            query: { plannerId: router.query.plannerId },
+                                        }}
+                                    >
+                                        <button
+                                            type="button"
+                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                        >
+                                            Zurück
+                                        </button>
+                                    </Link>
+                                </div>
+                                <div>
                                     <button
                                         type="button"
                                         className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                        onClick={onSubmit}
                                     >
-                                        Zurück
+                                        Weiter
                                     </button>
-                                </Link>
+                                </div>
                             </div>
-                            <div>
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={onSubmit}
-                                >
-                                    Weiter
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                )}
-                <SideProgressBarSectionBroadPlanner
-                    progressState={sideMenuStepsProgress}
-                    handleValidation={() => {}}
-                    isValid={true}
-                    sideMenuStepsData={sideMenuStepsData}
-                />
+                        </form>
+                    )}
+                </div>
             </div>
-        </>
+            <SideProgressBarSectionBroadPlanner
+                progressState={sideMenuStepsProgress}
+                handleValidation={() => {}}
+                isValid={true}
+                sideMenuStepsData={sideMenuStepsData}
+            />
+        </div>
     );
 }

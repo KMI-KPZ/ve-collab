@@ -46,38 +46,40 @@ export default function FinePlanner() {
     }, [session, status, router]);
 
     return (
-        <>
-            <HeadProgressBarSection stage={2} linkFineStep={steps[0]?.name} />
-            <div className="flex justify-center bg-pattern-left-blue-small bg-no-repeat">
-                {loading ? (
-                    <LoadingAnimation />
-                ) : (
-                    <div>
-                        <div className=" flex justify-center font-bold text-xl mt-32 mb-20">
-                            Bitte legen Sie zuerst grobe Schritte fest bevor Sie mit der Feinplanung
-                            fortsetzen.
+        <div className="flex bg-pattern-left-blue-small bg-no-repeat">
+            <div className="flex flex-grow justify-center">
+                <div>
+                    <HeadProgressBarSection stage={2} linkFineStep={steps[0]?.name} />
+                    {loading ? (
+                        <LoadingAnimation />
+                    ) : (
+                        <div>
+                            <div className=" flex justify-center font-bold text-xl mt-32 mb-20">
+                                Bitte legen Sie zuerst grobe Schritte fest bevor Sie mit der
+                                Feinplanung fortsetzen.
+                            </div>
+                            <Link
+                                className="flex justify-center font-bold text-xl m-2 bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                href={{
+                                    pathname: '/startingWizard/broadPlanner',
+                                    query: { plannerId: router.query.plannerId },
+                                }}
+                            >
+                                Etappenplaner
+                            </Link>
+                            <Link
+                                className="flex justify-center font-bold text-xl m-2 bg-gray-400 text-white py-3 px-5 rounded-lg"
+                                href={{
+                                    pathname: '/startingWizard/finish',
+                                    query: { plannerId: router.query.plannerId },
+                                }}
+                            >
+                                Ohne Etappen Fortfahren
+                            </Link>
                         </div>
-                        <Link
-                            className="flex justify-center font-bold text-xl m-2 bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                            href={{
-                                pathname: '/startingWizard/broadPlanner',
-                                query: { plannerId: router.query.plannerId },
-                            }}
-                        >
-                            Etappenplaner
-                        </Link>
-                        <Link
-                            className="flex justify-center font-bold text-xl m-2 bg-gray-400 text-white py-3 px-5 rounded-lg"
-                            href={{
-                                pathname: '/startingWizard/finish',
-                                query: { plannerId: router.query.plannerId },
-                            }}
-                        >
-                            Ohne Etappen Fortfahren
-                        </Link>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
-        </>
+        </div>
     );
 }

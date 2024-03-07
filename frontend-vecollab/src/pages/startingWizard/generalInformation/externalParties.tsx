@@ -151,77 +151,79 @@ export default function ExternalPersons() {
     };
 
     return (
-        <>
-            <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
-            <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
-                {loading ? (
-                    <LoadingAnimation />
-                ) : (
-                    <form
-                        onSubmit={handleSubmit(onSubmit)}
-                        className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
-                    >
-                        <div>
-                            <div className={'text-center font-bold text-4xl mb-2'}>
-                                Gibt es externe Beteiligte?
-                            </div>
-                            <div className={'text-center mb-20'}>optional</div>
-                            {renderExternalPartiesInputs()}
-                            <div className={'w-3/4 mx-7 mt-3 flex justify-end'}>
-                                <button type="button" onClick={() => remove(fields.length - 1)}>
-                                    <RxMinus size={20} />
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        append({
-                                            externalParty: '',
-                                        });
-                                    }}
-                                >
-                                    <RxPlus size={20} />
-                                </button>
-                            </div>
-                        </div>
-                        <div className="flex justify-around w-full">
+        <div className="flex bg-pattern-left-blue-small bg-no-repeat">
+            <div className="flex flex-grow justify-center">
+                <div>
+                    <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
+                    {loading ? (
+                        <LoadingAnimation />
+                    ) : (
+                        <form
+                            onSubmit={handleSubmit(onSubmit)}
+                            className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
+                        >
                             <div>
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={handleSubmit((data) =>
-                                        combinedSubmitRouteAndUpdate(
-                                            data,
-                                            '/startingWizard/generalInformation/partners'
-                                        )
-                                    )}
-                                >
-                                    Zurück
-                                </button>
+                                <div className={'text-center font-bold text-4xl mb-2'}>
+                                    Gibt es externe Beteiligte?
+                                </div>
+                                <div className={'text-center mb-20'}>optional</div>
+                                {renderExternalPartiesInputs()}
+                                <div className={'w-3/4 mx-7 mt-3 flex justify-end'}>
+                                    <button type="button" onClick={() => remove(fields.length - 1)}>
+                                        <RxMinus size={20} />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            append({
+                                                externalParty: '',
+                                            });
+                                        }}
+                                    >
+                                        <RxPlus size={20} />
+                                    </button>
+                                </div>
                             </div>
-                            <div>
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={handleSubmit((data) =>
-                                        combinedSubmitRouteAndUpdate(
-                                            data,
-                                            '/startingWizard/generalInformation/institutions'
-                                        )
-                                    )}
-                                >
-                                    Weiter
-                                </button>
+                            <div className="flex justify-around w-full">
+                                <div>
+                                    <button
+                                        type="button"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                        onClick={handleSubmit((data) =>
+                                            combinedSubmitRouteAndUpdate(
+                                                data,
+                                                '/startingWizard/generalInformation/partners'
+                                            )
+                                        )}
+                                    >
+                                        Zurück
+                                    </button>
+                                </div>
+                                <div>
+                                    <button
+                                        type="button"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                        onClick={handleSubmit((data) =>
+                                            combinedSubmitRouteAndUpdate(
+                                                data,
+                                                '/startingWizard/generalInformation/institutions'
+                                            )
+                                        )}
+                                    >
+                                        Weiter
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    </form>
-                )}
-                <SideProgressBarSectionBroadPlanner
-                    progressState={sideMenuStepsProgress}
-                    handleValidation={() => {}}
-                    isValid={true}
-                    sideMenuStepsData={sideMenuStepsData}
-                />
+                        </form>
+                    )}
+                </div>
             </div>
-        </>
+            <SideProgressBarSectionBroadPlanner
+                progressState={sideMenuStepsProgress}
+                handleValidation={() => {}}
+                isValid={true}
+                sideMenuStepsData={sideMenuStepsData}
+            />
+        </div>
     );
 }

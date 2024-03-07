@@ -335,82 +335,84 @@ export default function TargetGroups() {
         ));
     };
     return (
-        <>
-            <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
-            <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
-                {loading ? (
-                    <LoadingAnimation />
-                ) : (
-                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
-                        <div>
-                            <div className={'text-center font-bold text-4xl mb-2'}>
-                                An welche Zielgruppen richtet sich der VE?
-                            </div>
-                            <div className={'text-center mb-20'}>optional</div>
-                            <div className="flex flex-wrap justify-center">
-                                {rendertargetGroupsInputs()}
-                            </div>
-                            <div className={'mx-2 flex justify-end'}>
-                                <button type="button" onClick={() => remove(fields.length - 1)}>
-                                    <RxMinus size={20} />
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        append({
-                                            name: '',
-                                            age_min: '',
-                                            age_max: '',
-                                            experience: '',
-                                            academic_course: '',
-                                            mother_tongue: '',
-                                            foreign_languages: '',
-                                        });
-                                    }}
-                                >
-                                    <RxPlus size={20} />
-                                </button>
-                            </div>
-                        </div>
-                        <div className="flex justify-around w-full">
+        <div className="flex bg-pattern-left-blue-small bg-no-repeat">
+            <div className="flex flex-grow justify-center">
+                <div>
+                    <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
+                    {loading ? (
+                        <LoadingAnimation />
+                    ) : (
+                        <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                             <div>
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={handleSubmit((data) =>
-                                        combinedSubmitRouteAndUpdate(
-                                            data,
-                                            '/startingWizard/generalInformation/globalGoals'
-                                        )
-                                    )}
-                                >
-                                    Zurück
-                                </button>
+                                <div className={'text-center font-bold text-4xl mb-2'}>
+                                    An welche Zielgruppen richtet sich der VE?
+                                </div>
+                                <div className={'text-center mb-20'}>optional</div>
+                                <div className="flex flex-wrap justify-center">
+                                    {rendertargetGroupsInputs()}
+                                </div>
+                                <div className={'mx-2 flex justify-end'}>
+                                    <button type="button" onClick={() => remove(fields.length - 1)}>
+                                        <RxMinus size={20} />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            append({
+                                                name: '',
+                                                age_min: '',
+                                                age_max: '',
+                                                experience: '',
+                                                academic_course: '',
+                                                mother_tongue: '',
+                                                foreign_languages: '',
+                                            });
+                                        }}
+                                    >
+                                        <RxPlus size={20} />
+                                    </button>
+                                </div>
                             </div>
-                            <div>
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={handleSubmit((data) =>
-                                        combinedSubmitRouteAndUpdate(
-                                            data,
-                                            '/startingWizard/generalInformation/veTopic'
-                                        )
-                                    )}
-                                >
-                                    Weiter
-                                </button>
+                            <div className="flex justify-around w-full">
+                                <div>
+                                    <button
+                                        type="button"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                        onClick={handleSubmit((data) =>
+                                            combinedSubmitRouteAndUpdate(
+                                                data,
+                                                '/startingWizard/generalInformation/globalGoals'
+                                            )
+                                        )}
+                                    >
+                                        Zurück
+                                    </button>
+                                </div>
+                                <div>
+                                    <button
+                                        type="button"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                        onClick={handleSubmit((data) =>
+                                            combinedSubmitRouteAndUpdate(
+                                                data,
+                                                '/startingWizard/generalInformation/veTopic'
+                                            )
+                                        )}
+                                    >
+                                        Weiter
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    </form>
-                )}
-                <SideProgressBarSectionBroadPlanner
-                    progressState={sideMenuStepsProgress}
-                    handleValidation={handleSubmit(onSubmit)}
-                    isValid={isValid}
-                    sideMenuStepsData={sideMenuStepsData}
-                />
+                        </form>
+                    )}
+                </div>
             </div>
-        </>
+            <SideProgressBarSectionBroadPlanner
+                progressState={sideMenuStepsProgress}
+                handleValidation={handleSubmit(onSubmit)}
+                isValid={isValid}
+                sideMenuStepsData={sideMenuStepsData}
+            />
+        </div>
     );
 }

@@ -103,77 +103,79 @@ export default function EssentialInformation() {
     };
 
     return (
-        <>
-            <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
-            <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
-                {loading ? (
-                    <LoadingAnimation />
-                ) : (
-                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
-                        <div>
-                            <div className={'text-center font-bold text-4xl mb-20'}>
-                                Wie soll das Projekt heißen?
-                            </div>
-                            <div className="m-7 flex justify-center">
-                                <div>
-                                    <input
-                                        type="text"
-                                        placeholder="Name eingeben"
-                                        className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
-                                        {...register('name', {
-                                            required: {
-                                                value: true,
-                                                message: 'Bitte gebe deiner VE einen Namen.',
-                                            },
-                                            maxLength: {
-                                                value: 50,
-                                                message:
-                                                    'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
-                                            },
-                                            pattern: {
-                                                value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
-                                                message:
-                                                    'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?-',
-                                            },
-                                        })}
-                                    />
-                                    <p className="text-red-600 pt-2">{errors.name?.message}</p>
+        <div className="flex bg-pattern-left-blue-small bg-no-repeat">
+            <div className="flex flex-grow justify-center">
+                <div>
+                    <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
+                    {loading ? (
+                        <LoadingAnimation />
+                    ) : (
+                        <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
+                            <div>
+                                <div className={'text-center font-bold text-4xl mb-20'}>
+                                    Wie soll das Projekt heißen?
+                                </div>
+                                <div className="m-7 flex justify-center">
+                                    <div>
+                                        <input
+                                            type="text"
+                                            placeholder="Name eingeben"
+                                            className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
+                                            {...register('name', {
+                                                required: {
+                                                    value: true,
+                                                    message: 'Bitte gebe deiner VE einen Namen.',
+                                                },
+                                                maxLength: {
+                                                    value: 50,
+                                                    message:
+                                                        'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                                },
+                                                pattern: {
+                                                    value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
+                                                    message:
+                                                        'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?-',
+                                                },
+                                            })}
+                                        />
+                                        <p className="text-red-600 pt-2">{errors.name?.message}</p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div className="flex justify-around w-full">
-                            <div>
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg invisible"
-                                >
-                                    Zurück
-                                </button>
+                            <div className="flex justify-around w-full">
+                                <div>
+                                    <button
+                                        type="button"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg invisible"
+                                    >
+                                        Zurück
+                                    </button>
+                                </div>
+                                <div>
+                                    <button
+                                        type="button"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                        onClick={handleSubmit((data) =>
+                                            combinedSubmitRouteAndUpdate(
+                                                data,
+                                                '/startingWizard/generalInformation/partners'
+                                            )
+                                        )}
+                                    >
+                                        Weiter
+                                    </button>
+                                </div>
                             </div>
-                            <div>
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={handleSubmit((data) =>
-                                        combinedSubmitRouteAndUpdate(
-                                            data,
-                                            '/startingWizard/generalInformation/partners'
-                                        )
-                                    )}
-                                >
-                                    Weiter
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                )}
-                <SideProgressBarSectionBroadPlanner
-                    progressState={sideMenuStepsProgress}
-                    handleValidation={handleSubmit(onSubmit)}
-                    isValid={isValid}
-                    sideMenuStepsData={sideMenuStepsData}
-                />
+                        </form>
+                    )}
+                </div>
             </div>
-        </>
+            <SideProgressBarSectionBroadPlanner
+                progressState={sideMenuStepsProgress}
+                handleValidation={handleSubmit(onSubmit)}
+                isValid={isValid}
+                sideMenuStepsData={sideMenuStepsData}
+            />
+        </div>
     );
 }

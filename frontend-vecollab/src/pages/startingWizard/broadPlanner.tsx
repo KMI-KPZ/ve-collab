@@ -316,106 +316,113 @@ export default function BroadPlanner() {
     };
 
     return (
-        <>
-            <HeadProgressBarSection stage={1} linkFineStep={steps[0]?.name} />
-            <div className="flex justify-center bg-pattern-left-blue-small bg-no-repeat">
-                {loading ? (
-                    <LoadingAnimation />
-                ) : (
-                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
-                        <div>
-                            <div className="flex justify-center">
-                                <div
-                                    className={'text-center font-bold text-4xl mb-2 relative w-fit'}
-                                >
-                                    Plane den groben Ablauf
-                                    <Tooltip tooltipsText="Ausführliche Informationen zur Etappenplanung und verschiedenen Typen und Modellen von VA findest du hier in den Selbstlernmaterialien …">
-                                        <Link target="_blank" href={'/content/VE-Planung'}>
-                                            <FiInfo size={30} color="#00748f" />
-                                        </Link>
-                                    </Tooltip>
+        <div className="flex bg-pattern-left-blue-small bg-no-repeat">
+            <div className="flex flex-grow justify-center">
+                <div>
+                    <HeadProgressBarSection stage={1} linkFineStep={steps[0]?.name} />
+                    {loading ? (
+                        <LoadingAnimation />
+                    ) : (
+                        <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
+                            <div>
+                                <div className="flex justify-center">
+                                    <div
+                                        className={
+                                            'text-center font-bold text-4xl mb-2 relative w-fit'
+                                        }
+                                    >
+                                        Plane den groben Ablauf
+                                        <Tooltip tooltipsText="Ausführliche Informationen zur Etappenplanung und verschiedenen Typen und Modellen von VA findest du hier in den Selbstlernmaterialien …">
+                                            <Link target="_blank" href={'/content/VE-Planung'}>
+                                                <FiInfo size={30} color="#00748f" />
+                                            </Link>
+                                        </Tooltip>
+                                    </div>
+                                </div>
+                                <div className={'text-center mb-20'}>
+                                    erstelle beliebig viele Etappen, setze deren Daten und vergib
+                                    für jede einen individuellen Namen
+                                </div>
+                                <DragDropContext onDragEnd={onDragEnd}>
+                                    <Droppable droppableId="broadsteps-items">
+                                        {(provided: DroppableProvided) => (
+                                            <div
+                                                ref={provided.innerRef}
+                                                {...provided.droppableProps}
+                                            >
+                                                {renderBroadStepsInputs()}
+                                                {provided.placeholder}
+                                            </div>
+                                        )}
+                                    </Droppable>
+                                </DragDropContext>
+                                <div className="flex justify-center">
+                                    <button
+                                        className="p-4 bg-white rounded-3xl shadow-2xl"
+                                        type="button"
+                                        onClick={() => {
+                                            append({
+                                                from: '',
+                                                to: '',
+                                                name: '',
+                                            });
+                                        }}
+                                    >
+                                        <RxPlus size={30} />
+                                    </button>
                                 </div>
                             </div>
-                            <div className={'text-center mb-20'}>
-                                erstelle beliebig viele Etappen, setze deren Daten und vergib für
-                                jede einen individuellen Namen
-                            </div>
-                            <DragDropContext onDragEnd={onDragEnd}>
-                                <Droppable droppableId="broadsteps-items">
-                                    {(provided: DroppableProvided) => (
-                                        <div ref={provided.innerRef} {...provided.droppableProps}>
-                                            {renderBroadStepsInputs()}
-                                            {provided.placeholder}
-                                        </div>
-                                    )}
-                                </Droppable>
-                            </DragDropContext>
-                            <div className="flex justify-center">
-                                <button
-                                    className="p-4 bg-white rounded-3xl shadow-2xl"
-                                    type="button"
-                                    onClick={() => {
-                                        append({
-                                            from: '',
-                                            to: '',
-                                            name: '',
-                                        });
-                                    }}
-                                >
-                                    <RxPlus size={30} />
-                                </button>
-                            </div>
-                        </div>
-                        <div className="flex justify-around w-full">
-                            <div>
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={handleSubmit(
-                                        async (data) => {
-                                            await combinedSubmitRouteAndUpdate(
+                            <div className="flex justify-around w-full">
+                                <div>
+                                    <button
+                                        type="button"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                        onClick={handleSubmit(
+                                            async (data) => {
+                                                await combinedSubmitRouteAndUpdate(
+                                                    data,
+                                                    '/startingWizard/generalInformation/formalConditions'
+                                                );
+                                            },
+                                            async () => {
+                                                await router.push({
+                                                    pathname:
+                                                        '/startingWizard/generalInformation/formalConditions',
+                                                    query: { plannerId: router.query.plannerId },
+                                                });
+                                            }
+                                        )}
+                                    >
+                                        Zurück
+                                    </button>
+                                </div>
+                                <div>
+                                    <button
+                                        type="button"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                        onClick={handleSubmit((data) =>
+                                            combinedSubmitRouteAndUpdate(
                                                 data,
-                                                '/startingWizard/generalInformation/formalConditions'
-                                            );
-                                        },
-                                        async () => {
-                                            await router.push({
-                                                pathname:
-                                                    '/startingWizard/generalInformation/formalConditions',
-                                                query: { plannerId: router.query.plannerId },
-                                            });
-                                        }
-                                    )}
-                                >
-                                    Zurück
-                                </button>
+                                                `/startingWizard/fineplanner/${encodeURIComponent(
+                                                    watch('broadSteps')[0].name
+                                                )}`
+                                            )
+                                        )}
+                                    >
+                                        Weiter
+                                    </button>
+                                </div>
                             </div>
-                            <div>
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={handleSubmit((data) =>
-                                        combinedSubmitRouteAndUpdate(
-                                            data,
-                                            `/startingWizard/fineplanner/${encodeURIComponent(
-                                                watch('broadSteps')[0].name
-                                            )}`
-                                        )
-                                    )}
-                                >
-                                    Weiter
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                )}
-                <SideProgressBarSectionBroadPlanner
-                    progressState={sideMenuStepsProgress}
-                    handleValidation={handleSubmit(onSubmit)}
-                    isValid={isValid}
-                    sideMenuStepsData={sideMenuStepsData}
-                />
+                        </form>
+                    )}
+                </div>
             </div>
-        </>
+            <SideProgressBarSectionBroadPlanner
+                progressState={sideMenuStepsProgress}
+                handleValidation={handleSubmit(onSubmit)}
+                isValid={isValid}
+                sideMenuStepsData={sideMenuStepsData}
+            />
+        </div>
     );
 }

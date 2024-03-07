@@ -148,9 +148,10 @@ export default function Languages() {
     };
 
     return (
-        <>
+        <div className="flex bg-pattern-left-blue-small bg-no-repeat">
+        <div className="flex flex-grow justify-center">
+            <div>
             <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
-            <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
                 {loading ? (
                     <LoadingAnimation />
                 ) : (
@@ -216,13 +217,14 @@ export default function Languages() {
                         </div>
                     </form>
                 )}
-                <SideProgressBarSectionBroadPlanner
-                    progressState={sideMenuStepsProgress}
-                    handleValidation={handleSubmit(onSubmit)}
-                    isValid={isValid}
-                    sideMenuStepsData={sideMenuStepsData}
-                />
+                </div>
             </div>
-        </>
+            <SideProgressBarSectionBroadPlanner
+                progressState={sideMenuStepsProgress}
+                handleValidation={handleSubmit(onSubmit)}
+                isValid={isValid}
+                sideMenuStepsData={sideMenuStepsData}
+            />
+        </div>
     );
 }

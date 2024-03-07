@@ -113,81 +113,88 @@ export default function LearningEnvironment() {
     };
 
     return (
-        <>
-            <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
-            <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
-                {loading ? (
-                    <LoadingAnimation />
-                ) : (
-                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
-                        <div>
-                            <div className={'text-center font-bold text-4xl mb-2 relative'}>
-                                In welcher digitalen Lernumgebung findet der VE statt?
-                                <Tooltip tooltipsText="Mehr zu LMS findest du hier in den Selbstlernmaterialien …">
-                                    <Link target="_blank" href={'/content/Digitale%20Medien%20&%20Werkzeuge'}>
-                                        <FiInfo size={30} color="#00748f" />
-                                    </Link>
-                                </Tooltip>
-                            </div>
-                            <div className={'text-center '}>optional</div>
-                            <div className={'text-center mb-20'}>
-                                Weitere mögliche digitale Lernumgebungen finden Sie hier.
-                            </div>
-                            <div className="mt-4 flex justify-center">
-                                <textarea
-                                    rows={5}
-                                    placeholder="Freitextfeld für manuelle Eingabe eines LMS"
-                                    className="border border-gray-500 rounded-lg w-3/4 p-2"
-                                    {...register('learningEnv', {
-                                        maxLength: {
-                                            value: 500,
-                                            message:
-                                                'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                                        },
-                                    })}
-                                />
-                                <p className="text-red-600 pt-2">{errors?.learningEnv?.message}</p>
-                            </div>
-                        </div>
-                        <div className="flex justify-around w-full">
+        <div className="flex bg-pattern-left-blue-small bg-no-repeat">
+            <div className="flex flex-grow justify-center">
+                <div>
+                    <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
+                    {loading ? (
+                        <LoadingAnimation />
+                    ) : (
+                        <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
                             <div>
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={handleSubmit((data) =>
-                                        combinedSubmitRouteAndUpdate(
-                                            data,
-                                            '/startingWizard/generalInformation/courseFormat'
-                                        )
-                                    )}
-                                >
-                                    Zurück
-                                </button>
+                                <div className={'text-center font-bold text-4xl mb-2 relative'}>
+                                    In welcher digitalen Lernumgebung findet der VE statt?
+                                    <Tooltip tooltipsText="Mehr zu LMS findest du hier in den Selbstlernmaterialien …">
+                                        <Link
+                                            target="_blank"
+                                            href={'/content/Digitale%20Medien%20&%20Werkzeuge'}
+                                        >
+                                            <FiInfo size={30} color="#00748f" />
+                                        </Link>
+                                    </Tooltip>
+                                </div>
+                                <div className={'text-center '}>optional</div>
+                                <div className={'text-center mb-20'}>
+                                    Weitere mögliche digitale Lernumgebungen finden Sie hier.
+                                </div>
+                                <div className="mt-4 flex justify-center">
+                                    <textarea
+                                        rows={5}
+                                        placeholder="Freitextfeld für manuelle Eingabe eines LMS"
+                                        className="border border-gray-500 rounded-lg w-3/4 p-2"
+                                        {...register('learningEnv', {
+                                            maxLength: {
+                                                value: 500,
+                                                message:
+                                                    'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
+                                            },
+                                        })}
+                                    />
+                                    <p className="text-red-600 pt-2">
+                                        {errors?.learningEnv?.message}
+                                    </p>
+                                </div>
                             </div>
-                            <div>
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={handleSubmit((data) =>
-                                        combinedSubmitRouteAndUpdate(
-                                            data,
-                                            '/startingWizard/generalInformation/formalConditions'
-                                        )
-                                    )}
-                                >
-                                    Weiter
-                                </button>
+                            <div className="flex justify-around w-full">
+                                <div>
+                                    <button
+                                        type="button"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                        onClick={handleSubmit((data) =>
+                                            combinedSubmitRouteAndUpdate(
+                                                data,
+                                                '/startingWizard/generalInformation/courseFormat'
+                                            )
+                                        )}
+                                    >
+                                        Zurück
+                                    </button>
+                                </div>
+                                <div>
+                                    <button
+                                        type="button"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                        onClick={handleSubmit((data) =>
+                                            combinedSubmitRouteAndUpdate(
+                                                data,
+                                                '/startingWizard/generalInformation/formalConditions'
+                                            )
+                                        )}
+                                    >
+                                        Weiter
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    </form>
-                )}
-                <SideProgressBarSectionBroadPlanner
-                    progressState={sideMenuStepsProgress}
-                    handleValidation={handleSubmit(onSubmit)}
-                    isValid={isValid}
-                    sideMenuStepsData={sideMenuStepsData}
-                />
+                        </form>
+                    )}
+                </div>
             </div>
-        </>
+            <SideProgressBarSectionBroadPlanner
+                progressState={sideMenuStepsProgress}
+                handleValidation={handleSubmit(onSubmit)}
+                isValid={isValid}
+                sideMenuStepsData={sideMenuStepsData}
+            />
+        </div>
     );
 }
