@@ -467,7 +467,7 @@ class Profiles:
         update of profile data) None is returned.
         """
 
-        # verify space has all the necessary attributes
+        # verify profile has all the necessary attributes
         # if not all(attr in updated_profile for attr in self.profile_attributes.keys()):
         #    raise ValueError("Profile misses required attribute")
 

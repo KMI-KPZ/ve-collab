@@ -240,7 +240,7 @@ class GlobalACLRessourceTest(BaseResourceTestCase):
         acl_entry = self.db.global_acl.find_one({"role": "another_role"})
         self.assertIsNotNone(acl_entry)
         self.assertEqual(acl_entry["role"], "another_role")
-        self.assertEqual(acl_entry["create_space"], False)
+        self.assertEqual(acl_entry["create_space"], True)
 
     def test_insert_admin(self):
         """
@@ -437,7 +437,7 @@ class SpaceACLResourceTest(BaseResourceTestCase):
 
         self.default_acl_entry = {
             "username": CURRENT_ADMIN.username,
-            "space": self.space_name,
+            "space": self.space_id,
             "join_space": True,
             "read_timeline": True,
             "post": True,
@@ -485,15 +485,15 @@ class SpaceACLResourceTest(BaseResourceTestCase):
         """
 
         acl_manager = ACL(self.db)
-        acl_manager.space_acl.insert_default(CURRENT_USER.username, self.space_name)
+        acl_manager.space_acl.insert_default(CURRENT_USER.username, self.space_id)
 
         # check if default rule was inserted
         acl_entry = self.db.space_acl.find_one(
-            {"username": CURRENT_USER.username, "space": self.space_name}
+            {"username": CURRENT_USER.username, "space": self.space_id}
         )
         self.assertIsNotNone(acl_entry)
         self.assertEqual(acl_entry["username"], CURRENT_USER.username)
-        self.assertEqual(acl_entry["space"], self.space_name)
+        self.assertEqual(acl_entry["space"], self.space_id)
         self.assertEqual(acl_entry["join_space"], False)
         self.assertEqual(acl_entry["read_timeline"], True)
         self.assertEqual(acl_entry["post"], False)
@@ -509,15 +509,15 @@ class SpaceACLResourceTest(BaseResourceTestCase):
         """
 
         acl_manager = ACL(self.db)
-        acl_manager.space_acl.insert_admin(CURRENT_USER.username, self.space_name)
+        acl_manager.space_acl.insert_admin(CURRENT_USER.username, self.space_id)
 
         # check if admin rule was inserted
         acl_entry = self.db.space_acl.find_one(
-            {"username": CURRENT_USER.username, "space": self.space_name}
+            {"username": CURRENT_USER.username, "space": self.space_id}
         )
         self.assertIsNotNone(acl_entry)
         self.assertEqual(acl_entry["username"], CURRENT_USER.username)
-        self.assertEqual(acl_entry["space"], self.space_name)
+        self.assertEqual(acl_entry["space"], self.space_id)
         self.assertEqual(acl_entry["join_space"], True)
         self.assertEqual(acl_entry["read_timeline"], True)
         self.assertEqual(acl_entry["post"], True)
@@ -534,15 +534,15 @@ class SpaceACLResourceTest(BaseResourceTestCase):
         """
 
         acl_manager = ACL(self.db)
-        acl_manager.space_acl.insert_default_discussion(CURRENT_USER.username, self.space_name)
+        acl_manager.space_acl.insert_default_discussion(CURRENT_USER.username, self.space_id)
 
         # check if default rule was inserted
         acl_entry = self.db.space_acl.find_one(
-            {"username": CURRENT_USER.username, "space": self.space_name}
+            {"username": CURRENT_USER.username, "space": self.space_id}
         )
         self.assertIsNotNone(acl_entry)
         self.assertEqual(acl_entry["username"], CURRENT_USER.username)
-        self.assertEqual(acl_entry["space"], self.space_name)
+        self.assertEqual(acl_entry["space"], self.space_id)
         self.assertEqual(acl_entry["join_space"], True)
         self.assertEqual(acl_entry["read_timeline"], True)
         self.assertEqual(acl_entry["post"], True)
@@ -560,42 +560,42 @@ class SpaceACLResourceTest(BaseResourceTestCase):
         acl_manager = ACL(self.db)
         self.assertTrue(
             acl_manager.space_acl.ask(
-                self.default_acl_entry["username"], self.space_name, "join_space"
+                self.default_acl_entry["username"], self.space_id, "join_space"
             )
         )
         self.assertTrue(
             acl_manager.space_acl.ask(
-                self.default_acl_entry["username"], self.space_name, "read_timeline"
+                self.default_acl_entry["username"], self.space_id, "read_timeline"
             )
         )
         self.assertTrue(
             acl_manager.space_acl.ask(
-                self.default_acl_entry["username"], self.space_name, "post"
+                self.default_acl_entry["username"], self.space_id, "post"
             )
         )
         self.assertTrue(
             acl_manager.space_acl.ask(
-                self.default_acl_entry["username"], self.space_name, "comment"
+                self.default_acl_entry["username"], self.space_id, "comment"
             )
         )
         self.assertTrue(
             acl_manager.space_acl.ask(
-                self.default_acl_entry["username"], self.space_name, "read_wiki"
+                self.default_acl_entry["username"], self.space_id, "read_wiki"
             )
         )
         self.assertTrue(
             acl_manager.space_acl.ask(
-                self.default_acl_entry["username"], self.space_name, "write_wiki"
+                self.default_acl_entry["username"], self.space_id, "write_wiki"
             )
         )
         self.assertTrue(
             acl_manager.space_acl.ask(
-                self.default_acl_entry["username"], self.space_name, "read_files"
+                self.default_acl_entry["username"], self.space_id, "read_files"
             )
         )
         self.assertTrue(
             acl_manager.space_acl.ask(
-                self.default_acl_entry["username"], self.space_name, "write_files"
+                self.default_acl_entry["username"], self.space_id, "write_files"
             )
         )
 
@@ -609,7 +609,7 @@ class SpaceACLResourceTest(BaseResourceTestCase):
             KeyError,
             acl_manager.space_acl.ask,
             self.default_acl_entry["username"],
-            self.space_name,
+            self.space_id,
             "test",
         )
 
@@ -623,7 +623,7 @@ class SpaceACLResourceTest(BaseResourceTestCase):
             ValueError,
             acl_manager.space_acl.ask,
             "non_existing_user",
-            self.space_name,
+            self.space_id,
             "join_space",
         )
 
@@ -634,10 +634,10 @@ class SpaceACLResourceTest(BaseResourceTestCase):
 
         acl_manager = ACL(self.db)
         acl_entry = acl_manager.space_acl.get(
-            self.default_acl_entry["username"], self.space_name
+            self.default_acl_entry["username"], self.space_id
         )
         self.assertEqual(acl_entry["username"], self.default_acl_entry["username"])
-        self.assertEqual(acl_entry["space"], self.space_name)
+        self.assertEqual(acl_entry["space"], self.space_id)
         self.assertEqual(acl_entry["join_space"], True)
         self.assertEqual(acl_entry["read_timeline"], True)
         self.assertEqual(acl_entry["post"], True)
@@ -653,7 +653,7 @@ class SpaceACLResourceTest(BaseResourceTestCase):
         """
 
         acl_manager = ACL(self.db)
-        acl_entry = acl_manager.space_acl.get("non_existing_user", self.space_name)
+        acl_entry = acl_manager.space_acl.get("non_existing_user", self.space_id)
         self.assertIsNone(acl_entry)
 
     def test_get_all(self):
@@ -662,9 +662,10 @@ class SpaceACLResourceTest(BaseResourceTestCase):
         """
 
         # add one more rule for another space
+        another_space_id = ObjectId()
         test_rule = {
             "username": "another_user",
-            "space": "another_test",
+            "space": another_space_id,
             "join_space": False,
             "read_timeline": False,
             "post": False,
@@ -677,7 +678,7 @@ class SpaceACLResourceTest(BaseResourceTestCase):
         self.db.space_acl.insert_one(test_rule.copy())
 
         acl_manager = ACL(self.db)
-        acl_entries = acl_manager.space_acl.get_all("another_test")
+        acl_entries = acl_manager.space_acl.get_all(another_space_id)
         # default rule should not be in, because it is in another space
         self.assertEqual(len(acl_entries), 1)
         self.assertIn(test_rule, acl_entries)
@@ -690,7 +691,7 @@ class SpaceACLResourceTest(BaseResourceTestCase):
         # add one more rule for another space
         test_rule = {
             "username": "another_user",
-            "space": "another_test",
+            "space": ObjectId(),
             "join_space": False,
             "read_timeline": False,
             "post": False,
@@ -715,16 +716,16 @@ class SpaceACLResourceTest(BaseResourceTestCase):
 
         acl_manager = ACL(self.db)
         acl_manager.space_acl.set(
-            self.default_acl_entry["username"], self.space_name, "join_space", False
+            self.default_acl_entry["username"], self.space_id, "join_space", False
         )
 
         # check if value was set
         acl_entry = self.db.space_acl.find_one(
-            {"username": self.default_acl_entry["username"], "space": self.space_name}
+            {"username": self.default_acl_entry["username"], "space": self.space_id}
         )
         self.assertIsNotNone(acl_entry)
         self.assertEqual(acl_entry["username"], self.default_acl_entry["username"])
-        self.assertEqual(acl_entry["space"], self.space_name)
+        self.assertEqual(acl_entry["space"], self.space_id)
         self.assertEqual(acl_entry["join_space"], False)
         self.assertEqual(acl_entry["read_timeline"], True)
         self.assertEqual(acl_entry["post"], True)
@@ -741,15 +742,15 @@ class SpaceACLResourceTest(BaseResourceTestCase):
         """
 
         acl_manager = ACL(self.db)
-        acl_manager.space_acl.set("another_user", self.space_name, "join_space", False)
+        acl_manager.space_acl.set("another_user", self.space_id, "join_space", False)
 
         # check if value was set
         acl_entry = self.db.space_acl.find_one(
-            {"username": "another_user", "space": self.space_name}
+            {"username": "another_user", "space": self.space_id}
         )
         self.assertIsNotNone(acl_entry)
         self.assertEqual(acl_entry["username"], "another_user")
-        self.assertEqual(acl_entry["space"], self.space_name)
+        self.assertEqual(acl_entry["space"], self.space_id)
         self.assertEqual(acl_entry["join_space"], False)
 
     def test_set_error_key_doesnt_exist(self):
@@ -762,7 +763,7 @@ class SpaceACLResourceTest(BaseResourceTestCase):
             KeyError,
             acl_manager.space_acl.set,
             self.default_acl_entry["username"],
-            self.space_name,
+            self.space_id,
             "test",
             True,
         )
@@ -776,7 +777,7 @@ class SpaceACLResourceTest(BaseResourceTestCase):
         acl_manager.space_acl.set_all(
             {
                 "username": self.default_acl_entry["username"],
-                "space": self.space_name,
+                "space": self.space_id,
                 "join_space": False,
                 "read_timeline": False,
                 "post": False,
@@ -790,11 +791,11 @@ class SpaceACLResourceTest(BaseResourceTestCase):
 
         # check if values were set
         acl_entry = self.db.space_acl.find_one(
-            {"username": self.default_acl_entry["username"], "space": self.space_name}
+            {"username": self.default_acl_entry["username"], "space": self.space_id}
         )
         self.assertIsNotNone(acl_entry)
         self.assertEqual(acl_entry["username"], self.default_acl_entry["username"])
-        self.assertEqual(acl_entry["space"], self.space_name)
+        self.assertEqual(acl_entry["space"], self.space_id)
         self.assertEqual(acl_entry["join_space"], False)
         self.assertEqual(acl_entry["read_timeline"], False)
         self.assertEqual(acl_entry["post"], False)
@@ -814,7 +815,7 @@ class SpaceACLResourceTest(BaseResourceTestCase):
         acl_manager.space_acl.set_all(
             {
                 "username": "test",
-                "space": self.space_name,
+                "space": self.space_id,
                 "join_space": False,
                 "read_timeline": False,
                 "post": False,
@@ -828,11 +829,11 @@ class SpaceACLResourceTest(BaseResourceTestCase):
 
         # check if values were set
         acl_entry = self.db.space_acl.find_one(
-            {"username": "test", "space": self.space_name}
+            {"username": "test", "space": self.space_id}
         )
         self.assertIsNotNone(acl_entry)
         self.assertEqual(acl_entry["username"], "test")
-        self.assertEqual(acl_entry["space"], self.space_name)
+        self.assertEqual(acl_entry["space"], self.space_id)
         self.assertEqual(acl_entry["join_space"], False)
         self.assertEqual(acl_entry["read_timeline"], False)
         self.assertEqual(acl_entry["post"], False)
@@ -852,7 +853,7 @@ class SpaceACLResourceTest(BaseResourceTestCase):
             KeyError,
             acl_manager.space_acl.set_all,
             {
-                "space": self.space_name,
+                "space": self.space_id,
                 "join_space": False,
                 "read_timeline": False,
                 "post": False,
@@ -898,7 +899,7 @@ class SpaceACLResourceTest(BaseResourceTestCase):
             acl_manager.space_acl.set_all,
             {
                 "username": self.default_acl_entry["username"],
-                "space": self.space_name,
+                "space": self.space_id,
                 "test": True,
             },
         )
@@ -909,11 +910,11 @@ class SpaceACLResourceTest(BaseResourceTestCase):
         """
 
         acl_manager = ACL(self.db)
-        acl_manager.space_acl.delete(self.default_acl_entry["username"], self.space_name)
+        acl_manager.space_acl.delete(self.default_acl_entry["username"], self.space_id)
 
         # check if entry was deleted
         acl_entry = self.db.space_acl.find_one(
-            {"username": self.default_acl_entry["username"], "space": self.space_name}
+            {"username": self.default_acl_entry["username"], "space": self.space_id}
         )
         self.assertIsNone(acl_entry)
 
@@ -957,7 +958,7 @@ class ACLResourceTest(BaseResourceTestCase):
         acl_entry = self.db.global_acl.find_one({"role": "guest"})
         self.assertIsNotNone(acl_entry)
         self.assertEqual(acl_entry["role"], "guest")
-        self.assertEqual(acl_entry["create_space"], False)
+        self.assertEqual(acl_entry["create_space"], True)
 
 
 class PostResourceTest(BaseResourceTestCase):
@@ -1196,12 +1197,11 @@ class PostResourceTest(BaseResourceTestCase):
         }
 
         post_manager = Posts(self.db)
-        post_manager.insert_post(new_post)
+        post_id = post_manager.insert_post(new_post)
 
         # check if post was inserted
-        post = self.db.posts.find_one({"text": "new_test"})
+        post = self.db.posts.find_one({"_id": post_id})
         self.assertIsNotNone(post)
-        self.assertIsInstance(post["_id"], ObjectId)
         self.assertEqual(post["author"], new_post["author"])
         self.assertEqual(post["creation_date"], new_post["creation_date"])
         self.assertEqual(post["text"], new_post["text"])
@@ -1408,7 +1408,7 @@ class PostResourceTest(BaseResourceTestCase):
             "author": CURRENT_ADMIN.username,
             "creation_date": datetime(2023, 1, 1, 9, 0, 0),
             "text": "new_test",
-            "space": space_name,
+            "space": space_id,
             "pinned": False,
             "isRepost": False,
             "wordpress_post_id": None,
@@ -1449,13 +1449,14 @@ class PostResourceTest(BaseResourceTestCase):
         """
 
         # add 2 more space posts
+        space_id = ObjectId()
         additional_posts = [
             {
                 "_id": ObjectId(),
                 "author": CURRENT_ADMIN.username,
                 "creation_date": datetime(2023, 1, 1, 9, 0, 0),
                 "text": "test",
-                "space": "test_space",
+                "space": space_id,
                 "pinned": False,
                 "isRepost": False,
                 "wordpress_post_id": None,
@@ -1469,7 +1470,7 @@ class PostResourceTest(BaseResourceTestCase):
                 "author": CURRENT_ADMIN.username,
                 "creation_date": datetime(2023, 1, 1, 9, 0, 0),
                 "text": "test",
-                "space": "test_space",
+                "space": space_id,
                 "pinned": False,
                 "isRepost": False,
                 "wordpress_post_id": None,
@@ -1482,10 +1483,10 @@ class PostResourceTest(BaseResourceTestCase):
         self.db.posts.insert_many(additional_posts)
 
         post_manager = Posts(self.db)
-        post_manager.delete_post_by_space("test_space")
+        post_manager.delete_post_by_space(space_id)
 
         # check if posts were deleted
-        posts = list(self.db.posts.find({"space": "test_space"}))
+        posts = list(self.db.posts.find({"space": space_id}))
         self.assertEqual(len(posts), 0)
 
         # check that default post is still there
@@ -1590,14 +1591,16 @@ class PostResourceTest(BaseResourceTestCase):
         }
 
         post_manager = Posts(self.db)
-        post_manager.add_comment(self.post_id, comment)
+        comment_id = post_manager.add_comment(self.post_id, comment)
 
         # check if comment was added
         post = self.db.posts.find_one({"_id": self.post_id})
         self.assertIsNotNone(post)
         self.assertEqual(len(post["comments"]), 2)
+        comment_ids = [comment["_id"] for comment in post["comments"]]
         comment_text = [comment["text"] for comment in post["comments"]]
         self.assertIn(comment["text"], comment_text)
+        self.assertIn(comment_id, comment_ids)
 
     def test_add_comment_error_post_doesnt_exist(self):
         """
@@ -1686,7 +1689,7 @@ class PostResourceTest(BaseResourceTestCase):
             "author": CURRENT_ADMIN.username,
             "creation_date": datetime(2023, 1, 2, 9, 0, 0),
             "text": "test",
-            "space": "test_space",
+            "space": ObjectId(),
             "pinned": False,
             "wordpress_post_id": None,
             "tags": ["test"],
@@ -1700,10 +1703,10 @@ class PostResourceTest(BaseResourceTestCase):
         }
 
         post_manager = Posts(self.db)
-        post_manager.insert_repost(repost)
+        repost_id = post_manager.insert_repost(repost)
 
         # check if repost was added
-        post = self.db.posts.find_one({"repostText": "test_repost"})
+        post = self.db.posts.find_one({"_id": repost_id})
         self.assertIsNotNone(post)
         self.assertEqual(post["author"], repost["author"])
         self.assertEqual(post["creation_date"], repost["creation_date"])
@@ -1726,12 +1729,13 @@ class PostResourceTest(BaseResourceTestCase):
         """
 
         # insert a repost into the db
+        space_id = ObjectId()
         repost = {
             "_id": ObjectId(),
             "author": CURRENT_ADMIN.username,
             "creation_date": datetime(2023, 1, 2, 9, 0, 0),
             "text": "test",
-            "space": "test_space",
+            "space": space_id,
             "pinned": False,
             "wordpress_post_id": None,
             "tags": ["test"],
@@ -1752,7 +1756,7 @@ class PostResourceTest(BaseResourceTestCase):
                 2023, 1, 3, 9, 0, 0
             ),  # changed, but shouldnt be updated
             "text": "test",
-            "space": "test_space",
+            "space": space_id,
             "pinned": True,  # changed, but shouldnt be updated
             "wordpress_post_id": None,
             "tags": ["test"],
@@ -1765,7 +1769,9 @@ class PostResourceTest(BaseResourceTestCase):
             "repostText": "updated_test_repost",
         }
         post_manager = Posts(self.db)
-        post_manager.insert_repost(repost)
+        returned_repost_id = post_manager.insert_repost(repost)
+
+        self.assertEqual(returned_repost_id, repost["_id"])
 
         # check if repost was updated, but only the repostText is updateable
         post = self.db.posts.find_one({"_id": repost["_id"]})
@@ -1795,7 +1801,7 @@ class PostResourceTest(BaseResourceTestCase):
         repost = {
             "author": CURRENT_ADMIN.username,
             "creation_date": datetime(2023, 1, 2, 9, 0, 0),
-            "space": "test_space",
+            "space": ObjectId(),
             "pinned": False,
             "wordpress_post_id": None,
             "tags": ["test"],
@@ -1816,7 +1822,7 @@ class PostResourceTest(BaseResourceTestCase):
             "author": CURRENT_ADMIN.username,
             "creation_date": datetime(2023, 1, 2, 9, 0, 0),
             "text": "test",
-            "space": "test_space",
+            "space": ObjectId(),
             "pinned": False,
             "wordpress_post_id": None,
             "tags": ["test"],
@@ -1842,7 +1848,7 @@ class PostResourceTest(BaseResourceTestCase):
             "author": CURRENT_ADMIN.username,
             "creation_date": datetime(2023, 1, 2, 9, 0, 0),
             "text": "test",
-            "space": "test_space",
+            "space": ObjectId(),
             "pinned": False,
             "wordpress_post_id": None,
             "tags": ["test"],
@@ -2029,6 +2035,7 @@ class PostResourceTest(BaseResourceTestCase):
         """
 
         # add 5 posts, 3 of them in the space
+        space_id = ObjectId()
         for i in range(5):
             post = {
                 "author": CURRENT_ADMIN.username,
@@ -2044,15 +2051,35 @@ class PostResourceTest(BaseResourceTestCase):
                 "likers": [],
             }
             if i % 2 == 0:
-                post["space"] = "test_space"
+                post["space"] = space_id
             self.db.posts.insert_one(post)
 
+        # add one more space post outside of the time frame (lies in the future to check)
+        # that is pinned
+        post = {
+            "author": CURRENT_ADMIN.username,
+            "creation_date": datetime.now() + timedelta(days=1),
+            "text": "test",
+            "space": space_id,
+            "pinned": True,
+            "isRepost": False,
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "files": [],
+            "comments": [],
+            "likers": [],
+        }
+        self.db.posts.insert_one(post)
+
         post_manager = Posts(self.db)
+
         # this should include only the 3 posts in the space
-        posts = post_manager.get_space_timeline(
-            "test_space", datetime.now() - timedelta(days=1), datetime.now()
+        # and the pinned post should be in the pinned_posts list
+        timeline_posts, pinned_posts = post_manager.get_space_timeline(
+            space_id, datetime.now(), 10
         )
-        self.assertEqual(len(posts), 3)
+        self.assertEqual(len(timeline_posts), 3)
+        self.assertEqual(len(pinned_posts), 1)
 
     def test_get_user_timeline(self):
         """
@@ -2081,7 +2108,7 @@ class PostResourceTest(BaseResourceTestCase):
         post_manager = Posts(self.db)
         # this should include only the 3 posts by the user
         posts = post_manager.get_user_timeline(
-            CURRENT_USER.username, datetime.now() - timedelta(days=1), datetime.now()
+            CURRENT_USER.username, datetime.now(), 10
         )
         self.assertEqual(len(posts), 3)
 
@@ -2130,8 +2157,9 @@ class PostResourceTest(BaseResourceTestCase):
         }
 
         # create space test_space
+        space_id = ObjectId()
         space = {
-            "_id": ObjectId(),
+            "_id": space_id,
             "name": "test_space",
             "invisible": False,
             "joinable": True,
@@ -2150,7 +2178,7 @@ class PostResourceTest(BaseResourceTestCase):
             "author": "doesnt_matter",
             "creation_date": datetime.now(),
             "text": "test",
-            "space": "test_space",
+            "space": space_id,
             "pinned": False,
             "isRepost": False,
             "wordpress_post_id": None,
@@ -2164,7 +2192,7 @@ class PostResourceTest(BaseResourceTestCase):
             "author": "doesnt_matter",
             "creation_date": datetime.now(),
             "text": "test",
-            "space": "non_member_space",
+            "space": ObjectId(),
             "pinned": False,
             "isRepost": False,
             "wordpress_post_id": None,
@@ -2269,8 +2297,9 @@ class PostResourceTest(BaseResourceTestCase):
         }
 
         # create space test_space
+        space_id = ObjectId()
         space = {
-            "_id": ObjectId(),
+            "_id": space_id,
             "name": "test_space",
             "invisible": False,
             "joinable": True,
@@ -2289,7 +2318,7 @@ class PostResourceTest(BaseResourceTestCase):
             "author": "doesnt_matter",
             "creation_date": datetime.now(),
             "text": "testgydfgdfg",
-            "space": "test_space",
+            "space": space_id,
             "pinned": False,
             "isRepost": False,
             "wordpress_post_id": None,
@@ -2303,7 +2332,7 @@ class PostResourceTest(BaseResourceTestCase):
             "author": "doesnt_matter",
             "creation_date": datetime.now(),
             "text": "test",
-            "space": "non_member_space",
+            "space": ObjectId(),
             "pinned": False,
             "isRepost": False,
             "wordpress_post_id": None,
@@ -3279,7 +3308,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         """
 
         space_manager = Spaces(self.db)
-        self.assertTrue(space_manager.check_space_exists(self.space_name))
+        self.assertTrue(space_manager.check_space_exists(self.space_id))
 
     def test_check_space_exists_failure(self):
         """
@@ -3287,7 +3316,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         """
 
         space_manager = Spaces(self.db)
-        self.assertFalse(space_manager.check_space_exists("non_existing_space"))
+        self.assertFalse(space_manager.check_space_exists(ObjectId()))
         self.assertFalse(space_manager.check_space_exists(None))
 
     def test_check_user_is_space_admin(self):
@@ -3298,7 +3327,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         space_manager = Spaces(self.db)
         self.assertTrue(
             space_manager.check_user_is_space_admin(
-                self.space_name, CURRENT_ADMIN.username
+                self.space_id, CURRENT_ADMIN.username
             )
         )
 
@@ -3310,7 +3339,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         space_manager = Spaces(self.db)
         self.assertFalse(
             space_manager.check_user_is_space_admin(
-                self.space_name, CURRENT_USER.username
+                self.space_id, CURRENT_USER.username
             )
         )
 
@@ -3323,7 +3352,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             SpaceDoesntExistError,
             space_manager.check_user_is_space_admin,
-            "non_existing_space",
+            ObjectId(),
             CURRENT_ADMIN.username,
         )
 
@@ -3334,7 +3363,7 @@ class SpaceResourceTest(BaseResourceTestCase):
 
         space_manager = Spaces(self.db)
         self.assertTrue(
-            space_manager.check_user_is_member(self.space_name, CURRENT_ADMIN.username)
+            space_manager.check_user_is_member(self.space_id, CURRENT_ADMIN.username)
         )
 
     def test_check_user_is_member_failure(self):
@@ -3344,7 +3373,7 @@ class SpaceResourceTest(BaseResourceTestCase):
 
         space_manager = Spaces(self.db)
         self.assertFalse(
-            space_manager.check_user_is_member(self.space_name, CURRENT_USER.username)
+            space_manager.check_user_is_member(self.space_id, CURRENT_USER.username)
         )
 
     def test_check_user_is_member_error(self):
@@ -3356,7 +3385,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             SpaceDoesntExistError,
             space_manager.check_user_is_member,
-            "non_existing_space",
+            ObjectId(),
             CURRENT_ADMIN.username,
         )
 
@@ -3366,9 +3395,10 @@ class SpaceResourceTest(BaseResourceTestCase):
         """
 
         space_manager = Spaces(self.db)
-        space = space_manager.get_space(self.space_name)
+        space = space_manager.get_space(self.space_id)
         self.assertIsNotNone(space)
         self.assertEqual(space._id, self.default_space["_id"])
+        self.assertEqual(space.name, self.default_space["name"])
         self.assertEqual(space.invisible, self.default_space["invisible"])
         self.assertEqual(space.joinable, self.default_space["joinable"])
         self.assertEqual(space.members, self.default_space["members"])
@@ -3387,7 +3417,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         """
 
         space_manager = Spaces(self.db)
-        space = space_manager.get_space("non_existing_space")
+        space = space_manager.get_space(ObjectId())
         self.assertIsNone(space)
 
     def test_get_all_spaces(self):
@@ -3472,7 +3502,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         spaces = space_manager.get_all_spaces_visible_to_user(CURRENT_ADMIN.username)
         self.assertEqual(len(spaces), 3)
         space_names = [space.name for space in spaces]
-        self.assertIn("test", space_names)
+        self.assertIn(self.space_name, space_names)
         self.assertIn("test2", space_names)
         self.assertIn("test3", space_names)
         self.assertNotIn("test4", space_names)
@@ -3669,12 +3699,13 @@ class SpaceResourceTest(BaseResourceTestCase):
         }
 
         space_manager = Spaces(self.db)
-        space_manager.create_space(new_space)
+        _id = space_manager.create_space(new_space)
 
         # check if space was created
         space = self.db.spaces.find_one({"name": "new_space"})
         self.assertIsNotNone(space)
         self.assertIsInstance(space["_id"], ObjectId)
+        self.assertEqual(space["_id"], _id)
         self.assertEqual(space["name"], new_space["name"])
         self.assertEqual(space["invisible"], new_space["invisible"])
         self.assertEqual(space["joinable"], new_space["joinable"])
@@ -3685,29 +3716,6 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertEqual(space["files"], new_space["files"])
         self.assertEqual(space["space_pic"], new_space["space_pic"])
         self.assertEqual(space["space_description"], new_space["space_description"])
-
-    def test_create_space_failure_space_already_exists(self):
-        """
-        expect: SpaceAlreadyExistsError is raised because space with this name already exists
-        """
-
-        new_space = {
-            "name": self.space_name,
-            "invisible": False,
-            "joinable": True,
-            "members": [CURRENT_ADMIN.username],
-            "admins": [CURRENT_ADMIN.username],
-            "invites": [],
-            "requests": [],
-            "files": [],
-            "space_pic": "default_space_pic.jpg",
-            "space_description": "test",
-        }
-
-        space_manager = Spaces(self.db)
-        self.assertRaises(
-            SpaceAlreadyExistsError, space_manager.create_space, new_space
-        )
 
     def test_create_space_failure_invalid_attributes(self):
         """
@@ -3741,10 +3749,10 @@ class SpaceResourceTest(BaseResourceTestCase):
         """
 
         space_manager = Spaces(self.db)
-        space_manager.delete_space(self.space_name)
+        space_manager.delete_space(self.space_id)
 
         # check if space was deleted
-        space = self.db.spaces.find_one({"name": self.space_name})
+        space = self.db.spaces.find_one({"_id": self.space_id})
         self.assertIsNone(space)
 
     def test_delete_space_error_space_doesnt_exist(self):
@@ -3755,7 +3763,7 @@ class SpaceResourceTest(BaseResourceTestCase):
 
         space_manager = Spaces(self.db)
         self.assertRaises(
-            SpaceDoesntExistError, space_manager.delete_space, "non_existing_space"
+            SpaceDoesntExistError, space_manager.delete_space, ObjectId()
         )
 
     def test_is_space_directly_joinable(self):
@@ -3764,7 +3772,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         """
 
         space_manager = Spaces(self.db)
-        joinable = space_manager.is_space_directly_joinable(self.space_name)
+        joinable = space_manager.is_space_directly_joinable(self.space_id)
         self.assertEqual(joinable, self.default_space["joinable"])
 
     def test_is_space_directly_joinable_error_space_doesnt_exist(self):
@@ -3777,7 +3785,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             SpaceDoesntExistError,
             space_manager.is_space_directly_joinable,
-            "non_existing_space",
+            ObjectId(),
         )
 
     def test_join_space(self):
@@ -3786,10 +3794,10 @@ class SpaceResourceTest(BaseResourceTestCase):
         """
 
         space_manager = Spaces(self.db)
-        space_manager.join_space(self.space_name, CURRENT_USER.username)
+        space_manager.join_space(self.space_id, CURRENT_USER.username)
 
         # check if user was added to members list
-        space = self.db.spaces.find_one({"name": self.space_name})
+        space = self.db.spaces.find_one({"_id": self.space_id})
         self.assertIn(CURRENT_USER.username, space["members"])
 
     def test_join_space_error_space_doesnt_exist(self):
@@ -3802,7 +3810,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             SpaceDoesntExistError,
             space_manager.join_space,
-            "non_existing_space",
+            ObjectId(),
             CURRENT_USER.username,
         )
 
@@ -3816,7 +3824,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             AlreadyMemberError,
             space_manager.join_space,
-            self.space_name,
+            self.space_id,
             CURRENT_ADMIN.username,
         )
 
@@ -3826,10 +3834,10 @@ class SpaceResourceTest(BaseResourceTestCase):
         """
 
         space_manager = Spaces(self.db)
-        space_manager.join_space_request(self.space_name, CURRENT_USER.username)
+        space_manager.join_space_request(self.space_id, CURRENT_USER.username)
 
         # check if user was added to requests list
-        space = self.db.spaces.find_one({"name": self.space_name})
+        space = self.db.spaces.find_one({"_id": self.space_id})
         self.assertIn(CURRENT_USER.username, space["requests"])
 
     def test_join_space_request_error_space_doesnt_exist(self):
@@ -3842,7 +3850,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             SpaceDoesntExistError,
             space_manager.join_space_request,
-            "non_existing_space",
+            ObjectId(),
             CURRENT_USER.username,
         )
 
@@ -3854,7 +3862,7 @@ class SpaceResourceTest(BaseResourceTestCase):
 
         # manually add user to requests list
         self.db.spaces.update_one(
-            {"name": self.space_name},
+            {"_id": self.space_id},
             {"$push": {"requests": CURRENT_USER.username}},
         )
 
@@ -3862,7 +3870,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             AlreadyRequestedJoinError,
             space_manager.join_space_request,
-            self.space_name,
+            self.space_id,
             CURRENT_USER.username,
         )
 
@@ -3872,10 +3880,10 @@ class SpaceResourceTest(BaseResourceTestCase):
         """
 
         space_manager = Spaces(self.db)
-        space_manager.add_space_admin(self.space_name, CURRENT_USER.username)
+        space_manager.add_space_admin(self.space_id, CURRENT_USER.username)
 
         # check if user was added to admins list, which includes being in the members list
-        space = self.db.spaces.find_one({"name": self.space_name})
+        space = self.db.spaces.find_one({"_id": self.space_id})
         self.assertIn(CURRENT_USER.username, space["admins"])
         self.assertIn(CURRENT_USER.username, space["members"])
 
@@ -3889,7 +3897,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             SpaceDoesntExistError,
             space_manager.add_space_admin,
-            "non_existing_space",
+            ObjectId(),
             CURRENT_USER.username,
         )
 
@@ -3902,7 +3910,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             AlreadyAdminError,
             space_manager.add_space_admin,
-            self.space_name,
+            self.space_id,
             CURRENT_ADMIN.username,
         )
 
@@ -3913,10 +3921,10 @@ class SpaceResourceTest(BaseResourceTestCase):
 
         space_manager = Spaces(self.db)
         space_manager.set_space_picture(
-            self.space_name, "test_pic", b"test", "image/jpg"
+            self.space_id, "test_pic", b"test", "image/jpg"
         )
 
-        space = self.db.spaces.find_one({"name": self.space_name})
+        space = self.db.spaces.find_one({"_id": self.space_id})
         space_pic_id = space["space_pic"]
 
         fs = gridfs.GridFS(self.db)
@@ -3933,7 +3941,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             SpaceDoesntExistError,
             space_manager.set_space_picture,
-            "non_existing_space",
+            ObjectId(),
             "test_pic",
             b"test",
             "image/jpg",
@@ -3945,9 +3953,9 @@ class SpaceResourceTest(BaseResourceTestCase):
         """
 
         space_manager = Spaces(self.db)
-        space_manager.set_space_description(self.space_name, "test_description")
+        space_manager.set_space_description(self.space_id, "test_description")
 
-        space = self.db.spaces.find_one({"name": self.space_name})
+        space = self.db.spaces.find_one({"_id": self.space_id})
         self.assertEqual(space["space_description"], "test_description")
 
     def test_set_space_description_error_space_doesnt_exist(self):
@@ -3960,7 +3968,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             SpaceDoesntExistError,
             space_manager.set_space_description,
-            "non_existing_space",
+            ObjectId(),
             "test_description",
         )
 
@@ -3970,9 +3978,9 @@ class SpaceResourceTest(BaseResourceTestCase):
         """
 
         space_manager = Spaces(self.db)
-        space_manager.invite_user(self.space_name, CURRENT_USER.username)
+        space_manager.invite_user(self.space_id, CURRENT_USER.username)
 
-        space = self.db.spaces.find_one({"name": self.space_name})
+        space = self.db.spaces.find_one({"_id": self.space_id})
         self.assertIn(CURRENT_USER.username, space["invites"])
 
     def test_invite_user_error_space_doesnt_exist(self):
@@ -3985,7 +3993,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             SpaceDoesntExistError,
             space_manager.invite_user,
-            "non_existing_space",
+            ObjectId(),
             CURRENT_USER.username,
         )
 
@@ -3997,14 +4005,14 @@ class SpaceResourceTest(BaseResourceTestCase):
 
         # manually add user to invites list
         self.db.spaces.update_one(
-            {"name": self.space_name},
+            {"_id": self.space_id},
             {"$push": {"invites": CURRENT_USER.username}},
         )
 
         space_manager = Spaces(self.db)
-        space_manager.accept_space_invite(self.space_name, CURRENT_USER.username)
+        space_manager.accept_space_invite(self.space_id, CURRENT_USER.username)
 
-        space = self.db.spaces.find_one({"name": self.space_name})
+        space = self.db.spaces.find_one({"_id": self.space_id})
         self.assertNotIn(CURRENT_USER.username, space["invites"])
         self.assertIn(CURRENT_USER.username, space["members"])
 
@@ -4018,7 +4026,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             UserNotInvitedError,
             space_manager.accept_space_invite,
-            self.space_name,
+            self.space_id,
             CURRENT_USER.username,
         )
 
@@ -4032,7 +4040,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             SpaceDoesntExistError,
             space_manager.accept_space_invite,
-            "non_existing_space",
+            ObjectId(),
             CURRENT_USER.username,
         )
 
@@ -4043,14 +4051,14 @@ class SpaceResourceTest(BaseResourceTestCase):
 
         # manually add user to invites list
         self.db.spaces.update_one(
-            {"name": self.space_name},
+            {"_id": self.space_id},
             {"$push": {"invites": CURRENT_USER.username}},
         )
 
         space_manager = Spaces(self.db)
-        space_manager.decline_space_invite(self.space_name, CURRENT_USER.username)
+        space_manager.decline_space_invite(self.space_id, CURRENT_USER.username)
 
-        space = self.db.spaces.find_one({"name": self.space_name})
+        space = self.db.spaces.find_one({"_id": self.space_id})
         self.assertNotIn(CURRENT_USER.username, space["invites"])
         self.assertNotIn(CURRENT_USER.username, space["members"])
 
@@ -4064,7 +4072,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             SpaceDoesntExistError,
             space_manager.decline_space_invite,
-            "non_existing_space",
+            ObjectId(),
             CURRENT_USER.username,
         )
 
@@ -4075,14 +4083,14 @@ class SpaceResourceTest(BaseResourceTestCase):
 
         # manually add user to invites list
         self.db.spaces.update_one(
-            {"name": self.space_name},
+            {"_id": self.space_id},
             {"$push": {"invites": CURRENT_USER.username}},
         )
 
         space_manager = Spaces(self.db)
-        space_manager.revoke_space_invite(self.space_name, CURRENT_USER.username)
+        space_manager.revoke_space_invite(self.space_id, CURRENT_USER.username)
 
-        space = self.db.spaces.find_one({"name": self.space_name})
+        space = self.db.spaces.find_one({"_id": self.space_id})
         self.assertNotIn(CURRENT_USER.username, space["invites"])
         # for sanity, check that user is not added elsewhere
         self.assertNotIn(CURRENT_USER.username, space["requests"])
@@ -4098,7 +4106,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             SpaceDoesntExistError,
             space_manager.revoke_space_invite,
-            "non_existing_space",
+            ObjectId(),
             CURRENT_USER.username,
         )
 
@@ -4109,14 +4117,14 @@ class SpaceResourceTest(BaseResourceTestCase):
 
         # manually add user to requests list
         self.db.spaces.update_one(
-            {"name": self.space_name},
+            {"_id": self.space_id},
             {"$push": {"requests": CURRENT_USER.username}},
         )
 
         space_manager = Spaces(self.db)
-        space_manager.accept_join_request(self.space_name, CURRENT_USER.username)
+        space_manager.accept_join_request(self.space_id, CURRENT_USER.username)
 
-        space = self.db.spaces.find_one({"name": self.space_name})
+        space = self.db.spaces.find_one({"_id": self.space_id})
         self.assertNotIn(CURRENT_USER.username, space["requests"])
         self.assertIn(CURRENT_USER.username, space["members"])
 
@@ -4130,7 +4138,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             SpaceDoesntExistError,
             space_manager.accept_join_request,
-            "non_existing_space",
+            ObjectId(),
             CURRENT_USER.username,
         )
 
@@ -4144,7 +4152,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             NotRequestedJoinError,
             space_manager.accept_join_request,
-            self.space_name,
+            self.space_id,
             CURRENT_USER.username,
         )
 
@@ -4155,14 +4163,14 @@ class SpaceResourceTest(BaseResourceTestCase):
 
         # manually add user to requests list
         self.db.spaces.update_one(
-            {"name": self.space_name},
+            {"_id": self.space_id},
             {"$push": {"requests": CURRENT_USER.username}},
         )
 
         space_manager = Spaces(self.db)
-        space_manager.reject_join_request(self.space_name, CURRENT_USER.username)
+        space_manager.reject_join_request(self.space_id, CURRENT_USER.username)
 
-        space = self.db.spaces.find_one({"name": self.space_name})
+        space = self.db.spaces.find_one({"_id": self.space_id})
         self.assertNotIn(CURRENT_USER.username, space["requests"])
         self.assertNotIn(CURRENT_USER.username, space["members"])
 
@@ -4176,7 +4184,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             SpaceDoesntExistError,
             space_manager.reject_join_request,
-            "non_existing_space",
+            ObjectId(),
             CURRENT_USER.username,
         )
 
@@ -4187,14 +4195,14 @@ class SpaceResourceTest(BaseResourceTestCase):
 
         # manually add user to requests list
         self.db.spaces.update_one(
-            {"name": self.space_name},
+            {"_id": self.space_id},
             {"$push": {"requests": CURRENT_USER.username}},
         )
 
         space_manager = Spaces(self.db)
-        space_manager.revoke_join_request(self.space_name, CURRENT_USER.username)
+        space_manager.revoke_join_request(self.space_id, CURRENT_USER.username)
 
-        space = self.db.spaces.find_one({"name": self.space_name})
+        space = self.db.spaces.find_one({"_id": self.space_id})
         self.assertNotIn(CURRENT_USER.username, space["requests"])
         # for sanity, check that user is not added elsewhere
         self.assertNotIn(CURRENT_USER.username, space["invites"])
@@ -4210,7 +4218,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             SpaceDoesntExistError,
             space_manager.revoke_join_request,
-            "non_existing_space",
+            ObjectId(),
             CURRENT_USER.username,
         )
 
@@ -4221,14 +4229,14 @@ class SpaceResourceTest(BaseResourceTestCase):
 
         current_visibility = self.default_space["invisible"]
         space_manager = Spaces(self.db)
-        space_manager.toggle_visibility(self.space_name)
+        space_manager.toggle_visibility(self.space_id)
 
-        space = self.db.spaces.find_one({"name": self.space_name})
+        space = self.db.spaces.find_one({"_id": self.space_id})
         self.assertEqual(space["invisible"], not current_visibility)
 
         # try again backwards
-        space_manager.toggle_visibility(self.space_name)
-        space = self.db.spaces.find_one({"name": self.space_name})
+        space_manager.toggle_visibility(self.space_id)
+        space = self.db.spaces.find_one({"_id": self.space_id})
         self.assertEqual(space["invisible"], current_visibility)
 
     def test_toggle_visibility_error_space_doesnt_exist(self):
@@ -4239,7 +4247,7 @@ class SpaceResourceTest(BaseResourceTestCase):
 
         space_manager = Spaces(self.db)
         self.assertRaises(
-            SpaceDoesntExistError, space_manager.toggle_visibility, "non_existing_space"
+            SpaceDoesntExistError, space_manager.toggle_visibility, ObjectId()
         )
 
     def test_toggle_joinability(self):
@@ -4249,14 +4257,14 @@ class SpaceResourceTest(BaseResourceTestCase):
 
         current_joinability = self.default_space["joinable"]
         space_manager = Spaces(self.db)
-        space_manager.toggle_joinability(self.space_name)
+        space_manager.toggle_joinability(self.space_id)
 
-        space = self.db.spaces.find_one({"name": self.space_name})
+        space = self.db.spaces.find_one({"_id": self.space_id})
         self.assertEqual(space["joinable"], not current_joinability)
 
         # try again backwards
-        space_manager.toggle_joinability(self.space_name)
-        space = self.db.spaces.find_one({"name": self.space_name})
+        space_manager.toggle_joinability(self.space_id)
+        space = self.db.spaces.find_one({"_id": self.space_id})
         self.assertEqual(space["joinable"], current_joinability)
 
     def test_toggle_joinability_error_space_doesnt_exist(self):
@@ -4269,7 +4277,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             SpaceDoesntExistError,
             space_manager.toggle_joinability,
-            "non_existing_space",
+            ObjectId(),
         )
 
     def test_leave_space_member(self):
@@ -4279,14 +4287,14 @@ class SpaceResourceTest(BaseResourceTestCase):
 
         # manually add other user to space first
         self.db.spaces.update_one(
-            {"name": self.space_name},
+            {"_id": self.space_id},
             {"$push": {"members": CURRENT_USER.username}},
         )
 
         space_manager = Spaces(self.db)
-        space_manager.leave_space(self.space_name, CURRENT_USER.username)
+        space_manager.leave_space(self.space_id, CURRENT_USER.username)
 
-        space = self.db.spaces.find_one({"name": self.space_name})
+        space = self.db.spaces.find_one({"_id": self.space_id})
         self.assertNotIn(CURRENT_USER.username, space["members"])
 
     def test_leave_space_admin(self):
@@ -4296,7 +4304,7 @@ class SpaceResourceTest(BaseResourceTestCase):
 
         # manually add another admin first, becuase otherwise OnylAdminError should raise
         self.db.spaces.update_one(
-            {"name": self.space_name},
+            {"_id": self.space_id},
             {
                 "$push": {
                     "admins": CURRENT_USER.username,
@@ -4306,9 +4314,9 @@ class SpaceResourceTest(BaseResourceTestCase):
         )
 
         space_manager = Spaces(self.db)
-        space_manager.leave_space(self.space_name, CURRENT_USER.username)
+        space_manager.leave_space(self.space_id, CURRENT_USER.username)
 
-        space = self.db.spaces.find_one({"name": self.space_name})
+        space = self.db.spaces.find_one({"_id": self.space_id})
         self.assertNotIn(CURRENT_USER.username, space["admins"])
         self.assertNotIn(CURRENT_USER.username, space["members"])
 
@@ -4322,7 +4330,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             OnlyAdminError,
             space_manager.leave_space,
-            self.space_name,
+            self.space_id,
             CURRENT_ADMIN.username,
         )
 
@@ -4335,7 +4343,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             SpaceDoesntExistError,
             space_manager.leave_space,
-            "non_existing_space",
+            ObjectId(),
             CURRENT_USER.username,
         )
 
@@ -4346,14 +4354,14 @@ class SpaceResourceTest(BaseResourceTestCase):
 
         # manually add user to space first
         self.db.spaces.update_one(
-            {"name": self.space_name},
+            {"_id": self.space_id},
             {"$push": {"members": CURRENT_USER.username}},
         )
 
         space_manager = Spaces(self.db)
-        space_manager.kick_user(self.space_name, CURRENT_USER.username)
+        space_manager.kick_user(self.space_id, CURRENT_USER.username)
 
-        space = self.db.spaces.find_one({"name": self.space_name})
+        space = self.db.spaces.find_one({"_id": self.space_id})
         self.assertNotIn(CURRENT_USER.username, space["members"])
 
     def test_kick_user_error_space_doesnt_exist(self):
@@ -4365,7 +4373,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             SpaceDoesntExistError,
             space_manager.kick_user,
-            "non_existing_space",
+            ObjectId(),
             CURRENT_USER.username,
         )
 
@@ -4378,7 +4386,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             UserNotMemberError,
             space_manager.kick_user,
-            self.space_name,
+            self.space_id,
             CURRENT_USER.username,
         )
 
@@ -4389,7 +4397,7 @@ class SpaceResourceTest(BaseResourceTestCase):
 
         # manually add user to admins list first
         self.db.spaces.update_one(
-            {"name": self.space_name},
+            {"_id": self.space_id},
             {
                 "$push": {
                     "admins": CURRENT_USER.username,
@@ -4400,10 +4408,10 @@ class SpaceResourceTest(BaseResourceTestCase):
 
         space_manager = Spaces(self.db)
         space_manager.revoke_space_admin_privilege(
-            self.space_name, CURRENT_USER.username
+            self.space_id, CURRENT_USER.username
         )
 
-        space = self.db.spaces.find_one({"name": self.space_name})
+        space = self.db.spaces.find_one({"_id": self.space_id})
         self.assertNotIn(CURRENT_USER.username, space["admins"])
         self.assertIn(CURRENT_USER.username, space["members"])
 
@@ -4416,7 +4424,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             SpaceDoesntExistError,
             space_manager.revoke_space_admin_privilege,
-            "non_existing_space",
+            ObjectId(),
             CURRENT_USER.username,
         )
 
@@ -4429,7 +4437,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             UserNotAdminError,
             space_manager.revoke_space_admin_privilege,
-            self.space_name,
+            self.space_id,
             CURRENT_USER.username,
         )
 
@@ -4443,7 +4451,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             OnlyAdminError,
             space_manager.revoke_space_admin_privilege,
-            self.space_name,
+            self.space_id,
             CURRENT_ADMIN.username,
         )
 
@@ -4455,7 +4463,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         space_manager = Spaces(self.db)
 
         # default case
-        files = space_manager.get_files(self.space_name)
+        files = space_manager.get_files(self.space_id)
         self.assertEqual(files, self.default_space["files"])
 
         # add file metadata to space
@@ -4465,10 +4473,10 @@ class SpaceResourceTest(BaseResourceTestCase):
             "manually_uploaded": True,
         }
         self.db.spaces.update_one(
-            {"name": self.space_name},
+            {"_id": self.space_id},
             {"$push": {"files": additional_file}},
         )
-        files = space_manager.get_files(self.space_name)
+        files = space_manager.get_files(self.space_id)
         self.assertEqual(files, [additional_file])
 
     def test_get_files_error_space_doesnt_exist(self):
@@ -4478,7 +4486,7 @@ class SpaceResourceTest(BaseResourceTestCase):
 
         space_manager = Spaces(self.db)
         self.assertRaises(
-            SpaceDoesntExistError, space_manager.get_files, "non_existing_space"
+            SpaceDoesntExistError, space_manager.get_files, ObjectId()
         )
 
     def test_add_new_post_file(self):
@@ -4491,10 +4499,10 @@ class SpaceResourceTest(BaseResourceTestCase):
         filename = "test"
         space_manager = Spaces(self.db)
         space_manager.add_new_post_file(
-            self.space_name, CURRENT_USER.username, file_id, filename
+            self.space_id, CURRENT_USER.username, file_id, filename
         )
 
-        space = self.db.spaces.find_one({"name": self.space_name})
+        space = self.db.spaces.find_one({"_id": self.space_id})
         self.assertEqual(
             space["files"],
             [
@@ -4517,7 +4525,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             SpaceDoesntExistError,
             space_manager.add_new_post_file,
-            "non_existing_space",
+            ObjectId(),
             CURRENT_USER.username,
             file_id,
             "test",
@@ -4536,7 +4544,7 @@ class SpaceResourceTest(BaseResourceTestCase):
             "manually_uploaded": False,
         }
         self.db.spaces.update_one(
-            {"name": self.space_name},
+            {"_id": self.space_id},
             {"$push": {"files": file_obj}},
         )
 
@@ -4544,7 +4552,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             FileAlreadyInRepoError,
             space_manager.add_new_post_file,
-            self.space_name,
+            self.space_id,
             CURRENT_USER.username,
             file_obj["file_id"],
             file_obj["file_name"],
@@ -4557,14 +4565,14 @@ class SpaceResourceTest(BaseResourceTestCase):
 
         space_manager = Spaces(self.db)
         _id = space_manager.add_new_repo_file(
-            self.space_name,
+            self.space_id,
             "test_file",
             b"test",
             "image/jpg",
             CURRENT_ADMIN.username,
         )
 
-        space = self.db.spaces.find_one({"name": self.space_name})
+        space = self.db.spaces.find_one({"_id": self.space_id})
         self.assertEqual(
             space["files"],
             [
@@ -4588,7 +4596,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             SpaceDoesntExistError,
             space_manager.add_new_repo_file,
-            "non_existing_space",
+            ObjectId(),
             "test_file",
             b"test",
             "image/jpg",
@@ -4608,14 +4616,14 @@ class SpaceResourceTest(BaseResourceTestCase):
             "manually_uploaded": True,
         }
         self.db.spaces.update_one(
-            {"name": self.space_name},
+            {"_id": self.space_id},
             {"$push": {"files": file_obj}},
         )
 
         space_manager = Spaces(self.db)
-        space_manager.remove_file(self.space_name, file_id)
+        space_manager.remove_file(self.space_id, file_id)
 
-        space = self.db.spaces.find_one({"name": self.space_name})
+        space = self.db.spaces.find_one({"_id": self.space_id})
         self.assertEqual(space["files"], [])
         self.assertFalse(gridfs.GridFS(self.db).exists(file_id))
 
@@ -4629,7 +4637,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             SpaceDoesntExistError,
             space_manager.remove_file,
-            "non_existing_space",
+            ObjectId(),
             file_id,
         )
 
@@ -4648,7 +4656,7 @@ class SpaceResourceTest(BaseResourceTestCase):
             "manually_uploaded": False,
         }
         self.db.spaces.update_one(
-            {"name": self.space_name},
+            {"_id": self.space_id},
             {"$push": {"files": file_obj}},
         )
 
@@ -4656,7 +4664,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             PostFileNotDeleteableError,
             space_manager.remove_file,
-            self.space_name,
+            self.space_id,
             file_id,
         )
 
@@ -4669,7 +4677,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             FileDoesntExistError,
             space_manager.remove_file,
-            self.space_name,
+            self.space_id,
             ObjectId(),
         )
 
@@ -4687,14 +4695,14 @@ class SpaceResourceTest(BaseResourceTestCase):
             "manually_uploaded": False,
         }
         self.db.spaces.update_one(
-            {"name": self.space_name},
+            {"_id": self.space_id},
             {"$push": {"files": file_obj}},
         )
 
         space_manager = Spaces(self.db)
-        space_manager.remove_post_file(self.space_name, file_id)
+        space_manager.remove_post_file(self.space_id, file_id)
 
-        space = self.db.spaces.find_one({"name": self.space_name})
+        space = self.db.spaces.find_one({"_id": self.space_id})
         self.assertEqual(space["files"], [])
 
     def test_remove_post_file_error_space_doesnt_exist(self):
@@ -4707,7 +4715,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             SpaceDoesntExistError,
             space_manager.remove_post_file,
-            "non_existing_space",
+            ObjectId(),
             file_id,
         )
 
@@ -4720,7 +4728,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertRaises(
             FileDoesntExistError,
             space_manager.remove_post_file,
-            self.space_name,
+            self.space_id,
             ObjectId(),
         )
 

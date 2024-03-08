@@ -137,7 +137,9 @@ class ProfileInformationHandler(BaseHandler):
             # grab and add profile details, putting role and follows out of
             # the nested profile dict
             profile = {}
-            profile = profile_manager.ensure_profile_exists(username)
+            profile = profile_manager.ensure_profile_exists(
+                username, keycloak_info["firstName"], keycloak_info["lastName"]
+            )
             role = profile["role"]
             follows = profile["follows"]
             # remove unnecessary (duplicate) keys from nested dict
@@ -155,7 +157,7 @@ class ProfileInformationHandler(BaseHandler):
 
             # grab and add spaces
             space_manager = Spaces(db)
-            spaces = space_manager.get_space_names_of_user(username)
+            spaces = space_manager.get_space_ids_of_user(username)
             user_information_response["spaces"] = spaces
 
         self.set_status(200)

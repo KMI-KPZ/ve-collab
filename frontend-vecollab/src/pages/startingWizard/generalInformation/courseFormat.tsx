@@ -199,193 +199,200 @@ export default function Realization() {
     }
 
     return (
-        <>
-            <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
-            <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
-                {loading ? (
-                    <LoadingAnimation />
-                ) : (
-                    <form className="flex flex-col w-full p-12 max-w-screen-2xl items-center justify-start">
-                        <div>
-                            <div className={'text-center font-bold text-4xl mb-2 relative'}>
-                                In welchem Format / welchen Formaten wird der VE umgesetzt?
-                                <Tooltip tooltipsText="Mehr zu Formaten findest du hier in den Selbstlernmaterialien …">
-                                    <Link target="_blank" href={'/content/Digitale%20Medien%20&%20Werkzeuge'}>
-                                        <FiInfo size={30} color="#00748f" />
-                                    </Link>
-                                </Tooltip>
+        <div className="flex bg-pattern-left-blue-small bg-no-repeat">
+            <div className="flex flex-grow justify-center">
+                <div className="flex flex-col">
+                    <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
+                    {loading ? (
+                        <LoadingAnimation />
+                    ) : (
+                        <form className="gap-y-6 w-full p-12 max-w-7xl items-center flex flex-col flex-grow justify-between">
+                            <div>
+                                <div className={'text-center font-bold text-4xl mb-2 relative'}>
+                                    In welchem Format / welchen Formaten wird der VE umgesetzt?
+                                    <Tooltip tooltipsText="Mehr zu Formaten findest du hier in den Selbstlernmaterialien …">
+                                        <Link
+                                            target="_blank"
+                                            href={'/content/Digitale%20Medien%20&%20Werkzeuge'}
+                                        >
+                                            <FiInfo size={30} color="#00748f" />
+                                        </Link>
+                                    </Tooltip>
+                                </div>
+                                <div className={'text-center mb-20'}>optional</div>
+                                <div className="mx-7 mt-7 flex justify-center">
+                                    <Select
+                                        className="w-3/4"
+                                        value={
+                                            courseFormat
+                                                ? { label: courseFormat, value: courseFormat }
+                                                : null
+                                        }
+                                        options={[
+                                            { value: 'synchron', label: 'synchron' },
+                                            { value: 'asynchron', label: 'asynchron' },
+                                            {
+                                                value: 'asynchron und synchron',
+                                                label: 'asynchron und synchron',
+                                            },
+                                        ]}
+                                        onChange={handleChange}
+                                        placeholder="Auswählen..."
+                                    />
+                                </div>
                             </div>
-                            <div className={'text-center mb-20'}>optional</div>
-                            <div className="mx-7 mt-7 flex justify-center">
-                                <Select
-                                    className="w-3/4"
-                                    value={
-                                        courseFormat
-                                            ? { label: courseFormat, value: courseFormat }
-                                            : null
-                                    }
-                                    options={[
-                                        { value: 'synchron', label: 'synchron' },
-                                        { value: 'asynchron', label: 'asynchron' },
-                                        {
-                                            value: 'asynchron und synchron',
-                                            label: 'asynchron und synchron',
-                                        },
-                                    ]}
-                                    onChange={handleChange}
-                                    placeholder="Auswählen..."
-                                />
-                            </div>
-                        </div>
-                        <WhiteBox>
-                            <div className="p-10">
-                                <div className="flex items-center justify-start">
-                                    <p className="w-1/2">
-                                        Wird der VE durch eine physische Mobilität ergänzt /
-                                        begleitet?
-                                    </p>
-                                    <div className="flex w-1/2 gap-x-5">
-                                        <div className="flex my-1">
-                                            <div>
-                                                <label className="px-2 py-2">Ja</label>
+                            <WhiteBox>
+                                <div className="p-6">
+                                    <div className="flex items-center">
+                                        <p className="w-72">
+                                            Wird der VE durch eine physische Mobilität ergänzt /
+                                            begleitet?
+                                        </p>
+                                        <div className="flex w-40 justify-end gap-x-5">
+                                            <div className="flex my-1">
+                                                <div>
+                                                    <label className="px-2 py-2">Ja</label>
+                                                </div>
+                                                <div>
+                                                    <input
+                                                        type="radio"
+                                                        name="physicalMobility"
+                                                        value="true"
+                                                        checked={physicalMobilityChosen}
+                                                        className="border border-gray-400 rounded-lg p-2"
+                                                        onChange={() =>
+                                                            setPhysicalMobilityChosen(true)
+                                                        }
+                                                    />
+                                                </div>
                                             </div>
-                                            <div>
-                                                <input
-                                                    type="radio"
-                                                    name="physicalMobility"
-                                                    value="true"
-                                                    checked={physicalMobilityChosen}
-                                                    className="border border-gray-500 rounded-lg p-2"
-                                                    onChange={() => setPhysicalMobilityChosen(true)}
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="flex my-1">
-                                            <div>
-                                                <label className="px-2 py-2">Nein</label>
-                                            </div>
-                                            <div>
-                                                <input
-                                                    type="radio"
-                                                    name="physicalMobility"
-                                                    value="false"
-                                                    checked={!physicalMobilityChosen}
-                                                    className="border border-gray-500 rounded-lg p-2"
-                                                    onChange={() =>
-                                                        setPhysicalMobilityChosen(false)
-                                                    }
-                                                />
+                                            <div className="flex my-1">
+                                                <div>
+                                                    <label className="px-2 py-2">Nein</label>
+                                                </div>
+                                                <div>
+                                                    <input
+                                                        type="radio"
+                                                        name="physicalMobility"
+                                                        value="false"
+                                                        checked={!physicalMobilityChosen}
+                                                        className="border border-gray-400 rounded-lg p-2"
+                                                        onChange={() =>
+                                                            setPhysicalMobilityChosen(false)
+                                                        }
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                                {physicalMobilityChosen && (
-                                    <>
-                                        <div className="divide-y">
-                                            {physicalMobilities.map((mobility, index) => (
-                                                <div
-                                                    key={index}
-                                                    className="w-full items-center justify-start py-4"
-                                                >
-                                                    <div className="flex items-center justify-start pb-2 gap-x-2">
-                                                        <p>Ort:</p>
-                                                        <input
-                                                            type="text"
-                                                            value={mobility.location}
-                                                            onChange={(e) =>
-                                                                modifyPhysicalMobilityLocation(
-                                                                    index,
-                                                                    e.target.value
-                                                                )
-                                                            }
-                                                            placeholder="Ort eingeben"
-                                                            className="border border-gray-500 rounded-lg p-2"
-                                                        />
+                                    {physicalMobilityChosen && (
+                                        <>
+                                            <div className="divide-y my-2">
+                                                {physicalMobilities.map((mobility, index) => (
+                                                    <div key={index} className="py-4">
+                                                        <div className="flex items-center justify-start pb-2">
+                                                            <p className="mr-4">Ort:</p>
+                                                            <input
+                                                                type="text"
+                                                                value={mobility.location}
+                                                                onChange={(e) =>
+                                                                    modifyPhysicalMobilityLocation(
+                                                                        index,
+                                                                        e.target.value
+                                                                    )
+                                                                }
+                                                                placeholder="Ort eingeben"
+                                                                className="border border-gray-400 rounded-lg p-2 w-full"
+                                                            />
+                                                        </div>
+                                                        <div className="flex justify-between">
+                                                            <div className="flex items-center">
+                                                                <p className="mr-4">von:</p>
+                                                                <input
+                                                                    type="date"
+                                                                    value={mobility.timestamp_from}
+                                                                    onChange={(e) =>
+                                                                        modifyPhysicalMobilityTimestampFrom(
+                                                                            index,
+                                                                            e.target.value
+                                                                        )
+                                                                    }
+                                                                    className="border border-gray-400 rounded-lg p-2 mr-2"
+                                                                />
+                                                            </div>
+                                                            <div className="flex items-center">
+                                                                <p className="mr-4">bis:</p>
+                                                                <input
+                                                                    type="date"
+                                                                    value={mobility.timestamp_to}
+                                                                    onChange={(e) =>
+                                                                        modifyPhysicalMobilityTimestampTo(
+                                                                            index,
+                                                                            e.target.value
+                                                                        )
+                                                                    }
+                                                                    className="border border-gray-400 rounded-lg p-2 ml-2"
+                                                                />
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    <label htmlFor="from" className="">
-                                                        von:
-                                                    </label>
-                                                    <input
-                                                        type="date"
-                                                        value={mobility.timestamp_from}
-                                                        onChange={(e) =>
-                                                            modifyPhysicalMobilityTimestampFrom(
-                                                                index,
-                                                                e.target.value
-                                                            )
-                                                        }
-                                                        className="border border-gray-500 rounded-lg h-12 p-2 mx-2"
-                                                    />
-                                                    <label htmlFor="to" className="">
-                                                        bis:
-                                                    </label>
-                                                    <input
-                                                        type="date"
-                                                        value={mobility.timestamp_to}
-                                                        onChange={(e) =>
-                                                            modifyPhysicalMobilityTimestampTo(
-                                                                index,
-                                                                e.target.value
-                                                            )
-                                                        }
-                                                        className="border border-gray-500 rounded-lg h-12 p-2 mx-2"
-                                                    />
-                                                </div>
-                                            ))}
-                                        </div>
-                                        <div className={'mx-7 mt-3 flex justify-end'}>
-                                            <button
-                                                type="button"
-                                                onClick={removePhysicalMobilityField}
-                                            >
-                                                <RxMinus size={20} />
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={addPhysicalMobilityField}
-                                            >
-                                                <RxPlus size={20} />
-                                            </button>
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-                        </WhiteBox>
-                        <div className="flex justify-around w-full mt-10">
-                            <div>
-                                <Link
-                                    href={{
-                                        pathname: '/startingWizard/generalInformation/languages',
-                                        query: { plannerId: router.query.plannerId },
-                                    }}
-                                >
+                                                ))}
+                                            </div>
+                                            <div className={'mt-3 flex justify-end'}>
+                                                <button
+                                                    type="button"
+                                                    onClick={removePhysicalMobilityField}
+                                                >
+                                                    <RxMinus size={20} />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={addPhysicalMobilityField}
+                                                >
+                                                    <RxPlus size={20} />
+                                                </button>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            </WhiteBox>
+                            <div className="flex justify-around w-full mt-10">
+                                <div>
+                                    <Link
+                                        href={{
+                                            pathname:
+                                                '/startingWizard/generalInformation/languages',
+                                            query: { plannerId: router.query.plannerId },
+                                        }}
+                                    >
+                                        <button
+                                            type="button"
+                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                        >
+                                            Zurück
+                                        </button>
+                                    </Link>
+                                </div>
+                                <div>
                                     <button
                                         type="button"
                                         className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                        onClick={onSubmit}
                                     >
-                                        Zurück
+                                        Weiter
                                     </button>
-                                </Link>
+                                </div>
                             </div>
-                            <div>
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={onSubmit}
-                                >
-                                    Weiter
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                )}
-                <SideProgressBarSectionBroadPlanner
-                    progressState={sideMenuStepsProgress}
-                    handleValidation={() => {}}
-                    isValid={true}
-                    sideMenuStepsData={sideMenuStepsData}
-                />
+                        </form>
+                    )}
+                </div>
             </div>
-        </>
+            <SideProgressBarSectionBroadPlanner
+                progressState={sideMenuStepsProgress}
+                handleValidation={() => {}}
+                isValid={true}
+                sideMenuStepsData={sideMenuStepsData}
+            />
+        </div>
     );
 }

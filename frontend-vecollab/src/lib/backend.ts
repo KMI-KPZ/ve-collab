@@ -1,7 +1,7 @@
 import {
     BackendChatMessage,
     BackendChatroomSnippet,
-    BackendPosts,
+    BackendPost,
     BackendSpace,
     BackendSpaceACLEntry,
     BackendUserSnippet,
@@ -225,7 +225,7 @@ export function useGetCheckAdminUser(accessToken: string): {
 
 export function useGetSpace(
     accessToken: string,
-    spaceName: string
+    spaceId: string
 ): {
     data: BackendSpace;
     isLoading: boolean;
@@ -233,7 +233,7 @@ export function useGetSpace(
     mutate: KeyedMutator<any>;
 } {
     const { data, error, isLoading, mutate } = useSWR(
-        [`/spaceadministration/info?name=${spaceName}`, accessToken],
+        [`/spaceadministration/info?id=${spaceId}`, accessToken],
         ([url, token]) => GETfetcher(url, token)
     );
     return {
@@ -316,21 +316,47 @@ export function useGetMySpaceRequests(accessToken: string): {
     };
 }
 
-export function useGetTimeline(
-    accessToken: string,
-    toDate?: string,
-    fromDate?: string,
-    limit?: number,
-    space?: string
- ): {
-    data: BackendPosts[];
+export function useGetMySpaceACLEntry(accessToken: string, spaceId: string): {
+    data: BackendSpaceACLEntry;
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;
 } {
-    const endpointUrl = space
-        ? `/timeline/space/${space}?from=${fromDate}&to=${toDate}`
-        : `/timeline/you?to=${toDate}&limit=${limit}`
+    const { data, error, isLoading, mutate } = useSWR(
+        [`/space_acl/get?space=${spaceId}`, accessToken],
+        ([url, token]) => GETfetcher(url, token)
+    );
+    return {
+        data: isLoading || error ? '' : data.acl_entry,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
+export function useGetTimeline(
+    accessToken: string,
+    toDate?: string,
+    limit?: number,
+    space?: string,
+    user?: string
+ ): {
+    data: BackendPost[];
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    let endpointUrl = "/timeline"
+    if (space) {
+        endpointUrl += `/space/${space}`
+    }
+    else if (user) {
+        endpointUrl += `/user/${user}`
+    }
+    else {
+        endpointUrl += `/you`
+    }
+    endpointUrl += `?to=${toDate}&limit=${limit}`
 
     const { data, error, isLoading, mutate } = useSWR(
         [endpointUrl, accessToken],
@@ -343,24 +369,6 @@ export function useGetTimeline(
         error,
         mutate,
     }
-}
-
-export function useGetMySpaceACLEntry(accessToken: string, spaceName: string): {
-    data: BackendSpaceACLEntry;
-    isLoading: boolean;
-    error: any;
-    mutate: KeyedMutator<any>;
-} {
-    const { data, error, isLoading, mutate } = useSWR(
-        [`/space_acl/get?space=${spaceName}`, accessToken],
-        ([url, token]) => GETfetcher(url, token)
-    );
-    return {
-        data: isLoading || error ? '' : data.acl_entry,
-        isLoading,
-        error,
-        mutate,
-    };
 }
 
 export async function fetchGET(relativeUrl: string, accessToken?: string) {

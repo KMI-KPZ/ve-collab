@@ -1,4 +1,5 @@
 import json
+import logging
 from typing import Any, Dict, List, Optional
 
 from bson import ObjectId
@@ -30,6 +31,8 @@ from resources.network.profile import Profiles
 from resources.planner.etherpad_integration import EtherpadResouce
 from resources.planner.ve_plan import VEPlanResource
 import util
+
+logger = logging.getLogger(__name__)
 
 
 class VEPlanHandler(BaseHandler):
@@ -1352,7 +1355,10 @@ class VEPlanHandler(BaseHandler):
             return
         
         er = EtherpadResouce(db)
-        er.initiate_etherpad_for_plan(_id)
+        try:
+            er.initiate_etherpad_for_plan(_id)
+        except Exception:
+            logger.warn("etherpad is possibly down")
 
         self.serialize_and_write({"success": True, "inserted_id": _id})
 
@@ -1394,7 +1400,10 @@ class VEPlanHandler(BaseHandler):
         
         if upsert is True:
             er = EtherpadResouce(db)
-            er.initiate_etherpad_for_plan(_id)
+            try:
+                er.initiate_etherpad_for_plan(_id)
+            except Exception:
+                logger.warn("etherpad is possibly down")
 
         self.serialize_and_write({"success": True, "updated_id": _id})
 
@@ -1475,7 +1484,10 @@ class VEPlanHandler(BaseHandler):
         else:
             if upsert is True:
                 er = EtherpadResouce(db)
-                er.initiate_etherpad_for_plan(_id)
+                try:
+                    er.initiate_etherpad_for_plan(_id)
+                except Exception:
+                    logger.warn("etherpad is possibly down")
 
             self.serialize_and_write({"success": True, "updated_id": _id})
 

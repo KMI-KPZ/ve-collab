@@ -5,13 +5,19 @@ import Dialog from '../profile/Dialog';
 import NewChatForm from './NewChatForm';
 import { useSession } from 'next-auth/react';
 import RoomSnippet from './RoomSnippet';
+import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
 
 interface Props {
     handleChatSelect: (chat: string) => void;
     headerBarMessageEvents: any[];
+    profileSnippets: UserSnippet[];
 }
 
-export default function Sidebar({ handleChatSelect, headerBarMessageEvents }: Props) {
+export default function Sidebar({
+    handleChatSelect,
+    headerBarMessageEvents,
+    profileSnippets,
+}: Props) {
     const { data: session, status } = useSession();
     const [isNewChatDialogOpen, setIsNewChatDialogOpen] = useState(false);
 
@@ -40,6 +46,9 @@ export default function Sidebar({ handleChatSelect, headerBarMessageEvents }: Pr
                             room={room}
                             handleChatSelect={handleChatSelect}
                             headerBarMessageEvents={headerBarMessageEvents}
+                            memberProfileSnippets={profileSnippets.filter((profileSnippet) =>
+                                room.members.includes(profileSnippet.preferredUsername)
+                            )}
                         />
                     ))
                 )}

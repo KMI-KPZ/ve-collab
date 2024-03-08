@@ -7,6 +7,7 @@ import { BackendChatroomSnippet } from '@/interfaces/api/apiInterfaces';
 import RoomHeader from './RoomHeader';
 import ChatMessage from './ChatMessage';
 import InputArea from './InputArea';
+import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
 
 interface Props {
     socket: Socket;
@@ -16,6 +17,7 @@ interface Props {
     headerBarMessageEvents: any[];
     setHeaderBarMessageEvents: Dispatch<SetStateAction<any[]>>;
     roomInfo: BackendChatroomSnippet;
+    memberProfileSnippets: UserSnippet[];
 }
 
 export default function ChatWindow({
@@ -26,6 +28,7 @@ export default function ChatWindow({
     headerBarMessageEvents,
     setHeaderBarMessageEvents,
     roomInfo,
+    memberProfileSnippets,
 }: Props) {
     const { data: session, status } = useSession();
     const messageBottomRef = useRef<HTMLDivElement>(null);
@@ -97,7 +100,7 @@ export default function ChatWindow({
 
     return (
         <div className="w-full h-full flex flex-col">
-            <RoomHeader roomInfo={roomInfo} />
+            <RoomHeader roomInfo={roomInfo} memberProfileSnippets={memberProfileSnippets} />
             <div
                 ref={messageContainerRef}
                 className="h-full bg-white overflow-y-auto content-scrollbar relative"

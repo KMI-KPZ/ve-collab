@@ -1,3 +1,5 @@
+import logging
+
 import tornado
 
 from error_reasons import INSUFFICIENT_PERMISSIONS, MISSING_KEY_SLUG, PLAN_DOESNT_EXIST
@@ -6,6 +8,9 @@ from handlers.base_handler import BaseHandler, auth_needed
 from resources.planner.etherpad_integration import EtherpadResouce
 from resources.planner.ve_plan import VEPlanResource
 import util
+
+
+logger = logging.getLogger(__name__)
 
 
 class EtherpadIntegrationHandler(BaseHandler):
@@ -50,12 +55,17 @@ class EtherpadIntegrationHandler(BaseHandler):
                 # user has access, so we obtain a session for him and invalidate
                 # all other previous sessions
                 er = EtherpadResouce(db)
-                authorID = er.create_etherpad_author_for_user_if_not_exists(
-                    self.current_user.user_id, self.current_user.username
-                )
-                groupID = er.create_etherpad_group_for_plan_if_not_exists(plan_id)
-                er.revoke_all_session_for_user_in_group(authorID, groupID)
-                sessionID = er.create_etherpad_user_session_for_plan(groupID, authorID)
+                try:
+                    authorID = er.create_etherpad_author_for_user_if_not_exists(
+                        self.current_user.user_id, self.current_user.username
+                    )
+                    groupID = er.create_etherpad_group_for_plan_if_not_exists(plan_id)
+                    er.revoke_all_session_for_user_in_group(authorID, groupID)
+                    sessionID = er.create_etherpad_user_session_for_plan(groupID, authorID)
+                except Exception:
+                    logger.warn("etherpad is possibly down")
+                    sessionID = None
+                    groupID = None
 
                 self.write(
                     {

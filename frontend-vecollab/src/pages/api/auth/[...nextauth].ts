@@ -3,6 +3,7 @@ import { JWT } from 'next-auth/jwt';
 import KeycloakProvider, { KeycloakProfile } from 'next-auth/providers/keycloak';
 import { type OAuthConfig } from 'next-auth/providers';
 import { AdapterUser } from 'next-auth/adapters';
+import { fetchGET } from '@/lib/backend';
 
 if (!process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID) {
     throw new Error(`
@@ -200,6 +201,11 @@ export const authOptions = {
                 token.accessTokenExpired = account.expires_at!;
                 token.refreshTokenExpired = Date.now() + (account.refresh_expires_in - 15) * 1000;
                 token.user = user;
+
+                // only after signin (when account & user is != null), 
+                // ensure that the user gets a profile in the backend
+                // by simply fetching his profile information
+                fetchGET('/profileinformation', token.accessToken);
 
                 return token;
             }

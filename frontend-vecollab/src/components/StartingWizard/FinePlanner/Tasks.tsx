@@ -26,7 +26,7 @@ export default function Tasks({ taskIndex }: Props) {
     };
 
     return (
-        <div className={'p-4 my-4 mx-2 bg-slate-200 rounded-3xl shadow-2xl'}>
+        <div className={'px-4 pt-4 pb-12 my-4 mx-2 bg-slate-200 rounded-3xl shadow-2xl'}>
             <div className="mt-2 flex">
                 <div className="w-1/6 flex items-center">
                     <label htmlFor="title" className="px-2 py-2">
@@ -43,7 +43,7 @@ export default function Tasks({ taskIndex }: Props) {
                             },
                         })}
                         placeholder="Aufgabentitel"
-                        className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                        className="border border-gray-400 rounded-lg w-full p-2"
                     />
                     <p className="text-red-600 pt-2">
                         {formState.errors?.tasks?.[taskIndex]?.title?.message}
@@ -66,7 +66,7 @@ export default function Tasks({ taskIndex }: Props) {
                             },
                         })}
                         placeholder="Beschreibe die Aufgabe detailierter"
-                        className="border border-gray-500 rounded-lg w-full p-2"
+                        className="border border-gray-400 rounded-lg w-full p-2"
                     />
                     <p className="text-red-600 pt-2">
                         {formState.errors?.tasks?.[taskIndex]?.description?.message}
@@ -89,40 +89,41 @@ export default function Tasks({ taskIndex }: Props) {
                             },
                         })}
                         placeholder="Welche Lernziele werden mit der Aufgabe verfolgt?"
-                        className="border border-gray-500 rounded-lg w-full p-2"
+                        className="border border-gray-400 rounded-lg w-full p-2"
                     />
                     <p className="text-red-600 pt-2">
                         {formState.errors?.tasks?.[taskIndex]?.learning_goal?.message}
                     </p>
                 </div>
             </div>
-            <div className="mt-2">
-                <div className="flex">
-                    <div className="w-1/6 flex items-start">
-                        <label htmlFor="tools" className="px-2 py-2">
-                            Tools & Medien
-                        </label>
-                    </div>
-                    <div className="w-full flex flex-col gap-2">
-                        {fields.map((tool, toolIndex) => (
-                            <Tools
-                                key={tool.id}
-                                taskIndex={taskIndex}
-                                toolIndex={toolIndex}
-                                removeItem={handleDelete}
-                            />
-                        ))}
-                        <div className="w-full flex items-center justify-center">
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    append(defaultValueTools);
-                                }}
-                            >
-                                <RxPlus size={20} />
-                            </button>
-                        </div>
-                    </div>
+            <div className="mt-2 flex">
+                <div className="w-1/6 flex items-center">
+                    <label htmlFor="tools" className="px-2 py-2">
+                        Tools & Medien
+                    </label>
+                </div>
+                <div className="w-5/6 flex flex-col gap-2">
+                    {fields.map((tool, toolIndex) => (
+                        <Tools
+                            key={tool.id}
+                            taskIndex={taskIndex}
+                            toolIndex={toolIndex}
+                            removeItem={handleDelete}
+                        />
+                    ))}
+                </div>
+            </div>
+            <div className="flex">
+                <div className="w-1/6" />
+                <div className="w-5/6 mt-3 flex items-center justify-center">
+                    <button
+                        type="button"
+                        onClick={() => {
+                            append(defaultValueTools);
+                        }}
+                    >
+                        <RxPlus size={20} />
+                    </button>
                 </div>
             </div>
         </div>

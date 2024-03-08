@@ -242,7 +242,7 @@ class SearchHandler(BaseHandler):
         with util.get_mongodb() as db:
             space_manager = Spaces(db)
             profile_manager = Profiles(db)
-            spaces_of_user = space_manager.get_space_names_of_user(
+            space_ids_of_user = space_manager.get_space_ids_of_user(
                 self.current_user.username
             )
             follows_of_user = profile_manager.get_follows(self.current_user.username)
@@ -251,7 +251,7 @@ class SearchHandler(BaseHandler):
         for post in posts:
             # if the post was in a space, the user has to be a member of it
             if post["space"]:
-                if post["space"] in spaces_of_user:
+                if post["space"] in space_ids_of_user:
                     reduced.append(post)
 
             # if the post was not in a space, the user has to follow the author (or be the author himself)

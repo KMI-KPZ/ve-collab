@@ -1,6 +1,7 @@
 from __future__ import annotations
 import logging
 from typing import Optional, Dict, List
+from bson import ObjectId
 
 from pymongo.database import Database
 
@@ -58,7 +59,7 @@ class ACL:
         with self:
             db = self.client[global_vars.mongodb_db_name]
             currently_existing_roles = db.profiles.distinct("role")
-            currently_existing_spaces = db.spaces.distinct("name")
+            currently_existing_spaces = db.spaces.distinct("_id")
 
             # clean global acl (roles no longer exists)
             for global_acl_rule in self.global_acl.get_all():
@@ -96,7 +97,7 @@ class _GlobalACL:
 
         default_rule = {
             "role": role,
-            "create_space": False,
+            "create_space": True,
         }
         self.db.global_acl.update_one(  # use update + upsert so this function can also be used to restore to default
             {"role": role}, {"$set": default_rule}, upsert=True
@@ -236,7 +237,7 @@ class _SpaceACL:
     def get_existing_keys(self):
         return self._EXISTING_KEYS
 
-    def insert_default(self, username: str, space: str) -> dict:
+    def insert_default(self, username: str, space_id: str | ObjectId) -> dict:
         """
         insert the standard rule for the given user, returning the inserted rule.
         standard is read timeline only:
@@ -253,9 +254,11 @@ class _SpaceACL:
         :return: inserted rule
         """
 
+        space_id = util.parse_object_id(space_id)
+
         default_rule = {
             "username": username,
-            "space": space,
+            "space": space_id,
             "join_space": False,
             "read_timeline": True,
             "post": False,
@@ -266,15 +269,17 @@ class _SpaceACL:
             "write_files": False,
         }
         self.db.space_acl.update_one(  # use update + upsert so this function can also be used to restore to default
-            {"username": username, "space": space}, {"$set": default_rule}, upsert=True
+            {"username": username, "space": space_id}, {"$set": default_rule}, upsert=True
         )
 
         return default_rule
 
-    def insert_admin(self, username: str, space: str) -> dict:
+    def insert_admin(self, username: str, space_id: str | ObjectId) -> dict:
+        space_id = util.parse_object_id(space_id)
+
         admin_rule = {
             "username": username,
-            "space": space,
+            "space": space_id,
             "join_space": True,
             "read_timeline": True,
             "post": True,
@@ -286,14 +291,16 @@ class _SpaceACL:
         }
 
         self.db.space_acl.update_one(
-            {"username": username, "space": space}, {"$set": admin_rule}, upsert=True
+            {"username": username, "space": space_id}, {"$set": admin_rule}, upsert=True
         )
         return admin_rule
 
-    def insert_default_discussion(self, username: str, space: str):
+    def insert_default_discussion(self, username: str, space_id: str | ObjectId):
+        space_id = util.parse_object_id(space_id)
+
         default_rule = {
             "username": username,
-            "space": space,
+            "space": space_id,
             "join_space": True,
             "read_timeline": True,
             "post": True,
@@ -305,18 +312,20 @@ class _SpaceACL:
         }
 
         self.db.space_acl.update_one(  # use update + upsert so this function can also be used to restore to default
-            {"username": username, "space": space}, {"$set": default_rule}, upsert=True
+            {"username": username, "space": space_id}, {"$set": default_rule}, upsert=True
         )
         return default_rule
 
-    def ask(self, username: str, space: str, permission_key: str) -> bool:
+    def ask(self, username: str, space_id: str | ObjectId, permission_key: str) -> bool:
         """
         "ask" the acl for a permission value on a given user
-        :param space: the space where the rules apply
+        :param space_id: the space where the rules apply
         :param username: which user to query
         :param permission_key: the name of the permission. these are the same as the keys stored in the db, e.g. "create_space"
         :return: boolean indicator whether the user has the requested permission or not
         """
+
+        space_id = util.parse_object_id(space_id)
 
         if permission_key not in self._EXISTING_KEYS:
             raise KeyError(
@@ -325,16 +334,16 @@ class _SpaceACL:
                 )
             )
 
-        record = self.db.space_acl.find_one({"username": username, "space": space})
+        record = self.db.space_acl.find_one({"username": username, "space": space_id})
         if not record:
             raise ValueError(
                 "no Space ACL entry exists for user '{}' in space '{}'".format(
-                    username, space
+                    username, str(space_id)
                 )
             )
         return record[permission_key]
 
-    def get(self, username: str, space: str) -> Optional[Dict]:
+    def get(self, username: str, space_id: str | ObjectId) -> Optional[Dict]:
         """
         request the entire set of permissions for the user in the space
         :param space:
@@ -343,19 +352,24 @@ class _SpaceACL:
         or None if the combination of user and space does not exist
         """
 
-        record = self.db.space_acl.find_one({"username": username, "space": space})
+        space_id = util.parse_object_id(space_id)
+
+        record = self.db.space_acl.find_one({"username": username, "space": space_id})
         if record:
             del record["_id"]  # _id useless information here, can leave it out
         return record
         # TODO raise exception instead of returning None if the role/space combination was not found
 
-    def get_all(self, space: str) -> Optional[List[Dict]]:
+    def get_all(self, space_id: str | ObjectId) -> Optional[List[Dict]]:
         """
         request all entries of the give space from the acl
         :return: list of dict's containing all the entries, or None if no acl entry exists.
         """
+
+        space_id = util.parse_object_id(space_id)
+
         result_list = []
-        records = self.db.space_acl.find({"space": space})
+        records = self.db.space_acl.find({"space": space_id})
         if records:
             for record in records:
                 del record["_id"]
@@ -367,6 +381,7 @@ class _SpaceACL:
         request the full list of the space ACL, i.e. all spaces and all users
         :return: list of dict's containing all the entries, or None if no acl entry exists.
         """
+
         ret_list = []
         entries = self.db.space_acl.find()
         if entries:
@@ -375,14 +390,16 @@ class _SpaceACL:
                 ret_list.append(entry)
         return ret_list
 
-    def set(self, username: str, space: str, permission_key: str, value: bool) -> None:
+    def set(self, username: str, space_id: str | ObjectId, permission_key: str, value: bool) -> None:
         """
         set a value for a specific permission in a space for a user
-        :param space: the space where the rules apply
+        :param space_id: the space where the rules apply
         :param username: the user to set the permission for
         :param permission_key: which permission to set. use the same identifier as in the db, e.g. "create_space"
         :param value: the value to set (True/False)
         """
+
+        space_id = util.parse_object_id(space_id)
 
         if permission_key not in self._EXISTING_KEYS:
             raise KeyError(
@@ -392,7 +409,7 @@ class _SpaceACL:
             )
 
         self.db.space_acl.update_one(
-            {"username": username, "space": space},
+            {"username": username, "space": space_id},
             {"$set": {permission_key: value}},
             upsert=True,
         )
@@ -405,7 +422,7 @@ class _SpaceACL:
         ACL entry needs to only contain:
         {
             "username": "<username>",
-            "space": "<space>",
+            "space": "<space_id>",
             "join_space": True/False,
             "read_timeline": True/False,
             "post": True/False,
@@ -424,6 +441,10 @@ class _SpaceACL:
             raise KeyError("ACL Entry is missing mandatory key 'username'")
         if "space" not in acl_entry:
             raise KeyError("ACL Entry is missing mandatory key 'space'")
+        
+        # ensure object_id for space
+        acl_entry["space"] = util.parse_object_id(acl_entry["space"])
+
         # check for any keys that are too much (or have a typo e.g.)
         for key in acl_entry.keys():
             if key not in self._EXISTING_KEYS:
@@ -437,12 +458,15 @@ class _SpaceACL:
             upsert=True,
         )
 
-    def delete(self, username: str = None, space: str = None):
+    def delete(self, username: str = None, space_id: str | ObjectId = None):
         """
         Delete ACL entries either by username or by space
         """
 
-        self.db.space_acl.delete_many({"$or": [{"username": username}, {"space": space}]})
+        if space_id is not None:
+            space_id = util.parse_object_id(space_id)
+
+        self.db.space_acl.delete_many({"$or": [{"username": username}, {"space": space_id}]})
 
 
 def cleanup_unused_rules() -> None:
@@ -460,7 +484,7 @@ def cleanup_unused_rules() -> None:
         acl_manager = ACL(db)
         currently_existing_roles = db.profiles.distinct("role")
         currently_existing_users = db.profiles.distinct("username")
-        currently_existing_spaces = db.spaces.distinct("name")
+        currently_existing_spaces = db.spaces.distinct("_id")
 
         # clean global acl (roles no longer exists)
         for global_acl_rule in acl_manager.global_acl.get_all():

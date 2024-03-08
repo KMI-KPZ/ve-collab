@@ -157,7 +157,7 @@ export default function Lectures() {
                                     },
                                 })}
                                 placeholder="Name eingeben"
-                                className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                className="border border-gray-400 rounded-lg w-full p-2"
                             />
                             <p className="text-red-600 pt-2">
                                 {errors?.lectures?.[index]?.name?.message}
@@ -180,7 +180,7 @@ export default function Lectures() {
                                     },
                                 })}
                                 placeholder="z.B. Wahl, Wahlpflicht, Pflicht"
-                                className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                className="border border-gray-400 rounded-lg w-full px-1 py-2"
                             >
                                 <option value="Pflichtveranstaltung">Pflichtveranstaltung</option>
                                 <option value="Wahlveranstaltung">Wahlveranstaltung</option>
@@ -206,7 +206,7 @@ export default function Lectures() {
                                     },
                                 })}
                                 placeholder="z.B. online, hybrid, präsenz"
-                                className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                className="border border-gray-400 rounded-lg w-full px-1 py-2"
                             >
                                 <option value="Präsenz">Präsenz</option>
                                 <option value="Online">Online</option>
@@ -239,7 +239,7 @@ export default function Lectures() {
                                     setValueAs: (v) => parseInt(v),
                                 })}
                                 placeholder="Anzahl eingeben"
-                                className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                className="border border-gray-400 rounded-lg w-full p-2"
                             />
                             <p className="text-red-600 pt-2">
                                 {errors?.lectures?.[index]?.participants_amount?.message}
@@ -251,13 +251,14 @@ export default function Lectures() {
         ));
     };
     return (
-        <>
+        <div className="flex bg-pattern-left-blue-small bg-no-repeat">
+            <div className="flex flex-grow justify-center">
+                <div className='flex flex-col'>
             <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
-            <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
                 {loading ? (
                     <LoadingAnimation />
                 ) : (
-                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
+                    <form className="gap-y-6 w-full p-12 max-w-7xl items-center flex flex-col flex-grow justify-between">
                         <div>
                             <div className={'text-center font-bold text-4xl mb-2'}>
                                 Im Rahmen welcher Lehrveranstaltungen wird der VE umgesetzt?
@@ -285,7 +286,7 @@ export default function Lectures() {
                                 </button>
                             </div>
                         </div>
-                        <div className="flex justify-around w-full">
+                        <div className="flex justify-between w-full max-w-xl">
                             <div>
                                 <button
                                     type="button"
@@ -317,13 +318,14 @@ export default function Lectures() {
                         </div>
                     </form>
                 )}
-                <SideProgressBarSectionBroadPlanner
-                    progressState={sideMenuStepsProgress}
-                    handleValidation={handleSubmit(onSubmit)}
-                    isValid={isValid}
-                    sideMenuStepsData={sideMenuStepsData}
-                />
+                </div>
             </div>
-        </>
+            <SideProgressBarSectionBroadPlanner
+                progressState={sideMenuStepsProgress}
+                handleValidation={handleSubmit(onSubmit)}
+                isValid={isValid}
+                sideMenuStepsData={sideMenuStepsData}
+            />
+        </div>
     );
 }

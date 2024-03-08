@@ -30,17 +30,24 @@ export default function Space() {
         { name: '', profilePicUrl: '', institution: '', preferredUsername: '' },
     ]);
 
+    // TODO use conditional fetching with the swr hook to wait for the router to be ready, 
+    // because sometimes when the router is not yet ready, but the hook fires
+    // an additional request with undefined id is made
     const {
         data: space,
         isLoading,
         error,
         mutate,
-    } = useGetSpace(session!.accessToken, router.query.name as string);
-    console.log({space, memberSnippets});
+    } = useGetSpace(session!.accessToken, router.query.id as string);
+    console.log(space);
+    console.log(memberSnippets);
 
+    // TODO use conditional fetching with the swr hook to wait for the router to be ready, 
+    // because sometimes when the router is not yet ready, but the hook fires
+    // an additional request with undefined id is made
     const { data: spaceACLEntry, isLoading: spaceACLEntryLoading } = useGetMySpaceACLEntry(
         session!.accessToken,
-        router.query.name as string
+        router.query.id as string
     );
     console.log(spaceACLEntry);
 
@@ -70,7 +77,7 @@ export default function Space() {
         // upload as form data instead of json
         const response = await fetch(
             process.env.NEXT_PUBLIC_BACKEND_BASE_URL +
-                `/spaceadministration/put_file?name=${space.name}`,
+                `/spaceadministration/put_file?id=${space._id}`,
             {
                 method: 'POST',
                 headers: headers,
@@ -287,7 +294,7 @@ export default function Space() {
                                         {(() => {
                                             switch (renderPicker) {
                                                 case 'timeline':
-                                                    return <Timeline space={space.name} />;
+                                                    return <Timeline space={space._id} />;
                                                 case 'members':
                                                     return members();
                                                 case 'files':
