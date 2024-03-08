@@ -48,7 +48,7 @@ export default function Institutions() {
 
     const {
         register,
-        formState: { errors, isValid },
+        formState: { errors },
         handleSubmit,
         control,
         setValue,
@@ -299,7 +299,7 @@ export default function Institutions() {
     return (
         <div className="flex bg-pattern-left-blue-small bg-no-repeat">
             <div className="flex flex-grow justify-center">
-                <div className='flex flex-col'>
+                <div className="flex flex-col">
                     <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
                     {loading ? (
                         <LoadingAnimation />
@@ -370,7 +370,7 @@ export default function Institutions() {
             <SideProgressBarSectionBroadPlanner
                 progressState={sideMenuStepsProgress}
                 handleValidation={handleSubmit(onSubmit)}
-                isValid={isValid}
+                isValid={true}
                 sideMenuStepsData={sideMenuStepsData}
             />
         </div>

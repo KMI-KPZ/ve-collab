@@ -264,7 +264,7 @@ export default function FinePlanner() {
     return (
         <div className="flex bg-pattern-left-blue-small bg-no-repeat">
             <div className="flex flex-grow justify-center">
-                <div className='flex flex-col'>
+                <div className="flex flex-col">
                     <HeadProgressBarSection stage={2} linkFineStep={steps[0]?.name} />
                     {loading ? (
                         <LoadingAnimation />
@@ -329,7 +329,7 @@ export default function FinePlanner() {
             <SideProgressbarSectionFinePlanner
                 progressState={sideMenuStepsProgress}
                 handleValidation={methods.handleSubmit(onSubmit)}
-                isValid={methods.formState.isValid}
+                isValid={true}
                 sideMenuStepsData={sideMenuStepsData}
             />
         </div>

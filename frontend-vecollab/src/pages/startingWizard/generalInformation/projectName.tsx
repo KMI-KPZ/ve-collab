@@ -40,7 +40,7 @@ export default function EssentialInformation() {
     const {
         register,
         handleSubmit,
-        formState: { errors, isValid },
+        formState: { errors },
         setValue,
     } = useForm<FormValues>({ mode: 'onChange' });
 
@@ -171,7 +171,7 @@ export default function EssentialInformation() {
             <SideProgressBarSectionBroadPlanner
                 progressState={sideMenuStepsProgress}
                 handleValidation={handleSubmit(onSubmit)}
-                isValid={isValid}
+                isValid={true}
                 sideMenuStepsData={sideMenuStepsData}
             />
         </div>
