@@ -45,7 +45,7 @@ export default function Languages() {
 
     const {
         register,
-        formState: { errors, isValid },
+        formState: { errors },
         handleSubmit,
         control,
         setValue,
@@ -234,7 +234,7 @@ export default function Languages() {
             <SideProgressBarSectionBroadPlanner
                 progressState={sideMenuStepsProgress}
                 handleValidation={handleSubmit(onSubmit)}
-                isValid={isValid}
+                isValid={true}
                 sideMenuStepsData={sideMenuStepsData}
             />
         </div>

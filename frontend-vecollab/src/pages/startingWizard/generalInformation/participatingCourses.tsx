@@ -48,7 +48,7 @@ export default function Lectures() {
 
     const {
         register,
-        formState: { errors, isValid },
+        formState: { errors },
         handleSubmit,
         control,
         setValue,
@@ -253,77 +253,77 @@ export default function Lectures() {
     return (
         <div className="flex bg-pattern-left-blue-small bg-no-repeat">
             <div className="flex flex-grow justify-center">
-                <div className='flex flex-col'>
-            <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
-                {loading ? (
-                    <LoadingAnimation />
-                ) : (
-                    <form className="gap-y-6 w-full p-12 max-w-7xl items-center flex flex-col flex-grow justify-between">
-                        <div>
-                            <div className={'text-center font-bold text-4xl mb-2'}>
-                                Im Rahmen welcher Lehrveranstaltungen wird der VE umgesetzt?
-                            </div>
-                            <div className={'text-center mb-20'}>optional</div>
-                            <div className="flex flex-wrap justify-center">
-                                {renderLecturesInputs()}
-                            </div>
-                            <div className={'mx-2 flex justify-end'}>
-                                <button type="button" onClick={() => remove(fields.length - 1)}>
-                                    <RxMinus size={20} />
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        append({
-                                            name: '',
-                                            lecture_type: '',
-                                            lecture_format: '',
-                                            participants_amount: '',
-                                        });
-                                    }}
-                                >
-                                    <RxPlus size={20} />
-                                </button>
-                            </div>
-                        </div>
-                        <div className="flex justify-between w-full max-w-xl">
+                <div className="flex flex-col">
+                    <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
+                    {loading ? (
+                        <LoadingAnimation />
+                    ) : (
+                        <form className="gap-y-6 w-full p-12 max-w-7xl items-center flex flex-col flex-grow justify-between">
                             <div>
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={handleSubmit((data) =>
-                                        combinedSubmitRouteAndUpdate(
-                                            data,
-                                            '/startingWizard/generalInformation/institutions'
-                                        )
-                                    )}
-                                >
-                                    Zurück
-                                </button>
+                                <div className={'text-center font-bold text-4xl mb-2'}>
+                                    Im Rahmen welcher Lehrveranstaltungen wird der VE umgesetzt?
+                                </div>
+                                <div className={'text-center mb-20'}>optional</div>
+                                <div className="flex flex-wrap justify-center">
+                                    {renderLecturesInputs()}
+                                </div>
+                                <div className={'mx-2 flex justify-end'}>
+                                    <button type="button" onClick={() => remove(fields.length - 1)}>
+                                        <RxMinus size={20} />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            append({
+                                                name: '',
+                                                lecture_type: '',
+                                                lecture_format: '',
+                                                participants_amount: '',
+                                            });
+                                        }}
+                                    >
+                                        <RxPlus size={20} />
+                                    </button>
+                                </div>
                             </div>
-                            <div>
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={handleSubmit((data) =>
-                                        combinedSubmitRouteAndUpdate(
-                                            data,
-                                            '/startingWizard/generalInformation/globalGoals'
-                                        )
-                                    )}
-                                >
-                                    Weiter
-                                </button>
+                            <div className="flex justify-between w-full max-w-xl">
+                                <div>
+                                    <button
+                                        type="button"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                        onClick={handleSubmit((data) =>
+                                            combinedSubmitRouteAndUpdate(
+                                                data,
+                                                '/startingWizard/generalInformation/institutions'
+                                            )
+                                        )}
+                                    >
+                                        Zurück
+                                    </button>
+                                </div>
+                                <div>
+                                    <button
+                                        type="button"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                        onClick={handleSubmit((data) =>
+                                            combinedSubmitRouteAndUpdate(
+                                                data,
+                                                '/startingWizard/generalInformation/globalGoals'
+                                            )
+                                        )}
+                                    >
+                                        Weiter
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    </form>
-                )}
+                        </form>
+                    )}
                 </div>
             </div>
             <SideProgressBarSectionBroadPlanner
                 progressState={sideMenuStepsProgress}
                 handleValidation={handleSubmit(onSubmit)}
-                isValid={isValid}
+                isValid={true}
                 sideMenuStepsData={sideMenuStepsData}
             />
         </div>
