@@ -13,7 +13,6 @@ import {
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/startingWizard/sideProgressBar';
-import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 
 export interface Institution {
@@ -371,7 +370,6 @@ export default function Institutions() {
                 progressState={sideMenuStepsProgress}
                 handleValidation={handleSubmit(onSubmit)}
                 isValid={true}
-                sideMenuStepsData={sideMenuStepsData}
             />
         </div>
     );

@@ -7,7 +7,6 @@ import { signIn, useSession } from 'next-auth/react';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import LoadingAnimation from '@/components/LoadingAnimation';
-import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
@@ -224,7 +223,6 @@ export default function ExternalPersons() {
                 progressState={sideMenuStepsProgress}
                 handleValidation={() => {}}
                 isValid={true}
-                sideMenuStepsData={sideMenuStepsData}
             />
         </div>
     );
