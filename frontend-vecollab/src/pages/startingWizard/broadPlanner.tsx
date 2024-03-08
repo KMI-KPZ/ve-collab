@@ -89,7 +89,7 @@ export default function BroadPlanner() {
 
     const {
         register,
-        formState: { errors, isValid },
+        formState: { errors },
         handleSubmit,
         control,
         setValue,
@@ -412,7 +412,7 @@ export default function BroadPlanner() {
                 <SideProgressBarSectionBroadPlanner
                     progressState={sideMenuStepsProgress}
                     handleValidation={handleSubmit(onSubmit)}
-                    isValid={isValid}
+                    isValid={true}
                     sideMenuStepsData={sideMenuStepsData}
                 />
             </div>
