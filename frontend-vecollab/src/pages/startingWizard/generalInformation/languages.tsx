@@ -1,5 +1,5 @@
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
-import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
+import SideProgressBarSectionBroadPlanner from '@/components/StartingWizard/SideProgressBarSectionBroadPlanner';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
@@ -12,9 +12,11 @@ import {
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/startingWizard/sideProgressBar';
-import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+import { Tooltip } from '@/components/Tooltip';
+import Link from 'next/link';
+import { FiInfo } from 'react-icons/fi';
 
 interface Language {
     language: string;
@@ -29,7 +31,6 @@ export default function Languages() {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
-    const { validateAndRoute } = useValidation();
     const [steps, setSteps] = useState<IFineStep[]>([]);
 
     // check for session errors and trigger the login flow if necessary
@@ -44,7 +45,7 @@ export default function Languages() {
 
     const {
         register,
-        formState: { errors, isValid },
+        formState: { errors },
         handleSubmit,
         control,
         setValue,
@@ -115,13 +116,21 @@ export default function Languages() {
         );
     };
 
+    const combinedSubmitRouteAndUpdate = async (data: FormValues, url: string) => {
+        onSubmit(data);
+        await router.push({
+            pathname: url,
+            query: { plannerId: router.query.plannerId },
+        });
+    };
+
     const renderLanguagesInputs = (): JSX.Element[] => {
         return fields.map((language, index) => (
-            <div key={language.id} className="mx-7 mt-7 flex flex-col justify-center">
+            <div key={language.id} className="mt-2 flex flex-col items-center">
                 <input
                     type="text"
                     placeholder="Sprache eingeben"
-                    className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
+                    className="border border-gray-300 rounded-lg w-3/4 p-2"
                     {...register(`languages.${index}.language`, {
                         maxLength: {
                             value: 50,
@@ -133,84 +142,101 @@ export default function Languages() {
                         },
                     })}
                 />
-                <p className="text-red-600 pt-2">{errors?.languages?.[index]?.language?.message}</p>
+                {errors?.languages?.[index]?.language?.message && (
+                    <p className="text-red-600 pt-2">
+                        {errors?.languages?.[index]?.language?.message}
+                    </p>
+                )}
             </div>
         ));
     };
 
     return (
-        <>
-            <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
-            <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
-                {loading ? (
-                    <LoadingAnimation />
-                ) : (
-                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
-                        <div>
-                            <div className={'text-center font-bold text-4xl mb-2'}>
-                                In welchen Sprachen findet der VE (hauptsächlich) statt?
-                            </div>
-                            <div className={'text-center mb-20'}>optional</div>
-                            {renderLanguagesInputs()}
-                            <div className={'w-3/4 mx-7 mt-3 flex justify-end'}>
-                                <button type="button" onClick={() => remove(fields.length - 1)}>
-                                    <RxMinus size={20} />
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        append({
-                                            language: '',
-                                        });
-                                    }}
-                                >
-                                    <RxPlus size={20} />
-                                </button>
-                            </div>
-                        </div>
-                        <div className="flex justify-around w-full">
+        <div className="flex bg-pattern-left-blue-small bg-no-repeat">
+            <div className="flex flex-grow justify-center">
+                <div className="flex flex-col">
+                    <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
+                    {loading ? (
+                        <LoadingAnimation />
+                    ) : (
+                        <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between">
                             <div>
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={() => {
-                                        validateAndRoute(
-                                            '/startingWizard/generalInformation/veTopic',
-                                            router.query.plannerId,
-                                            handleSubmit(onSubmit),
-                                            isValid
-                                        );
-                                    }}
-                                >
-                                    Zurück
-                                </button>
+                                <div className={'text-center font-bold text-4xl mb-2 relative'}>
+                                    In welchen Sprachen findet der VE (hauptsächlich) statt?
+                                    <Tooltip tooltipsText="Mehr zu Sprache(n) im VE findest du hier in den Selbstlernmaterialien …">
+                                        <Link
+                                            target="_blank"
+                                            href={'/content/sprachliche%20Aspekte'}
+                                        >
+                                            <FiInfo size={30} color="#00748f" />
+                                        </Link>
+                                    </Tooltip>
+                                </div>
+                                <div className={'text-center mb-20'}>optional</div>
+                                <div className="flex flex-col justify-center">
+                                    {renderLanguagesInputs()}
+                                </div>
+                                <div className="w-full flex justify-center">
+                                    <div className={'mt-3 mx-2 flex justify-end w-3/4'}>
+                                        <button
+                                            type="button"
+                                            onClick={() => remove(fields.length - 1)}
+                                        >
+                                            <RxMinus size={20} />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                append({
+                                                    language: '',
+                                                });
+                                            }}
+                                        >
+                                            <RxPlus size={20} />
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={() => {
-                                        validateAndRoute(
-                                            '/startingWizard/generalInformation/courseFormat',
-                                            router.query.plannerId,
-                                            handleSubmit(onSubmit),
-                                            isValid
-                                        );
-                                    }}
-                                >
-                                    Weiter
-                                </button>
+                            <div className="flex justify-between w-full max-w-xl">
+                                <div>
+                                    <button
+                                        type="button"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                        onClick={handleSubmit((data) =>
+                                            combinedSubmitRouteAndUpdate(
+                                                data,
+                                                '/startingWizard/generalInformation/veTopic'
+                                            )
+                                        )}
+                                    >
+                                        Zurück
+                                    </button>
+                                </div>
+                                <div>
+                                    <button
+                                        type="button"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                        onClick={handleSubmit((data) =>
+                                            combinedSubmitRouteAndUpdate(
+                                                data,
+                                                '/startingWizard/generalInformation/courseFormat'
+                                            )
+                                        )}
+                                    >
+                                        Weiter
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    </form>
-                )}
-                <SideProgressBarSection
-                    progressState={sideMenuStepsProgress}
-                    handleValidation={handleSubmit(onSubmit)}
-                    isValid={isValid}
-                    sideMenuStepsData={sideMenuStepsData}
-                />
+                        </form>
+                    )}
+                </div>
             </div>
-        </>
+            <SideProgressBarSectionBroadPlanner
+                progressState={sideMenuStepsProgress}
+                handleValidation={handleSubmit(onSubmit)}
+                isValid={true}
+                sideMenuStepsData={sideMenuStepsData}
+            />
+        </div>
     );
 }

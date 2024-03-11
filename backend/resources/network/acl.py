@@ -97,7 +97,7 @@ class _GlobalACL:
 
         default_rule = {
             "role": role,
-            "create_space": False,
+            "create_space": True,
         }
         self.db.global_acl.update_one(  # use update + upsert so this function can also be used to restore to default
             {"role": role}, {"$set": default_rule}, upsert=True

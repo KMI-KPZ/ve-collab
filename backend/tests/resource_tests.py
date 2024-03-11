@@ -47,6 +47,7 @@ import global_vars
 from model import (
     Institution,
     Lecture,
+    PhysicalMobility,
     Step,
     TargetGroup,
     Task,
@@ -167,7 +168,6 @@ class BaseResourceTestCase(TestCase):
             academic_course="test",
             mother_tongue="test",
             foreign_languages={"test": "l1"},
-            learning_goal="test",
         )
 
     def create_institution(self, name: str = "test") -> Institution:
@@ -193,6 +193,17 @@ class BaseResourceTestCase(TestCase):
             lecture_format="test",
             lecture_type="test",
             participants_amount=10,
+        )
+    
+    def create_physical_mobility(slef, location: str = "test") -> PhysicalMobility:
+        """
+        convenience method to create a physical mobility with non-default values
+        """
+
+        return PhysicalMobility(
+            location=location,
+            timestamp_from=datetime(2023, 1, 1),
+            timestamp_to=datetime(2023, 1, 8),
         )
 
 
@@ -229,7 +240,7 @@ class GlobalACLRessourceTest(BaseResourceTestCase):
         acl_entry = self.db.global_acl.find_one({"role": "another_role"})
         self.assertIsNotNone(acl_entry)
         self.assertEqual(acl_entry["role"], "another_role")
-        self.assertEqual(acl_entry["create_space"], False)
+        self.assertEqual(acl_entry["create_space"], True)
 
     def test_insert_admin(self):
         """
@@ -947,7 +958,7 @@ class ACLResourceTest(BaseResourceTestCase):
         acl_entry = self.db.global_acl.find_one({"role": "guest"})
         self.assertIsNotNone(acl_entry)
         self.assertEqual(acl_entry["role"], "guest")
-        self.assertEqual(acl_entry["create_space"], False)
+        self.assertEqual(acl_entry["create_space"], True)
 
 
 class PostResourceTest(BaseResourceTestCase):
@@ -1580,14 +1591,16 @@ class PostResourceTest(BaseResourceTestCase):
         }
 
         post_manager = Posts(self.db)
-        post_manager.add_comment(self.post_id, comment)
+        comment_id = post_manager.add_comment(self.post_id, comment)
 
         # check if comment was added
         post = self.db.posts.find_one({"_id": self.post_id})
         self.assertIsNotNone(post)
         self.assertEqual(len(post["comments"]), 2)
+        comment_ids = [comment["_id"] for comment in post["comments"]]
         comment_text = [comment["text"] for comment in post["comments"]]
         self.assertIn(comment["text"], comment_text)
+        self.assertIn(comment_id, comment_ids)
 
     def test_add_comment_error_post_doesnt_exist(self):
         """
@@ -1690,10 +1703,10 @@ class PostResourceTest(BaseResourceTestCase):
         }
 
         post_manager = Posts(self.db)
-        post_manager.insert_repost(repost)
+        repost_id = post_manager.insert_repost(repost)
 
         # check if repost was added
-        post = self.db.posts.find_one({"repostText": "test_repost"})
+        post = self.db.posts.find_one({"_id": repost_id})
         self.assertIsNotNone(post)
         self.assertEqual(post["author"], repost["author"])
         self.assertEqual(post["creation_date"], repost["creation_date"])
@@ -1756,7 +1769,9 @@ class PostResourceTest(BaseResourceTestCase):
             "repostText": "updated_test_repost",
         }
         post_manager = Posts(self.db)
-        post_manager.insert_repost(repost)
+        returned_repost_id = post_manager.insert_repost(repost)
+
+        self.assertEqual(returned_repost_id, repost["_id"])
 
         # check if repost was updated, but only the repostText is updateable
         post = self.db.posts.find_one({"_id": repost["_id"]})
@@ -4744,6 +4759,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.target_group = self.create_target_group("test")
         self.institution = self.create_institution("test")
         self.lecture = self.create_lecture("test")
+        self.physical_mobility = self.create_physical_mobility("test")
         self.default_plan = {
             "_id": self.plan_id,
             "author": "test_user",
@@ -4754,35 +4770,42 @@ class PlanResourceTest(BaseResourceTestCase):
             "name": "test",
             "partners": ["test_admin"],
             "institutions": [self.institution.to_dict()],
-            "topic": "test",
+            "topics": ["test", "test"],
             "lectures": [self.lecture.to_dict()],
+            "learning_goals": ["test", "test"],
             "audience": [self.target_group.to_dict()],
             "languages": ["test", "test"],
             "timestamp_from": self.step.timestamp_from,
             "timestamp_to": self.step.timestamp_to,
             "involved_parties": ["test", "test"],
             "realization": "test",
+            "physical_mobility": True,
+            "physical_mobilities": [self.physical_mobility.to_dict()],
             "learning_env": "test",
-            "tools": ["test", "test"],
             "new_content": False,
-            "formalities": {
+            "formalities": [{
+                "username": "test_user",
                 "technology": False,
                 "exam_regulations": False,
-            },
+            }, {
+                "username": "test_admin",
+                "technology": True,
+                "exam_regulations": True,
+            }],
             "duration": self.step.duration.total_seconds(),
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",
-                "topic": "not_started",
+                "topics": "not_started",
                 "lectures": "not_started",
+                "learning_goals": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
-                "tools": "not_started",
                 "new_content": "not_started",
                 "formalities": "not_started",
                 "steps": "not_started",
@@ -4817,11 +4840,12 @@ class PlanResourceTest(BaseResourceTestCase):
                     [institution.to_dict() for institution in plan.institutions],
                     self.default_plan["institutions"],
                 )
-                self.assertEqual(plan.topic, self.default_plan["topic"])
+                self.assertEqual(plan.topics, self.default_plan["topics"])
                 self.assertEqual(
                     [lecture.to_dict() for lecture in plan.lectures],
                     self.default_plan["lectures"],
                 )
+                self.assertEqual(plan.learning_goals, self.default_plan["learning_goals"])
                 self.assertEqual(
                     [target_group.to_dict() for target_group in plan.audience],
                     self.default_plan["audience"],
@@ -4831,8 +4855,12 @@ class PlanResourceTest(BaseResourceTestCase):
                     plan.involved_parties, self.default_plan["involved_parties"]
                 )
                 self.assertEqual(plan.realization, self.default_plan["realization"])
+                self.assertEqual(plan.physical_mobility, self.default_plan["physical_mobility"])
+                self.assertEqual(
+                    [mobility.to_dict() for mobility in plan.physical_mobilities],
+                    self.default_plan["physical_mobilities"],
+                )
                 self.assertEqual(plan.learning_env, self.default_plan["learning_env"])
-                self.assertEqual(plan.tools, self.default_plan["tools"])
                 self.assertEqual(plan.new_content, self.default_plan["new_content"])
                 self.assertEqual(plan.formalities, self.default_plan["formalities"])
                 self.assertEqual(
@@ -4865,11 +4893,12 @@ class PlanResourceTest(BaseResourceTestCase):
                     [institution.to_dict() for institution in plan.institutions],
                     self.default_plan["institutions"],
                 )
-                self.assertEqual(plan.topic, self.default_plan["topic"])
+                self.assertEqual(plan.topics, self.default_plan["topics"])
                 self.assertEqual(
                     [lecture.to_dict() for lecture in plan.lectures],
                     self.default_plan["lectures"],
                 )
+                self.assertEqual(plan.learning_goals, self.default_plan["learning_goals"])
                 self.assertEqual(
                     [target_group.to_dict() for target_group in plan.audience],
                     self.default_plan["audience"],
@@ -4879,8 +4908,12 @@ class PlanResourceTest(BaseResourceTestCase):
                     plan.involved_parties, self.default_plan["involved_parties"]
                 )
                 self.assertEqual(plan.realization, self.default_plan["realization"])
+                self.assertEqual(plan.physical_mobility, self.default_plan["physical_mobility"])
+                self.assertEqual(
+                    [mobility.to_dict() for mobility in plan.physical_mobilities],
+                    self.default_plan["physical_mobilities"],
+                )
                 self.assertEqual(plan.learning_env, self.default_plan["learning_env"])
-                self.assertEqual(plan.tools, self.default_plan["tools"])
                 self.assertEqual(plan.new_content, self.default_plan["new_content"])
                 self.assertEqual(plan.formalities, self.default_plan["formalities"])
                 self.assertEqual(
@@ -4949,11 +4982,12 @@ class PlanResourceTest(BaseResourceTestCase):
             [institution.to_dict() for institution in plan.institutions],
             self.default_plan["institutions"],
         )
-        self.assertEqual(plan.topic, self.default_plan["topic"])
+        self.assertEqual(plan.topics, self.default_plan["topics"])
         self.assertEqual(
             [lecture.to_dict() for lecture in plan.lectures],
             self.default_plan["lectures"],
         )
+        self.assertEqual(plan.learning_goals, self.default_plan["learning_goals"])
         self.assertEqual(
             [target_group.to_dict() for target_group in plan.audience],
             self.default_plan["audience"],
@@ -4961,8 +4995,12 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(plan.languages, self.default_plan["languages"])
         self.assertEqual(plan.involved_parties, self.default_plan["involved_parties"])
         self.assertEqual(plan.realization, self.default_plan["realization"])
+        self.assertEqual(plan.physical_mobility, self.default_plan["physical_mobility"])
+        self.assertEqual(
+            [mobility.to_dict() for mobility in plan.physical_mobilities],
+            self.default_plan["physical_mobilities"],
+        )
         self.assertEqual(plan.learning_env, self.default_plan["learning_env"])
-        self.assertEqual(plan.tools, self.default_plan["tools"])
         self.assertEqual(plan.new_content, self.default_plan["new_content"])
         self.assertEqual(plan.formalities, self.default_plan["formalities"])
         self.assertEqual(
@@ -4992,35 +5030,38 @@ class PlanResourceTest(BaseResourceTestCase):
                 "name": "admin",
                 "partners": ["test_user"],
                 "institutions": [self.institution.to_dict()],
-                "topic": "test",
+                "topics": ["test"],
                 "lectures": [self.lecture.to_dict()],
+                "learning_goals": ["test", "test"],
                 "audience": [self.target_group.to_dict()],
                 "languages": ["test", "test"],
                 "timestamp_from": self.step.timestamp_from,
                 "timestamp_to": self.step.timestamp_to,
                 "involved_parties": ["test", "test"],
                 "realization": "test",
+                "physical_mobility": True,
+                "physical_mobilities": [self.physical_mobility.to_dict()],
                 "learning_env": "test",
-                "tools": ["test", "test"],
                 "new_content": False,
-                "formalities": {
+                "formalities": [{
+                    "username": "test_user",
                     "technology": False,
                     "exam_regulations": False,
-                },
+                }],
                 "duration": self.step.duration.total_seconds(),
                 "workload": self.step.workload,
                 "steps": [self.step.to_dict()],
                 "progress": {
                     "name": "not_started",
                     "institutions": "not_started",
-                    "topic": "not_started",
+                    "topics": "not_started",
                     "lectures": "not_started",
+                    "learning_goals": "not_started",
                     "audience": "not_started",
                     "languages": "not_started",
                     "involved_parties": "not_started",
                     "realization": "not_started",
                     "learning_env": "not_started",
-                    "tools": "not_started",
                     "new_content": "not_started",
                     "formalities": "not_started",
                     "steps": "not_started",
@@ -5031,37 +5072,40 @@ class PlanResourceTest(BaseResourceTestCase):
                 "creation_timestamp": datetime.now(),
                 "last_modified": datetime.now(),
                 "name": "user",
-                "partners": [],
+                "partners": ["test_user"],
                 "institutions": [self.institution.to_dict()],
-                "topic": "test",
+                "topics": ["test"],
                 "lectures": [self.lecture.to_dict()],
+                "learning_goals": ["test", "test"],
                 "audience": [self.target_group.to_dict()],
                 "languages": ["test", "test"],
                 "timestamp_from": self.step.timestamp_from,
                 "timestamp_to": self.step.timestamp_to,
                 "involved_parties": ["test", "test"],
                 "realization": "test",
+                "physical_mobility": True,
+                "physical_mobilities": [self.physical_mobility.to_dict()],
                 "learning_env": "test",
-                "tools": ["test", "test"],
                 "new_content": False,
-                "formalities": {
+                "formalities": [{
+                    "username": "test_user",
                     "technology": False,
                     "exam_regulations": False,
-                },
+                }],
                 "duration": self.step.duration.total_seconds(),
                 "workload": self.step.workload,
                 "steps": [self.step.to_dict()],
                 "progress": {
                     "name": "not_started",
                     "institutions": "not_started",
-                    "topic": "not_started",
+                    "topics": "not_started",
                     "lectures": "not_started",
+                    "learning_goals": "not_started",
                     "audience": "not_started",
                     "languages": "not_started",
                     "involved_parties": "not_started",
                     "realization": "not_started",
                     "learning_env": "not_started",
-                    "tools": "not_started",
                     "new_content": "not_started",
                     "formalities": "not_started",
                     "steps": "not_started",
@@ -5093,35 +5137,38 @@ class PlanResourceTest(BaseResourceTestCase):
             "read_access": ["test_user"],
             "write_access": ["test_user"],
             "institutions": [self.institution.to_dict()],
-            "topic": "test",
+            "topics": ["test"],
             "lectures": [self.lecture.to_dict()],
+            "learning_goals": ["test", "test"],
             "audience": [self.target_group.to_dict()],
             "languages": ["test", "test"],
             "timestamp_from": self.step.timestamp_from,
             "timestamp_to": self.step.timestamp_to,
             "involved_parties": ["test", "test"],
             "realization": "test",
+            "physical_mobility": True,
+            "physical_mobilities": [self.physical_mobility.to_dict()],
             "learning_env": "test",
-            "tools": ["test", "test"],
             "new_content": False,
-            "formalities": {
+            "formalities": [{
+                "username": "test_user",
                 "technology": False,
                 "exam_regulations": False,
-            },
+            }],
             "duration": self.step.duration.total_seconds(),
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",
-                "topic": "not_started",
+                "topics": "not_started",
                 "lectures": "not_started",
+                "learning_goals": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
-                "tools": "not_started",
                 "new_content": "not_started",
                 "formalities": "not_started",
                 "steps": "not_started",
@@ -5151,35 +5198,38 @@ class PlanResourceTest(BaseResourceTestCase):
             "name": "new plan",
             "partners": ["test_admin"],
             "institutions": [self.institution.to_dict()],
-            "topic": "test",
+            "topics": ["test"],
             "lectures": [self.lecture.to_dict()],
+            "learning_goals": ["test", "test"],
             "audience": [self.target_group.to_dict()],
             "languages": ["test", "test"],
             "timestamp_from": self.step.timestamp_from,
             "timestamp_to": self.step.timestamp_to,
             "involved_parties": ["test", "test"],
             "realization": "test",
+            "physical_mobility": True,
+            "physical_mobilities": [self.physical_mobility.to_dict()],
             "learning_env": "test",
-            "tools": ["test", "test"],
             "new_content": False,
-            "formalities": {
+            "formalities": [{
+                "username": "test_user",
                 "technology": False,
                 "exam_regulations": False,
-            },
+            }],
             "duration": self.step.duration.total_seconds(),
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",
-                "topic": "not_started",
+                "topics": "not_started",
                 "lectures": "not_started",
+                "learning_goals": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
-                "tools": "not_started",
                 "new_content": "not_started",
                 "formalities": "not_started",
                 "steps": "not_started",
@@ -5224,7 +5274,7 @@ class PlanResourceTest(BaseResourceTestCase):
         # use the default plan, but change its name and topic
         existing_plan = VEPlan.from_dict(self.default_plan)
         existing_plan.name = "updated_name"
-        existing_plan.topic = "new_topic"
+        existing_plan.topics = ["new_topic", "test"]
 
         # expect an "updated" response
         result = self.planner.update_full_plan(existing_plan)
@@ -5236,7 +5286,7 @@ class PlanResourceTest(BaseResourceTestCase):
         db_state = self.db.plans.find_one({"_id": existing_plan._id})
         self.assertIsNotNone(db_state)
         self.assertEqual(db_state["name"], existing_plan.name)
-        self.assertEqual(db_state["topic"], existing_plan.topic)
+        self.assertEqual(db_state["topics"], existing_plan.topics)
         self.assertEqual(db_state["realization"], self.default_plan["realization"])
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
@@ -5255,7 +5305,7 @@ class PlanResourceTest(BaseResourceTestCase):
         # use the default plan, but change its name and topic
         existing_plan = VEPlan.from_dict(self.default_plan)
         existing_plan.name = "updated_name"
-        existing_plan.topic = "new_topic"
+        existing_plan.topics = ["new_topic", "test"]
 
         # expect an "updated" response
         result = self.planner.update_full_plan(
@@ -5269,7 +5319,7 @@ class PlanResourceTest(BaseResourceTestCase):
         db_state = self.db.plans.find_one({"_id": existing_plan._id})
         self.assertIsNotNone(db_state)
         self.assertEqual(db_state["name"], existing_plan.name)
-        self.assertEqual(db_state["topic"], existing_plan.topic)
+        self.assertEqual(db_state["topics"], existing_plan.topics)
         self.assertEqual(db_state["realization"], self.default_plan["realization"])
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
@@ -5322,7 +5372,7 @@ class PlanResourceTest(BaseResourceTestCase):
 
         self.assertRaises(PlanDoesntExistError, self.planner.update_full_plan, VEPlan())
 
-    def test_update_plan_erro_no_write_access(self):
+    def test_update_plan_error_no_write_access(self):
         """
         expect: NoWriteAccessError is raised because user has no write permission
         """
@@ -5340,16 +5390,18 @@ class PlanResourceTest(BaseResourceTestCase):
         expect: successfully update a single field of a VEPlan
         """
 
-        self.planner.update_field(self.plan_id, "topic", "updated_topic")
+        self.planner.update_field(self.plan_id, "topics", ["updated_topic"])
         self.planner.update_field(
             self.plan_id, "involved_parties", ["update1", "update2"]
         )
         self.planner.update_field(self.plan_id, "realization", "updated_realization")
+        self.planner.update_field(self.plan_id, "physical_mobility", False)
+        self.planner.update_field(self.plan_id, "physical_mobilities", [])
         self.planner.update_field(self.plan_id, "learning_env", "updated_learning_env")
-        self.planner.update_field(self.plan_id, "tools", ["update1", "update2"])
         self.planner.update_field(self.plan_id, "new_content", True)
+        self.planner.update_field(self.plan_id, "learning_goals", ["update1", "update2"])
         self.planner.update_field(
-            self.plan_id, "formalities", {"technology": True, "exam_regulations": True}
+            self.plan_id, "formalities", [{"username": "test_user", "technology": True, "exam_regulations": True}]
         )
         self.planner.update_field(
             self.plan_id,
@@ -5357,14 +5409,13 @@ class PlanResourceTest(BaseResourceTestCase):
             {
                 "name": "completed",
                 "institutions": "not_started",
-                "topic": "not_started",
+                "topics": "not_started",
                 "lectures": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
-                "tools": "not_started",
                 "new_content": "not_started",
                 "formalities": "not_started",
                 "steps": "not_started",
@@ -5373,14 +5424,16 @@ class PlanResourceTest(BaseResourceTestCase):
 
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
-        self.assertEqual(db_state["topic"], "updated_topic")
+        self.assertEqual(db_state["topics"], ["updated_topic"])
         self.assertEqual(db_state["involved_parties"], ["update1", "update2"])
         self.assertEqual(db_state["realization"], "updated_realization")
+        self.assertEqual(db_state["physical_mobility"], False)
+        self.assertEqual(db_state["physical_mobilities"], [])
         self.assertEqual(db_state["learning_env"], "updated_learning_env")
-        self.assertEqual(db_state["tools"], ["update1", "update2"])
         self.assertEqual(db_state["new_content"], True)
+        self.assertEqual(db_state["learning_goals"], ["update1", "update2"])
         self.assertEqual(
-            db_state["formalities"], {"technology": True, "exam_regulations": True}
+            db_state["formalities"], [{"username": "test_user", "technology": True, "exam_regulations": True}]
         )
         self.assertEqual(db_state["progress"]["name"], "completed")
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
@@ -5391,7 +5444,7 @@ class PlanResourceTest(BaseResourceTestCase):
         """
 
         self.planner.update_field(
-            self.plan_id, "topic", "updated_topic", requesting_username="test_user"
+            self.plan_id, "topics", ["updated_topic"], requesting_username="test_user"
         )
         self.planner.update_field(
             self.plan_id,
@@ -5412,18 +5465,18 @@ class PlanResourceTest(BaseResourceTestCase):
             requesting_username="test_user",
         )
         self.planner.update_field(
-            self.plan_id,
-            "tools",
-            ["update1", "update2"],
-            requesting_username="test_user",
-        )
-        self.planner.update_field(
             self.plan_id, "new_content", True, requesting_username="test_user"
         )
         self.planner.update_field(
             self.plan_id,
+            "learning_goals",
+            ["update1", "update2"],
+            requesting_username="test_user",
+        )
+        self.planner.update_field(
+            self.plan_id,
             "formalities",
-            {"technology": True, "exam_regulations": True},
+            [{"username": "test_user", "technology": True, "exam_regulations": True}],
             requesting_username="test_user",
         )
         self.planner.update_field(
@@ -5432,14 +5485,14 @@ class PlanResourceTest(BaseResourceTestCase):
             {
                 "name": "completed",
                 "institutions": "not_started",
-                "topic": "not_started",
+                "topics": "not_started",
                 "lectures": "not_started",
+                "learning_goals": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
-                "tools": "not_started",
                 "new_content": "not_started",
                 "formalities": "not_started",
                 "steps": "not_started",
@@ -5449,14 +5502,14 @@ class PlanResourceTest(BaseResourceTestCase):
 
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
-        self.assertEqual(db_state["topic"], "updated_topic")
+        self.assertEqual(db_state["topics"], ["updated_topic"])
         self.assertEqual(db_state["involved_parties"], ["update1", "update2"])
         self.assertEqual(db_state["realization"], "updated_realization")
         self.assertEqual(db_state["learning_env"], "updated_learning_env")
-        self.assertEqual(db_state["tools"], ["update1", "update2"])
         self.assertEqual(db_state["new_content"], True)
+        self.assertEqual(db_state["learning_goals"], ["update1", "update2"])
         self.assertEqual(
-            db_state["formalities"], {"technology": True, "exam_regulations": True}
+            db_state["formalities"], [{"username": "test_user", "technology": True, "exam_regulations": True}]
         )
         self.assertEqual(db_state["progress"]["name"], "completed")
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
@@ -5475,7 +5528,6 @@ class PlanResourceTest(BaseResourceTestCase):
             academic_course="updated_academic_course",
             mother_tongue="de",
             foreign_languages={"en": "c1"},
-            learning_goal="test",
         )
         # we need to delay our execution here just a little bit, because otherwise
         # the updated would happen too fast relative to the setup, which would result
@@ -5495,7 +5547,6 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(
             db_state["audience"][0]["foreign_languages"], tg.foreign_languages
         )
-        self.assertEqual(db_state["audience"][0]["learning_goal"], tg.learning_goal)
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
         # same, but this time manually specify a _id
@@ -5508,7 +5559,6 @@ class PlanResourceTest(BaseResourceTestCase):
             academic_course="updated_academic_course2",
             mother_tongue="de2",
             foreign_languages={"en": "c1"},
-            learning_goal="test",
         )
         # we need to delay our execution here just a little bit, because otherwise
         # the updated would happen too fast relative to the setup, which would result
@@ -5530,7 +5580,6 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(
             db_state["audience"][0]["foreign_languages"], tg2.foreign_languages
         )
-        self.assertEqual(db_state["audience"][0]["learning_goal"], tg.learning_goal)
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
     def test_update_field_object_with_user(self):
@@ -5547,7 +5596,6 @@ class PlanResourceTest(BaseResourceTestCase):
             academic_course="updated_academic_course",
             mother_tongue="de",
             foreign_languages={"en": "c1"},
-            learning_goal="test",
         )
         # we need to delay our execution here just a little bit, because otherwise
         # the updated would happen too fast relative to the setup, which would result
@@ -5569,7 +5617,6 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(
             db_state["audience"][0]["foreign_languages"], tg.foreign_languages
         )
-        self.assertEqual(db_state["audience"][0]["learning_goal"], tg.learning_goal)
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
         # same, but this time manually specify a _id
@@ -5582,7 +5629,6 @@ class PlanResourceTest(BaseResourceTestCase):
             academic_course="updated_academic_course2",
             mother_tongue="de2",
             foreign_languages={"en": "c1"},
-            learning_goal="test",
         )
         # we need to delay our execution here just a little bit, because otherwise
         # the updated would happen too fast relative to the setup, which would result
@@ -5606,7 +5652,6 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(
             db_state["audience"][0]["foreign_languages"], tg2.foreign_languages
         )
-        self.assertEqual(db_state["audience"][0]["learning_goal"], tg.learning_goal)
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
     def test_update_field_upsert(self):
@@ -5625,7 +5670,6 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertIsNotNone(db_state)
         self.assertEqual(db_state["realization"], "updated_realization")
         self.assertIsNone(db_state["name"])
-        self.assertEqual(db_state["tools"], [])
         self.assertEqual(db_state["creation_timestamp"], db_state["last_modified"])
 
         # now same test, but with a complex attribute
@@ -5675,7 +5719,6 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertIsNotNone(db_state)
         self.assertEqual(db_state["realization"], "updated_realization")
         self.assertIsNone(db_state["name"])
-        self.assertEqual(db_state["tools"], [])
         self.assertEqual(db_state["creation_timestamp"], db_state["last_modified"])
 
         # now same test, but with a complex attribute
@@ -5719,7 +5762,7 @@ class PlanResourceTest(BaseResourceTestCase):
 
         # primitive attribute
         self.assertRaises(
-            TypeError, self.planner.update_field, self.plan_id, "tools", "123"
+            TypeError, self.planner.update_field, self.plan_id, "topics", "123"
         )
 
         # object_like_attribute

@@ -13,6 +13,7 @@ from resources.network.post import (
     Posts,
     PostNotExistingException,
 )
+from resources.network.profile import Profiles
 from resources.network.space import (
     FileAlreadyInRepoError,
     Spaces,
@@ -175,6 +176,12 @@ class PostHandler(BaseHandler):
                 post_id = post_manager.insert_post(post)
 
                 post["_id"] = post_id
+
+                profile_manager = Profiles(db)
+                author_profile_snippet = profile_manager.get_profile_snippets([author])[
+                    0
+                ]
+                post["author"] = author_profile_snippet
 
                 self.set_status(200)
                 self.serialize_and_write(
@@ -399,7 +406,20 @@ class CommentHandler(BaseHandler):
         return:
             200 OK
             {"status": 200,
-             "success": True}
+             "success": True,
+             "inserted_comment": {
+                    "author": {
+                        "username": "string",
+                        "first_name": "string",
+                        "last_name": "string",
+                        "profile_pic": "string",
+                        "institution": "string",
+                    },
+                    "creation_date": "string",
+                    "text": "string",
+                    "pinned": "bool",
+                },
+             }
 
             400 Bad Request
             {"status": 400,
@@ -484,8 +504,9 @@ class CommentHandler(BaseHandler):
                 "text": http_body["text"],
                 "pinned": False,
             }
+
             try:
-                post_manager.add_comment(post["_id"], comment)
+                comment_id = post_manager.add_comment(post["_id"], comment)
             except PostNotExistingException:
                 self.set_status(409)
                 self.write(
@@ -493,8 +514,19 @@ class CommentHandler(BaseHandler):
                 )
                 return
 
+            comment["_id"] = comment_id
+
+            # enhance comment author with profile details to return
+            profile_manager = Profiles(db)
+            author_profile_snippet = profile_manager.get_profile_snippets(
+                [comment["author"]]
+            )[0]
+            comment["author"] = author_profile_snippet
+
         self.set_status(200)
-        self.write({"status": 200, "success": True})
+        self.serialize_and_write(
+            {"status": 200, "success": True, "inserted_comment": comment}
+        )
 
     @auth_needed
     async def delete(self):
@@ -825,7 +857,8 @@ class RepostHandler(BaseHandler):
             returns:
                 200 OK,
                 {"status": 200,
-                 "success": True}
+                 "success": True, 
+                 "inserted_repost": {repost}}
 
                 400 Bad Request
                 {"status": 400,
@@ -988,10 +1021,30 @@ class RepostHandler(BaseHandler):
                 post["tags"] = []
                 del post["_id"]
 
-                post_manager.insert_repost(post)
+                repost_id = post_manager.insert_repost(post)
+
+                post["_id"] = repost_id
+
+                # ennhance original author and repost author with profile details to return
+                profile_manager = Profiles(db)
+                author_profile_snippets = profile_manager.get_profile_snippets(
+                    [post["author"], post["repostAuthor"]]
+                )
+                post["author"] = [
+                    author_profile_snippet
+                    for author_profile_snippet in author_profile_snippets
+                    if author_profile_snippet["username"] == post["author"]
+                ][0]
+                post["repostAuthor"] = [
+                    author_profile_snippet
+                    for author_profile_snippet in author_profile_snippets
+                    if author_profile_snippet["username"] == post["repostAuthor"]
+                ][0]
 
                 self.set_status(200)
-                self.write({"status": 200, "success": True})
+                self.serialize_and_write(
+                    {"status": 200, "success": True, "inserted_repost": post}
+                )
 
         # _id was specified in the request: update the existing repost
         else:

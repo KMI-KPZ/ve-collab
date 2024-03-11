@@ -1,6 +1,6 @@
 import WhiteBox from '@/components/Layout/WhiteBox';
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
-import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
+import SideProgressBarSectionBroadPlanner from '@/components/StartingWizard/SideProgressBarSectionBroadPlanner';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
@@ -13,7 +13,6 @@ import {
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/startingWizard/sideProgressBar';
-import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 
@@ -25,7 +24,6 @@ export interface TargetGroup {
     academic_course: string;
     mother_tongue: string;
     foreign_languages: string;
-    learning_goal: string;
 }
 
 interface FormValues {
@@ -39,7 +37,6 @@ export default function TargetGroups() {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
-    const { validateAndRoute } = useValidation();
     const [steps, setSteps] = useState<IFineStep[]>([]);
 
     // check for session errors and trigger the login flow if necessary
@@ -54,7 +51,7 @@ export default function TargetGroups() {
 
     const {
         register,
-        formState: { errors, isValid },
+        formState: { errors },
         handleSubmit,
         control,
         setValue,
@@ -70,7 +67,6 @@ export default function TargetGroups() {
                     academic_course: '',
                     mother_tongue: '',
                     foreign_languages: '',
-                    learning_goal: '',
                 },
             ],
         },
@@ -133,6 +129,14 @@ export default function TargetGroups() {
         );
     };
 
+    const combinedSubmitRouteAndUpdate = async (data: FormValues, url: string) => {
+        onSubmit(data);
+        await router.push({
+            pathname: url,
+            query: { plannerId: router.query.plannerId },
+        });
+    };
+
     const rendertargetGroupsInputs = (): JSX.Element[] => {
         return fields.map((targetGroup, index) => (
             <div key={targetGroup.id} className="mx-2">
@@ -153,13 +157,13 @@ export default function TargetGroups() {
                                             'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
                                     },
                                     pattern: {
-                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
+                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
                                         message:
-                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
+                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?,-',
                                     },
                                 })}
                                 placeholder="Name eingeben"
-                                className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                className="border border-gray-400 rounded-lg w-full p-2"
                             />
                             <p className="text-red-600 pt-2">
                                 {errors?.targetGroups?.[index]?.name?.message}
@@ -175,7 +179,7 @@ export default function TargetGroups() {
                         <div className="w-3/4 flex">
                             <div>
                                 <input
-                                    type="text"
+                                    type="number"
                                     {...register(`targetGroups.${index}.age_min`, {
                                         maxLength: {
                                             value: 4,
@@ -187,7 +191,7 @@ export default function TargetGroups() {
                                         },
                                     })}
                                     placeholder="von"
-                                    className="border border-gray-500 rounded-lg w-1/2 h-12 p-2 mr-2"
+                                    className="border border-gray-400 rounded-lg w-1/2 p-2 mr-2"
                                 />
                                 <p className="text-red-600 pt-2">
                                     {errors?.targetGroups?.[index]?.age_min?.message}
@@ -195,7 +199,7 @@ export default function TargetGroups() {
                             </div>
                             <div>
                                 <input
-                                    type="text"
+                                    type="number"
                                     {...register(`targetGroups.${index}.age_max`, {
                                         maxLength: {
                                             value: 4,
@@ -207,7 +211,7 @@ export default function TargetGroups() {
                                         },
                                     })}
                                     placeholder="bis"
-                                    className="border border-gray-500 rounded-lg w-1/2 h-12 p-2 ml-2"
+                                    className="border border-gray-400 rounded-lg w-1/2 p-2 ml-2"
                                 />
                                 <p className="text-red-600 pt-2">
                                     {errors?.targetGroups?.[index]?.age_max?.message}
@@ -231,13 +235,13 @@ export default function TargetGroups() {
                                             'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
                                     },
                                     pattern: {
-                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
+                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
                                         message:
-                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
+                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?,-',
                                     },
                                 })}
                                 placeholder=" z.B. Sprachkenntnisse, bisherige Seminare zum Thema, etc."
-                                className="border border-gray-500 rounded-lg w-full p-2"
+                                className="border border-gray-400 rounded-lg w-full p-2"
                             />
                             <p className="text-red-600 pt-2">
                                 {errors?.targetGroups?.[index]?.experience?.message}
@@ -260,13 +264,13 @@ export default function TargetGroups() {
                                             'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
                                     },
                                     pattern: {
-                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
+                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
                                         message:
                                             'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
                                     },
                                 })}
                                 placeholder="Studiengang eingeben, mehrere durch Komma trennen"
-                                className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                className="border border-gray-400 rounded-lg w-full p-2"
                             />
                             <p className="text-red-600 pt-2">
                                 {errors?.targetGroups?.[index]?.academic_course?.message}
@@ -288,9 +292,14 @@ export default function TargetGroups() {
                                         message:
                                             'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
                                     },
+                                    pattern: {
+                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
+                                        message:
+                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
+                                    },
                                 })}
                                 placeholder="Erstsprachen eingeben, mehrere durch Komma trennen"
-                                className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                className="border border-gray-400 rounded-lg w-full p-2"
                             />
                             <p className="text-red-600 pt-2">
                                 {errors?.targetGroups?.[index]?.mother_tongue?.message}
@@ -313,45 +322,16 @@ export default function TargetGroups() {
                                             'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
                                     },
                                     pattern: {
-                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
+                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
                                         message:
                                             'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
                                     },
                                 })}
                                 placeholder="Weitere Sprachen eingeben, mehrere durch Komma trennen"
-                                className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                className="border border-gray-400 rounded-lg w-full p-2"
                             />
                             <p className="text-red-600 pt-2">
                                 {errors?.targetGroups?.[index]?.foreign_languages?.message}
-                            </p>
-                        </div>
-                    </div>
-                    <div className="mt-4 flex">
-                        <div className="w-1/4 flex items-center">
-                            <label htmlFor="foreignLanguages" className="px-2 py-2">
-                                Lehr-/Lernziele
-                            </label>
-                        </div>
-                        <div className="w-3/4">
-                            <textarea
-                                rows={3}
-                                {...register(`targetGroups.${index}.learning_goal`, {
-                                    maxLength: {
-                                        value: 50,
-                                        message:
-                                            'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
-                                    },
-                                    pattern: {
-                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'".:,;&()!?-]*$/i,
-                                        message:
-                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
-                                    },
-                                })}
-                                placeholder="Welche"
-                                className="border border-gray-500 rounded-lg w-full p-2"
-                            />
-                            <p className="text-red-600 pt-2">
-                                {errors?.targetGroups?.[index]?.learning_goal?.message}
                             </p>
                         </div>
                     </div>
@@ -360,87 +340,84 @@ export default function TargetGroups() {
         ));
     };
     return (
-        <>
-            <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
-            <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
-                {loading ? (
-                    <LoadingAnimation />
-                ) : (
-                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
-                        <div>
-                            <div className={'text-center font-bold text-4xl mb-2'}>
-                                An welche Zielgruppen richtet sich der VE?
-                            </div>
-                            <div className={'text-center mb-20'}>optional</div>
-                            <div className="flex flex-wrap justify-center">
-                                {rendertargetGroupsInputs()}
-                            </div>
-                            <div className={'mx-2 flex justify-end'}>
-                                <button type="button" onClick={() => remove(fields.length - 1)}>
-                                    <RxMinus size={20} />
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        append({
-                                            name: '',
-                                            age_min: '',
-                                            age_max: '',
-                                            experience: '',
-                                            academic_course: '',
-                                            mother_tongue: '',
-                                            foreign_languages: '',
-                                            learning_goal: '',
-                                        });
-                                    }}
-                                >
-                                    <RxPlus size={20} />
-                                </button>
-                            </div>
-                        </div>
-                        <div className="flex justify-around w-full">
+        <div className="flex bg-pattern-left-blue-small bg-no-repeat">
+            <div className="flex flex-grow justify-center">
+                <div className="flex flex-col">
+                    <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
+                    {loading ? (
+                        <LoadingAnimation />
+                    ) : (
+                        <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between">
                             <div>
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={() => {
-                                        validateAndRoute(
-                                            '/startingWizard/generalInformation/globalGoals',
-                                            router.query.plannerId,
-                                            handleSubmit(onSubmit),
-                                            isValid
-                                        );
-                                    }}
-                                >
-                                    Zurück
-                                </button>
+                                <div className={'text-center font-bold text-4xl mb-2'}>
+                                    An welche Zielgruppen richtet sich der VE?
+                                </div>
+                                <div className={'text-center mb-20'}>optional</div>
+                                <div className="flex flex-wrap justify-center">
+                                    {rendertargetGroupsInputs()}
+                                </div>
+                                <div className={'mx-2 flex justify-end'}>
+                                    <button type="button" onClick={() => remove(fields.length - 1)}>
+                                        <RxMinus size={20} />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            append({
+                                                name: '',
+                                                age_min: '',
+                                                age_max: '',
+                                                experience: '',
+                                                academic_course: '',
+                                                mother_tongue: '',
+                                                foreign_languages: '',
+                                            });
+                                        }}
+                                    >
+                                        <RxPlus size={20} />
+                                    </button>
+                                </div>
                             </div>
-                            <div>
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={() => {
-                                        validateAndRoute(
-                                            '/startingWizard/generalInformation/veTopic',
-                                            router.query.plannerId,
-                                            handleSubmit(onSubmit),
-                                            isValid
-                                        );
-                                    }}
-                                >
-                                    Weiter
-                                </button>
+                            <div className="flex justify-between w-full max-w-xl">
+                                <div>
+                                    <button
+                                        type="button"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                        onClick={handleSubmit((data) =>
+                                            combinedSubmitRouteAndUpdate(
+                                                data,
+                                                '/startingWizard/generalInformation/globalGoals'
+                                            )
+                                        )}
+                                    >
+                                        Zurück
+                                    </button>
+                                </div>
+                                <div>
+                                    <button
+                                        type="button"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                        onClick={handleSubmit((data) =>
+                                            combinedSubmitRouteAndUpdate(
+                                                data,
+                                                '/startingWizard/generalInformation/veTopic'
+                                            )
+                                        )}
+                                    >
+                                        Weiter
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    </form>
-                )}
-                <SideProgressBarSection
-                    progressState={sideMenuStepsProgress}
-                    handleValidation={handleSubmit(onSubmit)}
-                    isValid={isValid}
-                    sideMenuStepsData={sideMenuStepsData}
-                />
+                        </form>
+                    )}
+                </div>
             </div>
-        </>
+            <SideProgressBarSectionBroadPlanner
+                progressState={sideMenuStepsProgress}
+                handleValidation={handleSubmit(onSubmit)}
+                isValid={true}
+                sideMenuStepsData={sideMenuStepsData}
+            />
+        </div>
     );
 }

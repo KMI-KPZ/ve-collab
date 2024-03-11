@@ -50,7 +50,7 @@ export default function ViewFinestep({ fineStep }: Props): JSX.Element {
                     <hr className="h-px my-5 bg-gray-400 border-0" />
                     <div className="mt-4 flex">
                         <div className="w-1/6 flex items-center">
-                            <p className="font-semibold px-2 py-2">Workload</p>
+                            <p className="font-semibold px-2 py-2">Workload:</p>
                         </div>
                         <div className="flex items-center w-fit bg-slate-200 rounded-lg px-3">
                             {showDataOrEmptySign(fineStep.workload) + ' Stunden'}
@@ -58,7 +58,7 @@ export default function ViewFinestep({ fineStep }: Props): JSX.Element {
                     </div>
                     <div className="mt-4 flex">
                         <div className="w-1/6 flex items-center">
-                            <p className="font-semibold px-2 py-2 flex items-center">Sozialform</p>
+                            <p className="font-semibold px-2 py-2 flex items-center">Sozialform:</p>
                         </div>
                         <div className="flex items-center w-fit bg-slate-200 rounded-lg px-3">
                             {showDataOrEmptySign(fineStep.social_form)}
@@ -66,7 +66,7 @@ export default function ViewFinestep({ fineStep }: Props): JSX.Element {
                     </div>
                     <div className="mt-4 flex">
                         <div className="w-1/6 flex items-center">
-                            <p className="font-semibold px-2 py-2 ">digitale Lernumgebung</p>
+                            <p className="font-semibold px-2 py-2 ">digitale Lernumgebung:</p>
                         </div>
                         <div className="flex items-center w-fit bg-slate-200 rounded-lg px-3">
                             {showDataOrEmptySign(fineStep.learning_env)}
@@ -74,7 +74,7 @@ export default function ViewFinestep({ fineStep }: Props): JSX.Element {
                     </div>
                     <div className="mt-4 flex">
                         <div className="w-1/6 flex items-center">
-                            <p className="font-semibold px-2 py-2">VE-Ansatz</p>
+                            <p className="font-semibold px-2 py-2">VE-Ansatz:</p>
                         </div>
                         <div className="flex items-center w-fit bg-slate-200 rounded-lg px-3">
                             {showDataOrEmptySign(fineStep.ve_approach)}
@@ -82,7 +82,7 @@ export default function ViewFinestep({ fineStep }: Props): JSX.Element {
                     </div>
                     <div className="mt-4 flex">
                         <div className="font-semibold w-1/5 flex items-center px-2 py-2px-2 py-2">
-                            Aufgabenstellungen
+                            Aufgabenstellungen:
                         </div>
                         {fineStep.tasks.map((task, taskIndex) => (
                             <div
@@ -90,27 +90,19 @@ export default function ViewFinestep({ fineStep }: Props): JSX.Element {
                                 key={taskIndex}
                             >
                                 <div className="flex space-x-8">
-                                    <span className="w-1/4 font-medium">Titel:</span>
+                                    <span className="w-1/4 font-medium">Titel</span>
                                     <span>{showDataOrEmptySign(task.title)}</span>
                                 </div>
                                 <div className="flex space-x-8">
-                                    <span className="w-1/4 font-medium">Beschreibung:</span>
+                                    <span className="w-1/4 font-medium">Beschreibung</span>
                                     <span>{showDataOrEmptySign(task.description)}</span>
                                 </div>
                                 <div className="flex space-x-8">
-                                    <span className="w-1/4 font-medium">Lernziele:</span>
+                                    <span className="w-1/4 font-medium">Lernziele</span>
                                     <span>{showDataOrEmptySign(task.learning_goal)}</span>
                                 </div>
                                 <div className="flex space-x-8">
-                                    <span className="w-1/4 font-medium">Beschreibung:</span>
-                                    <span>{showDataOrEmptySign(task.description)}</span>
-                                </div>
-                                <div className="flex space-x-8">
-                                    <span className="w-1/4 font-medium">Lernziel:</span>
-                                    <span>{showDataOrEmptySign(task.learning_goal)}</span>
-                                </div>
-                                <div className="flex space-x-8">
-                                    <span className="w-1/4 font-medium">Tools:</span>
+                                    <span className="w-1/4 font-medium">Tools / Medien</span>
                                     <span>
                                         {showDataOrEmptySign(
                                             task.tools

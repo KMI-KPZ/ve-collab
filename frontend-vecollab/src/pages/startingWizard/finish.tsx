@@ -8,6 +8,7 @@ import { PlanOverview } from '@/components/planSummary/planOverview';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 
+Finished.auth = true;
 export default function Finished() {
     const router = useRouter();
     const { data: session, status } = useSession();

@@ -75,7 +75,7 @@ export default function Stage({ fineStep }: Props) {
                                 valueAsNumber: true,
                             })}
                             placeholder="in Stunden"
-                            className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                            className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">{formState.errors?.workload?.message}</p>
                     </div>
@@ -96,7 +96,7 @@ export default function Stage({ fineStep }: Props) {
                                 },
                             })}
                             placeholder="wie arbeiten die Studierenden zusammen, z.B. Partner-/Gruppenarbeit, individuell"
-                            className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                            className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">
                             {formState.errors?.social_form?.message}
@@ -119,7 +119,7 @@ export default function Stage({ fineStep }: Props) {
                                 },
                             })}
                             placeholder="Struktur und Inhalte der ausgewählten Umgebung (LMS, social Media, kooperatives Dokument usw.)"
-                            className="border border-gray-500 rounded-lg w-full p-2"
+                            className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">
                             {formState.errors?.learning_env?.message}
@@ -141,7 +141,7 @@ export default function Stage({ fineStep }: Props) {
                                 },
                             })}
                             placeholder="Welche Ansätze werden verfolgt? (z. B. aufgabenorientierter Ansatz, kulturbezogenes Lernen)"
-                            className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                            className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">
                             {formState.errors?.ve_approach?.message}

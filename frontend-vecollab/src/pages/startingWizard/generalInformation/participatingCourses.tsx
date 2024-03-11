@@ -1,6 +1,6 @@
 import WhiteBox from '@/components/Layout/WhiteBox';
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
-import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
+import SideProgressBarSectionBroadPlanner from '@/components/StartingWizard/SideProgressBarSectionBroadPlanner';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
@@ -13,7 +13,6 @@ import {
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/startingWizard/sideProgressBar';
-import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 
@@ -35,7 +34,6 @@ export default function Lectures() {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
-    const { validateAndRoute } = useValidation();
     const [steps, setSteps] = useState<IFineStep[]>([]);
 
     // check for session errors and trigger the login flow if necessary
@@ -50,7 +48,7 @@ export default function Lectures() {
 
     const {
         register,
-        formState: { errors, isValid },
+        formState: { errors },
         handleSubmit,
         control,
         setValue,
@@ -125,6 +123,14 @@ export default function Lectures() {
         );
     };
 
+    const combinedSubmitRouteAndUpdate = async (data: FormValues, url: string) => {
+        onSubmit(data);
+        await router.push({
+            pathname: url,
+            query: { plannerId: router.query.plannerId },
+        });
+    };
+
     const renderLecturesInputs = (): JSX.Element[] => {
         return fields.map((lecture, index) => (
             <div key={lecture.id} className="mx-2">
@@ -151,7 +157,7 @@ export default function Lectures() {
                                     },
                                 })}
                                 placeholder="Name eingeben"
-                                className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                className="border border-gray-400 rounded-lg w-full p-2"
                             />
                             <p className="text-red-600 pt-2">
                                 {errors?.lectures?.[index]?.name?.message}
@@ -174,12 +180,10 @@ export default function Lectures() {
                                     },
                                 })}
                                 placeholder="z.B. Wahl, Wahlpflicht, Pflicht"
-                                className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                className="border border-gray-400 rounded-lg w-full px-1 py-2"
                             >
                                 <option value="Pflichtveranstaltung">Pflichtveranstaltung</option>
-                                <option value="Fachhochschule/University of Applied Sciences">
-                                    Wahlveranstaltung
-                                </option>
+                                <option value="Wahlveranstaltung">Wahlveranstaltung</option>
                             </select>
                             <p className="text-red-600 pt-2">
                                 {errors?.lectures?.[index]?.lecture_type?.message}
@@ -202,7 +206,7 @@ export default function Lectures() {
                                     },
                                 })}
                                 placeholder="z.B. online, hybrid, präsenz"
-                                className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                className="border border-gray-400 rounded-lg w-full px-1 py-2"
                             >
                                 <option value="Präsenz">Präsenz</option>
                                 <option value="Online">Online</option>
@@ -222,6 +226,7 @@ export default function Lectures() {
                         <div className="w-1/2">
                             <input
                                 type="number"
+                                min={0}
                                 {...register(`lectures.${index}.participants_amount`, {
                                     maxLength: {
                                         value: 4,
@@ -234,7 +239,7 @@ export default function Lectures() {
                                     setValueAs: (v) => parseInt(v),
                                 })}
                                 placeholder="Anzahl eingeben"
-                                className="border border-gray-500 rounded-lg w-full h-12 p-2"
+                                className="border border-gray-400 rounded-lg w-full p-2"
                             />
                             <p className="text-red-600 pt-2">
                                 {errors?.lectures?.[index]?.participants_amount?.message}
@@ -246,83 +251,81 @@ export default function Lectures() {
         ));
     };
     return (
-        <>
-            <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
-            <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
-                {loading ? (
-                    <LoadingAnimation />
-                ) : (
-                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
-                        <div>
-                            <div className={'text-center font-bold text-4xl mb-2'}>
-                                Im Rahmen welcher Lehrveranstaltungen wird der VE umgesetzt?
-                            </div>
-                            <div className={'text-center mb-20'}>optional</div>
-                            <div className="flex flex-wrap justify-center">
-                                {renderLecturesInputs()}
-                            </div>
-                            <div className={'mx-2 flex justify-end'}>
-                                <button type="button" onClick={() => remove(fields.length - 1)}>
-                                    <RxMinus size={20} />
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        append({
-                                            name: '',
-                                            lecture_type: '',
-                                            lecture_format: '',
-                                            participants_amount: '',
-                                        });
-                                    }}
-                                >
-                                    <RxPlus size={20} />
-                                </button>
-                            </div>
-                        </div>
-                        <div className="flex justify-around w-full">
+        <div className="flex bg-pattern-left-blue-small bg-no-repeat">
+            <div className="flex flex-grow justify-center">
+                <div className="flex flex-col">
+                    <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
+                    {loading ? (
+                        <LoadingAnimation />
+                    ) : (
+                        <form className="gap-y-6 w-full p-12 max-w-7xl items-center flex flex-col flex-grow justify-between">
                             <div>
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={() => {
-                                        validateAndRoute(
-                                            '/startingWizard/generalInformation/institutions',
-                                            router.query.plannerId,
-                                            handleSubmit(onSubmit),
-                                            isValid
-                                        );
-                                    }}
-                                >
-                                    Zurück
-                                </button>
+                                <div className={'text-center font-bold text-4xl mb-2'}>
+                                    Im Rahmen welcher Lehrveranstaltungen wird der VE umgesetzt?
+                                </div>
+                                <div className={'text-center mb-20'}>optional</div>
+                                <div className="flex flex-wrap justify-center">
+                                    {renderLecturesInputs()}
+                                </div>
+                                <div className={'mx-2 flex justify-end'}>
+                                    <button type="button" onClick={() => remove(fields.length - 1)}>
+                                        <RxMinus size={20} />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            append({
+                                                name: '',
+                                                lecture_type: '',
+                                                lecture_format: '',
+                                                participants_amount: '',
+                                            });
+                                        }}
+                                    >
+                                        <RxPlus size={20} />
+                                    </button>
+                                </div>
                             </div>
-                            <div>
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={() => {
-                                        validateAndRoute(
-                                            '/startingWizard/generalInformation/globalGoals',
-                                            router.query.plannerId,
-                                            handleSubmit(onSubmit),
-                                            isValid
-                                        );
-                                    }}
-                                >
-                                    Weiter
-                                </button>
+                            <div className="flex justify-between w-full max-w-xl">
+                                <div>
+                                    <button
+                                        type="button"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                        onClick={handleSubmit((data) =>
+                                            combinedSubmitRouteAndUpdate(
+                                                data,
+                                                '/startingWizard/generalInformation/institutions'
+                                            )
+                                        )}
+                                    >
+                                        Zurück
+                                    </button>
+                                </div>
+                                <div>
+                                    <button
+                                        type="button"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                        onClick={handleSubmit((data) =>
+                                            combinedSubmitRouteAndUpdate(
+                                                data,
+                                                '/startingWizard/generalInformation/globalGoals'
+                                            )
+                                        )}
+                                    >
+                                        Weiter
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    </form>
-                )}
-                <SideProgressBarSection
-                    progressState={sideMenuStepsProgress}
-                    handleValidation={handleSubmit(onSubmit)}
-                    isValid={isValid}
-                    sideMenuStepsData={sideMenuStepsData}
-                />
+                        </form>
+                    )}
+                </div>
             </div>
-        </>
+            <SideProgressBarSectionBroadPlanner
+                progressState={sideMenuStepsProgress}
+                handleValidation={handleSubmit(onSubmit)}
+                isValid={true}
+                sideMenuStepsData={sideMenuStepsData}
+            />
+        </div>
     );
 }

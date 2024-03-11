@@ -66,23 +66,25 @@ export interface BackendSpaceACLEntry {
     write_files: boolean,
 }
 
-export interface BackendPostsAuthor {
+export interface BackendPostAuthor {
     username: string;
     profile_pic: string;
+    first_name: string;
+    last_name: string;
 }
 
-export interface BackendPostsComment {
+export interface BackendPostComment {
     _id: string;
-    author: BackendPostsAuthor;
+    author: BackendPostAuthor;
     creation_date: string;
     pinned: boolean
     text: string;
 }
 
-export interface BackendPosts {
+export interface BackendPost {
     _id: string;
-    author: BackendPostsAuthor;
-    comments: BackendPostsComment[];
+    author: BackendPostAuthor;
+    comments: BackendPostComment[];
     creation_date: string;
     files: string[];
     likers: string[];
@@ -94,7 +96,6 @@ export interface BackendPosts {
 
     isRepost?: boolean;
     originalCreationDate?: string;
-    repostAuthor?: string;
-    repostAuthorProfilePic?: string;
+    repostAuthor?: BackendPostAuthor;
     repostText?: string;
 }

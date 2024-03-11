@@ -1,7 +1,7 @@
 import {
     BackendChatMessage,
     BackendChatroomSnippet,
-    BackendPosts,
+    BackendPost,
     BackendSpace,
     BackendSpaceACLEntry,
     BackendUserSnippet,
@@ -337,18 +337,26 @@ export function useGetMySpaceACLEntry(accessToken: string, spaceId: string): {
 export function useGetTimeline(
     accessToken: string,
     toDate?: string,
-    fromDate?: string,
     limit?: number,
-    space?: string
+    space?: string,
+    user?: string
  ): {
-    data: BackendPosts[];
+    data: BackendPost[];
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;
 } {
-    const endpointUrl = space
-        ? `/timeline/space/${space}?from=${fromDate}&to=${toDate}`
-        : `/timeline/you?to=${toDate}&limit=${limit}`
+    let endpointUrl = "/timeline"
+    if (space) {
+        endpointUrl += `/space/${space}`
+    }
+    else if (user) {
+        endpointUrl += `/user/${user}`
+    }
+    else {
+        endpointUrl += `/you`
+    }
+    endpointUrl += `?to=${toDate}&limit=${limit}`
 
     const { data, error, isLoading, mutate } = useSWR(
         [endpointUrl, accessToken],

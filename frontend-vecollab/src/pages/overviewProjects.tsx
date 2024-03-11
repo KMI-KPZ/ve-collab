@@ -45,7 +45,7 @@ export default function Overview() {
 
     return (
         <>
-            <div className="flex justify-center bg-pattern-left-blue-small bg-no-repeat">
+            <div className="flex min-h-[70vh] justify-center bg-pattern-left-blue-small bg-no-repeat">
                 <div className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-content">
                     <div>
                         <div className={'text-center font-bold text-4xl mb-2'}>Übersicht</div>

@@ -1,72 +1,72 @@
-import { fetchPOST, useGetTimeline } from "@/lib/backend";
+import { useGetAllSpaces, useGetTimeline } from "@/lib/backend";
 import { useSession } from "next-auth/react";
 import LoadingAnimation from "../LoadingAnimation";
 import TimelinePost from "./TimelinePost";
-import { FormEvent, useState } from "react";
-import { IoIosSend } from "react-icons/io";
-import AuthenticatedImage from "../AuthenticatedImage";
+import { useEffect, useState } from "react";
+import TimelinePostForm from "./TimelinePostForm";
+import { BackendPost } from "@/interfaces/api/apiInterfaces";
 
 interface Props {
     space?: string | undefined;
+    user?: string | undefined;
 }
 
 Timeline.auth = true
-export default function Timeline({ space }: Props) {
+export default function Timeline({ space, user }: Props) {
     const { data: session } = useSession();
-    const [toDate, setToDate] = useState(new Date().toISOString());
-
-    const now = new Date()
-    const [fromDate] = useState( new Date(now.setFullYear( now.getFullYear() - 1 )).toISOString());
-    // TODO fromDate is just a dummy until /timline/[space] supports the 'limit' parameter
+    const [toDate, setToDate] = useState<Date>(new Date());
+    const [sharedPost, setSharedPost] = useState<BackendPost|null>(null);
+    const [allPosts, setAllPosts] = useState<BackendPost[]>([]);
 
     const {
-        data: timeline,
+        data: currentPosts,
         isLoading: isLoadingTimeline,
         error,
         mutate,
     } = useGetTimeline(
         session!.accessToken,
-        toDate,
-        fromDate,
+        toDate.toISOString(),
         10,
-        space
+        space,
+        user
     )
-    console.log({timeline, space});
 
-    // TODO infinite scroll
-    // TODO user profile pic should be part of session?.user
+    // TODO may get all spaces from parent
+    const {
+        data: allSpaces,
+        isLoading: isLoadingAllSpaces,
+        error: errorAllSpaces,
+        mutate: mutateAllSpaces,
+    } = useGetAllSpaces(session!.accessToken);
 
-    const onSubmitForm = async (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        const formData = new FormData(event.currentTarget)
-        const text = (formData.get('text') as string).trim()
+    useEffect(() => {
+        if (!currentPosts.length) return
 
-        if (text === '')  return
+        setAllPosts((prev) => [...prev, ...currentPosts]);
 
-        // TODO currently we reload the whole timeline
-        //  to only load the new post the endpoint "/posts" may should return the newly added post which
-        //  we can append here
-        //  see https://blog.logrocket.com/handling-data-fetching-next-js-useswr/#mutation-revalidation
-        //  alternative we load posts fromDate (last toDate) toDate (new now) and append
+    }, [currentPosts])
+    console.log({allPosts});
 
-        try {
-            await fetchPOST(
-                '/posts',
-                {
-                    text,
-                    tags: []
-                },
-                session?.accessToken,
-                true
-            )
-            setToDate(new Date().toISOString())
-        } catch (error) {
-            console.error(error);
-        }
+    const fetchNextPosts = () => {
+        if (!allPosts.length) return
+
+        const newToDate = new Date(allPosts[allPosts.length - 1].creation_date)
+        newToDate.setMilliseconds(newToDate.getMilliseconds()+1)
+
+        setToDate(newToDate)
     }
 
-    if (isLoadingTimeline) {
-        return (<><LoadingAnimation /></>)
+    const removePost = (post: BackendPost) => {
+        setAllPosts((prev) => prev.filter(a => a._id != post._id));
+    }
+
+    const afterCreatePost = (post: BackendPost) => {
+        if (!post) return
+        if (post.isRepost) setSharedPost(null)
+
+        // TODO may use mutate->populateCache instead ?!
+        // https://github.com/KMI-KPZ/ve-collab/blob/a791a2ed9d68e71b6968488fe33dbf8bac000d4c/frontend-vecollab/src/components/network/Timeline.tsx
+        setAllPosts((prev) => [post, ...prev]);
     }
 
     if (error) {
@@ -76,36 +76,27 @@ export default function Timeline({ space }: Props) {
 
     return (
         <>
-            <div className={'p-4 my-8 bg-white rounded-3xl shadow-2xl '}>
-                <form onSubmit={onSubmitForm}>
-                    <div className="flex items-center mb-5">
-                        <AuthenticatedImage
-                            imageId={"default_profile_pic.jpg"}
-                            alt={'Benutzerbild'}
-                            width={40}
-                            height={40}
-                            className="rounded-full mr-3"
-                        ></AuthenticatedImage>
-                        <textarea
-                            className={'w-full border border-[#cccccc] rounded-md px-2 py-[6px]'}
-                            placeholder={'Beitrag schreiben ...'}
-                            name='text'
-                        />
-                    </div>
-                    <div className="flex justify-end">
-
-
-
-                    <button className="flex items-center bg-ve-collab-orange text-white py-2 px-5 rounded-lg" type='submit' title="Senden">
-                        <IoIosSend className="mx-2" />Senden
-                    </button>
-                    </div>
-                </form>
+            <div className={'p-4 my-8 bg-white rounded shadow '}>
+                <TimelinePostForm
+                    space={space}
+                    sharedPost={sharedPost}
+                    onCancelRepost={() => setSharedPost(null)}
+                    onCreatedPost={afterCreatePost}
+                />
             </div>
-            {!timeline.length ? ( <div>Timeline is Empty</div>) : (<></>)}
-            {timeline.map((post, i) =>
-                <TimelinePost key={i} post={post} mutate={mutate} />
+            {allPosts.length == 0 && ( <div className="m-10 flex justify-center">Bisher keine Beiträge ...</div>)}
+            {allPosts.map((post, i) =>
+                <TimelinePost key={i}
+                    post={post}
+                    space={space}
+                    isLast={i === allPosts.length - 1}
+                    allSpaces={allSpaces}
+                    removePost={removePost}
+                    sharePost={post => setSharedPost(post)}
+                    fetchNextPosts={fetchNextPosts}
+                />
             )}
+            {isLoadingTimeline && (<LoadingAnimation />)}
         </>
     );
 }

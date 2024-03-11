@@ -6,8 +6,6 @@ import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarS
 import LoadingAnimation from '@/components/LoadingAnimation';
 import Stage from '@/components/StartingWizard/FinePlanner/Stage';
 import { SubmitHandler, useForm, FormProvider } from 'react-hook-form';
-import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
-import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
@@ -15,6 +13,10 @@ import {
     ProgressState,
     SideMenuStep,
 } from '@/interfaces/startingWizard/sideProgressBar';
+import SideProgressbarSectionFinePlanner from '@/components/StartingWizard/SideProgressbarSectionFinePlanner';
+import { Tooltip } from '@/components/Tooltip';
+import Link from 'next/link';
+import { FiInfo } from 'react-icons/fi';
 
 export interface ITask {
     title: string;
@@ -87,7 +89,6 @@ export default function FinePlanner() {
     const [loading, setLoading] = useState(false);
     const router = useRouter();
     const { stepSlug } = router.query;
-    const { validateAndRoute } = useValidation();
     const methods = useForm<IFineStepFrontend>({
         mode: 'onChange',
         defaultValues: {
@@ -216,6 +217,14 @@ export default function FinePlanner() {
         );
     };
 
+    const combinedSubmitRouteAndUpdate = async (data: IFineStepFrontend, url: string) => {
+        onSubmit(data);
+        await router.push({
+            pathname: url,
+            query: { plannerId: router.query.plannerId },
+        });
+    };
+
     const generateSideMenuStepsData = (steps: IFineStep[]): SideMenuStep[] => {
         return steps.map((step: IFineStep) => ({
             id: encodeURIComponent(step.name),
@@ -253,67 +262,76 @@ export default function FinePlanner() {
     };
 
     return (
-        <>
-            <HeadProgressBarSection stage={2} linkFineStep={steps[0]?.name} />
-            <div className="flex justify-center bg-pattern-left-blue-small bg-no-repeat">
-                {loading ? (
-                    <LoadingAnimation />
-                ) : (
-                    <FormProvider {...methods}>
-                        <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between">
-                            <div>
-                                <div className={'text-center font-bold text-4xl mb-2'}>
-                                    Feinplanung
-                                </div>
-                                <div className={'text-center mb-20'}>
-                                    erweitere die Informationen zu jeder Etappe
-                                </div>
-                                <Stage fineStep={currentFineStep} />
-                            </div>
-                            <div className="flex justify-around w-full">
+        <div className="flex bg-pattern-left-blue-small bg-no-repeat">
+            <div className="flex flex-grow justify-center">
+                <div className="flex flex-col">
+                    <HeadProgressBarSection stage={2} linkFineStep={steps[0]?.name} />
+                    {loading ? (
+                        <LoadingAnimation />
+                    ) : (
+                        <FormProvider {...methods}>
+                            <form className="gap-y-6 w-full p-12 max-w-7xl items-center flex flex-col flex-grow justify-between">
                                 <div>
-                                    <button
-                                        type="button"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                        onClick={() => {
-                                            validateAndRoute(
-                                                getPreviousFineStepUrl(),
-                                                router.query.plannerId,
-                                                methods.handleSubmit(onSubmit),
-                                                methods.formState.isValid
-                                            );
-                                        }}
-                                    >
-                                        Zurück
-                                    </button>
+                                    <div className="flex justify-center">
+                                        <div
+                                            className={
+                                                'text-center font-bold text-4xl mb-2 relative w-fit'
+                                            }
+                                        >
+                                            Feinplanung
+                                            <Tooltip tooltipsText="Mehr Aspekte der Feinplanung findest du hier in den Selbstlernmaterialien …">
+                                                <Link target="_blank" href={'/content/VE-Planung'}>
+                                                    <FiInfo size={30} color="#00748f" />
+                                                </Link>
+                                            </Tooltip>
+                                        </div>
+                                    </div>
+                                    <div className={'text-center mb-20'}>
+                                        erweitere die Informationen zu jeder Etappe
+                                    </div>
+                                    <Stage fineStep={currentFineStep} />
                                 </div>
-                                <div>
-                                    <button
-                                        type="button"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                        onClick={() => {
-                                            validateAndRoute(
-                                                getNextFineStepUrl(),
-                                                router.query.plannerId,
-                                                methods.handleSubmit(onSubmit),
-                                                methods.formState.isValid
-                                            );
-                                        }}
-                                    >
-                                        Weiter
-                                    </button>
+                                <div className="flex justify-between w-full max-w-xl">
+                                    <div>
+                                        <button
+                                            type="button"
+                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                            onClick={methods.handleSubmit((data) =>
+                                                combinedSubmitRouteAndUpdate(
+                                                    data,
+                                                    getPreviousFineStepUrl()
+                                                )
+                                            )}
+                                        >
+                                            Zurück
+                                        </button>
+                                    </div>
+                                    <div>
+                                        <button
+                                            type="button"
+                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                            onClick={methods.handleSubmit((data) =>
+                                                combinedSubmitRouteAndUpdate(
+                                                    data,
+                                                    getNextFineStepUrl()
+                                                )
+                                            )}
+                                        >
+                                            Weiter
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                        </form>
-                    </FormProvider>
-                )}
-                <SideProgressBarSection
-                    progressState={sideMenuStepsProgress}
-                    handleValidation={methods.handleSubmit(onSubmit)}
-                    isValid={methods.formState.isValid}
-                    sideMenuStepsData={sideMenuStepsData}
-                />
+                            </form>
+                        </FormProvider>
+                    )}
+                </div>
             </div>
-        </>
+            <SideProgressbarSectionFinePlanner
+                progressState={sideMenuStepsProgress}
+                handleValidation={methods.handleSubmit(onSubmit)}
+                isValid={true}
+                sideMenuStepsData={sideMenuStepsData}
+            />
+        </div>
     );
 }

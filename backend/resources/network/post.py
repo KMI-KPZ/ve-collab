@@ -162,7 +162,6 @@ class Posts:
         # we know that there was no post with the given _id
         if update_result.modified_count != 1:
             raise PostNotExistingException()
-        
         return post_id
 
     def delete_post(self, post_id: str | ObjectId) -> None:
@@ -251,9 +250,10 @@ class Posts:
         if update_result.modified_count != 1:
             raise NotLikerException()
 
-    def add_comment(self, post_id: str | ObjectId, comment: dict) -> None:
+    def add_comment(self, post_id: str | ObjectId, comment: dict) -> ObjectId:
         """
-        add the given comment to the post, validating the attributes beforehand
+        add the given comment to the post, validating the attributes beforehand 
+        and returning the comment _id
         """
 
         post_id = util.parse_object_id(post_id)
@@ -273,6 +273,8 @@ class Posts:
         # we know that there was no post with the given post_id
         if update_result.matched_count != 1:
             raise PostNotExistingException()
+
+        return comment["_id"]
 
     def delete_comment(
         self, comment_id: str | ObjectId, post_id: str | ObjectId = None
@@ -307,11 +309,12 @@ class Posts:
         if update_result.matched_count != 1:
             raise PostNotExistingException()
 
-    def insert_repost(self, repost: dict) -> None:
+    def insert_repost(self, repost: dict) -> ObjectId:
         """
         insert a repost, validating the attributes beforehand.
         If the supplied repost has an _id field,
         update the existing repost text instead.
+        Returns the _id of the inserted (or updated) repost.
         :param repost: the repost to save as a dict
         """
 
@@ -327,9 +330,11 @@ class Posts:
         ):
             raise ValueError("Post misses required attribute")
 
-        self.db.posts.insert_one(repost)
+        result = self.db.posts.insert_one(repost)
 
-    def update_repost_text(self, repost_id: str | ObjectId, text: str) -> None:
+        return result.inserted_id
+
+    def update_repost_text(self, repost_id: str | ObjectId, text: str) -> ObjectId:
         """
         update the text of an existing repost
         """
@@ -345,6 +350,8 @@ class Posts:
         # we know that there was no post with the given _id
         if update_result.modified_count != 1:
             raise PostNotExistingException()
+        
+        return repost_id
 
     def pin_post(self, post_id: str | ObjectId) -> None:
         """
@@ -456,15 +463,15 @@ class Posts:
         self, space_id: str | ObjectId, time_to: datetime.datetime, limit: int = 10
     ) -> Tuple[List[Dict], List[Dict]]:
         """
-        get the timeline of a space (as well as pinned posts). 
-        The timeline will always include `limit` number of posts, that are older than the 
-        `time_to` timestamp. So, e.g. achieve endless scrolling, retrieve the next `limit` 
-        posts as kind of a pagination approach, use the oldest timestamp of your current 
+        get the timeline of a space (as well as pinned posts).
+        The timeline will always include `limit` number of posts, that are older than the
+        `time_to` timestamp. So, e.g. achieve endless scrolling, retrieve the next `limit`
+        posts as kind of a pagination approach, use the oldest timestamp of your current
         result set as the new starting point.
-        
+
         If there are not enough posts, the timeline will include as many
-        posts as possible. In turn, if there are less then `limit` posts returned, 
-        this timeline does not contain any more posts, so further requests with an even 
+        posts as possible. In turn, if there are less then `limit` posts returned,
+        this timeline does not contain any more posts, so further requests with an even
         older timestamp will not yield any more results.
 
         Returns a tuple of two lists, the first one containing the posts that match the
@@ -506,18 +513,18 @@ class Posts:
         self, username: str, time_to: datetime.datetime, limit: int = 10
     ) -> List[Dict]:
         """
-        get the timeline of the given user (aka the timeline on his profile) 
-        
-        The timeline will always include `limit` number of posts, that are older than the 
-        `time_to` timestamp. So, e.g. achieve endless scrolling, retrieve the next `limit` 
-        posts as kind of a pagination approach, use the oldest timestamp of your current 
+        get the timeline of the given user (aka the timeline on his profile)
+
+        The timeline will always include `limit` number of posts, that are older than the
+        `time_to` timestamp. So, e.g. achieve endless scrolling, retrieve the next `limit`
+        posts as kind of a pagination approach, use the oldest timestamp of your current
         result set as the new starting point.
-        
+
         If there are not enough posts, the timeline will include as many
-        posts as possible. In turn, if there are less then `limit` posts returned, 
-        this timeline does not contain any more posts, so further requests with an even 
+        posts as possible. In turn, if there are less then `limit` posts returned,
+        this timeline does not contain any more posts, so further requests with an even
         older timestamp will not yield any more results.
-        
+
         :param username: the name of the user whose timeline is requested
         :param time_to: the maximum creation date of the posts to be returned (i.e. only
                         posts older than this date will be returned)
@@ -534,7 +541,7 @@ class Posts:
                 }, sort=[("creation_date", -1)], limit=limit
             )
         )
-    
+
     def get_personal_timeline(
         self, username: str, time_to: datetime.datetime, limit: int = 10
     ) -> List[Dict]:
@@ -544,16 +551,16 @@ class Posts:
         - posts of people that you follow,
         - posts in spaces that you are a member of
 
-        The timeline will always include `limit` number of posts, that are older than the 
-        `time_to` timestamp. So, e.g. achieve endless scrolling, retrieve the next `limit` 
-        posts as kind of a pagination approach, use the oldest timestamp of your current 
+        The timeline will always include `limit` number of posts, that are older than the
+        `time_to` timestamp. So, e.g. achieve endless scrolling, retrieve the next `limit`
+        posts as kind of a pagination approach, use the oldest timestamp of your current
         result set as the new starting point.
-        
+
         If there are not enough posts, the timeline will include as many
-        posts as possible. In turn, if there are less then `limit` posts returned, 
-        this timeline does not contain any more posts, so further requests with an even 
+        posts as possible. In turn, if there are less then `limit` posts returned,
+        this timeline does not contain any more posts, so further requests with an even
         older timestamp will not yield any more results.
-        
+
         :param username: the name of the user whose personal timeline is requested
         :param time_to: the maximum creation date of the posts to be returned (i.e. only
                         posts older than this date will be returned)
@@ -723,10 +730,10 @@ class Posts:
                         },
                     }
                 },
-                # only include the last `limit` posts
-                {"$limit": limit},
                 # sort by creation date, descending
                 {"$sort": {"creation_date": -1}},
+                # only include the last `limit` posts
+                {"$limit": limit},
                 # last step, cleanup all the extra fields we had to use along
                 {
                     "$unset": [

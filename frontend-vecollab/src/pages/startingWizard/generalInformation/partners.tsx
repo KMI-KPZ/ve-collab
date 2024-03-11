@@ -1,5 +1,5 @@
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
-import SideProgressBarSection from '@/components/StartingWizard/SideProgressBarSection';
+import SideProgressBarSectionBroadPlanner from '@/components/StartingWizard/SideProgressBarSectionBroadPlanner';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
@@ -21,6 +21,8 @@ import {
 import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import { FormalConditionPartner } from '@/pages/startingWizard/generalInformation/formalConditions';
+import { FiInfo } from 'react-icons/fi';
+import { Tooltip } from '@/components/Tooltip';
 
 export default function Partners() {
     const { data: session, status } = useSession();
@@ -28,6 +30,7 @@ export default function Partners() {
     const router = useRouter();
 
     const [formalConditions, setFormalConditions] = useState<FormalConditionPartner[]>([]);
+    const [author, setAuthor] = useState<string>('');
     const [partners, setPartners] = useState<string[]>(['']);
     const [partnerProfileSnippets, setPartnerProfileSnippets] = useState<{
         [Key: string]: BackendUserSnippet;
@@ -86,6 +89,7 @@ export default function Partners() {
                     if (data.plan.formalities && Array.isArray(data.plan.formalities)) {
                         setFormalConditions(data.plan.formalities);
                     }
+                    setAuthor(data.plan.author);
                     setSteps(data.plan.steps);
                 }
             );
@@ -113,22 +117,47 @@ export default function Partners() {
     const onSubmit = async () => {
         const updateFormalConditions = partners.map((partner) => {
             const findFormalCondition = formalConditions.find(
-                (formalCondition) => formalCondition.partnerName === partner
+                (formalCondition) => formalCondition.username === partner
             );
             if (findFormalCondition) {
                 return findFormalCondition;
             } else {
                 return {
-                    partnerName: partner,
+                    username: partner,
                     time: false,
-                    place: false,
+                    format: false,
+                    topic: false,
+                    goals: false,
+                    languages: false,
+                    media: false,
                     technicalEquipment: false,
+                    evaluation: false,
                     institutionalRequirements: false,
-                    examinationRegulations: false,
                     dataProtection: false,
                 };
             }
         });
+
+        // sanity check: if the author (i.e. creator of the plan) was not
+        // manually added as a partner by the users, add their formal conditions
+        // entry nonetheless, because otherwise he would not be included on the
+        // formal conditions page, even though he has to fulfill them as well
+        if (!partners.includes(author)) {
+            updateFormalConditions.push({
+                username: author,
+                time: false,
+                format: false,
+                topic: false,
+                goals: false,
+                languages: false,
+                media: false,
+                technicalEquipment: false,
+                evaluation: false,
+                institutionalRequirements: false,
+                dataProtection: false,
+            });
+        }
+
         await fetchPOST(
             '/planner/update_fields',
             {
@@ -182,107 +211,98 @@ export default function Partners() {
     };
 
     return (
-        <>
-            <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
-            <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
-                {loading ? (
-                    <LoadingAnimation />
-                ) : (
-                    <form
-                        onSubmit={onSubmit}
-                        className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
-                    >
-                        <div>
-                            <div className={'text-center font-bold text-4xl mb-2'}>
-                                Wer ist am Projekt beteiligt?
-                            </div>
-                            <div className={'text-center mb-20'}>optional</div>
-                            {partners.map((partner, index) => (
-                                <div key={index} className="my-2">
-                                    <AsyncCreatableSelect
-                                        instanceId={index.toString()}
-                                        defaultOptions={[
-                                            {
-                                                label: `${
-                                                    partnerProfileSnippets[partner]
-                                                        ? partnerProfileSnippets[partner].first_name
-                                                        : ''
-                                                } ${
-                                                    partnerProfileSnippets[partner]
-                                                        ? partnerProfileSnippets[partner].last_name
-                                                        : ''
-                                                } - ${partner}`,
-                                                value: partner,
-                                            },
-                                        ]}
-                                        loadOptions={loadOptions}
-                                        onChange={(e) => modifyPartner(index, e!.value)}
-                                        value={{
-                                            label: `${
-                                                partnerProfileSnippets[partner]
-                                                    ? partnerProfileSnippets[partner].first_name
-                                                    : ''
-                                            } ${
-                                                partnerProfileSnippets[partner]
-                                                    ? partnerProfileSnippets[partner].last_name
-                                                    : ''
-                                            } - ${partner}`,
-                                            value: partner,
-                                        }}
-                                        placeholder={'Suche nach Nutzer:innen...'}
-                                        getOptionLabel={(option) => option.label}
-                                        formatCreateLabel={(inputValue) => (
-                                            <span>
-                                                kein Treffer? <b>{inputValue}</b> trotzdem verwenden
-                                            </span>
-                                        )}
-                                    />
-                                </div>
-                            ))}
-                            <div className={'w-3/4 mx-7 mt-3 flex justify-end'}>
-                                <button onClick={removeInputField}>
-                                    <RxMinus size={20} />
-                                </button>
-                                <button onClick={addInputField}>
-                                    <RxPlus size={20} />
-                                </button>
-                            </div>
-                        </div>
-                        <div className="flex justify-around w-full">
+        <div className="flex bg-pattern-left-blue-small bg-no-repeat">
+            <div className="flex flex-grow justify-center">
+                <div className='flex flex-col'>
+                    <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
+                    {loading ? (
+                        <LoadingAnimation />
+                    ) : (
+                        <form
+                            onSubmit={onSubmit}
+                            className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between"
+                        >
                             <div>
-                                <Link
-                                    href={{
-                                        pathname: '/startingWizard/generalInformation/projectName',
-                                        query: { plannerId: router.query.plannerId },
-                                    }}
-                                >
+                                <div className="flex">
+                                    <div className={'text-center font-bold text-4xl mb-2 relative'}>
+                                        Wer ist am Projekt beteiligt?
+                                        <Tooltip tooltipsText="Tipps für die Partnersuche findest du hier in den Selbstlernmaterialien …">
+                                            <Link target="_blank" href={'/content/Partnersuche'}>
+                                                <FiInfo size={30} color="#00748f" />
+                                            </Link>
+                                        </Tooltip>
+                                    </div>
+                                </div>
+                                <div className={'text-center mb-20'}>optional</div>
+                                {partners.map((partner, index) => (
+                                    <div key={index} className="my-2">
+                                        <AsyncCreatableSelect
+                                            instanceId={index.toString()}
+                                            loadOptions={loadOptions}
+                                            onChange={(e) => modifyPartner(index, e!.value)}
+                                            value={{
+                                                label: partnerProfileSnippets[partner]
+                                                    ? `${partnerProfileSnippets[partner].first_name} ${partnerProfileSnippets[partner].last_name} - ${partner}`
+                                                    : `${partner}`,
+                                                value: partner,
+                                            }}
+                                            placeholder={'Suche nach Nutzer:innen...'}
+                                            getOptionLabel={(option) => option.label}
+                                            formatCreateLabel={(inputValue) => (
+                                                <span>
+                                                    kein Treffer? <b>{inputValue}</b> trotzdem
+                                                    verwenden
+                                                </span>
+                                            )}
+                                        />
+                                    </div>
+                                ))}
+                                <div className={'mt-3 flex justify-end'}>
+                                    <button onClick={removeInputField}>
+                                        <RxMinus size={20} />
+                                    </button>
+                                    <button onClick={addInputField}>
+                                        <RxPlus size={20} />
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="flex justify-between w-full max-w-xl">
+                                <div>
+                                    <Link
+                                        href={{
+                                            pathname:
+                                                '/startingWizard/generalInformation/projectName',
+                                            query: { plannerId: router.query.plannerId },
+                                        }}
+                                    >
+                                        <button
+                                            type="button"
+                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                        >
+                                            Zurück
+                                        </button>
+                                    </Link>
+                                </div>
+                                <div>
                                     <button
                                         type="button"
+                                        onClick={onSubmit}
                                         className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
                                     >
-                                        Zurück
+                                        Weiter
                                     </button>
-                                </Link>
+                                </div>
                             </div>
-                            <div>
-                                <button
-                                    type="button"
-                                    onClick={onSubmit}
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                >
-                                    Weiter
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                )}
-                <SideProgressBarSection
-                    progressState={sideMenuStepsProgress}
-                    handleValidation={() => {}}
-                    isValid={true}
-                    sideMenuStepsData={sideMenuStepsData}
-                />
+                        </form>
+                    )}
+                </div>
             </div>
-        </>
+            <SideProgressBarSectionBroadPlanner
+                progressState={sideMenuStepsProgress}
+                handleValidation={() => {}}
+                isValid={true}
+                sideMenuStepsData={sideMenuStepsData}
+            />
+        </div>
     );
 }
