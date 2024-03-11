@@ -399,10 +399,10 @@ export async function fetchPOST(
     accessToken?: string,
     asFormData: boolean=false
 ) {
-    const headers: { Authorization?: string } = {};
-
+    const requestHeaders: HeadersInit = new Headers();
     if (accessToken) {
-        headers['Authorization'] = 'Bearer ' + accessToken;
+        requestHeaders.set('Authorization', 'Bearer ' + accessToken);
+
     }
 
     function getFormData(payload: any) {
@@ -414,7 +414,7 @@ export async function fetchPOST(
     try {
         let backendResponse = await fetch(BACKEND_BASE_URL + relativeUrl, {
             method: 'POST',
-            headers: headers,
+            headers: requestHeaders,
             body: asFormData
                 ? getFormData(payload)
                 : JSON.stringify(payload),
