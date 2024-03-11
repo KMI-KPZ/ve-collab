@@ -179,12 +179,9 @@ export default function TimelinePost(
         )
 
         return (
-            <div className="whitespace-break-spaces">
-                {post.isRepost
-                    ? ( <>{post.repostText}</> )
-                    : ( <>{post.text}</> )
-                }
-            </div>
+            <div className="network-post-value" dangerouslySetInnerHTML={{__html: post.isRepost
+                ? post.repostText as string
+                : post.text as string}} />
         )
     }
 

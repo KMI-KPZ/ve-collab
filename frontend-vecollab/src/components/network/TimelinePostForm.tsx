@@ -7,8 +7,13 @@ import { BackendPost, BackendPostAuthor } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
 import PostHeader from "./PostHeader";
 import React, { useState } from 'react'
+import dynamic from "next/dynamic";
+import 'react-quill/dist/quill.snow.css'
 import { MdAttachFile } from "react-icons/md";
 import { RxFile } from "react-icons/rx";
+
+// TODO replace with slate.js or other
+const QuillNoSSRWrapper = dynamic(import('react-quill'), { ssr: false })
 
 interface Props {
     post?: BackendPost | undefined;
@@ -34,22 +39,89 @@ export default function TimelinePostForm(
     const { data: session } = useSession();
     const ref = useRef<HTMLFormElement>(null)
     const fileUploadRef = useRef<HTMLInputElement>(null)
+
     const [filesToAttach, setFilesToAttach] = useState<File[] | null>(null);
+    const [text, setText] = useState<string>('');
+
+    useEffect(() => {
+        if (postToEdit) setText(postToEdit.text)
+    }, [postToEdit])
+
+    const modules = {
+        toolbar: [
+          ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+          [
+            { list: 'ordered' },
+            { list: 'bullet' },
+          ],
+          ['link'],
+          ['clean'],
+        ],
+        clipboard: {
+          // toggle to add extra line breaks when pasting HTML:
+          matchVisual: false,
+        },
+      }
+      /*
+       * Quill editor formats
+       * See https://quilljs.com/docs/formats/
+       */
+      const formats = [
+        'bold',
+        'italic',
+        'underline',
+        'strike',
+        'blockquote',
+        'list',
+        'bullet',
+        'indent',
+        'link',
+      ]
 
     // scroll up to the form if user clicked to re-post a post
     useEffect(() => {
         if (postToRepost && ref.current) {
             window.scrollTo({ behavior: 'smooth', top: ref.current.offsetTop - 75 })
-            ref.current.querySelector("textarea")?.focus()
         }
     }, [ref, postToRepost])
 
     const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        const formData = new FormData(event.currentTarget)
-        const text = (formData.get('text') as string).trim()
+        if (text == "" || text == "<p><br></p>") return
 
-        if (text === '')  return
+        const updatePost = async () => {
+            return await fetchPOST(
+                '/posts',
+                Object.assign({},
+                    postToEdit,
+                    space ? { space } : {},
+                    { text },
+                ),
+                session?.accessToken,
+                true,
+                ''
+            )
+        }
+
+        const createPost = async () => {
+            return await fetchPOST(
+                '/posts',
+                Object.assign({},
+                    { tags: [] },
+                    space ? { space } : {},
+                    { text },
+                    filesToAttach
+                        ? {
+                            file_amount: filesToAttach.length,
+                            ...filesToAttach.reduce((o, file, i) => ({ ...o, [`file${i}`]: file}), {})
+                        }
+                        : {}
+                ),
+                session?.accessToken,
+                true,
+                ''
+            )
+        }
 
         const createOrUpdatePost = async () => {
             let postData: any = {};
@@ -79,7 +151,7 @@ export default function TimelinePostForm(
         }
 
         const rePost = async () => {
-            const res = await fetchPOST(
+            return await fetchPOST(
                 '/repost',
                 Object.assign({},
                     {
@@ -90,18 +162,37 @@ export default function TimelinePostForm(
                 ),
                 session?.accessToken
             )
-            return res
         }
 
+
         try {
-            const res = postToRepost
-                ? await rePost()
-                : await createOrUpdatePost()
+            let res: {
+                inserted_repost?: BackendPost,
+                inserted_post?: BackendPost
+            } = {}
+            if (postToEdit) {
+                res = await updatePost()
+                if (onUpdatedPost) onUpdatedPost(text)
+            }
+            else if (postToRepost) {
+                res = await rePost()
+                if (onCreatedPost) onCreatedPost(res.inserted_repost as BackendPost)
+            }
+            else {
+                res = await createPost()
+                if (onCreatedPost) onCreatedPost(res.inserted_post as BackendPost)
+            }
+            // const res = postToRepost
+            //     ? await rePost()
+            //     : postToEdit
+            //         ? await updatePost()
+            //         : await createPost()
             ref.current?.reset()
+            setText("")
             setFilesToAttach(null)
-            if (!postToEdit && !postToRepost && onCreatedPost) onCreatedPost(res.inserted_post)
-            if (postToEdit && onUpdatedPost) onUpdatedPost(text)
-            if (!postToEdit && postToRepost && onCreatedPost) onCreatedPost(res.inserted_repost)
+            // if (!postToEdit && !postToRepost && onCreatedPost) onCreatedPost(res.inserted_post)
+            // if (postToEdit && onUpdatedPost) onUpdatedPost(text)
+            // if (!postToEdit && postToRepost && onCreatedPost) onCreatedPost(res.inserted_repost)
         } catch (error) {
             alert(`Error:\n${error as string}\nSee console for details`)
             console.error(error);
@@ -141,12 +232,18 @@ export default function TimelinePostForm(
                             className="rounded-full mr-3 mt-5 self-start"
                         ></AuthenticatedImage>
                     )}
-                    <textarea
-                        className={'w-full border border-[#cccccc] rounded-md px-2 py-2'}
-                        placeholder={'Beitrag schreiben ...'}
-                        name='text'
-                        defaultValue={postToEdit ? (postToEdit.isRepost ? postToEdit.repostText : postToEdit.text) : ''}
-                    />
+
+                    <div className="w-full">
+                        {/* TODO replace with slate.,js or other */}
+                        <QuillNoSSRWrapper
+                            placeholder="Beitrag schreiben..."
+                            value={text}
+                            onChange={setText}
+                            modules={modules}
+                            formats={formats}
+                            theme="snow"
+                        />
+                    </div>
                 </div>
 
                 {postToRepost && (
@@ -169,12 +266,12 @@ export default function TimelinePostForm(
                 {(filesToAttach && filesToAttach.length > 0) && (
                     <div className="ml-16 mb-4 flex flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
                         {filesToAttach.map((file, index) => (
-                            <div className="max-w-[250px] flex">
+                            <div className="max-w-[250px] flex" key={index}>
                                 <RxFile size={30} className="m-1" />
                                 {/* TODO preview for certain file types*/}
                                 <div className="truncate py-2">{file.name}</div>
                                 <button onClick={() => removeSelectedFile(index)} className="p-2" title="Remove file">
-                                        <IoMdClose className="text-ve-collab-blue" />
+                                        <IoMdClose />
                                 </button>
                             </div>
                         ))}
