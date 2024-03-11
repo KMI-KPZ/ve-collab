@@ -98,8 +98,7 @@ export default function TimelinePostForm(
                     { text },
                 ),
                 session?.accessToken,
-                true,
-                ''
+                true
             )
         }
 
@@ -118,35 +117,7 @@ export default function TimelinePostForm(
                         : {}
                 ),
                 session?.accessToken,
-                true,
-                ''
-            )
-        }
-
-        const createOrUpdatePost = async () => {
-            let postData: any = {};
-
-            postData.tags = []
-
-            if (postToEdit) {
-                postData = Object.assign({}, postToEdit )
-            }
-
-            postData.text = text
-            if (space) {
-                postData.space = space
-            }
-            if (filesToAttach) {
-                postData["file_amount"] = filesToAttach.length
-                filesToAttach.map((file, f) => postData[`file${f}`] = file )
-            }
-
-            return await fetchPOST(
-                '/posts',
-                postData,
-                session?.accessToken,
-                true,
-                ''
+                true
             )
         }
 
@@ -253,7 +224,7 @@ export default function TimelinePostForm(
                                 ? ( <PostHeader author={postToRepost.repostAuthor as BackendPostAuthor} date={postToRepost.creation_date} /> )
                                 : ( <PostHeader author={postToRepost.author} date={postToRepost.creation_date} /> )
                             }
-                            <button onClick={onCancelRepost} className="ml-auto self-start">
+                            <button onClick={onCancelRepost} className="ml-auto self-start p-2 rounded-full hover:bg-ve-collab-blue/10">
                                 <IoMdClose />
                             </button>
                         </div>
@@ -266,11 +237,11 @@ export default function TimelinePostForm(
                 {(filesToAttach && filesToAttach.length > 0) && (
                     <div className="ml-16 mb-4 flex flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
                         {filesToAttach.map((file, index) => (
-                            <div className="max-w-[250px] flex" key={index}>
+                            <div className="max-w-[250px] mr-4 flex items-center" key={index}>
                                 <RxFile size={30} className="m-1" />
                                 {/* TODO preview for certain file types*/}
                                 <div className="truncate py-2">{file.name}</div>
-                                <button onClick={() => removeSelectedFile(index)} className="p-2" title="Remove file">
+                                <button onClick={() => removeSelectedFile(index)} className="ml-2 p-2 rounded-full hover:bg-ve-collab-blue/10" title="Remove file">
                                         <IoMdClose />
                                 </button>
                             </div>
@@ -287,15 +258,22 @@ export default function TimelinePostForm(
                         </button>)}
                         {!postToEdit && (
                             <>
-                                <button onClick={openFileOpenDialog} title="Attach file" className="mx-4 px-5 py-2 rounded-lg bg-ve-collab-blue/10 text-ve-collab-blue">
-                                    {/* <MdAddCircleOutline size={`1.3em`} /> */}
-                                    <MdAttachFile className="mr-2 inline" /> Datei hinzufügen
+                                <button type="button" onClick={openFileOpenDialog} title="Attach file" className="mx-4 px-5 py-2 rounded-lg bg-ve-collab-blue/10 text-ve-collab-blue
+
+                                hover:bg-ve-collab-blue/20
+
+                                ">
+                                    <span className="relative">
+                                        <MdAttachFile className="mr-2 inline" /> Datei hinzufügen
+                                    </span>
                                 </button>
                                 <input type="file" multiple name="file" onChange={addFiles} className="hidden" ref={fileUploadRef} />
                             </>
                         )}
-                        <button className="bg-ve-collab-orange text-white py-2 px-5 rounded-lg" type='submit' title="Senden">
-                            {postToEdit ? ( <>Aktualisieren</> ) : ( <><IoIosSend className="mr-2 inline" /> Senden</> )}
+                        <button type="submit" title="Senden" className="relative py-2 px-5 rounded-lg bg-ve-collab-orange text-white overflow-hidden transition-all before:absolute before:right-0 before:top-0 before:h-12 before:w-6 before:translate-x-12 before:rotate-6 before:bg-white before:opacity-10 before:duration-700 hover:before:-translate-x-40 ">
+                            <span className="relative">
+                                {postToEdit ? ( <>Aktualisieren</> ) : ( <><IoIosSend className="mr-2 inline" /> Senden</> )}
+                            </span>
                         </button>
                     </div>
                 </div>

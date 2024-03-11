@@ -224,16 +224,9 @@ export default function TimelinePost(
             <div ref={ref} className={`${wbRemoved ? "opacity-0 transition-opacity ease-in-out delay-50 duration-300" : "opacity-100 transition-none" } p-4 my-8 bg-white rounded shadow`}>
                 <div className="flex items-center">
                     {(post.isRepost && post.repostAuthor) ? (
-                        <>
-                            <PostHeader author={post.repostAuthor} date={post.creation_date} />
-                            {/* <div className='self-start leading-[1.6rem] text-xs text-gray-500 ml-1'>
-                                teilte einen Beitrag
-                            </div> */}
-                        </>
+                        <PostHeader author={post.repostAuthor} date={post.creation_date} />
                     ) : (
-                        <>
-                            <PostHeader author={post.author} date={post.creation_date} />
-                        </>
+                        <PostHeader author={post.author} date={post.creation_date} />
                      )}
 
                     {(!space && post.space) && (
@@ -244,11 +237,11 @@ export default function TimelinePost(
 
                     <div className='ml-auto'>
                         {(post.likers.includes(session?.user.preferred_username as string)) ? (
-                            <button className="p-2" onClick={onClickLikeBtn} title="click to unlike post"><HiHeart /></button>
+                            <button className="p-2 rounded-full hover:bg-ve-collab-blue/10" onClick={onClickLikeBtn} title="click to unlike post"><HiHeart /></button>
                         ) : (
-                            <button className="p-2" onClick={onClickLikeBtn} title="Click to like post"><HiOutlineHeart /></button>
+                            <button className="p-2 rounded-full hover:bg-ve-collab-blue/10" onClick={onClickLikeBtn} title="Click to like post"><HiOutlineHeart /></button>
                         )}
-                        <button className="p-2" onClick={onClickReplyBtn} title="Click to reply post"><TiArrowForward /></button>
+                        <button className="p-2 rounded-full hover:bg-ve-collab-blue/10" onClick={onClickReplyBtn} title="Click to reply post"><TiArrowForward /></button>
                         {drOptions.length > 0 && (
                             <Dropdown options={drOptions} onSelect={handleSelectOption} />
                         )}
@@ -302,16 +295,12 @@ export default function TimelinePost(
                 <Likes />
                 {(post.comments.length == 0 && !showCommentForm)
                     ? (
-                        <button onClick={openCommentForm} title="Add comment" className="align-middle">
+                        <button onClick={openCommentForm} title="Add comment" className="align-middle p-2 rounded-full hover:bg-ve-collab-blue/10">
                             <MdOutlineAddComment />
                         </button>
                     ) : (
                         <div className='mt-4 pt-4 pl-4 border-t-2 border-ve-collab-blue/50'>
-                            {/* <div className="mb-4 font-slate-900 rounded-t-md bg-ve-collab-blue/50 p-3 text-white font-bold text-lg"> */}
-                            <div className="mb-4 font-slate-900 font-bold text-lg">
-                                {/* <MdComment className="inline" />&nbsp; */}
-                                Kommentare
-                            </div>
+                            <div className="mb-4 font-slate-900 font-bold text-lg">Kommentare</div>
 
                             <form onSubmit={onSubmitCommentForm} className="mb-2" ref={commentFormref}>
                                 <input
