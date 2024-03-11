@@ -11,6 +11,8 @@ import { MdDeleteOutline, MdDoubleArrow, MdModeEdit, MdOutlineAddComment, MdOutl
 import { TiArrowForward } from "react-icons/ti";
 import TimelinePostForm from "./TimelinePostForm";
 import PostHeader from "./PostHeader";
+import { AuthenticatedFile } from "../AuthenticatedFile";
+import { RxFile } from "react-icons/rx";
 
 interface Props {
     post: BackendPost
@@ -277,6 +279,28 @@ export default function TimelinePost(
                 <div className='my-5'>
                     <PostText />
                 </div>
+
+                {post.files.length > 0 && (
+                    <div className="my-4">
+                        <div className="mb-2 font-slate-500 font-bold">Dateien</div>
+                        <div className="mb-8 flex flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
+                            {post.files.map((file, index) => (
+                                <AuthenticatedFile
+                                    key={index}
+                                    url={`/uploads/${file}`}
+                                    filename={file}
+                                >
+                                    <div className="flex justify-center">
+                                        <RxFile size={40} />{' '}
+                                    </div>
+                                    <div className="max-w-1/2 justify-center mx-2 px-1 my-1 truncate">
+                                        {file}
+                                    </div>
+                                </AuthenticatedFile>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 <Likes />
                 {(post.comments.length == 0 && !showCommentForm)

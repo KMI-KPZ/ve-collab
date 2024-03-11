@@ -6,6 +6,9 @@ import AuthenticatedImage from "../AuthenticatedImage";
 import { BackendPost, BackendPostAuthor } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
 import PostHeader from "./PostHeader";
+import React, { useState } from 'react'
+import { MdAttachFile } from "react-icons/md";
+import { RxFile } from "react-icons/rx";
 
 interface Props {
     post?: BackendPost | undefined;
@@ -30,6 +33,8 @@ export default function TimelinePostForm(
 }: Props) {
     const { data: session } = useSession();
     const ref = useRef<HTMLFormElement>(null)
+    const fileUploadRef = useRef<HTMLInputElement>(null)
+    const [filesToAttach, setFilesToAttach] = useState<File[] | null>(null);
 
     // scroll up to the form if user clicked to re-post a post
     useEffect(() => {
@@ -47,15 +52,29 @@ export default function TimelinePostForm(
         if (text === '')  return
 
         const createOrUpdatePost = async () => {
+            let postData: any = {};
+
+            postData.tags = []
+
+            if (postToEdit) {
+                postData = Object.assign({}, postToEdit )
+            }
+
+            postData.text = text
+            if (space) {
+                postData.space = space
+            }
+            if (filesToAttach) {
+                postData["file_amount"] = filesToAttach.length
+                filesToAttach.map((file, f) => postData[`file${f}`] = file )
+            }
+
             return await fetchPOST(
                 '/posts',
-                Object.assign({},
-                    postToEdit ? postToEdit : { tags: [] },
-                    space ? { space } : {},
-                    { text },
-                ),
+                postData,
                 session?.accessToken,
-                true
+                true,
+                ''
             )
         }
 
@@ -78,12 +97,13 @@ export default function TimelinePostForm(
             const res = postToRepost
                 ? await rePost()
                 : await createOrUpdatePost()
-
             ref.current?.reset()
-            if (postToEdit && onUpdatedPost) onUpdatedPost(text)
+            setFilesToAttach(null)
             if (!postToEdit && !postToRepost && onCreatedPost) onCreatedPost(res.inserted_post)
+            if (postToEdit && onUpdatedPost) onUpdatedPost(text)
             if (!postToEdit && postToRepost && onCreatedPost) onCreatedPost(res.inserted_repost)
         } catch (error) {
+            alert(`Error:\n${error as string}\nSee console for details`)
             console.error(error);
         }
     }
@@ -91,6 +111,21 @@ export default function TimelinePostForm(
     const onCancel = () => {
         ref.current?.reset()
         if (onCancelForm) onCancelForm()
+    }
+
+    const openFileOpenDialog = () => {
+        if (fileUploadRef?.current) fileUploadRef.current.click()
+    }
+
+    const addFiles = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.files) {
+            const files = Array.from(event.target.files)
+            setFilesToAttach((prev) => prev ? [...prev, ...files] : files);
+        }
+    }
+
+    const removeSelectedFile = (fileId: any) => {
+        setFilesToAttach(prev => prev ? prev.filter((a, i) => i != fileId) : null)
     }
 
     return (
@@ -103,7 +138,7 @@ export default function TimelinePostForm(
                             alt={'Benutzerbild'}
                             width={40}
                             height={40}
-                            className={`rounded-full mr-3`}
+                            className="rounded-full mr-3 mt-5 self-start"
                         ></AuthenticatedImage>
                     )}
                     <textarea
@@ -125,19 +160,47 @@ export default function TimelinePostForm(
                                 <IoMdClose />
                             </button>
                         </div>
-                        <div className='mt-5  whitespace-break-spaces'>
-                            {postToRepost.isRepost ? postToRepost.repostText : postToRepost.text}
-                        </div>
+                        <div className="network-post-value" dangerouslySetInnerHTML={{__html: postToRepost.isRepost
+                            ? postToRepost.repostText as string
+                            : postToRepost.text as string}} />
                     </div>
                 )}
 
-                <div className="flex justify-end">
-                    <button className={`${!postToEdit ? "hidden" : ""} mx-4 py-2 px-5 border border-ve-collab-orange rounded-lg`} title="Abbrechen" onClick={onCancel}>
-                        Abbrechen
-                    </button>
-                    <button className="flex items-center bg-ve-collab-orange text-white py-2 px-5 rounded-lg" type='submit' title="Senden">
-                        <IoIosSend className="mx-2" />{postToEdit ? ( <>Aktualisieren</> ) : ( <>Senden</> )}
-                    </button>
+                {(filesToAttach && filesToAttach.length > 0) && (
+                    <div className="ml-16 mb-4 flex flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
+                        {filesToAttach.map((file, index) => (
+                            <div className="max-w-[250px] flex">
+                                <RxFile size={30} className="m-1" />
+                                {/* TODO preview for certain file types*/}
+                                <div className="truncate py-2">{file.name}</div>
+                                <button onClick={() => removeSelectedFile(index)} className="p-2" title="Remove file">
+                                        <IoMdClose className="text-ve-collab-blue" />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+
+
+                <div className="flex items-center">
+                    <div className="ml-auto">
+                        {postToEdit && (<button className={`mx-4 py-2 px-5 border border-ve-collab-orange rounded-lg`} title="Abbrechen" onClick={onCancel} type="button">
+                            Abbrechen
+                        </button>)}
+                        {!postToEdit && (
+                            <>
+                                <button onClick={openFileOpenDialog} title="Attach file" className="mx-4 px-5 py-2 rounded-lg bg-ve-collab-blue/10 text-ve-collab-blue">
+                                    {/* <MdAddCircleOutline size={`1.3em`} /> */}
+                                    <MdAttachFile className="mr-2 inline" /> Datei hinzufügen
+                                </button>
+                                <input type="file" multiple name="file" onChange={addFiles} className="hidden" ref={fileUploadRef} />
+                            </>
+                        )}
+                        <button className="bg-ve-collab-orange text-white py-2 px-5 rounded-lg" type='submit' title="Senden">
+                            {postToEdit ? ( <>Aktualisieren</> ) : ( <><IoIosSend className="mr-2 inline" /> Senden</> )}
+                        </button>
+                    </div>
                 </div>
             </form>
         </>
