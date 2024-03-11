@@ -1,6 +1,26 @@
 {
     "taxonomy": [
         {
+            "parent": 12,
+            "droppable": false,
+            "text": "VE-Beispiele aus der Praxis",
+            "data": {
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/beispiele-aus-der-praxis/"
+            },
+            "id": 27
+        },
+        {
+            "parent": 8,
+            "droppable": false,
+            "text": "Was ist ein Virtueller Austausch",
+            "data": {
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/3-was-ist-ein-virtueller-austausch/"
+            },
+            "id": 26
+        },
+        {
             "parent": 11,
             "droppable": false,
             "text": "2.1 Einstieg",
@@ -84,7 +104,7 @@
         {
             "parent": 0,
             "droppable": true,
-            "text": "fachbezogene VEs",
+            "text": "Beispiele aus der Praxis",
             "id": 12
         },
         {
