@@ -169,22 +169,6 @@ export default function TimelinePost(
         return ( <>{ space?.name }</> )
     }
 
-    const PostText = () => {
-        if (editPost) return (
-            <TimelinePostForm
-                post={post}
-                onCancelForm={() => setEditPost(false)}
-                onUpdatedPost={updatePostText}
-            />
-        )
-
-        return (
-            <div className="network-post-value" dangerouslySetInnerHTML={{__html: post.isRepost
-                ? post.repostText as string
-                : post.text as string}} />
-        )
-    }
-
     const Likes = () => {
         if (!post.likers.length) return ( <></> )
 
@@ -227,7 +211,7 @@ export default function TimelinePost(
                         <PostHeader author={post.repostAuthor} date={post.creation_date} />
                     ) : (
                         <PostHeader author={post.author} date={post.creation_date} />
-                     )}
+                    )}
 
                     {(!space && post.space) && (
                         <div className='self-start leading-[1.6rem] text-xs text-gray-500 ml-1'>
@@ -249,25 +233,35 @@ export default function TimelinePost(
                 </div>
 
                 {post.isRepost && (
-                    <>
-                        <div className="my-5 ml-5 p-4 rounded bg-[#e5f1f4]">
-                            <div className="flex items-center">
-                                <PostHeader author={post.repostAuthor as BackendPostAuthor} date={post.originalCreationDate as string} />
-                            </div>
-                            <div className={`${repostExpand ? "" : "max-h-40 overflow-hidden"} mt-5 whitespace-break-spaces relative repost-text`}>
-                                {post.text}
-                                <span className={`${repostExpand ? "hidden" : ""} absolute left-0 bottom-0 w-full h-20 bg-gradient-to-b from-transparent to-[#e5f1f4]`}>
-                                    <button className="absolute bottom-0 left-10 mx-4 py-2 px-5" onClick={() => setRepostExpand(true)} title="Click to expand">
-                                        <MdOutlineKeyboardDoubleArrowDown />
-                                    </button>
-                                </span>
-                            </div>
+                    <div className="my-5 ml-5 p-4 rounded bg-[#e5f1f4]">
+                        <div className="flex items-center">
+                            <PostHeader author={post.repostAuthor as BackendPostAuthor} date={post.originalCreationDate as string} />
                         </div>
-                    </>
+                        <div className={`${repostExpand ? "" : "max-h-40 overflow-hidden"} mt-5 whitespace-break-spaces relative repost-text`}>
+                            <div className="network-post-value" dangerouslySetInnerHTML={{__html: post.text as string}} />
+                            <span className={`${repostExpand ? "hidden" : ""} absolute left-0 bottom-0 w-full h-20 bg-gradient-to-b from-transparent to-[#e5f1f4]`}>
+                                <button className="absolute bottom-0 left-10 mx-4 p-2 rounded-full hover:bg-ve-collab-blue/10" onClick={() => setRepostExpand(true)} title="Click to expand">
+                                    <MdOutlineKeyboardDoubleArrowDown />
+                                </button>
+                            </span>
+                        </div>
+                    </div>
                 )}
 
                 <div className='my-5'>
-                    <PostText />
+                    {editPost
+                        ? (
+                            <TimelinePostForm
+                                post={post}
+                                onCancelForm={() => setEditPost(false)}
+                                onUpdatedPost={updatePostText}
+                            />
+                        ) : (
+                            <div className="network-post-value" dangerouslySetInnerHTML={{__html: post.isRepost
+                                ? post.repostText as string
+                                : post.text as string}} />
+                        )
+                    }
                 </div>
 
                 {post.files.length > 0 && (

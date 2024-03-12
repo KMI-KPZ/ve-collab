@@ -44,7 +44,9 @@ export default function TimelinePostForm(
     const [text, setText] = useState<string>('');
 
     useEffect(() => {
-        if (postToEdit) setText(postToEdit.text)
+        if (postToEdit) {
+            setText(postToEdit.isRepost ? postToEdit.repostText as string : postToEdit.text)
+        }
     }, [postToEdit])
 
     const modules = {
@@ -89,12 +91,11 @@ export default function TimelinePostForm(
         event.preventDefault();
         if (text == "" || text == "<p><br></p>") return
 
-        const updatePost = async () => {
+        const updatePost = async (id: string) => {
             return await fetchPOST(
                 '/posts',
                 Object.assign({},
-                    postToEdit,
-                    space ? { space } : {},
+                    {_id: id},
                     { text },
                 ),
                 session?.accessToken,
@@ -121,7 +122,7 @@ export default function TimelinePostForm(
             )
         }
 
-        const rePost = async () => {
+        const createRePost = async () => {
             return await fetchPOST(
                 '/repost',
                 Object.assign({},
@@ -135,35 +136,41 @@ export default function TimelinePostForm(
             )
         }
 
+        const updateRePost = async (id: string) => {
+            return await fetchPOST(
+                '/repost',
+                Object.assign({},
+                    {_id: id},
+                    { text },
+                ),
+                session?.accessToken
+            )
+        }
+
 
         try {
             let res: {
                 inserted_repost?: BackendPost,
                 inserted_post?: BackendPost
             } = {}
+
             if (postToEdit) {
-                res = await updatePost()
+                res = postToEdit.isRepost
+                    ? await updateRePost(postToEdit._id)
+                    : await updatePost(postToEdit._id)
                 if (onUpdatedPost) onUpdatedPost(text)
             }
             else if (postToRepost) {
-                res = await rePost()
+                res = await createRePost()
                 if (onCreatedPost) onCreatedPost(res.inserted_repost as BackendPost)
             }
             else {
                 res = await createPost()
                 if (onCreatedPost) onCreatedPost(res.inserted_post as BackendPost)
             }
-            // const res = postToRepost
-            //     ? await rePost()
-            //     : postToEdit
-            //         ? await updatePost()
-            //         : await createPost()
             ref.current?.reset()
             setText("")
             setFilesToAttach(null)
-            // if (!postToEdit && !postToRepost && onCreatedPost) onCreatedPost(res.inserted_post)
-            // if (postToEdit && onUpdatedPost) onUpdatedPost(text)
-            // if (!postToEdit && postToRepost && onCreatedPost) onCreatedPost(res.inserted_repost)
         } catch (error) {
             alert(`Error:\n${error as string}\nSee console for details`)
             console.error(error);
@@ -256,7 +263,7 @@ export default function TimelinePostForm(
                         {postToEdit && (<button className={`mx-4 py-2 px-5 border border-ve-collab-orange rounded-lg`} title="Abbrechen" onClick={onCancel} type="button">
                             Abbrechen
                         </button>)}
-                        {!postToEdit && (
+                        {(!postToEdit && !postToRepost) && (
                             <>
                                 <button type="button" onClick={openFileOpenDialog} title="Attach file" className="mx-4 px-5 py-2 rounded-lg bg-ve-collab-blue/10 text-ve-collab-blue
 
