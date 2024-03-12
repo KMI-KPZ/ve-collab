@@ -6,8 +6,7 @@ import React, { useEffect, useState } from 'react';
 import { RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
-import SideProgressBarSectionBroadPlanner from '@/components/StartingWizard/SideProgressBarSectionBroadPlanner';
-import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
+import { FormProvider, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
@@ -29,6 +28,8 @@ import Image from 'next/image';
 import { Tooltip } from '@/components/Tooltip';
 import Link from 'next/link';
 import { FiInfo } from 'react-icons/fi';
+import SideProgressBarSectionBroadPlannerWithReactHookForm from '@/components/StartingWizard/SideProgressBarSectionBroadPlannerWithReactHookForm';
+import PopupSaveData from '@/components/StartingWizard/PopupSaveData';
 
 interface BroadStep {
     from: string;
@@ -75,6 +76,7 @@ export default function BroadPlanner() {
         initialSideProgressBarStates
     );
     const [steps, setSteps] = useState<IFineStep[]>([defaultFineStepData]);
+    const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -86,15 +88,7 @@ export default function BroadPlanner() {
         }
     }, [session, status]);
 
-    const {
-        register,
-        formState: { errors },
-        handleSubmit,
-        control,
-        setValue,
-        watch,
-        getValues,
-    } = useForm<FormValues>({
+    const methods = useForm<FormValues>({
         mode: 'onChange',
     });
 
@@ -115,7 +109,7 @@ export default function BroadPlanner() {
                 (data) => {
                     setLoading(false);
                     setSteps(data.plan.steps);
-                    setValue('broadSteps', [emptyBroadStep]);
+                    methods.setValue('broadSteps', [emptyBroadStep]);
                     if (data.plan.steps?.length > 0) {
                         const steps: IFineStep[] = data.plan.steps;
                         const broadSteps: BroadStep[] = steps.map((step) => {
@@ -126,7 +120,7 @@ export default function BroadPlanner() {
                                 name: name,
                             };
                         });
-                        setValue('broadSteps', broadSteps);
+                        methods.setValue('broadSteps', broadSteps);
                     }
                     if (data.plan.progress.length !== 0) {
                         setSideMenuStepsProgress(data.plan.progress);
@@ -134,11 +128,11 @@ export default function BroadPlanner() {
                 }
             );
         }
-    }, [session, status, router, setValue]);
+    }, [session, status, router, methods]);
 
     const { fields, append, remove, move, update } = useFieldArray({
         name: 'broadSteps',
-        control,
+        control: methods.control,
     });
 
     const checkIfNamesAreUnique = (broadSteps: BroadStep[]): boolean => {
@@ -201,7 +195,7 @@ export default function BroadPlanner() {
 
     const validateDateRange = (fromValue: string, indexFromTo: number) => {
         const fromDate = new Date(fromValue);
-        const toDate = new Date(watch(`broadSteps.${indexFromTo}.to`));
+        const toDate = new Date(methods.watch(`broadSteps.${indexFromTo}.to`));
         if (fromDate > toDate) {
             return 'Das Startdatum muss vor dem Enddatum liegen';
         } else {
@@ -228,7 +222,7 @@ export default function BroadPlanner() {
                                     <label>von:</label>
                                     <input
                                         type="date"
-                                        {...register(`broadSteps.${index}.from`, {
+                                        {...methods.register(`broadSteps.${index}.from`, {
                                             required: {
                                                 value: true,
                                                 message: 'Bitte fülle das Felde "von" aus',
@@ -240,7 +234,7 @@ export default function BroadPlanner() {
                                     <label>bis:</label>
                                     <input
                                         type="date"
-                                        {...register(`broadSteps.${index}.to`, {
+                                        {...methods.register(`broadSteps.${index}.to`, {
                                             required: {
                                                 value: true,
                                                 message: 'Bitte fülle das Felde "bis" aus',
@@ -250,7 +244,7 @@ export default function BroadPlanner() {
                                     />
                                     <input
                                         type="text"
-                                        {...register(`broadSteps.${index}.name`, {
+                                        {...methods.register(`broadSteps.${index}.name`, {
                                             required: {
                                                 value: true,
                                                 message: 'Bitte fülle das Felde "Name" aus',
@@ -259,7 +253,7 @@ export default function BroadPlanner() {
                                                 unique: () => {
                                                     return (
                                                         !checkIfNamesAreUnique(
-                                                            getValues('broadSteps')
+                                                            methods.getValues('broadSteps')
                                                         ) || 'Bitte wähle einen einzigartigen Namen'
                                                     );
                                                 },
@@ -285,19 +279,25 @@ export default function BroadPlanner() {
                                         alt="deleteStep"
                                     ></Image>
                                 </div>
-                                {errors?.broadSteps?.[index]?.from && (
+                                {methods.formState.errors?.broadSteps?.[index]?.from && (
                                     <p className="text-red-600 pt-2 flex justify-center">
-                                        {errors?.broadSteps?.[index]?.from?.message}
+                                        {
+                                            methods.formState.errors?.broadSteps?.[index]?.from
+                                                ?.message
+                                        }
                                     </p>
                                 )}
-                                {errors?.broadSteps?.[index]?.to && (
+                                {methods.formState.errors?.broadSteps?.[index]?.to && (
                                     <p className="text-red-600 pt-2 flex justify-center">
-                                        {errors?.broadSteps?.[index]?.to?.message}
+                                        {methods.formState.errors?.broadSteps?.[index]?.to?.message}
                                     </p>
                                 )}
-                                {errors?.broadSteps?.[index]?.name && (
+                                {methods.formState.errors?.broadSteps?.[index]?.name && (
                                     <p className="text-red-600 pt-2 flex justify-center">
-                                        {errors?.broadSteps?.[index]?.name?.message}
+                                        {
+                                            methods.formState.errors?.broadSteps?.[index]?.name
+                                                ?.message
+                                        }
                                     </p>
                                 )}
                             </div>
@@ -315,112 +315,119 @@ export default function BroadPlanner() {
     };
 
     return (
-        <div className="flex bg-pattern-left-blue-small bg-no-repeat">
-            <div className="flex flex-grow justify-center">
-                <div className="flex flex-col">
-                    <HeadProgressBarSection stage={1} linkFineStep={steps[0]?.name} />
-                    {loading ? (
-                        <LoadingAnimation />
-                    ) : (
-                        <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between">
-                            <div>
-                                <div className="flex justify-center">
-                                    <div
-                                        className={
-                                            'text-center font-bold text-4xl mb-2 relative w-fit'
-                                        }
-                                    >
-                                        Plane den groben Ablauf
-                                        <Tooltip tooltipsText="Ausführliche Informationen zur Etappenplanung und verschiedenen Typen und Modellen von VA findest du hier in den Selbstlernmaterialien …">
-                                            <Link target="_blank" href={'/content/VE-Planung'}>
-                                                <FiInfo size={30} color="#00748f" />
-                                            </Link>
-                                        </Tooltip>
+        <FormProvider {...methods}>
+            <PopupSaveData
+                isOpen={isPopupOpen}
+                handleContinue={async () => {
+                    await router.push({
+                        pathname: '/startingWizard/generalInformation/formalConditions',
+                        query: {
+                            plannerId: router.query.plannerId,
+                        },
+                    });
+                }}
+                handleCancel={() => setIsPopupOpen(false)}
+            />
+            <div className="flex bg-pattern-left-blue-small bg-no-repeat">
+                <div className="flex flex-grow justify-center">
+                    <div className="flex flex-col">
+                        <HeadProgressBarSection stage={1} linkFineStep={steps[0]?.name} />
+                        {loading ? (
+                            <LoadingAnimation />
+                        ) : (
+                            <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between">
+                                <div>
+                                    <div className="flex justify-center">
+                                        <div
+                                            className={
+                                                'text-center font-bold text-4xl mb-2 relative w-fit'
+                                            }
+                                        >
+                                            Plane den groben Ablauf
+                                            <Tooltip tooltipsText="Ausführliche Informationen zur Etappenplanung und verschiedenen Typen und Modellen von VA findest du hier in den Selbstlernmaterialien …">
+                                                <Link target="_blank" href={'/content/VE-Planung'}>
+                                                    <FiInfo size={30} color="#00748f" />
+                                                </Link>
+                                            </Tooltip>
+                                        </div>
+                                    </div>
+                                    <div className={'text-center mb-20'}>
+                                        erstelle beliebig viele Etappen, setze deren Daten und
+                                        vergib für jede einen individuellen Namen
+                                    </div>
+                                    <DragDropContext onDragEnd={onDragEnd}>
+                                        <Droppable droppableId="broadsteps-items">
+                                            {(provided: DroppableProvided) => (
+                                                <div
+                                                    ref={provided.innerRef}
+                                                    {...provided.droppableProps}
+                                                >
+                                                    {renderBroadStepsInputs()}
+                                                    {provided.placeholder}
+                                                </div>
+                                            )}
+                                        </Droppable>
+                                    </DragDropContext>
+                                    <div className="flex justify-center">
+                                        <button
+                                            className="p-4 bg-white rounded-3xl shadow-2xl"
+                                            type="button"
+                                            onClick={() => {
+                                                append({
+                                                    from: '',
+                                                    to: '',
+                                                    name: '',
+                                                });
+                                            }}
+                                        >
+                                            <RxPlus size={30} />
+                                        </button>
                                     </div>
                                 </div>
-                                <div className={'text-center mb-20'}>
-                                    erstelle beliebig viele Etappen, setze deren Daten und vergib
-                                    für jede einen individuellen Namen
-                                </div>
-                                <DragDropContext onDragEnd={onDragEnd}>
-                                    <Droppable droppableId="broadsteps-items">
-                                        {(provided: DroppableProvided) => (
-                                            <div
-                                                ref={provided.innerRef}
-                                                {...provided.droppableProps}
-                                            >
-                                                {renderBroadStepsInputs()}
-                                                {provided.placeholder}
-                                            </div>
-                                        )}
-                                    </Droppable>
-                                </DragDropContext>
-                                <div className="flex justify-center">
-                                    <button
-                                        className="p-4 bg-white rounded-3xl shadow-2xl"
-                                        type="button"
-                                        onClick={() => {
-                                            append({
-                                                from: '',
-                                                to: '',
-                                                name: '',
-                                            });
-                                        }}
-                                    >
-                                        <RxPlus size={30} />
-                                    </button>
-                                </div>
-                            </div>
-                            <div className="flex justify-between w-full max-w-xl">
-                                <div>
-                                    <button
-                                        type="button"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                        onClick={handleSubmit(
-                                            async (data) => {
-                                                await combinedSubmitRouteAndUpdate(
+                                <div className="flex justify-between w-full max-w-xl">
+                                    <div>
+                                        <button
+                                            type="button"
+                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                            onClick={methods.handleSubmit(
+                                                async (data) => {
+                                                    await combinedSubmitRouteAndUpdate(
+                                                        data,
+                                                        '/startingWizard/generalInformation/formalConditions'
+                                                    );
+                                                },
+                                                async () => setIsPopupOpen(true)
+                                            )}
+                                        >
+                                            Zurück
+                                        </button>
+                                    </div>
+                                    <div>
+                                        <button
+                                            type="button"
+                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                            onClick={methods.handleSubmit((data) =>
+                                                combinedSubmitRouteAndUpdate(
                                                     data,
-                                                    '/startingWizard/generalInformation/formalConditions'
-                                                );
-                                            },
-                                            async () => {
-                                                await router.push({
-                                                    pathname:
-                                                        '/startingWizard/generalInformation/formalConditions',
-                                                    query: { plannerId: router.query.plannerId },
-                                                });
-                                            }
-                                        )}
-                                    >
-                                        Zurück
-                                    </button>
+                                                    `/startingWizard/fineplanner/${encodeURIComponent(
+                                                        methods.watch('broadSteps')[0].name
+                                                    )}`
+                                                )
+                                            )}
+                                        >
+                                            Weiter
+                                        </button>
+                                    </div>
                                 </div>
-                                <div>
-                                    <button
-                                        type="button"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                        onClick={handleSubmit((data) =>
-                                            combinedSubmitRouteAndUpdate(
-                                                data,
-                                                `/startingWizard/fineplanner/${encodeURIComponent(
-                                                    watch('broadSteps')[0].name
-                                                )}`
-                                            )
-                                        )}
-                                    >
-                                        Weiter
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    )}
+                            </form>
+                        )}
+                    </div>
                 </div>
+                <SideProgressBarSectionBroadPlannerWithReactHookForm
+                    progressState={sideMenuStepsProgress}
+                    onSubmit={onSubmit}
+                />
             </div>
-            <SideProgressBarSectionBroadPlanner
-                progressState={sideMenuStepsProgress}
-                handleValidation={handleSubmit(onSubmit)}
-                isValid={true}
-            />
-        </div>
+        </FormProvider>
     );
 }
