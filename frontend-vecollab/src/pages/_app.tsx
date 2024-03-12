@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import '@/styles/globals.css';
-import '@/styles/editor.css';
+import '@/styles/networkPostsFormatter.css';
 
 
 import type { AppProps } from 'next/app';

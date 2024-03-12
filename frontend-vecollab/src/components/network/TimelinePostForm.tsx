@@ -7,13 +7,22 @@ import { BackendPost, BackendPostAuthor } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
 import PostHeader from "./PostHeader";
 import React, { useState } from 'react'
-import dynamic from "next/dynamic";
-import 'react-quill/dist/quill.snow.css'
 import { MdAttachFile } from "react-icons/md";
 import { RxFile } from "react-icons/rx";
 
-// TODO replace with slate.js or other
-const QuillNoSSRWrapper = dynamic(import('react-quill'), { ssr: false })
+import {
+    BtnBold,
+    BtnItalic,
+    BtnUnderline,
+    BtnStrikeThrough,
+    BtnBulletList,
+    BtnNumberedList,
+    BtnLink,
+    BtnClearFormatting,
+    Editor,
+    EditorProvider,
+    Toolbar
+  } from 'react-simple-wysiwyg';
 
 interface Props {
     post?: BackendPost | undefined;
@@ -39,46 +48,16 @@ export default function TimelinePostForm(
     const { data: session } = useSession();
     const ref = useRef<HTMLFormElement>(null)
     const fileUploadRef = useRef<HTMLInputElement>(null)
-
     const [filesToAttach, setFilesToAttach] = useState<File[] | null>(null);
     const [text, setText] = useState<string>('');
+
+    const domParser = new DOMParser()
 
     useEffect(() => {
         if (postToEdit) {
             setText(postToEdit.isRepost ? postToEdit.repostText as string : postToEdit.text)
         }
     }, [postToEdit])
-
-    const modules = {
-        toolbar: [
-          ['bold', 'italic', 'underline', 'strike', 'blockquote'],
-          [
-            { list: 'ordered' },
-            { list: 'bullet' },
-          ],
-          ['link'],
-          ['clean'],
-        ],
-        clipboard: {
-          // toggle to add extra line breaks when pasting HTML:
-          matchVisual: false,
-        },
-      }
-      /*
-       * Quill editor formats
-       * See https://quilljs.com/docs/formats/
-       */
-      const formats = [
-        'bold',
-        'italic',
-        'underline',
-        'strike',
-        'blockquote',
-        'list',
-        'bullet',
-        'indent',
-        'link',
-      ]
 
     // scroll up to the form if user clicked to re-post a post
     useEffect(() => {
@@ -89,7 +68,9 @@ export default function TimelinePostForm(
 
     const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        if (text == "" || text == "<p><br></p>") return
+        var newValueDoc = domParser.parseFromString(text, "text/html");
+
+        if (text == "" || newValueDoc.body.innerText == '') return
 
         const updatePost = async (id: string) => {
             return await fetchPOST(
@@ -147,7 +128,6 @@ export default function TimelinePostForm(
             )
         }
 
-
         try {
             let res: {
                 inserted_repost?: BackendPost,
@@ -169,7 +149,7 @@ export default function TimelinePostForm(
                 if (onCreatedPost) onCreatedPost(res.inserted_post as BackendPost)
             }
             ref.current?.reset()
-            setText("")
+            setText('')
             setFilesToAttach(null)
         } catch (error) {
             alert(`Error:\n${error as string}\nSee console for details`)
@@ -212,15 +192,23 @@ export default function TimelinePostForm(
                     )}
 
                     <div className="w-full">
-                        {/* TODO replace with slate.,js or other */}
-                        <QuillNoSSRWrapper
-                            placeholder="Beitrag schreiben..."
-                            value={text}
-                            onChange={setText}
-                            modules={modules}
-                            formats={formats}
-                            theme="snow"
-                        />
+                        <EditorProvider>
+                            <Editor
+                                value={text}
+                                placeholder="Beitrag schreiben..."
+                                onChange={(e) => setText(e.target.value)}
+                            />
+                            <Toolbar>
+                                <BtnBold />
+                                <BtnItalic />
+                                <BtnUnderline />
+                                <BtnStrikeThrough />
+                                <BtnBulletList style={{ paddingLeft: "5px" }} />
+                                <BtnNumberedList style={{ paddingLeft: "5px" }} />
+                                <BtnLink />
+                                <BtnClearFormatting />
+                            </Toolbar>
+                        </EditorProvider>
                     </div>
                 </div>
 

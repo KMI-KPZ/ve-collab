@@ -1,0 +1,57 @@
+.network-post-value {
+    @apply whitespace-pre-wrap p-0;
+}
+
+.network-post-value ol {
+    @apply list-inside list-decimal py-3;
+}
+
+.network-post-value ul {
+    @apply list-inside list-disc py-3;
+}
+
+.network-post-value blockquote {
+    @apply bg-gray-50 border-l border-indigo-200 p-2;
+}
+
+.network-post-value pre {
+    @apply bg-gray-50 p-2 my-2 text-sm;
+}
+
+.network-post-value a {
+    @apply text-ve-collab-blue;
+}
+.network-post-value a:hover {
+    @apply underline;
+}
+
+.rsw-editor {
+    @apply text-base;
+    @apply !border-2
+}
+
+.rsw-editor a {
+    @apply text-ve-collab-blue;
+}
+.rsw-editor a:hover {
+    @apply underline;
+    @apply cursor-pointer;
+}
+.rsw-toolbar {
+    @apply !bg-transparent;
+    @apply !border-0;
+    @apply mt-1;
+}
+
+.rsw-toolbar button {
+    @apply text-slate-700;
+    @apply rounded-full;
+}
+
+.rsw-toolbar button:hover {
+    @apply bg-ve-collab-blue/10
+}
+
+.rsw-toolbar button[data-active=true] {
+    @apply bg-ve-collab-blue/10
+}
