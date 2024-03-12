@@ -56,6 +56,7 @@ export default function TimelinePostForm(
     useEffect(() => {
         if (postToEdit) {
             setText(postToEdit.isRepost ? postToEdit.repostText as string : postToEdit.text)
+            setFocus()
         }
     }, [postToEdit])
 
@@ -63,8 +64,14 @@ export default function TimelinePostForm(
     useEffect(() => {
         if (postToRepost && ref.current) {
             window.scrollTo({ behavior: 'smooth', top: ref.current.offsetTop - 75 })
+            setFocus()
         }
     }, [ref, postToRepost])
+
+    const setFocus = () => {
+        const el = ref?.current?.querySelector(".rsw-ce") as HTMLElement
+        if (el) el.focus()
+    }
 
     const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
