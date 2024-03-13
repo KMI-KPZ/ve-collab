@@ -214,11 +214,11 @@ export default function TimelinePost(
 
                     <div className='ml-auto'>
                         {(post.likers.includes(session?.user.preferred_username as string)) ? (
-                            <button className="p-2 rounded-full hover:bg-ve-collab-blue/10" onClick={onClickLikeBtn}><HiHeart /></button>
+                            <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickLikeBtn}><HiHeart /></button>
                         ) : (
-                            <button className="p-2 rounded-full hover:bg-ve-collab-blue/10" onClick={onClickLikeBtn}><HiOutlineHeart /></button>
+                            <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickLikeBtn}><HiOutlineHeart /></button>
                         )}
-                        <button className="p-2 rounded-full hover:bg-ve-collab-blue/10" onClick={onClickReplyBtn} title="Antworten"><TiArrowForward /></button>
+                        <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickReplyBtn} title="Antworten"><TiArrowForward /></button>
                         {drOptions.length > 0 && (
                             <Dropdown options={drOptions} onSelect={handleSelectOption} />
                         )}
@@ -226,14 +226,14 @@ export default function TimelinePost(
                 </div>
 
                 {post.isRepost && (
-                    <div className="my-5 ml-5 p-4 rounded bg-[#e2e2e2]">
+                    <div className="my-5 ml-5 p-4 rounded bg-slate-100">
                         <div className="flex items-center">
                             <PostHeader author={post.repostAuthor as BackendPostAuthor} date={post.originalCreationDate as string} />
                         </div>
                         <div className={`${repostExpand ? "" : "max-h-40 overflow-hidden"} mt-5 whitespace-break-spaces relative repost-text`}>
                             <div className="network-post-value" dangerouslySetInnerHTML={{__html: post.text as string}} />
                             <span className={`${repostExpand ? "hidden" : ""} absolute left-0 bottom-0 w-full h-20 bg-gradient-to-b from-transparent to-[#e5f1f4]`}>
-                                <button className="absolute bottom-0 left-10 mx-4 p-2 rounded-full hover:bg-ve-collab-blue/10" onClick={() => setRepostExpand(true)} title="Erweitern">
+                                <button className="absolute bottom-0 left-10 mx-4 p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={() => setRepostExpand(true)} title="Erweitern">
                                     <MdOutlineKeyboardDoubleArrowDown />
                                 </button>
                             </span>
@@ -282,7 +282,7 @@ export default function TimelinePost(
                 <Likes />
                 {(post.comments.length == 0 && !showCommentForm)
                     ? (
-                        <button onClick={openCommentForm} title="Kommentar hinzufügen" className="align-middle px-3 py-2 rounded-full hover:bg-ve-collab-blue/10">
+                        <button onClick={openCommentForm} title="Kommentar hinzufügen" className="align-middle px-3 py-2 rounded-full hover:bg-ve-collab-blue-light">
                             <MdOutlineAddComment className="inline" size={20} />
                         </button>
                     ) : (

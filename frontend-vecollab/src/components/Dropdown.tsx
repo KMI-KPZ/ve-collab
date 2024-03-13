@@ -40,7 +40,7 @@ export default function MyDropdown({
 
     return (
         <div className="inline" ref={wrapperRef}>
-            <button className="p-2 rounded-full hover:bg-ve-collab-blue/10" onClick={() => setOpen(!open)}><HiDotsHorizontal /></button>
+            <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={() => setOpen(!open)}><HiDotsHorizontal /></button>
 
             {open && (
                 <ul className="absolute ml-1/2 rounded-lg bg-white p-2 ring ring-ve-collab-orange">

@@ -59,9 +59,9 @@
 }
 
 .rsw-toolbar button:hover {
-    @apply bg-ve-collab-blue/10
+    @apply bg-ve-collab-blue-light
 }
 
 .rsw-toolbar button[data-active=true] {
-    @apply bg-ve-collab-blue/10
+    @apply bg-ve-collab-blue-light
 }
