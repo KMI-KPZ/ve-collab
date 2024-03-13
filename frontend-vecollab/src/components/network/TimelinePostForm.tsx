@@ -9,7 +9,7 @@ import PostHeader from "./PostHeader";
 import React, { useState } from 'react'
 import { MdAttachFile } from "react-icons/md";
 import { RxFile } from "react-icons/rx";
-
+import LoadingAnimation from "../LoadingAnimation";
 import {
     BtnBold,
     BtnItalic,
@@ -49,6 +49,7 @@ export default function TimelinePostForm(
     const ref = useRef<HTMLFormElement>(null)
     const fileUploadRef = useRef<HTMLInputElement>(null)
     const [filesToAttach, setFilesToAttach] = useState<File[] | null>(null);
+    const [loading, setLoading] = useState<boolean>(false);
     const [text, setText] = useState<string>('');
 
     const domParser = new DOMParser()
@@ -78,6 +79,8 @@ export default function TimelinePostForm(
         var newValueDoc = domParser.parseFromString(text, "text/html");
 
         if (text == "" || newValueDoc.body.innerText == '') return
+
+        setLoading(true)
 
         const updatePost = async (id: string) => {
             return await fetchPOST(
@@ -162,6 +165,7 @@ export default function TimelinePostForm(
             alert(`Error:\n${error as string}\nSee console for details`)
             console.error(error);
         }
+        setLoading(false)
     }
 
     const onCancel = () => {
@@ -186,7 +190,13 @@ export default function TimelinePostForm(
 
     return (
         <>
-            <form onSubmit={onSubmit} ref={ref}>
+            <form onSubmit={onSubmit} ref={ref} className="relative">
+                {loading && (
+                    <>
+                        <div className="absolute w-full items-center top-10 z-20"><LoadingAnimation /></div>
+                        <div className="absolute w-full h-full bg-white/50 z-10"></div>
+                    </>
+                )}
                 <div className="flex items-center mb-5">
                     {!postToEdit && (
                         <AuthenticatedImage
@@ -250,8 +260,6 @@ export default function TimelinePostForm(
                         ))}
                     </div>
                 )}
-
-
 
                 <div className="flex items-center">
                     <div className="ml-auto">
