@@ -58,7 +58,7 @@ export default function TimelinePost(
         });
 
         observer.observe(ref.current);
-    }, [isLast])
+    }, [isLast, fetchNextPosts])
 
     // may collapse/expand repost
     useEffect(() => {
@@ -197,132 +197,132 @@ export default function TimelinePost(
     }
 
     return (
-        <>
-            <div ref={ref} className={`${wbRemoved ? "opacity-0 transition-opacity ease-in-out delay-50 duration-300" : "opacity-100 transition-none" } p-4 bg-white rounded shadow`}>
-                <div className="flex items-center">
-                    {(post.isRepost && post.repostAuthor) ? (
-                        <PostHeader author={post.repostAuthor} date={post.creation_date} />
+        <div ref={ref} className={`${wbRemoved ? "opacity-0 transition-opacity ease-in-out delay-50 duration-300" : "opacity-100 transition-none" }
+            p-4 bg-white rounded shadow`}
+        >
+            <div className="flex items-center">
+                {(post.isRepost && post.repostAuthor) ? (
+                    <PostHeader author={post.repostAuthor} date={post.creation_date} />
+                ) : (
+                    <PostHeader author={post.author} date={post.creation_date} />
+                )}
+
+                {(!space && post.space) && (
+                    <div className='self-start leading-[1.6rem] text-xs text-gray-500 ml-1'>
+                        <MdDoubleArrow className="inline" /> <Link href={`/space/?id=${post.space}`} className="font-bold align-middle">{SpacenameById(post.space)}</Link>
+                    </div>
+                )}
+
+                <div className='ml-auto'>
+                    {(post.likers.includes(session?.user.preferred_username as string)) ? (
+                        <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickLikeBtn}><HiHeart /></button>
                     ) : (
-                        <PostHeader author={post.author} date={post.creation_date} />
+                        <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickLikeBtn}><HiOutlineHeart /></button>
                     )}
-
-                    {(!space && post.space) && (
-                        <div className='self-start leading-[1.6rem] text-xs text-gray-500 ml-1'>
-                            <MdDoubleArrow className="inline" /> <Link href={`/space/?id=${post.space}`} className="font-bold align-middle">{SpacenameById(post.space)}</Link>
-                        </div>
+                    <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickReplyBtn} title="Antworten"><TiArrowForward /></button>
+                    {drOptions.length > 0 && (
+                        <Dropdown options={drOptions} onSelect={handleSelectOption} />
                     )}
+                </div>
+            </div>
 
-                    <div className='ml-auto'>
-                        {(post.likers.includes(session?.user.preferred_username as string)) ? (
-                            <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickLikeBtn}><HiHeart /></button>
-                        ) : (
-                            <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickLikeBtn}><HiOutlineHeart /></button>
-                        )}
-                        <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickReplyBtn} title="Antworten"><TiArrowForward /></button>
-                        {drOptions.length > 0 && (
-                            <Dropdown options={drOptions} onSelect={handleSelectOption} />
-                        )}
+            {post.isRepost && (
+                <div className="my-5 ml-5 p-4 rounded bg-slate-100">
+                    <div className="flex items-center">
+                        <PostHeader author={post.repostAuthor as BackendPostAuthor} date={post.originalCreationDate as string} />
+                    </div>
+                    <div className={`${repostExpand ? "" : "max-h-40 overflow-hidden"} mt-5 whitespace-break-spaces relative repost-text`}>
+                        <div className="network-post-value" dangerouslySetInnerHTML={{__html: post.text as string}} />
+                        <span className={`${repostExpand ? "hidden" : ""} absolute left-0 bottom-0 w-full h-20 bg-gradient-to-b from-transparent to-[#e5f1f4]`}>
+                            <button className="absolute bottom-0 left-10 mx-4 p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={() => setRepostExpand(true)} title="Erweitern">
+                                <MdOutlineKeyboardDoubleArrowDown />
+                            </button>
+                        </span>
                     </div>
                 </div>
+            )}
 
-                {post.isRepost && (
-                    <div className="my-5 ml-5 p-4 rounded bg-slate-100">
-                        <div className="flex items-center">
-                            <PostHeader author={post.repostAuthor as BackendPostAuthor} date={post.originalCreationDate as string} />
-                        </div>
-                        <div className={`${repostExpand ? "" : "max-h-40 overflow-hidden"} mt-5 whitespace-break-spaces relative repost-text`}>
-                            <div className="network-post-value" dangerouslySetInnerHTML={{__html: post.text as string}} />
-                            <span className={`${repostExpand ? "hidden" : ""} absolute left-0 bottom-0 w-full h-20 bg-gradient-to-b from-transparent to-[#e5f1f4]`}>
-                                <button className="absolute bottom-0 left-10 mx-4 p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={() => setRepostExpand(true)} title="Erweitern">
-                                    <MdOutlineKeyboardDoubleArrowDown />
-                                </button>
-                            </span>
-                        </div>
-                    </div>
-                )}
-
-                <div className='my-5'>
-                    {editPost
-                        ? (
-                            <TimelinePostForm
-                                post={post}
-                                onCancelForm={() => setEditPost(false)}
-                                onUpdatedPost={updatePostText}
-                            />
-                        ) : (
-                            <div className="network-post-value" dangerouslySetInnerHTML={{__html: post.isRepost
-                                ? post.repostText as string
-                                : post.text as string}} />
-                        )
-                    }
-                </div>
-
-                {post.files.length > 0 && (
-                    <div className="my-4">
-                        <div className="mb-2 text-slate-900 font-bold">Dateien</div>
-                        <div className="mb-8 flex flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
-                            {post.files.map((file, index) => (
-                                <AuthenticatedFile
-                                    key={index}
-                                    url={`/uploads/${file}`}
-                                    filename={file}
-                                >
-                                    <div className="flex justify-center">
-                                        <RxFile size={40} />{' '}
-                                    </div>
-                                    <div className="max-w-1/2 justify-center mx-2 px-1 my-1 truncate">
-                                        {file}
-                                    </div>
-                                </AuthenticatedFile>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                <Likes />
-                {(post.comments.length == 0 && !showCommentForm)
+            <div className='my-5'>
+                {editPost
                     ? (
-                        <button onClick={openCommentForm} title="Kommentar hinzufügen" className="align-middle px-3 py-2 rounded-full hover:bg-ve-collab-blue-light">
-                            <MdOutlineAddComment className="inline" size={20} />
-                        </button>
+                        <TimelinePostForm
+                            post={post}
+                            onCancelForm={() => setEditPost(false)}
+                            onUpdatedPost={updatePostText}
+                        />
                     ) : (
-                        <div className='mt-4 pt-4 pl-4 border-t-2 border-ve-collab-blue/50'>
-                            <div className="mb-4 text-slate-900 font-bold text-lg">Kommentare</div>
-
-                            <form onSubmit={onSubmitCommentForm} className="mb-2" ref={commentFormref}>
-                                <input
-                                    className={'border border-[#cccccc] rounded-md px-2 py-[6px]'}
-                                    type="text"
-                                    placeholder={'Kommentar schreiben ...'}
-                                    name='text'
-                                    autoComplete="off"
-                                />
-                                <button className="p-2" type='submit' title="Senden"><IoIosSend /></button>
-                            </form>
-
-                            {post.comments.length > 0 && (
-                                <div className="pl-5 mt-5">
-                                    {post.comments.reverse().map((comment, ci) => (
-                                        <div key={ci}>
-                                            <div className={`${ci >= showXComments ? "hidden" : ""}`}>
-                                                <div className={`flex items-center`}>
-                                                    <PostHeader author={comment.author} date={comment.creation_date} />
-                                                </div>
-                                                <div className='my-5'>{comment.text}</div>
-                                            </div>
-                                            {(ci+1 == showXComments && post.comments.length > showXComments) && (
-                                                <button className="py-2 px-5 rounded-lg" onClick={() => setShowXComments(showXComments+5)} title="Mehr">
-                                                    <MdOutlineKeyboardDoubleArrowDown />
-                                                </button>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+                        <div className="network-post-value" dangerouslySetInnerHTML={{__html: post.isRepost
+                            ? post.repostText as string
+                            : post.text as string}} />
                     )
                 }
             </div>
-        </>
+
+            {post.files.length > 0 && (
+                <div className="my-4">
+                    <div className="mb-2 text-slate-900 font-bold">Dateien</div>
+                    <div className="mb-8 flex flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
+                        {post.files.map((file, index) => (
+                            <AuthenticatedFile
+                                key={index}
+                                url={`/uploads/${file}`}
+                                filename={file}
+                            >
+                                <div className="flex justify-center">
+                                    <RxFile size={40} />{' '}
+                                </div>
+                                <div className="max-w-1/2 justify-center mx-2 px-1 my-1 truncate">
+                                    {file}
+                                </div>
+                            </AuthenticatedFile>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            <Likes />
+            {(post.comments.length == 0 && !showCommentForm)
+                ? (
+                    <button onClick={openCommentForm} title="Kommentar hinzufügen" className="align-middle px-3 py-2 rounded-full hover:bg-ve-collab-blue-light">
+                        <MdOutlineAddComment className="inline" size={20} />
+                    </button>
+                ) : (
+                    <div className='mt-4 pt-4 pl-4 border-t-2 border-ve-collab-blue/50'>
+                        <div className="mb-4 text-slate-900 font-bold text-lg">Kommentare</div>
+
+                        <form onSubmit={onSubmitCommentForm} className="mb-2" ref={commentFormref}>
+                            <input
+                                className={'border border-[#cccccc] rounded-md px-2 py-[6px]'}
+                                type="text"
+                                placeholder={'Kommentar schreiben ...'}
+                                name='text'
+                                autoComplete="off"
+                            />
+                            <button className="p-2" type='submit' title="Senden"><IoIosSend /></button>
+                        </form>
+
+                        {post.comments.length > 0 && (
+                            <div className="pl-5 mt-5">
+                                {post.comments.reverse().map((comment, ci) => (
+                                    <div key={ci}>
+                                        <div className={`${ci >= showXComments ? "hidden" : ""}`}>
+                                            <div className={`flex items-center`}>
+                                                <PostHeader author={comment.author} date={comment.creation_date} />
+                                            </div>
+                                            <div className='my-5'>{comment.text}</div>
+                                        </div>
+                                        {(ci+1 == showXComments && post.comments.length > showXComments) && (
+                                            <button className="py-2 px-5 rounded-lg" onClick={() => setShowXComments(showXComments+5)} title="Mehr">
+                                                <MdOutlineKeyboardDoubleArrowDown />
+                                            </button>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )
+            }
+        </div>
     );
 }

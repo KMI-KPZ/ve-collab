@@ -22,7 +22,12 @@ export default function Timeline({ space, user }: Props) {
     const [allPosts, setAllPosts] = useState<BackendPost[]>([]);
     let prevDate: Date | null = null;
 
-    let dateBubbleColorI: number = 0;
+    let datePillIdx: number = 0;
+    const datePillColors: { vg: string, bg: string}[] = [
+        { vg: '#00748f', bg: '#d8f2f9' }, // blue
+        { vg: '#c4560b', bg: '#f5cfb5' }, // orange
+        { vg: '#0f172a', bg: '#e2e2e2' }, // greyy
+    ]
 
     const {
         data: newFetchedPosts,
@@ -48,9 +53,10 @@ export default function Timeline({ space, user }: Props) {
     useEffect(() => {
         if (!newFetchedPosts.length) return
 
-        if (newFetchedPosts[0]._id == allPosts[0]?._id) {
+        if (allPosts.some((post) => post._id == newFetchedPosts[0]._id) ) {
+            // newFetchedPosts[0]._id == allPosts[0]?._id
             // TODO sometimes this happens -> WHY???? Because of hot-refresh while development
-            console.error('ERROR: fetched posts are the same as current', {allPosts, newFetchedPosts});
+            console.error('ERROR: fetched posts are the same as current', {allPosts, newFetchedPosts, toDate});
 
         } else {
             setAllPosts((prev) => [...prev, ...newFetchedPosts]);
@@ -94,27 +100,21 @@ export default function Timeline({ space, user }: Props) {
         return (<>Error loading timeline. See console for details</>)
     }
 
-    const showNewDateBubble = (post: BackendPost) => {
+    const showDatePill = (post: BackendPost) => {
         const curDate = new Date(post.creation_date)
 
         if (prevDate
-            && format(prevDate, 'dMMMyyy') == format(curDate, 'dMMMyyy')) {
+            && format(prevDate, 'dMMMyyy') == format(curDate, 'dMMMyyy')
+        ) {
             return false
         }
-
         prevDate = curDate
-        dateBubbleColorI += 1
+        datePillIdx += 1
         return true
     }
 
-    const dateBubbleColors: { vg: string, bg: string}[] = [
-        { vg: '#00748f', bg: '#d8f2f9' }, // blue
-        { vg: '#c4560b', bg: '#f5cfb5' }, // orange
-        { vg: '#0f172a', bg: '#e2e2e2' }, // greyy
-    ]
-
-    const currentDBC = () => {
-        return dateBubbleColors[ (dateBubbleColorI-1) % dateBubbleColors.length ]
+    const getCurrentDatePill = () => {
+        return datePillColors[ (datePillIdx-1) % datePillColors.length ]
     }
 
     return (
@@ -127,33 +127,34 @@ export default function Timeline({ space, user }: Props) {
                     onCreatedPost={afterCreatePost}
                 />
             </div>
-            {allPosts.map((post, i) =>
-                <div key={post._id}>
-                    {showNewDateBubble(post) && (
-                        <div
-                            style={{ borderColor: currentDBC().vg, color: currentDBC().vg }}
-                            className="-ml-5 flex items-center border-l font-bold "
-                        >
-                            <div
-                                style={{ backgroundColor:currentDBC().bg, borderColor: currentDBC().vg }}
-                                className="relative -left-[18px] -top-[5px] rounded-full border"
-                            >
-                                <HiOutlineCalendar className='m-2' />
-                                </div>
-                            <div
-
-                                style={{ backgroundColor:currentDBC().bg }}
-                                className="px-4 py-2 ml-2 -left-[18px] -top-[5px] relative rounded-full"
-                            >
-                                <Timestamp timestamp={post.creation_date} dateFormat="d. MMM" />
-                            </div>
-                        </div>
-                    )}
-
-                    <div
-                        style={{ borderColor: currentDBC().vg }}
-                        className="-ml-5 border-l pl-5 pb-8 pt-6"
+            {allPosts.map((post, i) => {
+                const hasDatePill = showDatePill(post)
+                const datePill = getCurrentDatePill();
+                return (
+                    <div key={post._id}
+                        style={{ borderColor: datePill.vg }}
+                        className="-ml-7 pl-7 pb-7 pt-2 border-l"
                     >
+                        {hasDatePill && (
+                            <div
+                                style={{ color: datePill.vg }}
+                                className="relative -left-[45px] -top-[5px] -mt-2 mb-4 flex items-center font-bold"
+                            >
+                                <div
+                                    style={{ borderColor: datePill.vg, backgroundColor:datePill.bg }}
+                                    className="rounded-full border"
+                                >
+                                    <HiOutlineCalendar className='m-2' />
+                                </div>
+                                <div
+
+                                    style={{ backgroundColor:datePill.bg }}
+                                    className="px-4 py-2 ml-2 relative rounded-full"
+                                >
+                                    <Timestamp timestamp={post.creation_date} dateFormat="d. MMM" />
+                                </div>
+                            </div>
+                        )}
                         <TimelinePost
                             post={post}
                             updatePost={updatePost}
@@ -165,8 +166,8 @@ export default function Timeline({ space, user }: Props) {
                             fetchNextPosts={() => fetchNextPosts(post, i)}
                         />
                     </div>
-                </div>
-            )}
+                );
+            })}
             {isLoadingTimeline && (<LoadingAnimation />)}
             {!isLoadingTimeline && allPosts.length == 0 && ( <div className="m-10 flex justify-center">Bisher keine Beiträge ...</div>)}
         </>
