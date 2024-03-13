@@ -363,6 +363,8 @@ export function useGetTimeline(
         ([url, token]) => GETfetcher(url, token)
     );
 
+    // console.log('backend.getTimneline', {endpointUrl, toDate});
+
     return {
         data: isLoading || error ? [] : data.posts,
         isLoading,
@@ -399,10 +401,11 @@ export async function fetchPOST(
     accessToken?: string,
     asFormData: boolean=false
 ) {
-    const requestHeaders: HeadersInit = new Headers();
+    // const requestHeaders: HeadersInit = new Headers();
+    const headers: { Authorization?: string } = {};
     if (accessToken) {
-        requestHeaders.set('Authorization', 'Bearer ' + accessToken);
-
+        // requestHeaders.set('Authorization', 'Bearer ' + accessToken);
+        headers['Authorization'] = 'Bearer ' + accessToken;
     }
 
     function getFormData(payload: any) {
@@ -414,7 +417,7 @@ export async function fetchPOST(
     try {
         let backendResponse = await fetch(BACKEND_BASE_URL + relativeUrl, {
             method: 'POST',
-            headers: requestHeaders,
+            headers,
             body: asFormData
                 ? getFormData(payload)
                 : JSON.stringify(payload),
