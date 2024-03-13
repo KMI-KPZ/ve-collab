@@ -40,13 +40,6 @@
     @apply border-slate-950;
 }
 
-.rsw-editor a {
-    @apply text-ve-collab-blue;
-}
-.rsw-editor a:hover {
-    @apply underline;
-    @apply cursor-pointer;
-}
 .rsw-toolbar {
     @apply !bg-transparent;
     @apply !border-0;
@@ -64,4 +57,19 @@
 
 .rsw-toolbar button[data-active=true] {
     @apply bg-ve-collab-blue-light
+}
+
+.rsw-editor a {
+    @apply text-ve-collab-blue;
+}
+.rsw-editor a:hover {
+    @apply underline;
+    @apply cursor-pointer;
+}
+.rsw-editor ol {
+    @apply list-inside list-decimal py-3;
+}
+
+.rsw-editor ul {
+    @apply list-inside list-disc py-3;
 }
