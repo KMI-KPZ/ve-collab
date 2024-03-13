@@ -5,6 +5,9 @@ import TimelinePost from "./TimelinePost";
 import { useEffect, useState } from "react";
 import TimelinePostForm from "./TimelinePostForm";
 import { BackendPost } from "@/interfaces/api/apiInterfaces";
+import Timestamp from "../Timestamp";
+import { HiOutlineCalendar } from "react-icons/hi";
+import { format } from "date-fns";
 
 interface Props {
     space?: string | undefined;
@@ -17,6 +20,9 @@ export default function Timeline({ space, user }: Props) {
     const [toDate, setToDate] = useState<Date>(new Date());
     const [sharedPost, setSharedPost] = useState<BackendPost|null>(null);
     const [allPosts, setAllPosts] = useState<BackendPost[]>([]);
+    let prevDate: Date | null = null;
+
+    let dateBubbleColorI: number = 0;
 
     const {
         data: newFetchedPosts,
@@ -43,17 +49,18 @@ export default function Timeline({ space, user }: Props) {
         if (!newFetchedPosts.length) return
 
         if (newFetchedPosts[0]._id == allPosts[0]?._id) {
-            // TODO sometimes this happens -> WHY????
-            console.log('ERROR: fetched posts are the same as current', {allPosts, newFetchedPosts});
+            // TODO sometimes this happens -> WHY???? Because of hot-refresh while development
+            console.error('ERROR: fetched posts are the same as current', {allPosts, newFetchedPosts});
 
         } else {
             setAllPosts((prev) => [...prev, ...newFetchedPosts]);
         }
     }, [newFetchedPosts])
-    console.log({allPosts});
+    // console.log({allPosts});
 
-    const fetchNextPosts = () => {
+    const fetchNextPosts = (post: BackendPost, i: number) => {
         if (!allPosts.length) return
+        // console.log('Fetch next posts', {i, post, allPosts});
 
         const newToDate = new Date(allPosts[allPosts.length - 1].creation_date)
         newToDate.setMilliseconds(newToDate.getMilliseconds()+1)
@@ -87,6 +94,29 @@ export default function Timeline({ space, user }: Props) {
         return (<>Error loading timeline. See console for details</>)
     }
 
+    const showNewDateBubble = (post: BackendPost) => {
+        const curDate = new Date(post.creation_date)
+
+        if (prevDate
+            && format(prevDate, 'dMMMyyy') == format(curDate, 'dMMMyyy')) {
+            return false
+        }
+
+        prevDate = curDate
+        dateBubbleColorI += 1
+        return true
+    }
+
+    const dateBubbleColors: { vg: string, bg: string}[] = [
+        { vg: '#00748f', bg: '#d8f2f9' }, // blue
+        { vg: '#c4560b', bg: '#f5cfb5' }, // orange
+        { vg: '#0f172a', bg: '#e2e2e2' }, // greyy
+    ]
+
+    const currentDBC = () => {
+        return dateBubbleColors[ (dateBubbleColorI-1) % dateBubbleColors.length ]
+    }
+
     return (
         <>
             <div className={'p-4 my-8 bg-white rounded shadow '}>
@@ -98,17 +128,44 @@ export default function Timeline({ space, user }: Props) {
                 />
             </div>
             {allPosts.map((post, i) =>
-                <TimelinePost
-                    key={post._id}
-                    post={post}
-                    updatePost={updatePost}
-                    space={space}
-                    isLast={i === allPosts.length - 1}
-                    allSpaces={allSpaces}
-                    removePost={removePost}
-                    sharePost={post => setSharedPost(post)}
-                    fetchNextPosts={fetchNextPosts}
-                />
+                <div key={post._id}>
+                    {showNewDateBubble(post) && (
+                        <div
+                            style={{ borderColor: currentDBC().vg, color: currentDBC().vg }}
+                            className="-ml-5 flex items-center border-l font-bold "
+                        >
+                            <div
+                                style={{ backgroundColor:currentDBC().bg, borderColor: currentDBC().vg }}
+                                className="relative -left-[18px] -top-[5px] rounded-full border"
+                            >
+                                <HiOutlineCalendar className='m-2' />
+                                </div>
+                            <div
+
+                                style={{ backgroundColor:currentDBC().bg }}
+                                className="px-4 py-2 ml-2 -left-[18px] -top-[5px] relative rounded-full"
+                            >
+                                <Timestamp timestamp={post.creation_date} dateFormat="d. MMM" />
+                            </div>
+                        </div>
+                    )}
+
+                    <div
+                        style={{ borderColor: currentDBC().vg }}
+                        className="-ml-5 border-l pl-5 pb-8 pt-6"
+                    >
+                        <TimelinePost
+                            post={post}
+                            updatePost={updatePost}
+                            space={space}
+                            isLast={i === allPosts.length - 1}
+                            allSpaces={allSpaces}
+                            removePost={removePost}
+                            sharePost={post => setSharedPost(post)}
+                            fetchNextPosts={() => fetchNextPosts(post, i)}
+                        />
+                    </div>
+                </div>
             )}
             {isLoadingTimeline && (<LoadingAnimation />)}
             {!isLoadingTimeline && allPosts.length == 0 && ( <div className="m-10 flex justify-center">Bisher keine Beiträge ...</div>)}

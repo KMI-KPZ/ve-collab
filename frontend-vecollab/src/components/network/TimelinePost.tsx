@@ -172,15 +172,15 @@ export default function TimelinePost(
     const Likes = () => {
         if (!post.likers.length) return ( <></> )
 
-        let hoverMsg = "By "
+        let hoverMsg = "Von "
         if (post.likers.length == 1) hoverMsg += `${post.likers[0]}`
-        else if (post.likers.length == 2) hoverMsg += `${post.likers[0]} and ${post.likers[1]}`
-        else if (post.likers.length == 3) hoverMsg += `${post.likers.slice(0, 2).join(", ")} and ${post.likers[2]}`
-        else hoverMsg += `${post.likers.slice(0, 3).join(", ")} and others`
+        else if (post.likers.length == 2) hoverMsg += `${post.likers[0]} und ${post.likers[1]}`
+        else if (post.likers.length == 3) hoverMsg += `${post.likers.slice(0, 2).join(", ")} und ${post.likers[2]}`
+        else hoverMsg += `${post.likers.slice(0, 3).join(", ")} und anderen`
 
         return (
             <span className="hover:cursor-pointer text-sm mr-3" title={hoverMsg}>
-                <MdThumbUp className="inline" /> {post.likers.length}
+                <MdThumbUp className="inline" size={20} /> {post.likers.length}
             </span>
         )
     }
@@ -198,14 +198,7 @@ export default function TimelinePost(
 
     return (
         <>
-            {/* <div className="-ml-5 flex items-center text-ve-collab-blue">
-                <div className='rounded-full bg-ve-collab-blue/10'><HiOutlineCalendar className='m-4' /></div>
-                <div className="p-3 m-2 rounded-full bg-ve-collab-blue/10">
-                    <Timestamp timestamp={post.creation_date} className='inline-block' />
-                </div>
-            </div> */}
-
-            <div ref={ref} className={`${wbRemoved ? "opacity-0 transition-opacity ease-in-out delay-50 duration-300" : "opacity-100 transition-none" } p-4 my-8 bg-white rounded shadow`}>
+            <div ref={ref} className={`${wbRemoved ? "opacity-0 transition-opacity ease-in-out delay-50 duration-300" : "opacity-100 transition-none" } p-4 bg-white rounded shadow`}>
                 <div className="flex items-center">
                     {(post.isRepost && post.repostAuthor) ? (
                         <PostHeader author={post.repostAuthor} date={post.creation_date} />
@@ -221,11 +214,11 @@ export default function TimelinePost(
 
                     <div className='ml-auto'>
                         {(post.likers.includes(session?.user.preferred_username as string)) ? (
-                            <button className="p-2 rounded-full hover:bg-ve-collab-blue/10" onClick={onClickLikeBtn} title="click to unlike post"><HiHeart /></button>
+                            <button className="p-2 rounded-full hover:bg-ve-collab-blue/10" onClick={onClickLikeBtn}><HiHeart /></button>
                         ) : (
-                            <button className="p-2 rounded-full hover:bg-ve-collab-blue/10" onClick={onClickLikeBtn} title="Click to like post"><HiOutlineHeart /></button>
+                            <button className="p-2 rounded-full hover:bg-ve-collab-blue/10" onClick={onClickLikeBtn}><HiOutlineHeart /></button>
                         )}
-                        <button className="p-2 rounded-full hover:bg-ve-collab-blue/10" onClick={onClickReplyBtn} title="Click to reply post"><TiArrowForward /></button>
+                        <button className="p-2 rounded-full hover:bg-ve-collab-blue/10" onClick={onClickReplyBtn} title="Antworten"><TiArrowForward /></button>
                         {drOptions.length > 0 && (
                             <Dropdown options={drOptions} onSelect={handleSelectOption} />
                         )}
@@ -233,14 +226,14 @@ export default function TimelinePost(
                 </div>
 
                 {post.isRepost && (
-                    <div className="my-5 ml-5 p-4 rounded bg-[#e5f1f4]">
+                    <div className="my-5 ml-5 p-4 rounded bg-[#e2e2e2]">
                         <div className="flex items-center">
                             <PostHeader author={post.repostAuthor as BackendPostAuthor} date={post.originalCreationDate as string} />
                         </div>
                         <div className={`${repostExpand ? "" : "max-h-40 overflow-hidden"} mt-5 whitespace-break-spaces relative repost-text`}>
                             <div className="network-post-value" dangerouslySetInnerHTML={{__html: post.text as string}} />
                             <span className={`${repostExpand ? "hidden" : ""} absolute left-0 bottom-0 w-full h-20 bg-gradient-to-b from-transparent to-[#e5f1f4]`}>
-                                <button className="absolute bottom-0 left-10 mx-4 p-2 rounded-full hover:bg-ve-collab-blue/10" onClick={() => setRepostExpand(true)} title="Click to expand">
+                                <button className="absolute bottom-0 left-10 mx-4 p-2 rounded-full hover:bg-ve-collab-blue/10" onClick={() => setRepostExpand(true)} title="Erweitern">
                                     <MdOutlineKeyboardDoubleArrowDown />
                                 </button>
                             </span>
@@ -266,7 +259,7 @@ export default function TimelinePost(
 
                 {post.files.length > 0 && (
                     <div className="my-4">
-                        <div className="mb-2 font-slate-500 font-bold">Dateien</div>
+                        <div className="mb-2 text-slate-900 font-bold">Dateien</div>
                         <div className="mb-8 flex flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
                             {post.files.map((file, index) => (
                                 <AuthenticatedFile
@@ -289,12 +282,12 @@ export default function TimelinePost(
                 <Likes />
                 {(post.comments.length == 0 && !showCommentForm)
                     ? (
-                        <button onClick={openCommentForm} title="Add comment" className="align-middle p-2 rounded-full hover:bg-ve-collab-blue/10">
-                            <MdOutlineAddComment />
+                        <button onClick={openCommentForm} title="Kommentar hinzufügen" className="align-middle px-3 py-2 rounded-full hover:bg-ve-collab-blue/10">
+                            <MdOutlineAddComment className="inline" size={20} />
                         </button>
                     ) : (
                         <div className='mt-4 pt-4 pl-4 border-t-2 border-ve-collab-blue/50'>
-                            <div className="mb-4 font-slate-900 font-bold text-lg">Kommentare</div>
+                            <div className="mb-4 text-slate-900 font-bold text-lg">Kommentare</div>
 
                             <form onSubmit={onSubmitCommentForm} className="mb-2" ref={commentFormref}>
                                 <input
@@ -318,7 +311,7 @@ export default function TimelinePost(
                                                 <div className='my-5'>{comment.text}</div>
                                             </div>
                                             {(ci+1 == showXComments && post.comments.length > showXComments) && (
-                                                <button className="py-2 px-5 rounded-lg" onClick={() => setShowXComments(showXComments+5)} title="Show more comments">
+                                                <button className="py-2 px-5 rounded-lg" onClick={() => setShowXComments(showXComments+5)} title="Mehr">
                                                     <MdOutlineKeyboardDoubleArrowDown />
                                                 </button>
                                             )}

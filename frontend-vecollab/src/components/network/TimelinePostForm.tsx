@@ -220,7 +220,7 @@ export default function TimelinePostForm(
                 </div>
 
                 {postToRepost && (
-                    <div className="my-5 ml-[50px] p-3 rounded bg-ve-collab-blue/10">
+                    <div className="my-5 ml-[50px] p-3 rounded bg-[#e2e2e2]">
                         <div className="flex items-center">
                             {postToRepost.isRepost
                                 ? ( <PostHeader author={postToRepost.repostAuthor as BackendPostAuthor} date={postToRepost.creation_date} /> )
@@ -243,7 +243,7 @@ export default function TimelinePostForm(
                                 <RxFile size={30} className="m-1" />
                                 {/* TODO preview for certain file types*/}
                                 <div className="truncate py-2">{file.name}</div>
-                                <button onClick={() => removeSelectedFile(index)} className="ml-2 p-2 rounded-full hover:bg-ve-collab-blue/10" title="Remove file">
+                                <button onClick={() => removeSelectedFile(index)} className="ml-2 p-2 rounded-full hover:bg-ve-collab-blue/10" title="Entfernen">
                                         <IoMdClose />
                                 </button>
                             </div>
@@ -260,7 +260,7 @@ export default function TimelinePostForm(
                         </button>)}
                         {(!postToEdit && !postToRepost) && (
                             <>
-                                <button type="button" onClick={openFileOpenDialog} title="Attach file" className="mx-4 px-5 py-2 rounded-lg bg-ve-collab-blue/10 text-ve-collab-blue
+                                <button type="button" onClick={openFileOpenDialog} title="Datei hinzufügen" className="mx-4 px-5 py-2 rounded-lg bg-[#d8f2f9] text-ve-collab-blue
 
                                 hover:bg-ve-collab-blue/20
 
