@@ -1,19 +1,22 @@
 import WhiteBox from '@/components/Layout/WhiteBox';
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
-import SideProgressBarSectionBroadPlanner from '@/components/StartingWizard/SideProgressBarSectionBroadPlanner';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
-import { RxMinus, RxPlus } from 'react-icons/rx';
+import { RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
-import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
+import { FormProvider, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/startingWizard/sideProgressBar';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+import SideProgressBarSectionBroadPlannerWithReactHookForm from '@/components/StartingWizard/SideProgressBarSectionBroadPlannerWithReactHookForm';
+import PopupSaveData from '@/components/StartingWizard/PopupSaveData';
+import trash from '@/images/icons/startingWizard/trash.png';
+import Image from 'next/image';
 
 export interface Institution {
     name: string;
@@ -34,6 +37,7 @@ export default function Institutions() {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
+    const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
     const [steps, setSteps] = useState<IFineStep[]>([]);
 
     // check for session errors and trigger the login flow if necessary
@@ -45,13 +49,7 @@ export default function Institutions() {
         }
     }, [session, status]);
 
-    const {
-        register,
-        formState: { errors },
-        handleSubmit,
-        control,
-        setValue,
-    } = useForm<FormValues>({
+    const methods = useForm<FormValues>({
         mode: 'onChange',
         defaultValues: {
             institutions: [
@@ -83,7 +81,7 @@ export default function Institutions() {
                 (data) => {
                     setLoading(false);
                     if (data.plan.institutions.length !== 0) {
-                        setValue('institutions', data.plan.institutions);
+                        methods.setValue('institutions', data.plan.institutions);
                     }
                     if (data.plan.progress.length !== 0) {
                         setSideMenuStepsProgress(data.plan.progress);
@@ -92,11 +90,11 @@ export default function Institutions() {
                 }
             );
         }
-    }, [session, status, router, setValue]);
+    }, [session, status, router, methods]);
 
     const { fields, append, remove } = useFieldArray({
         name: 'institutions',
-        control,
+        control: methods.control,
     });
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
@@ -146,7 +144,7 @@ export default function Institutions() {
                                 type="text"
                                 placeholder="Name eingeben"
                                 className="border border-gray-400 rounded-lg w-full p-2"
-                                {...register(`institutions.${index}.name`, {
+                                {...methods.register(`institutions.${index}.name`, {
                                     maxLength: {
                                         value: 50,
                                         message:
@@ -160,7 +158,7 @@ export default function Institutions() {
                                 })}
                             />
                             <p className="text-red-600 pt-2">
-                                {errors?.institutions?.[index]?.name?.message}
+                                {methods.formState.errors?.institutions?.[index]?.name?.message}
                             </p>
                         </div>
                     </div>
@@ -174,7 +172,7 @@ export default function Institutions() {
                             <select
                                 placeholder="Bildungseinrichtung eingeben"
                                 className="border border-gray-400 rounded-lg w-full px-1 py-2"
-                                {...register(`institutions.${index}.school_type`, {
+                                {...methods.register(`institutions.${index}.school_type`, {
                                     maxLength: {
                                         value: 50,
                                         message:
@@ -199,7 +197,10 @@ export default function Institutions() {
                                 <option value="Sonstige">Sonstige</option>
                             </select>
                             <p className="text-red-600 pt-2">
-                                {errors?.institutions?.[index]?.school_type?.message}
+                                {
+                                    methods.formState.errors?.institutions?.[index]?.school_type
+                                        ?.message
+                                }
                             </p>
                         </div>
                     </div>
@@ -214,7 +215,7 @@ export default function Institutions() {
                                 type="text"
                                 placeholder="Land eingeben"
                                 className="border border-gray-400 rounded-lg w-full p-2"
-                                {...register(`institutions.${index}.country`, {
+                                {...methods.register(`institutions.${index}.country`, {
                                     maxLength: {
                                         value: 50,
                                         message:
@@ -228,7 +229,7 @@ export default function Institutions() {
                                 })}
                             />
                             <p className="text-red-600 pt-2">
-                                {errors?.institutions?.[index]?.country?.message}
+                                {methods.formState.errors?.institutions?.[index]?.country?.message}
                             </p>
                         </div>
                     </div>
@@ -243,7 +244,7 @@ export default function Institutions() {
                                 type="text"
                                 placeholder="Fachbereich eingeben"
                                 className="border border-gray-400 rounded-lg w-full p-2"
-                                {...register(`institutions.${index}.departments.0`, {
+                                {...methods.register(`institutions.${index}.departments.0`, {
                                     maxLength: {
                                         value: 50,
                                         message:
@@ -257,7 +258,10 @@ export default function Institutions() {
                                 })}
                             />
                             <p className="text-red-600 pt-2">
-                                {errors?.institutions?.[index]?.departments?.[0]?.message}
+                                {
+                                    methods.formState.errors?.institutions?.[index]
+                                        ?.departments?.[0]?.message
+                                }
                             </p>
                         </div>
                     </div>
@@ -272,7 +276,7 @@ export default function Institutions() {
                                 type="text"
                                 placeholder="mehrere durch Komma trennen"
                                 className="border border-gray-400 rounded-lg w-full p-2"
-                                {...register(`institutions.${index}.academic_courses.0`, {
+                                {...methods.register(`institutions.${index}.academic_courses.0`, {
                                     maxLength: {
                                         value: 50,
                                         message:
@@ -286,9 +290,22 @@ export default function Institutions() {
                                 })}
                             />
                             <p className="text-red-600 pt-2">
-                                {errors?.institutions?.[index]?.academic_courses?.[0]?.message}
+                                {
+                                    methods.formState.errors?.institutions?.[index]
+                                        ?.academic_courses?.[0]?.message
+                                }
                             </p>
                         </div>
+                    </div>
+                    <div className="flex justify-end items-center">
+                        <Image
+                            className="mx-2 cursor-pointer m-2 "
+                            onClick={() => remove(index)}
+                            src={trash}
+                            width={20}
+                            height={20}
+                            alt="deleteStep"
+                        ></Image>
                     </div>
                 </WhiteBox>
             </div>
@@ -296,81 +313,92 @@ export default function Institutions() {
     };
 
     return (
-        <div className="flex bg-pattern-left-blue-small bg-no-repeat">
-            <div className="flex flex-grow justify-center">
-                <div className="flex flex-col">
-                    <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
-                    {loading ? (
-                        <LoadingAnimation />
-                    ) : (
-                        <form className="gap-y-6 w-full p-12 max-w-7xl items-center flex flex-col flex-grow justify-between">
-                            <div>
-                                <div className={'text-center font-bold text-4xl mb-2'}>
-                                    In welchen Institutionen wird der VE umgesetzt?
-                                </div>
-                                <div className={'text-center mb-20'}>optional</div>
-                                <div className={'flex flex-wrap justify-center'}>
-                                    {renderInstitutionsInputs()}
-                                </div>
-                                <div className={'mx-1 flex justify-end'}>
-                                    <button type="button" onClick={() => remove(fields.length - 1)}>
-                                        <RxMinus size={20} />
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            append({
-                                                name: '',
-                                                school_type: '',
-                                                country: '',
-                                                departments: [],
-                                                academic_courses: [],
-                                            });
-                                        }}
-                                    >
-                                        <RxPlus size={20} />
-                                    </button>
-                                </div>
-                            </div>
-                            <div className="flex justify-between w-full max-w-xl">
-                                <div>
-                                    <button
-                                        type="button"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                        onClick={handleSubmit((data) =>
-                                            combinedSubmitRouteAndUpdate(
-                                                data,
-                                                '/startingWizard/generalInformation/externalParties'
-                                            )
-                                        )}
-                                    >
-                                        Zurück
-                                    </button>
-                                </div>
-                                <div>
-                                    <button
-                                        type="button"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                        onClick={handleSubmit((data) =>
-                                            combinedSubmitRouteAndUpdate(
-                                                data,
-                                                '/startingWizard/generalInformation/participatingCourses'
-                                            )
-                                        )}
-                                    >
-                                        Weiter
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    )}
-                </div>
-            </div>
-            <SideProgressBarSectionBroadPlanner
-                progressState={sideMenuStepsProgress}
-                handleValidation={handleSubmit(onSubmit)}
-                isValid={true}
+        <FormProvider {...methods}>
+            <PopupSaveData
+                isOpen={isPopupOpen}
+                handleContinue={async () => {
+                    await router.push({
+                        pathname: '/startingWizard/generalInformation/formalConditions',
+                        query: {
+                            plannerId: router.query.plannerId,
+                        },
+                    });
+                }}
+                handleCancel={() => setIsPopupOpen(false)}
             />
-        </div>
+            <div className="flex bg-pattern-left-blue-small bg-no-repeat">
+                <div className="flex flex-grow justify-center">
+                    <div className="flex flex-col">
+                        <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
+                        {loading ? (
+                            <LoadingAnimation />
+                        ) : (
+                            <form className="gap-y-6 w-full p-12 max-w-7xl items-center flex flex-col flex-grow justify-between">
+                                <div>
+                                    <div className={'text-center font-bold text-4xl mb-2'}>
+                                        In welchen Institutionen wird der VE umgesetzt?
+                                    </div>
+                                    <div className={'text-center mb-20'}>optional</div>
+                                    <div className={'flex flex-wrap justify-center'}>
+                                        {renderInstitutionsInputs()}
+                                    </div>
+                                    <div className="flex justify-center">
+                                        <button
+                                            className="p-4 bg-white rounded-3xl shadow-2xl"
+                                            type="button"
+                                            onClick={() => {
+                                                append({
+                                                    name: '',
+                                                    school_type: '',
+                                                    country: '',
+                                                    departments: [],
+                                                    academic_courses: [],
+                                                });
+                                            }}
+                                        >
+                                            <RxPlus size={30} />
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="flex justify-between w-full max-w-xl">
+                                    <div>
+                                        <button
+                                            type="button"
+                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                            onClick={methods.handleSubmit((data) =>
+                                                combinedSubmitRouteAndUpdate(
+                                                    data,
+                                                    '/startingWizard/generalInformation/externalParties'
+                                                )
+                                            )}
+                                        >
+                                            Zurück
+                                        </button>
+                                    </div>
+                                    <div>
+                                        <button
+                                            type="button"
+                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                            onClick={methods.handleSubmit((data) =>
+                                                combinedSubmitRouteAndUpdate(
+                                                    data,
+                                                    '/startingWizard/generalInformation/participatingCourses'
+                                                )
+                                            )}
+                                        >
+                                            Weiter
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        )}
+                    </div>
+                </div>
+                <SideProgressBarSectionBroadPlannerWithReactHookForm
+                    progressState={sideMenuStepsProgress}
+                    onSubmit={onSubmit}
+                />
+            </div>
+        </FormProvider>
     );
 }
