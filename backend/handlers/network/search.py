@@ -205,7 +205,6 @@ class SearchHandler(BaseHandler):
         """
 
         query = {
-            "size": 5,
             "query": {
                 "bool": {
                     "should": [

@@ -84,10 +84,19 @@ export default function Spaces() {
     };
 
     function sendJoinRequest(spaceId: string): void {
-        fetchPOST(`/spaceadministration/join?id=${spaceId}`, {}, session!.accessToken).then(() => {
+        fetchPOST(`/spaceadministration/join?id=${spaceId}`, {}, session!.accessToken).then((data) => {
             mutateMySpaces();
             mutateAllSpaces();
             mutateMySpaceRequests();
+
+            // if space is joinable, user is automatically joined
+            // and therefore remove the space from the list
+            if(data.join_type === "joined") {
+                searchSpaceResults.splice(searchSpaceResults.findIndex((space) => space._id === spaceId), 1);
+            }
+            else if(data.join_type === "requested_join") {
+                searchSpaceResults.find((space) => space._id === spaceId)!.requests.push(session!.user.preferred_username!);
+            }
         });
     }
 
