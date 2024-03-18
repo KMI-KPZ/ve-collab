@@ -2,6 +2,7 @@ from typing import Dict, List
 
 import requests
 import tornado.web
+from tornado.options import options
 
 import global_vars
 from handlers.base_handler import BaseHandler, auth_needed
@@ -179,8 +180,18 @@ class SearchHandler(BaseHandler):
             },
         }
 
+        search_url = "{}/{}/_search?".format(
+            global_vars.elasticsearch_base_url, "profiles"
+        )
+
+        # catch test mode, because test_mode forces "test" index
+        if options.test_admin or options.test_user:
+            search_url = "{}/{}/_search?".format(
+                global_vars.elasticsearch_base_url, "test"
+            )
+
         response = requests.post(
-            "{}/{}/_search?".format(global_vars.elasticsearch_base_url, "profiles"),
+            search_url,
             auth=(
                 global_vars.elasticsearch_username,
                 global_vars.elasticsearch_password,
@@ -244,8 +255,18 @@ class SearchHandler(BaseHandler):
             },
         }
 
+        search_url = "{}/{}/_search?".format(
+            global_vars.elasticsearch_base_url, "spaces"
+        )
+
+        # catch test mode, because test_mode forces "test" index
+        if options.test_admin or options.test_user:
+            search_url = "{}/{}/_search?".format(
+                global_vars.elasticsearch_base_url, "test"
+            )
+
         response = requests.post(
-            "{}/{}/_search?".format(global_vars.elasticsearch_base_url, "spaces"),
+            search_url,
             auth=(
                 global_vars.elasticsearch_username,
                 global_vars.elasticsearch_password,
