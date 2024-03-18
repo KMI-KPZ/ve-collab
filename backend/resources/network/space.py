@@ -2,6 +2,7 @@ from typing import Dict, List, Optional
 
 from bson import ObjectId
 import gridfs
+from pymongo import ReturnDocument
 from pymongo.database import Database
 from exceptions import (
     AlreadyAdminError,
@@ -18,6 +19,7 @@ from exceptions import (
     UserNotInvitedError,
     UserNotMemberError,
 )
+from resources.elasticsearch_integration import ElasticsearchConnector
 from model import Space
 import util
 
@@ -180,7 +182,7 @@ class Spaces:
                 {"members": username}, projection={"name": True}
             )
         ]
-    
+
     def get_space_ids_of_user(self, username: str) -> List[ObjectId]:
         """
         retrieve a list of space _ids that the given user is a member of.
@@ -211,12 +213,64 @@ class Spaces:
 
         return list(self.db.spaces.find({"requests": username}))
 
-    def create_space(self, space: dict) -> ObjectId:
+    def get_bulk_space_snippets(
+        self, space_ids: List[str | ObjectId], member: str = None
+    ) -> List[Dict]:
+        """
+        request the space snippets (i.e. name, space_description, space_pic, joinable and requests)
+        for every given _id in `space_id` and return them as a Dict.
+        Optionally, you can specify a username as the `member`-parameter to
+        exclude spaces from the response, that the user is already a member of.
+        If any of the space_id's does not exist, it is omitted from the response,
+        meaning the length of the response list and the given list of _id's
+        might differ.
+        """
+
+        if not isinstance(space_ids, list):
+            raise TypeError(
+                "expected type 'list' for argument 'space_ids', got {}".format(
+                    type(space_ids)
+                )
+            )
+        space_ids = [util.parse_object_id(space_id) for space_id in space_ids]
+
+        if not space_ids:
+            return []
+
+        print(space_ids)
+
+        if member:
+            return list(
+                self.db.spaces.find(
+                    {
+                        "_id": {"$in": space_ids},
+                        "invisible": False,
+                        "members": {"$ne": member},
+                        "admins": {"$ne": member},
+                    },
+                )
+            )
+        else:
+            return list(
+                self.db.spaces.find(
+                    {
+                        "_id": {"$in": space_ids},
+                        "invisible": False,
+                    },
+                )
+            )
+
+    def create_space(
+        self, space: dict, elasticsearch_collection: str = "spaces"
+    ) -> ObjectId:
         """
         create a new space, validating the existence of the necessary attributes
         beforehand. mandatory attributes are: name (str), invisible (bool),
         joinable (bool), members (list<str>), admins (list<str>), invites (list<str>),
         requests (list<str>), files (list<ObjectId>)
+
+        You can also specify the elasticsearch collection in which the profile
+        should be replicated. The default is "spaces" just as in the mongodb.
 
         Returns the _id of the newly created space
         """
@@ -248,9 +302,16 @@ class Spaces:
         # finally, create it
         result = self.db.spaces.insert_one(space)
 
+        # replicate the insert to elasticsearch
+        ElasticsearchConnector().on_insert(
+            result.inserted_id, space, elasticsearch_collection
+        )
+
         return result.inserted_id
 
-    def delete_space(self, space_id: str | ObjectId) -> None:
+    def delete_space(
+        self, space_id: str | ObjectId, elasticsearch_collection: str = "spaces"
+    ) -> None:
         """
         delete the space and all data associated with it, i.e.:
         - space data (description, ...)
@@ -280,6 +341,8 @@ class Spaces:
 
             post_manager.delete_post_by_space(space_id)
             acl.space_acl.delete(space_id=space_id)
+
+        ElasticsearchConnector().on_delete(space_id, elasticsearch_collection)
 
     def is_space_directly_joinable(self, space_id: str | ObjectId) -> bool:
         """
@@ -401,7 +464,12 @@ class Spaces:
         if update_result.matched_count != 1:
             raise SpaceDoesntExistError()
 
-    def set_space_description(self, space_id: str | ObjectId, description: str) -> None:
+    def set_space_description(
+        self,
+        space_id: str | ObjectId,
+        description: str,
+        elasticsearch_collection: str = "spaces",
+    ) -> None:
         """
         set (or update) the description of the space.
         :param space_id: the space which description should be updated
@@ -410,13 +478,19 @@ class Spaces:
 
         space_id = util.parse_object_id(space_id)
 
-        update_result = self.db.spaces.update_one(
-            {"_id": space_id}, {"$set": {"space_description": description}}
+        update_result = self.db.spaces.find_one_and_update(
+            {"_id": space_id},
+            {"$set": {"space_description": description}},
+            return_document=ReturnDocument.AFTER,
         )
 
         # the filter didnt match any document, so the space doesnt exist
-        if update_result.matched_count != 1:
+        if update_result is None:
             raise SpaceDoesntExistError()
+
+        ElasticsearchConnector().on_update(
+            space_id, elasticsearch_collection, update_result
+        )
 
     def invite_user(self, space_id: str | ObjectId, username: str) -> None:
         """
@@ -564,7 +638,9 @@ class Spaces:
 
         self._remove_user_from_requests_list(space_id, username)
 
-    def toggle_visibility(self, space_id: str | ObjectId) -> None:
+    def toggle_visibility(
+        self, space_id: str | ObjectId, elasticsearch_collection: str = "spaces"
+    ) -> None:
         """
         toggle the visiblity of the space, i.e. visible --> invisible, invisible --> visible
         """
@@ -572,15 +648,23 @@ class Spaces:
         space_id = util.parse_object_id(space_id)
 
         # toggle visibility
-        update_result = self.db.spaces.update_one(
-            {"_id": space_id}, [{"$set": {"invisible": {"$not": "$invisible"}}}]
+        update_result = self.db.spaces.find_one_and_update(
+            {"_id": space_id},
+            [{"$set": {"invisible": {"$not": "$invisible"}}}],
+            return_document=ReturnDocument.AFTER,
         )
 
         # the filter didnt match any document, so the space doesnt exist
-        if update_result.matched_count != 1:
+        if update_result is None:
             raise SpaceDoesntExistError()
 
-    def toggle_joinability(self, space_id: str | ObjectId) -> None:
+        ElasticsearchConnector().on_update(
+            space_id, elasticsearch_collection, update_result
+        )
+
+    def toggle_joinability(
+        self, space_id: str | ObjectId, elasticsearch_collection: str = "spaces"
+    ) -> None:
         """
         toggle the joinability of the space, i.e. joinable --> not joinable, not joinable --> joinable
         """
@@ -588,13 +672,19 @@ class Spaces:
         space_id = util.parse_object_id(space_id)
 
         # toggle joinability
-        update_result = self.db.spaces.update_one(
-            {"_id": space_id}, [{"$set": {"joinable": {"$not": "$joinable"}}}]
+        update_result = self.db.spaces.find_one_and_update(
+            {"_id": space_id},
+            [{"$set": {"joinable": {"$not": "$joinable"}}}],
+            return_document=ReturnDocument.AFTER,
         )
 
         # the filter didnt match any document, so the space doesnt exist
-        if update_result.matched_count != 1:
+        if update_result is None:
             raise SpaceDoesntExistError()
+
+        ElasticsearchConnector().on_update(
+            space_id, elasticsearch_collection, update_result
+        )
 
     def leave_space(self, space_id: str | ObjectId, username: str) -> None:
         """
