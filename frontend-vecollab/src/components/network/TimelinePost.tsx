@@ -58,7 +58,7 @@ export default function TimelinePost(
         });
 
         observer.observe(ref.current);
-    }, [isLast, fetchNextPosts])
+    }, [isLast])
 
     // may collapse/expand repost
     useEffect(() => {
@@ -198,7 +198,7 @@ export default function TimelinePost(
 
     return (
         <div ref={ref} className={`${wbRemoved ? "opacity-0 transition-opacity ease-in-out delay-50 duration-300" : "opacity-100 transition-none" }
-            p-4 bg-white rounded shadow`}
+            p-4 mb-4 bg-white rounded shadow`}
         >
             <div className="flex items-center">
                 {(post.isRepost && post.repostAuthor) ? (

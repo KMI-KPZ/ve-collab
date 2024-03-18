@@ -8,6 +8,7 @@ import { BackendPost } from "@/interfaces/api/apiInterfaces";
 import Timestamp from "../Timestamp";
 import { HiOutlineCalendar } from "react-icons/hi";
 import { format } from "date-fns";
+import React from "react";
 
 interface Props {
     space?: string | undefined;
@@ -20,9 +21,8 @@ export default function Timeline({ space, user }: Props) {
     const [toDate, setToDate] = useState<Date>(new Date());
     const [sharedPost, setSharedPost] = useState<BackendPost|null>(null);
     const [allPosts, setAllPosts] = useState<BackendPost[]>([]);
-    let prevDate: Date | null = null;
+    const [groupedPosts, setGroupedPosts] = useState< Record<string, BackendPost[]> >({});
 
-    let datePillIdx: number = 0;
     const datePillColors: { vg: string, bg: string}[] = [
         { vg: '#00748f', bg: '#d8f2f9' }, // blue
         { vg: '#c4560b', bg: '#f5cfb5' }, // orange
@@ -54,15 +54,30 @@ export default function Timeline({ space, user }: Props) {
         if (!newFetchedPosts.length) return
 
         if (allPosts.some((post) => post._id == newFetchedPosts[0]._id) ) {
-            // newFetchedPosts[0]._id == allPosts[0]?._id
             // TODO sometimes this happens -> WHY???? Because of hot-refresh while development
             console.error('ERROR: fetched posts are the same as current', {allPosts, newFetchedPosts, toDate});
-
         } else {
             setAllPosts((prev) => [...prev, ...newFetchedPosts]);
         }
     }, [newFetchedPosts])
+
+    useEffect(() => {
+        if (!allPosts.length) return
+
+        setGroupedPosts( groupBy(allPosts, (p) => p.creation_date.replace(/T.+/, '')) )
+
+    }, [allPosts])
     // console.log({allPosts});
+    // console.log({groupedPosts, keys: Object.keys( groupedPosts )});
+
+    function groupBy<T>(arr: T[], fn: (item: T) => any) {
+        return arr.reduce<Record<string, T[]>>((prev, curr) => {
+            const groupKey = fn(curr);
+            const group = prev[groupKey] || [];
+            group.push(curr);
+            return { ...prev, [groupKey]: group };
+        }, {});
+    }
 
     const fetchNextPosts = (post: BackendPost, i: number) => {
         if (!allPosts.length) return
@@ -95,26 +110,13 @@ export default function Timeline({ space, user }: Props) {
         setAllPosts((prev) => [post, ...prev]);
     }
 
+    const getDatePill = (i: number) => {
+        return datePillColors[ (i) % datePillColors.length ]
+    }
+
     if (error) {
         console.error(error);
         return (<>Error loading timeline. See console for details</>)
-    }
-
-    const showDatePill = (post: BackendPost) => {
-        const curDate = new Date(post.creation_date)
-
-        if (prevDate
-            && format(prevDate, 'dMMMyyy') == format(curDate, 'dMMMyyy')
-        ) {
-            return false
-        }
-        prevDate = curDate
-        datePillIdx += 1
-        return true
-    }
-
-    const getCurrentDatePill = () => {
-        return datePillColors[ (datePillIdx-1) % datePillColors.length ]
     }
 
     return (
@@ -127,47 +129,46 @@ export default function Timeline({ space, user }: Props) {
                     onCreatedPost={afterCreatePost}
                 />
             </div>
-            {allPosts.map((post, i) => {
-                const hasDatePill = showDatePill(post)
-                const datePill = getCurrentDatePill();
-                return (
-                    <div key={post._id}
-                        style={{ borderColor: datePill.vg }}
-                        className="-ml-7 pl-7 pb-7 pt-2 border-l"
-                    >
-                        {hasDatePill && (
-                            <div
-                                style={{ color: datePill.vg }}
-                                className="relative -left-[45px] -top-[5px] -mt-2 mb-4 flex items-center font-bold"
-                            >
-                                <div
-                                    style={{ borderColor: datePill.vg, backgroundColor:datePill.bg }}
-                                    className="rounded-full border"
-                                >
-                                    <HiOutlineCalendar className='m-2' />
-                                </div>
-                                <div
 
-                                    style={{ backgroundColor:datePill.bg }}
-                                    className="px-4 py-2 ml-2 relative rounded-full"
-                                >
-                                    <Timestamp timestamp={post.creation_date} dateFormat="d. MMM" />
-                                </div>
+            {Object.keys( groupedPosts ).map( (group, i) => {
+                const datePill = getDatePill(i)
+                return (
+                    <div key={group}
+                        style={{ borderColor: datePill.vg }}
+                        className="-ml-7 pl-7 pb-4 border-l"
+                    >
+                        <div className="relativ sticky z-20 -ml-[45px] top-[17px] mb-4 flex items-center font-bold">
+                            <div
+                                style={{ color: datePill.vg, borderColor: datePill.vg, backgroundColor:datePill.bg }}
+                                className="rounded-full border p-[2px] -mt-[11px] shadow"
+                            >
+                                <HiOutlineCalendar className='m-2' />
                             </div>
-                        )}
-                        <TimelinePost
-                            post={post}
-                            updatePost={updatePost}
-                            space={space}
-                            isLast={i === allPosts.length - 1}
-                            allSpaces={allSpaces}
-                            removePost={removePost}
-                            sharePost={post => setSharedPost(post)}
-                            fetchNextPosts={() => fetchNextPosts(post, i)}
-                        />
+                            <div
+                                style={{ color: datePill.vg, backgroundColor:datePill.bg }}
+                                className="relative px-4 py-2 ml-2 -mt-[11px] rounded-full shadow"
+                            >
+                                <Timestamp timestamp={group} dateFormat="d. MMM" />
+                            </div>
+                        </div>
+
+                        { groupedPosts[group].map( (post, j) => (
+                            <TimelinePost
+                                key={post._id}
+                                post={post}
+                                updatePost={updatePost}
+                                space={space}
+                                isLast={i === Object.keys(groupedPosts).length-1 && j === groupedPosts[group].length-1}
+                                allSpaces={allSpaces}
+                                removePost={removePost}
+                                sharePost={post => setSharedPost(post)}
+                                fetchNextPosts={() => fetchNextPosts(post, i)}
+                            />
+                        )) }
                     </div>
-                );
-            })}
+                )
+            } )}
+
             {isLoadingTimeline && (<LoadingAnimation />)}
             {!isLoadingTimeline && allPosts.length == 0 && ( <div className="m-10 flex justify-center">Bisher keine Beiträge ...</div>)}
         </>

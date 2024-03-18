@@ -16,9 +16,9 @@ export default function Timestamp({
         <time
             className={className}
             dateTime={timestamp}
-            title={format(parseISO(timestamp), 'd. MMM yyyy H:mm', {
-                locale: de,
-            })}
+            // title={format(parseISO(timestamp), 'd. MMM yyyy H:mm', {
+            //     locale: de,
+            // })}
         >
             {format(parseISO(timestamp), dateFormat, {
                 locale: de,
