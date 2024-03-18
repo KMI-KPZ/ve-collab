@@ -194,7 +194,7 @@ class BaseResourceTestCase(TestCase):
             lecture_type="test",
             participants_amount=10,
         )
-    
+
     def create_physical_mobility(slef, location: str = "test") -> PhysicalMobility:
         """
         convenience method to create a physical mobility with non-default values
@@ -534,7 +534,9 @@ class SpaceACLResourceTest(BaseResourceTestCase):
         """
 
         acl_manager = ACL(self.db)
-        acl_manager.space_acl.insert_default_discussion(CURRENT_USER.username, self.space_id)
+        acl_manager.space_acl.insert_default_discussion(
+            CURRENT_USER.username, self.space_id
+        )
 
         # check if default rule was inserted
         acl_entry = self.db.space_acl.find_one(
@@ -3302,6 +3304,22 @@ class SpaceResourceTest(BaseResourceTestCase):
         for fs_file in fs.find():
             fs.delete(fs_file._id)
 
+    @classmethod
+    def tearDownClass(cls) -> None:
+        super().tearDownClass()
+
+        # clear out elastisearch index, only once after all tests
+        # because otherwise there would be too many http requests
+        response = requests.delete(
+            "{}/test".format(global_vars.elasticsearch_base_url),
+            auth=(
+                global_vars.elasticsearch_username,
+                global_vars.elasticsearch_password,
+            ),
+        )
+        if response.status_code != 200:
+            print(response.content)
+
     def test_check_space_exists_success(self):
         """
         expect: True because space exists
@@ -3699,7 +3717,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         }
 
         space_manager = Spaces(self.db)
-        _id = space_manager.create_space(new_space)
+        _id = space_manager.create_space(new_space.copy(), "test")
 
         # check if space was created
         space = self.db.spaces.find_one({"name": "new_space"})
@@ -3716,6 +3734,18 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertEqual(space["files"], new_space["files"])
         self.assertEqual(space["space_pic"], new_space["space_pic"])
         self.assertEqual(space["space_description"], new_space["space_description"])
+
+        # check that the profile was also replicated to elasticsearch
+        response = requests.get(
+            "{}/{}/_doc/{}".format(
+                global_vars.elasticsearch_base_url, "test", space["_id"]
+            ),
+            auth=(
+                global_vars.elasticsearch_username,
+                global_vars.elasticsearch_password,
+            ),
+        )
+        self.assertEqual(response.status_code, 200)
 
     def test_create_space_failure_invalid_attributes(self):
         """
@@ -3737,11 +3767,11 @@ class SpaceResourceTest(BaseResourceTestCase):
 
         # invisible is missing
         space_manager = Spaces(self.db)
-        self.assertRaises(ValueError, space_manager.create_space, new_space)
+        self.assertRaises(ValueError, space_manager.create_space, new_space, "test")
 
         # invisible has wrong type
         new_space["invisible"] = "test"
-        self.assertRaises(TypeError, space_manager.create_space, new_space)
+        self.assertRaises(TypeError, space_manager.create_space, new_space, "test")
 
     def test_delete_space(self):
         """
@@ -3749,7 +3779,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         """
 
         space_manager = Spaces(self.db)
-        space_manager.delete_space(self.space_id)
+        space_manager.delete_space(self.space_id, "test")
 
         # check if space was deleted
         space = self.db.spaces.find_one({"_id": self.space_id})
@@ -3763,7 +3793,7 @@ class SpaceResourceTest(BaseResourceTestCase):
 
         space_manager = Spaces(self.db)
         self.assertRaises(
-            SpaceDoesntExistError, space_manager.delete_space, ObjectId()
+            SpaceDoesntExistError, space_manager.delete_space, ObjectId(), "test"
         )
 
     def test_is_space_directly_joinable(self):
@@ -3920,9 +3950,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         """
 
         space_manager = Spaces(self.db)
-        space_manager.set_space_picture(
-            self.space_id, "test_pic", b"test", "image/jpg"
-        )
+        space_manager.set_space_picture(self.space_id, "test_pic", b"test", "image/jpg")
 
         space = self.db.spaces.find_one({"_id": self.space_id})
         space_pic_id = space["space_pic"]
@@ -3953,10 +3981,25 @@ class SpaceResourceTest(BaseResourceTestCase):
         """
 
         space_manager = Spaces(self.db)
-        space_manager.set_space_description(self.space_id, "test_description")
+        space_manager.set_space_description(self.space_id, "test_description", "test")
 
         space = self.db.spaces.find_one({"_id": self.space_id})
         self.assertEqual(space["space_description"], "test_description")
+
+        # check that the update was replicated to elasticsearch
+        response = requests.get(
+            "{}/{}/_doc/{}".format(
+                global_vars.elasticsearch_base_url, "test", space["_id"]
+            ),
+            auth=(
+                global_vars.elasticsearch_username,
+                global_vars.elasticsearch_password,
+            ),
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json()["_source"]["space_description"], "test_description"
+        )
 
     def test_set_space_description_error_space_doesnt_exist(self):
         """
@@ -3970,6 +4013,7 @@ class SpaceResourceTest(BaseResourceTestCase):
             space_manager.set_space_description,
             ObjectId(),
             "test_description",
+            "test",
         )
 
     def test_invite_user(self):
@@ -4229,15 +4273,43 @@ class SpaceResourceTest(BaseResourceTestCase):
 
         current_visibility = self.default_space["invisible"]
         space_manager = Spaces(self.db)
-        space_manager.toggle_visibility(self.space_id)
+        space_manager.toggle_visibility(self.space_id, "test")
 
         space = self.db.spaces.find_one({"_id": self.space_id})
         self.assertEqual(space["invisible"], not current_visibility)
 
+        # also check that the change was replicated to elasticsearch
+        response = requests.get(
+            "{}/{}/_doc/{}".format(
+                global_vars.elasticsearch_base_url, "test", space["_id"]
+            ),
+            auth=(
+                global_vars.elasticsearch_username,
+                global_vars.elasticsearch_password,
+            ),
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json()["_source"]["invisible"], not current_visibility
+        )
+
         # try again backwards
-        space_manager.toggle_visibility(self.space_id)
+        space_manager.toggle_visibility(self.space_id, "test")
         space = self.db.spaces.find_one({"_id": self.space_id})
         self.assertEqual(space["invisible"], current_visibility)
+
+        # also check that the change was replicated to elasticsearch
+        response = requests.get(
+            "{}/{}/_doc/{}".format(
+                global_vars.elasticsearch_base_url, "test", space["_id"]
+            ),
+            auth=(
+                global_vars.elasticsearch_username,
+                global_vars.elasticsearch_password,
+            ),
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["_source"]["invisible"], current_visibility)
 
     def test_toggle_visibility_error_space_doesnt_exist(self):
         """
@@ -4247,7 +4319,7 @@ class SpaceResourceTest(BaseResourceTestCase):
 
         space_manager = Spaces(self.db)
         self.assertRaises(
-            SpaceDoesntExistError, space_manager.toggle_visibility, ObjectId()
+            SpaceDoesntExistError, space_manager.toggle_visibility, ObjectId(), "test"
         )
 
     def test_toggle_joinability(self):
@@ -4257,15 +4329,43 @@ class SpaceResourceTest(BaseResourceTestCase):
 
         current_joinability = self.default_space["joinable"]
         space_manager = Spaces(self.db)
-        space_manager.toggle_joinability(self.space_id)
+        space_manager.toggle_joinability(self.space_id, "test")
 
         space = self.db.spaces.find_one({"_id": self.space_id})
         self.assertEqual(space["joinable"], not current_joinability)
 
+        # also check that the change was replicated to elasticsearch
+        response = requests.get(
+            "{}/{}/_doc/{}".format(
+                global_vars.elasticsearch_base_url, "test", space["_id"]
+            ),
+            auth=(
+                global_vars.elasticsearch_username,
+                global_vars.elasticsearch_password,
+            ),
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json()["_source"]["joinable"], not current_joinability
+        )
+
         # try again backwards
-        space_manager.toggle_joinability(self.space_id)
+        space_manager.toggle_joinability(self.space_id, "test")
         space = self.db.spaces.find_one({"_id": self.space_id})
         self.assertEqual(space["joinable"], current_joinability)
+
+        # also check that the change was replicated to elasticsearch
+        response = requests.get(
+            "{}/{}/_doc/{}".format(
+                global_vars.elasticsearch_base_url, "test", space["_id"]
+            ),
+            auth=(
+                global_vars.elasticsearch_username,
+                global_vars.elasticsearch_password,
+            ),
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["_source"]["joinable"], current_joinability)
 
     def test_toggle_joinability_error_space_doesnt_exist(self):
         """
@@ -4275,9 +4375,7 @@ class SpaceResourceTest(BaseResourceTestCase):
 
         space_manager = Spaces(self.db)
         self.assertRaises(
-            SpaceDoesntExistError,
-            space_manager.toggle_joinability,
-            ObjectId(),
+            SpaceDoesntExistError, space_manager.toggle_joinability, ObjectId(), "test"
         )
 
     def test_leave_space_member(self):
@@ -4407,9 +4505,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         )
 
         space_manager = Spaces(self.db)
-        space_manager.revoke_space_admin_privilege(
-            self.space_id, CURRENT_USER.username
-        )
+        space_manager.revoke_space_admin_privilege(self.space_id, CURRENT_USER.username)
 
         space = self.db.spaces.find_one({"_id": self.space_id})
         self.assertNotIn(CURRENT_USER.username, space["admins"])
@@ -4485,9 +4581,7 @@ class SpaceResourceTest(BaseResourceTestCase):
         """
 
         space_manager = Spaces(self.db)
-        self.assertRaises(
-            SpaceDoesntExistError, space_manager.get_files, ObjectId()
-        )
+        self.assertRaises(SpaceDoesntExistError, space_manager.get_files, ObjectId())
 
     def test_add_new_post_file(self):
         """
@@ -4783,15 +4877,18 @@ class PlanResourceTest(BaseResourceTestCase):
             "physical_mobilities": [self.physical_mobility.to_dict()],
             "learning_env": "test",
             "new_content": False,
-            "formalities": [{
-                "username": "test_user",
-                "technology": False,
-                "exam_regulations": False,
-            }, {
-                "username": "test_admin",
-                "technology": True,
-                "exam_regulations": True,
-            }],
+            "formalities": [
+                {
+                    "username": "test_user",
+                    "technology": False,
+                    "exam_regulations": False,
+                },
+                {
+                    "username": "test_admin",
+                    "technology": True,
+                    "exam_regulations": True,
+                },
+            ],
             "duration": self.step.duration.total_seconds(),
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
@@ -4845,7 +4942,9 @@ class PlanResourceTest(BaseResourceTestCase):
                     [lecture.to_dict() for lecture in plan.lectures],
                     self.default_plan["lectures"],
                 )
-                self.assertEqual(plan.learning_goals, self.default_plan["learning_goals"])
+                self.assertEqual(
+                    plan.learning_goals, self.default_plan["learning_goals"]
+                )
                 self.assertEqual(
                     [target_group.to_dict() for target_group in plan.audience],
                     self.default_plan["audience"],
@@ -4855,7 +4954,9 @@ class PlanResourceTest(BaseResourceTestCase):
                     plan.involved_parties, self.default_plan["involved_parties"]
                 )
                 self.assertEqual(plan.realization, self.default_plan["realization"])
-                self.assertEqual(plan.physical_mobility, self.default_plan["physical_mobility"])
+                self.assertEqual(
+                    plan.physical_mobility, self.default_plan["physical_mobility"]
+                )
                 self.assertEqual(
                     [mobility.to_dict() for mobility in plan.physical_mobilities],
                     self.default_plan["physical_mobilities"],
@@ -4898,7 +4999,9 @@ class PlanResourceTest(BaseResourceTestCase):
                     [lecture.to_dict() for lecture in plan.lectures],
                     self.default_plan["lectures"],
                 )
-                self.assertEqual(plan.learning_goals, self.default_plan["learning_goals"])
+                self.assertEqual(
+                    plan.learning_goals, self.default_plan["learning_goals"]
+                )
                 self.assertEqual(
                     [target_group.to_dict() for target_group in plan.audience],
                     self.default_plan["audience"],
@@ -4908,7 +5011,9 @@ class PlanResourceTest(BaseResourceTestCase):
                     plan.involved_parties, self.default_plan["involved_parties"]
                 )
                 self.assertEqual(plan.realization, self.default_plan["realization"])
-                self.assertEqual(plan.physical_mobility, self.default_plan["physical_mobility"])
+                self.assertEqual(
+                    plan.physical_mobility, self.default_plan["physical_mobility"]
+                )
                 self.assertEqual(
                     [mobility.to_dict() for mobility in plan.physical_mobilities],
                     self.default_plan["physical_mobilities"],
@@ -5043,11 +5148,13 @@ class PlanResourceTest(BaseResourceTestCase):
                 "physical_mobilities": [self.physical_mobility.to_dict()],
                 "learning_env": "test",
                 "new_content": False,
-                "formalities": [{
-                    "username": "test_user",
-                    "technology": False,
-                    "exam_regulations": False,
-                }],
+                "formalities": [
+                    {
+                        "username": "test_user",
+                        "technology": False,
+                        "exam_regulations": False,
+                    }
+                ],
                 "duration": self.step.duration.total_seconds(),
                 "workload": self.step.workload,
                 "steps": [self.step.to_dict()],
@@ -5087,11 +5194,13 @@ class PlanResourceTest(BaseResourceTestCase):
                 "physical_mobilities": [self.physical_mobility.to_dict()],
                 "learning_env": "test",
                 "new_content": False,
-                "formalities": [{
-                    "username": "test_user",
-                    "technology": False,
-                    "exam_regulations": False,
-                }],
+                "formalities": [
+                    {
+                        "username": "test_user",
+                        "technology": False,
+                        "exam_regulations": False,
+                    }
+                ],
                 "duration": self.step.duration.total_seconds(),
                 "workload": self.step.workload,
                 "steps": [self.step.to_dict()],
@@ -5150,11 +5259,13 @@ class PlanResourceTest(BaseResourceTestCase):
             "physical_mobilities": [self.physical_mobility.to_dict()],
             "learning_env": "test",
             "new_content": False,
-            "formalities": [{
-                "username": "test_user",
-                "technology": False,
-                "exam_regulations": False,
-            }],
+            "formalities": [
+                {
+                    "username": "test_user",
+                    "technology": False,
+                    "exam_regulations": False,
+                }
+            ],
             "duration": self.step.duration.total_seconds(),
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
@@ -5211,11 +5322,13 @@ class PlanResourceTest(BaseResourceTestCase):
             "physical_mobilities": [self.physical_mobility.to_dict()],
             "learning_env": "test",
             "new_content": False,
-            "formalities": [{
-                "username": "test_user",
-                "technology": False,
-                "exam_regulations": False,
-            }],
+            "formalities": [
+                {
+                    "username": "test_user",
+                    "technology": False,
+                    "exam_regulations": False,
+                }
+            ],
             "duration": self.step.duration.total_seconds(),
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
@@ -5399,9 +5512,13 @@ class PlanResourceTest(BaseResourceTestCase):
         self.planner.update_field(self.plan_id, "physical_mobilities", [])
         self.planner.update_field(self.plan_id, "learning_env", "updated_learning_env")
         self.planner.update_field(self.plan_id, "new_content", True)
-        self.planner.update_field(self.plan_id, "learning_goals", ["update1", "update2"])
         self.planner.update_field(
-            self.plan_id, "formalities", [{"username": "test_user", "technology": True, "exam_regulations": True}]
+            self.plan_id, "learning_goals", ["update1", "update2"]
+        )
+        self.planner.update_field(
+            self.plan_id,
+            "formalities",
+            [{"username": "test_user", "technology": True, "exam_regulations": True}],
         )
         self.planner.update_field(
             self.plan_id,
@@ -5433,7 +5550,8 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(db_state["new_content"], True)
         self.assertEqual(db_state["learning_goals"], ["update1", "update2"])
         self.assertEqual(
-            db_state["formalities"], [{"username": "test_user", "technology": True, "exam_regulations": True}]
+            db_state["formalities"],
+            [{"username": "test_user", "technology": True, "exam_regulations": True}],
         )
         self.assertEqual(db_state["progress"]["name"], "completed")
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
@@ -5509,7 +5627,8 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(db_state["new_content"], True)
         self.assertEqual(db_state["learning_goals"], ["update1", "update2"])
         self.assertEqual(
-            db_state["formalities"], [{"username": "test_user", "technology": True, "exam_regulations": True}]
+            db_state["formalities"],
+            [{"username": "test_user", "technology": True, "exam_regulations": True}],
         )
         self.assertEqual(db_state["progress"]["name"], "completed")
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])

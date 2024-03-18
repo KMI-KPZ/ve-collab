@@ -2,6 +2,8 @@ from bson import ObjectId
 import json
 import requests
 
+from tornado.options import options
+
 import global_vars
 import util
 
@@ -69,6 +71,10 @@ class ElasticsearchConnector:
         `collection` is the same collection that the `document` is stored in inside MongoDB.
         """
 
+        # catch test mode
+        if options.test_admin or options.test_user:
+            collection = "test"
+
         if isinstance(_id, ObjectId):
             _id = str(_id)
 
@@ -121,6 +127,10 @@ class ElasticsearchConnector:
         `_id` is the MongoDB ObjectId of the document that should be deleted.
         `collection` is the same collection that the document is stored in inside MongoDB.
         """
+
+        # catch test mode
+        if options.test_admin or options.test_user:
+            collection = "test"
 
         if isinstance(_id, ObjectId):
             _id = str(_id)

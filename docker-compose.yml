@@ -86,7 +86,7 @@ services:
   etherpad:
     container_name: etherpad
     build:
-      context: https://github.com/ether/etherpad-lite.git
+      context: https://github.com/ether/etherpad-lite.git#1.9.6
       dockerfile: Dockerfile
       args:
         - ETHERPAD_PLUGINS=ep_openid_connect

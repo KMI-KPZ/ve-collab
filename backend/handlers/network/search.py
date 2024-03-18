@@ -2,6 +2,7 @@ from typing import Dict, List
 
 import requests
 import tornado.web
+from tornado.options import options
 
 import global_vars
 from handlers.base_handler import BaseHandler, auth_needed
@@ -16,7 +17,7 @@ class SearchHandler(BaseHandler):
     def get(self):
         """
         GET /search
-        search the database for posts, tags, and users
+        search the database for posts, tags, spaces, and users
         required parameters:
             query - search query
                 (if you search for tags, u may use a comma-delimited list of strings to search for multiple tags)
@@ -25,6 +26,7 @@ class SearchHandler(BaseHandler):
             posts - bool to include posts in the search (only "true" will evaluate to True!)
             tags - bool to include tags in the search (only "true" will evaluate to True!)
             users - bool to include users in the search (only "true" will evaluate to True!)
+            spaces - bool to include users in the search (only "true" will evaluate to True!)
 
         returns:
             200 OK
@@ -32,7 +34,8 @@ class SearchHandler(BaseHandler):
              "success": True,
              "users": [list_of_users_with_matching_profile_content],
              "tags": [list_of_posts_with_matching_tags],
-             "posts": [list_of_posts_with_matching_content]}
+             "posts": [list_of_posts_with_matching_content],
+             "spaces": [list_of_spaces_with_matching_content]}
 
             400 Bad Request
             {"status": 400,
@@ -61,14 +64,16 @@ class SearchHandler(BaseHandler):
         search_posts = self.get_argument("posts", "false")
         search_tags = self.get_argument("tags", "false")
         search_users = self.get_argument("users", "false")
+        search_spaces = self.get_argument("spaces", "false")
 
         # ensure type safety: only "true" will be True, everything else will evaluate to False
         search_posts = search_posts == "true"
         search_tags = search_tags == "true"
         search_users = search_users == "true"
+        search_spaces = search_spaces == "true"
 
         # reject if all search categories are false
-        if not any([search_posts, search_tags, search_users]):
+        if not any([search_posts, search_tags, search_users, search_spaces]):
             self.set_status(400)
             self.write(
                 {
@@ -82,6 +87,7 @@ class SearchHandler(BaseHandler):
         users_search_result = []
         tags_search_result = []
         posts_search_result = []
+        spaces_search_result = []
 
         # depending on flags, gather search results
         if search_users:
@@ -93,6 +99,9 @@ class SearchHandler(BaseHandler):
         if search_posts:
             posts_search_result = self._search_posts(query)
 
+        if search_spaces:
+            spaces_search_result = self._search_spaces(query)
+
         response = self.json_serialize_response(
             {
                 "status": 200,
@@ -100,6 +109,7 @@ class SearchHandler(BaseHandler):
                 "users": users_search_result,
                 "tags": tags_search_result,
                 "posts": posts_search_result,
+                "spaces": spaces_search_result,
             }
         )
 
@@ -170,8 +180,18 @@ class SearchHandler(BaseHandler):
             },
         }
 
+        search_url = "{}/{}/_search?".format(
+            global_vars.elasticsearch_base_url, "profiles"
+        )
+
+        # catch test mode, because test_mode forces "test" index
+        if options.test_admin or options.test_user:
+            search_url = "{}/{}/_search?".format(
+                global_vars.elasticsearch_base_url, "test"
+            )
+
         response = requests.post(
-            "{}/{}/_search?".format(global_vars.elasticsearch_base_url, "profiles"),
+            search_url,
             auth=(
                 global_vars.elasticsearch_username,
                 global_vars.elasticsearch_password,
@@ -187,6 +207,81 @@ class SearchHandler(BaseHandler):
         with util.get_mongodb() as db:
             profile_manager = Profiles(db)
             return profile_manager.get_bulk_profiles(usernames)
+
+    def _search_spaces(self, query: str) -> List[Dict]:
+        """
+        suggestion search on spaces profiles based on name and description
+        :param query: search query
+        :return: any spaces matching the query
+        """
+
+        query = {
+            "query": {
+                "bool": {
+                    "should": [
+                        {
+                            "prefix": {
+                                "name": {"value": query, "case_insensitive": True}
+                            }
+                        },
+                        {
+                            "fuzzy": {
+                                "name": {
+                                    "value": query,
+                                    "fuzziness": 1,
+                                    "prefix_length": 1,
+                                }
+                            }
+                        },
+                        {
+                            "prefix": {
+                                "space_description": {
+                                    "value": query,
+                                    "case_insensitive": True,
+                                }
+                            }
+                        },
+                        {
+                            "fuzzy": {
+                                "space_description": {
+                                    "value": query,
+                                    "fuzziness": 1,
+                                    "prefix_length": 1,
+                                }
+                            }
+                        },
+                    ]
+                }
+            },
+        }
+
+        search_url = "{}/{}/_search?".format(
+            global_vars.elasticsearch_base_url, "spaces"
+        )
+
+        # catch test mode, because test_mode forces "test" index
+        if options.test_admin or options.test_user:
+            search_url = "{}/{}/_search?".format(
+                global_vars.elasticsearch_base_url, "test"
+            )
+
+        response = requests.post(
+            search_url,
+            auth=(
+                global_vars.elasticsearch_username,
+                global_vars.elasticsearch_password,
+            ),
+            json=query,
+        )
+
+        # map _id's to exchange them for full spaces
+        space_ids = [elem["_id"] for elem in response.json()["hits"]["hits"]]
+
+        with util.get_mongodb() as db:
+            space_manager = Spaces(db)
+            return space_manager.get_bulk_space_snippets(
+                space_ids, member=self.current_user.username
+            )
 
     def _search_tags(self, tags: List[str]) -> List[Dict]:
         """
