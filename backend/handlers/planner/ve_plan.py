@@ -245,6 +245,10 @@ class VEPlanHandler(BaseHandler):
                                 "custom_attributes": {"my_attr": "my_value"}
                             }
                         ],
+                        "is_good_practise": True,
+                        "underlying_ve_model": "test",
+                        "reflection": "test",
+                        "evaluation": "test",
                         "progress": {
                             "name": "<completed|uncompleted|not_started>",
                             "institutions": "<completed|uncompleted|not_started>",
@@ -445,6 +449,10 @@ class VEPlanHandler(BaseHandler):
                                 "custom_attributes": {"my_attr": "my_value"}
                             }
                         ],
+                        "is_good_practise": True,
+                        "underlying_ve_model": "test",
+                        "reflection": "test",
+                        "evaluation": "test",
                         "progress": {
                             "name": "<completed|uncompleted|not_started>",
                             "institutions": "<completed|uncompleted|not_started>",
@@ -685,7 +693,7 @@ class VEPlanHandler(BaseHandler):
                  "reason": "no_logged_in_user"}
 
                 409 Conflict
-                (Atleast one of the update instructions failed, 
+                (Atleast one of the update instructions failed,
                  the errors list contains those that failed, possible
                  error message are the same as in the singular update field
                  endpoint)
@@ -1353,7 +1361,7 @@ class VEPlanHandler(BaseHandler):
             self.set_status(409)
             self.write({"success": False, "reason": PLAN_ALREADY_EXISTS})
             return
-        
+
         er = EtherpadResouce(db)
         try:
             er.initiate_etherpad_for_plan(_id)
@@ -1397,7 +1405,7 @@ class VEPlanHandler(BaseHandler):
             self.set_status(403)
             self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
             return
-        
+
         if upsert is True:
             er = EtherpadResouce(db)
             try:
@@ -1506,7 +1514,7 @@ class VEPlanHandler(BaseHandler):
 
         Responses:
             200 OK       --> all update instructions were successfull
-            409 Conflict --> atleast one failure, further information about each occured error 
+            409 Conflict --> atleast one failure, further information about each occured error
                              is contained in the "errors" list in the response
         """
 
@@ -1745,7 +1753,7 @@ class VEPlanHandler(BaseHandler):
         not be called manually anywhere else.
 
         Delete a plan by specifying its _id. Only the author of a plan is able to do that,
-        write access is not sufficient. 
+        write access is not sufficient.
 
         As a side effect, the deletion of a plan will also remove it from all VE Windows
         on the profile, where this plan was inside.
@@ -1769,7 +1777,7 @@ class VEPlanHandler(BaseHandler):
             self.set_status(409)
             self.write({"success": False, "reason": PLAN_DOESNT_EXIST})
             return
-        
+
         profile_manager = Profiles(db)
         profile_manager.remove_ve_windows_entry_by_plan_id(_id)
 

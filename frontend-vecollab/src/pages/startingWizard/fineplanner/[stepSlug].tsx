@@ -84,6 +84,7 @@ export const defaultFormValueDataFineStepFrontend: IFineStepFrontend = {
     ],
 };
 
+FinePlanner.auth = true;
 export default function FinePlanner() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);

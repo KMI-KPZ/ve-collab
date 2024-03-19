@@ -7496,6 +7496,10 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "duration": self.step.duration.total_seconds(),
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
+            "is_good_practise": True,
+            "underlying_ve_model": "test",
+            "reflection": "test",
+            "evaluation": "test",
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",
@@ -7586,6 +7590,10 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.duration, default_plan.duration)
         self.assertEqual(response_plan.workload, default_plan.workload)
         self.assertEqual(response_plan.steps, default_plan.steps)
+        self.assertEqual(response_plan.is_good_practise, default_plan.is_good_practise)
+        self.assertEqual(response_plan.underlying_ve_model, default_plan.underlying_ve_model)
+        self.assertEqual(response_plan.reflection, default_plan.reflection)
+        self.assertEqual(response_plan.evaluation, default_plan.evaluation)
         self.assertEqual(response_plan.progress, default_plan.progress)
         self.assertIsNotNone(response_plan.creation_timestamp)
         self.assertIsNotNone(response_plan.last_modified)
@@ -7681,6 +7689,10 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.duration, default_plan.duration)
         self.assertEqual(response_plan.workload, default_plan.workload)
         self.assertEqual(response_plan.steps, default_plan.steps)
+        self.assertEqual(response_plan.is_good_practise, default_plan.is_good_practise)
+        self.assertEqual(response_plan.underlying_ve_model, default_plan.underlying_ve_model)
+        self.assertEqual(response_plan.reflection, default_plan.reflection)
+        self.assertEqual(response_plan.evaluation, default_plan.evaluation)
         self.assertEqual(response_plan.progress, default_plan.progress)
         self.assertIsNotNone(response_plan.creation_timestamp)
         self.assertIsNotNone(response_plan.last_modified)

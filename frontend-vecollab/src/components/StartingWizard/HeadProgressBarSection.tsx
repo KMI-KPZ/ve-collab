@@ -46,6 +46,12 @@ export default function HeadProgressBarSection({ stage, linkFineStep }: HeadProg
             link: '/startingWizard/finish',
             image: imageFinish,
         },
+        {
+            description: 'Nachbearbeitung',
+            link: '/startingWizard/afterVE',
+            image: imageStagePlanner,
+        },
+        
     ];
     const [stateMenuProgressData] = useState<HeadMenuProgressStep[]>(headMenuProgressSteps);
 

@@ -4892,6 +4892,10 @@ class PlanResourceTest(BaseResourceTestCase):
             "duration": self.step.duration.total_seconds(),
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
+            "is_good_practise": True,
+            "underlying_ve_model": "test",
+            "reflection": "test",
+            "evaluation": "test",
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",
@@ -4967,6 +4971,10 @@ class PlanResourceTest(BaseResourceTestCase):
                 self.assertEqual(
                     [step.to_dict() for step in plan.steps], self.default_plan["steps"]
                 )
+                self.assertEqual(plan.is_good_practise, self.default_plan["is_good_practise"])
+                self.assertEqual(plan.underlying_ve_model, self.default_plan["underlying_ve_model"])
+                self.assertEqual(plan.reflection, self.default_plan["reflection"])
+                self.assertEqual(plan.evaluation, self.default_plan["evaluation"])
                 self.assertEqual(plan.timestamp_from, self.step.timestamp_from)
                 self.assertEqual(plan.timestamp_to, self.step.timestamp_to)
                 self.assertEqual(plan.workload, self.step.workload)
@@ -5024,6 +5032,9 @@ class PlanResourceTest(BaseResourceTestCase):
                 self.assertEqual(
                     [step.to_dict() for step in plan.steps], self.default_plan["steps"]
                 )
+                self.assertEqual(plan.is_good_practise, self.default_plan["is_good_practise"])
+                self.assertEqual(plan.underlying_ve_model, self.default_plan["underlying_ve_model"])
+                self.assertEqual(plan.reflection, self.default_plan["reflection"])
                 self.assertEqual(plan.progress, self.default_plan["progress"])
                 self.assertEqual(plan.timestamp_from, self.step.timestamp_from)
                 self.assertEqual(plan.timestamp_to, self.step.timestamp_to)
@@ -5111,6 +5122,9 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(
             [step.to_dict() for step in plan.steps], self.default_plan["steps"]
         )
+        self.assertEqual(plan.is_good_practise, self.default_plan["is_good_practise"])
+        self.assertEqual(plan.underlying_ve_model, self.default_plan["underlying_ve_model"])
+        self.assertEqual(plan.reflection, self.default_plan["reflection"])
         self.assertEqual(plan.progress, self.default_plan["progress"])
         self.assertEqual(plan.timestamp_from, self.step.timestamp_from)
         self.assertEqual(plan.timestamp_to, self.step.timestamp_to)
@@ -5158,6 +5172,10 @@ class PlanResourceTest(BaseResourceTestCase):
                 "duration": self.step.duration.total_seconds(),
                 "workload": self.step.workload,
                 "steps": [self.step.to_dict()],
+                "is_good_practise": True,
+                "underlying_ve_model": "test",
+                "reflection": "test",
+                "evaluation": "test",
                 "progress": {
                     "name": "not_started",
                     "institutions": "not_started",
@@ -5204,6 +5222,10 @@ class PlanResourceTest(BaseResourceTestCase):
                 "duration": self.step.duration.total_seconds(),
                 "workload": self.step.workload,
                 "steps": [self.step.to_dict()],
+                "is_good_practise": True,
+                "underlying_ve_model": "test",
+                "reflection": "test",
+                "evaluation": "test",
                 "progress": {
                     "name": "not_started",
                     "institutions": "not_started",
@@ -5269,6 +5291,10 @@ class PlanResourceTest(BaseResourceTestCase):
             "duration": self.step.duration.total_seconds(),
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
+            "is_good_practise": True,
+            "underlying_ve_model": "test",
+            "reflection": "test",
+            "evaluation": "test",
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",
@@ -5332,6 +5358,10 @@ class PlanResourceTest(BaseResourceTestCase):
             "duration": self.step.duration.total_seconds(),
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
+            "is_good_practise": True,
+            "underlying_ve_model": "test",
+            "reflection": "test",
+            "evaluation": "test",
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",
@@ -5520,6 +5550,10 @@ class PlanResourceTest(BaseResourceTestCase):
             "formalities",
             [{"username": "test_user", "technology": True, "exam_regulations": True}],
         )
+        self.planner.update_field(self.plan_id, "is_good_practise", False)
+        self.planner.update_field(self.plan_id, "underlying_ve_model", "updated_model")
+        self.planner.update_field(self.plan_id, "reflection", "updated_reflection")
+        self.planner.update_field(self.plan_id, "evaluation", "updated_evaluation")
         self.planner.update_field(
             self.plan_id,
             "progress",
@@ -5553,6 +5587,10 @@ class PlanResourceTest(BaseResourceTestCase):
             db_state["formalities"],
             [{"username": "test_user", "technology": True, "exam_regulations": True}],
         )
+        self.assertEqual(db_state["is_good_practise"], False)
+        self.assertEqual(db_state["underlying_ve_model"], "updated_model")
+        self.assertEqual(db_state["reflection"], "updated_reflection")
+        self.assertEqual(db_state["evaluation"], "updated_evaluation")
         self.assertEqual(db_state["progress"]["name"], "completed")
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
