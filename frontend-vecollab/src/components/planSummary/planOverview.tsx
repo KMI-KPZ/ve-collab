@@ -2,6 +2,7 @@ import React from 'react';
 import ViewAttributes from '@/components/planSummary/ViewAttributes';
 import ViewFinestep from '@/components/planSummary/ViewFinestep';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
+import ViewAfterVE from './ViewAfterVE';
 
 interface Props {
     plan: IPlan;
@@ -21,6 +22,8 @@ export function PlanOverview({ plan }: Props): JSX.Element {
             ) : (
                 <div className="ml-4"> Noch keine erstellt</div>
             )}
+            <hr className="h-px my-10 bg-gray-400 border-0" />
+            <ViewAfterVE plan={plan} />
         </div>
     );
 }
