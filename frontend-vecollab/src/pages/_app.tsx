@@ -117,13 +117,15 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
                             headerBarMessageEvents={messageEventsHeaderBar}
                         >
                             <>
-                                <Chat
-                                    socket={socket}
-                                    messageEvents={messageEvents}
-                                    setMessageEvents={setMessageEvents}
-                                    headerBarMessageEvents={messageEventsHeaderBar}
-                                    setHeaderBarMessageEvents={setMessageEventsHeaderBar}
-                                />
+                                <Auth>
+                                    <Chat
+                                        socket={socket}
+                                        messageEvents={messageEvents}
+                                        setMessageEvents={setMessageEvents}
+                                        headerBarMessageEvents={messageEventsHeaderBar}
+                                        setHeaderBarMessageEvents={setMessageEventsHeaderBar}
+                                    />
+                                </Auth>
                                 {Component.auth ? (
                                     <Auth>
                                         <Component

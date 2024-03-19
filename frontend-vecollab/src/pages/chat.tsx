@@ -29,8 +29,6 @@ export default function Chat(
 ) {
     const { data: session } = useSession();
 
-    if (!session) return ( <></> )
-
     const [open, setOpen] = useState<boolean>(false);
     // const [showRooms, setShowRooms] = useState<boolean>(true);
     const [selectedChat, setSelectedChat] = useState<string>('');
