@@ -365,11 +365,14 @@ export default function Institutions() {
                                         <button
                                             type="button"
                                             className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                            onClick={methods.handleSubmit((data) =>
-                                                combinedSubmitRouteAndUpdate(
-                                                    data,
-                                                    '/startingWizard/generalInformation/externalParties'
-                                                )
+                                            onClick={methods.handleSubmit(
+                                                (data) => {
+                                                    combinedSubmitRouteAndUpdate(
+                                                        data,
+                                                        '/startingWizard/generalInformation/externalParties'
+                                                    );
+                                                },
+                                                async () => setIsPopupOpen(true)
                                             )}
                                         >
                                             Zurück

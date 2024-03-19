@@ -197,11 +197,14 @@ export default function ExternalPersons() {
                                         <button
                                             type="button"
                                             className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                            onClick={methods.handleSubmit((data) =>
-                                                combinedSubmitRouteAndUpdate(
-                                                    data,
-                                                    '/startingWizard/generalInformation/partners'
-                                                )
+                                            onClick={methods.handleSubmit(
+                                                (data) => {
+                                                    combinedSubmitRouteAndUpdate(
+                                                        data,
+                                                        '/startingWizard/generalInformation/partners'
+                                                    );
+                                                },
+                                                async () => setIsPopupOpen(true)
                                             )}
                                         >
                                             Zurück

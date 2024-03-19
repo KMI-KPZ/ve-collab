@@ -1,19 +1,20 @@
 import WhiteBox from '@/components/Layout/WhiteBox';
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
-import SideProgressBarSectionBroadPlanner from '@/components/StartingWizard/SideProgressBarSectionBroadPlanner';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
-import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
+import { FormProvider, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/startingWizard/sideProgressBar';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+import SideProgressBarSectionBroadPlannerWithReactHookForm from '@/components/StartingWizard/SideProgressBarSectionBroadPlannerWithReactHookForm';
+import PopupSaveData from '@/components/StartingWizard/PopupSaveData';
 
 export interface Lecture {
     name: string;
@@ -34,6 +35,7 @@ export default function Lectures() {
         initialSideProgressBarStates
     );
     const [steps, setSteps] = useState<IFineStep[]>([]);
+    const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -45,13 +47,7 @@ export default function Lectures() {
         }
     }, [session, status]);
 
-    const {
-        register,
-        formState: { errors },
-        handleSubmit,
-        control,
-        setValue,
-    } = useForm<FormValues>({
+    const methods = useForm<FormValues>({
         mode: 'onChange',
         defaultValues: {
             lectures: [
@@ -82,7 +78,7 @@ export default function Lectures() {
                 (data) => {
                     setLoading(false);
                     if (data.plan.lectures.length !== 0) {
-                        setValue('lectures', data.plan.lectures);
+                        methods.setValue('lectures', data.plan.lectures);
                     }
                     if (data.plan.progress.length !== 0) {
                         setSideMenuStepsProgress(data.plan.progress);
@@ -91,11 +87,11 @@ export default function Lectures() {
                 }
             );
         }
-    }, [session, status, router, setValue]);
+    }, [session, status, router, methods]);
 
     const { fields, append, remove } = useFieldArray({
         name: 'lectures',
-        control,
+        control: methods.control,
     });
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
@@ -143,7 +139,7 @@ export default function Lectures() {
                         <div className="w-3/4">
                             <input
                                 type="text"
-                                {...register(`lectures.${index}.name`, {
+                                {...methods.register(`lectures.${index}.name`, {
                                     maxLength: {
                                         value: 50,
                                         message:
@@ -159,7 +155,7 @@ export default function Lectures() {
                                 className="border border-gray-400 rounded-lg w-full p-2"
                             />
                             <p className="text-red-600 pt-2">
-                                {errors?.lectures?.[index]?.name?.message}
+                                {methods.formState.errors?.lectures?.[index]?.name?.message}
                             </p>
                         </div>
                     </div>
@@ -171,7 +167,7 @@ export default function Lectures() {
                         </div>
                         <div className="w-3/4">
                             <select
-                                {...register(`lectures.${index}.lecture_type`, {
+                                {...methods.register(`lectures.${index}.lecture_type`, {
                                     maxLength: {
                                         value: 50,
                                         message:
@@ -185,7 +181,7 @@ export default function Lectures() {
                                 <option value="Wahlveranstaltung">Wahlveranstaltung</option>
                             </select>
                             <p className="text-red-600 pt-2">
-                                {errors?.lectures?.[index]?.lecture_type?.message}
+                                {methods.formState.errors?.lectures?.[index]?.lecture_type?.message}
                             </p>
                         </div>
                     </div>
@@ -197,7 +193,7 @@ export default function Lectures() {
                         </div>
                         <div className="w-3/4">
                             <select
-                                {...register(`lectures.${index}.lecture_format`, {
+                                {...methods.register(`lectures.${index}.lecture_format`, {
                                     maxLength: {
                                         value: 50,
                                         message:
@@ -212,7 +208,10 @@ export default function Lectures() {
                                 <option value="Hybrid">Hybrid</option>
                             </select>
                             <p className="text-red-600 pt-2">
-                                {errors?.lectures?.[index]?.lecture_format?.message}
+                                {
+                                    methods.formState.errors?.lectures?.[index]?.lecture_format
+                                        ?.message
+                                }
                             </p>
                         </div>
                     </div>
@@ -226,7 +225,7 @@ export default function Lectures() {
                             <input
                                 type="number"
                                 min={0}
-                                {...register(`lectures.${index}.participants_amount`, {
+                                {...methods.register(`lectures.${index}.participants_amount`, {
                                     maxLength: {
                                         value: 4,
                                         message: 'Bitte geben sie eine realistische Zahl ein',
@@ -241,7 +240,10 @@ export default function Lectures() {
                                 className="border border-gray-400 rounded-lg w-full p-2"
                             />
                             <p className="text-red-600 pt-2">
-                                {errors?.lectures?.[index]?.participants_amount?.message}
+                                {
+                                    methods.formState.errors?.lectures?.[index]?.participants_amount
+                                        ?.message
+                                }
                             </p>
                         </div>
                     </div>
@@ -250,80 +252,99 @@ export default function Lectures() {
         ));
     };
     return (
-        <div className="flex bg-pattern-left-blue-small bg-no-repeat">
-            <div className="flex flex-grow justify-center">
-                <div className="flex flex-col">
-                    <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
-                    {loading ? (
-                        <LoadingAnimation />
-                    ) : (
-                        <form className="gap-y-6 w-full p-12 max-w-7xl items-center flex flex-col flex-grow justify-between">
-                            <div>
-                                <div className={'text-center font-bold text-4xl mb-2'}>
-                                    Im Rahmen welcher Lehrveranstaltungen wird der VE umgesetzt?
-                                </div>
-                                <div className={'text-center mb-20'}>optional</div>
-                                <div className="flex flex-wrap justify-center">
-                                    {renderLecturesInputs()}
-                                </div>
-                                <div className={'mx-2 flex justify-end'}>
-                                    <button type="button" onClick={() => remove(fields.length - 1)}>
-                                        <RxMinus size={20} />
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            append({
-                                                name: '',
-                                                lecture_type: '',
-                                                lecture_format: '',
-                                                participants_amount: '',
-                                            });
-                                        }}
-                                    >
-                                        <RxPlus size={20} />
-                                    </button>
-                                </div>
-                            </div>
-                            <div className="flex justify-between w-full max-w-xl">
-                                <div>
-                                    <button
-                                        type="button"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                        onClick={handleSubmit((data) =>
-                                            combinedSubmitRouteAndUpdate(
-                                                data,
-                                                '/startingWizard/generalInformation/institutions'
-                                            )
-                                        )}
-                                    >
-                                        Zurück
-                                    </button>
-                                </div>
-                                <div>
-                                    <button
-                                        type="button"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                        onClick={handleSubmit((data) =>
-                                            combinedSubmitRouteAndUpdate(
-                                                data,
-                                                '/startingWizard/generalInformation/globalGoals'
-                                            )
-                                        )}
-                                    >
-                                        Weiter
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    )}
-                </div>
-            </div>
-            <SideProgressBarSectionBroadPlanner
-                progressState={sideMenuStepsProgress}
-                handleValidation={handleSubmit(onSubmit)}
-                isValid={true}
+        <FormProvider {...methods}>
+            <PopupSaveData
+                isOpen={isPopupOpen}
+                handleContinue={async () => {
+                    await router.push({
+                        pathname: '/startingWizard/generalInformation/formalConditions',
+                        query: {
+                            plannerId: router.query.plannerId,
+                        },
+                    });
+                }}
+                handleCancel={() => setIsPopupOpen(false)}
             />
-        </div>
+            <div className="flex bg-pattern-left-blue-small bg-no-repeat">
+                <div className="flex flex-grow justify-center">
+                    <div className="flex flex-col">
+                        <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
+                        {loading ? (
+                            <LoadingAnimation />
+                        ) : (
+                            <form className="gap-y-6 w-full p-12 max-w-7xl items-center flex flex-col flex-grow justify-between">
+                                <div>
+                                    <div className={'text-center font-bold text-4xl mb-2'}>
+                                        Im Rahmen welcher Lehrveranstaltungen wird der VE umgesetzt?
+                                    </div>
+                                    <div className={'text-center mb-20'}>optional</div>
+                                    <div className="flex flex-wrap justify-center">
+                                        {renderLecturesInputs()}
+                                    </div>
+                                    <div className={'mx-2 flex justify-end'}>
+                                        <button
+                                            type="button"
+                                            onClick={() => remove(fields.length - 1)}
+                                        >
+                                            <RxMinus size={20} />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                append({
+                                                    name: '',
+                                                    lecture_type: '',
+                                                    lecture_format: '',
+                                                    participants_amount: '',
+                                                });
+                                            }}
+                                        >
+                                            <RxPlus size={20} />
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="flex justify-between w-full max-w-xl">
+                                    <div>
+                                        <button
+                                            type="button"
+                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                            onClick={methods.handleSubmit((data) => {
+                                                combinedSubmitRouteAndUpdate(
+                                                    data,
+                                                    '/startingWizard/generalInformation/institutions'
+                                                );
+                                            })}
+                                        >
+                                            Zurück
+                                        </button>
+                                    </div>
+                                    <div>
+                                        <button
+                                            type="button"
+                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                            onClick={methods.handleSubmit(
+                                                (data) => {
+                                                    combinedSubmitRouteAndUpdate(
+                                                        data,
+                                                        '/startingWizard/generalInformation/globalGoals'
+                                                    );
+                                                },
+                                                async () => setIsPopupOpen(true)
+                                            )}
+                                        >
+                                            Weiter
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        )}
+                    </div>
+                </div>
+                <SideProgressBarSectionBroadPlannerWithReactHookForm
+                    progressState={sideMenuStepsProgress}
+                    onSubmit={onSubmit}
+                />
+            </div>
+        </FormProvider>
     );
 }
