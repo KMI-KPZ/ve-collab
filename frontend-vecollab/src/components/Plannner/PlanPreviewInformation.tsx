@@ -10,7 +10,7 @@ interface Props {
 export default function PlanPreviewInformation({ plan }: Props) {
     const { data: session } = useSession();
     return (
-        <div className="p-4">
+        <div className="mx-4 my-7 overflow-clip">
             <h2 className="text-xl font-bold leading-tight text-gray-800">{plan.name}</h2>
             {plan.author === session?.user.preferred_username ? (
                 <SmallGreyText text={plan.author} />
