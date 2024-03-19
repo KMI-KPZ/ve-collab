@@ -10,7 +10,6 @@ import {
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/startingWizard/sideProgressBar';
-import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import Link from 'next/link';
@@ -206,7 +205,6 @@ export default function Topics() {
                 progressState={sideMenuStepsProgress}
                 handleValidation={() => {}}
                 isValid={true}
-                sideMenuStepsData={sideMenuStepsData}
             />
         </div>
     );

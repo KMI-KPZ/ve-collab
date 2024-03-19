@@ -11,17 +11,12 @@ import {
     ProgressState,
 } from '@/interfaces/startingWizard/sideProgressBar';
 import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
-import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import { MultiValue, ActionMeta } from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 import Link from 'next/link';
 import { Tooltip } from '@/components/Tooltip';
 import { FiInfo } from 'react-icons/fi';
-
-interface FormValues {
-    globalGoals: string;
-}
 
 export default function GlobalGoals() {
     const { data: session, status } = useSession();
@@ -31,7 +26,6 @@ export default function GlobalGoals() {
         initialSideProgressBarStates
     );
     const [steps, setSteps] = useState<IFineStep[]>([]);
-    const { validateAndRoute } = useValidation();
     const [learningGoals, setLearningGoals] = useState<string[]>([]);
 
     // check for session errors and trigger the login flow if necessary
@@ -112,7 +106,7 @@ export default function GlobalGoals() {
     return (
         <div className="flex bg-pattern-left-blue-small bg-no-repeat">
             <div className="flex flex-grow justify-center">
-                <div className='flex flex-col'>
+                <div className="flex flex-col">
                     <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
                     {loading ? (
                         <LoadingAnimation />
@@ -212,7 +206,6 @@ export default function GlobalGoals() {
                 progressState={sideMenuStepsProgress}
                 handleValidation={() => {}}
                 isValid={true}
-                sideMenuStepsData={sideMenuStepsData}
             />
         </div>
     );

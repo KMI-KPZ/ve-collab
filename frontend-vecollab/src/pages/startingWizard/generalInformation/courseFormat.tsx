@@ -10,14 +10,12 @@ import {
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/startingWizard/sideProgressBar';
-import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import WhiteBox from '@/components/Layout/WhiteBox';
 import Select from 'react-select';
 import { SingleValue, ActionMeta } from 'react-select';
 import Link from 'next/link';
 import { RxMinus, RxPlus } from 'react-icons/rx';
-import { set } from 'date-fns';
 import { Tooltip } from '@/components/Tooltip';
 import { FiInfo } from 'react-icons/fi';
 
@@ -391,7 +389,6 @@ export default function Realization() {
                 progressState={sideMenuStepsProgress}
                 handleValidation={() => {}}
                 isValid={true}
-                sideMenuStepsData={sideMenuStepsData}
             />
         </div>
     );
