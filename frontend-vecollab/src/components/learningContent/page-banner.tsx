@@ -16,9 +16,11 @@ export default function PageBanner({ topLevelNodes }: Props) {
 
     const [isUserAdmin, setIsUserAdmin] = useState(false);
 
-    const title = 'Materialien zu VE';
+    const title = 'SELBSTLERNMATERIALIEN';
     const text =
-        'Hello and welcome to our ve-collab qualification offer! This section is centrally filled with lerning opportunities and can be extended by our community. The learning resources you will find here are sorted across the disciplines as well as discipline-specific. Here you can get an overview of VEs and learn more about the individual topics. ';
+        'Herzlich Willkommen zum stetig wachsenden Qualifizierungsangebot von VE-Collab!';
+    const text2 = 'Sie interessieren sich für virtuelle Austausche, haben aber noch kein oder wenig Vorwissen zum Thema? Dann helfen Ihnen die Materialien dabei, ins Thema einzutauchen und unterstützen Sie Schritt für Schritt auf dem Weg hin zu Ihrem ersten eigenen virtuellen Austausch.'
+    const text3 = 'Sie konnten bereits Erfahrung mit VA sammeln? Dann können Sie hier Ihr Wissen in den für Sie relevanten Themengebieten vertiefen, Ihre bisherigen Erfahrungen reflektieren und sich u. a. von aktuellen Links und Artikeln für die eigene Praxis und Forschung inspirieren lassen.'
 
     useEffect(() => {
         if (status === 'loading') {
@@ -36,9 +38,14 @@ export default function PageBanner({ topLevelNodes }: Props) {
         <>
             <div className={'w-full h-96 mt-2 relative rounded-2xl z-10'}>
                 <Image fill src={blueBackground} alt={''} />
-                <div className={'absolute top-10 bottom-10 left-20 right-20 text-center'}>
-                    <h1 className={'text-7xl text-white font-bold'}>{title}</h1>
+                <div className={'absolute top-10 bottom-10 left-20 right-20'}>
+                    <h1 className={'text-6xl text-white font-bold text-center'}>{title}</h1>
                     <p className={'relative top-5 text-base text-white'}> {text}</p>
+                    <br/>
+                    <p className={'relative top-5 text-base text-white'}> {text2}</p>
+                    <br/>
+                    <p className={'relative top-5 text-base text-white'}> {text3}</p>
+
                 </div>
                 {isUserAdmin && (
                     <div className="absolute top-5 right-5">
@@ -51,7 +58,7 @@ export default function PageBanner({ topLevelNodes }: Props) {
                     </div>
                 )}
             </div>
-            <ul className={'w-full flex relative -mt-14 justify-center z-20'}>
+            <ul className={'w-full flex relative -mt-10 justify-center z-20'}>
                 {topLevelNodes.map((node) => (
                     <CategoryBox key={node.id} slug={node.text} categoryName={node.text} />
                 ))}
