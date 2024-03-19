@@ -1,11 +1,10 @@
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
-import SideProgressBarSectionBroadPlanner from '@/components/StartingWizard/SideProgressBarSectionBroadPlanner';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
-import { SubmitHandler, useForm } from 'react-hook-form';
+import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
@@ -15,6 +14,8 @@ import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import { Tooltip } from '@/components/Tooltip';
 import Link from 'next/link';
 import { FiInfo } from 'react-icons/fi';
+import PopupSaveData from '@/components/StartingWizard/PopupSaveData';
+import SideProgressBarSectionBroadPlannerWithReactHookForm from '@/components/StartingWizard/SideProgressBarSectionBroadPlannerWithReactHookForm';
 
 interface FormValues {
     learningEnv: string;
@@ -28,6 +29,7 @@ export default function LearningEnvironment() {
         initialSideProgressBarStates
     );
     const [steps, setSteps] = useState<IFineStep[]>([]);
+    const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -39,12 +41,7 @@ export default function LearningEnvironment() {
         }
     }, [session, status]);
 
-    const {
-        register,
-        formState: { errors },
-        handleSubmit,
-        setValue,
-    } = useForm<FormValues>({
+    const methods = useForm<FormValues>({
         mode: 'onChange',
         defaultValues: {
             learningEnv: '',
@@ -68,7 +65,7 @@ export default function LearningEnvironment() {
                 (data) => {
                     setLoading(false);
                     if (data.plan.learning_env !== null) {
-                        setValue('learningEnv', data.plan.learning_env);
+                        methods.setValue('learningEnv', data.plan.learning_env);
                     }
                     if (data.plan.progress.length !== 0) {
                         setSideMenuStepsProgress(data.plan.progress);
@@ -77,7 +74,7 @@ export default function LearningEnvironment() {
                 }
             );
         }
-    }, [session, status, router, setValue]);
+    }, [session, status, router, methods]);
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         await fetchPOST(
@@ -112,84 +109,100 @@ export default function LearningEnvironment() {
     };
 
     return (
-        <div className="flex bg-pattern-left-blue-small bg-no-repeat">
-            <div className="flex flex-grow justify-center">
-                <div className="flex flex-col">
-                    <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
-                    {loading ? (
-                        <LoadingAnimation />
-                    ) : (
-                        <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between">
-                            <div>
-                                <div className={'text-center font-bold text-4xl mb-2 relative'}>
-                                    In welcher digitalen Lernumgebung findet der VE statt?
-                                    <Tooltip tooltipsText="Mehr zu LMS findest du hier in den Selbstlernmaterialien …">
-                                        <Link
-                                            target="_blank"
-                                            href={'/content/Digitale%20Medien%20&%20Werkzeuge'}
-                                        >
-                                            <FiInfo size={30} color="#00748f" />
-                                        </Link>
-                                    </Tooltip>
-                                </div>
-                                <div className={'text-center mb-20'}>optional</div>
-                                <div className="mt-4 flex justify-center">
-                                    <textarea
-                                        rows={5}
-                                        placeholder="Lernumgebung beschreiben"
-                                        className="border border-gray-300 rounded-lg w-3/4 p-2"
-                                        {...register('learningEnv', {
-                                            maxLength: {
-                                                value: 500,
-                                                message:
-                                                    'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                                            },
-                                        })}
-                                    />
-                                    <p className="text-red-600 pt-2">
-                                        {errors?.learningEnv?.message}
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="flex justify-between w-full max-w-xl">
-                                <div>
-                                    <button
-                                        type="button"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                        onClick={handleSubmit((data) =>
-                                            combinedSubmitRouteAndUpdate(
-                                                data,
-                                                '/startingWizard/generalInformation/courseFormat'
-                                            )
-                                        )}
-                                    >
-                                        Zurück
-                                    </button>
-                                </div>
-                                <div>
-                                    <button
-                                        type="button"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                        onClick={handleSubmit((data) =>
-                                            combinedSubmitRouteAndUpdate(
-                                                data,
-                                                '/startingWizard/generalInformation/formalConditions'
-                                            )
-                                        )}
-                                    >
-                                        Weiter
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    )}
-                </div>
-            </div>
-            <SideProgressBarSectionBroadPlanner
-                progressState={sideMenuStepsProgress}
-                handleValidation={handleSubmit(onSubmit)}
-                isValid={true}
+        <FormProvider {...methods}>
+            <PopupSaveData
+                isOpen={isPopupOpen}
+                handleContinue={async () => {
+                    await router.push({
+                        pathname: '/startingWizard/generalInformation/formalConditions',
+                        query: {
+                            plannerId: router.query.plannerId,
+                        },
+                    });
+                }}
+                handleCancel={() => setIsPopupOpen(false)}
             />
-        </div>
+            <div className="flex bg-pattern-left-blue-small bg-no-repeat">
+                <div className="flex flex-grow justify-center">
+                    <div className="flex flex-col">
+                        <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
+                        {loading ? (
+                            <LoadingAnimation />
+                        ) : (
+                            <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between">
+                                <div>
+                                    <div className={'text-center font-bold text-4xl mb-2 relative'}>
+                                        In welcher digitalen Lernumgebung findet der VE statt?
+                                        <Tooltip tooltipsText="Mehr zu LMS findest du hier in den Selbstlernmaterialien …">
+                                            <Link
+                                                target="_blank"
+                                                href={'/content/Digitale%20Medien%20&%20Werkzeuge'}
+                                            >
+                                                <FiInfo size={30} color="#00748f" />
+                                            </Link>
+                                        </Tooltip>
+                                    </div>
+                                    <div className={'text-center mb-20'}>optional</div>
+                                    <div className="mt-4 flex justify-center">
+                                        <textarea
+                                            rows={5}
+                                            placeholder="Lernumgebung beschreiben"
+                                            className="border border-gray-300 rounded-lg w-3/4 p-2"
+                                            {...methods.register('learningEnv', {
+                                                maxLength: {
+                                                    value: 500,
+                                                    message:
+                                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
+                                                },
+                                            })}
+                                        />
+                                        <p className="text-red-600 pt-2">
+                                            {methods.formState.errors?.learningEnv?.message}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex justify-between w-full max-w-xl">
+                                    <div>
+                                        <button
+                                            type="button"
+                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                            onClick={methods.handleSubmit((data) =>
+                                                combinedSubmitRouteAndUpdate(
+                                                    data,
+                                                    '/startingWizard/generalInformation/courseFormat'
+                                                )
+                                            )}
+                                        >
+                                            Zurück
+                                        </button>
+                                    </div>
+                                    <div>
+                                        <button
+                                            type="button"
+                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                            onClick={methods.handleSubmit(
+                                                (data) => {
+                                                    combinedSubmitRouteAndUpdate(
+                                                        data,
+                                                        '/startingWizard/generalInformation/formalConditions'
+                                                    );
+                                                },
+                                                async () => setIsPopupOpen(true)
+                                            )}
+                                        >
+                                            Weiter
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        )}
+                    </div>
+                </div>
+                <SideProgressBarSectionBroadPlannerWithReactHookForm
+                    progressState={sideMenuStepsProgress}
+                    onSubmit={onSubmit}
+                />
+            </div>
+        </FormProvider>
     );
 }
