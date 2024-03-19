@@ -10,7 +10,6 @@ import {
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/startingWizard/sideProgressBar';
-import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import { SubmitHandler, useForm } from 'react-hook-form';
 
@@ -172,7 +171,6 @@ export default function EssentialInformation() {
                 progressState={sideMenuStepsProgress}
                 handleValidation={handleSubmit(onSubmit)}
                 isValid={true}
-                sideMenuStepsData={sideMenuStepsData}
             />
         </div>
     );

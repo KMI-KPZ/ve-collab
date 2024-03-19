@@ -11,7 +11,6 @@ import {
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/startingWizard/sideProgressBar';
-import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import { Tooltip } from '@/components/Tooltip';
 import Link from 'next/link';
@@ -190,7 +189,6 @@ export default function LearningEnvironment() {
                 progressState={sideMenuStepsProgress}
                 handleValidation={handleSubmit(onSubmit)}
                 isValid={true}
-                sideMenuStepsData={sideMenuStepsData}
             />
         </div>
     );

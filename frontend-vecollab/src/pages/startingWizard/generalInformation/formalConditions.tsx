@@ -10,7 +10,6 @@ import {
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import LoadingAnimation from '@/components/LoadingAnimation';
-import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import Link from 'next/link';
 import { TooltipList } from '@/components/TooltipList';
@@ -404,7 +403,6 @@ export default function FormalConditions() {
                 progressState={sideMenuStepsProgress}
                 handleValidation={() => {}}
                 isValid={true}
-                sideMenuStepsData={sideMenuStepsData}
             />
         </div>
     );

@@ -1205,6 +1205,10 @@ class VEPlan:
         "new_content": (bool, type(None)),
         "formalities": list,
         "steps": list,
+        "is_good_practise": (bool, type(None)),
+        "underlying_ve_model": (str, type(None)),
+        "reflection": (str, type(None)),
+        "evaluation": (str, type(None)),
         "progress": dict,
     }
 
@@ -1232,6 +1236,10 @@ class VEPlan:
         new_content: bool = None,
         formalities: list = [],
         steps: List[Step] = [],
+        is_good_practise: bool = None,
+        underlying_ve_model: str = None,
+        reflection: str = None,
+        evaluation: str = None,
         progress: Dict = {},
     ) -> None:
         """
@@ -1283,6 +1291,13 @@ class VEPlan:
         self.steps = steps
         self.physical_mobility = physical_mobility
         self.physical_mobilities = physical_mobilities
+
+        if not is_good_practise:
+            is_good_practise = False
+        self.is_good_practise = is_good_practise
+        self.underlying_ve_model = underlying_ve_model
+        self.reflection = reflection
+        self.evaluation = evaluation
 
         if progress:
             # TODO check every expected key is inside as well
@@ -1408,6 +1423,10 @@ class VEPlan:
             "duration": self.duration.total_seconds() if self.duration else None,
             "workload": self.workload,
             "steps": [step.to_dict() for step in self.steps],
+            "is_good_practise": self.is_good_practise,
+            "underlying_ve_model": self.underlying_ve_model,
+            "reflection": self.reflection,
+            "evaluation": self.evaluation,
             "progress": self.progress,
         }
 
@@ -1560,6 +1579,10 @@ class VEPlan:
                         "custom_attributes": {},
                     }
                 ],
+                "is_good_practise": True,
+                "underlying_ve_model": None,
+                "reflection": None,
+                "evaluation": None,
                 "progress": {
                     "name": "<completed|uncompleted|not_started>",
                     "institutions": "<completed|uncompleted|not_started>",

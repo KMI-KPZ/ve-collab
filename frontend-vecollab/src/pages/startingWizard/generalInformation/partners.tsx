@@ -18,7 +18,6 @@ import {
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/startingWizard/sideProgressBar';
-import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import { FormalConditionPartner } from '@/pages/startingWizard/generalInformation/formalConditions';
 import { FiInfo } from 'react-icons/fi';
@@ -213,7 +212,7 @@ export default function Partners() {
     return (
         <div className="flex bg-pattern-left-blue-small bg-no-repeat">
             <div className="flex flex-grow justify-center">
-                <div className='flex flex-col'>
+                <div className="flex flex-col">
                     <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
                     {loading ? (
                         <LoadingAnimation />
@@ -301,7 +300,6 @@ export default function Partners() {
                 progressState={sideMenuStepsProgress}
                 handleValidation={() => {}}
                 isValid={true}
-                sideMenuStepsData={sideMenuStepsData}
             />
         </div>
     );
