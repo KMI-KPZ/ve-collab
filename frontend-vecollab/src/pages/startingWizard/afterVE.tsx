@@ -2,19 +2,88 @@ import LoadingAnimation from '@/components/LoadingAnimation';
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
 import { Tooltip } from '@/components/Tooltip';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FiInfo } from 'react-icons/fi';
 import { defaultFineStepData } from './broadPlanner';
 import { IFineStep } from './fineplanner/[stepSlug]';
 import { useRouter } from 'next/router';
 import WhiteBox from '@/components/Layout/WhiteBox';
+import { useSession } from 'next-auth/react';
+import { fetchGET, fetchPOST } from '@/lib/backend';
 
+AfterVE.auth = true;
 export default function AfterVE() {
+    const { data: session, status } = useSession();
     const router = useRouter();
-    const [loading, setLoading] = useState(false);
-    const [steps, setSteps] = useState<IFineStep[]>([defaultFineStepData]);
 
+    const [loading, setLoading] = useState(false);
+
+    const [steps, setSteps] = useState<IFineStep[]>([defaultFineStepData]);
     const [shareAsGoodPractiseChosen, setShareAsGoodPractiseChosen] = useState(false);
+    const [veModel, setVeModel] = useState('');
+    const [reflection, setReflection] = useState('');
+    const [evaluation, setEvaluation] = useState('');
+
+    const onSubmit = async () => {
+        await fetchPOST(
+            '/planner/update_fields',
+            {
+                update: [
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'is_good_practise',
+                        value: shareAsGoodPractiseChosen,
+                    },
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'underlying_ve_model',
+                        value: veModel,
+                    },
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'reflection',
+                        value: reflection,
+                    },
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'evaluation',
+                        value: evaluation,
+                    },
+                ],
+            },
+            session?.accessToken
+        );
+
+        await router.push({ pathname: '/overviewProjects' });
+    };
+
+    useEffect(() => {
+        // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
+        if (!router.isReady || status === 'loading') {
+            setLoading(true);
+            return;
+        }
+        // router is loaded, but still no plan ID in the query --> redirect to overview because we can't do anything without an ID
+        if (!router.query.plannerId) {
+            router.push('/overviewProjects');
+            return;
+        }
+
+        if (session) {
+            fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
+                (data) => {
+                    setLoading(false);
+                    if (data.plan.steps?.length > 0) {
+                        setSteps(data.plan.steps);
+                        setShareAsGoodPractiseChosen(data.plan.is_good_practise);
+                        setVeModel(data.plan.underlying_ve_model);
+                        setReflection(data.plan.reflection);
+                        setEvaluation(data.plan.evaluation);
+                    }
+                }
+            );
+        }
+    }, [session, status, router]);
 
     return (
         <div className="flex bg-pattern-left-blue-small bg-no-repeat">
@@ -119,6 +188,8 @@ export default function AfterVE() {
                                                     className="border border-gray-400 rounded-lg w-full p-2 mt-2"
                                                     rows={5}
                                                     placeholder="Beschreibe das zugrundeliegende VE-Modell"
+                                                    value={veModel}
+                                                    onChange={(e) => setVeModel(e.target.value)}
                                                 />
                                             </li>
                                             <li className="mb-4">
@@ -132,6 +203,8 @@ export default function AfterVE() {
                                                     className="border border-gray-400 rounded-lg w-full p-2 mt-2"
                                                     rows={5}
                                                     placeholder="Beschreibe deine Reflexion"
+                                                    value={reflection}
+                                                    onChange={(e) => setReflection(e.target.value)}
                                                 />
                                             </li>
                                             <li className="mb-4">
@@ -144,6 +217,8 @@ export default function AfterVE() {
                                                     className="border border-gray-400 rounded-lg w-full p-2 mt-2"
                                                     rows={5}
                                                     placeholder="Beschreibe die Evaluation der Teilnehmenden"
+                                                    value={evaluation}
+                                                    onChange={(e) => setEvaluation(e.target.value)}
                                                 />
                                             </li>
                                         </ol>
@@ -167,14 +242,13 @@ export default function AfterVE() {
                                     </Link>
                                 </div>
                                 <div>
-                                    <Link href={'/overviewProjects'}>
-                                        <button
-                                            type="submit"
-                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg mr-2"
-                                        >
-                                            Weiter zur Übersicht
-                                        </button>
-                                    </Link>
+                                    <button
+                                        type="submit"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg mr-2"
+                                        onClick={onSubmit}
+                                    >
+                                        Speichern & zur Übersicht
+                                    </button>
                                 </div>
                             </div>
                         </form>
