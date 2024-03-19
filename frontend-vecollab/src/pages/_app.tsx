@@ -12,6 +12,7 @@ import { Notification } from '@/interfaces/socketio';
 import { NextComponentType, NextPageContext } from 'next';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import { CookiesProvider } from 'react-cookie';
+import Chat from './chat';
 
 declare type ComponentWithAuth = NextComponentType<NextPageContext, any, any> & {
     auth?: boolean;
@@ -115,8 +116,28 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
                             notificationEvents={notificationEvents}
                             headerBarMessageEvents={messageEventsHeaderBar}
                         >
-                            {Component.auth ? (
-                                <Auth>
+                            <>
+                                <Chat
+                                    socket={socket}
+                                    messageEvents={messageEvents}
+                                    setMessageEvents={setMessageEvents}
+                                    headerBarMessageEvents={messageEventsHeaderBar}
+                                    setHeaderBarMessageEvents={setMessageEventsHeaderBar}
+                                />
+                                {Component.auth ? (
+                                    <Auth>
+                                        <Component
+                                            {...pageProps}
+                                            socket={socket}
+                                            notificationEvents={notificationEvents}
+                                            setNotificationEvents={setNotificationEvents}
+                                            messageEvents={messageEvents}
+                                            setMessageEvents={setMessageEvents}
+                                            headerBarMessageEvents={messageEventsHeaderBar}
+                                            setHeaderBarMessageEvents={setMessageEventsHeaderBar}
+                                        />
+                                    </Auth>
+                                ) : (
                                     <Component
                                         {...pageProps}
                                         socket={socket}
@@ -127,19 +148,8 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
                                         headerBarMessageEvents={messageEventsHeaderBar}
                                         setHeaderBarMessageEvents={setMessageEventsHeaderBar}
                                     />
-                                </Auth>
-                            ) : (
-                                <Component
-                                    {...pageProps}
-                                    socket={socket}
-                                    notificationEvents={notificationEvents}
-                                    setNotificationEvents={setNotificationEvents}
-                                    messageEvents={messageEvents}
-                                    setMessageEvents={setMessageEvents}
-                                    headerBarMessageEvents={messageEventsHeaderBar}
-                                    setHeaderBarMessageEvents={setMessageEventsHeaderBar}
-                                />
-                            )}
+                                )}
+                            </>
                         </LayoutSection>
                     </SocketAuthenticationProvider>
                 </CookiesProvider>

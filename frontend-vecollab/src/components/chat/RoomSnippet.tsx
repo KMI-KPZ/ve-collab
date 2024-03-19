@@ -16,7 +16,7 @@ export default function RoomSnippet({
 }: Props) {
     return (
         <li
-            className="bg-gray-200 rounded-md p-2 cursor-pointer hover:bg-gray-300 overflow-hidden whitespace-nowrap text-ellipsis"
+            className="rounded-md p-2 cursor-pointer hover:bg-gray-300 overflow-hidden whitespace-nowrap text-ellipsis"
             onClick={() => handleChatSelect(room._id)}
         >
             <div className="flex justify-between items-center">
@@ -33,7 +33,7 @@ export default function RoomSnippet({
                     </p>
                 </div>
 
-                {/* determine if there are any unread messages in this room, 
+                {/* determine if there are any unread messages in this room,
                 by using the copy of message events that get deleted once they are acknowledged */}
                 {headerBarMessageEvents.filter((message) => message.room_id === room._id).length >
                     0 && <div className="bg-blue-500 w-2 h-2 rounded-full mr-2"></div>}

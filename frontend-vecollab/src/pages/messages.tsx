@@ -1,5 +1,6 @@
 import LoadingAnimation from '@/components/LoadingAnimation';
 import ChatWindow from '@/components/chat/ChatWindow';
+import RoomHeader from '@/components/chat/RoomHeader';
 import Sidebar from '@/components/chat/Sidebar';
 import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
 import { fetchPOST, useGetChatrooms } from '@/lib/backend';
@@ -72,31 +73,40 @@ export default function Messages({
 
     return (
         <>
-            <div className="flex">
-                <Sidebar
-                    handleChatSelect={handleChatSelect}
-                    headerBarMessageEvents={headerBarMessageEvents}
-                    profileSnippets={profileSnippets}
-                />
-                <div className="w-4/5 h-[80vh]">
-                    {selectedChat ? (
-                        <ChatWindow
-                            selectedChatID={selectedChat}
-                            socketMessages={messageEvents}
-                            setSocketMessages={setMessageEvents}
-                            headerBarMessageEvents={headerBarMessageEvents}
-                            setHeaderBarMessageEvents={setHeaderBarMessageEvents}
-                            socket={socket}
-                            roomInfo={roomSnippets.find((room) => room._id === selectedChat)!}
-                            memberProfileSnippets={profileSnippets.filter((profileSnippet) =>
-                                roomSnippets
-                                    .find((room) => room._id === selectedChat)!
-                                    .members.includes(profileSnippet.preferredUsername)
-                            )}
-                        />
-                    ) : (
-                        <div className="bg-white h-full">Please select a chat</div>
-                    )}
+            <div className='container mx-auto mb-14 px-5'>
+                <div className="flex">
+                    <Sidebar
+                        handleChatSelect={handleChatSelect}
+                        headerBarMessageEvents={headerBarMessageEvents}
+                        profileSnippets={profileSnippets}
+                    />
+                    <div className="w-4/5 h-[80vh] py-2">
+                        {selectedChat ? (
+                            <>
+                                <RoomHeader
+                                    roomInfo={roomSnippets.find((room) => room._id === selectedChat)!}
+                                    memberProfileSnippets={profileSnippets.filter((profileSnippet) =>
+                                        roomSnippets
+                                            .find((room) => room._id === selectedChat)!
+                                            .members.includes(profileSnippet.preferredUsername)
+                                    )}
+                                />
+
+                                <ChatWindow
+                                    selectedChatID={selectedChat}
+                                    socketMessages={messageEvents}
+                                    setSocketMessages={setMessageEvents}
+                                    headerBarMessageEvents={headerBarMessageEvents}
+                                    setHeaderBarMessageEvents={setHeaderBarMessageEvents}
+                                    socket={socket}
+                                    roomInfo={roomSnippets.find((room) => room._id === selectedChat)!}
+                                    memberProfileSnippets={[]}
+                                />
+                            </>
+                        ) : (
+                            <div className="mt-16 p-10 bg-white h-1/2 italic">Please select a chat</div>
+                        )}
+                    </div>
                 </div>
             </div>
         </>

@@ -100,13 +100,13 @@ export default function ChatWindow({
 
     return (
         <div className="w-full h-full flex flex-col">
-            <RoomHeader roomInfo={roomInfo} memberProfileSnippets={memberProfileSnippets} />
+            {/* <RoomHeader roomInfo={roomInfo} memberProfileSnippets={memberProfileSnippets} /> */}
             <div
                 ref={messageContainerRef}
-                className="h-full bg-white overflow-y-auto content-scrollbar relative"
+                className="h-full bg-white overflow-y-auto content-scrollbar relative rounded-md"
             >
                 {/* Chat messages */}
-                <ul className="flex flex-col px-36 justify-end">
+                <ul className="flex flex-col justify-end">
                     {isLoading ? (
                         <LoadingAnimation />
                     ) : (
