@@ -23,6 +23,8 @@ import {
     EditorProvider,
     Toolbar
   } from 'react-simple-wysiwyg';
+import TimelinePostText from "./TimelinePostText";
+import { sanitizedText } from "./sanitizedText";
 
 interface Props {
     post?: BackendPost | undefined;
@@ -213,7 +215,7 @@ export default function TimelinePostForm(
                             <Editor
                                 value={text}
                                 placeholder="Beitrag schreiben..."
-                                onChange={(e) => setText(e.target.value)}
+                                onChange={(e) => setText(sanitizedText(e.target.value))}
                             />
                             <Toolbar>
                                 <BtnBold />
@@ -240,9 +242,11 @@ export default function TimelinePostForm(
                                 <IoMdClose />
                             </button>
                         </div>
-                        <div className="network-post-value" dangerouslySetInnerHTML={{__html: postToRepost.isRepost
-                            ? postToRepost.repostText as string
-                            : postToRepost.text as string}} />
+                        <TimelinePostText text={
+                            postToRepost.isRepost
+                                ? postToRepost.repostText as string
+                                : postToRepost.text as string
+                        } />
                     </div>
                 )}
 

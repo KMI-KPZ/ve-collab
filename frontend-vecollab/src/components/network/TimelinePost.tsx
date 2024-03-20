@@ -13,6 +13,7 @@ import TimelinePostForm from "./TimelinePostForm";
 import PostHeader from "./PostHeader";
 import { AuthenticatedFile } from "../AuthenticatedFile";
 import { RxFile } from "react-icons/rx";
+import TimelinePostText from "./TimelinePostText";
 
 interface Props {
     post: BackendPost
@@ -232,7 +233,7 @@ export default function TimelinePost(
                         <PostHeader author={post.repostAuthor as BackendPostAuthor} date={post.originalCreationDate as string} />
                     </div>
                     <div className={`${repostExpand ? "" : "max-h-40 overflow-hidden"} mt-5 whitespace-break-spaces relative repost-text`}>
-                        <div className="network-post-value" dangerouslySetInnerHTML={{__html: post.text as string}} />
+                        <TimelinePostText text={ post.text as string } />
                         <span className={`${repostExpand ? "hidden" : ""} absolute left-0 bottom-0 w-full h-20 bg-gradient-to-b from-transparent to-[#e5f1f4]`}>
                             <button className="absolute bottom-0 left-10 mx-4 p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={() => setRepostExpand(true)} title="Erweitern">
                                 <MdOutlineKeyboardDoubleArrowDown />
@@ -251,9 +252,11 @@ export default function TimelinePost(
                             onUpdatedPost={updatePostText}
                         />
                     ) : (
-                        <div className="network-post-value" dangerouslySetInnerHTML={{__html: post.isRepost
-                            ? post.repostText as string
-                            : post.text as string}} />
+                        <TimelinePostText text={
+                            post.isRepost
+                                ? post.repostText as string
+                                : post.text as string
+                        } />
                     )
                 }
             </div>
