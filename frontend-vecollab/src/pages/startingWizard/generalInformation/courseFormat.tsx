@@ -1,8 +1,7 @@
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
-import SideProgressBarSectionBroadPlanner from '@/components/StartingWizard/SideProgressBarSectionBroadPlanner';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
-import React, { FormEvent, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import {
@@ -12,12 +11,19 @@ import {
 } from '@/interfaces/startingWizard/sideProgressBar';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import WhiteBox from '@/components/Layout/WhiteBox';
-import Select from 'react-select';
-import { SingleValue, ActionMeta } from 'react-select';
 import Link from 'next/link';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { Tooltip } from '@/components/Tooltip';
 import { FiInfo } from 'react-icons/fi';
+import { FormProvider, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
+import PopupSaveData from '@/components/StartingWizard/PopupSaveData';
+import SideProgressBarSectionBroadPlannerWithReactHookForm from '@/components/StartingWizard/SideProgressBarSectionBroadPlannerWithReactHookForm';
+
+export interface FormValues {
+    courseFormat: string;
+    usePhysicalMobility: string;
+    physicalMobilities: PhysicalMobility[];
+}
 
 export interface PhysicalMobility {
     location: string;
@@ -32,12 +38,8 @@ export default function Realization() {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
-    const [courseFormat, setCourseFormat] = useState<string>();
-    const [physicalMobilityChosen, setPhysicalMobilityChosen] = useState<boolean>(false);
-    const [physicalMobilities, setPhysicalMobilities] = useState<PhysicalMobility[]>([
-        { location: '', timestamp_from: '', timestamp_to: '' },
-    ]);
     const [steps, setSteps] = useState<IFineStep[]>([]);
+    const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -48,6 +50,20 @@ export default function Realization() {
             }
         }
     }, [session, status]);
+
+    const methods = useForm<FormValues>({
+        mode: 'onChange',
+        defaultValues: {
+            courseFormat: '',
+            usePhysicalMobility: 'false',
+            physicalMobilities: [{ location: '', timestamp_from: '', timestamp_to: '' }],
+        },
+    });
+
+    const { fields, append, remove, update } = useFieldArray({
+        name: 'physicalMobilities',
+        control: methods.control,
+    });
 
     useEffect(() => {
         // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
@@ -65,32 +81,36 @@ export default function Realization() {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
                     setLoading(false);
-                    console.log(data.plan);
                     if (data.plan.realization !== null) {
-                        setCourseFormat(data.plan.realization);
-                        setPhysicalMobilityChosen(data.plan.physical_mobility);
-                        // date inputs only accept yyyy-mm-dd, so gotta cut the time part off
-                        setPhysicalMobilities(
-                            data.plan.physical_mobilities.map((mobility: PhysicalMobility) => {
-                                if (
-                                    mobility.timestamp_from !== null &&
-                                    mobility.timestamp_from !== '' &&
-                                    mobility.timestamp_to !== null &&
-                                    mobility.timestamp_to !== ''
-                                ) {
-                                    return {
-                                        location: mobility.location,
-                                        timestamp_from: mobility.timestamp_from.split('T')[0],
-                                        timestamp_to: mobility.timestamp_to.split('T')[0],
-                                    };
-                                } else {
-                                    return mobility;
-                                }
-                            })
-                        );
+                        methods.setValue('courseFormat', data.plan.realization);
                     }
                     if (data.plan.physical_mobility !== null) {
-                        setPhysicalMobilityChosen(data.plan.physical_mobility);
+                        methods.setValue(
+                            'usePhysicalMobility',
+                            String(data.plan.physical_mobility)
+                        );
+                    }
+                    if (
+                        data.plan.physical_mobilities !== null &&
+                        data.plan.physical_mobilities.length !== 0
+                    ) {
+                        const physical_mobilities: PhysicalMobility[] =
+                            data.plan.physical_mobilities.map(
+                                (physicalMobility: PhysicalMobility) => {
+                                    const { timestamp_from, timestamp_to, location } =
+                                        physicalMobility;
+                                    return {
+                                        location: location,
+                                        timestamp_from:
+                                            timestamp_from !== null
+                                                ? timestamp_from.split('T')[0]
+                                                : '', // react hook form only takes '2019-12-13'
+                                        timestamp_to:
+                                            timestamp_to !== null ? timestamp_to.split('T')[0] : '',
+                                    };
+                                }
+                            );
+                        methods.setValue('physicalMobilities', physical_mobilities);
                     }
 
                     setSteps(data.plan.steps);
@@ -101,21 +121,17 @@ export default function Realization() {
                 }
             );
         }
-    }, [session, status, router]);
+    }, [session, status, router, methods]);
 
-    /*
-    const validateDateRange = (fromValue: string) => {
-        const fromDate = new Date(fromValue);
-        const toDate = new Date(watch(`physicalMobilityQuestion.physicalMobilityTimeTo`));
-        if (fromDate > toDate) {
-            return 'Das Startdatum muss vor dem Enddatum liegen';
-        } else {
-            return true;
-        }
+    const validateDateRange = (fromValue: string, indexFromTo: number) => {
+        const toValue = methods.watch(`physicalMobilities.${indexFromTo}.timestamp_to`);
+        if (fromValue === '' || toValue === '') return true;
+        return new Date(fromValue) > new Date(toValue)
+            ? 'Das Startdatum muss vor dem Enddatum liegen'
+            : true;
     };
-    */
 
-    const onSubmit = async () => {
+    const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         await fetchPOST(
             '/planner/update_fields',
             {
@@ -123,19 +139,17 @@ export default function Realization() {
                     {
                         plan_id: router.query.plannerId,
                         field_name: 'realization',
-                        value: courseFormat ? courseFormat : null,
+                        value: data.courseFormat,
                     },
                     {
                         plan_id: router.query.plannerId,
                         field_name: 'physical_mobility',
-                        value: physicalMobilityChosen,
+                        value: data.usePhysicalMobility === 'true',
                     },
                     {
                         plan_id: router.query.plannerId,
                         field_name: 'physical_mobilities',
-                        value: physicalMobilityChosen
-                            ? physicalMobilities
-                            : [{ location: '', timestamp_from: '', timestamp_to: '' }],
+                        value: data.physicalMobilities,
                     },
                     {
                         plan_id: router.query.plannerId,
@@ -149,247 +163,274 @@ export default function Realization() {
             },
             session?.accessToken
         );
+    };
 
+    const combinedSubmitRouteAndUpdate = async (data: FormValues, url: string) => {
+        onSubmit(data);
         await router.push({
-            pathname: '/startingWizard/generalInformation/learningPlatform',
+            pathname: url,
             query: { plannerId: router.query.plannerId },
         });
     };
 
-    function handleChange(
-        newValue: SingleValue<{ value: string; label: string }>,
-        actionMeta: ActionMeta<{ value: string; label: string }>
-    ): void {
-        setCourseFormat(newValue!.value);
-    }
+    const handleDelete = (index: number): void => {
+        if (fields.length > 1) {
+            remove(index);
+        } else {
+            update(index, { location: '', timestamp_from: '', timestamp_to: '' });
+        }
+    };
 
-    function addPhysicalMobilityField(event: FormEvent): void {
-        event.preventDefault();
-        setPhysicalMobilities([
-            ...physicalMobilities,
-            { location: '', timestamp_from: '', timestamp_to: '' },
-        ]);
-    }
-
-    function removePhysicalMobilityField(event: FormEvent): void {
-        event.preventDefault();
-        let copy = [...physicalMobilities];
-        copy.pop();
-        setPhysicalMobilities(copy);
-    }
-
-    function modifyPhysicalMobilityLocation(index: number, value: string): void {
-        let copy = [...physicalMobilities];
-        copy[index].location = value;
-        setPhysicalMobilities(copy);
-    }
-
-    function modifyPhysicalMobilityTimestampFrom(index: number, value: string): void {
-        let copy = [...physicalMobilities];
-        copy[index].timestamp_from = value;
-        setPhysicalMobilities(copy);
-    }
-
-    function modifyPhysicalMobilityTimestampTo(index: number, value: string): void {
-        let copy = [...physicalMobilities];
-        copy[index].timestamp_to = value;
-        setPhysicalMobilities(copy);
-    }
+    const renderMobilitiesInputs = (): JSX.Element[] => {
+        return fields.map((mobility, index) => (
+            <div key={mobility.id} className="flex py-4 w-full ">
+                <div className="w-full">
+                    <div className="flex items-center justify-start pb-2">
+                        <p className="mr-4">Ort:</p>
+                        <input
+                            type="text"
+                            placeholder="Ort eingeben"
+                            className="border border-gray-400 rounded-lg p-2 w-full"
+                            {...methods.register(`physicalMobilities.${index}.location`, {
+                                maxLength: {
+                                    value: 50,
+                                    message:
+                                        'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                },
+                            })}
+                        />
+                    </div>
+                    <p className="flex justify-center text-red-600 pb-2">
+                        {methods.formState.errors?.physicalMobilities?.[index]?.location?.message}
+                    </p>
+                    <div className="flex justify-between">
+                        <div className="flex items-center">
+                            <p className="mr-4">von:</p>
+                            <input
+                                type="date"
+                                {...methods.register(`physicalMobilities.${index}.timestamp_from`, {
+                                    maxLength: {
+                                        value: 50,
+                                        message:
+                                            'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                    },
+                                    validate: (v) => validateDateRange(v, index),
+                                })}
+                                className="border border-gray-400 rounded-lg p-2 mr-2"
+                            />
+                        </div>
+                        <div className="flex items-center">
+                            <p className="mr-4">bis:</p>
+                            <input
+                                type="date"
+                                {...methods.register(`physicalMobilities.${index}.timestamp_to`, {
+                                    maxLength: {
+                                        value: 50,
+                                        message:
+                                            'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                    },
+                                })}
+                                className="border border-gray-400 rounded-lg p-2 ml-2"
+                            />
+                        </div>
+                    </div>
+                    <p className="flex justify-center text-red-600 pt-2">
+                        {
+                            methods.formState.errors?.physicalMobilities?.[index]?.timestamp_from
+                                ?.message
+                        }
+                    </p>
+                    <p className="flex justify-center text-red-600 pt-2">
+                        {
+                            methods.formState.errors?.physicalMobilities?.[index]?.timestamp_to
+                                ?.message
+                        }
+                    </p>
+                </div>
+                <button type="button" onClick={() => handleDelete(index)}>
+                    <RxMinus size={20} />
+                </button>
+            </div>
+        ));
+    };
 
     return (
-        <div className="flex bg-pattern-left-blue-small bg-no-repeat">
-            <div className="flex flex-grow justify-center">
-                <div className="flex flex-col">
-                    <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
-                    {loading ? (
-                        <LoadingAnimation />
-                    ) : (
-                        <form className="gap-y-6 w-full p-12 max-w-7xl items-center flex flex-col flex-grow justify-between">
-                            <div>
-                                <div className={'text-center font-bold text-4xl mb-2 relative'}>
-                                    In welchem Format / welchen Formaten wird der VE umgesetzt?
-                                    <Tooltip tooltipsText="Mehr zu Formaten findest du hier in den Selbstlernmaterialien …">
-                                        <Link
-                                            target="_blank"
-                                            href={'/content/Digitale%20Medien%20&%20Werkzeuge'}
+        <FormProvider {...methods}>
+            <PopupSaveData
+                isOpen={isPopupOpen}
+                handleContinue={async () => {
+                    await router.push({
+                        pathname: '/startingWizard/generalInformation/learningPlatform',
+                        query: {
+                            plannerId: router.query.plannerId,
+                        },
+                    });
+                }}
+                handleCancel={() => setIsPopupOpen(false)}
+            />
+            <div className="flex bg-pattern-left-blue-small bg-no-repeat">
+                <div className="flex flex-grow justify-center">
+                    <div className="flex flex-col">
+                        <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
+                        {loading ? (
+                            <LoadingAnimation />
+                        ) : (
+                            <form className="gap-y-6 w-full p-12 max-w-7xl items-center flex flex-col flex-grow justify-between">
+                                <div>
+                                    <div className={'text-center font-bold text-4xl mb-2 relative'}>
+                                        In welchem Format / welchen Formaten wird der VE umgesetzt?
+                                        <Tooltip tooltipsText="Mehr zu Formaten findest du hier in den Selbstlernmaterialien …">
+                                            <Link
+                                                target="_blank"
+                                                href={'/content/Digitale%20Medien%20&%20Werkzeuge'}
+                                            >
+                                                <FiInfo size={30} color="#00748f" />
+                                            </Link>
+                                        </Tooltip>
+                                    </div>
+                                    <div className={'text-center mb-20'}>optional</div>
+                                    <div className="flex justify-center items-center">
+                                        <label htmlFor="courseFormat" className="px-2 py-2">
+                                            Format:
+                                        </label>
+                                        <select
+                                            placeholder="Auswählen..."
+                                            className="bg-white border border-gray-400 rounded-lg p-2 w-1/3"
+                                            {...methods.register(`courseFormat`, {
+                                                maxLength: {
+                                                    value: 50,
+                                                    message:
+                                                        'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                                },
+                                            })}
                                         >
-                                            <FiInfo size={30} color="#00748f" />
-                                        </Link>
-                                    </Tooltip>
+                                            <option value="synchron">synchron</option>
+                                            <option value="asynchron">asynchron</option>
+                                            <option value="asynchron und synchron">
+                                                asynchron und synchron
+                                            </option>
+                                        </select>
+                                    </div>
                                 </div>
-                                <div className={'text-center mb-20'}>optional</div>
-                                <div className="mx-7 mt-7 flex justify-center">
-                                    <Select
-                                        className="w-3/4"
-                                        value={
-                                            courseFormat
-                                                ? { label: courseFormat, value: courseFormat }
-                                                : null
-                                        }
-                                        options={[
-                                            { value: 'synchron', label: 'synchron' },
-                                            { value: 'asynchron', label: 'asynchron' },
-                                            {
-                                                value: 'asynchron und synchron',
-                                                label: 'asynchron und synchron',
-                                            },
-                                        ]}
-                                        onChange={handleChange}
-                                        placeholder="Auswählen..."
-                                    />
-                                </div>
-                            </div>
-                            <WhiteBox>
-                                <div className="p-6">
-                                    <div className="flex items-center">
-                                        <p className="w-72">
-                                            Wird der VE durch eine physische Mobilität ergänzt /
-                                            begleitet?
-                                        </p>
-                                        <div className="flex w-40 justify-end gap-x-5">
-                                            <div className="flex my-1">
-                                                <div>
-                                                    <label className="px-2 py-2">Ja</label>
+                                <WhiteBox>
+                                    <div className="p-6 w-full">
+                                        <div className="flex items-center">
+                                            <p className="w-72">
+                                                Wird der VE durch eine physische Mobilität ergänzt /
+                                                begleitet?
+                                            </p>
+                                            <div className="flex w-40 justify-end gap-x-5">
+                                                <div className="flex my-1">
+                                                    <div>
+                                                        <label className="px-2 py-2">Ja</label>
+                                                    </div>
+                                                    <div>
+                                                        <input
+                                                            type="radio"
+                                                            className="border border-gray-400 rounded-lg p-2"
+                                                            value="true"
+                                                            {...methods.register(
+                                                                `usePhysicalMobility`,
+                                                                {
+                                                                    maxLength: {
+                                                                        value: 50,
+                                                                        message:
+                                                                            'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                                                    },
+                                                                }
+                                                            )}
+                                                        />
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <input
-                                                        type="radio"
-                                                        name="physicalMobility"
-                                                        value="true"
-                                                        checked={physicalMobilityChosen}
-                                                        className="border border-gray-400 rounded-lg p-2"
-                                                        onChange={() =>
-                                                            setPhysicalMobilityChosen(true)
-                                                        }
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div className="flex my-1">
-                                                <div>
-                                                    <label className="px-2 py-2">Nein</label>
-                                                </div>
-                                                <div>
-                                                    <input
-                                                        type="radio"
-                                                        name="physicalMobility"
-                                                        value="false"
-                                                        checked={!physicalMobilityChosen}
-                                                        className="border border-gray-400 rounded-lg p-2"
-                                                        onChange={() =>
-                                                            setPhysicalMobilityChosen(false)
-                                                        }
-                                                    />
+                                                <div className="flex my-1">
+                                                    <div>
+                                                        <label className="px-2 py-2">Nein</label>
+                                                    </div>
+                                                    <div>
+                                                        <input
+                                                            type="radio"
+                                                            value="false"
+                                                            {...methods.register(
+                                                                `usePhysicalMobility`,
+                                                                {
+                                                                    maxLength: {
+                                                                        value: 50,
+                                                                        message:
+                                                                            'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                                                    },
+                                                                }
+                                                            )}
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
+                                        {methods.watch('usePhysicalMobility') === 'true' && (
+                                            <>
+                                                <div className="divide-y my-2 w-full">
+                                                    {renderMobilitiesInputs()}
+                                                </div>
+                                                <div className="flex justify-center">
+                                                    <button
+                                                        className="p-4 bg-white rounded-3xl shadow-2xl ml-2"
+                                                        type="button"
+                                                        onClick={() => {
+                                                            append({
+                                                                location: '',
+                                                                timestamp_from: '',
+                                                                timestamp_to: '',
+                                                            });
+                                                        }}
+                                                    >
+                                                        <RxPlus size={30} />
+                                                    </button>
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
-                                    {physicalMobilityChosen && (
-                                        <>
-                                            <div className="divide-y my-2">
-                                                {physicalMobilities.map((mobility, index) => (
-                                                    <div key={index} className="py-4">
-                                                        <div className="flex items-center justify-start pb-2">
-                                                            <p className="mr-4">Ort:</p>
-                                                            <input
-                                                                type="text"
-                                                                value={mobility.location}
-                                                                onChange={(e) =>
-                                                                    modifyPhysicalMobilityLocation(
-                                                                        index,
-                                                                        e.target.value
-                                                                    )
-                                                                }
-                                                                placeholder="Ort eingeben"
-                                                                className="border border-gray-400 rounded-lg p-2 w-full"
-                                                            />
-                                                        </div>
-                                                        <div className="flex justify-between">
-                                                            <div className="flex items-center">
-                                                                <p className="mr-4">von:</p>
-                                                                <input
-                                                                    type="date"
-                                                                    value={mobility.timestamp_from}
-                                                                    onChange={(e) =>
-                                                                        modifyPhysicalMobilityTimestampFrom(
-                                                                            index,
-                                                                            e.target.value
-                                                                        )
-                                                                    }
-                                                                    className="border border-gray-400 rounded-lg p-2 mr-2"
-                                                                />
-                                                            </div>
-                                                            <div className="flex items-center">
-                                                                <p className="mr-4">bis:</p>
-                                                                <input
-                                                                    type="date"
-                                                                    value={mobility.timestamp_to}
-                                                                    onChange={(e) =>
-                                                                        modifyPhysicalMobilityTimestampTo(
-                                                                            index,
-                                                                            e.target.value
-                                                                        )
-                                                                    }
-                                                                    className="border border-gray-400 rounded-lg p-2 ml-2"
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                            <div className={'mt-3 flex justify-end'}>
-                                                <button
-                                                    type="button"
-                                                    onClick={removePhysicalMobilityField}
-                                                >
-                                                    <RxMinus size={20} />
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={addPhysicalMobilityField}
-                                                >
-                                                    <RxPlus size={20} />
-                                                </button>
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-                            </WhiteBox>
-                            <div className="flex justify-around w-full mt-10">
-                                <div>
-                                    <Link
-                                        href={{
-                                            pathname:
-                                                '/startingWizard/generalInformation/evaluation',
-                                            query: { plannerId: router.query.plannerId },
-                                        }}
-                                    >
+                                </WhiteBox>
+                                <div className="flex justify-around w-full mt-10">
+                                    <div>
                                         <button
                                             type="button"
                                             className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                            onClick={methods.handleSubmit((data) =>
+                                                combinedSubmitRouteAndUpdate(
+                                                    data,
+                                                    '/startingWizard/generalInformation/evaluation'
+                                                )
+                                            )}
                                         >
                                             Zurück
                                         </button>
-                                    </Link>
+                                    </div>
+                                    <div>
+                                        <button
+                                            type="button"
+                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                            onClick={methods.handleSubmit(
+                                                (data) => {
+                                                    combinedSubmitRouteAndUpdate(
+                                                        data,
+                                                        '/startingWizard/generalInformation/learningPlatform'
+                                                    );
+                                                },
+                                                async () => setIsPopupOpen(true)
+                                            )}
+                                        >
+                                            Weiter
+                                        </button>
+                                    </div>
                                 </div>
-                                <div>
-                                    <button
-                                        type="button"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                        onClick={onSubmit}
-                                    >
-                                        Weiter
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    )}
+                            </form>
+                        )}
+                    </div>
                 </div>
+                <SideProgressBarSectionBroadPlannerWithReactHookForm
+                    progressState={sideMenuStepsProgress}
+                    onSubmit={onSubmit}
+                />
             </div>
-            <SideProgressBarSectionBroadPlanner
-                progressState={sideMenuStepsProgress}
-                handleValidation={() => {}}
-                isValid={true}
-            />
-        </div>
+        </FormProvider>
     );
 }
