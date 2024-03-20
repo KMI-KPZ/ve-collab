@@ -33,8 +33,8 @@ export default function Sidebar({
     };
 
     return (
-        <div className="w-1/5 relative px-4 bg-gray-200 h-[80vh]">
-            <ul className="flex flex-col bg-gray-200 overflow-y-auto">
+        <div className="relative px-4 max-h-[80vh]">
+            <ul className="flex flex-col  overflow-y-auto">
                 {isLoading ? (
                     <li>
                         <LoadingAnimation />
@@ -54,7 +54,7 @@ export default function Sidebar({
                 )}
             </ul>
             <button
-                className="bg-gray-300 rounded-md p-2 cursor-pointer hover:bg-gray-400 absolute bottom-4"
+                className="rounded-md p-2 cursor-pointer hover:bg-gray-400 relative bottom-4 mt-4"
                 onClick={(e) => handleOpenNewChatDialog()}
             >
                 <div className="flex justify-between items-center">
