@@ -132,7 +132,7 @@ export default function Topics() {
                 isOpen={isPopupOpen}
                 handleContinue={async () => {
                     await router.push({
-                        pathname: '/startingWizard/generalInformation/formalConditions',
+                        pathname: '/startingWizard/generalInformation/languages',
                         query: {
                             plannerId: router.query.plannerId,
                         },

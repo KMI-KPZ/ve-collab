@@ -318,7 +318,7 @@ export default function Institutions() {
                 isOpen={isPopupOpen}
                 handleContinue={async () => {
                     await router.push({
-                        pathname: '/startingWizard/generalInformation/formalConditions',
+                        pathname: '/startingWizard/generalInformation/participatingCourses',
                         query: {
                             plannerId: router.query.plannerId,
                         },

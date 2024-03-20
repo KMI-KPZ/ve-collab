@@ -154,7 +154,7 @@ export default function ExternalPersons() {
                 isOpen={isPopupOpen}
                 handleContinue={async () => {
                     await router.push({
-                        pathname: '/startingWizard/generalInformation/formalConditions',
+                        pathname: '/startingWizard/generalInformation/institutions',
                         query: {
                             plannerId: router.query.plannerId,
                         },
@@ -197,15 +197,12 @@ export default function ExternalPersons() {
                                         <button
                                             type="button"
                                             className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                            onClick={methods.handleSubmit(
-                                                (data) => {
-                                                    combinedSubmitRouteAndUpdate(
-                                                        data,
-                                                        '/startingWizard/generalInformation/partners'
-                                                    );
-                                                },
-                                                async () => setIsPopupOpen(true)
-                                            )}
+                                            onClick={methods.handleSubmit((data) => {
+                                                combinedSubmitRouteAndUpdate(
+                                                    data,
+                                                    '/startingWizard/generalInformation/partners'
+                                                );
+                                            })}
                                         >
                                             Zurück
                                         </button>
@@ -214,11 +211,14 @@ export default function ExternalPersons() {
                                         <button
                                             type="button"
                                             className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                            onClick={methods.handleSubmit((data) =>
-                                                combinedSubmitRouteAndUpdate(
-                                                    data,
-                                                    '/startingWizard/generalInformation/institutions'
-                                                )
+                                            onClick={methods.handleSubmit(
+                                                (data) => {
+                                                    combinedSubmitRouteAndUpdate(
+                                                        data,
+                                                        '/startingWizard/generalInformation/institutions'
+                                                    );
+                                                },
+                                                async () => setIsPopupOpen(true)
                                             )}
                                         >
                                             Weiter
