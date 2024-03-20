@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { KeyboardEvent, useState } from 'react';
 import { Socket } from 'socket.io-client';
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
@@ -23,26 +23,24 @@ export default function InputArea({ roomID, socket }: Props) {
         setSendingMessage('');
     };
 
+    const sendOnEnter = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.code == "Enter" && !e.shiftKey) {
+            handleMessageSend()
+            e.preventDefault()
+        }
+    }
+
     return (
         <div className="my-2">
-            {/* <div className="w-1/5 bg-gray-200"></div> */}
-            <div className="border border-[#cccccc] bg-white rounded-md">
+            <div className="border border-[#cccccc] bg-white rounded-md ">
 
                 <textarea
-                    className="w-full h-16 p-2 rounded-md resize-none"
+                    className="w-full h-16 p-2 border-b rounded-t-md resize-none"
                     placeholder="Type your message here..."
                     value={sendingMessage}
                     onChange={(e) => setSendingMessage(e.target.value)}
+                    onKeyDown={(e) => sendOnEnter(e)}
                 />
-                {/* <input
-                    className={'border border-[#cccccc] rounded-md px-2 py-[6px] w-full'}
-                    type="text"
-                    placeholder={'message ...'}
-                    name='text'
-                    autoComplete="off"
-                    onChange={(e) => setSendingMessage(e.target.value)}
-                    value={sendingMessage}
-                /> */}
                 {showEmojiPicker && (
                     <div className="absolute right-48 bottom-0">
                         <div className="p-4 relative">
