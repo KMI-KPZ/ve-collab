@@ -2,9 +2,13 @@ import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import veCollabLogo from '@/images/veCollabLogo.png';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { Notification } from '@/interfaces/socketio';
+import { IoMdNotificationsOutline } from 'react-icons/io';
+import { MdArrowDropDown, MdOutlineMessage, MdSearch } from 'react-icons/md';
+import Dropdown from '../Dropdown';
+import AuthenticatedImage from '../AuthenticatedImage';
 
 interface Props {
     notificationEvents: Notification[];
@@ -15,8 +19,9 @@ export default function HeaderSection({ notificationEvents, headerBarMessageEven
     const { data: session } = useSession();
     const [messageEventCount, setMessageEventCount] = useState<number>(0);
     const currentPath = usePathname()
-    const inactiveClass = 'hover:ring hover:ring-ve-collab-orange rounded-lg'
-    const activeClass = "hover:ring hover:ring-ve-collab-orange rounded-lg bg-ve-collab-orange-light"
+    const inactiveClass = 'rounded-md border-b-2 border-transparent hover:border-b-2 hover:border-ve-collab-orange'
+    const activeClass = "rounded-md border-b-2 border-ve-collab-orange-light hover:border-b-2 hover:border-ve-collab-orange"
+    const router = useRouter()
 
     useEffect(() => {
         //filter out the messages that the user sent himself --> they should not trigger a notification icon
@@ -32,78 +37,115 @@ export default function HeaderSection({ notificationEvents, headerBarMessageEven
 
     const isFrontpage = () => currentPath == '/'
 
+    const handleSelectOption = (value: string) => {
+        switch (value) {
+            case 'logout':
+                signOut()
+                break;
+            case 'profil':
+                router.push('/profile')
+                break;
+            case 'contact':
+                window.open('mailto:schlecht@infai.org, mihaela.markovic@uni-leipzig.de', '_blank');
+                break;
+            default:
+                break;
+        }
+    }
+
+    const userImage = session?.user.image || "default_profile_pic.jpg"
+
     return (
-        <header className="bg-white px-4 lg:px-6 py-2.5 drop-shadow-lg">
-            <nav className="flex flex-wrap justify-between items-center mx-auto max-w-screen-2xl">
-                <Link href="/">
-                    <Image
-                        src={veCollabLogo}
-                        alt="Ve Collab Logo"
-                        width={100}
-                        className="duration-300 hover:scale-110"
-                    ></Image>
-                </Link>
-                <ul className="flex items-center font-semibold space-x-14">
+        <header className="bg-white px-4 lg:px-6 py-2.5 drop-shadow-lg relative z-20">
+            <nav className="flex flex-wrap items-center mx-auto max-w-screen-2xl">
+                <div className='flex items-center '>
+                    <Link href="/">
+                        <Image
+                            src={veCollabLogo}
+                            alt="Ve Collab Logo"
+                            width={100}
+                            className="duration-300 hover:scale-110"
+                        ></Image>
+                    </Link>
+                    <form className='ml-10 relative'>
+                        <input
+                                className={'border border-[#cccccc] rounded-l px-2 py-1 h-full'}
+                                type="text"
+                                placeholder={'Suchen ...'}
+                                name='search'
+                                autoComplete="off"
+                            />
+                        <button type="submit" title="Suchen" className='-ml-1 bg-ve-collab-orange rounded-r p-2 absolute h-full hover:bg-ve-collab-orange-light'>
+                            <MdSearch className='text-white' />
+                        </button>
+                    </form>
+                </div>
+                <ul className="flex flex-1 justify-end items-center font-semibold space-x-7">
                     <li className={isFrontpage() ? activeClass : inactiveClass}>
-                        <Link href="/" className='inline-block	px-2 py-3'>Start</Link>
+                        <Link href="/" className='inline-block	px-2 py-1'>Start</Link>
                     </li>
                     <li className={isActivePath('/content') ? activeClass : inactiveClass}>
-                        <Link href="/content" className='inline-block	px-2 py-3'>Materialien</Link>
+                        <Link href="/content" className='inline-block	px-2 py-1'>Materialien</Link>
                     </li>
-                    <li className={isActivePath('/editProfile') ? activeClass : inactiveClass}>
-                        <Link href="/profile" className='inline-block	px-2 py-3'>Profil</Link>
-                    </li>
-                    <li className={isActivePath('/space') ? activeClass : inactiveClass}>
-                        <Link href="/spaces" className='inline-block	px-2 py-3'>Gruppen</Link>
-                    </li>
-                    <li className={isActivePath('/overviewProjects') ? activeClass : inactiveClass}>
-                        <Link href="/overviewProjects" className='inline-block	px-2 py-3'>VE Designer</Link>
-                    </li>
-                    <li className={isActivePath('/messages') ? `relative ${activeClass}` : `relative ${inactiveClass}`}>
-                        <Link href="/messages" className='inline-block	px-2 py-3'>Chat</Link>
-                        {messageEventCount > 0 && (
-                            <span className="absolute top-[-10px] right-[-20px] py-1 px-2 rounded-[50%] bg-red-600 text-xs">
-                                {messageEventCount}
-                            </span>
-                        )}
-                    </li>
-                    <li className={isActivePath('/notifications') ? `relative ${activeClass}` : `relative ${inactiveClass}`}>
-                        <Link href="/notifications" className='inline-block	px-2 py-3'>Benachrichtigungen</Link>
-                        {notificationEvents.length > 0 && (
-                            <span className="absolute top-[-10px] right-[-20px] py-1 px-2 rounded-[50%] bg-red-600 text-xs">
-                                {notificationEvents.length}
-                            </span>
-                        )}
-                    </li>
-                </ul>
-                <ul className="flex items-center font-semibold space-x-8">
-                    {!session && (
+                    {session && (
                         <>
-                            <li
-                                onClick={() => signIn('keycloak')}
-                                className="bg-ve-collab-orange hover:bg-ve-collab-orange/70 text-white py-3 px-5 rounded-lg cursor-pointer"
-                            >
-                                <button onClick={() => signIn('keycloak')}>Login</button>
+                            <li className={isActivePath('/space') ? activeClass : inactiveClass}>
+                                <Link href="/spaces" className='inline-block	px-2 py-1'>Gruppen</Link>
                             </li>
-                            <li
-                                onClick={() => signIn('keycloak')}
-                                className="py-3 px-5 cursor-pointer"
-                            >
-                                <button onClick={() => signIn('keycloak')}>Registrieren</button>
+                            <li className={isActivePath('/overviewProjects') ? activeClass : inactiveClass}>
+                                <Link href="/overviewProjects" className='inline-block	px-2 py-1'>VE Designer</Link>
+                            </li>
+                            <li className={`${isActivePath('/messages') ? activeClass : inactiveClass} !ml-2`}>
+                                <Link href="/messages" className='inline-block px-2 py-1'>
+                                    <MdOutlineMessage />
+                                </Link>
+                                {messageEventCount > 0 && (
+                                    <span className="absolute top-[-10px] right-[-20px] py-1 px-2 rounded-[50%] bg-blue-400/75 text-xs">
+                                        {messageEventCount}
+                                    </span>
+                                )}
+                            </li>
+                            <li className={`${isActivePath('/notifications') ? activeClass : inactiveClass} !ml-2`}>
+                                <Link href="/notifications" className='inline-block	px-2 py-1'>
+                                    <IoMdNotificationsOutline />
+                                </Link>
+                                {notificationEvents.length > 0 && (
+                                    <span className="absolute top-[-10px] right-[-20px] py-1 px-2 rounded-[50%] bg-blue-400/75 text-xs">
+                                        {notificationEvents.length}
+                                    </span>
+                                )}
+                            </li>
+                            <li className='!ml-2'>
+                                <div className='flex items-center font-normal' >
+                                    <Dropdown
+                                        options={[
+                                            {value: 'profil', label: 'Profil', title: 'Profil bearbeiten'},
+                                            {value: 'contact', label: 'Kontakt', title: 'Kontakt per Mail ...'},
+                                            {value: 'logout', label: 'Abmelden'}
+                                        ]}
+                                        icon={
+                                            <div className='flex items-center'>
+                                                <AuthenticatedImage
+                                                    imageId={userImage}
+                                                    alt={'Benutzerbild'}
+                                                    width={30}
+                                                    height={30}
+                                                    className="rounded-full mr-3"
+                                                ></AuthenticatedImage>
+                                                <div title='{session.user?.name}' className='max-w-24 truncate font-semibold'>{session.user?.name}</div>
+                                                <MdArrowDropDown />
+                                            </div>
+                                        }
+                                        onSelect={handleSelectOption}
+                                    />
+                                </div>
                             </li>
                         </>
                     )}
-                    {session && (
+                    {!session && (
                         <>
-                            <li>
-                                <span>Eingeloggt als: {session.user?.name}</span>
-                            </li>
-                            <li
-                                onClick={() => signOut()}
-                                className="bg-ve-collab-orange text-white py-3 px-5 rounded-lg cursor-pointer"
-                            >
-                                <button onClick={() => signOut()}>Ausloggen</button>
-                            </li>
+                            <li><button onClick={() => signIn('keycloak')}>Login</button></li>
+                            <li><button onClick={() => signIn('keycloak')}>Registrieren</button></li>
                         </>
                     )}
                 </ul>
