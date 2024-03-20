@@ -1208,7 +1208,7 @@ class VEPlan:
         "is_good_practise": (bool, type(None)),
         "underlying_ve_model": (str, type(None)),
         "reflection": (str, type(None)),
-        "evaluation": (str, type(None)),
+        "good_practise_evaluation": (str, type(None)),
         "progress": dict,
     }
 
@@ -1239,7 +1239,7 @@ class VEPlan:
         is_good_practise: bool = None,
         underlying_ve_model: str = None,
         reflection: str = None,
-        evaluation: str = None,
+        good_practise_evaluation: str = None,
         progress: Dict = {},
     ) -> None:
         """
@@ -1297,7 +1297,7 @@ class VEPlan:
         self.is_good_practise = is_good_practise
         self.underlying_ve_model = underlying_ve_model
         self.reflection = reflection
-        self.evaluation = evaluation
+        self.good_practise_evaluation = good_practise_evaluation
 
         if progress:
             # TODO check every expected key is inside as well
@@ -1426,7 +1426,7 @@ class VEPlan:
             "is_good_practise": self.is_good_practise,
             "underlying_ve_model": self.underlying_ve_model,
             "reflection": self.reflection,
-            "evaluation": self.evaluation,
+            "good_practise_evaluation": self.good_practise_evaluation,
             "progress": self.progress,
         }
 
@@ -1582,7 +1582,7 @@ class VEPlan:
                 "is_good_practise": True,
                 "underlying_ve_model": None,
                 "reflection": None,
-                "evaluation": None,
+                "good_practise_evaluation": None,
                 "progress": {
                     "name": "<completed|uncompleted|not_started>",
                     "institutions": "<completed|uncompleted|not_started>",

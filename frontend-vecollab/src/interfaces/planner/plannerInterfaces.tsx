@@ -42,7 +42,7 @@ export interface IPlan {
     is_good_practise: boolean;
     underlying_ve_model: string | null;
     reflection: string | null;
-    evaluation: string | null;
+    good_practise_evaluation: string | null;
     timestamp_from: string | null;
     timestamp_to: string | null;
     topics: string[];

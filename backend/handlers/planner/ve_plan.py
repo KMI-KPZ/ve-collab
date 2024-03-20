@@ -248,7 +248,7 @@ class VEPlanHandler(BaseHandler):
                         "is_good_practise": True,
                         "underlying_ve_model": "test",
                         "reflection": "test",
-                        "evaluation": "test",
+                        "good_practise_evaluation": "test",
                         "progress": {
                             "name": "<completed|uncompleted|not_started>",
                             "institutions": "<completed|uncompleted|not_started>",
@@ -452,7 +452,7 @@ class VEPlanHandler(BaseHandler):
                         "is_good_practise": True,
                         "underlying_ve_model": "test",
                         "reflection": "test",
-                        "evaluation": "test",
+                        "good_practise_evaluation": "test",
                         "progress": {
                             "name": "<completed|uncompleted|not_started>",
                             "institutions": "<completed|uncompleted|not_started>",

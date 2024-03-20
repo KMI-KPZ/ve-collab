@@ -359,7 +359,7 @@ export default function Realization() {
                                     <Link
                                         href={{
                                             pathname:
-                                                '/startingWizard/generalInformation/languages',
+                                                '/startingWizard/generalInformation/evaluation',
                                             query: { plannerId: router.query.plannerId },
                                         }}
                                     >

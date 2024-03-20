@@ -61,9 +61,9 @@ export default function ViewAttributes({ plan }: Props): JSX.Element {
                         Evaluation der Teilnehmenden:
                     </span>
                     <ul className="flex flex-col space-y-2 col-span-3">
-                        {plan.evaluation ? (
+                        {plan.good_practise_evaluation ? (
                             <li className="flex w-fit bg-slate-200 rounded-lg p-2 whitespace-pre-line">
-                                {showDataOrEmptySign(plan.evaluation)}
+                                {showDataOrEmptySign(plan.good_practise_evaluation)}
                             </li>
                         ) : (
                             <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>

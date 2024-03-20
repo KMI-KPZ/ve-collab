@@ -1481,7 +1481,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.is_good_practise, False)
         self.assertIsNone(plan.underlying_ve_model)
         self.assertIsNone(plan.reflection)
-        self.assertIsNone(plan.evaluation)
+        self.assertIsNone(plan.good_practise_evaluation)
         self.assertEqual(plan.progress, self.default_progress)
         self.assertEqual(plan.duration, None)
         self.assertEqual(plan.workload, 0)
@@ -1548,7 +1548,7 @@ class VEPlanModelTest(TestCase):
             is_good_practise=True,
             underlying_ve_model="test",
             reflection="test",
-            evaluation="test",
+            good_practise_evaluation="test",
             progress={
                 "name": "completed",
                 "institutions": "not_started",
@@ -1592,7 +1592,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.is_good_practise, True)
         self.assertEqual(plan.underlying_ve_model, "test")
         self.assertEqual(plan.reflection, "test")
-        self.assertEqual(plan.evaluation, "test")
+        self.assertEqual(plan.good_practise_evaluation, "test")
         self.assertEqual(plan.progress["name"], "completed")
         self.assertEqual(plan.workload, 20)
         self.assertEqual(plan.timestamp_from, datetime(2023, 1, 1))
@@ -1627,7 +1627,7 @@ class VEPlanModelTest(TestCase):
             is_good_practise=True,
             underlying_ve_model="test",
             reflection="test",
-            evaluation="test",
+            good_practise_evaluation="test",
             progress={
                 "name": "completed",
                 "institutions": "not_started",
@@ -1665,7 +1665,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.is_good_practise, True)
         self.assertEqual(plan.underlying_ve_model, "test")
         self.assertEqual(plan.reflection, "test")
-        self.assertEqual(plan.evaluation, "test")
+        self.assertEqual(plan.good_practise_evaluation, "test")
         self.assertEqual(plan.progress["name"], "completed")
         self.assertEqual(plan.workload, 10)
         self.assertEqual(plan.timestamp_from, datetime(2023, 1, 1))
@@ -1780,7 +1780,7 @@ class VEPlanModelTest(TestCase):
         self.assertIn("is_good_practise", plan_dict)
         self.assertIn("underlying_ve_model", plan_dict)
         self.assertIn("reflection", plan_dict)
-        self.assertIn("evaluation", plan_dict)
+        self.assertIn("good_practise_evaluation", plan_dict)
         self.assertIn("progress", plan_dict)
         self.assertIsInstance(plan_dict["_id"], ObjectId)
         self.assertIsNone(plan_dict["author"])
@@ -1807,7 +1807,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan_dict["is_good_practise"], False)
         self.assertIsNone(plan_dict["underlying_ve_model"])
         self.assertIsNone(plan_dict["reflection"])
-        self.assertIsNone(plan_dict["evaluation"])
+        self.assertIsNone(plan_dict["good_practise_evaluation"])
         self.assertEqual(plan_dict["progress"], expected_progress)
 
     def test_from_dict(self):
@@ -1898,7 +1898,7 @@ class VEPlanModelTest(TestCase):
             "is_good_practise": True,
             "underlying_ve_model": "test",
             "reflection": "test",
-            "evaluation": "test",
+            "good_practise_evaluation": "test",
             "progress": {
                 "name": "completed",
                 "institutions": "not_started",
@@ -1944,7 +1944,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.is_good_practise, True)
         self.assertEqual(plan.underlying_ve_model, "test")
         self.assertEqual(plan.reflection, "test")
-        self.assertEqual(plan.evaluation, "test")
+        self.assertEqual(plan.good_practise_evaluation, "test")
         self.assertEqual(plan.progress["name"], "completed")
         self.assertEqual(plan.duration, step.duration)
         self.assertEqual(plan.timestamp_from, step.timestamp_from)
@@ -2023,7 +2023,7 @@ class VEPlanModelTest(TestCase):
             "is_good_practise": True,
             "underlying_ve_model": "test",
             "reflection": "test",
-            "evaluation": "test",
+            "good_practise_evaluation": "test",
             "progress": {
                 "name": "completed",
                 "institutions": "not_started",
@@ -2074,7 +2074,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.is_good_practise, True)
         self.assertEqual(plan.underlying_ve_model, "test")
         self.assertEqual(plan.reflection, "test")
-        self.assertEqual(plan.evaluation, "test")
+        self.assertEqual(plan.good_practise_evaluation, "test")
         self.assertIsInstance(plan._id, ObjectId)
         self.assertIsInstance(plan.steps[0]._id, ObjectId)
         self.assertIsInstance(plan.audience[0]._id, ObjectId)
@@ -2122,7 +2122,7 @@ class VEPlanModelTest(TestCase):
             "is_good_practise": None,
             "underlying_ve_model": None,
             "reflection": None,
-            "evaluation": None,
+            "good_practise_evaluation": None,
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",
@@ -2174,7 +2174,7 @@ class VEPlanModelTest(TestCase):
             "is_good_practise": None,
             "underlying_ve_model": None,
             "reflection": None,
-            "evaluation": None,
+            "good_practise_evaluation": None,
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",
@@ -2273,9 +2273,9 @@ class VEPlanModelTest(TestCase):
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
         plan_dict["reflection"] = None
 
-        plan_dict["evaluation"] = 123
+        plan_dict["good_practise_evaluation"] = 123
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
-        plan_dict["evaluation"] = None
+        plan_dict["good_practise_evaluation"] = None
 
         plan_dict["progress"] = 123
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
@@ -2317,7 +2317,7 @@ class VEPlanModelTest(TestCase):
             "is_good_practise": None,
             "underlying_ve_model": None,
             "reflection": None,
-            "evaluation": None,
+            "good_practise_evaluation": None,
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",

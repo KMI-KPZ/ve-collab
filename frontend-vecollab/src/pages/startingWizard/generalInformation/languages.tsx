@@ -121,8 +121,8 @@ export default function Languages() {
 
     const renderLanguagesInputs = (): JSX.Element[] => {
         return fields.map((language, index) => (
-            <div key={language.id} className="mt-2">
-                <div className="flex justify-center items-center">
+            <div key={language.id} className="mt-2 flex flex-col justify-center items-center">
+                <div className="flex justify-center items-center w-full">
                     <input
                         type="text"
                         placeholder="Sprache eingeben"
@@ -226,7 +226,7 @@ export default function Languages() {
                                                 (data) => {
                                                     combinedSubmitRouteAndUpdate(
                                                         data,
-                                                        '/startingWizard/generalInformation/courseFormat'
+                                                        '/startingWizard/generalInformation/evaluation'
                                                     );
                                                 },
                                                 async () => setIsPopupOpen(true)

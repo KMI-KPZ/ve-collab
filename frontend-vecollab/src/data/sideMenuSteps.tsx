@@ -47,6 +47,11 @@ export const sideMenuStepsData: SideMenuStep[] = [
         link: '/startingWizard/generalInformation/languages',
     },
     {
+        text: 'Bewertung und Evaluation',
+        id: 'evaluation',
+        link: '/startingWizard/generalInformation/evaluation',
+    },
+    {
         text: '(Digitale) Formate',
         id: 'realization',
         link: '/startingWizard/generalInformation/courseFormat',
