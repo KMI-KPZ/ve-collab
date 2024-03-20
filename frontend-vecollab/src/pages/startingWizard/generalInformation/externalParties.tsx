@@ -179,8 +179,9 @@ export default function ExternalPersons() {
                                     </div>
                                     <div className={'text-center mb-20'}>optional</div>
                                     {renderExternalPartiesInputs()}
-                                    <div className={'mt-3 flex justify-center'}>
+                                    <div className="flex justify-center mt-4">
                                         <button
+                                            className="p-4 bg-white rounded-3xl shadow-2xl"
                                             type="button"
                                             onClick={() => {
                                                 append({
