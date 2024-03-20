@@ -33,7 +33,7 @@ export default function Sidebar({
     };
 
     return (
-        <div className="relative top-16 px-4 max-h-[80vh]">
+        <div className="relative px-4 max-h-[80vh]">
             <ul className="flex flex-col  overflow-y-auto">
                 {isLoading ? (
                     <li>

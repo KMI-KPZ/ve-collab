@@ -103,7 +103,7 @@ export default function ChatWindow({
             {/* <RoomHeader roomInfo={roomInfo} memberProfileSnippets={memberProfileSnippets} /> */}
             <div
                 ref={messageContainerRef}
-                className="h-full bg-white overflow-y-auto content-scrollbar relative rounded-md"
+                className="h-full bg-white overflow-y-auto content-scrollbar relative rounded-md border"
             >
                 {/* Chat messages */}
                 <ul className="flex flex-col justify-end">
