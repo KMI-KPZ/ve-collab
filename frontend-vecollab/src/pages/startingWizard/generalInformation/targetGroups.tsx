@@ -1,19 +1,22 @@
 import WhiteBox from '@/components/Layout/WhiteBox';
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
-import SideProgressBarSectionBroadPlanner from '@/components/StartingWizard/SideProgressBarSectionBroadPlanner';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
-import { RxMinus, RxPlus } from 'react-icons/rx';
+import { RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
-import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
+import { FormProvider, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/startingWizard/sideProgressBar';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+import SideProgressBarSectionBroadPlannerWithReactHookForm from '@/components/StartingWizard/SideProgressBarSectionBroadPlannerWithReactHookForm';
+import PopupSaveData from '@/components/StartingWizard/PopupSaveData';
+import Image from 'next/image';
+import trash from '@/images/icons/startingWizard/trash.png';
 
 export interface TargetGroup {
     name: string;
@@ -37,6 +40,7 @@ export default function TargetGroups() {
         initialSideProgressBarStates
     );
     const [steps, setSteps] = useState<IFineStep[]>([]);
+    const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -48,13 +52,7 @@ export default function TargetGroups() {
         }
     }, [session, status]);
 
-    const {
-        register,
-        formState: { errors },
-        handleSubmit,
-        control,
-        setValue,
-    } = useForm<FormValues>({
+    const methods = useForm<FormValues>({
         mode: 'onChange',
         defaultValues: {
             targetGroups: [
@@ -88,7 +86,7 @@ export default function TargetGroups() {
                 (data) => {
                     setLoading(false);
                     if (data.plan.audience.length !== 0) {
-                        setValue('targetGroups', data.plan.audience);
+                        methods.setValue('targetGroups', data.plan.audience);
                     }
                     if (data.plan.progress.length !== 0) {
                         setSideMenuStepsProgress(data.plan.progress);
@@ -97,11 +95,11 @@ export default function TargetGroups() {
                 }
             );
         }
-    }, [session, status, router, setValue]);
+    }, [session, status, router, methods]);
 
     const { fields, append, remove } = useFieldArray({
         name: 'targetGroups',
-        control,
+        control: methods.control,
     });
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
@@ -136,7 +134,7 @@ export default function TargetGroups() {
         });
     };
 
-    const rendertargetGroupsInputs = (): JSX.Element[] => {
+    const renderTargetGroupsInputs = (): JSX.Element[] => {
         return fields.map((targetGroup, index) => (
             <div key={targetGroup.id} className="mx-2">
                 <WhiteBox>
@@ -149,7 +147,7 @@ export default function TargetGroups() {
                         <div className="w-3/4">
                             <input
                                 type="text"
-                                {...register(`targetGroups.${index}.name`, {
+                                {...methods.register(`targetGroups.${index}.name`, {
                                     maxLength: {
                                         value: 50,
                                         message:
@@ -165,7 +163,7 @@ export default function TargetGroups() {
                                 className="border border-gray-400 rounded-lg w-full p-2"
                             />
                             <p className="text-red-600 pt-2">
-                                {errors?.targetGroups?.[index]?.name?.message}
+                                {methods.formState.errors?.targetGroups?.[index]?.name?.message}
                             </p>
                         </div>
                     </div>
@@ -179,7 +177,7 @@ export default function TargetGroups() {
                             <div>
                                 <input
                                     type="number"
-                                    {...register(`targetGroups.${index}.age_min`, {
+                                    {...methods.register(`targetGroups.${index}.age_min`, {
                                         maxLength: {
                                             value: 4,
                                             message: 'Bitte geben sie eine realistische Zahl ein',
@@ -193,13 +191,16 @@ export default function TargetGroups() {
                                     className="border border-gray-400 rounded-lg w-1/2 p-2 mr-2"
                                 />
                                 <p className="text-red-600 pt-2">
-                                    {errors?.targetGroups?.[index]?.age_min?.message}
+                                    {
+                                        methods.formState.errors?.targetGroups?.[index]?.age_min
+                                            ?.message
+                                    }
                                 </p>
                             </div>
                             <div>
                                 <input
                                     type="number"
-                                    {...register(`targetGroups.${index}.age_max`, {
+                                    {...methods.register(`targetGroups.${index}.age_max`, {
                                         maxLength: {
                                             value: 4,
                                             message: 'Bitte geben sie eine realistische Zahl ein',
@@ -213,7 +214,10 @@ export default function TargetGroups() {
                                     className="border border-gray-400 rounded-lg w-1/2 p-2 ml-2"
                                 />
                                 <p className="text-red-600 pt-2">
-                                    {errors?.targetGroups?.[index]?.age_max?.message}
+                                    {
+                                        methods.formState.errors?.targetGroups?.[index]?.age_max
+                                            ?.message
+                                    }
                                 </p>
                             </div>
                         </div>
@@ -227,7 +231,7 @@ export default function TargetGroups() {
                         <div className="w-3/4">
                             <textarea
                                 rows={3}
-                                {...register(`targetGroups.${index}.experience`, {
+                                {...methods.register(`targetGroups.${index}.experience`, {
                                     maxLength: {
                                         value: 50,
                                         message:
@@ -243,7 +247,10 @@ export default function TargetGroups() {
                                 className="border border-gray-400 rounded-lg w-full p-2"
                             />
                             <p className="text-red-600 pt-2">
-                                {errors?.targetGroups?.[index]?.experience?.message}
+                                {
+                                    methods.formState.errors?.targetGroups?.[index]?.experience
+                                        ?.message
+                                }
                             </p>
                         </div>
                     </div>
@@ -256,7 +263,7 @@ export default function TargetGroups() {
                         <div className="w-3/4">
                             <input
                                 type="text"
-                                {...register(`targetGroups.${index}.academic_course`, {
+                                {...methods.register(`targetGroups.${index}.academic_course`, {
                                     maxLength: {
                                         value: 50,
                                         message:
@@ -272,7 +279,10 @@ export default function TargetGroups() {
                                 className="border border-gray-400 rounded-lg w-full p-2"
                             />
                             <p className="text-red-600 pt-2">
-                                {errors?.targetGroups?.[index]?.academic_course?.message}
+                                {
+                                    methods.formState.errors?.targetGroups?.[index]?.academic_course
+                                        ?.message
+                                }
                             </p>
                         </div>
                     </div>
@@ -285,7 +295,7 @@ export default function TargetGroups() {
                         <div className="w-3/4">
                             <input
                                 type="text"
-                                {...register(`targetGroups.${index}.mother_tongue`, {
+                                {...methods.register(`targetGroups.${index}.mother_tongue`, {
                                     maxLength: {
                                         value: 50,
                                         message:
@@ -301,7 +311,10 @@ export default function TargetGroups() {
                                 className="border border-gray-400 rounded-lg w-full p-2"
                             />
                             <p className="text-red-600 pt-2">
-                                {errors?.targetGroups?.[index]?.mother_tongue?.message}
+                                {
+                                    methods.formState.errors?.targetGroups?.[index]?.mother_tongue
+                                        ?.message
+                                }
                             </p>
                         </div>
                     </div>
@@ -314,7 +327,7 @@ export default function TargetGroups() {
                         <div className="w-3/4">
                             <input
                                 type="text"
-                                {...register(`targetGroups.${index}.foreign_languages`, {
+                                {...methods.register(`targetGroups.${index}.foreign_languages`, {
                                     maxLength: {
                                         value: 50,
                                         message:
@@ -330,92 +343,119 @@ export default function TargetGroups() {
                                 className="border border-gray-400 rounded-lg w-full p-2"
                             />
                             <p className="text-red-600 pt-2">
-                                {errors?.targetGroups?.[index]?.foreign_languages?.message}
+                                {
+                                    methods.formState.errors?.targetGroups?.[index]
+                                        ?.foreign_languages?.message
+                                }
                             </p>
                         </div>
+                    </div>
+                    <div className="flex justify-end items-center">
+                        <Image
+                            className="mx-2 cursor-pointer m-2 "
+                            onClick={() => remove(index)}
+                            src={trash}
+                            width={20}
+                            height={20}
+                            alt="deleteStep"
+                        ></Image>
                     </div>
                 </WhiteBox>
             </div>
         ));
     };
     return (
-        <div className="flex bg-pattern-left-blue-small bg-no-repeat">
-            <div className="flex flex-grow justify-center">
-                <div className="flex flex-col">
-                    <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
-                    {loading ? (
-                        <LoadingAnimation />
-                    ) : (
-                        <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between">
-                            <div>
-                                <div className={'text-center font-bold text-4xl mb-2'}>
-                                    An welche Zielgruppen richtet sich der VE?
-                                </div>
-                                <div className={'text-center mb-20'}>optional</div>
-                                <div className="flex flex-wrap justify-center">
-                                    {rendertargetGroupsInputs()}
-                                </div>
-                                <div className={'mx-2 flex justify-end'}>
-                                    <button type="button" onClick={() => remove(fields.length - 1)}>
-                                        <RxMinus size={20} />
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            append({
-                                                name: '',
-                                                age_min: '',
-                                                age_max: '',
-                                                experience: '',
-                                                academic_course: '',
-                                                mother_tongue: '',
-                                                foreign_languages: '',
-                                            });
-                                        }}
-                                    >
-                                        <RxPlus size={20} />
-                                    </button>
-                                </div>
-                            </div>
-                            <div className="flex justify-between w-full max-w-xl">
-                                <div>
-                                    <button
-                                        type="button"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                        onClick={handleSubmit((data) =>
-                                            combinedSubmitRouteAndUpdate(
-                                                data,
-                                                '/startingWizard/generalInformation/globalGoals'
-                                            )
-                                        )}
-                                    >
-                                        Zurück
-                                    </button>
-                                </div>
-                                <div>
-                                    <button
-                                        type="button"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                        onClick={handleSubmit((data) =>
-                                            combinedSubmitRouteAndUpdate(
-                                                data,
-                                                '/startingWizard/generalInformation/veTopic'
-                                            )
-                                        )}
-                                    >
-                                        Weiter
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    )}
-                </div>
-            </div>
-            <SideProgressBarSectionBroadPlanner
-                progressState={sideMenuStepsProgress}
-                handleValidation={handleSubmit(onSubmit)}
-                isValid={true}
+        <FormProvider {...methods}>
+            <PopupSaveData
+                isOpen={isPopupOpen}
+                handleContinue={async () => {
+                    await router.push({
+                        pathname: '/startingWizard/generalInformation/veTopic',
+                        query: {
+                            plannerId: router.query.plannerId,
+                        },
+                    });
+                }}
+                handleCancel={() => setIsPopupOpen(false)}
             />
-        </div>
+            <div className="flex bg-pattern-left-blue-small bg-no-repeat">
+                <div className="flex flex-grow justify-center">
+                    <div className="flex flex-col">
+                        <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
+                        {loading ? (
+                            <LoadingAnimation />
+                        ) : (
+                            <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between">
+                                <div>
+                                    <div className={'text-center font-bold text-4xl mb-2'}>
+                                        An welche Zielgruppen richtet sich der VE?
+                                    </div>
+                                    <div className={'text-center mb-20'}>optional</div>
+                                    <div className="flex flex-wrap justify-center">
+                                        {renderTargetGroupsInputs()}
+                                    </div>
+                                    <div className="flex justify-center">
+                                        <button
+                                            className="p-4 bg-white rounded-3xl shadow-2xl"
+                                            type="button"
+                                            onClick={() => {
+                                                append({
+                                                    name: '',
+                                                    age_min: '',
+                                                    age_max: '',
+                                                    experience: '',
+                                                    academic_course: '',
+                                                    mother_tongue: '',
+                                                    foreign_languages: '',
+                                                });
+                                            }}
+                                        >
+                                            <RxPlus size={30} />
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="flex justify-between w-full max-w-xl">
+                                    <div>
+                                        <button
+                                            type="button"
+                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                            onClick={methods.handleSubmit((data) =>
+                                                combinedSubmitRouteAndUpdate(
+                                                    data,
+                                                    '/startingWizard/generalInformation/globalGoals'
+                                                )
+                                            )}
+                                        >
+                                            Zurück
+                                        </button>
+                                    </div>
+                                    <div>
+                                        <button
+                                            type="button"
+                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                            onClick={methods.handleSubmit(
+                                                (data) => {
+                                                    combinedSubmitRouteAndUpdate(
+                                                        data,
+                                                        '/startingWizard/generalInformation/veTopic'
+                                                    );
+                                                },
+                                                async () => setIsPopupOpen(true)
+                                            )}
+                                        >
+                                            Weiter
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        )}
+                    </div>
+                </div>
+                <SideProgressBarSectionBroadPlannerWithReactHookForm
+                    progressState={sideMenuStepsProgress}
+                    onSubmit={onSubmit}
+                />
+            </div>
+        </FormProvider>
     );
 }
