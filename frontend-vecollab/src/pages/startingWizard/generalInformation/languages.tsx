@@ -218,7 +218,7 @@ export default function Languages() {
                                         onClick={handleSubmit((data) =>
                                             combinedSubmitRouteAndUpdate(
                                                 data,
-                                                '/startingWizard/generalInformation/courseFormat'
+                                                '/startingWizard/generalInformation/evaluation'
                                             )
                                         )}
                                     >
