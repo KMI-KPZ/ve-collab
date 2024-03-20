@@ -143,7 +143,7 @@ export default function LearningEnvironment() {
                                         </Tooltip>
                                     </div>
                                     <div className={'text-center mb-20'}>optional</div>
-                                    <div className="mt-4 flex justify-center">
+                                    <div className="mt-4 flex flex-col justify-center items-center">
                                         <textarea
                                             rows={5}
                                             placeholder="Lernumgebung beschreiben"
