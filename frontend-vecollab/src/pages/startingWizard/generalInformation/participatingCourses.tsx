@@ -3,7 +3,7 @@ import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarS
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
-import { RxMinus, RxPlus } from 'react-icons/rx';
+import { RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import { FormProvider, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
@@ -15,6 +15,8 @@ import {
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import SideProgressBarSectionBroadPlannerWithReactHookForm from '@/components/StartingWizard/SideProgressBarSectionBroadPlannerWithReactHookForm';
 import PopupSaveData from '@/components/StartingWizard/PopupSaveData';
+import Image from 'next/image';
+import trash from '@/images/icons/startingWizard/trash.png';
 
 export interface Lecture {
     name: string;
@@ -247,6 +249,16 @@ export default function Lectures() {
                             </p>
                         </div>
                     </div>
+                    <div className="flex justify-end items-center">
+                        <Image
+                            className="mx-2 cursor-pointer m-2 "
+                            onClick={() => remove(index)}
+                            src={trash}
+                            width={20}
+                            height={20}
+                            alt="deleteStep"
+                        ></Image>
+                    </div>
                 </WhiteBox>
             </div>
         ));
@@ -281,14 +293,9 @@ export default function Lectures() {
                                     <div className="flex flex-wrap justify-center">
                                         {renderLecturesInputs()}
                                     </div>
-                                    <div className={'mx-2 flex justify-end'}>
+                                    <div className="flex justify-center ">
                                         <button
-                                            type="button"
-                                            onClick={() => remove(fields.length - 1)}
-                                        >
-                                            <RxMinus size={20} />
-                                        </button>
-                                        <button
+                                            className="p-4 bg-white rounded-3xl shadow-2xl"
                                             type="button"
                                             onClick={() => {
                                                 append({
@@ -299,7 +306,7 @@ export default function Lectures() {
                                                 });
                                             }}
                                         >
-                                            <RxPlus size={20} />
+                                            <RxPlus size={30} />
                                         </button>
                                     </div>
                                 </div>
