@@ -6,6 +6,7 @@ import Container from '@/components/Layout/container';
 import Dialog from '@/components/profile/Dialog';
 import VerticalTabs from '@/components/profile/VerticalTabs';
 import {
+    fetchGET,
     fetchPOST,
     useGetAllSpaces,
     useGetMySpaceInvites,
@@ -16,6 +17,7 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { RxDotsVertical } from 'react-icons/rx';
+import { BackendSpace } from '@/interfaces/api/apiInterfaces';
 
 Spaces.auth = true;
 export default function Spaces() {
@@ -24,7 +26,7 @@ export default function Spaces() {
     const [newSpaceInput, setNewSpaceInput] = useState('');
     const [newSpaceInvisibleCheckboxChecked, setNewSpaceInvisibleCheckboxChecked] = useState(false);
     const [newSpaceJoinableCheckboxChecked, setNewSpaceJoinableCheckboxChecked] = useState(false);
-    const [numSearchResultsDummy, setNumSearchResultsDummy] = useState(0);
+    const [searchSpaceResults, setSearchSpaceResults] = useState<BackendSpace[]>([]);
 
     const [isNewSpaceDialogOpen, setIsNewSpaceDialogOpen] = useState(false);
 
@@ -59,7 +61,12 @@ export default function Spaces() {
 
     const handleSearchSpaceInput = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSearchSpaceInput(event.target.value);
-        setNumSearchResultsDummy(Math.random() * 10);
+        fetchGET(`/search?spaces=true&query=${event.target.value}`, session!.accessToken).then(
+            (data) => {
+                console.log(data);
+                setSearchSpaceResults(data.spaces);
+            }
+        );
     };
 
     const handleCloseNewSpaceDialog = () => {
@@ -77,13 +84,20 @@ export default function Spaces() {
     };
 
     function sendJoinRequest(spaceId: string): void {
-        fetchPOST(`/spaceadministration/join?id=${spaceId}`, {}, session!.accessToken).then(
-            () => {
-                mutateMySpaces();
-                mutateAllSpaces();
-                mutateMySpaceRequests();
+        fetchPOST(`/spaceadministration/join?id=${spaceId}`, {}, session!.accessToken).then((data) => {
+            mutateMySpaces();
+            mutateAllSpaces();
+            mutateMySpaceRequests();
+
+            // if space is joinable, user is automatically joined
+            // and therefore remove the space from the list
+            if(data.join_type === "joined") {
+                searchSpaceResults.splice(searchSpaceResults.findIndex((space) => space._id === spaceId), 1);
             }
-        );
+            else if(data.join_type === "requested_join") {
+                searchSpaceResults.find((space) => space._id === spaceId)!.requests.push(session!.user.preferred_username!);
+            }
+        });
     }
 
     function acceptInvite(spaceId: string): void {
@@ -177,59 +191,100 @@ export default function Spaces() {
                                     value={searchSpaceInput}
                                     onChange={handleSearchSpaceInput}
                                 />
-                                {Array.from({ length: numSearchResultsDummy }, (_, index) => (
-                                    <div key={index} className="px-2 py-5">
-                                        <div className="flex cursor-pointer">
-                                            <div>
-                                                <AuthenticatedImage
-                                                    imageId={'default_group_pic.jpg'}
-                                                    alt={'Profilbild'}
-                                                    width={60}
-                                                    height={60}
-                                                    className="rounded-full"
-                                                ></AuthenticatedImage>
-                                            </div>
-                                            <div>
-                                                <BoxHeadline title={'Lorem ipsum Gruppe'} />
-                                                <div className="mx-2 px-1 my-1 text-gray-600">
-                                                    {'Lorem ipsum Beschreibung'}
-                                                </div>
-                                            </div>
-                                            <div className="flex ml-auto px-2 items-center justify-center">
-                                                <div className="flex items-center">
-                                                    {index % 3 === 0 && (
-                                                        <button
-                                                            className={
-                                                                'h-10 bg-ve-collab-orange text-white px-4 mx-2 rounded-lg shadow-xl'
-                                                            }
-                                                        >
-                                                            <span>Beitreten</span>
-                                                        </button>
-                                                    )}
-                                                    {index % 3 === 1 && (
-                                                        <button
-                                                            className={
-                                                                'h-10 bg-transparent border border-ve-collab-orange text-ve-collab-orange  px-4 mx-2 rounded-lg shadow-xl'
-                                                            }
-                                                        >
-                                                            <span>Beitritt anfragen</span>
-                                                        </button>
-                                                    )}
-                                                    {index % 3 === 2 && (
-                                                        <button
-                                                            disabled
-                                                            className={
-                                                                'h-10 bg-transparent border border-ve-collab-orange/50 text-ve-collab-orange/50 cursor-not-allowed px-4 mx-2 rounded-lg shadow-xl'
-                                                            }
-                                                        >
-                                                            <span>angefragt</span>
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </div>
+                                {searchSpaceInput && searchSpaceResults.length === 0 ? (
+                                    <div className="px-2 py-5">
+                                        <div className="mx-2 px-1 my-1 text-gray-600">
+                                            leider keine Ergebnisse gefunden
                                         </div>
                                     </div>
-                                ))}
+                                ) : (
+                                    <>
+                                        {searchSpaceResults.map((space, index) => (
+                                            <div key={index} className="px-2 py-5">
+                                                <div className="flex cursor-pointer">
+                                                    <div>
+                                                        <AuthenticatedImage
+                                                            imageId={space.space_pic}
+                                                            alt={'Profilbild'}
+                                                            width={60}
+                                                            height={60}
+                                                            className="rounded-full"
+                                                        ></AuthenticatedImage>
+                                                    </div>
+                                                    <div>
+                                                        <BoxHeadline title={space.name} />
+                                                        <div className="mx-2 px-1 my-1 text-gray-600">
+                                                            {space.space_description
+                                                                ? space.space_description
+                                                                : 'keine Beschreibung vorhanden'}
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex ml-auto px-2 items-center justify-center">
+                                                        <div className="flex items-center">
+                                                            {/* if user is already member (or admin), no button is rendered */}
+                                                            {!(
+                                                                space.members.includes(
+                                                                    session!.user
+                                                                        .preferred_username!
+                                                                ) ||
+                                                                space.admins.includes(
+                                                                    session!.user
+                                                                        .preferred_username!
+                                                                )
+                                                            ) &&
+                                                                // if space is joinable, render join button
+                                                                (space.joinable ? (
+                                                                    <button
+                                                                        className={
+                                                                            'h-10 bg-ve-collab-orange text-white px-4 mx-2 rounded-lg shadow-xl'
+                                                                        }
+                                                                        onClick={(e) => {
+                                                                            e.preventDefault();
+                                                                            sendJoinRequest(
+                                                                                space._id
+                                                                            );
+                                                                        }}
+                                                                    >
+                                                                        <span>Beitreten</span>
+                                                                    </button>
+                                                                ) : // if space is not joinable and user has already requested to join, render disabled "already requested" button
+                                                                space.requests.includes(
+                                                                      session!.user
+                                                                          .preferred_username!
+                                                                  ) ? (
+                                                                    <button
+                                                                        disabled
+                                                                        className={
+                                                                            'h-10 bg-transparent border border-ve-collab-orange/50 text-ve-collab-orange/50 cursor-not-allowed px-4 mx-2 rounded-lg shadow-xl'
+                                                                        }
+                                                                    >
+                                                                        <span>angefragt</span>
+                                                                    </button>
+                                                                ) : (
+                                                                    // if space is not joinable and user has not already requested to join, render request button
+                                                                    <button
+                                                                        className={
+                                                                            'h-10 bg-transparent border border-ve-collab-orange text-ve-collab-orange  px-4 mx-2 rounded-lg shadow-xl'
+                                                                        }
+                                                                        onClick={(e) => {
+                                                                            e.preventDefault();
+                                                                            sendJoinRequest(
+                                                                                space._id
+                                                                            );
+                                                                        }}
+                                                                    >
+                                                                        <span>
+                                                                            Beitritt anfragen
+                                                                        </span>
+                                                                    </button>
+                                                                ))}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </>
+                                )}
                             </div>
                             <div className="my-4">
                                 <BoxHeadline title={'Nichts passendes dabei?'} />

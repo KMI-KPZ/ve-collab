@@ -81,9 +81,20 @@ export default function Finished() {
                             <Link href={'/overviewProjects'}>
                                 <button
                                     type="submit"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg mr-2"
                                 >
                                     Weiter zur Übersicht
+                                </button>
+                            </Link>
+                            <Link href={{
+                                    pathname: `/startingWizard/afterVE`,
+                                    query: { plannerId: router.query.plannerId },
+                                }}>
+                                <button
+                                    type="submit"
+                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg ml-2"
+                                >
+                                    zur Nachbearbeitung
                                 </button>
                             </Link>
                         </div>

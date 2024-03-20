@@ -18,7 +18,6 @@ import {
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/startingWizard/sideProgressBar';
-import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import { FormalConditionPartner } from '@/pages/startingWizard/generalInformation/formalConditions';
 import { FiInfo } from 'react-icons/fi';
@@ -211,94 +210,97 @@ export default function Partners() {
     };
 
     return (
-        <>
-            <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
-            <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
-                {loading ? (
-                    <LoadingAnimation />
-                ) : (
-                    <form
-                        onSubmit={onSubmit}
-                        className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
-                    >
-                        <div>
-                            <div className="flex">
-                                <div className={'text-center font-bold text-4xl mb-2 relative'}>
-                                    Wer ist am Projekt beteiligt?
-                                    <Tooltip tooltipsText="Tipps für die Partnersuche findest du hier in den Selbstlernmaterialien …">
-                                        <Link target="_blank" href={'/content/Partnersuche'}>
-                                            <FiInfo size={30} color="#00748f" />
-                                        </Link>
-                                    </Tooltip>
-                                </div>
-                            </div>
-                            <div className={'text-center mb-20'}>optional</div>
-                            {partners.map((partner, index) => (
-                                <div key={index} className="my-2">
-                                    <AsyncCreatableSelect
-                                        instanceId={index.toString()}
-                                        loadOptions={loadOptions}
-                                        onChange={(e) => modifyPartner(index, e!.value)}
-                                        value={{
-                                            label: partnerProfileSnippets[partner]
-                                                ? `${partnerProfileSnippets[partner].first_name} ${partnerProfileSnippets[partner].last_name} - ${partner}`
-                                                : `${partner}`,
-                                            value: partner,
-                                        }}
-                                        placeholder={'Suche nach Nutzer:innen...'}
-                                        getOptionLabel={(option) => option.label}
-                                        formatCreateLabel={(inputValue) => (
-                                            <span>
-                                                kein Treffer? <b>{inputValue}</b> trotzdem verwenden
-                                            </span>
-                                        )}
-                                    />
-                                </div>
-                            ))}
-                            <div className={'w-3/4 mx-7 mt-3 flex justify-end'}>
-                                <button onClick={removeInputField}>
-                                    <RxMinus size={20} />
-                                </button>
-                                <button onClick={addInputField}>
-                                    <RxPlus size={20} />
-                                </button>
-                            </div>
-                        </div>
-                        <div className="flex justify-around w-full">
+        <div className="flex bg-pattern-left-blue-small bg-no-repeat">
+            <div className="flex flex-grow justify-center">
+                <div className="flex flex-col">
+                    <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
+                    {loading ? (
+                        <LoadingAnimation />
+                    ) : (
+                        <form
+                            onSubmit={onSubmit}
+                            className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between"
+                        >
                             <div>
-                                <Link
-                                    href={{
-                                        pathname: '/startingWizard/generalInformation/projectName',
-                                        query: { plannerId: router.query.plannerId },
-                                    }}
-                                >
+                                <div className="flex">
+                                    <div className={'text-center font-bold text-4xl mb-2 relative'}>
+                                        Wer ist am Projekt beteiligt?
+                                        <Tooltip tooltipsText="Tipps für die Partnersuche findest du hier in den Selbstlernmaterialien …">
+                                            <Link target="_blank" href={'/content/Partnersuche'}>
+                                                <FiInfo size={30} color="#00748f" />
+                                            </Link>
+                                        </Tooltip>
+                                    </div>
+                                </div>
+                                <div className={'text-center mb-20'}>optional</div>
+                                {partners.map((partner, index) => (
+                                    <div key={index} className="my-2">
+                                        <AsyncCreatableSelect
+                                            instanceId={index.toString()}
+                                            loadOptions={loadOptions}
+                                            onChange={(e) => modifyPartner(index, e!.value)}
+                                            value={{
+                                                label: partnerProfileSnippets[partner]
+                                                    ? `${partnerProfileSnippets[partner].first_name} ${partnerProfileSnippets[partner].last_name} - ${partner}`
+                                                    : `${partner}`,
+                                                value: partner,
+                                            }}
+                                            placeholder={'Suche nach Nutzer:innen...'}
+                                            getOptionLabel={(option) => option.label}
+                                            formatCreateLabel={(inputValue) => (
+                                                <span>
+                                                    kein Treffer? <b>{inputValue}</b> trotzdem
+                                                    verwenden
+                                                </span>
+                                            )}
+                                        />
+                                    </div>
+                                ))}
+                                <div className={'mt-3 flex justify-end'}>
+                                    <button onClick={removeInputField}>
+                                        <RxMinus size={20} />
+                                    </button>
+                                    <button onClick={addInputField}>
+                                        <RxPlus size={20} />
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="flex justify-between w-full max-w-xl">
+                                <div>
+                                    <Link
+                                        href={{
+                                            pathname:
+                                                '/startingWizard/generalInformation/projectName',
+                                            query: { plannerId: router.query.plannerId },
+                                        }}
+                                    >
+                                        <button
+                                            type="button"
+                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                        >
+                                            Zurück
+                                        </button>
+                                    </Link>
+                                </div>
+                                <div>
                                     <button
                                         type="button"
+                                        onClick={onSubmit}
                                         className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
                                     >
-                                        Zurück
+                                        Weiter
                                     </button>
-                                </Link>
+                                </div>
                             </div>
-                            <div>
-                                <button
-                                    type="button"
-                                    onClick={onSubmit}
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                >
-                                    Weiter
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                )}
-                <SideProgressBarSectionBroadPlanner
-                    progressState={sideMenuStepsProgress}
-                    handleValidation={() => {}}
-                    isValid={true}
-                    sideMenuStepsData={sideMenuStepsData}
-                />
+                        </form>
+                    )}
+                </div>
             </div>
-        </>
+            <SideProgressBarSectionBroadPlanner
+                progressState={sideMenuStepsProgress}
+                handleValidation={() => {}}
+                isValid={true}
+            />
+        </div>
     );
 }

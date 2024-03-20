@@ -3,12 +3,19 @@ import { HiDotsHorizontal } from "react-icons/hi";
 import { MdDeleteOutline, MdModeEdit } from "react-icons/md";
 
 interface Props {
-    options: { value: string, label: string, icon: JSX.Element }[];
+    options: {
+        value: string,
+        label: string,
+        title?: string,
+        icon?: JSX.Element }[];
+    icon?: JSX.Element
     onSelect: (value: string) => void;
+
 }
 
 export default function MyDropdown({
     options,
+    icon=<HiDotsHorizontal />,
     onSelect
 }: Props) {
     const [open, setOpen] = useState(false);
@@ -39,14 +46,17 @@ export default function MyDropdown({
     }
 
     return (
-        <div className="inline" ref={wrapperRef}>
-            <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={() => setOpen(!open)}><HiDotsHorizontal /></button>
+        <div className="inline relative" ref={wrapperRef}>
+            <button className="p-2" onClick={() => setOpen(!open)}>
+                {icon}
+            </button>
 
             {open && (
-                <ul className="absolute ml-1/2 rounded-lg bg-white p-2 ring ring-ve-collab-orange">
+                <ul className="absolute z-30 right-0 left-auto rounded-md bg-white p-2 shadow border">
                     {options.map((a, i) => (
                         <li
                             key={i}
+                            title={a.title}
                             onClick={() => _handleSelect(a.value)}
                             className="flex items-center hover:cursor-pointer"
                         >

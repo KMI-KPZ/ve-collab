@@ -12,7 +12,7 @@ interface Props {
 export default function Tools({ toolIndex, taskIndex, removeItem }: Props) {
     const { register, formState } = useFormContext<IFineStepFrontend>();
     return (
-        <div className="w-full flex flex-row gap-5">
+        <div className="flex gap-5">
             <input
                 type="text"
                 {...register(`tasks.${taskIndex}.tools.${toolIndex}.name`, {
@@ -22,7 +22,7 @@ export default function Tools({ toolIndex, taskIndex, removeItem }: Props) {
                     },
                 })}
                 placeholder="Welche Tools können verwendet werden?"
-                className="w-full border border-gray-500 rounded-lg h-12 p-2 my-1"
+                className="w-full border border-gray-400 rounded-lg p-2"
             />
             <button
                 type="button"

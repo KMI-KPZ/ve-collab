@@ -10,7 +10,6 @@ import {
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import LoadingAnimation from '@/components/LoadingAnimation';
-import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import Link from 'next/link';
 import { TooltipList } from '@/components/TooltipList';
@@ -135,8 +134,8 @@ export default function FormalConditions() {
 
     function renderCheckBoxes(partnerName: string): JSX.Element {
         return (
-            <div className="w-4/5 space-y-3 py-8">
-                <div className="flex justify-center items-center font-bold text-lg mb-4">
+            <div className="w-4/5 space-y-3 py-8 flex flex-col">
+                <div className="flex justify-start items-center font-bold text-lg mb-4">
                     {partnerName}
                 </div>
                 <div className="flex justify-start items-center">
@@ -328,82 +327,83 @@ export default function FormalConditions() {
     }
 
     return (
-        <>
-            <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
-            <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
-                {loading ? (
-                    <LoadingAnimation />
-                ) : (
-                    <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-center">
-                        <div>
-                            <div className={'text-center font-bold text-4xl mb-2 relative'}>
-                                Formale Rahmenbedingungen
-                                <Tooltip tooltipsText="Mehr zu formalen Rahmenbedingungen findest du hier in den Selbstlernmaterialien …">
-                                    <Link target="_blank" href={'/content/Herausforderungen'}>
-                                        <FiInfo size={30} color="#00748f" />
+        <div className="flex bg-pattern-left-blue-small bg-no-repeat">
+            <div className="flex flex-grow justify-center">
+                <div className="flex flex-col">
+                    <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
+                    {loading ? (
+                        <LoadingAnimation />
+                    ) : (
+                        <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-center">
+                            <div>
+                                <div className={'text-center font-bold text-4xl mb-2 relative'}>
+                                    Formale Rahmenbedingungen
+                                    <Tooltip tooltipsText="Mehr zu formalen Rahmenbedingungen findest du hier in den Selbstlernmaterialien …">
+                                        <Link target="_blank" href={'/content/Herausforderungen'}>
+                                            <FiInfo size={30} color="#00748f" />
+                                        </Link>
+                                    </Tooltip>
+                                </div>
+                                <div className={'text-center mb-4'}>optional</div>
+                                <div className={'text-center'}>
+                                    Bevor es mit der inhaltlichen und didaktischen Planung losgeht:
+                                </div>
+                                <div className="text-center mb-10">
+                                    Sind die folgenden formalen Rahmenbedingungen bei allen
+                                    Beteiligten erfüllt?
+                                </div>
+                                <div className="grid grid-cols-3 gap-1 mt-7 mb-10">
+                                    {formalConditions.map((formalConditionPartner, index) => (
+                                        <div key={index} className="flex justify-center">
+                                            {renderCheckBoxes(formalConditionPartner.username)}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="flex justify-between w-full max-w-xl">
+                                <div>
+                                    <Link
+                                        href={{
+                                            pathname:
+                                                '/startingWizard/generalInformation/learningPlatform',
+                                            query: { plannerId: router.query.plannerId },
+                                        }}
+                                    >
+                                        <button
+                                            type="button"
+                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                            onClick={() => handleSubmit()}
+                                        >
+                                            Zurück
+                                        </button>
                                     </Link>
-                                </Tooltip>
-                            </div>
-                            <div className={'text-center mb-4'}>optional</div>
-                            <div className={'text-center'}>
-                                Bevor es mit der inhaltlichen und didaktischen Planung losgeht:
-                            </div>
-                            <div className="text-center mb-10">
-                                Sind die folgenden formalen Rahmenbedingungen bei allen Beteiligten
-                                erfüllt?
-                            </div>
-                            <div className="grid grid-cols-2 gap-1 mt-7  mb-10">
-                                {formalConditions.map((formalConditionPartner, index) => (
-                                    <div key={index}>
-                                        {renderCheckBoxes(formalConditionPartner.username)}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                        <div className="flex justify-around w-full">
-                            <div>
-                                <Link
-                                    href={{
-                                        pathname:
-                                            '/startingWizard/generalInformation/learningPlatform',
-                                        query: { plannerId: router.query.plannerId },
-                                    }}
-                                >
-                                    <button
-                                        type="button"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                        onClick={() => handleSubmit()}
+                                </div>
+                                <div>
+                                    <Link
+                                        href={{
+                                            pathname: '/startingWizard/broadPlanner',
+                                            query: { plannerId: router.query.plannerId },
+                                        }}
                                     >
-                                        Zurück
-                                    </button>
-                                </Link>
+                                        <button
+                                            type="button"
+                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                            onClick={() => handleSubmit()}
+                                        >
+                                            Weiter
+                                        </button>
+                                    </Link>
+                                </div>
                             </div>
-                            <div>
-                                <Link
-                                    href={{
-                                        pathname: '/startingWizard/broadPlanner',
-                                        query: { plannerId: router.query.plannerId },
-                                    }}
-                                >
-                                    <button
-                                        type="button"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                        onClick={() => handleSubmit()}
-                                    >
-                                        Weiter
-                                    </button>
-                                </Link>
-                            </div>
-                        </div>
-                    </form>
-                )}
-                <SideProgressBarSectionBroadPlanner
-                    progressState={sideMenuStepsProgress}
-                    handleValidation={() => {}}
-                    isValid={true}
-                    sideMenuStepsData={sideMenuStepsData}
-                />
+                        </form>
+                    )}
+                </div>
             </div>
-        </>
+            <SideProgressBarSectionBroadPlanner
+                progressState={sideMenuStepsProgress}
+                handleValidation={() => {}}
+                isValid={true}
+            />
+        </div>
     );
 }

@@ -1,19 +1,19 @@
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
-import SideProgressBarSectionBroadPlanner from '@/components/StartingWizard/SideProgressBarSectionBroadPlanner';
 import React, { useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import { signIn, useSession } from 'next-auth/react';
-import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
+import { FormProvider, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import LoadingAnimation from '@/components/LoadingAnimation';
-import { sideMenuStepsData } from '@/data/sideMenuSteps';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/startingWizard/sideProgressBar';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+import PopupSaveData from '@/components/StartingWizard/PopupSaveData';
+import SideProgressBarSectionBroadPlannerWithReactHookForm from '@/components/StartingWizard/SideProgressBarSectionBroadPlannerWithReactHookForm';
 
 interface ExternalParty {
     externalParty: string;
@@ -31,6 +31,7 @@ export default function ExternalPersons() {
         initialSideProgressBarStates
     );
     const [steps, setSteps] = useState<IFineStep[]>([]);
+    const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -42,13 +43,7 @@ export default function ExternalPersons() {
         }
     }, [session, status]);
 
-    const {
-        register,
-        formState: { errors },
-        handleSubmit,
-        control,
-        setValue,
-    } = useForm<FormValues>({
+    const methods = useForm<FormValues>({
         mode: 'onChange',
         defaultValues: {
             externalParties: [{ externalParty: '' }],
@@ -72,7 +67,7 @@ export default function ExternalPersons() {
                 (data) => {
                     setLoading(false);
                     if (data.plan.involved_parties.length !== 0) {
-                        setValue(
+                        methods.setValue(
                             'externalParties',
                             data.plan.involved_parties.map((element: string) => ({
                                 externalParty: element,
@@ -86,11 +81,11 @@ export default function ExternalPersons() {
                 }
             );
         }
-    }, [session, status, router, setValue]);
+    }, [session, status, router, methods]);
 
     const { fields, append, remove } = useFieldArray({
         name: 'externalParties',
-        control,
+        control: methods.control,
     });
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
@@ -127,101 +122,115 @@ export default function ExternalPersons() {
 
     const renderExternalPartiesInputs = (): JSX.Element[] => {
         return fields.map((externalParty, index) => (
-            <div key={externalParty.id} className="mx-7 mt-7 flex flex-col justify-center">
-                <input
-                    type="text"
-                    placeholder="Externen eingeben"
-                    className="border border-gray-500 rounded-lg w-3/4 h-12 p-2"
-                    {...register(`externalParties.${index}.externalParty`, {
-                        maxLength: {
-                            value: 50,
-                            message: 'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
-                        },
-                        pattern: {
-                            value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
-                            message: 'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
-                        },
-                    })}
-                />
-                <p className="text-red-600 pt-2">
-                    {errors?.externalParties?.[index]?.externalParty?.message}
-                </p>
+            <div key={externalParty.id} className="my-2">
+                <div className="flex justify-center items-center">
+                    <input
+                        type="text"
+                        placeholder="Externen eingeben"
+                        className="border border-gray-300 rounded-lg p-2 mr-2"
+                        {...methods.register(`externalParties.${index}.externalParty`, {
+                            maxLength: {
+                                value: 50,
+                                message: 'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                            },
+                        })}
+                    />
+                    <button type="button" onClick={() => remove(index)}>
+                        <RxMinus size={20} />
+                    </button>
+                </div>
+                {methods.formState.errors?.externalParties?.[index]?.externalParty?.message && (
+                    <p className="text-red-600 pt-2">
+                        {methods.formState.errors?.externalParties?.[index]?.externalParty?.message}
+                    </p>
+                )}
             </div>
         ));
     };
 
     return (
-        <>
-            <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
-            <div className="flex justify-between bg-pattern-left-blue-small bg-no-repeat">
-                {loading ? (
-                    <LoadingAnimation />
-                ) : (
-                    <form
-                        onSubmit={handleSubmit(onSubmit)}
-                        className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-between"
-                    >
-                        <div>
-                            <div className={'text-center font-bold text-4xl mb-2'}>
-                                Gibt es externe Beteiligte?
-                            </div>
-                            <div className={'text-center mb-20'}>optional</div>
-                            {renderExternalPartiesInputs()}
-                            <div className={'w-3/4 mx-7 mt-3 flex justify-end'}>
-                                <button type="button" onClick={() => remove(fields.length - 1)}>
-                                    <RxMinus size={20} />
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        append({
-                                            externalParty: '',
-                                        });
-                                    }}
-                                >
-                                    <RxPlus size={20} />
-                                </button>
-                            </div>
-                        </div>
-                        <div className="flex justify-around w-full">
-                            <div>
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={handleSubmit((data) =>
-                                        combinedSubmitRouteAndUpdate(
-                                            data,
-                                            '/startingWizard/generalInformation/partners'
-                                        )
-                                    )}
-                                >
-                                    Zurück
-                                </button>
-                            </div>
-                            <div>
-                                <button
-                                    type="button"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    onClick={handleSubmit((data) =>
-                                        combinedSubmitRouteAndUpdate(
-                                            data,
-                                            '/startingWizard/generalInformation/institutions'
-                                        )
-                                    )}
-                                >
-                                    Weiter
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                )}
-                <SideProgressBarSectionBroadPlanner
+        <FormProvider {...methods}>
+            <PopupSaveData
+                isOpen={isPopupOpen}
+                handleContinue={async () => {
+                    await router.push({
+                        pathname: '/startingWizard/generalInformation/formalConditions',
+                        query: {
+                            plannerId: router.query.plannerId,
+                        },
+                    });
+                }}
+                handleCancel={() => setIsPopupOpen(false)}
+            />
+            <div className="flex bg-pattern-left-blue-small bg-no-repeat">
+                <div className="flex flex-grow justify-center">
+                    <div className="flex flex-col">
+                        <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
+                        {loading ? (
+                            <LoadingAnimation />
+                        ) : (
+                            <form
+                                onSubmit={methods.handleSubmit(onSubmit)}
+                                className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between"
+                            >
+                                <div>
+                                    <div className={'text-center font-bold text-4xl mb-2'}>
+                                        Gibt es externe Beteiligte?
+                                    </div>
+                                    <div className={'text-center mb-20'}>optional</div>
+                                    {renderExternalPartiesInputs()}
+                                    <div className={'mt-3 flex justify-center'}>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                append({
+                                                    externalParty: '',
+                                                });
+                                            }}
+                                        >
+                                            <RxPlus size={20} />
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="flex justify-between w-full max-w-xl">
+                                    <div>
+                                        <button
+                                            type="button"
+                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                            onClick={methods.handleSubmit((data) =>
+                                                combinedSubmitRouteAndUpdate(
+                                                    data,
+                                                    '/startingWizard/generalInformation/partners'
+                                                )
+                                            )}
+                                        >
+                                            Zurück
+                                        </button>
+                                    </div>
+                                    <div>
+                                        <button
+                                            type="button"
+                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                            onClick={methods.handleSubmit((data) =>
+                                                combinedSubmitRouteAndUpdate(
+                                                    data,
+                                                    '/startingWizard/generalInformation/institutions'
+                                                )
+                                            )}
+                                        >
+                                            Weiter
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        )}
+                    </div>
+                </div>
+                <SideProgressBarSectionBroadPlannerWithReactHookForm
                     progressState={sideMenuStepsProgress}
-                    handleValidation={() => {}}
-                    isValid={true}
-                    sideMenuStepsData={sideMenuStepsData}
+                    onSubmit={onSubmit}
                 />
             </div>
-        </>
+        </FormProvider>
     );
 }

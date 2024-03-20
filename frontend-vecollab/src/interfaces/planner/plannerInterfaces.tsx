@@ -39,6 +39,10 @@ export interface IPlan {
     read_access: string[];
     realization: string | null;
     steps: IFineStep[];
+    is_good_practise: boolean;
+    underlying_ve_model: string | null;
+    reflection: string | null;
+    evaluation: string | null;
     timestamp_from: string | null;
     timestamp_to: string | null;
     topics: string[];

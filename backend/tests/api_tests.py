@@ -4,6 +4,7 @@ import io
 import json
 import logging
 import os
+import requests
 from typing import List
 
 from bson import ObjectId
@@ -124,6 +125,18 @@ def tearDownModule():
     with util.get_mongodb() as db:
         for collection_name in db.list_collection_names():
             db.drop_collection(collection_name)
+
+    # clear out elastisearch index, only once after all tests
+    # because otherwise there would be too many http requests
+    response = requests.delete(
+        "{}/test".format(global_vars.elasticsearch_base_url),
+        auth=(
+            global_vars.elasticsearch_username,
+            global_vars.elasticsearch_password,
+        ),
+    )
+    if response.status_code != 200:
+        print(response.content)
 
 
 class RenderHandlerTest(AsyncHTTPTestCase):
@@ -2626,7 +2639,9 @@ class RepostHandlerTest(BaseApiTestCase):
             db_author_profile["institution"],
         )
 
-        db_state = self.db.posts.find_one({"_id": ObjectId(response["inserted_repost"]["_id"])})
+        db_state = self.db.posts.find_one(
+            {"_id": ObjectId(response["inserted_repost"]["_id"])}
+        )
         self.assertNotEqual(db_state, None)
 
     def test_post_create_repost_space(self):
@@ -3594,6 +3609,22 @@ class SearchHandlerTest(BaseApiTestCase):
         except pymongo.errors.OperationFailure:
             pass
         super().tearDown()
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        # clear out elastisearch index, only once after all tests
+        # because otherwise there would be too many http requests
+        response = requests.delete(
+            "{}/test".format(global_vars.elasticsearch_base_url),
+            auth=(
+                global_vars.elasticsearch_username,
+                global_vars.elasticsearch_password,
+            ),
+        )
+        if response.status_code != 200:
+            print(response.content)
+
+        return super().tearDownClass()
 
     def test_get_search_user(self):
         """
@@ -7412,7 +7443,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             lecture_type="test",
             participants_amount=10,
         )
-    
+
     def create_physical_mobility(self, location: str = "test") -> PhysicalMobility:
         """
         convenience method to create a physical mobility with non-default values
@@ -7455,14 +7486,20 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "physical_mobilities": [self.physical_mobility.to_dict()],
             "learning_env": "test",
             "new_content": False,
-            "formalities": [{
-                "username": CURRENT_ADMIN.username,
-                "technology": False,
-                "exam_regulations": False,
-            }],
+            "formalities": [
+                {
+                    "username": CURRENT_ADMIN.username,
+                    "technology": False,
+                    "exam_regulations": False,
+                }
+            ],
             "duration": self.step.duration.total_seconds(),
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
+            "is_good_practise": True,
+            "underlying_ve_model": "test",
+            "reflection": "test",
+            "evaluation": "test",
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",
@@ -7541,14 +7578,22 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.timestamp_to, default_plan.timestamp_to)
         self.assertEqual(response_plan.involved_parties, default_plan.involved_parties)
         self.assertEqual(response_plan.realization, default_plan.realization)
-        self.assertEqual(response_plan.physical_mobility, default_plan.physical_mobility)
-        self.assertEqual(response_plan.physical_mobilities, default_plan.physical_mobilities)
+        self.assertEqual(
+            response_plan.physical_mobility, default_plan.physical_mobility
+        )
+        self.assertEqual(
+            response_plan.physical_mobilities, default_plan.physical_mobilities
+        )
         self.assertEqual(response_plan.learning_env, default_plan.learning_env)
         self.assertEqual(response_plan.new_content, default_plan.new_content)
         self.assertEqual(response_plan.formalities, default_plan.formalities)
         self.assertEqual(response_plan.duration, default_plan.duration)
         self.assertEqual(response_plan.workload, default_plan.workload)
         self.assertEqual(response_plan.steps, default_plan.steps)
+        self.assertEqual(response_plan.is_good_practise, default_plan.is_good_practise)
+        self.assertEqual(response_plan.underlying_ve_model, default_plan.underlying_ve_model)
+        self.assertEqual(response_plan.reflection, default_plan.reflection)
+        self.assertEqual(response_plan.evaluation, default_plan.evaluation)
         self.assertEqual(response_plan.progress, default_plan.progress)
         self.assertIsNotNone(response_plan.creation_timestamp)
         self.assertIsNotNone(response_plan.last_modified)
@@ -7632,14 +7677,22 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.timestamp_to, default_plan.timestamp_to)
         self.assertEqual(response_plan.involved_parties, default_plan.involved_parties)
         self.assertEqual(response_plan.realization, default_plan.realization)
-        self.assertEqual(response_plan.physical_mobility, default_plan.physical_mobility)
-        self.assertEqual(response_plan.physical_mobilities, default_plan.physical_mobilities)
+        self.assertEqual(
+            response_plan.physical_mobility, default_plan.physical_mobility
+        )
+        self.assertEqual(
+            response_plan.physical_mobilities, default_plan.physical_mobilities
+        )
         self.assertEqual(response_plan.learning_env, default_plan.learning_env)
         self.assertEqual(response_plan.new_content, default_plan.new_content)
         self.assertEqual(response_plan.formalities, default_plan.formalities)
         self.assertEqual(response_plan.duration, default_plan.duration)
         self.assertEqual(response_plan.workload, default_plan.workload)
         self.assertEqual(response_plan.steps, default_plan.steps)
+        self.assertEqual(response_plan.is_good_practise, default_plan.is_good_practise)
+        self.assertEqual(response_plan.underlying_ve_model, default_plan.underlying_ve_model)
+        self.assertEqual(response_plan.reflection, default_plan.reflection)
+        self.assertEqual(response_plan.evaluation, default_plan.evaluation)
         self.assertEqual(response_plan.progress, default_plan.progress)
         self.assertIsNotNone(response_plan.creation_timestamp)
         self.assertIsNotNone(response_plan.last_modified)
@@ -7901,7 +7954,13 @@ class VEPlanHandlerTest(BaseApiTestCase):
         payload = {
             "plan_id": self.plan_id,
             "field_name": "formalities",
-            "value": [{"username": CURRENT_ADMIN.username, "technology": True, "exam_regulations": True}],
+            "value": [
+                {
+                    "username": CURRENT_ADMIN.username,
+                    "technology": True,
+                    "exam_regulations": True,
+                }
+            ],
         }
 
         response = self.base_checks(
@@ -7917,7 +7976,14 @@ class VEPlanHandlerTest(BaseApiTestCase):
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
         self.assertEqual(
-            db_state["formalities"], [{"username": CURRENT_ADMIN.username, "technology": True, "exam_regulations": True}]
+            db_state["formalities"],
+            [
+                {
+                    "username": CURRENT_ADMIN.username,
+                    "technology": True,
+                    "exam_regulations": True,
+                }
+            ],
         )
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
