@@ -81,12 +81,18 @@ export interface BackendPostComment {
     text: string;
 }
 
+export interface BackendPostFile {
+    file_id: string;
+    file_name: string;
+    author: string;
+}
+
 export interface BackendPost {
     _id: string;
     author: BackendPostAuthor;
     comments: BackendPostComment[];
     creation_date: string;
-    files: string[];
+    files: BackendPostFile[];
     likers: string[];
     pinned: boolean;
     space: string;

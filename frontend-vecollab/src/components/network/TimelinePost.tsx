@@ -268,14 +268,14 @@ export default function TimelinePost(
                         {post.files.map((file, index) => (
                             <AuthenticatedFile
                                 key={index}
-                                url={`/uploads/${file}`}
-                                filename={file}
+                                url={`/uploads/${file.file_id}`}
+                                filename={file.file_name}
                             >
                                 <div className="flex justify-center">
                                     <RxFile size={40} />{' '}
                                 </div>
                                 <div className="max-w-1/2 justify-center mx-2 px-1 my-1 truncate">
-                                    {file}
+                                    {file.file_name}
                                 </div>
                             </AuthenticatedFile>
                         ))}
