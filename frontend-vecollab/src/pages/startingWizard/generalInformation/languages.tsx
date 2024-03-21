@@ -24,6 +24,8 @@ interface Language {
 interface FormValues {
     languages: Language[];
 }
+
+Languages.auth = true;
 export default function Languages() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
@@ -129,8 +131,8 @@ export default function Languages() {
                         className="border border-gray-300 rounded-lg w-1/2 p-2 mr-2"
                         {...methods.register(`languages.${index}.language`, {
                             maxLength: {
-                                value: 50,
-                                message: 'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                value: 500,
+                                message: 'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                             },
                             pattern: {
                                 value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,

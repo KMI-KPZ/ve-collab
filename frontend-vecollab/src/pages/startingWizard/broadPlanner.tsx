@@ -68,6 +68,7 @@ const emptyBroadStep: BroadStep = {
     name: '',
 };
 
+BroadPlanner.auth = true;
 export default function BroadPlanner() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);

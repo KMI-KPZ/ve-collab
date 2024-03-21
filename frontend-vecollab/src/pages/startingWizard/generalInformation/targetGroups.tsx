@@ -32,6 +32,7 @@ interface FormValues {
     targetGroups: TargetGroup[];
 }
 
+TargetGroups.auth = true;
 export default function TargetGroups() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
@@ -149,9 +150,9 @@ export default function TargetGroups() {
                                 type="text"
                                 {...methods.register(`targetGroups.${index}.name`, {
                                     maxLength: {
-                                        value: 50,
+                                        value: 500,
                                         message:
-                                            'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                            'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                                     },
                                     pattern: {
                                         value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
@@ -233,9 +234,9 @@ export default function TargetGroups() {
                                 rows={3}
                                 {...methods.register(`targetGroups.${index}.experience`, {
                                     maxLength: {
-                                        value: 50,
+                                        value: 500,
                                         message:
-                                            'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                            'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                                     },
                                     pattern: {
                                         value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
@@ -265,9 +266,9 @@ export default function TargetGroups() {
                                 type="text"
                                 {...methods.register(`targetGroups.${index}.academic_course`, {
                                     maxLength: {
-                                        value: 50,
+                                        value: 500,
                                         message:
-                                            'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                            'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                                     },
                                     pattern: {
                                         value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
@@ -297,9 +298,9 @@ export default function TargetGroups() {
                                 type="text"
                                 {...methods.register(`targetGroups.${index}.mother_tongue`, {
                                     maxLength: {
-                                        value: 50,
+                                        value: 500,
                                         message:
-                                            'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                            'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                                     },
                                     pattern: {
                                         value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
@@ -329,9 +330,9 @@ export default function TargetGroups() {
                                 type="text"
                                 {...methods.register(`targetGroups.${index}.foreign_languages`, {
                                     maxLength: {
-                                        value: 50,
+                                        value: 500,
                                         message:
-                                            'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                            'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                                     },
                                     pattern: {
                                         value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,

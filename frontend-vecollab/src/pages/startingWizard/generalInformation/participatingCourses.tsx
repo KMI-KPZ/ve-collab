@@ -29,6 +29,7 @@ interface FormValues {
     lectures: Lecture[];
 }
 
+Lectures.auth = true;
 export default function Lectures() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
@@ -143,9 +144,9 @@ export default function Lectures() {
                                 type="text"
                                 {...methods.register(`lectures.${index}.name`, {
                                     maxLength: {
-                                        value: 50,
+                                        value: 500,
                                         message:
-                                            'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                            'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                                     },
                                     pattern: {
                                         value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
@@ -171,9 +172,9 @@ export default function Lectures() {
                             <select
                                 {...methods.register(`lectures.${index}.lecture_type`, {
                                     maxLength: {
-                                        value: 50,
+                                        value: 500,
                                         message:
-                                            'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                            'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                                     },
                                 })}
                                 placeholder="z.B. Wahl, Wahlpflicht, Pflicht"
@@ -197,9 +198,9 @@ export default function Lectures() {
                             <select
                                 {...methods.register(`lectures.${index}.lecture_format`, {
                                     maxLength: {
-                                        value: 50,
+                                        value: 500,
                                         message:
-                                            'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                            'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                                     },
                                 })}
                                 placeholder="z.B. online, hybrid, präsenz"

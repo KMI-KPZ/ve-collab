@@ -24,6 +24,7 @@ import { FiInfo } from 'react-icons/fi';
 import { Tooltip } from '@/components/Tooltip';
 import { EvaluationPerPartner } from './evaluation';
 
+Partners.auth = true;
 export default function Partners() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
@@ -119,46 +120,55 @@ export default function Partners() {
     };
 
     const onSubmit = async () => {
-        const updateFormalConditions = partners.map((partner) => {
-            const findFormalCondition = formalConditions.find(
-                (formalCondition) => formalCondition.username === partner
-            );
-            if (findFormalCondition) {
-                return findFormalCondition;
-            } else {
-                return {
-                    username: partner,
-                    time: false,
-                    format: false,
-                    topic: false,
-                    goals: false,
-                    languages: false,
-                    media: false,
-                    technicalEquipment: false,
-                    evaluation: false,
-                    institutionalRequirements: false,
-                    dataProtection: false,
-                };
-            }
-        });
-        const updateEvaluationInfo = partners.map((partner) => {
-            const findEvaluationInfo = evaluationInfo.find(
-                (evaluation) => evaluation.username === partner
-            );
-            if (findEvaluationInfo) {
-                return findEvaluationInfo;
-            } else {
-                return {
-                    username: partner,
-                    is_graded: false,
-                    task_type: '',
-                    assessment_type: '',
-                    evaluation_while: '',
-                    evaluation_after: '',
-                };
-            }
-        });
-
+        let updateFormalConditions: FormalConditionPartner[] = [];
+        let updateEvaluationInfo: EvaluationPerPartner[] = [];
+        
+        // the empty string is a placeholder to show to first input field,
+        // but shouldnt be sent to the backend - so in order to not
+        // crowd the partner-dependent attributes with the empty value,
+        // only aggregate them if there are actual partners
+        if(!(partners.length === 1 && partners[0] === '')){
+            updateFormalConditions = partners.map((partner) => {
+                const findFormalCondition = formalConditions.find(
+                    (formalCondition) => formalCondition.username === partner
+                    );
+                    if (findFormalCondition) {
+                        return findFormalCondition;
+                    } else {
+                        return {
+                            username: partner,
+                            time: false,
+                            format: false,
+                            topic: false,
+                            goals: false,
+                            languages: false,
+                            media: false,
+                            technicalEquipment: false,
+                            evaluation: false,
+                            institutionalRequirements: false,
+                            dataProtection: false,
+                        };
+                    }
+                });
+                updateEvaluationInfo = partners.map((partner) => {
+                    const findEvaluationInfo = evaluationInfo.find(
+                        (evaluation) => evaluation.username === partner
+                        );
+                        if (findEvaluationInfo) {
+                            return findEvaluationInfo;
+                        } else {
+                            return {
+                                username: partner,
+                                is_graded: false,
+                                task_type: '',
+                                assessment_type: '',
+                                evaluation_while: '',
+                                evaluation_after: '',
+                            };
+                        }
+                    });
+                }
+                    
         // sanity check: if the author (i.e. creator of the plan) was not
         // manually added as a partner by the users, add their formal conditions
         // entry nonetheless, because otherwise he would not be included on the

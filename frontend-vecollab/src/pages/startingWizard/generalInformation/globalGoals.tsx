@@ -10,7 +10,6 @@ import {
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/startingWizard/sideProgressBar';
-import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import { MultiValue, ActionMeta } from 'react-select';
 import CreatableSelect from 'react-select/creatable';
@@ -18,6 +17,7 @@ import Link from 'next/link';
 import { Tooltip } from '@/components/Tooltip';
 import { FiInfo } from 'react-icons/fi';
 
+GlobalGoals.auth = true;
 export default function GlobalGoals() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
@@ -168,7 +168,7 @@ export default function GlobalGoals() {
                                     })}
                                     onChange={handleChange}
                                     formatCreateLabel={(inputValue) => `Sonstige: ${inputValue}`}
-                                    placeholder="Richtlernziele auswählen oder neue hinzufügen"
+                                    placeholder="Richtlernziele auswählen oder neue durch Tippen hinzufügen"
                                 />
                             </div>
                             <div className="flex justify-between w-full max-w-xl">

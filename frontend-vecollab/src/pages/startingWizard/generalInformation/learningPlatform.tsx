@@ -21,6 +21,7 @@ interface FormValues {
     learningEnv: string;
 }
 
+LearningEnvironment.auth = true;
 export default function LearningEnvironment() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);

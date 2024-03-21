@@ -30,6 +30,7 @@ interface FormValues {
     institutions: Institution[];
 }
 
+Institutions.auth = true;
 export default function Institutions() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
@@ -146,9 +147,9 @@ export default function Institutions() {
                                 className="border border-gray-400 rounded-lg w-full p-2"
                                 {...methods.register(`institutions.${index}.name`, {
                                     maxLength: {
-                                        value: 50,
+                                        value: 500,
                                         message:
-                                            'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                            'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                                     },
                                     pattern: {
                                         value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
@@ -174,9 +175,9 @@ export default function Institutions() {
                                 className="border border-gray-400 rounded-lg w-full px-1 py-2"
                                 {...methods.register(`institutions.${index}.school_type`, {
                                     maxLength: {
-                                        value: 50,
+                                        value: 500,
                                         message:
-                                            'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                            'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                                     },
                                 })}
                             >
@@ -217,9 +218,9 @@ export default function Institutions() {
                                 className="border border-gray-400 rounded-lg w-full p-2"
                                 {...methods.register(`institutions.${index}.country`, {
                                     maxLength: {
-                                        value: 50,
+                                        value: 500,
                                         message:
-                                            'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                            'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                                     },
                                     pattern: {
                                         value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
@@ -246,9 +247,9 @@ export default function Institutions() {
                                 className="border border-gray-400 rounded-lg w-full p-2"
                                 {...methods.register(`institutions.${index}.departments.0`, {
                                     maxLength: {
-                                        value: 50,
+                                        value: 500,
                                         message:
-                                            'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                            'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                                     },
                                     pattern: {
                                         value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
@@ -278,9 +279,9 @@ export default function Institutions() {
                                 className="border border-gray-400 rounded-lg w-full p-2"
                                 {...methods.register(`institutions.${index}.academic_courses.0`, {
                                     maxLength: {
-                                        value: 50,
+                                        value: 500,
                                         message:
-                                            'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                            'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                                     },
                                     pattern: {
                                         value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,

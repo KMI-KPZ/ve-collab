@@ -26,7 +26,8 @@ export interface EvaluationPerPartner {
     evaluation_after: string;
 }
 
-export default function FormalConditions() {
+Evaluation.auth = true;
+export default function Evaluation() {
     const router = useRouter();
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);

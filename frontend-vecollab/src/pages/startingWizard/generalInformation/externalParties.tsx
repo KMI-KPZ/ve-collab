@@ -23,6 +23,7 @@ interface FormValues {
     externalParties: ExternalParty[];
 }
 
+ExternalPersons.auth = true;
 export default function ExternalPersons() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
@@ -130,8 +131,8 @@ export default function ExternalPersons() {
                         className="border border-gray-300 rounded-lg p-2 mr-2"
                         {...methods.register(`externalParties.${index}.externalParty`, {
                             maxLength: {
-                                value: 50,
-                                message: 'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                value: 500,
+                                message: 'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                             },
                         })}
                     />

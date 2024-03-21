@@ -31,6 +31,7 @@ export interface PhysicalMobility {
     timestamp_to: string;
 }
 
+Realization.auth = true;
 export default function Realization() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
@@ -193,9 +194,9 @@ export default function Realization() {
                             className="border border-gray-400 rounded-lg p-2 w-full"
                             {...methods.register(`physicalMobilities.${index}.location`, {
                                 maxLength: {
-                                    value: 50,
+                                    value: 500,
                                     message:
-                                        'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                                 },
                             })}
                         />
@@ -210,9 +211,9 @@ export default function Realization() {
                                 type="date"
                                 {...methods.register(`physicalMobilities.${index}.timestamp_from`, {
                                     maxLength: {
-                                        value: 50,
+                                        value: 500,
                                         message:
-                                            'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                            'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                                     },
                                     validate: (v) => validateDateRange(v, index),
                                 })}
@@ -225,9 +226,9 @@ export default function Realization() {
                                 type="date"
                                 {...methods.register(`physicalMobilities.${index}.timestamp_to`, {
                                     maxLength: {
-                                        value: 50,
+                                        value: 500,
                                         message:
-                                            'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                            'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                                     },
                                 })}
                                 className="border border-gray-400 rounded-lg p-2 ml-2"
@@ -298,9 +299,9 @@ export default function Realization() {
                                             className="bg-white border border-gray-400 rounded-lg p-2 w-1/3"
                                             {...methods.register(`courseFormat`, {
                                                 maxLength: {
-                                                    value: 50,
+                                                    value: 500,
                                                     message:
-                                                        'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                                                 },
                                             })}
                                         >
@@ -333,9 +334,9 @@ export default function Realization() {
                                                                 `usePhysicalMobility`,
                                                                 {
                                                                     maxLength: {
-                                                                        value: 50,
+                                                                        value: 500,
                                                                         message:
-                                                                            'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                                                            'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                                                                     },
                                                                 }
                                                             )}
@@ -354,9 +355,9 @@ export default function Realization() {
                                                                 `usePhysicalMobility`,
                                                                 {
                                                                     maxLength: {
-                                                                        value: 50,
+                                                                        value: 500,
                                                                         message:
-                                                                            'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                                                            'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                                                                     },
                                                                 }
                                                             )}

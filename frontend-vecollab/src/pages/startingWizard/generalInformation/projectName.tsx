@@ -17,6 +17,7 @@ interface FormValues {
     name: string;
 }
 
+EssentialInformation.auth = true;
 export default function EssentialInformation() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);

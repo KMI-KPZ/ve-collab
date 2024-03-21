@@ -26,6 +26,7 @@ interface FormValues {
     veTopics: VeTopic[];
 }
 
+Topics.auth = true;
 export default function Topics() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
@@ -176,9 +177,9 @@ export default function Topics() {
                                                             `veTopics.${index}.name`,
                                                             {
                                                                 maxLength: {
-                                                                    value: 50,
+                                                                    value: 500,
                                                                     message:
-                                                                        'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                                                                 },
                                                             }
                                                         )}
