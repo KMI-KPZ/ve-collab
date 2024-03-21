@@ -205,6 +205,16 @@ class VEPlanHandler(BaseHandler):
                             }
                         ],
                         "languages": ["test"],
+                        "evaluation": [
+                            {
+                                "username": "username1",
+                                "is_graded": True,
+                                "task_type": "test",
+                                "assessment_type": "test",
+                                "evaluation_while": "test",
+                                "evaluation_after": "test",
+                            }
+                        ],
                         "involved_parties": ["test"],
                         "realization": "test",
                         "physical_mobility": True,
@@ -257,6 +267,7 @@ class VEPlanHandler(BaseHandler):
                             "learning_goals": "<completed|uncompleted|not_started>",
                             "audience": "<completed|uncompleted|not_started>",
                             "languages": "<completed|uncompleted|not_started>",
+                            "evaluation": "<completed|uncompleted|not_started>",
                             "involved_parties": "<completed|uncompleted|not_started>",
                             "realization": "<completed|uncompleted|not_started>",
                             "learning_env": "<completed|uncompleted|not_started>",
@@ -409,6 +420,16 @@ class VEPlanHandler(BaseHandler):
                             }
                         ],
                         "languages": ["test"],
+                        "evaluation": [
+                            {
+                                "username": "username1",
+                                "is_graded": True,
+                                "task_type": "test",
+                                "assessment_type": "test",
+                                "evaluation_while": "test",
+                                "evaluation_after": "test",
+                            }
+                        ],
                         "involved_parties": ["test"],
                         "realization": "test",
                         "physical_mobility": True,
@@ -461,6 +482,7 @@ class VEPlanHandler(BaseHandler):
                             "learning_goals": "<completed|uncompleted|not_started>",
                             "audience": "<completed|uncompleted|not_started>",
                             "languages": "<completed|uncompleted|not_started>",
+                            "evaluation": "<completed|uncompleted|not_started>",
                             "involved_parties": "<completed|uncompleted|not_started>",
                             "realization": "<completed|uncompleted|not_started>",
                             "learning_env": "<completed|uncompleted|not_started>",

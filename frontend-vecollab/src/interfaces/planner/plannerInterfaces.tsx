@@ -5,6 +5,7 @@ import { Institution } from '@/pages/startingWizard/generalInformation/instituti
 import { Lecture } from '@/pages/startingWizard/generalInformation/participatingCourses';
 import { PhysicalMobility } from '@/pages/startingWizard/generalInformation/courseFormat';
 import { FormalConditionPartner } from '@/pages/startingWizard/generalInformation/formalConditions';
+import { EvaluationPerPartner } from '@/pages/startingWizard/generalInformation/evaluation';
 
 export interface PlanPreview {
     _id: string;
@@ -26,6 +27,7 @@ export interface IPlan {
     institutions: Institution[];
     involved_parties: string[];
     languages: string[];
+    evaluation: EvaluationPerPartner[];
     last_modified: string;
     learning_env: string | null;
     learning_goals: string[];
@@ -35,7 +37,7 @@ export interface IPlan {
     partners: string[];
     physical_mobility: boolean | null;
     physical_mobilities: PhysicalMobility[];
-    progress: ISideProgressBarStates[];
+    progress: ISideProgressBarStates;
     read_access: string[];
     realization: string | null;
     steps: IFineStep[];

@@ -15,6 +15,7 @@ import Link from 'next/link';
 import { Tooltip } from '@/components/Tooltip';
 import { FiInfo } from 'react-icons/fi';
 import WhiteBox from '@/components/Layout/WhiteBox';
+import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 
 export interface EvaluationPerPartner {
     username: string;
@@ -50,14 +51,6 @@ export default function FormalConditions() {
             evaluation_while: 'Feedback',
             evaluation_after: 'Notenvergabe',
         },
-        {
-            username: 'Dozent*in 3',
-            is_graded: true,
-            task_type: 'Referat',
-            assessment_type: 'Mündlich',
-            evaluation_while: 'Feedback',
-            evaluation_after: 'Notenvergabe',
-        },
     ]);
 
     useEffect(() => {
@@ -74,48 +67,43 @@ export default function FormalConditions() {
         // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
         if (session) {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
-                (data) => {
+                (data: {plan: IPlan}) => {
                     setLoading(false);
                     console.log(data.plan);
-                    if (data.plan.progress.length !== 0) {
-                        setSideMenuStepsProgress(data.plan.progress);
-                    }
+                    setSideMenuStepsProgress(data.plan.progress);
                     setSteps(data.plan.steps);
 
-                    /*
-                    if (data.plan.formalities && Array.isArray(data.plan.formalities)) {
-                        setFormalConditions(data.plan.formalities);
+                    if (data.plan.evaluation && Array.isArray(data.plan.evaluation)) {
+                        setEvaluationInfo(data.plan.evaluation);
                     }
-                    */
+                
                 }
             );
         }
     }, [session, status, router]);
 
     const handleSubmit = async () => {
-        /*
         await fetchPOST(
             '/planner/update_fields',
             {
                 update: [
                     {
                         plan_id: router.query.plannerId,
-                        field_name: 'formalities',
-                        value: formalConditions,
+                        field_name: 'evaluation',
+                        value: evaluationInfo,
                     },
                     {
                         plan_id: router.query.plannerId,
                         field_name: 'progress',
                         value: {
                             ...sideMenuStepsProgress,
-                            formalities: ProgressState.completed,
+                            evaluation: ProgressState.completed,
                         },
                     },
                 ],
             },
             session?.accessToken
         );
-        */
     };
 
     const modifyIsGraded = (username: string, newGraded: boolean) => {
