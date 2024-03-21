@@ -22,6 +22,7 @@ import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import { FormalConditionPartner } from '@/pages/startingWizard/generalInformation/formalConditions';
 import { FiInfo } from 'react-icons/fi';
 import { Tooltip } from '@/components/Tooltip';
+import { EvaluationPerPartner } from './evaluation';
 
 export default function Partners() {
     const { data: session, status } = useSession();
@@ -29,6 +30,7 @@ export default function Partners() {
     const router = useRouter();
 
     const [formalConditions, setFormalConditions] = useState<FormalConditionPartner[]>([]);
+    const [evaluationInfo, setEvaluationInfo] = useState<EvaluationPerPartner[]>([]);
     const [author, setAuthor] = useState<string>('');
     const [partners, setPartners] = useState<string[]>(['']);
     const [partnerProfileSnippets, setPartnerProfileSnippets] = useState<{
@@ -88,6 +90,9 @@ export default function Partners() {
                     if (data.plan.formalities && Array.isArray(data.plan.formalities)) {
                         setFormalConditions(data.plan.formalities);
                     }
+                    if (data.plan.evaluation && Array.isArray(data.plan.evaluation)) {
+                        setEvaluationInfo(data.plan.evaluation);
+                    }
                     setAuthor(data.plan.author);
                     setSteps(data.plan.steps);
                 }
@@ -136,6 +141,23 @@ export default function Partners() {
                 };
             }
         });
+        const updateEvaluationInfo = partners.map((partner) => {
+            const findEvaluationInfo = evaluationInfo.find(
+                (evaluation) => evaluation.username === partner
+            );
+            if (findEvaluationInfo) {
+                return findEvaluationInfo;
+            } else {
+                return {
+                    username: partner,
+                    is_graded: false,
+                    task_type: '',
+                    assessment_type: '',
+                    evaluation_while: '',
+                    evaluation_after: '',
+                };
+            }
+        });
 
         // sanity check: if the author (i.e. creator of the plan) was not
         // manually added as a partner by the users, add their formal conditions
@@ -154,6 +176,14 @@ export default function Partners() {
                 evaluation: false,
                 institutionalRequirements: false,
                 dataProtection: false,
+            });
+            updateEvaluationInfo.push({
+                username: author,
+                is_graded: false,
+                task_type: '',
+                assessment_type: '',
+                evaluation_while: '',
+                evaluation_after: '',
             });
         }
 
@@ -178,6 +208,11 @@ export default function Partners() {
                         plan_id: router.query.plannerId,
                         field_name: 'formalities',
                         value: updateFormalConditions,
+                    },
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'evaluation',
+                        value: updateEvaluationInfo,
                     },
                 ],
             },

@@ -9,6 +9,7 @@ from exceptions import (
 )
 
 from model import (
+    Evaluation,
     Institution,
     Lecture,
     PhysicalMobility,
@@ -1356,6 +1357,332 @@ class LectureModelTest(TestCase):
         params["participants_amount"] = 10
 
 
+class PhysicalMobilityModelTest(TestCase):
+    def setUp(self) -> None:
+        return super().setUp()
+
+    def tearDown(self) -> None:
+        return super().tearDown()
+
+    def test_init_default(self):
+        """
+        expect: successful creation of a minimal PhysicalMobility object
+        """
+
+        physical_mobility = PhysicalMobility()
+        self.assertIsInstance(physical_mobility._id, ObjectId)
+        self.assertIsNone(physical_mobility.location)
+        self.assertIsNone(physical_mobility.timestamp_from)
+        self.assertIsNone(physical_mobility.timestamp_to)
+
+    def test_init(self):
+        """
+        expect: successful creation of a PhysicalMobility object, passing values for each attribute
+        """
+
+        _id = ObjectId()
+        physical_mobility = PhysicalMobility(
+            _id=_id,
+            location="test",
+            timestamp_from=datetime(2023, 1, 1),
+            timestamp_to=datetime(2023, 1, 8),
+        )
+
+        self.assertEqual(physical_mobility._id, _id)
+        self.assertEqual(physical_mobility.location, "test")
+        self.assertEqual(physical_mobility.timestamp_from, datetime(2023, 1, 1))
+        self.assertEqual(physical_mobility.timestamp_to, datetime(2023, 1, 8))
+
+    def test_to_dict(self):
+        """
+        expect: successful serialization of a minimal PhysicalMobility object into
+        its dictionary representation
+        """
+
+        _id = ObjectId()
+        physical_mobility = PhysicalMobility(
+            _id=_id,
+            location="test",
+            timestamp_from=datetime(2023, 1, 1),
+            timestamp_to=datetime(2023, 1, 8),
+        ).to_dict()
+
+        self.assertIn("_id", physical_mobility)
+        self.assertIn("location", physical_mobility)
+        self.assertIn("timestamp_from", physical_mobility)
+        self.assertIn("timestamp_to", physical_mobility)
+        self.assertEqual(physical_mobility["_id"], _id)
+        self.assertEqual(physical_mobility["location"], "test")
+        self.assertEqual(physical_mobility["timestamp_from"], datetime(2023, 1, 1))
+        self.assertEqual(physical_mobility["timestamp_to"], datetime(2023, 1, 8))
+
+    def test_from_dict(self):
+        """
+        expect: successful creation of a PhysicalMobility object derived from a dictionary
+        """
+
+        # with _id
+        params = {
+            "_id": ObjectId(),
+            "location": "test",
+            "timestamp_from": datetime(2023, 1, 1),
+            "timestamp_to": datetime(2023, 1, 8),
+        }
+
+        physical_mobility = PhysicalMobility.from_dict(params)
+
+        self.assertEqual(physical_mobility._id, params["_id"])
+        self.assertEqual(physical_mobility.location, params["location"])
+        self.assertEqual(physical_mobility.timestamp_from, params["timestamp_from"])
+        self.assertEqual(physical_mobility.timestamp_to, params["timestamp_to"])
+
+        # without _id
+        params = {
+            "location": "test",
+            "timestamp_from": datetime(2023, 1, 1),
+            "timestamp_to": datetime(2023, 1, 8),
+        }
+
+        physical_mobility = PhysicalMobility.from_dict(params)
+
+        self.assertIsInstance(physical_mobility._id, ObjectId)
+        self.assertEqual(physical_mobility.location, params["location"])
+        self.assertEqual(physical_mobility.timestamp_from, params["timestamp_from"])
+        self.assertEqual(physical_mobility.timestamp_to, params["timestamp_to"])
+
+    def test_from_dict_error_params_not_dict(self):
+        """
+        expect: creation of PhysicalMobility object from dict raises TypeError because source is
+        not a dict
+        """
+
+        self.assertRaises(TypeError, PhysicalMobility.from_dict, "wrong_type")
+
+    def test_from_dict_error_missing_key(self):
+        """
+        expect: creation of PhysicalMobility object from dict raises MissingKeyError because
+        the dict is missing required keys
+        """
+
+        # timestamp_from is missing
+        params = {
+            "location": "test",
+            "timestamp_to": datetime(2023, 1, 8),
+        }
+
+        self.assertRaises(MissingKeyError, PhysicalMobility.from_dict, params)
+
+    def test_from_dict_error_wrong_types(self):
+        """
+        expect: creation of PhysicalMobility object from dict raises TypeError's because
+        arguments have the wrong types
+        """
+
+        params = {
+            "location": "test",
+            "timestamp_from": 1,
+            "timestamp_to": datetime(2023, 1, 8),
+        }
+
+        self.assertRaises(TypeError, PhysicalMobility.from_dict, params)
+
+        params = {
+            "location": "test",
+            "timestamp_from": datetime(2023, 1, 1),
+            "timestamp_to": 1,
+        }
+
+        self.assertRaises(TypeError, PhysicalMobility.from_dict, params)
+
+
+class EvaluationModelTest(TestCase):
+    def setUp(self) -> None:
+        return super().setUp()
+
+    def tearDown(self) -> None:
+        return super().tearDown()
+
+    def test_init_default(self):
+        """
+        expect: successful creation of a minimal Evaluation object
+        """
+
+        evaluation = Evaluation()
+        self.assertIsInstance(evaluation._id, ObjectId)
+        self.assertIsNone(evaluation.username)
+        self.assertFalse(evaluation.is_graded)
+        self.assertIsNone(evaluation.task_type)
+        self.assertIsNone(evaluation.assessment_type)
+        self.assertIsNone(evaluation.evaluation_while)
+        self.assertIsNone(evaluation.evaluation_after)
+
+    def test_init(self):
+        """
+        expect: successful creation of a Evaluation object, passing values for each attribute
+        """
+
+        _id = ObjectId()
+        evaluation = Evaluation(
+            _id=_id,
+            username="test",
+            is_graded=True,
+            task_type="test",
+            assessment_type="test",
+            evaluation_while="test",
+            evaluation_after="test",
+        )
+
+        self.assertEqual(evaluation._id, _id)
+        self.assertEqual(evaluation.username, "test")
+        self.assertTrue(evaluation.is_graded)
+        self.assertEqual(evaluation.task_type, "test")
+        self.assertEqual(evaluation.assessment_type, "test")
+        self.assertEqual(evaluation.evaluation_while, "test")
+        self.assertEqual(evaluation.evaluation_after, "test")
+
+    def test_to_dict(self):
+        """
+        expect: successful serialization of a minimal Evaluation object into
+        its dictionary representation
+        """
+
+        _id = ObjectId()
+        evaluation = Evaluation(
+            _id=_id,
+            username="test",
+            is_graded=True,
+            task_type="test",
+            assessment_type="test",
+            evaluation_while="test",
+            evaluation_after="test",
+        ).to_dict()
+
+        self.assertIn("_id", evaluation)
+        self.assertIn("username", evaluation)
+        self.assertIn("is_graded", evaluation)
+        self.assertIn("task_type", evaluation)
+        self.assertIn("assessment_type", evaluation)
+        self.assertIn("evaluation_while", evaluation)
+        self.assertIn("evaluation_after", evaluation)
+        self.assertEqual(evaluation["_id"], _id)
+        self.assertEqual(evaluation["username"], "test")
+        self.assertTrue(evaluation["is_graded"])
+        self.assertEqual(evaluation["task_type"], "test")
+        self.assertEqual(evaluation["assessment_type"], "test")
+        self.assertEqual(evaluation["evaluation_while"], "test")
+        self.assertEqual(evaluation["evaluation_after"], "test")
+
+    def test_from_dict(self):
+        """
+        expect: successful creation of a Evaluation object derived from a dictionary
+        """
+
+        # with _id
+        params = {
+            "_id": ObjectId(),
+            "username": "test",
+            "is_graded": True,
+            "task_type": "test",
+            "assessment_type": "test",
+            "evaluation_while": "test",
+            "evaluation_after": "test",
+        }
+
+        evaluation = Evaluation.from_dict(params)
+
+        self.assertEqual(evaluation._id, params["_id"])
+        self.assertEqual(evaluation.username, params["username"])
+        self.assertTrue(evaluation.is_graded)
+        self.assertEqual(evaluation.task_type, params["task_type"])
+        self.assertEqual(evaluation.assessment_type, params["assessment_type"])
+        self.assertEqual(evaluation.evaluation_while, params["evaluation_while"])
+        self.assertEqual(evaluation.evaluation_after, params["evaluation_after"])
+
+        # without _id
+        params = {
+            "username": "test",
+            "is_graded": True,
+            "task_type": "test",
+            "assessment_type": "test",
+            "evaluation_while": "test",
+            "evaluation_after": "test",
+        }
+
+        evaluation = Evaluation.from_dict(params)
+
+        self.assertIsInstance(evaluation._id, ObjectId)
+        self.assertEqual(evaluation.username, params["username"])
+        self.assertTrue(evaluation.is_graded)
+        self.assertEqual(evaluation.task_type, params["task_type"])
+        self.assertEqual(evaluation.assessment_type, params["assessment_type"])
+        self.assertEqual(evaluation.evaluation_while, params["evaluation_while"])
+        self.assertEqual(evaluation.evaluation_after, params["evaluation_after"])
+
+    def test_from_dict_error_params_not_dict(self):
+        """
+        expect: creation of Evaluation object from dict raises TypeError because source is
+        not a dict
+        """
+
+        self.assertRaises(TypeError, Evaluation.from_dict, "wrong_type")
+
+    def test_from_dict_error_missing_key(self):
+        """
+        expect: creation of Evaluation object from dict raises MissingKeyError because
+        the dict is missing required keys
+        """
+
+        # evaluation_after is missing
+        params = {
+            "username": "test",
+            "is_graded": True,
+            "task_type": "test",
+            "assessment_type": "test",
+            "evaluation_while": "test",
+        }
+
+        self.assertRaises(MissingKeyError, Evaluation.from_dict, params)
+
+    def test_from_dict_error_wrong_types(self):
+        """
+        expect: creation of Evaluation object from dict raises TypeError's because
+        arguments have the wrong types
+        """
+
+        params = {
+            "username": "test",
+            "is_graded": True,
+            "task_type": "test",
+            "assessment_type": "test",
+            "evaluation_while": "test",
+            "evaluation_after": "test",
+        }
+
+        params["username"] = list()
+        self.assertRaises(TypeError, Evaluation.from_dict, params)
+        params["username"] = "test"
+
+        params["is_graded"] = 123
+        self.assertRaises(TypeError, Evaluation.from_dict, params)
+        params["is_graded"] = True
+
+        params["task_type"] = list()
+        self.assertRaises(TypeError, Evaluation.from_dict, params)
+        params["task_type"] = "test"
+
+        params["assessment_type"] = list()
+        self.assertRaises(TypeError, Evaluation.from_dict, params)
+        params["assessment_type"] = "test"
+
+        params["evaluation_while"] = list()
+        self.assertRaises(TypeError, Evaluation.from_dict, params)
+        params["evaluation_while"] = "test"
+
+        params["evaluation_after"] = list()
+        self.assertRaises(TypeError, Evaluation.from_dict, params)
+        params["evaluation_after"] = "test"
+
+
 class VEPlanModelTest(TestCase):
     def setUp(self) -> None:
         self.default_progress = {
@@ -1366,6 +1693,7 @@ class VEPlanModelTest(TestCase):
             "learning_goals": "not_started",
             "audience": "not_started",
             "languages": "not_started",
+            "evaluation": "not_started",
             "involved_parties": "not_started",
             "realization": "not_started",
             "learning_env": "not_started",
@@ -1451,6 +1779,20 @@ class VEPlanModelTest(TestCase):
             timestamp_from=datetime(2023, 1, 1),
             timestamp_to=datetime(2023, 1, 8),
         )
+    
+    def create_evaluation(self, username: str = "test_admin") -> Evaluation:
+        """
+        convenience method to create a Evaluation object with non-default values
+        """
+
+        return Evaluation(
+            username=username,
+            is_graded=True,
+            task_type="test",
+            assessment_type="test",
+            evaluation_while="test",
+            evaluation_after="test",
+        )
 
     def test_init_default(self):
         """
@@ -1470,6 +1812,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.learning_goals, [])
         self.assertEqual(plan.audience, [])
         self.assertEqual(plan.languages, [])
+        self.assertEqual(plan.evaluation, [])
         self.assertEqual(plan.involved_parties, [])
         self.assertIsNone(plan.realization)
         self.assertIsNone(plan.physical_mobility)
@@ -1521,6 +1864,7 @@ class VEPlanModelTest(TestCase):
             self.create_physical_mobility(),
             self.create_physical_mobility(),
         ]
+        evaluation = [self.create_evaluation(), self.create_evaluation()]
 
         plan = VEPlan(
             _id=_id,
@@ -1535,6 +1879,7 @@ class VEPlanModelTest(TestCase):
             learning_goals=["test", "test"],
             audience=target_groups,
             languages=["test", "test"],
+            evaluation=evaluation,
             involved_parties=["test", "test"],
             realization="test",
             physical_mobility=True,
@@ -1557,6 +1902,7 @@ class VEPlanModelTest(TestCase):
                 "learning_goals": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
+                "evaluation": "not_started",
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
@@ -1578,6 +1924,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.learning_goals, ["test", "test"])
         self.assertEqual(plan.audience, target_groups)
         self.assertEqual(plan.languages, ["test", "test"])
+        self.assertEqual(plan.evaluation, evaluation)
         self.assertEqual(plan.involved_parties, ["test", "test"])
         self.assertEqual(plan.realization, "test")
         self.assertEqual(plan.physical_mobility, True)
@@ -1616,6 +1963,7 @@ class VEPlanModelTest(TestCase):
             learning_goals=["test", "test"],
             audience=target_groups,
             languages=["test", "test"],
+            evaluation=evaluation,
             involved_parties=["test", "test"],
             realization="test",
             physical_mobility=True,
@@ -1636,6 +1984,7 @@ class VEPlanModelTest(TestCase):
                 "learning_goals": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
+                "evaluation": "not_started",
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
@@ -1653,6 +2002,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.learning_goals, ["test", "test"])
         self.assertEqual(plan.audience, target_groups)
         self.assertEqual(plan.languages, ["test", "test"])
+        self.assertEqual(plan.evaluation, evaluation)
         self.assertEqual(plan.involved_parties, ["test", "test"])
         self.assertEqual(plan.realization, "test")
         self.assertEqual(plan.physical_mobility, True)
@@ -1765,6 +2115,7 @@ class VEPlanModelTest(TestCase):
         self.assertIn("learning_goals", plan_dict)
         self.assertIn("audience", plan_dict)
         self.assertIn("languages", plan_dict)
+        self.assertIn("evaluation", plan_dict)
         self.assertIn("timestamp_from", plan_dict)
         self.assertIn("timestamp_to", plan_dict)
         self.assertIn("involved_parties", plan_dict)
@@ -1794,6 +2145,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan_dict["learning_goals"], [])
         self.assertEqual(plan_dict["audience"], [])
         self.assertEqual(plan_dict["languages"], [])
+        self.assertEqual(plan_dict["evaluation"], [])
         self.assertEqual(plan_dict["involved_parties"], [])
         self.assertIsNone(plan_dict["realization"])
         self.assertEqual(plan_dict["physical_mobility"], True)
@@ -1823,6 +2175,7 @@ class VEPlanModelTest(TestCase):
         institution = self.create_institution("test")
         lecture = self.create_lecture("test")
         physical_mobility = self.create_physical_mobility("test")
+        evaluation = self.create_evaluation("test")
         plan_dict = {
             "_id": _id,
             "name": None,
@@ -1861,6 +2214,15 @@ class VEPlanModelTest(TestCase):
                 }
             ],
             "languages": [],
+            "evaluation": [{
+                "_id": evaluation._id,
+                "username": evaluation.username,
+                "is_graded": evaluation.is_graded,
+                "task_type": evaluation.task_type,
+                "assessment_type": evaluation.assessment_type,
+                "evaluation_while": evaluation.evaluation_while,
+                "evaluation_after": evaluation.evaluation_after,
+            }],
             "involved_parties": [],
             "realization": None,
             "physical_mobility": True,
@@ -1907,6 +2269,7 @@ class VEPlanModelTest(TestCase):
                 "learning_goals": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
+                "evaluation": "not_started",
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
@@ -1929,6 +2292,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.learning_goals, ["test", "test"])
         self.assertEqual(plan.audience, [target_group])
         self.assertEqual(plan.languages, [])
+        self.assertEqual(plan.evaluation, [evaluation])
         self.assertEqual(plan.involved_parties, [])
         self.assertIsNone(plan.realization)
         self.assertEqual(plan.physical_mobility, True)
@@ -1988,6 +2352,14 @@ class VEPlanModelTest(TestCase):
                 }
             ],
             "languages": [],
+            "evaluation": [{
+                "username": evaluation.username,
+                "is_graded": evaluation.is_graded,
+                "task_type": evaluation.task_type,
+                "assessment_type": evaluation.assessment_type,
+                "evaluation_while": evaluation.evaluation_while,
+                "evaluation_after": evaluation.evaluation_after,
+            }],
             "involved_parties": [],
             "realization": None,
             "physical_mobility": True,
@@ -2032,6 +2404,7 @@ class VEPlanModelTest(TestCase):
                 "learning_goals": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
+                "evaluation": "not_started",
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
@@ -2055,6 +2428,8 @@ class VEPlanModelTest(TestCase):
         self.assertIsInstance(plan.lectures[0], Lecture)
         self.assertEqual(plan.learning_goals, ["test", "test"])
         self.assertEqual(plan.languages, [])
+        self.assertEqual(len(plan.evaluation), 1)
+        self.assertIsInstance(plan.evaluation[0], Evaluation)
         self.assertEqual(plan.involved_parties, [])
         self.assertIsNone(plan.realization)
         self.assertEqual(plan.physical_mobility, True)
@@ -2080,6 +2455,7 @@ class VEPlanModelTest(TestCase):
         self.assertIsInstance(plan.audience[0]._id, ObjectId)
         self.assertIsInstance(plan.lectures[0]._id, ObjectId)
         self.assertIsInstance(plan.institutions[0]._id, ObjectId)
+        self.assertIsInstance(plan.evaluation[0]._id, ObjectId)
 
     def test_from_dict_error_params_not_dict(self):
         """
@@ -2106,6 +2482,7 @@ class VEPlanModelTest(TestCase):
             "learning_goals": [],
             "audience": [],
             "languages": [],
+            "evaluation": [],
             "involved_parties": [],
             "realization": None,
             "physical_mobility": None,
@@ -2131,6 +2508,7 @@ class VEPlanModelTest(TestCase):
                 "learning_goals": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
+                "evaluation": "not_started",
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
@@ -2157,6 +2535,7 @@ class VEPlanModelTest(TestCase):
             "learning_goals": [],
             "audience": [],
             "languages": [],
+            "evaluation": [],
             "involved_parties": [],
             "realization": None,
             "physical_mobility": None,
@@ -2183,6 +2562,7 @@ class VEPlanModelTest(TestCase):
                 "learning_goals": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
+                "evaluation": "not_started",
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
@@ -2228,6 +2608,10 @@ class VEPlanModelTest(TestCase):
         plan_dict["languages"] = "test"
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
         plan_dict["languages"] = list()
+
+        plan_dict["evaluation"] = 123
+        self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
+        plan_dict["evaluation"] = list()
 
         plan_dict["involved_parties"] = 123
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
@@ -2297,6 +2681,7 @@ class VEPlanModelTest(TestCase):
             "learning_goals": [],
             "audience": [],
             "languages": [],
+            "evaluation": [],
             "involved_parties": [],
             "realization": None,
             "physical_mobility": None,
@@ -2326,6 +2711,7 @@ class VEPlanModelTest(TestCase):
                 "learning_goals": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
+                "evaluation": "not_started",
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",

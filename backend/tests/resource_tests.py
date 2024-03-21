@@ -44,7 +44,9 @@ from exceptions import (
     UserNotMemberError,
 )
 import global_vars
+from main import make_app  # import, otherwise test mode will fail in the app
 from model import (
+    Evaluation,
     Institution,
     Lecture,
     PhysicalMobility,
@@ -118,6 +120,9 @@ class BaseResourceTestCase(TestCase):
 
     def setUp(self) -> None:
         super().setUp()
+
+        # set test mode to bypass authentication as an admin as default for each test case (test cases where user view is required will set mode themselves)
+        options.test_admin = True
 
         # initialize mongodb connection
         self.client = self.__class__._client
@@ -195,7 +200,7 @@ class BaseResourceTestCase(TestCase):
             participants_amount=10,
         )
 
-    def create_physical_mobility(slef, location: str = "test") -> PhysicalMobility:
+    def create_physical_mobility(self, location: str = "test") -> PhysicalMobility:
         """
         convenience method to create a physical mobility with non-default values
         """
@@ -204,6 +209,20 @@ class BaseResourceTestCase(TestCase):
             location=location,
             timestamp_from=datetime(2023, 1, 1),
             timestamp_to=datetime(2023, 1, 8),
+        )
+
+    def create_evaluation(self, username: str = "test_admin") -> Evaluation:
+        """
+        convenience method to create an evaluation with non-default values
+        """
+
+        return Evaluation(
+            username=username,
+            is_graded=True,
+            task_type="test",
+            assessment_type="test",
+            evaluation_while="test",
+            evaluation_after="test",
         )
 
 
@@ -4854,6 +4873,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.institution = self.create_institution("test")
         self.lecture = self.create_lecture("test")
         self.physical_mobility = self.create_physical_mobility("test")
+        self.evaluation = self.create_evaluation("test")
         self.default_plan = {
             "_id": self.plan_id,
             "author": "test_user",
@@ -4869,6 +4889,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "learning_goals": ["test", "test"],
             "audience": [self.target_group.to_dict()],
             "languages": ["test", "test"],
+            "evaluation": [self.evaluation.to_dict()],
             "timestamp_from": self.step.timestamp_from,
             "timestamp_to": self.step.timestamp_to,
             "involved_parties": ["test", "test"],
@@ -4904,6 +4925,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "learning_goals": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
+                "evaluation": "not_started",
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
@@ -4955,6 +4977,10 @@ class PlanResourceTest(BaseResourceTestCase):
                 )
                 self.assertEqual(plan.languages, self.default_plan["languages"])
                 self.assertEqual(
+                    [evaluation.to_dict() for evaluation in plan.evaluation],
+                    self.default_plan["evaluation"],
+                )
+                self.assertEqual(
                     plan.involved_parties, self.default_plan["involved_parties"]
                 )
                 self.assertEqual(plan.realization, self.default_plan["realization"])
@@ -4971,10 +4997,17 @@ class PlanResourceTest(BaseResourceTestCase):
                 self.assertEqual(
                     [step.to_dict() for step in plan.steps], self.default_plan["steps"]
                 )
-                self.assertEqual(plan.is_good_practise, self.default_plan["is_good_practise"])
-                self.assertEqual(plan.underlying_ve_model, self.default_plan["underlying_ve_model"])
+                self.assertEqual(
+                    plan.is_good_practise, self.default_plan["is_good_practise"]
+                )
+                self.assertEqual(
+                    plan.underlying_ve_model, self.default_plan["underlying_ve_model"]
+                )
                 self.assertEqual(plan.reflection, self.default_plan["reflection"])
-                self.assertEqual(plan.good_practise_evaluation, self.default_plan["good_practise_evaluation"])
+                self.assertEqual(
+                    plan.good_practise_evaluation,
+                    self.default_plan["good_practise_evaluation"],
+                )
                 self.assertEqual(plan.timestamp_from, self.step.timestamp_from)
                 self.assertEqual(plan.timestamp_to, self.step.timestamp_to)
                 self.assertEqual(plan.workload, self.step.workload)
@@ -5016,6 +5049,10 @@ class PlanResourceTest(BaseResourceTestCase):
                 )
                 self.assertEqual(plan.languages, self.default_plan["languages"])
                 self.assertEqual(
+                    [evaluation.to_dict() for evaluation in plan.evaluation],
+                    self.default_plan["evaluation"],
+                )
+                self.assertEqual(
                     plan.involved_parties, self.default_plan["involved_parties"]
                 )
                 self.assertEqual(plan.realization, self.default_plan["realization"])
@@ -5032,8 +5069,12 @@ class PlanResourceTest(BaseResourceTestCase):
                 self.assertEqual(
                     [step.to_dict() for step in plan.steps], self.default_plan["steps"]
                 )
-                self.assertEqual(plan.is_good_practise, self.default_plan["is_good_practise"])
-                self.assertEqual(plan.underlying_ve_model, self.default_plan["underlying_ve_model"])
+                self.assertEqual(
+                    plan.is_good_practise, self.default_plan["is_good_practise"]
+                )
+                self.assertEqual(
+                    plan.underlying_ve_model, self.default_plan["underlying_ve_model"]
+                )
                 self.assertEqual(plan.reflection, self.default_plan["reflection"])
                 self.assertEqual(plan.progress, self.default_plan["progress"])
                 self.assertEqual(plan.timestamp_from, self.step.timestamp_from)
@@ -5109,6 +5150,10 @@ class PlanResourceTest(BaseResourceTestCase):
             self.default_plan["audience"],
         )
         self.assertEqual(plan.languages, self.default_plan["languages"])
+        self.assertEqual(
+            [evaluation.to_dict() for evaluation in plan.evaluation],
+            self.default_plan["evaluation"],
+        )
         self.assertEqual(plan.involved_parties, self.default_plan["involved_parties"])
         self.assertEqual(plan.realization, self.default_plan["realization"])
         self.assertEqual(plan.physical_mobility, self.default_plan["physical_mobility"])
@@ -5123,7 +5168,9 @@ class PlanResourceTest(BaseResourceTestCase):
             [step.to_dict() for step in plan.steps], self.default_plan["steps"]
         )
         self.assertEqual(plan.is_good_practise, self.default_plan["is_good_practise"])
-        self.assertEqual(plan.underlying_ve_model, self.default_plan["underlying_ve_model"])
+        self.assertEqual(
+            plan.underlying_ve_model, self.default_plan["underlying_ve_model"]
+        )
         self.assertEqual(plan.reflection, self.default_plan["reflection"])
         self.assertEqual(plan.progress, self.default_plan["progress"])
         self.assertEqual(plan.timestamp_from, self.step.timestamp_from)
@@ -5154,6 +5201,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "learning_goals": ["test", "test"],
                 "audience": [self.target_group.to_dict()],
                 "languages": ["test", "test"],
+                "evaluation": [self.evaluation.to_dict()],
                 "timestamp_from": self.step.timestamp_from,
                 "timestamp_to": self.step.timestamp_to,
                 "involved_parties": ["test", "test"],
@@ -5184,6 +5232,7 @@ class PlanResourceTest(BaseResourceTestCase):
                     "learning_goals": "not_started",
                     "audience": "not_started",
                     "languages": "not_started",
+                    "evaluation": "not_started",
                     "involved_parties": "not_started",
                     "realization": "not_started",
                     "learning_env": "not_started",
@@ -5204,6 +5253,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "learning_goals": ["test", "test"],
                 "audience": [self.target_group.to_dict()],
                 "languages": ["test", "test"],
+                "evaluation": [self.evaluation.to_dict()],
                 "timestamp_from": self.step.timestamp_from,
                 "timestamp_to": self.step.timestamp_to,
                 "involved_parties": ["test", "test"],
@@ -5234,6 +5284,7 @@ class PlanResourceTest(BaseResourceTestCase):
                     "learning_goals": "not_started",
                     "audience": "not_started",
                     "languages": "not_started",
+                    "evaluation": "not_started",
                     "involved_parties": "not_started",
                     "realization": "not_started",
                     "learning_env": "not_started",
@@ -5273,6 +5324,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "learning_goals": ["test", "test"],
             "audience": [self.target_group.to_dict()],
             "languages": ["test", "test"],
+            "evaluation": [self.evaluation.to_dict()],
             "timestamp_from": self.step.timestamp_from,
             "timestamp_to": self.step.timestamp_to,
             "involved_parties": ["test", "test"],
@@ -5303,6 +5355,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "learning_goals": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
+                "evaluation": "not_started",
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
@@ -5340,6 +5393,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "learning_goals": ["test", "test"],
             "audience": [self.target_group.to_dict()],
             "languages": ["test", "test"],
+            "evaluation": [self.evaluation.to_dict()],
             "timestamp_from": self.step.timestamp_from,
             "timestamp_to": self.step.timestamp_to,
             "involved_parties": ["test", "test"],
@@ -5370,6 +5424,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "learning_goals": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
+                "evaluation": "not_started",
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
@@ -5553,7 +5608,9 @@ class PlanResourceTest(BaseResourceTestCase):
         self.planner.update_field(self.plan_id, "is_good_practise", False)
         self.planner.update_field(self.plan_id, "underlying_ve_model", "updated_model")
         self.planner.update_field(self.plan_id, "reflection", "updated_reflection")
-        self.planner.update_field(self.plan_id, "good_practise_evaluation", "updated_good_practise_evaluation")
+        self.planner.update_field(
+            self.plan_id, "good_practise_evaluation", "updated_good_practise_evaluation"
+        )
         self.planner.update_field(
             self.plan_id,
             "progress",
@@ -5564,6 +5621,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "lectures": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
+                "evaluation": "not_started",
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
@@ -5590,7 +5648,9 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(db_state["is_good_practise"], False)
         self.assertEqual(db_state["underlying_ve_model"], "updated_model")
         self.assertEqual(db_state["reflection"], "updated_reflection")
-        self.assertEqual(db_state["good_practise_evaluation"], "updated_good_practise_evaluation")
+        self.assertEqual(
+            db_state["good_practise_evaluation"], "updated_good_practise_evaluation"
+        )
         self.assertEqual(db_state["progress"]["name"], "completed")
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
@@ -5646,6 +5706,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "learning_goals": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
+                "evaluation": "not_started",
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
