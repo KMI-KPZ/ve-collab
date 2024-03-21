@@ -30,6 +30,7 @@ export interface FormalConditionPartner {
     dataProtection: boolean;
 }
 
+FormalConditions.auth = true;
 export default function FormalConditions() {
     const router = useRouter();
     const { data: session, status } = useSession();
@@ -299,7 +300,10 @@ export default function FormalConditions() {
                         className="border border-gray-500 rounded-lg w-4 h-4 p-3 mr-6"
                     />
                     <TooltipList tooltipsTextItems={['Umgang mit Anwesenheit und Mitarbeit']}>
-                        <p>institutionelle Gepflogenheiten</p>
+                        <div>
+                        <p>institutionelle</p>
+                        <p>Vorgaben</p>
+                        </div>
                     </TooltipList>
                 </div>
                 <div className="flex justify-start items-center">
