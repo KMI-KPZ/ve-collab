@@ -1459,7 +1459,16 @@ class PostHandlerTest(BaseApiTestCase):
         self.assertFalse(db_state["pinned"])
         self.assertIsNone(db_state["wordpress_post_id"])
         self.assertEqual(db_state["tags"], json.loads(request_json["tags"]))
-        self.assertEqual(db_state["files"], [file._id])
+        self.assertEqual(
+            db_state["files"],
+            [
+                {
+                    "file_id": file._id,
+                    "file_name": self.test_file_name,
+                    "author": CURRENT_ADMIN.username,
+                }
+            ],
+        )
 
         # expect file to be in space as well
 
@@ -1933,7 +1942,13 @@ class PostHandlerTest(BaseApiTestCase):
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
-                "files": [_id],
+                "files": [
+                    {
+                        "file_id": _id,
+                        "file_name": self.test_file_name,
+                        "author": CURRENT_ADMIN.username,
+                    }
+                ],
             }
         )
         self.db.spaces.update_one(
@@ -7591,7 +7606,9 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.workload, default_plan.workload)
         self.assertEqual(response_plan.steps, default_plan.steps)
         self.assertEqual(response_plan.is_good_practise, default_plan.is_good_practise)
-        self.assertEqual(response_plan.underlying_ve_model, default_plan.underlying_ve_model)
+        self.assertEqual(
+            response_plan.underlying_ve_model, default_plan.underlying_ve_model
+        )
         self.assertEqual(response_plan.reflection, default_plan.reflection)
         self.assertEqual(response_plan.evaluation, default_plan.evaluation)
         self.assertEqual(response_plan.progress, default_plan.progress)
@@ -7690,7 +7707,9 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.workload, default_plan.workload)
         self.assertEqual(response_plan.steps, default_plan.steps)
         self.assertEqual(response_plan.is_good_practise, default_plan.is_good_practise)
-        self.assertEqual(response_plan.underlying_ve_model, default_plan.underlying_ve_model)
+        self.assertEqual(
+            response_plan.underlying_ve_model, default_plan.underlying_ve_model
+        )
         self.assertEqual(response_plan.reflection, default_plan.reflection)
         self.assertEqual(response_plan.evaluation, default_plan.evaluation)
         self.assertEqual(response_plan.progress, default_plan.progress)
