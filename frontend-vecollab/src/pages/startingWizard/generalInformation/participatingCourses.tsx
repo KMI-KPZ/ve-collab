@@ -334,7 +334,7 @@ export default function Lectures() {
                                                 (data) => {
                                                     combinedSubmitRouteAndUpdate(
                                                         data,
-                                                        '/startingWizard/generalInformation/globalGoals'
+                                                        '/startingWizard/generalInformation/targetGroups'
                                                     );
                                                 },
                                                 async () => setIsPopupOpen(true)

@@ -89,7 +89,7 @@ export default function GlobalGoals() {
         );
 
         await router.push({
-            pathname: '/startingWizard/generalInformation/targetGroups',
+            pathname: '/startingWizard/generalInformation/veTopic',
             query: { plannerId: router.query.plannerId },
         });
     };
@@ -176,7 +176,7 @@ export default function GlobalGoals() {
                                     <Link
                                         href={{
                                             pathname:
-                                                '/startingWizard/generalInformation/participatingCourses',
+                                                '/startingWizard/generalInformation/targetGroups',
                                             query: { plannerId: router.query.plannerId },
                                         }}
                                     >

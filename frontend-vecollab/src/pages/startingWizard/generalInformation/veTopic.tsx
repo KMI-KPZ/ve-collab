@@ -222,7 +222,7 @@ export default function Topics() {
                                             onClick={methods.handleSubmit((data) => {
                                                 combinedSubmitRouteAndUpdate(
                                                     data,
-                                                    '/startingWizard/generalInformation/targetGroups'
+                                                    '/startingWizard/generalInformation/globalGoals'
                                                 );
                                             })}
                                         >

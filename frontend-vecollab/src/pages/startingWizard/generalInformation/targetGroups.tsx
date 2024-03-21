@@ -423,7 +423,7 @@ export default function TargetGroups() {
                                             onClick={methods.handleSubmit((data) =>
                                                 combinedSubmitRouteAndUpdate(
                                                     data,
-                                                    '/startingWizard/generalInformation/globalGoals'
+                                                    '/startingWizard/generalInformation/participatingCourses'
                                                 )
                                             )}
                                         >
@@ -438,7 +438,7 @@ export default function TargetGroups() {
                                                 (data) => {
                                                     combinedSubmitRouteAndUpdate(
                                                         data,
-                                                        '/startingWizard/generalInformation/veTopic'
+                                                        '/startingWizard/generalInformation/globalGoals'
                                                     );
                                                 },
                                                 async () => setIsPopupOpen(true)
