@@ -137,7 +137,7 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
                             toggleChatWindow={toggleChatWindow}
                         >
                             <>
-                                <Auth showLoader={false} autoForward={false} children={
+                                <Auth showLoader={false} autoForward={false}>
                                     <ChatWindow
                                         socket={socket}
                                         messageEvents={messageEvents}
@@ -146,7 +146,7 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
                                         open={chatOpen}
                                         toggleChatWindow={toggleChatWindow}
                                     />
-                                } />
+                                </Auth>
 
                                 {Component.auth ? (
                                     <Auth>
