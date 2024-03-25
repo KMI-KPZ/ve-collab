@@ -84,6 +84,7 @@ export interface BackendPostComment {
 export interface BackendPostFile {
     file_id: string;
     file_name: string;
+    file_type: string;
     author: string;
 }
 

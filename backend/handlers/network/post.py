@@ -148,6 +148,7 @@ class PostHandler(BaseHandler):
                         files.append({
                             "file_id": stored_id,
                             "file_name": file_obj["filename"],
+                            "file_type": file_obj["content_type"],
                             "author": self.current_user.username,
                         })
 
@@ -861,7 +862,7 @@ class RepostHandler(BaseHandler):
             returns:
                 200 OK,
                 {"status": 200,
-                 "success": True, 
+                 "success": True,
                  "inserted_repost": {repost}}
 
                 400 Bad Request
