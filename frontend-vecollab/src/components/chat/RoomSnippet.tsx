@@ -21,7 +21,7 @@ export default function RoomSnippet({
 
     useEffect(() => {
         setMessageEventCount(headerBarMessageEvents.filter((message) => message.room_id === room._id).length)
-    }, [headerBarMessageEvents, session]);
+    }, [headerBarMessageEvents, room._id]);
 
     return (
         <li
