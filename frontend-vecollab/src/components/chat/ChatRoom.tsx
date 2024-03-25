@@ -46,7 +46,7 @@ export default function ChatRoom({
         if (messageBottomRef.current && messageContainerRef.current) {
             messageContainerRef.current?.scrollTo({
                 top: messageBottomRef.current?.offsetTop + messageBottomRef.current?.offsetHeight,
-                behavior: 'instant',
+                behavior: 'auto',
             });
         }
     };
