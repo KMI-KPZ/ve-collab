@@ -1465,6 +1465,7 @@ class PostHandlerTest(BaseApiTestCase):
                 {
                     "file_id": file._id,
                     "file_name": self.test_file_name,
+                    "file_type": "text/plain",
                     "author": CURRENT_ADMIN.username,
                 }
             ],
