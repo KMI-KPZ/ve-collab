@@ -211,7 +211,7 @@ export default function AfterVE() {
                                                 <p>
                                                     Evaluationsergebnisse / Feedback der
                                                     Teilnehmenden: Fasse die Ergebnisse hier
-                                                    zusammen, falls vorhanden.
+                                                    zusammen.
                                                 </p>
                                                 <textarea
                                                     className="border border-gray-400 rounded-lg w-full p-2 mt-2"

@@ -38,7 +38,7 @@ export default function ViewAttributes({ plan }: Props): JSX.Element {
                             <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
                         )}
                     </ul>
-                    <span className="text-base font-semibold pr-5">Externe Beteidigte:</span>
+                    <span className="text-base font-semibold pr-5">Externe Beteiligte:</span>
                     <ul className="flex flex-col space-y-2 col-span-3">
                         {plan.involved_parties.length !== 0 ? (
                             plan.involved_parties.map((party, index) => (
