@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import Image from 'next/image';
 import veCollabLogo from '@/images/veCollabLogo.png';
 import Link from 'next/link';
@@ -13,9 +13,14 @@ import AuthenticatedImage from '../AuthenticatedImage';
 interface Props {
     notificationEvents: Notification[];
     headerBarMessageEvents: any[];
+    toggleChatWindow: () => void
 }
 
-export default function HeaderSection({ notificationEvents, headerBarMessageEvents }: Props) {
+export default function HeaderSection({
+    notificationEvents,
+    headerBarMessageEvents,
+    toggleChatWindow
+}: Props) {
     const { data: session } = useSession();
     const [messageEventCount, setMessageEventCount] = useState<number>(0);
     const currentPath = usePathname()
@@ -56,7 +61,7 @@ export default function HeaderSection({ notificationEvents, headerBarMessageEven
     const userImage = session?.user.image || "default_profile_pic.jpg"
 
     return (
-        <header className="bg-white px-4 lg:px-6 py-2.5 drop-shadow-lg relative z-20">
+        <header className="bg-white px-4 py-2.5 drop-shadow-lg relative z-40">
             <nav className="flex flex-wrap items-center mx-auto max-w-screen-2xl">
                 <div className='flex items-center '>
                     <Link href="/">
@@ -67,20 +72,20 @@ export default function HeaderSection({ notificationEvents, headerBarMessageEven
                             className="duration-300 hover:scale-110"
                         ></Image>
                     </Link>
-                    <form className='ml-10 relative'>
+                    <form className='mx-10 flex items-stretch'>
                         <input
-                                className={'border border-[#cccccc] rounded-l px-2 py-1 h-full'}
+                                className={'border border-[#cccccc] rounded-l px-2 py-1'}
                                 type="text"
                                 placeholder={'Suchen ...'}
                                 name='search'
                                 autoComplete="off"
                             />
-                        <button type="submit" title="Suchen" className='-ml-1 bg-ve-collab-orange rounded-r p-2 absolute h-full hover:bg-ve-collab-orange-light'>
+                        <button type="submit" title="Suchen" className='-ml-1 bg-ve-collab-orange rounded-r p-2 hover:bg-ve-collab-orange-light'>
                             <MdSearch className='text-white' />
                         </button>
                     </form>
                 </div>
-                <ul className="flex flex-1 justify-end items-center font-semibold space-x-7">
+                <ul className="flex flex-1 justify-center xl:justify-end items-center font-semibold space-x-2 xl:space-x-6">
                     <li className={isFrontpage() ? activeClass : inactiveClass}>
                         <Link href="/" className='inline-block	px-2 py-1'>Start</Link>
                     </li>
@@ -90,25 +95,26 @@ export default function HeaderSection({ notificationEvents, headerBarMessageEven
                     {session && (
                         <>
                             <li className={isActivePath('/space') ? activeClass : inactiveClass}>
-                                <Link href="/spaces" className='inline-block	px-2 py-1'>Gruppen</Link>
+                                <Link href="/spaces" className='px-2 py-1'>Gruppen</Link>
                             </li>
                             <li className={isActivePath('/overviewProjects') ? activeClass : inactiveClass}>
-                                <Link href="/overviewProjects" className='inline-block	px-2 py-1'>VE Designer</Link>
+                                <Link href="/overviewProjects" className='px-2 py-1'>VE Designer</Link>
                             </li>
-                            <li className={`${isActivePath('/messages') ? activeClass : inactiveClass} !ml-2`}>
-                                <Link href="/messages" className='inline-block px-2 py-1'>
-                                    <MdOutlineMessage />
-                                </Link>
+                            <li className={`!ml-2`}>
+                                <button className='p-2 rounded-full hover:bg-ve-collab-blue-light' onClick={e => toggleChatWindow()}>
+                                    <MdOutlineMessage size={20} />
+                                </button>
                                 {messageEventCount > 0 && (
-                                    <span className="absolute top-[-10px] right-[-20px] py-1 px-2 rounded-[50%] bg-blue-400/75 text-xs">
+                                    <span className="absolute -ml-4 -mt-2 px-2 py-1 rounded-full bg-blue-500/75 text-xs font-semibold">
                                         {messageEventCount}
                                     </span>
                                 )}
                             </li>
-                            <li className={`${isActivePath('/notifications') ? activeClass : inactiveClass} !ml-2`}>
-                                <Link href="/notifications" className='inline-block	px-2 py-1'>
-                                    <IoMdNotificationsOutline />
-                                </Link>
+                            {/* TODO this may also will be a popup window */}
+                            <li className={`!ml-2`}>
+                                <button className='p-2 rounded-full hover:bg-ve-collab-blue-light' onClick={e => router.push('/notifications')}>
+                                    <IoMdNotificationsOutline size={20} />
+                                </button>
                                 {notificationEvents.length > 0 && (
                                     <span className="absolute top-[-10px] right-[-20px] py-1 px-2 rounded-[50%] bg-blue-400/75 text-xs">
                                         {notificationEvents.length}
@@ -136,6 +142,7 @@ export default function HeaderSection({ notificationEvents, headerBarMessageEven
                                                 <MdArrowDropDown />
                                             </div>
                                         }
+                                        ulClasses='min-w-[10rem]'
                                         onSelect={handleSelectOption}
                                     />
                                 </div>
@@ -144,8 +151,12 @@ export default function HeaderSection({ notificationEvents, headerBarMessageEven
                     )}
                     {!session && (
                         <>
-                            <li><button onClick={() => signIn('keycloak')}>Login</button></li>
-                            <li><button onClick={() => signIn('keycloak')}>Registrieren</button></li>
+                            <li>
+                                <button onClick={() => signIn('keycloak')} className={`${inactiveClass} px-2 py-1`}>Login</button>
+                            </li>
+                            <li>
+                                <button onClick={() => signIn('keycloak')} className={`${inactiveClass} px-2 py-1`}>Registrieren</button>
+                            </li>
                         </>
                     )}
                 </ul>

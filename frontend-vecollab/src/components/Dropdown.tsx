@@ -1,6 +1,5 @@
-import { MouseEvent, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { HiDotsHorizontal } from "react-icons/hi";
-import { MdDeleteOutline, MdModeEdit } from "react-icons/md";
 
 interface Props {
     options: {
@@ -9,6 +8,7 @@ interface Props {
         title?: string,
         icon?: JSX.Element }[];
     icon?: JSX.Element
+    ulClasses?: string,
     onSelect: (value: string) => void;
 
 }
@@ -16,6 +16,7 @@ interface Props {
 export default function MyDropdown({
     options,
     icon=<HiDotsHorizontal />,
+    ulClasses='',
     onSelect
 }: Props) {
     const [open, setOpen] = useState(false);
@@ -52,7 +53,7 @@ export default function MyDropdown({
             </button>
 
             {open && (
-                <ul className="absolute z-30 right-0 left-auto rounded-md bg-white p-2 shadow border">
+                <ul className={`${ulClasses} absolute z-40 right-0 left-auto p-2 rounded-md bg-white shadow border`}>
                     {options.map((a, i) => (
                         <li
                             key={i}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Dispatch, SetStateAction } from 'react';
 import HeaderSection from '@/components/Layout/HeaderSection';
 import FooterSection from '@/components/Layout/FooterSection';
 import { useSession } from 'next-auth/react';
@@ -10,8 +10,14 @@ interface Props {
     children: React.ReactNode;
     headerBarMessageEvents: any[];
     notificationEvents: Notification[];
+    toggleChatWindow(value?: boolean): void
 }
-export default function LayoutSection({ children, notificationEvents, headerBarMessageEvents }: Props): JSX.Element {
+export default function LayoutSection({
+    children,
+    notificationEvents,
+    headerBarMessageEvents,
+    toggleChatWindow
+}: Props): JSX.Element {
     const { data: session, status } = useSession();
 
     const {
@@ -23,7 +29,11 @@ export default function LayoutSection({ children, notificationEvents, headerBarM
 
     return (
         <>
-            <HeaderSection notificationEvents={notificationEvents} headerBarMessageEvents={headerBarMessageEvents}/>
+            <HeaderSection
+                notificationEvents={notificationEvents}
+                headerBarMessageEvents={headerBarMessageEvents}
+                toggleChatWindow={toggleChatWindow}
+            />
             <main>
                 {!isLoading && excludedFromMatching && <ExcludedFromMatchingBanner />}
                 <>{children}</>

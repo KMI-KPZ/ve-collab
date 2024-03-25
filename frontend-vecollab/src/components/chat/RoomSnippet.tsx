@@ -17,15 +17,15 @@ export default function RoomSnippet({
     memberProfileSnippets,
 }: Props) {
     const { data: session } = useSession();
-
     const [messageEventCount, setMessageEventCount] = useState<number>(0);
+
     useEffect(() => {
         setMessageEventCount(headerBarMessageEvents.filter((message) => message.room_id === room._id).length)
-    }, [headerBarMessageEvents, session]);
+    }, [headerBarMessageEvents, room._id]);
 
     return (
         <li
-            className="rounded-md p-2 cursor-pointer hover:bg-gray-300 overflow-hidden whitespace-nowrap text-ellipsis"
+            className="rounded-md p-2 cursor-pointer hover:bg-gray-200 overflow-hidden whitespace-nowrap text-ellipsis"
             onClick={() => handleChatSelect(room._id)}
         >
             <div className="flex justify-between items-center">
