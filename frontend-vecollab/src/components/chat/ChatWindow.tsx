@@ -45,7 +45,6 @@ export default function ChatWindow(
         // fetch profile snippets
         fetchPOST('/profile_snippets', { usernames: usernames }, session?.accessToken).then(
             (data) => {
-                console.log(data);
                 setProfileSnippets(
                     data.user_snippets.map((snippet: any) => {
                         return {
