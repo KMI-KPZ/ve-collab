@@ -220,6 +220,11 @@ export default function TimelinePost(
                 )}
 
                 <div className='ml-auto'>
+                    {(post.comments.length == 0 && !showCommentForm) && (
+                        <button onClick={openCommentForm} title="Kommentar hinzufügen" className="p-2 rounded-full hover:bg-ve-collab-blue-light">
+                            <MdOutlineAddComment />
+                        </button>
+                    )}
                     {(post.likers.includes(session?.user.preferred_username as string)) ? (
                         <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickLikeBtn}><HiHeart /></button>
                     ) : (
@@ -298,48 +303,42 @@ export default function TimelinePost(
             )}
 
             <Likes />
-            {(post.comments.length == 0 && !showCommentForm)
-                ? (
-                    <button onClick={openCommentForm} title="Kommentar hinzufügen" className="align-middle px-3 py-2 rounded-full hover:bg-ve-collab-blue-light">
-                        <MdOutlineAddComment className="inline" size={20} />
-                    </button>
-                ) : (
-                    <div className='mt-4 pt-4 pl-4 border-t-2 border-ve-collab-blue/50'>
-                        <div className="mb-4 text-slate-900 font-bold text-lg">Kommentare</div>
+            {(post.comments.length > 0 || showCommentForm) && (
+                <div className='mt-4 pt-4 pl-4 border-t-2 border-ve-collab-blue/50'>
+                    <div className="mb-4 text-slate-900 font-bold text-lg">Kommentare</div>
 
-                        <form onSubmit={onSubmitCommentForm} className="mb-2" ref={commentFormref}>
-                            <input
-                                className={'border border-[#cccccc] rounded-md px-2 py-[6px]'}
-                                type="text"
-                                placeholder={'Kommentar schreiben ...'}
-                                name='text'
-                                autoComplete="off"
-                            />
-                            <button className="p-2" type='submit' title="Senden"><IoIosSend /></button>
-                        </form>
+                    <form onSubmit={onSubmitCommentForm} className="mb-2" ref={commentFormref}>
+                        <input
+                            className={'border border-[#cccccc] rounded-md px-2 py-[6px]'}
+                            type="text"
+                            placeholder={'Kommentar schreiben ...'}
+                            name='text'
+                            autoComplete="off"
+                        />
+                        <button className="p-2" type='submit' title="Senden"><IoIosSend /></button>
+                    </form>
 
-                        {post.comments.length > 0 && (
-                            <div className="pl-5 mt-5">
-                                {post.comments.reverse().map((comment, ci) => (
-                                    <div key={ci}>
-                                        <div className={`${ci >= showXComments ? "hidden" : ""}`}>
-                                            <div className={`flex items-center`}>
-                                                <PostHeader author={comment.author} date={comment.creation_date} />
-                                            </div>
-                                            <div className='my-5'>{comment.text}</div>
+                    {post.comments.length > 0 && (
+                        <div className="pl-5 mt-5">
+                            {post.comments.reverse().map((comment, ci) => (
+                                <div key={ci}>
+                                    <div className={`${ci >= showXComments ? "hidden" : ""}`}>
+                                        <div className={`flex items-center`}>
+                                            <PostHeader author={comment.author} date={comment.creation_date} />
                                         </div>
-                                        {(ci+1 == showXComments && post.comments.length > showXComments) && (
-                                            <button className="py-2 px-5 rounded-lg" onClick={() => setShowXComments(showXComments+5)} title="Mehr">
-                                                <MdOutlineKeyboardDoubleArrowDown />
-                                            </button>
-                                        )}
+                                        <div className='my-5'>{comment.text}</div>
                                     </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                )
-            }
+                                    {(ci+1 == showXComments && post.comments.length > showXComments) && (
+                                        <button className="py-2 px-5 rounded-lg" onClick={() => setShowXComments(showXComments+5)} title="Mehr">
+                                            <MdOutlineKeyboardDoubleArrowDown />
+                                        </button>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     );
 }
