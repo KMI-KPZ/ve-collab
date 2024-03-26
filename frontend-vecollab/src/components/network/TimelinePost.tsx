@@ -276,24 +276,21 @@ export default function TimelinePost(
                                 url={`/uploads/${file.file_id}`}
                                 filename={file.file_name}
                             >
-                                {fileIsImage(file) ? (
-                                    <AuthenticatedImage
-                                        imageId={file.file_id}
-                                        alt={file.file_name}
-                                        width={50}
-                                        height={50}
-                                        className=""
-                                    ></AuthenticatedImage>
-                                ) : (
-                                    <>
-                                        <div className="flex justify-center">
-                                            <RxFile size={40} />{' '}
-                                        </div>
-                                        <div className="max-w-1/2 justify-center mx-2 px-1 my-1 truncate">
-                                            {file.file_name}
-                                        </div>
-                                    </>
-                                )}
+                                <div className="flex justify-center">
+                                    {fileIsImage(file) ? (
+                                        <AuthenticatedImage
+                                            imageId={file.file_id}
+                                            alt={file.file_name}
+                                            width={50}
+                                            height={50}
+                                        ></AuthenticatedImage>
+                                    ) : (
+                                        <RxFile size={40} />
+                                    )}
+                                </div>
+                                <div className="max-w-1/2 justify-center mx-2 px-1 my-1 truncate">
+                                    {file.file_name}
+                                </div>
                             </AuthenticatedFile>
                         ))}
                     </div>
