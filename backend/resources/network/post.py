@@ -180,13 +180,13 @@ class Posts:
         # from the space's repository
         if post["files"]:
             fs = gridfs.GridFS(self.db)
-            for file_id in post["files"]:
-                fs.delete(file_id)
+            for file_obj in post["files"]:
+                fs.delete(file_obj["file_id"])
             if post["space"]:
                 space_manager = Spaces(self.db)
-                for file_id in post["files"]:
+                for file_obj in post["files"]:
                     try:
-                        space_manager.remove_post_file(post["space"], file_id)
+                        space_manager.remove_post_file(post["space"], file_obj["file_id"])
                     except SpaceDoesntExistError:
                         pass
                     except FileDoesntExistError:

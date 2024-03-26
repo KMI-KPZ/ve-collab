@@ -5,7 +5,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { IoIosSend } from "react-icons/io";
 import Dropdown from "../Dropdown";
-import { BackendPost, BackendPostAuthor, BackendPostComment, BackendSpace } from "@/interfaces/api/apiInterfaces";
+import { BackendPost, BackendPostAuthor, BackendPostComment, BackendPostFile, BackendSpace } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
 import { MdDeleteOutline, MdDoubleArrow, MdModeEdit, MdOutlineAddComment, MdOutlineKeyboardDoubleArrowDown, MdThumbUp } from "react-icons/md";
 import { TiArrowForward } from "react-icons/ti";
@@ -14,6 +14,7 @@ import PostHeader from "./PostHeader";
 import { AuthenticatedFile } from "../AuthenticatedFile";
 import { RxFile } from "react-icons/rx";
 import TimelinePostText from "./TimelinePostText";
+import AuthenticatedImage from "../AuthenticatedImage";
 
 interface Props {
     post: BackendPost
@@ -186,6 +187,10 @@ export default function TimelinePost(
         )
     }
 
+    const fileIsImage = (file: BackendPostFile) => {
+        return file.file_type?.startsWith('image/')
+    }
+
     let drOptions = []
     if (
         (!post.isRepost && post.author.username == session?.user.preferred_username)
@@ -268,14 +273,23 @@ export default function TimelinePost(
                         {post.files.map((file, index) => (
                             <AuthenticatedFile
                                 key={index}
-                                url={`/uploads/${file}`}
-                                filename={file}
+                                url={`/uploads/${file.file_id}`}
+                                filename={file.file_name}
                             >
                                 <div className="flex justify-center">
-                                    <RxFile size={40} />{' '}
+                                    {fileIsImage(file) ? (
+                                        <AuthenticatedImage
+                                            imageId={file.file_id}
+                                            alt={file.file_name}
+                                            width={50}
+                                            height={50}
+                                        ></AuthenticatedImage>
+                                    ) : (
+                                        <RxFile size={40} />
+                                    )}
                                 </div>
                                 <div className="max-w-1/2 justify-center mx-2 px-1 my-1 truncate">
-                                    {file}
+                                    {file.file_name}
                                 </div>
                             </AuthenticatedFile>
                         ))}
