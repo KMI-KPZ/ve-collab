@@ -126,7 +126,7 @@ export default function Stage({ fineStep }: Props) {
                     </div>
                 </div>
                 <div className="mt-4 flex">
-                    <div className="w-1/6 flex items-center">
+                    <div className="w-1/6 flex mt-8">
                         <label htmlFor="tasks" className="px-2 py-2">
                             Aufgabenstellungen
                         </label>
