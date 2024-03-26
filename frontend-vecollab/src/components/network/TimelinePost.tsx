@@ -7,14 +7,15 @@ import { IoIosSend } from "react-icons/io";
 import Dropdown from "../Dropdown";
 import { BackendPost, BackendPostAuthor, BackendPostComment, BackendPostFile, BackendSpace } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
-import { MdDeleteOutline, MdDoubleArrow, MdModeEdit, MdOutlineAddComment, MdOutlineKeyboardDoubleArrowDown, MdThumbUp } from "react-icons/md";
-import { TiArrowForward } from "react-icons/ti";
+import { MdDeleteOutline, MdDoubleArrow, MdModeEdit, MdOutlineAddComment, MdOutlineKeyboardDoubleArrowDown, MdPin, MdPushPin, MdThumbUp } from "react-icons/md";
+import { TiArrowForward, TiPin, TiPinOutline } from "react-icons/ti";
 import TimelinePostForm from "./TimelinePostForm";
 import PostHeader from "./PostHeader";
 import { AuthenticatedFile } from "../AuthenticatedFile";
 import { RxFile } from "react-icons/rx";
 import TimelinePostText from "./TimelinePostText";
 import AuthenticatedImage from "../AuthenticatedImage";
+import { KeyedMutator } from "swr";
 
 interface Props {
     post: BackendPost
@@ -25,6 +26,7 @@ interface Props {
     removePost: (post: BackendPost) => void
     sharePost?: (post: BackendPost) => void
     fetchNextPosts: Function
+    updatePinnedPosts: KeyedMutator<any> | undefined
 }
 
 TimelinePost.auth = true
@@ -37,7 +39,8 @@ export default function TimelinePost(
     allSpaces,
     removePost,
     sharePost: replyPost,
-    fetchNextPosts
+    fetchNextPosts,
+    updatePinnedPosts
 }: Props) {
     const { data: session } = useSession();
     const ref = useRef<any>(null)
@@ -114,6 +117,20 @@ export default function TimelinePost(
                 newLikers.push(session?.user.preferred_username as string)
             }
             updatePost( {...post, likers: newLikers} )
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    const onClickPin = async () => {
+        try {
+            if (post.pinned) {
+                await fetchDELETE( '/pin', { id: post._id, pin_type: 'post' }, session?.accessToken )
+            } else {
+                await fetchPOST( '/pin', { id: post._id, pin_type: 'post' }, session?.accessToken )
+            }
+            updatePost( {...post, pinned: !post.pinned} )
+            if (updatePinnedPosts) updatePinnedPosts()
         } catch (error) {
             console.log(error);
         }
@@ -229,6 +246,15 @@ export default function TimelinePost(
                         <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickLikeBtn}><HiHeart /></button>
                     ) : (
                         <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickLikeBtn}><HiOutlineHeart /></button>
+                    )}
+                    {space && (
+                        <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickPin} title="Beitrag anheften">
+                            {post.pinned ? (
+                                <TiPin />
+                            ) : (
+                                <TiPinOutline />
+                            )}
+                        </button>
                     )}
                     <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickReplyBtn} title="Antworten"><TiArrowForward /></button>
                     {drOptions.length > 0 && (

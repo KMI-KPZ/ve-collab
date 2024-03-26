@@ -1,4 +1,4 @@
-import { useGetAllSpaces, useGetTimeline } from "@/lib/backend";
+import { useGetAllSpaces, useGetPinnedPosts, useGetTimeline } from "@/lib/backend";
 import { useSession } from "next-auth/react";
 import LoadingAnimation from "../LoadingAnimation";
 import TimelinePost from "./TimelinePost";
@@ -50,12 +50,21 @@ export default function Timeline({ space, user }: Props) {
         mutate: mutateAllSpaces,
     } = useGetAllSpaces(session!.accessToken);
 
+    const {
+        data: pinnedPosts,
+        isLoading: isLoadingPinnedPosts,
+        error: errorPinnedPosts,
+        mutate: mutatePinnedPosts
+    } = space
+        ? useGetPinnedPosts(session!.accessToken, space!)
+        : { data: [], isLoading: false, error: undefined, mutate: undefined }
+
     useEffect(() => {
         if (!newFetchedPosts.length) return
 
         if (allPosts.some((post) => post._id == newFetchedPosts[0]._id) ) {
             // TODO sometimes this happens -> WHY???? Because of hot-refresh while development
-            console.error('ERROR: fetched posts are the same as current', {allPosts, newFetchedPosts, toDate});
+            console.warn('Fetched same postss as current [dev-only?!?]', {allPosts, newFetchedPosts, toDate});
         } else {
             setAllPosts((prev) => [...prev, ...newFetchedPosts]);
         }
@@ -65,10 +74,8 @@ export default function Timeline({ space, user }: Props) {
         if (!allPosts.length) return
 
         setGroupedPosts( groupBy(allPosts, (p) => p.creation_date.replace(/T.+/, '')) )
-
+        console.log({allPosts, groupedPosts});
     }, [allPosts])
-    // console.log({allPosts});
-    // console.log({groupedPosts, keys: Object.keys( groupedPosts )});
 
     function groupBy<T>(arr: T[], fn: (item: T) => any) {
         return arr.reduce<Record<string, T[]>>((prev, curr) => {
@@ -130,6 +137,28 @@ export default function Timeline({ space, user }: Props) {
                 />
             </div>
 
+            {pinnedPosts.length > 0 && (
+                <div className="mb-8 p-4 rounded-xl border-2 border-ve-collab-orange">
+                    <div className="mb-4 font-bold text-slate-900 text-xl">
+                        <button>Angeheftete Beiträge</button>
+                    </div>
+                    {pinnedPosts.map((post, i) => (
+                        <TimelinePost
+                            key={post._id}
+                            post={post}
+                            updatePost={updatePost}
+                            space={space}
+                            isLast={false}
+                            allSpaces={allSpaces}
+                            removePost={removePost}
+                            sharePost={post => setSharedPost(post)}
+                            fetchNextPosts={() => {}}
+                            updatePinnedPosts={mutatePinnedPosts}
+                        />
+                    ))}
+                </div>
+            )}
+
             {Object.keys( groupedPosts ).map( (group, i) => {
                 const datePill = getDatePill(i)
                 return (
@@ -137,7 +166,7 @@ export default function Timeline({ space, user }: Props) {
                         style={{ borderColor: datePill.vg }}
                         className="-ml-7 pl-7 pb-4 border-l"
                     >
-                        <div className="relativ sticky z-20 -ml-[45px] top-[17px] mb-4 flex items-center font-bold">
+                        <div className="relativ sticky z-20 -ml-[47px] top-[17px] mb-4 flex items-center font-bold">
                             <div
                                 style={{ color: datePill.vg, borderColor: datePill.vg, backgroundColor:datePill.bg }}
                                 className="rounded-full border p-[2px] -mt-[11px] shadow"
@@ -163,6 +192,7 @@ export default function Timeline({ space, user }: Props) {
                                 removePost={removePost}
                                 sharePost={post => setSharedPost(post)}
                                 fetchNextPosts={() => fetchNextPosts(post, i)}
+                                updatePinnedPosts={mutatePinnedPosts}
                             />
                         )) }
                     </div>

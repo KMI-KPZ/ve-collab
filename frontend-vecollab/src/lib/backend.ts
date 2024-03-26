@@ -373,6 +373,29 @@ export function useGetTimeline(
     }
 }
 
+export function useGetPinnedPosts(
+    accessToken: string,
+    space: string,
+    limit?: number
+ ): {
+    data: BackendPost[];
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        [`/timeline/space/${space}?limit=${limit || 3}`, accessToken],
+        ([url, token]) => GETfetcher(url, token)
+    );
+
+    return {
+        data: isLoading || error ? [] : data.pinned_posts,
+        isLoading,
+        error,
+        mutate,
+    }
+}
+
 export async function fetchGET(relativeUrl: string, accessToken?: string) {
     const headers: { Authorization?: string } = {};
 
