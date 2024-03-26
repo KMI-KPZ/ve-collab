@@ -12,9 +12,12 @@ interface Props {
 
 export const defaultValueTask: ITaskFrontend = {
     title: '',
-    description: '',
     learning_goal: '',
+    task_formulation: '',
+    social_form: '',
+    description: '',
     tools: [{ name: '' }, { name: '' }],
+    media: [{ name: '' }, { name: '' }],
 };
 
 export default function Stage({ fineStep }: Props) {

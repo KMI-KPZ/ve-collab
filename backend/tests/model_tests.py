@@ -198,9 +198,12 @@ class TaskModelTest(TestCase):
         """
         task = Task()
         self.assertEqual(task.title, None)
-        self.assertEqual(task.description, None)
         self.assertEqual(task.learning_goal, None)
+        self.assertEqual(task.task_formulation, None)
+        self.assertEqual(task.social_form, None)
+        self.assertEqual(task.description, None)
         self.assertEqual(task.tools, [])
+        self.assertEqual(task.media, [])
         self.assertIsInstance(task._id, ObjectId)
 
     def test_init(self):
@@ -214,28 +217,40 @@ class TaskModelTest(TestCase):
         task = Task(
             _id=_id,
             title=dummy_val,
-            description=dummy_val,
             learning_goal=dummy_val,
+            task_formulation=dummy_val,
+            social_form=dummy_val,
+            description=dummy_val,
             tools=[dummy_val],
+            media=[dummy_val],
         )
 
         self.assertEqual(task.title, dummy_val)
-        self.assertEqual(task.description, dummy_val)
         self.assertEqual(task.learning_goal, dummy_val)
+        self.assertEqual(task.task_formulation, dummy_val)
+        self.assertEqual(task.social_form, dummy_val)
+        self.assertEqual(task.description, dummy_val)
         self.assertEqual(task.tools, [dummy_val])
+        self.assertEqual(task.media, [dummy_val])
         self.assertEqual(task._id, _id)
 
         # test again, without supplying and _id
         task = Task(
             title=dummy_val,
-            description=dummy_val,
             learning_goal=dummy_val,
+            task_formulation=dummy_val,
+            social_form=dummy_val,
+            description=dummy_val,
             tools=[dummy_val],
+            media=[dummy_val],
         )
         self.assertEqual(task.title, dummy_val)
-        self.assertEqual(task.description, dummy_val)
         self.assertEqual(task.learning_goal, dummy_val)
+        self.assertEqual(task.task_formulation, dummy_val)
+        self.assertEqual(task.social_form, dummy_val)
+        self.assertEqual(task.description, dummy_val)
         self.assertEqual(task.tools, [dummy_val])
+        self.assertEqual(task.media, [dummy_val])
         self.assertIsInstance(task._id, ObjectId)
 
     def test_to_dict(self):
@@ -246,14 +261,20 @@ class TaskModelTest(TestCase):
 
         task = Task().to_dict()
         self.assertIn("title", task)
-        self.assertIn("description", task)
         self.assertIn("learning_goal", task)
+        self.assertIn("task_formulation", task)
+        self.assertIn("social_form", task)
+        self.assertIn("description", task)
         self.assertIn("tools", task)
+        self.assertIn("media", task)
         self.assertIn("_id", task)
         self.assertEqual(task["title"], None)
-        self.assertEqual(task["description"], None)
         self.assertEqual(task["learning_goal"], None)
+        self.assertEqual(task["task_formulation"], None)
+        self.assertEqual(task["social_form"], None)
+        self.assertEqual(task["description"], None)
         self.assertEqual(task["tools"], [])
+        self.assertEqual(task["media"], [])
         self.assertIsInstance(task["_id"], ObjectId)
 
     def test_from_dict(self):
@@ -265,29 +286,41 @@ class TaskModelTest(TestCase):
         task_dict = {
             "_id": _id,
             "title": "test",
-            "description": "test",
             "learning_goal": "test",
+            "task_formulation": "test",
+            "social_form": "test",
+            "description": "test",
             "tools": ["test"],
+            "media": ["test"],
         }
         task = Task.from_dict(task_dict)
         self.assertEqual(task.title, "test")
-        self.assertEqual(task.description, "test")
         self.assertEqual(task.learning_goal, "test")
+        self.assertEqual(task.task_formulation, "test")
+        self.assertEqual(task.social_form, "test")
+        self.assertEqual(task.description, "test")
         self.assertEqual(task.tools, ["test"])
+        self.assertEqual(task.media, ["test"])
         self.assertEqual(task._id, _id)
 
         # test again, without supplying an _id
         task_dict = {
             "title": "test",
-            "description": "test",
             "learning_goal": "test",
+            "task_formulation": "test",
+            "social_form": "test",
+            "description": "test",
             "tools": ["test"],
+            "media": ["test"],
         }
         task = Task.from_dict(task_dict)
         self.assertEqual(task.title, "test")
-        self.assertEqual(task.description, "test")
         self.assertEqual(task.learning_goal, "test")
+        self.assertEqual(task.task_formulation, "test")
+        self.assertEqual(task.social_form, "test")
+        self.assertEqual(task.description, "test")
         self.assertEqual(task.tools, ["test"])
+        self.assertEqual(task.media, ["test"])
         self.assertIsInstance(task._id, ObjectId)
 
     def test_from_dict_error_params_no_dict(self):
@@ -308,9 +341,12 @@ class TaskModelTest(TestCase):
         _id = ObjectId()
         task_dict = {
             "_id": _id,
-            "description": "test",
             "learning_goal": "test",
+            "task_formulation": "test",
+            "social_form": "test",
+            "description": "test",
             "tools": ["test"],
+            "media": ["test"],
         }
         self.assertRaises(MissingKeyError, Task.from_dict, task_dict)
 
@@ -323,9 +359,12 @@ class TaskModelTest(TestCase):
         task_dict = {
             "_id": ObjectId(),
             "title": "test",
-            "description": "test",
             "learning_goal": "test",
+            "task_formulation": "test",
+            "social_form": "test",
+            "description": "test",
             "tools": ["test"],
+            "media": ["test"],
         }
 
         # try out each attribute with a wrong type and expect ValueErrors
@@ -337,17 +376,29 @@ class TaskModelTest(TestCase):
         self.assertRaises(TypeError, Task.from_dict, task_dict)
         task_dict["title"] = "test"
 
-        task_dict["description"] = 1
-        self.assertRaises(TypeError, Task.from_dict, task_dict)
-        task_dict["description"] = "test"
-
         task_dict["learning_goal"] = 1
         self.assertRaises(TypeError, Task.from_dict, task_dict)
         task_dict["learning_goal"] = "test"
 
+        task_dict["task_formulation"] = 1
+        self.assertRaises(TypeError, Task.from_dict, task_dict)
+        task_dict["task_formulation"] = "test"
+
+        task_dict["social_form"] = 1
+        self.assertRaises(TypeError, Task.from_dict, task_dict)
+        task_dict["social_form"] = "test"
+
+        task_dict["description"] = 1
+        self.assertRaises(TypeError, Task.from_dict, task_dict)
+        task_dict["description"] = "test"
+
         task_dict["tools"] = dict()
         self.assertRaises(TypeError, Task.from_dict, task_dict)
         task_dict["tools"] = ["test"]
+
+        task_dict["media"] = dict()
+        self.assertRaises(TypeError, Task.from_dict, task_dict)
+        task_dict["media"] = ["test"]
 
 
 class StepModelTest(TestCase):

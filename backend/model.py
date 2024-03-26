@@ -141,18 +141,24 @@ class Task:
     # this lookup allows to check for the correct types
     EXPECTED_DICT_ENTRIES = {
         "title": (str, type(None)),
-        "description": (str, type(None)),
         "learning_goal": (str, type(None)),
+        "task_formulation": (str, type(None)),
+        "social_form": (str, type(None)),
+        "description": (str, type(None)),
         "tools": list,
+        "media": list,
     }
 
     def __init__(
         self,
         _id: str | ObjectId = None,
         title: str = None,
-        description: str = None,
         learning_goal: str = None,
+        task_formulation: str = None,
+        social_form: str = None,
+        description: str = None,
         tools: List[str] = [],
+        media: List[str] = [],
     ) -> None:
         """
         Initialization of a `Task` instance.
@@ -177,9 +183,12 @@ class Task:
         self._id = util.parse_object_id(_id) if _id != None else ObjectId()
 
         self.title = title
-        self.description = description
         self.learning_goal = learning_goal
+        self.task_formulation = task_formulation
+        self.social_form = social_form
+        self.description = description
         self.tools = tools
+        self.media = media
 
     def __str__(self) -> str:
         return str(self.__dict__)
@@ -201,9 +210,12 @@ class Task:
         return {
             "_id": self._id,
             "title": self.title,
-            "description": self.description,
             "learning_goal": self.learning_goal,
+            "task_formulation": self.task_formulation,
+            "social_form": self.social_form,
+            "description": self.description,
             "tools": self.tools,
+            "media": self.media,
         }
 
     @classmethod
@@ -211,9 +223,11 @@ class Task:
         """
         initialize a `Task`-object from a dictionary (`params`).
         All of the followings keys have to be present in the dict:
-        `"title"`, `"description"`, `"learning_goal"`, `"tools"`.
+        `"title"`, `learning_goal`, `task_formulation`, `social_form`, 
+        `"description"`, `"tools"`, `media`.
         However values are not required, any attributes may be
-        initialized with None (title/description/learning_goal) or [] (tools).
+        initialized with None (title/description/learning_goal/task_formulation/social_form)
+        or [] (tools/media).
 
         Optionally, a `"_id"` may be supplied, conveying the semantics that this Task
         already exists. However, true existence is handled by the database itself and

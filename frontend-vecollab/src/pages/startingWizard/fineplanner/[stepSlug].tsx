@@ -20,18 +20,28 @@ import { FiInfo } from 'react-icons/fi';
 
 export interface ITask {
     title: string;
-    description: string;
     learning_goal: string;
+    task_formulation: string;
+    social_form: string;
+    description: string;
     tools: string[];
+    media: string[];
 }
 
 export interface ITaskFrontend {
     title: string;
-    description: string;
     learning_goal: string;
+    task_formulation: string;
+    social_form: string;
+    description: string;
     tools: IToolsFrontend[];
+    media: IMediaFrontend[];
 }
 export interface IToolsFrontend {
+    name: string;
+}
+
+export interface IMediaFrontend {
     name: string;
 }
 
@@ -74,9 +84,12 @@ export const defaultFormValueDataFineStepFrontend: IFineStepFrontend = {
     tasks: [
         {
             title: '',
-            description: '',
             learning_goal: '',
+            task_formulation: '',
+            social_form: '',
+            description: '',
             tools: [{ name: '' }, { name: '' }],
+            media: [{ name: '' }, { name: '' }],
         },
     ],
 };
@@ -144,6 +157,9 @@ export default function FinePlanner() {
                                         tools: task.tools.map((tool) => ({
                                             name: tool,
                                         })),
+                                        media: task.media.map((media) => ({
+                                            name: media,
+                                        })),
                                     };
                                 }
                             );
@@ -167,6 +183,7 @@ export default function FinePlanner() {
             return {
                 ...task,
                 tools: task.tools.map((tool) => tool.name),
+                media: task.media.map((media) => media.name),
             };
         });
 

@@ -51,9 +51,12 @@ export const defaultFineStepData: IFineStep = {
     tasks: [
         {
             title: '',
-            description: '',
             learning_goal: '',
+            task_formulation: '',
+            social_form: '',
+            description: '',
             tools: ['', ''],
+            media: ['', ''],
         },
     ],
     evaluation_tools: [],

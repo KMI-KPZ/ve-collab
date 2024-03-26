@@ -244,9 +244,12 @@ class VEPlanHandler(BaseHandler):
                                 "tasks": [
                                     {
                                         "title": "test",
-                                        "description": "test",
                                         "learning_goal": "test",
-                                        "tools": ["test"]
+                                        "task_formulation": "test",
+                                        "social_form": "test",
+                                        "description": "test",
+                                        "tools": ["test"],
+                                        "media": ["test"]
                                     }
                                 ],
                                 "evaluation_tools": ["test"],
@@ -458,9 +461,12 @@ class VEPlanHandler(BaseHandler):
                                 "tasks": [
                                     {
                                         "title": "test",
-                                        "description": "test",
                                         "learning_goal": "test",
-                                        "tools": ["test"]
+                                        "task_formulation": "test",
+                                        "social_form": "test",
+                                        "description": "test",
+                                        "tools": ["test"],
+                                        "media": ["test"]
                                     }
                                 ],
                                 "evaluation_tools": ["test"],
@@ -755,9 +761,12 @@ class VEPlanHandler(BaseHandler):
                         "tasks": [
                             {
                                 "title": "test",
-                                "description": "test",
                                 "learning_goal": "test",
-                                "tools": ["test"]
+                                "task_formulation": "test",
+                                "social_form": "test",
+                                "description": "test",
+                                "tools": ["test"],
+                                "media": ["test"]
                             }
                         ],
                         "evaluation_tools": ["test"],

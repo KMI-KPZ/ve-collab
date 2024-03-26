@@ -86,18 +86,36 @@ export default function ViewFinestep({ fineStep }: Props): JSX.Element {
                                     <span>{showDataOrEmptySign(task.title)}</span>
                                 </div>
                                 <div className="flex space-x-8">
+                                    <span className="w-1/4 font-medium">Feinlernziele</span>
+                                    <span>{showDataOrEmptySign(task.learning_goal)}</span>
+                                </div>
+                                <div className="flex space-x-8">
+                                    <span className="w-1/4 font-medium">Aufgabenstellung</span>
+                                    <span>{showDataOrEmptySign(task.task_formulation)}</span>
+                                </div>
+                                <div className="flex space-x-8">
+                                    <span className="w-1/4 font-medium">Sozialform</span>
+                                    <span>{showDataOrEmptySign(task.social_form)}</span>
+                                </div>
+                                <div className="flex space-x-8">
                                     <span className="w-1/4 font-medium">Beschreibung</span>
                                     <span>{showDataOrEmptySign(task.description)}</span>
                                 </div>
                                 <div className="flex space-x-8">
-                                    <span className="w-1/4 font-medium">Lernziele</span>
-                                    <span>{showDataOrEmptySign(task.learning_goal)}</span>
-                                </div>
-                                <div className="flex space-x-8">
-                                    <span className="w-1/4 font-medium">Tools / Medien</span>
+                                    <span className="w-1/4 font-medium">Tools</span>
                                     <span>
                                         {showDataOrEmptySign(
                                             task.tools
+                                                .filter((element) => element !== '')
+                                                .join(', ')
+                                        )}
+                                    </span>
+                                </div>
+                                <div className="flex space-x-8">
+                                    <span className="w-1/4 font-medium">Medien</span>
+                                    <span>
+                                        {showDataOrEmptySign(
+                                            task.media
                                                 .filter((element) => element !== '')
                                                 .join(', ')
                                         )}
