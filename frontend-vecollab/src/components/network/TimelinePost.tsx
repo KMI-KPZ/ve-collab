@@ -1,13 +1,13 @@
 import { fetchDELETE, fetchPOST } from "@/lib/backend";
 import { useSession } from "next-auth/react";
-import { HiHeart, HiOutlineCalendar, HiOutlineHeart, HiOutlineShare } from "react-icons/hi";
+import { HiHeart, HiOutlineHeart } from "react-icons/hi";
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { IoIosSend } from "react-icons/io";
 import Dropdown from "../Dropdown";
-import { BackendPost, BackendPostAuthor, BackendPostComment, BackendPostFile, BackendSpace } from "@/interfaces/api/apiInterfaces";
+import { BackendPost, BackendPostAuthor, BackendPostFile, BackendSpace } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
-import { MdDeleteOutline, MdDoubleArrow, MdModeEdit, MdOutlineAddComment, MdOutlineKeyboardDoubleArrowDown, MdPin, MdPushPin, MdThumbUp } from "react-icons/md";
+import { MdDeleteOutline, MdDoubleArrow, MdModeEdit,  MdOutlineComment, MdOutlineKeyboardDoubleArrowDown,  MdThumbUp } from "react-icons/md";
 import { TiArrowForward, TiPin, TiPinOutline } from "react-icons/ti";
 import TimelinePostForm from "./TimelinePostForm";
 import PostHeader from "./PostHeader";
@@ -50,6 +50,10 @@ export default function TimelinePost(
     const [showCommentForm, setShowCommentForm] = useState<boolean>(false)
     const [showXComments, setShowXComments] = useState<number>(3)
     const [editPost, setEditPost] = useState<boolean>(false)
+
+    const [loadingLikers, setLoadingLikers] = useState<boolean>(false)
+    const [likers, setLikers] = useState<BackendPostAuthor[]>([])
+
 
     // implement infinity scroll (detect intersection of window viewport with last post)
     useEffect(() => {
@@ -182,6 +186,16 @@ export default function TimelinePost(
         }, 1);
     }
 
+    const fetchLikers = () => {
+        if (likers.length > 0 || loadingLikers) return
+        setLoadingLikers(true)
+        fetchPOST('/profile_snippets', { usernames: post.likers }, session?.accessToken)
+        .then(data => {
+            setLikers(data.user_snippets)
+            setLoadingLikers(false)
+        });
+    }
+
     const SpacenameById = (spaceId: string) => {
         if (!allSpaces) return (<>{spaceId}</>)
         const space = allSpaces.find(space => space._id == spaceId)
@@ -191,16 +205,25 @@ export default function TimelinePost(
     const Likes = () => {
         if (!post.likers.length) return ( <></> )
 
-        let hoverMsg = "Von "
-        if (post.likers.length == 1) hoverMsg += `${post.likers[0]}`
-        else if (post.likers.length == 2) hoverMsg += `${post.likers[0]} und ${post.likers[1]}`
-        else if (post.likers.length == 3) hoverMsg += `${post.likers.slice(0, 2).join(", ")} und ${post.likers[2]}`
-        else hoverMsg += `${post.likers.slice(0, 3).join(", ")} und anderen`
-
         return (
-            <span className="hover:cursor-pointer text-sm mr-3" title={hoverMsg}>
-                <MdThumbUp className="inline" size={20} /> {post.likers.length}
-            </span>
+            <div className="group w-10 text-sm mr-3 flex relative hover:cursor-pointer overflow-hidden hover:overflow-visible" onMouseOver={fetchLikers}>
+                <MdThumbUp className="" size={20} />&nbsp;{post.likers.length}
+                <div className="absolute w-40 overflow-y-auto max-h-32 left-1/2 -translate-x-1/2 p-2 mt-5 group-hover:opacity-100 hover:!opacity-100 transition-opacity opacity-0 rounded-md bg-white shadow border">
+                    {likers.map((liker, i) => (
+                        <Link key={i} href={`/profile?username=${liker.username}`} className='truncate'>
+                            <AuthenticatedImage
+                                imageId={liker.profile_pic}
+                                alt={'Benutzerbild'}
+                                width={20}
+                                height={20}
+                                className="rounded-full mr-3 inline"
+                            />
+                            {/* TODO use prefered username */}
+                            {liker.first_name} {liker.last_name}
+                        </Link>
+                    ))}
+                </div>
+            </div>
         )
     }
 
@@ -239,7 +262,7 @@ export default function TimelinePost(
                 <div className='ml-auto'>
                     {(post.comments.length == 0 && !showCommentForm) && (
                         <button onClick={openCommentForm} title="Kommentar hinzufügen" className="p-2 rounded-full hover:bg-ve-collab-blue-light">
-                            <MdOutlineAddComment />
+                            <MdOutlineComment />
                         </button>
                     )}
                     {(post.likers.includes(session?.user.preferred_username as string)) ? (
@@ -329,6 +352,7 @@ export default function TimelinePost(
             )}
 
             <Likes />
+
             {(post.comments.length > 0 || showCommentForm) && (
                 <div className='mt-4 pt-4 pl-4 border-t-2 border-ve-collab-blue/50'>
                     <div className="mb-4 text-slate-900 font-bold text-lg">Kommentare</div>
