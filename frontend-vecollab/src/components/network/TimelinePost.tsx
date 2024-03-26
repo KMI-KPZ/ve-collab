@@ -121,6 +121,7 @@ export default function TimelinePost(
                 newLikers.push(session?.user.preferred_username as string)
             }
             updatePost( {...post, likers: newLikers} )
+            fetchLikers(newLikers)
         } catch (error) {
             console.log(error);
         }
@@ -186,10 +187,11 @@ export default function TimelinePost(
         }, 1);
     }
 
-    const fetchLikers = () => {
-        if (likers.length > 0 || loadingLikers) return
+    const fetchLikers = (usernames: string[]) => {
+        if (likers.length == usernames.length || loadingLikers) return
+
         setLoadingLikers(true)
-        fetchPOST('/profile_snippets', { usernames: post.likers }, session?.accessToken)
+        fetchPOST('/profile_snippets', { usernames }, session?.accessToken)
         .then(data => {
             setLikers(data.user_snippets)
             setLoadingLikers(false)
@@ -206,7 +208,7 @@ export default function TimelinePost(
         if (!post.likers.length) return ( <></> )
 
         return (
-            <div className="group w-10 text-sm mr-3 flex relative hover:cursor-pointer overflow-hidden hover:overflow-visible" onMouseOver={fetchLikers}>
+            <div className="group w-10 text-sm mr-3 flex relative hover:cursor-pointer overflow-hidden hover:overflow-visible" onMouseOver={() => fetchLikers(post.likers)}>
                 <MdThumbUp className="" size={20} />&nbsp;{post.likers.length}
                 <div className="absolute w-40 overflow-y-auto max-h-32 left-1/2 -translate-x-1/2 p-2 mt-5 group-hover:opacity-100 hover:!opacity-100 transition-opacity opacity-0 rounded-md bg-white shadow border">
                     {likers.map((liker, i) => (
