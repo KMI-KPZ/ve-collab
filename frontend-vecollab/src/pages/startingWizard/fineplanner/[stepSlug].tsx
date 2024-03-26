@@ -41,9 +41,8 @@ export interface IFineStepFrontend {
     timestamp_to: string;
     name: string;
     workload: number;
-    social_form: string;
     learning_env: string;
-    ve_approach: string;
+    learning_goal: string;
     tasks: ITaskFrontend[];
     evaluation_tools: string[];
     attachments?: string[];
@@ -56,9 +55,8 @@ export interface IFineStep {
     timestamp_to: string;
     name: string;
     workload: number;
-    social_form: string;
     learning_env: string;
-    ve_approach: string;
+    learning_goal: string;
     tasks: ITask[];
     evaluation_tools: string[];
     attachments?: string[];
@@ -70,9 +68,8 @@ export const defaultFormValueDataFineStepFrontend: IFineStepFrontend = {
     timestamp_to: '',
     name: '',
     workload: 0,
-    social_form: '',
     learning_env: '',
-    ve_approach: '',
+    learning_goal: '',
     evaluation_tools: ['', ''],
     tasks: [
         {
@@ -178,9 +175,8 @@ export default function FinePlanner() {
                 ? {
                       ...data,
                       workload: data.workload,
-                      social_form: data.social_form,
                       learning_env: data.learning_env,
-                      ve_approach: data.ve_approach,
+                      learning_goal: data.learning_goal,
                       tasks: currentStepTransformBackTools,
                   }
                 : step

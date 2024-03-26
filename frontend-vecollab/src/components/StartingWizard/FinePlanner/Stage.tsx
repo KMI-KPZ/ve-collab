@@ -82,29 +82,6 @@ export default function Stage({ fineStep }: Props) {
                 </div>
                 <div className="mt-4 flex">
                     <div className="w-1/6 flex items-center">
-                        <label htmlFor="social_form" className="px-2 py-2">
-                            Sozialform
-                        </label>
-                    </div>
-                    <div className="w-5/6">
-                        <input
-                            type="text"
-                            {...register(`social_form`, {
-                                maxLength: {
-                                    value: 100,
-                                    message: 'Bitte nicht mehr als 100 Zeichen.',
-                                },
-                            })}
-                            placeholder="wie arbeiten die Studierenden zusammen, z.B. Partner-/Gruppenarbeit, individuell"
-                            className="border border-gray-400 rounded-lg w-full p-2"
-                        />
-                        <p className="text-red-600 pt-2">
-                            {formState.errors?.social_form?.message}
-                        </p>
-                    </div>
-                </div>
-                <div className="mt-4 flex">
-                    <div className="w-1/6 flex items-center">
                         <label htmlFor="learning_env" className="px-2 py-2">
                             digitale Lernumgebung
                         </label>
@@ -128,23 +105,23 @@ export default function Stage({ fineStep }: Props) {
                 </div>
                 <div className="mt-4 flex">
                     <div className="w-1/6 flex items-center">
-                        <label htmlFor="ve_approach" className="px-2 py-2">
-                            VE-Ansatz
+                        <label htmlFor="learning_goal" className="px-2 py-2">
+                            Groblernziel(e)
                         </label>
                     </div>
                     <div className="w-5/6">
                         <input
-                            {...register(`ve_approach`, {
+                            {...register(`learning_goal`, {
                                 maxLength: {
-                                    value: 100,
-                                    message: 'Bitte nicht mehr als 100 Zeichen.',
+                                    value: 500,
+                                    message: 'Bitte nicht mehr als 500 Zeichen.',
                                 },
                             })}
-                            placeholder="Welche Ansätze werden verfolgt? (z. B. aufgabenorientierter Ansatz, kulturbezogenes Lernen)"
+                            placeholder="mehrere durch Komma trennen"
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">
-                            {formState.errors?.ve_approach?.message}
+                            {formState.errors?.learning_goal?.message}
                         </p>
                     </div>
                 </div>

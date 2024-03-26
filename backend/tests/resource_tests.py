@@ -152,9 +152,8 @@ class BaseResourceTestCase(TestCase):
             workload=10,
             timestamp_from=timestamp_from,
             timestamp_to=timestamp_to,
-            social_form="test",
             learning_env="test",
-            ve_approach="test",
+            learning_goal="test",
             tasks=[Task()],
             evaluation_tools=["test", "test"],
             attachments=[ObjectId()],
@@ -6019,7 +6018,7 @@ class PlanResourceTest(BaseResourceTestCase):
             [step],
         )
 
-        del step["ve_approach"]
+        del step["tasks"]
 
         self.assertRaises(
             MissingKeyError,

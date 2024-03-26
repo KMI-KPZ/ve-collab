@@ -46,9 +46,8 @@ export const defaultFineStepData: IFineStep = {
     workload: 0,
     timestamp_from: '',
     timestamp_to: '',
-    social_form: '',
     learning_env: '',
-    ve_approach: '',
+    learning_goal: '',
     tasks: [
         {
             title: '',
