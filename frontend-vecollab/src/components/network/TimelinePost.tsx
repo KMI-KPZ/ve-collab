@@ -208,9 +208,9 @@ export default function TimelinePost(
         if (!post.likers.length) return ( <></> )
 
         return (
-            <div className="group w-10 text-sm mr-3 flex relative hover:cursor-pointer overflow-hidden hover:overflow-visible" onMouseOver={() => fetchLikers(post.likers)}>
+            <div className="group/likes w-10 text-sm mr-3 flex relative hover:cursor-pointer overflow-hidden hover:overflow-visible" onMouseOver={() => fetchLikers(post.likers)}>
                 <MdThumbUp className="" size={20} />&nbsp;{post.likers.length}
-                <div className="absolute w-40 overflow-y-auto max-h-32 left-1/2 -translate-x-1/2 p-2 mt-5 group-hover:opacity-100 hover:!opacity-100 transition-opacity opacity-0 rounded-md bg-white shadow border">
+                <div className="absolute w-40 overflow-y-auto max-h-32 left-1/2 -translate-x-1/2 p-2 mt-5 group-hover/likes:opacity-100 hover:!opacity-100 transition-opacity opacity-0 rounded-md bg-white shadow border">
                     {likers.map((liker, i) => (
                         <Link key={i} href={`/profile?username=${liker.username}`} className='truncate'>
                             <AuthenticatedImage
@@ -246,7 +246,7 @@ export default function TimelinePost(
 
     return (
         <div ref={ref} className={`${wbRemoved ? "opacity-0 transition-opacity ease-in-out delay-50 duration-300" : "opacity-100 transition-none" }
-            p-4 mb-4 bg-white rounded shadow`}
+            group/post p-4 mb-4 bg-white rounded shadow`}
         >
             <div className="flex items-center">
                 {(post.isRepost && post.repostAuthor) ? (
@@ -261,7 +261,7 @@ export default function TimelinePost(
                     </div>
                 )}
 
-                <div className='ml-auto'>
+                <div className='ml-auto opacity-0 group-hover/post:opacity-100 transition-opacity'>
                     {(post.comments.length == 0 && !showCommentForm) && (
                         <button onClick={openCommentForm} title="Kommentar hinzufügen" className="p-2 rounded-full hover:bg-ve-collab-blue-light">
                             <MdOutlineComment />
