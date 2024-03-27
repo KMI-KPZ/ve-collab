@@ -1373,7 +1373,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
-            "files": [file_id],
+            "files": [{"file_id": file_id, "file_name": "test.txt", "author": CURRENT_ADMIN.username}],
             "comments": [],
             "likers": [],
         }
@@ -1433,7 +1433,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
-            "files": [file_id],
+            "files": [{"file_id": file_id, "file_name": "test.txt", "author": CURRENT_ADMIN.username}],
             "comments": [],
             "likers": [],
         }

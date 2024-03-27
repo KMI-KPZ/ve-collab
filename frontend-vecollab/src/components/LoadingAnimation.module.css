@@ -6,14 +6,22 @@
     animation: spin988 2s linear infinite;
 }
 
+.loaderSmall {
+    --dim: 2rem !important
+}
+
 .loader .circle {
-    --color: #333;
+    --color: #030303;
     --dim: 1.2rem;
     width: var(--dim);
     height: var(--dim);
     background-color: var(--color);
     border-radius: 50%;
     position: absolute;
+}
+
+.circleSmall {
+    --dim: 0.9rem !important
 }
 
 .loader .circle:nth-child(1) {

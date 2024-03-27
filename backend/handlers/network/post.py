@@ -145,7 +145,12 @@ class PostHandler(BaseHandler):
                             self.current_user.username,
                         )
 
-                        files.append(stored_id)
+                        files.append({
+                            "file_id": stored_id,
+                            "file_name": file_obj["filename"],
+                            "file_type": file_obj["content_type"],
+                            "author": self.current_user.username,
+                        })
 
                         # if the post was in a space, also store the file in the repo,
                         # indicating it is part of a post by setting manually_uploaded to False
@@ -857,7 +862,7 @@ class RepostHandler(BaseHandler):
             returns:
                 200 OK,
                 {"status": 200,
-                 "success": True, 
+                 "success": True,
                  "inserted_repost": {repost}}
 
                 400 Bad Request

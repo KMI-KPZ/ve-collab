@@ -1,0 +1,75 @@
+.network-post-value {
+    @apply whitespace-pre-wrap p-0;
+}
+
+.network-post-value ol {
+    @apply list-inside list-decimal py-3;
+}
+
+.network-post-value ul {
+    @apply list-inside list-disc py-3;
+}
+
+.network-post-value blockquote {
+    @apply bg-gray-50 border-l border-indigo-200 p-2;
+}
+
+.network-post-value pre {
+    @apply bg-gray-50 p-2 my-2 text-sm;
+}
+
+.network-post-value a {
+    @apply text-ve-collab-blue;
+}
+.network-post-value a:hover {
+    @apply underline;
+}
+
+.rsw-editor {
+    @apply text-base;
+    @apply !border-0
+}
+
+.rsw-ce {
+    @apply border-2;
+    @apply rounded-lg;
+    @apply border-slate-200;
+}
+
+.rsw-ce:focus {
+    @apply border-slate-950;
+}
+
+.rsw-toolbar {
+    @apply !bg-transparent;
+    @apply !border-0;
+    @apply mt-1;
+}
+
+.rsw-toolbar button {
+    @apply text-slate-700;
+    @apply rounded-full;
+}
+
+.rsw-toolbar button:hover {
+    @apply bg-ve-collab-blue-light
+}
+
+.rsw-toolbar button[data-active=true] {
+    @apply bg-ve-collab-blue-light
+}
+
+.rsw-editor a {
+    @apply text-ve-collab-blue;
+}
+.rsw-editor a:hover {
+    @apply underline;
+    @apply cursor-pointer;
+}
+.rsw-editor ol {
+    @apply list-inside list-decimal py-3;
+}
+
+.rsw-editor ul {
+    @apply list-inside list-disc py-3;
+}

@@ -5,6 +5,10 @@ import TimelinePost from "./TimelinePost";
 import { useEffect, useState } from "react";
 import TimelinePostForm from "./TimelinePostForm";
 import { BackendPost } from "@/interfaces/api/apiInterfaces";
+import Timestamp from "../Timestamp";
+import { HiOutlineCalendar } from "react-icons/hi";
+import { format } from "date-fns";
+import React from "react";
 
 interface Props {
     space?: string | undefined;
@@ -17,9 +21,16 @@ export default function Timeline({ space, user }: Props) {
     const [toDate, setToDate] = useState<Date>(new Date());
     const [sharedPost, setSharedPost] = useState<BackendPost|null>(null);
     const [allPosts, setAllPosts] = useState<BackendPost[]>([]);
+    const [groupedPosts, setGroupedPosts] = useState< Record<string, BackendPost[]> >({});
+
+    const datePillColors: { vg: string, bg: string}[] = [
+        { vg: '#00748f', bg: '#d8f2f9' }, // blue
+        { vg: '#c4560b', bg: '#f5cfb5' }, // orange
+        { vg: '#0f172a', bg: '#e2e2e2' }, // greyy
+    ]
 
     const {
-        data: currentPosts,
+        data: newFetchedPosts,
         isLoading: isLoadingTimeline,
         error,
         mutate,
@@ -40,20 +51,50 @@ export default function Timeline({ space, user }: Props) {
     } = useGetAllSpaces(session!.accessToken);
 
     useEffect(() => {
-        if (!currentPosts.length) return
+        if (!newFetchedPosts.length) return
 
-        setAllPosts((prev) => [...prev, ...currentPosts]);
+        if (allPosts.some((post) => post._id == newFetchedPosts[0]._id) ) {
+            // TODO sometimes this happens -> WHY???? Because of hot-refresh while development
+            console.error('ERROR: fetched posts are the same as current', {allPosts, newFetchedPosts, toDate});
+        } else {
+            setAllPosts((prev) => [...prev, ...newFetchedPosts]);
+        }
+    }, [newFetchedPosts])
 
-    }, [currentPosts])
-    console.log({allPosts});
-
-    const fetchNextPosts = () => {
+    useEffect(() => {
         if (!allPosts.length) return
+
+        setGroupedPosts( groupBy(allPosts, (p) => p.creation_date.replace(/T.+/, '')) )
+
+    }, [allPosts])
+    // console.log({allPosts});
+    // console.log({groupedPosts, keys: Object.keys( groupedPosts )});
+
+    function groupBy<T>(arr: T[], fn: (item: T) => any) {
+        return arr.reduce<Record<string, T[]>>((prev, curr) => {
+            const groupKey = fn(curr);
+            const group = prev[groupKey] || [];
+            group.push(curr);
+            return { ...prev, [groupKey]: group };
+        }, {});
+    }
+
+    const fetchNextPosts = (post: BackendPost, i: number) => {
+        if (!allPosts.length) return
+        // console.log('Fetch next posts', {i, post, allPosts});
 
         const newToDate = new Date(allPosts[allPosts.length - 1].creation_date)
         newToDate.setMilliseconds(newToDate.getMilliseconds()+1)
 
         setToDate(newToDate)
+    }
+
+    const updatePost = (newPost: BackendPost) => {
+        setAllPosts(allPosts.map(post => {
+            return post._id == newPost._id
+                ? { ...post, ...newPost }
+                : post
+        }))
     }
 
     const removePost = (post: BackendPost) => {
@@ -67,6 +108,10 @@ export default function Timeline({ space, user }: Props) {
         // TODO may use mutate->populateCache instead ?!
         // https://github.com/KMI-KPZ/ve-collab/blob/a791a2ed9d68e71b6968488fe33dbf8bac000d4c/frontend-vecollab/src/components/network/Timeline.tsx
         setAllPosts((prev) => [post, ...prev]);
+    }
+
+    const getDatePill = (i: number) => {
+        return datePillColors[ (i) % datePillColors.length ]
     }
 
     if (error) {
@@ -84,19 +129,48 @@ export default function Timeline({ space, user }: Props) {
                     onCreatedPost={afterCreatePost}
                 />
             </div>
-            {allPosts.length == 0 && ( <div className="m-10 flex justify-center">Bisher keine Beiträge ...</div>)}
-            {allPosts.map((post, i) =>
-                <TimelinePost key={i}
-                    post={post}
-                    space={space}
-                    isLast={i === allPosts.length - 1}
-                    allSpaces={allSpaces}
-                    removePost={removePost}
-                    sharePost={post => setSharedPost(post)}
-                    fetchNextPosts={fetchNextPosts}
-                />
-            )}
+
+            {Object.keys( groupedPosts ).map( (group, i) => {
+                const datePill = getDatePill(i)
+                return (
+                    <div key={group}
+                        style={{ borderColor: datePill.vg }}
+                        className="-ml-7 pl-7 pb-4 border-l"
+                    >
+                        <div className="relativ sticky z-20 -ml-[45px] top-[17px] mb-4 flex items-center font-bold">
+                            <div
+                                style={{ color: datePill.vg, borderColor: datePill.vg, backgroundColor:datePill.bg }}
+                                className="rounded-full border p-[2px] -mt-[11px] shadow"
+                            >
+                                <HiOutlineCalendar className='m-2' />
+                            </div>
+                            <div
+                                style={{ color: datePill.vg, backgroundColor:datePill.bg }}
+                                className="relative px-4 py-2 ml-2 -mt-[11px] rounded-full shadow"
+                            >
+                                <Timestamp timestamp={group} dateFormat="d. MMM" />
+                            </div>
+                        </div>
+
+                        { groupedPosts[group].map( (post, j) => (
+                            <TimelinePost
+                                key={post._id}
+                                post={post}
+                                updatePost={updatePost}
+                                space={space}
+                                isLast={i === Object.keys(groupedPosts).length-1 && j === groupedPosts[group].length-1}
+                                allSpaces={allSpaces}
+                                removePost={removePost}
+                                sharePost={post => setSharedPost(post)}
+                                fetchNextPosts={() => fetchNextPosts(post, i)}
+                            />
+                        )) }
+                    </div>
+                )
+            } )}
+
             {isLoadingTimeline && (<LoadingAnimation />)}
+            {!isLoadingTimeline && allPosts.length == 0 && ( <div className="m-10 flex justify-center">Bisher keine Beiträge ...</div>)}
         </>
     );
 }

@@ -6,6 +6,7 @@ import NewChatForm from './NewChatForm';
 import { useSession } from 'next-auth/react';
 import RoomSnippet from './RoomSnippet';
 import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
+import { MdOutlineAddCircleOutline } from 'react-icons/md';
 
 interface Props {
     handleChatSelect: (chat: string) => void;
@@ -33,14 +34,12 @@ export default function Sidebar({
     };
 
     return (
-        <div className="w-1/5 relative px-4 bg-gray-200 h-[80vh]">
-            <ul className="flex flex-col bg-gray-200 overflow-y-auto">
-                {isLoading ? (
-                    <li>
-                        <LoadingAnimation />
-                    </li>
-                ) : (
-                    roomSnippets.map((room) => (
+        <div className="relative px-4 max-h-[80vh]">
+            {isLoading ? (
+                <LoadingAnimation size='small' />
+            ) : (
+                <ul className="flex flex-col  overflow-y-auto">
+                    {roomSnippets.map((room) => (
                         <RoomSnippet
                             key={room._id}
                             room={room}
@@ -50,23 +49,19 @@ export default function Sidebar({
                                 room.members.includes(profileSnippet.preferredUsername)
                             )}
                         />
-                    ))
-                )}
-            </ul>
+                    ))}
+                </ul>
+            )}
             <button
-                className="bg-gray-300 rounded-md p-2 cursor-pointer hover:bg-gray-400 absolute bottom-4"
+                className="mt-4 p-2 rounded-full cursor-pointer hover:bg-slate-100"
                 onClick={(e) => handleOpenNewChatDialog()}
+                title="Neuen Chat erstellen"
             >
-                <div className="flex justify-between items-center">
-                    <div className="flex flex-col">
-                        <p className="text-lg font-medium">+</p>
-                        <p className="text-sm text-gray-500">New Chat</p>
-                    </div>
-                </div>
+                <MdOutlineAddCircleOutline />
             </button>
             <Dialog
                 isOpen={isNewChatDialogOpen}
-                title={`neuen Chat erstellen`}
+                title={`Neuer Chat`}
                 onClose={handleCloseNewChatDialog}
             >
                 <NewChatForm closeDialogCallback={handleCloseNewChatDialog} />

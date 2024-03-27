@@ -1460,7 +1460,17 @@ class PostHandlerTest(BaseApiTestCase):
         self.assertFalse(db_state["pinned"])
         self.assertIsNone(db_state["wordpress_post_id"])
         self.assertEqual(db_state["tags"], json.loads(request_json["tags"]))
-        self.assertEqual(db_state["files"], [file._id])
+        self.assertEqual(
+            db_state["files"],
+            [
+                {
+                    "file_id": file._id,
+                    "file_name": self.test_file_name,
+                    "file_type": "text/plain",
+                    "author": CURRENT_ADMIN.username,
+                }
+            ],
+        )
 
         # expect file to be in space as well
 
@@ -1934,7 +1944,13 @@ class PostHandlerTest(BaseApiTestCase):
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
-                "files": [_id],
+                "files": [
+                    {
+                        "file_id": _id,
+                        "file_name": self.test_file_name,
+                        "author": CURRENT_ADMIN.username,
+                    }
+                ],
             }
         )
         self.db.spaces.update_one(

@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import '@/styles/globals.css';
+import '@/styles/networkPostsFormatter.css';
+
+
 import type { AppProps } from 'next/app';
 import LayoutSection from '@/components/Layout/LayoutSection';
 import Head from 'next/head';
@@ -12,6 +15,7 @@ import { Notification } from '@/interfaces/socketio';
 import { NextComponentType, NextPageContext } from 'next';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import { CookiesProvider } from 'react-cookie';
+import ChatWindow from '@/components/chat/ChatWindow';
 
 declare type ComponentWithAuth = NextComponentType<NextPageContext, any, any> & {
     auth?: boolean;
@@ -20,27 +24,39 @@ declare type AppPropsWithAuth = AppProps & {
     Component: ComponentWithAuth;
 };
 // any component that defines Component.auth = true will be wrapped inside this component,
-// which triggers a relogin flow if the session does not validate
+// which triggers a relogin flow (if not autoForward=false) if the session does not validate
 // meaning that inside a component no session check is required, one can
 // be assured that the component is onyl rendered if the session is valid.
-function Auth({ children }: { children: JSX.Element }): JSX.Element {
+function Auth({
+    autoForward=true,
+    showLoader=true,
+    children
+} : {
+    autoForward?: boolean,
+    showLoader?: boolean,
+    children: JSX.Element
+}): JSX.Element {
     const { data: session, status } = useSession();
 
     if (status === 'loading') {
-        return <LoadingAnimation />;
-    } else {
-        if (!session || session?.error === 'RefreshAccessTokenError') {
-            console.log('forced new signIn');
-            signIn('keycloak');
-        }
+        return showLoader ? <LoadingAnimation /> : <></>;
     }
-
-    return children;
+    else if (!session || session?.error === 'RefreshAccessTokenError') {
+            console.log('forced new signIn');
+            if (autoForward === true) {
+                signIn('keycloak');
+            }
+            return <></>;
+    }
+    else {
+        return children;
+    }
 }
 
 export default function App({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAuth) {
     const [notificationEvents, setNotificationEvents] = useState<Notification[]>([]);
     const [messageEvents, setMessageEvents] = useState<any[]>([]);
+    const [chatOpen, setChatOpen] = useState<boolean>(false);
 
     // it is a pain:
     // the headerbar has to get a state copy of the messageEvents, because in order to remove the
@@ -101,6 +117,10 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
         };
     }, [notificationEvents, messageEvents]);
 
+    const toggleChatWindow = () => {
+        setChatOpen(!chatOpen)
+    }
+
     return (
         <>
             <SessionProvider session={session}>
@@ -114,9 +134,34 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
                         <LayoutSection
                             notificationEvents={notificationEvents}
                             headerBarMessageEvents={messageEventsHeaderBar}
+                            toggleChatWindow={toggleChatWindow}
                         >
-                            {Component.auth ? (
-                                <Auth>
+                            <>
+                                <Auth showLoader={false} autoForward={false}>
+                                    <ChatWindow
+                                        socket={socket}
+                                        messageEvents={messageEvents}
+                                        headerBarMessageEvents={messageEventsHeaderBar}
+                                        setHeaderBarMessageEvents={setMessageEventsHeaderBar}
+                                        open={chatOpen}
+                                        toggleChatWindow={toggleChatWindow}
+                                    />
+                                </Auth>
+
+                                {Component.auth ? (
+                                    <Auth>
+                                        <Component
+                                            {...pageProps}
+                                            socket={socket}
+                                            notificationEvents={notificationEvents}
+                                            setNotificationEvents={setNotificationEvents}
+                                            messageEvents={messageEvents}
+                                            setMessageEvents={setMessageEvents}
+                                            headerBarMessageEvents={messageEventsHeaderBar}
+                                            setHeaderBarMessageEvents={setMessageEventsHeaderBar}
+                                        />
+                                    </Auth>
+                                ) : (
                                     <Component
                                         {...pageProps}
                                         socket={socket}
@@ -127,19 +172,8 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
                                         headerBarMessageEvents={messageEventsHeaderBar}
                                         setHeaderBarMessageEvents={setMessageEventsHeaderBar}
                                     />
-                                </Auth>
-                            ) : (
-                                <Component
-                                    {...pageProps}
-                                    socket={socket}
-                                    notificationEvents={notificationEvents}
-                                    setNotificationEvents={setNotificationEvents}
-                                    messageEvents={messageEvents}
-                                    setMessageEvents={setMessageEvents}
-                                    headerBarMessageEvents={messageEventsHeaderBar}
-                                    setHeaderBarMessageEvents={setMessageEventsHeaderBar}
-                                />
-                            )}
+                                )}
+                            </>
                         </LayoutSection>
                     </SocketAuthenticationProvider>
                 </CookiesProvider>
