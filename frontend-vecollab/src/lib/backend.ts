@@ -32,6 +32,32 @@ const GETfetcher = (relativeUrl: string, accessToken?: string) =>
         return res.json();
     });
 
+const POSTfetcher = (relativeUrl: string, data?: Record<string, any>, accessToken?: string) =>
+    fetchPOST(relativeUrl, data, accessToken)
+    .then((res) => {
+        return res
+    });
+
+export function useGetProfileSnippets(usernames?: string[]): {
+    data: BackendUserSnippet[];
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data: session } = useSession();
+    const { data, error, isLoading, mutate } = useSWR(
+        ['/profile_snippets', session?.accessToken],
+        ([url, token]) => POSTfetcher(url, { usernames }, token)
+    );
+
+    return {
+        data: isLoading || error ? [] : data.user_snippets,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
 export function useGetAvailablePlans(accessToken: string): {
     data: PlanPreview[];
     isLoading: boolean;
