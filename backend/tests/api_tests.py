@@ -21,6 +21,7 @@ from resources.network.acl import ACL
 import global_vars
 from main import make_app
 from model import (
+    Evaluation,
     Institution,
     Lecture,
     PhysicalMobility,
@@ -7412,9 +7413,8 @@ class VEPlanHandlerTest(BaseApiTestCase):
             workload=10,
             timestamp_from=timestamp_from,
             timestamp_to=timestamp_to,
-            social_form="test",
             learning_env="test",
-            ve_approach="test",
+            learning_goal="test",
             tasks=[Task()],
             evaluation_tools=["test", "test"],
             attachments=[ObjectId()],
@@ -7471,6 +7471,20 @@ class VEPlanHandlerTest(BaseApiTestCase):
             timestamp_to=datetime(2023, 1, 8),
         )
 
+    def create_evaluation(self, name: str = "test") -> Evaluation:
+        """
+        convenience method to create an evaluation with non-default values
+        """
+
+        return Evaluation(
+            username=name,
+            is_graded=True,
+            task_type="test",
+            assessment_type="test",
+            evaluation_while="test",
+            evaluation_after="test",
+        )
+
     def default_plan_setup(self):
         # manually set up a VEPlan in the db
         self.plan_id = ObjectId()
@@ -7479,6 +7493,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.institution = self.create_institution("test")
         self.lecture = self.create_lecture("test")
         self.physical_mobility = self.create_physical_mobility("test")
+        self.evaluation = self.create_evaluation("test")
         self.default_plan = {
             "_id": self.plan_id,
             "author": CURRENT_ADMIN.username,
@@ -7494,6 +7509,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "learning_goals": ["test", "test"],
             "audience": [self.target_group.to_dict()],
             "languages": ["test", "test"],
+            "evaluation": [self.evaluation.to_dict()],
             "timestamp_from": self.step.timestamp_from,
             "timestamp_to": self.step.timestamp_to,
             "involved_parties": ["test", "test"],
@@ -7515,7 +7531,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "is_good_practise": True,
             "underlying_ve_model": "test",
             "reflection": "test",
-            "evaluation": "test",
+            "good_practise_evaluation": "test",
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",
@@ -7524,6 +7540,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 "learning_goals": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
+                "evaluation": "not_started",
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
@@ -7590,6 +7607,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.learning_goals, default_plan.learning_goals)
         self.assertEqual(response_plan.audience, default_plan.audience)
         self.assertEqual(response_plan.languages, default_plan.languages)
+        self.assertEqual(response_plan.evaluation, default_plan.evaluation)
         self.assertEqual(response_plan.timestamp_from, default_plan.timestamp_from)
         self.assertEqual(response_plan.timestamp_to, default_plan.timestamp_to)
         self.assertEqual(response_plan.involved_parties, default_plan.involved_parties)
@@ -7611,7 +7629,10 @@ class VEPlanHandlerTest(BaseApiTestCase):
             response_plan.underlying_ve_model, default_plan.underlying_ve_model
         )
         self.assertEqual(response_plan.reflection, default_plan.reflection)
-        self.assertEqual(response_plan.evaluation, default_plan.evaluation)
+        self.assertEqual(
+            response_plan.good_practise_evaluation,
+            default_plan.good_practise_evaluation,
+        )
         self.assertEqual(response_plan.progress, default_plan.progress)
         self.assertIsNotNone(response_plan.creation_timestamp)
         self.assertIsNotNone(response_plan.last_modified)
@@ -7691,6 +7712,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.learning_goals, default_plan.learning_goals)
         self.assertEqual(response_plan.audience, default_plan.audience)
         self.assertEqual(response_plan.languages, default_plan.languages)
+        self.assertEqual(response_plan.evaluation, default_plan.evaluation)
         self.assertEqual(response_plan.timestamp_from, default_plan.timestamp_from)
         self.assertEqual(response_plan.timestamp_to, default_plan.timestamp_to)
         self.assertEqual(response_plan.involved_parties, default_plan.involved_parties)
@@ -7712,7 +7734,10 @@ class VEPlanHandlerTest(BaseApiTestCase):
             response_plan.underlying_ve_model, default_plan.underlying_ve_model
         )
         self.assertEqual(response_plan.reflection, default_plan.reflection)
-        self.assertEqual(response_plan.evaluation, default_plan.evaluation)
+        self.assertEqual(
+            response_plan.good_practise_evaluation,
+            default_plan.good_practise_evaluation,
+        )
         self.assertEqual(response_plan.progress, default_plan.progress)
         self.assertIsNotNone(response_plan.creation_timestamp)
         self.assertIsNotNone(response_plan.last_modified)
@@ -8329,9 +8354,8 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "timestamp_from": None,
                     "timestamp_to": None,
                     "duration": None,
-                    "social_form": None,
                     "learning_env": None,
-                    "ve_approach": None,
+                    "learning_goal": None,
                     "tasks": [],
                     "evaluation_tools": [],
                     "attachments": [],
@@ -8344,9 +8368,8 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "timestamp_from": None,
                     "timestamp_to": None,
                     "duration": None,
-                    "social_form": None,
                     "learning_env": None,
-                    "ve_approach": None,
+                    "learning_goal": None,
                     "tasks": [],
                     "evaluation_tools": [],
                     "attachments": [],
@@ -8380,9 +8403,8 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "timestamp_from": None,
                     "timestamp_to": None,
                     "duration": None,
-                    "social_form": None,
                     "learning_env": None,
-                    "ve_approach": None,
+                    "learning_goal": None,
                     "tasks": [
                         Task(title="test").to_dict(),
                         Task(title="test").to_dict(),

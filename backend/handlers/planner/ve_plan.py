@@ -205,6 +205,16 @@ class VEPlanHandler(BaseHandler):
                             }
                         ],
                         "languages": ["test"],
+                        "evaluation": [
+                            {
+                                "username": "username1",
+                                "is_graded": True,
+                                "task_type": "test",
+                                "assessment_type": "test",
+                                "evaluation_while": "test",
+                                "evaluation_after": "test",
+                            }
+                        ],
                         "involved_parties": ["test"],
                         "realization": "test",
                         "physical_mobility": True,
@@ -229,15 +239,17 @@ class VEPlanHandler(BaseHandler):
                                 "workload": 10,
                                 "timestamp_from": "2000-01-01",
                                 "timestamp_to": "2000-01-08",
-                                "social_form": "test",
                                 "learning_env": "test",
-                                "ve_approach": "test",
+                                "learning_goal": "test",
                                 "tasks": [
                                     {
                                         "title": "test",
-                                        "description": "test",
                                         "learning_goal": "test",
-                                        "tools": ["test"]
+                                        "task_formulation": "test",
+                                        "social_form": "test",
+                                        "description": "test",
+                                        "tools": ["test"],
+                                        "media": ["test"]
                                     }
                                 ],
                                 "evaluation_tools": ["test"],
@@ -248,7 +260,7 @@ class VEPlanHandler(BaseHandler):
                         "is_good_practise": True,
                         "underlying_ve_model": "test",
                         "reflection": "test",
-                        "evaluation": "test",
+                        "good_practise_evaluation": "test",
                         "progress": {
                             "name": "<completed|uncompleted|not_started>",
                             "institutions": "<completed|uncompleted|not_started>",
@@ -257,6 +269,7 @@ class VEPlanHandler(BaseHandler):
                             "learning_goals": "<completed|uncompleted|not_started>",
                             "audience": "<completed|uncompleted|not_started>",
                             "languages": "<completed|uncompleted|not_started>",
+                            "evaluation": "<completed|uncompleted|not_started>",
                             "involved_parties": "<completed|uncompleted|not_started>",
                             "realization": "<completed|uncompleted|not_started>",
                             "learning_env": "<completed|uncompleted|not_started>",
@@ -409,6 +422,16 @@ class VEPlanHandler(BaseHandler):
                             }
                         ],
                         "languages": ["test"],
+                        "evaluation": [
+                            {
+                                "username": "username1",
+                                "is_graded": True,
+                                "task_type": "test",
+                                "assessment_type": "test",
+                                "evaluation_while": "test",
+                                "evaluation_after": "test",
+                            }
+                        ],
                         "involved_parties": ["test"],
                         "realization": "test",
                         "physical_mobility": True,
@@ -433,15 +456,17 @@ class VEPlanHandler(BaseHandler):
                                 "workload": 10,
                                 "timestamp_from": "2000-01-01",
                                 "timestamp_to": "2000-01-08",
-                                "social_form": "test",
                                 "learning_env": "test",
-                                "ve_approach": "test",
+                                "learning_goal": "test",
                                 "tasks": [
                                     {
                                         "title": "test",
-                                        "description": "test",
                                         "learning_goal": "test",
-                                        "tools": ["test"]
+                                        "task_formulation": "test",
+                                        "social_form": "test",
+                                        "description": "test",
+                                        "tools": ["test"],
+                                        "media": ["test"]
                                     }
                                 ],
                                 "evaluation_tools": ["test"],
@@ -452,7 +477,7 @@ class VEPlanHandler(BaseHandler):
                         "is_good_practise": True,
                         "underlying_ve_model": "test",
                         "reflection": "test",
-                        "evaluation": "test",
+                        "good_practise_evaluation": "test",
                         "progress": {
                             "name": "<completed|uncompleted|not_started>",
                             "institutions": "<completed|uncompleted|not_started>",
@@ -461,6 +486,7 @@ class VEPlanHandler(BaseHandler):
                             "learning_goals": "<completed|uncompleted|not_started>",
                             "audience": "<completed|uncompleted|not_started>",
                             "languages": "<completed|uncompleted|not_started>",
+                            "evaluation": "<completed|uncompleted|not_started>",
                             "involved_parties": "<completed|uncompleted|not_started>",
                             "realization": "<completed|uncompleted|not_started>",
                             "learning_env": "<completed|uncompleted|not_started>",
@@ -730,15 +756,17 @@ class VEPlanHandler(BaseHandler):
                         "workload": 10,
                         "timestamp_from": "2000-01-01",
                         "timestamp_to": "2000-01-08",
-                        "social_form": "test",
                         "learning_env": "test",
-                        "ve_approach": "test",
+                        "learning_goal": "test",
                         "tasks": [
                             {
                                 "title": "test",
-                                "description": "test",
                                 "learning_goal": "test",
-                                "tools": ["test"]
+                                "task_formulation": "test",
+                                "social_form": "test",
+                                "description": "test",
+                                "tools": ["test"],
+                                "media": ["test"]
                             }
                         ],
                         "evaluation_tools": ["test"],

@@ -1,10 +1,12 @@
-import { fetchPOST } from '@/lib/backend';
+import { BackendSearchResponse, BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
+import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { Dispatch, SetStateAction, useState } from 'react';
+import AsyncCreatableSelect from 'react-select/async-creatable';
 
 interface Props {
     closeDialogCallback: () => void;
-    planId: string,
+    planId: string;
     setSuccessPopupOpen: Dispatch<SetStateAction<boolean>>;
     setSuccessMessage: Dispatch<SetStateAction<string>>;
 }
@@ -13,12 +15,15 @@ export default function SharePlanForm({
     closeDialogCallback,
     planId,
     setSuccessPopupOpen,
-    setSuccessMessage
+    setSuccessMessage,
 }: Props) {
     const { data: session } = useSession();
 
     const [shareUsername, setShareUsername] = useState('');
     const [shareAccessRight, setShareAccessRight] = useState('write');
+    const [searchResultProfileSnippets, setSearchResultProfileSnippets] = useState<
+        BackendUserSnippet[]
+    >([]);
 
     const sharePlan = async () => {
         const payload = {
@@ -31,21 +36,62 @@ export default function SharePlanForm({
         await fetchPOST('/planner/grant_access', payload, session?.accessToken).then((data) => {
             // render success message that disappears after 2 seconds
             setSuccessPopupOpen(true);
-            setSuccessMessage("Plan freigegeben")
+            setSuccessMessage('Plan freigegeben');
             setTimeout(() => {
                 setSuccessPopupOpen(false);
             }, 2000);
         });
     };
 
+    const loadOptions = (
+        inputValue: string,
+        callback: (options: { label: string; value: string }[]) => void
+    ) => {
+        // a little less api queries, only start searching for recommendations from 2 letter inputs
+        if (inputValue.length > 1) {
+            fetchGET(`/search?users=true&query=${inputValue}`, session?.accessToken).then(
+                (data: BackendSearchResponse) => {
+                    callback(
+                        data.users.map((user) => ({
+                            label: user.first_name + ' ' + user.last_name + ' - ' + user.username,
+                            value: user.username,
+                        }))
+                    );
+                    setSearchResultProfileSnippets(data.users);
+                }
+            );
+        }
+    };
+
     return (
         <>
-            <input
-                type="text"
-                className="border border-gray-500 rounded-lg w-full h-12 p-2"
-                placeholder="Nutzernamen eingeben"
-                value={shareUsername}
-                onChange={(e) => setShareUsername(e.target.value)}
+            <p className="my-2">Suche nach Nutzenden, um ihnen den Plan freizugeben:</p>
+            <AsyncCreatableSelect
+                loadOptions={loadOptions}
+                onChange={(e) => setShareUsername(e!.value)}
+                value={{
+                    label: searchResultProfileSnippets.find(
+                        (user) => user.username === shareUsername
+                    )
+                        ? `${
+                              searchResultProfileSnippets.find(
+                                  (user) => user.username === shareUsername
+                              )?.first_name
+                          } ${
+                              searchResultProfileSnippets.find(
+                                  (user) => user.username === shareUsername
+                              )?.last_name
+                          } - ${shareUsername}`
+                        : `${shareUsername}`,
+                    value: shareUsername,
+                }}
+                placeholder={'Suche nach Nutzer:innen...'}
+                getOptionLabel={(option) => option.label}
+                formatCreateLabel={(inputValue) => (
+                    <span>
+                        kein Treffer? <b>{inputValue}</b> trotzdem verwenden
+                    </span>
+                )}
             />
             <div className="flex justify-between my-8 mx-6">
                 <div>

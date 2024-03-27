@@ -23,6 +23,7 @@ interface FormValues {
     externalParties: ExternalParty[];
 }
 
+ExternalPersons.auth = true;
 export default function ExternalPersons() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
@@ -130,8 +131,8 @@ export default function ExternalPersons() {
                         className="border border-gray-300 rounded-lg p-2 mr-2"
                         {...methods.register(`externalParties.${index}.externalParty`, {
                             maxLength: {
-                                value: 50,
-                                message: 'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                value: 500,
+                                message: 'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                             },
                         })}
                     />
@@ -154,7 +155,7 @@ export default function ExternalPersons() {
                 isOpen={isPopupOpen}
                 handleContinue={async () => {
                     await router.push({
-                        pathname: '/startingWizard/generalInformation/formalConditions',
+                        pathname: '/startingWizard/generalInformation/institutions',
                         query: {
                             plannerId: router.query.plannerId,
                         },
@@ -179,8 +180,9 @@ export default function ExternalPersons() {
                                     </div>
                                     <div className={'text-center mb-20'}>optional</div>
                                     {renderExternalPartiesInputs()}
-                                    <div className={'mt-3 flex justify-center'}>
+                                    <div className="flex justify-center mt-4">
                                         <button
+                                            className="p-4 bg-white rounded-3xl shadow-2xl"
                                             type="button"
                                             onClick={() => {
                                                 append({
@@ -197,12 +199,12 @@ export default function ExternalPersons() {
                                         <button
                                             type="button"
                                             className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                            onClick={methods.handleSubmit((data) =>
+                                            onClick={methods.handleSubmit((data) => {
                                                 combinedSubmitRouteAndUpdate(
                                                     data,
                                                     '/startingWizard/generalInformation/partners'
-                                                )
-                                            )}
+                                                );
+                                            })}
                                         >
                                             Zurück
                                         </button>
@@ -211,11 +213,14 @@ export default function ExternalPersons() {
                                         <button
                                             type="button"
                                             className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                            onClick={methods.handleSubmit((data) =>
-                                                combinedSubmitRouteAndUpdate(
-                                                    data,
-                                                    '/startingWizard/generalInformation/institutions'
-                                                )
+                                            onClick={methods.handleSubmit(
+                                                (data) => {
+                                                    combinedSubmitRouteAndUpdate(
+                                                        data,
+                                                        '/startingWizard/generalInformation/institutions'
+                                                    );
+                                                },
+                                                async () => setIsPopupOpen(true)
                                             )}
                                         >
                                             Weiter
