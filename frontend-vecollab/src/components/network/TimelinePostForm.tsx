@@ -1,4 +1,4 @@
-import { fetchPOST } from "@/lib/backend";
+import { fetchPOST, useGetProfileSnippets } from "@/lib/backend";
 import { useSession } from "next-auth/react";
 import { FormEvent, MouseEventHandler, useEffect } from "react";
 import { IoIosSend, IoMdClose } from "react-icons/io";
@@ -55,6 +55,10 @@ export default function TimelinePostForm(
     const [text, setText] = useState<string>('');
 
     const domParser = new DOMParser()
+
+    const { data: userProfileSnippet } = session?.user.preferred_username
+        ? useGetProfileSnippets( [session.user.preferred_username] )
+        : { data: [] }
 
     useEffect(() => {
         if (postToEdit) {
@@ -202,7 +206,7 @@ export default function TimelinePostForm(
                 <div className="flex items-center mb-5">
                     {!postToEdit && (
                         <AuthenticatedImage
-                            imageId={"default_profile_pic.jpg"}
+                            imageId={userProfileSnippet.length ? userProfileSnippet[0].profile_pic : "default_profile_pic.jpg"}
                             alt={'Benutzerbild'}
                             width={40}
                             height={40}
