@@ -100,8 +100,8 @@ export default function HeaderSection({
                             <li className={isActivePath('/overviewProjects') ? activeClass : inactiveClass}>
                                 <Link href="/overviewProjects" className='px-2 py-1'>VE Designer</Link>
                             </li>
-                            <li className={`!ml-2`}>
-                                <button className='p-2 rounded-full hover:bg-ve-collab-blue-light' onClick={e => toggleChatWindow()}>
+                            <li className={`!ml-2 relative`}>
+                                <button className='relative p-2 rounded-full hover:bg-ve-collab-blue-light' onClick={e => toggleChatWindow()}>
                                     <MdOutlineMessage size={20} />
                                 </button>
                                 {messageEventCount > 0 && (
@@ -111,12 +111,12 @@ export default function HeaderSection({
                                 )}
                             </li>
                             {/* TODO this may also will be a popup window */}
-                            <li className={`!ml-2`}>
+                            <li className={`!ml-2 relative`}>
                                 <button className='p-2 rounded-full hover:bg-ve-collab-blue-light' onClick={e => router.push('/notifications')}>
                                     <IoMdNotificationsOutline size={20} />
                                 </button>
                                 {notificationEvents.length > 0 && (
-                                    <span className="absolute top-[-10px] right-[-20px] py-1 px-2 rounded-[50%] bg-blue-400/75 text-xs">
+                                    <span className="absolute -ml-4 -mt-2 py-1 px-2 rounded-[50%] bg-blue-400/75 text-xs">
                                         {notificationEvents.length}
                                     </span>
                                 )}

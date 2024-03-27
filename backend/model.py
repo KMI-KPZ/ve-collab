@@ -1735,9 +1735,12 @@ class VEPlan:
                             {
                                 "_id": "object_id_str",
                                 "title": None,
-                                "description": None,
                                 "learning_goal": None,
+                                "task_formulation": None,
+                                "social_form": None,
+                                "description": None,
                                 "tools": [],
+                                "media": [],
                             }
                         ],
                         "evaluation_tools": [],
