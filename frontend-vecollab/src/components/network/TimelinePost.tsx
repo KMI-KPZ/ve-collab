@@ -5,15 +5,20 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { IoIosSend } from "react-icons/io";
 import Dropdown from "../Dropdown";
-import { BackendPost, BackendPostAuthor, BackendPostComment, BackendSpace } from "@/interfaces/api/apiInterfaces";
+import { BackendPost, BackendPostAuthor, BackendPostComment, BackendPostFile, BackendSpace } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
-import { MdDeleteOutline, MdModeEdit, MdOutlineAddComment, MdOutlineKeyboardDoubleArrowDown, MdThumbUp } from "react-icons/md";
+import { MdDeleteOutline, MdDoubleArrow, MdModeEdit, MdOutlineAddComment, MdOutlineKeyboardDoubleArrowDown, MdThumbUp } from "react-icons/md";
 import { TiArrowForward } from "react-icons/ti";
 import TimelinePostForm from "./TimelinePostForm";
 import PostHeader from "./PostHeader";
+import { AuthenticatedFile } from "../AuthenticatedFile";
+import { RxFile } from "react-icons/rx";
+import TimelinePostText from "./TimelinePostText";
+import AuthenticatedImage from "../AuthenticatedImage";
 
 interface Props {
     post: BackendPost
+    updatePost: (post: BackendPost) => void
     space?: string
     isLast: boolean
     allSpaces?: BackendSpace[]
@@ -26,6 +31,7 @@ TimelinePost.auth = true
 export default function TimelinePost(
 {
     post,
+    updatePost,
     space,
     isLast,
     allSpaces,
@@ -34,31 +40,13 @@ export default function TimelinePost(
     fetchNextPosts
 }: Props) {
     const { data: session } = useSession();
-    const [wbRemoved, setWbRemoved] = useState<boolean>(false)
     const ref = useRef<any>(null)
+    const commentFormref = useRef<any>(null)
+    const [wbRemoved, setWbRemoved] = useState<boolean>(false)
     const [repostExpand, setRepostExpand] = useState<boolean>(false)
     const [showCommentForm, setShowCommentForm] = useState<boolean>(false)
-    const [comments, setComments] = useState<BackendPostComment[]>([])
-    const [likeIt, setLikeIt] = useState<boolean>(false)
-    const [likers, setLikers] = useState<string[]>([])
+    const [showXComments, setShowXComments] = useState<number>(3)
     const [editPost, setEditPost] = useState<boolean>(false)
-
-    // reverse comments order, set likers, calc repost-size
-    useEffect(() => {
-        const newComments = [...post.comments];
-        newComments.reverse()
-        setComments(newComments);
-
-        setLikeIt(post.likers.includes(session?.user.preferred_username as string))
-        setLikers(post.likers)
-
-
-        if (ref.current && post.isRepost) {
-            // TODO update on resize window ?!
-            const repostEl = ref.current.querySelector(".repost-text")
-            setRepostExpand( repostEl.scrollHeight <= repostEl.clientHeight )
-        }
-    }, [post, ref]);
 
     // implement infinity scroll (detect intersection of window viewport with last post)
     useEffect(() => {
@@ -74,10 +62,16 @@ export default function TimelinePost(
         observer.observe(ref.current);
     }, [isLast])
 
-    const onAddedNewComment = (newComment: BackendPostComment) => {
-        if (!newComment) return
-        setComments(prev => [newComment, ...prev]);
-    }
+    // may collapse/expand repost
+    useEffect(() => {
+        if (ref.current && post.isRepost) {
+            // TODO update on resize window ?!
+            setTimeout(() => {
+                const repostEl = ref.current.querySelector(".repost-text")
+                setRepostExpand( repostEl.scrollHeight <= repostEl.clientHeight )
+            }, 1)
+        }
+    });
 
     const onSubmitCommentForm = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -100,15 +94,16 @@ export default function TimelinePost(
 
         try {
             const newComment = await addNewComment()
-            onAddedNewComment(newComment.inserted_comment)
-            ref.current?.reset()
+            updatePost( {...post, comments: [...post.comments, newComment.inserted_comment] } )
+            commentFormref.current?.reset()
         } catch (error) {
             console.error(error);
         }
     }
 
     const onClickLikeBtn = async () => {
-        let newLikers = [...likers];
+        let newLikers = [...post.likers];
+        const likeIt = post.likers.includes(session?.user.preferred_username as string)
 
         try {
             if (likeIt) {
@@ -118,8 +113,7 @@ export default function TimelinePost(
                 await fetchPOST( '/like', { post_id: post._id }, session?.accessToken )
                 newLikers.push(session?.user.preferred_username as string)
             }
-            setLikeIt(!likeIt)
-            setLikers(newLikers)
+            updatePost( {...post, likers: newLikers} )
         } catch (error) {
             console.log(error);
         }
@@ -133,7 +127,7 @@ export default function TimelinePost(
         try {
             await fetchDELETE( '/posts', { post_id: post._id }, session?.accessToken )
             setWbRemoved(true)
-            // HACK wait until transition is done (TODO find a better solution...)
+            // wait until transition is done
             await new Promise(resolve => setTimeout(resolve, 450))
             removePost(post)
             setWbRemoved(false)
@@ -155,13 +149,20 @@ export default function TimelinePost(
         }
     }
 
-    const updatePost = (newText: string) => {
+    const updatePostText = (newText: string) => {
         if (post.isRepost) {
-            post.repostText = newText
+            updatePost( {...post, repostText: newText} )
         } else {
-            post.text = newText
+            updatePost( {...post, text: newText} )
         }
         setEditPost(false)
+    }
+
+    const openCommentForm = () => {
+        setShowCommentForm(true)
+        setTimeout(() => {
+            commentFormref.current?.querySelector("input")?.focus()
+        }, 1);
     }
 
     const SpacenameById = (spaceId: string) => {
@@ -170,39 +171,24 @@ export default function TimelinePost(
         return ( <>{ space?.name }</> )
     }
 
-    const PostText = () => {
-        if (editPost) return (
-            <TimelinePostForm
-                post={post}
-                onCancelForm={() => setEditPost(false)}
-                onUpdatedPost={updatePost}
-            />
-        )
-
-        return (
-            <div className="whitespace-break-spaces">
-                {post.isRepost
-                    ? ( <>{post.repostText}</> )
-                    : ( <>{post.text}</> )
-                }
-            </div>
-        )
-    }
-
     const Likes = () => {
-        if (!likers.length) return ( <></> )
+        if (!post.likers.length) return ( <></> )
 
-        let hoverMsg = "By "
-        if (likers.length == 1) hoverMsg += `${likers[0]}`
-        else if (likers.length == 2) hoverMsg += `${likers[0]} and ${likers[1]}`
-        else if (likers.length == 3) hoverMsg += `${likers.slice(0, 2).join(", ")} and ${likers[2]}`
-        else hoverMsg += `${likers.slice(0, 3).join(", ")} and others`
+        let hoverMsg = "Von "
+        if (post.likers.length == 1) hoverMsg += `${post.likers[0]}`
+        else if (post.likers.length == 2) hoverMsg += `${post.likers[0]} und ${post.likers[1]}`
+        else if (post.likers.length == 3) hoverMsg += `${post.likers.slice(0, 2).join(", ")} und ${post.likers[2]}`
+        else hoverMsg += `${post.likers.slice(0, 3).join(", ")} und anderen`
 
         return (
             <span className="hover:cursor-pointer text-sm mr-3" title={hoverMsg}>
-                <MdThumbUp className="inline" /> {likers.length}
+                <MdThumbUp className="inline" size={20} /> {post.likers.length}
             </span>
         )
+    }
+
+    const fileIsImage = (file: BackendPostFile) => {
+        return file.file_type?.startsWith('image/')
     }
 
     let drOptions = []
@@ -217,84 +203,111 @@ export default function TimelinePost(
     }
 
     return (
-        <>
-            {/* <div className="-ml-5 flex items-center text-ve-collab-blue">
-                <div className='rounded-full bg-ve-collab-blue/10'><HiOutlineCalendar className='m-4' /></div>
-                <div className="p-3 m-2 rounded-full bg-ve-collab-blue/10">
-                    <Timestamp timestamp={post.creation_date} className='inline-block' />
-                </div>
-            </div> */}
+        <div ref={ref} className={`${wbRemoved ? "opacity-0 transition-opacity ease-in-out delay-50 duration-300" : "opacity-100 transition-none" }
+            p-4 mb-4 bg-white rounded shadow`}
+        >
+            <div className="flex items-center">
+                {(post.isRepost && post.repostAuthor) ? (
+                    <PostHeader author={post.repostAuthor} date={post.creation_date} />
+                ) : (
+                    <PostHeader author={post.author} date={post.creation_date} />
+                )}
 
-            <div ref={ref} className={`${wbRemoved ? "opacity-0 transition-opacity ease-in-out delay-50 duration-300" : "opacity-100 transition-none" } p-4 my-8 bg-white rounded shadow`}>
-                <div className="flex items-center">
-                    {(post.isRepost && post.repostAuthor) ? (
-                        <>
-                            <PostHeader author={post.repostAuthor} date={post.creation_date} />
-                            <div className='self-start leading-[1.6rem] text-xs text-gray-500 ml-1'>
-                                teilte einen Beitrag
-                            </div>
-                        </>
+                {(!space && post.space) && (
+                    <div className='self-start leading-[1.6rem] text-xs text-gray-500 ml-1'>
+                        <MdDoubleArrow className="inline" /> <Link href={`/space/?id=${post.space}`} className="font-bold align-middle">{SpacenameById(post.space)}</Link>
+                    </div>
+                )}
+
+                <div className='ml-auto'>
+                    {(post.likers.includes(session?.user.preferred_username as string)) ? (
+                        <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickLikeBtn}><HiHeart /></button>
                     ) : (
-                        <>
-                            <PostHeader author={post.author} date={post.creation_date} />
-                        </>
-                     )}
-
-                    {(!space && post.space) && (
-                        <div className='self-start leading-[1.6rem] text-xs text-gray-500 ml-1'>
-                            in der Gruppe <Link href={`/space/?id=${post.space}`} className="font-bold">{SpacenameById(post.space)}</Link>
-                        </div>
+                        <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickLikeBtn}><HiOutlineHeart /></button>
                     )}
+                    <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickReplyBtn} title="Antworten"><TiArrowForward /></button>
+                    {drOptions.length > 0 && (
+                        <Dropdown options={drOptions} onSelect={handleSelectOption} />
+                    )}
+                </div>
+            </div>
 
-                    <div className='ml-auto'>
-                        {likeIt ? (
-                            <button className="p-2" onClick={onClickLikeBtn} title="click to unlike post"><HiHeart /></button>
-                        ) : (
-                            <button className="p-2" onClick={onClickLikeBtn} title="Click to like post"><HiOutlineHeart /></button>
-                        )}
-                        <button className="p-2" onClick={onClickReplyBtn} title="Click to reply post"><TiArrowForward /></button>
-                        {drOptions.length > 0 && (
-                            <Dropdown options={drOptions} onSelect={handleSelectOption} />
-                        )}
+            {post.isRepost && (
+                <div className="my-5 ml-5 p-4 rounded bg-slate-100">
+                    <div className="flex items-center">
+                        <PostHeader author={post.repostAuthor as BackendPostAuthor} date={post.originalCreationDate as string} />
+                    </div>
+                    <div className={`${repostExpand ? "" : "max-h-40 overflow-hidden"} mt-5 whitespace-break-spaces relative repost-text`}>
+                        <TimelinePostText text={ post.text as string } />
+                        <span className={`${repostExpand ? "hidden" : ""} absolute left-0 bottom-0 w-full h-20 bg-gradient-to-b from-transparent to-[#e5f1f4]`}>
+                            <button className="absolute bottom-0 left-10 mx-4 p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={() => setRepostExpand(true)} title="Erweitern">
+                                <MdOutlineKeyboardDoubleArrowDown />
+                            </button>
+                        </span>
                     </div>
                 </div>
+            )}
 
-                {post.isRepost && (
-                    <>
-                        <div className="my-5 ml-5 p-4 border-2 border-ve-collab-blue/25 rounded">
-                            <div className="flex items-center">
-                                <PostHeader author={post.repostAuthor as BackendPostAuthor} date={post.originalCreationDate as string} />
-                            </div>
-                            <div className={`${repostExpand ? "" : "max-h-40 overflow-hidden"} mt-5 whitespace-break-spaces relative repost-text`}>
-                                {post.text}
-                                <span className={`${repostExpand ? "hidden" : ""} absolute left-0 bottom-0 w-full h-20 bg-gradient-to-b from-transparent to-white`}>
-                                    <button className="absolute bottom-0 left-10 p-1" onClick={() => setRepostExpand(true)} title="Click to expand"><MdOutlineKeyboardDoubleArrowDown />
-</button>
-                                </span>
-                            </div>
-                        </div>
-                    </>
-                )}
+            <div className='my-5'>
+                {editPost
+                    ? (
+                        <TimelinePostForm
+                            post={post}
+                            onCancelForm={() => setEditPost(false)}
+                            onUpdatedPost={updatePostText}
+                        />
+                    ) : (
+                        <TimelinePostText text={
+                            post.isRepost
+                                ? post.repostText as string
+                                : post.text as string
+                        } />
+                    )
+                }
+            </div>
 
-                <div className='my-5'>
-                    <PostText />
+            {post.files.length > 0 && (
+                <div className="my-4">
+                    <div className="mb-2 text-slate-900 font-bold">Dateien</div>
+                    <div className="mb-8 flex flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
+                        {post.files.map((file, index) => (
+                            <AuthenticatedFile
+                                key={index}
+                                url={`/uploads/${file.file_id}`}
+                                filename={file.file_name}
+                            >
+                                <div className="flex justify-center">
+                                    {fileIsImage(file) ? (
+                                        <AuthenticatedImage
+                                            imageId={file.file_id}
+                                            alt={file.file_name}
+                                            width={50}
+                                            height={50}
+                                        ></AuthenticatedImage>
+                                    ) : (
+                                        <RxFile size={40} />
+                                    )}
+                                </div>
+                                <div className="max-w-1/2 justify-center mx-2 px-1 my-1 truncate">
+                                    {file.file_name}
+                                </div>
+                            </AuthenticatedFile>
+                        ))}
+                    </div>
                 </div>
+            )}
 
-                <Likes />
-                {(comments.length == 0 && !showCommentForm) && (
-                    <button onClick={() => {setShowCommentForm(!showCommentForm)}} title="Add comment" className="align-middle">
-                        <MdOutlineAddComment />
+            <Likes />
+            {(post.comments.length == 0 && !showCommentForm)
+                ? (
+                    <button onClick={openCommentForm} title="Kommentar hinzufügen" className="align-middle px-3 py-2 rounded-full hover:bg-ve-collab-blue-light">
+                        <MdOutlineAddComment className="inline" size={20} />
                     </button>
-                )}
+                ) : (
+                    <div className='mt-4 pt-4 pl-4 border-t-2 border-ve-collab-blue/50'>
+                        <div className="mb-4 text-slate-900 font-bold text-lg">Kommentare</div>
 
-                {(comments.length > 0 || showCommentForm)&& (
-                    <div className='mt-4 pt-4 border-t-2 border-ve-collab-blue/25'>
-                        <div className="mb-4 font-slate-900">
-                            {/* <MdComment className="inline" />&nbsp; */}
-                            Kommentare
-                        </div>
-
-                        <form onSubmit={onSubmitCommentForm}>
+                        <form onSubmit={onSubmitCommentForm} className="mb-2" ref={commentFormref}>
                             <input
                                 className={'border border-[#cccccc] rounded-md px-2 py-[6px]'}
                                 type="text"
@@ -305,21 +318,28 @@ export default function TimelinePost(
                             <button className="p-2" type='submit' title="Senden"><IoIosSend /></button>
                         </form>
 
-                        {comments.length > 0 && (
+                        {post.comments.length > 0 && (
                             <div className="pl-5 mt-5">
-                                {comments.map((comment, ci) => (
+                                {post.comments.reverse().map((comment, ci) => (
                                     <div key={ci}>
-                                        <div className="flex items-center">
-                                        <PostHeader author={comment.author} date={comment.creation_date} />
+                                        <div className={`${ci >= showXComments ? "hidden" : ""}`}>
+                                            <div className={`flex items-center`}>
+                                                <PostHeader author={comment.author} date={comment.creation_date} />
+                                            </div>
+                                            <div className='my-5'>{comment.text}</div>
                                         </div>
-                                        <div className='my-5'>{comment.text}</div>
+                                        {(ci+1 == showXComments && post.comments.length > showXComments) && (
+                                            <button className="py-2 px-5 rounded-lg" onClick={() => setShowXComments(showXComments+5)} title="Mehr">
+                                                <MdOutlineKeyboardDoubleArrowDown />
+                                            </button>
+                                        )}
                                     </div>
                                 ))}
                             </div>
                         )}
                     </div>
-                )}
-            </div>
-        </>
+                )
+            }
+        </div>
     );
 }

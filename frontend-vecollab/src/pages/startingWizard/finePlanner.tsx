@@ -7,6 +7,7 @@ import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 
+FinePlanner.auth = true;
 export default function FinePlanner() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);

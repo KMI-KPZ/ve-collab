@@ -22,13 +22,16 @@ import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import { FormalConditionPartner } from '@/pages/startingWizard/generalInformation/formalConditions';
 import { FiInfo } from 'react-icons/fi';
 import { Tooltip } from '@/components/Tooltip';
+import { EvaluationPerPartner } from './evaluation';
 
+Partners.auth = true;
 export default function Partners() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
     const [formalConditions, setFormalConditions] = useState<FormalConditionPartner[]>([]);
+    const [evaluationInfo, setEvaluationInfo] = useState<EvaluationPerPartner[]>([]);
     const [author, setAuthor] = useState<string>('');
     const [partners, setPartners] = useState<string[]>(['']);
     const [partnerProfileSnippets, setPartnerProfileSnippets] = useState<{
@@ -88,6 +91,9 @@ export default function Partners() {
                     if (data.plan.formalities && Array.isArray(data.plan.formalities)) {
                         setFormalConditions(data.plan.formalities);
                     }
+                    if (data.plan.evaluation && Array.isArray(data.plan.evaluation)) {
+                        setEvaluationInfo(data.plan.evaluation);
+                    }
                     setAuthor(data.plan.author);
                     setSteps(data.plan.steps);
                 }
@@ -114,29 +120,55 @@ export default function Partners() {
     };
 
     const onSubmit = async () => {
-        const updateFormalConditions = partners.map((partner) => {
-            const findFormalCondition = formalConditions.find(
-                (formalCondition) => formalCondition.username === partner
-            );
-            if (findFormalCondition) {
-                return findFormalCondition;
-            } else {
-                return {
-                    username: partner,
-                    time: false,
-                    format: false,
-                    topic: false,
-                    goals: false,
-                    languages: false,
-                    media: false,
-                    technicalEquipment: false,
-                    evaluation: false,
-                    institutionalRequirements: false,
-                    dataProtection: false,
-                };
-            }
-        });
-
+        let updateFormalConditions: FormalConditionPartner[] = [];
+        let updateEvaluationInfo: EvaluationPerPartner[] = [];
+        
+        // the empty string is a placeholder to show to first input field,
+        // but shouldnt be sent to the backend - so in order to not
+        // crowd the partner-dependent attributes with the empty value,
+        // only aggregate them if there are actual partners
+        if(!(partners.length === 1 && partners[0] === '')){
+            updateFormalConditions = partners.map((partner) => {
+                const findFormalCondition = formalConditions.find(
+                    (formalCondition) => formalCondition.username === partner
+                    );
+                    if (findFormalCondition) {
+                        return findFormalCondition;
+                    } else {
+                        return {
+                            username: partner,
+                            time: false,
+                            format: false,
+                            topic: false,
+                            goals: false,
+                            languages: false,
+                            media: false,
+                            technicalEquipment: false,
+                            evaluation: false,
+                            institutionalRequirements: false,
+                            dataProtection: false,
+                        };
+                    }
+                });
+                updateEvaluationInfo = partners.map((partner) => {
+                    const findEvaluationInfo = evaluationInfo.find(
+                        (evaluation) => evaluation.username === partner
+                        );
+                        if (findEvaluationInfo) {
+                            return findEvaluationInfo;
+                        } else {
+                            return {
+                                username: partner,
+                                is_graded: false,
+                                task_type: '',
+                                assessment_type: '',
+                                evaluation_while: '',
+                                evaluation_after: '',
+                            };
+                        }
+                    });
+                }
+                    
         // sanity check: if the author (i.e. creator of the plan) was not
         // manually added as a partner by the users, add their formal conditions
         // entry nonetheless, because otherwise he would not be included on the
@@ -154,6 +186,14 @@ export default function Partners() {
                 evaluation: false,
                 institutionalRequirements: false,
                 dataProtection: false,
+            });
+            updateEvaluationInfo.push({
+                username: author,
+                is_graded: false,
+                task_type: '',
+                assessment_type: '',
+                evaluation_while: '',
+                evaluation_after: '',
             });
         }
 
@@ -178,6 +218,11 @@ export default function Partners() {
                         plan_id: router.query.plannerId,
                         field_name: 'formalities',
                         value: updateFormalConditions,
+                    },
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'evaluation',
+                        value: updateEvaluationInfo,
                     },
                 ],
             },

@@ -1,129 +1,108 @@
-import { useGetChatroomHistory } from '@/lib/backend';
-import { useSession } from 'next-auth/react';
-import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
-import { Socket } from 'socket.io-client';
-import LoadingAnimation from '../LoadingAnimation';
-import { BackendChatroomSnippet } from '@/interfaces/api/apiInterfaces';
-import RoomHeader from './RoomHeader';
-import ChatMessage from './ChatMessage';
-import InputArea from './InputArea';
-import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
+import { BackendChatroomSnippet } from "@/interfaces/api/apiInterfaces";
+import { UserSnippet } from "@/interfaces/profile/profileInterfaces";
+import { fetchPOST, useGetChatrooms } from "@/lib/backend";
+import { useSession } from "next-auth/react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { MdKeyboardDoubleArrowRight } from "react-icons/md";
+import { Socket } from "socket.io-client";
+import LoadingAnimation from "../LoadingAnimation";
+import ChatRoom from "./ChatRoom";
+import Rooms from "@/components/chat/Rooms";
 
 interface Props {
     socket: Socket;
-    selectedChatID: string;
-    socketMessages: any[];
-    setSocketMessages: Dispatch<SetStateAction<any>>;
+    messageEvents: any[];
     headerBarMessageEvents: any[];
     setHeaderBarMessageEvents: Dispatch<SetStateAction<any[]>>;
-    roomInfo: BackendChatroomSnippet;
-    memberProfileSnippets: UserSnippet[];
+    toggleChatWindow: () => void
+    open: boolean
 }
 
-export default function ChatWindow({
+ChatWindow.auth = true;
+export default function ChatWindow(
+{
     socket,
-    selectedChatID,
-    socketMessages,
-    setSocketMessages,
+    messageEvents,
     headerBarMessageEvents,
     setHeaderBarMessageEvents,
-    roomInfo,
-    memberProfileSnippets,
-}: Props) {
-    const { data: session, status } = useSession();
-    const messageBottomRef = useRef<HTMLDivElement>(null);
-    const messageContainerRef = useRef<HTMLDivElement>(null);
-    const [displayMessages, setDisplayMessages] = useState<any[]>([]);
+    toggleChatWindow,
+    open,
+}: Props
+) {
+    const { data: session } = useSession();
+    const [selectedRoom, setSelectedRoom] = useState<BackendChatroomSnippet>();
+    const [profileSnippets, setProfileSnippets] = useState<UserSnippet[]>([]);
+    const [profileSnippetsLoading, setProfileSnippetsLoading] = useState<boolean>(true);
 
-    const {
-        data: messageHistory,
-        isLoading,
-        error,
-        mutate,
-    } = useGetChatroomHistory(session!.accessToken, selectedChatID);
-    // TODO use /chatroom/get_messages_after endpoint with the oldest message id in the socketMessages array from this chatroom
-    // TODO pagination: only load x messages at a time, load more when scrolling up instead of loading all messages at once
+    const { data: rooms, isLoading: loadingRooms, error, mutate } = useGetChatrooms(session!.accessToken);
 
-    const scrollMessagesToBottom = () => {
-        if (messageBottomRef.current && messageContainerRef.current) {
-            messageContainerRef.current?.scrollTo({
-                top: messageBottomRef.current?.offsetTop + messageBottomRef.current?.offsetHeight,
-                behavior: 'smooth',
-            });
-        }
-    };
+    useEffect(() => {
+        if (loadingRooms) return;
 
-    const acknowledgeAllSocketMessages = () => {
-        headerBarMessageEvents
-            .filter((message) => message.room_id === selectedChatID)
-            .filter((message) => message.sender !== session?.user.preferred_username) // dont need to acknowledge own messages
-            .forEach((message) => {
-                socket.emit('acknowledge_message', {
-                    message_id: message._id,
-                    room_id: message.room_id,
-                });
-            });
+        // filter a distinct list of usernames from the room snippets
+        const usernames = Array.from(new Set(rooms.map((room) => room.members).flat()));
 
-        setHeaderBarMessageEvents(
-            headerBarMessageEvents.filter((message) => message.room_id !== selectedChatID)
+        // fetch profile snippets
+        fetchPOST('/profile_snippets', { usernames: usernames }, session?.accessToken).then(
+            (data) => {
+                setProfileSnippets(
+                    data.user_snippets.map((snippet: any) => {
+                        return {
+                            profilePicUrl: snippet.profile_pic,
+                            name: snippet.first_name + ' ' + snippet.last_name,
+                            preferredUsername: snippet.username,
+                            institution: snippet.institution,
+                        };
+                    })
+                );
+                setProfileSnippetsLoading(false);
+            }
         );
+    }, [loadingRooms, rooms, session]);
+
+    const handleChatSelect = (chat: string) => {
+        setSelectedRoom( rooms.find(room => room._id === chat) )
     };
 
-    useEffect(() => {
-        // wait till message history is loaded
-        if (!isLoading) {
-            // filter only those socket messages that are in this selected chat room
-            const filteredSocketMessages = socketMessages.filter(
-                (message) => message.room_id === selectedChatID
-            );
-
-            // join message history and filtered socket messages, removing duplicates based on _id
-            const allMessages = [...messageHistory, ...filteredSocketMessages];
-            const uniqueMessages = allMessages.reduce((acc, message) => {
-                const existingMessage = acc.find((m: any) => m._id === message._id);
-                if (existingMessage) {
-                    return acc;
-                } else {
-                    return [...acc, message];
-                }
-            }, []);
-
-            setDisplayMessages(uniqueMessages);
-        }
-    }, [isLoading, messageHistory, socketMessages, selectedChatID]);
-
-    useEffect(() => {
-        scrollMessagesToBottom();
-        acknowledgeAllSocketMessages();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [displayMessages]);
+    if (!open) { return (<></>) }
 
     return (
-        <div className="w-full h-full flex flex-col">
-            <RoomHeader roomInfo={roomInfo} memberProfileSnippets={memberProfileSnippets} />
-            <div
-                ref={messageContainerRef}
-                className="h-full bg-white overflow-y-auto content-scrollbar relative"
+        <div className={`absolute z-30 right-0 top-20 w-1/5 min-w-[15rem] min-h-[18rem] px-2 py-4 shadow rounded-l bg-white border`}>
+            <div style={{clipPath: 'inset(-5px 1px -5px -5px)', borderRight: '0'}}
+                className="absolute flex top-1/3 -ml-2 -left-[16px] w-[26px] h-[90px] bg-white rounded-l border shadow"
             >
-                {/* Chat messages */}
-                <ul className="flex flex-col px-36 justify-end">
-                    {isLoading ? (
-                        <LoadingAnimation />
-                    ) : (
-                        <>
-                            {displayMessages.map((message, index) => (
-                                <ChatMessage
-                                    key={index}
-                                    message={message}
-                                    currentUser={session?.user.preferred_username}
-                                />
-                            ))}
-                            <div ref={messageBottomRef} className="h-12" />
-                        </>
-                    )}
-                </ul>
+                <button onClick={e => toggleChatWindow()} className="p-1 h-full w-full hover:bg-slate-100">
+                    <MdKeyboardDoubleArrowRight />
+                </button>
             </div>
-            <InputArea roomID={selectedChatID} socket={socket} />
+
+            {(selectedRoom) ? (
+                <div className="h-[60vh] min-h-[16rem] flex flex-col">
+                    <ChatRoom
+                        socketMessages={messageEvents}
+                        headerBarMessageEvents={headerBarMessageEvents}
+                        setHeaderBarMessageEvents={setHeaderBarMessageEvents}
+                        socket={socket}
+                        room={selectedRoom!}
+                        closeRoom={() => setSelectedRoom(undefined)}
+                        memberProfileSnippets={profileSnippets.filter(profile =>
+                            selectedRoom.members.includes(profile.preferredUsername)
+                        )}
+                    />
+                </div>
+            ) : (
+                <div className="h-[60vh] min-h-[16rem]">
+                    {profileSnippetsLoading ? (
+                        <LoadingAnimation size="small" />
+                    ) : (
+                        <Rooms
+                            handleChatSelect={handleChatSelect}
+                            headerBarMessageEvents={headerBarMessageEvents}
+                            profileSnippets={profileSnippets}
+                        />
+                    )}
+                </div>
+            )}
         </div>
-    );
+    )
 }

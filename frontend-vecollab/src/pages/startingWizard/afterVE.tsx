@@ -46,7 +46,7 @@ export default function AfterVE() {
                     },
                     {
                         plan_id: router.query.plannerId,
-                        field_name: 'evaluation',
+                        field_name: 'good_practise_evaluation',
                         value: evaluation,
                     },
                 ],
@@ -78,7 +78,7 @@ export default function AfterVE() {
                         setShareAsGoodPractiseChosen(data.plan.is_good_practise);
                         setVeModel(data.plan.underlying_ve_model);
                         setReflection(data.plan.reflection);
-                        setEvaluation(data.plan.evaluation);
+                        setEvaluation(data.plan.good_practise_evaluation);
                     }
                 }
             );
@@ -211,7 +211,7 @@ export default function AfterVE() {
                                                 <p>
                                                     Evaluationsergebnisse / Feedback der
                                                     Teilnehmenden: Fasse die Ergebnisse hier
-                                                    zusammen, falls vorhanden.
+                                                    zusammen.
                                                 </p>
                                                 <textarea
                                                     className="border border-gray-400 rounded-lg w-full p-2 mt-2"

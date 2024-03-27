@@ -141,18 +141,24 @@ class Task:
     # this lookup allows to check for the correct types
     EXPECTED_DICT_ENTRIES = {
         "title": (str, type(None)),
-        "description": (str, type(None)),
         "learning_goal": (str, type(None)),
+        "task_formulation": (str, type(None)),
+        "social_form": (str, type(None)),
+        "description": (str, type(None)),
         "tools": list,
+        "media": list,
     }
 
     def __init__(
         self,
         _id: str | ObjectId = None,
         title: str = None,
-        description: str = None,
         learning_goal: str = None,
+        task_formulation: str = None,
+        social_form: str = None,
+        description: str = None,
         tools: List[str] = [],
+        media: List[str] = [],
     ) -> None:
         """
         Initialization of a `Task` instance.
@@ -177,9 +183,12 @@ class Task:
         self._id = util.parse_object_id(_id) if _id != None else ObjectId()
 
         self.title = title
-        self.description = description
         self.learning_goal = learning_goal
+        self.task_formulation = task_formulation
+        self.social_form = social_form
+        self.description = description
         self.tools = tools
+        self.media = media
 
     def __str__(self) -> str:
         return str(self.__dict__)
@@ -201,9 +210,12 @@ class Task:
         return {
             "_id": self._id,
             "title": self.title,
-            "description": self.description,
             "learning_goal": self.learning_goal,
+            "task_formulation": self.task_formulation,
+            "social_form": self.social_form,
+            "description": self.description,
             "tools": self.tools,
+            "media": self.media,
         }
 
     @classmethod
@@ -211,9 +223,11 @@ class Task:
         """
         initialize a `Task`-object from a dictionary (`params`).
         All of the followings keys have to be present in the dict:
-        `"title"`, `"description"`, `"learning_goal"`, `"tools"`.
+        `"title"`, `learning_goal`, `task_formulation`, `social_form`, 
+        `"description"`, `"tools"`, `media`.
         However values are not required, any attributes may be
-        initialized with None (title/description/learning_goal) or [] (tools).
+        initialized with None (title/description/learning_goal/task_formulation/social_form)
+        or [] (tools/media).
 
         Optionally, a `"_id"` may be supplied, conveying the semantics that this Task
         already exists. However, true existence is handled by the database itself and
@@ -296,9 +310,8 @@ class Step:
         "workload": int,
         "timestamp_from": (str, datetime, type(None)),
         "timestamp_to": (str, datetime, type(None)),
-        "social_form": (str, type(None)),
         "learning_env": (str, type(None)),
-        "ve_approach": (str, type(None)),
+        "learning_goal": (str, type(None)),
         "tasks": list,
         "evaluation_tools": list,
         "attachments": list,
@@ -312,9 +325,8 @@ class Step:
         workload: int = 0,
         timestamp_from: str | datetime = None,
         timestamp_to: str | datetime = None,
-        social_form: str = None,
         learning_env: str = None,
-        ve_approach: str = None,
+        learning_goal: str = None,
         tasks: List[Task] = [],
         evaluation_tools: List[str] = [],
         attachments: List[ObjectId] = [],
@@ -365,10 +377,8 @@ class Step:
         else:
             self.duration = self.timestamp_to - self.timestamp_from
 
-        self.social_form = social_form
         self.learning_env = learning_env
-        self.ve_approach = ve_approach
-
+        self.learning_goal = learning_goal
         self.tasks = tasks
 
         # ensure that tasks have unique titles
@@ -405,9 +415,8 @@ class Step:
             "timestamp_from": self.timestamp_from,
             "timestamp_to": self.timestamp_to,
             "duration": self.duration.total_seconds() if self.duration else None,
-            "social_form": self.social_form,
             "learning_env": self.learning_env,
-            "ve_approach": self.ve_approach,
+            "learning_goal": self.learning_goal,
             "tasks": [task.to_dict() for task in self.tasks],
             "evaluation_tools": self.evaluation_tools,
             "attachments": self.attachments,
@@ -1181,6 +1190,148 @@ class PhysicalMobility:
         instance = cls()
         instance.__dict__.update(params)
         return instance
+    
+
+class Evaluation:
+    EXPECTED_DICT_ENTRIES = {
+        "username": (str, type(None)),
+        "is_graded": bool,
+        "task_type": (str, type(None)),
+        "assessment_type": (str, type(None)),
+        "evaluation_while": (str, type(None)),
+        "evaluation_after": (str, type(None)),
+    }
+
+    def __init__(
+        self,
+        _id: str | ObjectId = None,
+        username: str = None,
+        is_graded: bool = None,
+        task_type: str = None,
+        assessment_type: str = None,
+        evaluation_while: str = None,
+        evaluation_after: str = None,
+    ) -> None:
+        # ensure _id becomes type ObjectId, either using the given value or
+        # creating a fresh ID
+        self._id = util.parse_object_id(_id) if _id != None else ObjectId()
+
+        self.username = username
+        if is_graded == None:
+            is_graded = False
+        self.is_graded = is_graded
+        self.task_type = task_type
+        self.assessment_type = assessment_type
+        self.evaluation_while = evaluation_while
+        self.evaluation_after = evaluation_after
+
+    def __str__(self) -> str:
+        return str(self.__dict__)
+    
+    def __repr__(self) -> str:
+        return str(self)
+    
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, self.__class__):
+            return self.__dict__ == other.__dict__
+        else:
+            return False
+        
+    def to_dict(self) -> Dict:
+        """
+        serialize all attributes of this instance into a dictionary
+        """
+
+        return {
+            "_id": self._id,
+            "username": self.username,
+            "is_graded": self.is_graded,
+            "task_type": self.task_type,
+            "assessment_type": self.assessment_type,
+            "evaluation_while": self.evaluation_while,
+            "evaluation_after": self.evaluation_after,
+        }
+    
+    @classmethod
+    def from_dict(cls, params: Dict[str, Any]) -> Evaluation:
+        """
+        initialize an `Evaluation`-object from a dictionary (`params`).
+        All of the followings keys have to be present in the dict:
+        `"username"`, `"is_graded"`, `"task_type"`, `"assessment_type"`,
+        `"evaluation_while"`, `"evaluation_after"`.
+        However values are not required, any attributes may be
+        initialized with None (username/task_type/assessment_type/evaluation_while/
+        evaluation_after) or False (is_graded).
+
+        Optionally, a `"_id"` may be supplied, conveying the semantics that this Evaluation
+        already exists. However, true existence is handled by the database itself and
+        not by this model.
+        If no "_id" is supplied, a fresh one will be generated by the system.
+
+        Any other entries in `params` that do not represent an attribute
+        of an Evaluation will be ignored and deleted from the dictionary
+        (keep in mind for further use of the `params`-dict).
+
+        Returns an instance of `Evaluation`.
+
+        Raises `TypeError` if params is not a dictionary, or any of the values in the
+        dict have the wrong type.
+
+        Raises `MissingKeyError` if any of the required keys is missing
+        in the `params`-dict.
+
+        Usage example::
+
+            evaluation = Evaluation.from_dict(params)
+        """
+
+        if not isinstance(params, dict):
+            raise TypeError(
+                "expected type 'dict' for argument 'params', got {}".format(
+                    type(params)
+                )
+            )
+
+        # ensure all necessary keys are in the dict
+        for expected_key in cls.EXPECTED_DICT_ENTRIES.keys():
+            if expected_key not in params:
+                raise MissingKeyError(
+                    "Missing key {} in {} dictionary".format(
+                        expected_key, cls.__name__
+                    ),
+                    expected_key,
+                    cls.__name__,
+                )
+
+        # delete any keys from params that are not expected to avoid having
+        # any other additional attributes that might cause trouble
+        # (e.g. on serialization)
+        for key in list(params.keys()):
+            if key not in [*cls.EXPECTED_DICT_ENTRIES.keys(), *["_id"]]:
+                del params[key]
+
+        # ensure types of attributes are correct
+        for key in params:
+            if key in cls.EXPECTED_DICT_ENTRIES:
+                if not isinstance(params[key], cls.EXPECTED_DICT_ENTRIES[key]):
+                    raise TypeError(
+                        "expected type '{}' for key '{}', got '{}'".format(
+                            cls.EXPECTED_DICT_ENTRIES[key],
+                            key,
+                            type(params[key]),
+                        )
+                    )
+                
+        # handle existence and correct type of object id's
+        if "_id" in params:
+            params["_id"] = util.parse_object_id(params["_id"])
+        else:
+            params["_id"] = ObjectId()
+
+        # create and return object
+        instance = cls()
+        instance.__dict__.update(params)
+        return instance
 
 
 class VEPlan:
@@ -1197,6 +1348,7 @@ class VEPlan:
         "learning_goals": list,
         "audience": list,
         "languages": list,
+        "evaluation": list,
         "involved_parties": list,
         "realization": (str, type(None)),
         "physical_mobility": (bool, type(None)),
@@ -1208,7 +1360,7 @@ class VEPlan:
         "is_good_practise": (bool, type(None)),
         "underlying_ve_model": (str, type(None)),
         "reflection": (str, type(None)),
-        "evaluation": (str, type(None)),
+        "good_practise_evaluation": (str, type(None)),
         "progress": dict,
     }
 
@@ -1228,6 +1380,7 @@ class VEPlan:
         learning_goals: List[str] = [],
         audience: List[TargetGroup] = [],
         languages: List[str] = [],
+        evaluation: List[Evaluation] = [],
         involved_parties: List[str] = [],
         realization: str = None,
         physical_mobility: bool = None,
@@ -1239,7 +1392,7 @@ class VEPlan:
         is_good_practise: bool = None,
         underlying_ve_model: str = None,
         reflection: str = None,
-        evaluation: str = None,
+        good_practise_evaluation: str = None,
         progress: Dict = {},
     ) -> None:
         """
@@ -1284,6 +1437,7 @@ class VEPlan:
         self.learning_goals = learning_goals
         self.audience = audience
         self.languages = languages
+        self.evaluation = evaluation
         self.involved_parties = involved_parties
         self.realization = realization
         self.learning_env = learning_env
@@ -1297,7 +1451,7 @@ class VEPlan:
         self.is_good_practise = is_good_practise
         self.underlying_ve_model = underlying_ve_model
         self.reflection = reflection
-        self.evaluation = evaluation
+        self.good_practise_evaluation = good_practise_evaluation
 
         if progress:
             # TODO check every expected key is inside as well
@@ -1311,6 +1465,7 @@ class VEPlan:
                 "learning_goals": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
+                "evaluation": "not_started",
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
@@ -1408,6 +1563,7 @@ class VEPlan:
             "learning_goals": self.learning_goals,
             "audience": [target_group.to_dict() for target_group in self.audience],
             "languages": self.languages,
+            "evaluation": [evaluation.to_dict() for evaluation in self.evaluation],
             "timestamp_from": self.timestamp_from,
             "timestamp_to": self.timestamp_to,
             "involved_parties": self.involved_parties,
@@ -1426,7 +1582,7 @@ class VEPlan:
             "is_good_practise": self.is_good_practise,
             "underlying_ve_model": self.underlying_ve_model,
             "reflection": self.reflection,
-            "evaluation": self.evaluation,
+            "good_practise_evaluation": self.good_practise_evaluation,
             "progress": self.progress,
         }
 
@@ -1537,6 +1693,17 @@ class VEPlan:
                     }
                 ],
                 "languages": [],
+                "evaluation": [
+                    {
+                        "_id": "object_id_str",
+                        "username": None,
+                        "is_graded": False,
+                        "task_type": None,
+                        "assessment_type": None,
+                        "evaluation_while": None,
+                        "evaluation_after": None,
+                    }
+                ],
                 "involved_parties": [],
                 "realization": None,
                 "physical_mobility": True,
@@ -1562,9 +1729,8 @@ class VEPlan:
                         "workload": 0,
                         "timestamp_from": None,
                         "timestamp_to": None,
-                        "social_form": None,
                         "learning_env": None,
-                        "ve_approach": None,
+                        "learning_goal": None,
                         "tasks": [
                             {
                                 "_id": "object_id_str",
@@ -1582,7 +1748,7 @@ class VEPlan:
                 "is_good_practise": True,
                 "underlying_ve_model": None,
                 "reflection": None,
-                "evaluation": None,
+                "good_practise_evaluation": None,
                 "progress": {
                     "name": "<completed|uncompleted|not_started>",
                     "institutions": "<completed|uncompleted|not_started>",
@@ -1591,6 +1757,7 @@ class VEPlan:
                     "learning_goals": "<completed|uncompleted|not_started>",
                     "audience": "<completed|uncompleted|not_started>",
                     "languages": "<completed|uncompleted|not_started>",
+                    "evaluation": "<completed|uncompleted|not_started>",
                     "involved_parties": "<completed|uncompleted|not_started>",
                     "realization": "<completed|uncompleted|not_started>",
                     "learning_env": "<completed|uncompleted|not_started>",
@@ -1722,6 +1889,12 @@ class VEPlan:
         ]
         del params["physical_mobilities"]
 
+        # also build the evaluations
+        evaluations = [
+            Evaluation.from_dict(evaluation) for evaluation in params["evaluation"]
+        ]
+        del params["evaluation"]
+
         # last but not least, build lectures
         lectures = [Lecture.from_dict(lecture) for lecture in params["lectures"]]
         del params["lectures"]
@@ -1764,6 +1937,7 @@ class VEPlan:
             steps=steps,
             audience=audience,
             institutions=institutions,
+            evaluation=evaluations,
             lectures=lectures,
             physical_mobilities=physical_mobilities,
         )

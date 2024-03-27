@@ -27,14 +27,14 @@ export const sideMenuStepsData: SideMenuStep[] = [
         link: '/startingWizard/generalInformation/participatingCourses',
     },
     {
-        text: 'Richtlernziele',
-        id: 'learning_goals',
-        link: '/startingWizard/generalInformation/globalGoals',
-    },
-    {
         text: 'Zielgruppen',
         id: 'audience',
         link: '/startingWizard/generalInformation/targetGroups',
+    },
+    {
+        text: 'Richtlernziele',
+        id: 'learning_goals',
+        link: '/startingWizard/generalInformation/globalGoals',
     },
     {
         text: 'Thema/Themen',
@@ -45,6 +45,11 @@ export const sideMenuStepsData: SideMenuStep[] = [
         text: 'Sprache(n)',
         id: 'languages',
         link: '/startingWizard/generalInformation/languages',
+    },
+    {
+        text: 'Bewertung und Evaluation',
+        id: 'evaluation',
+        link: '/startingWizard/generalInformation/evaluation',
     },
     {
         text: '(Digitale) Formate',

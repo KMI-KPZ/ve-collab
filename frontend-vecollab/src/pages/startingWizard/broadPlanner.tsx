@@ -46,15 +46,17 @@ export const defaultFineStepData: IFineStep = {
     workload: 0,
     timestamp_from: '',
     timestamp_to: '',
-    social_form: '',
     learning_env: '',
-    ve_approach: '',
+    learning_goal: '',
     tasks: [
         {
             title: '',
-            description: '',
             learning_goal: '',
+            task_formulation: '',
+            social_form: '',
+            description: '',
             tools: ['', ''],
+            media: ['', ''],
         },
     ],
     evaluation_tools: [],
@@ -68,6 +70,7 @@ const emptyBroadStep: BroadStep = {
     name: '',
 };
 
+BroadPlanner.auth = true;
 export default function BroadPlanner() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);

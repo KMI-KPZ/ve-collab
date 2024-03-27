@@ -20,18 +20,28 @@ import { FiInfo } from 'react-icons/fi';
 
 export interface ITask {
     title: string;
-    description: string;
     learning_goal: string;
+    task_formulation: string;
+    social_form: string;
+    description: string;
     tools: string[];
+    media: string[];
 }
 
 export interface ITaskFrontend {
     title: string;
-    description: string;
     learning_goal: string;
+    task_formulation: string;
+    social_form: string;
+    description: string;
     tools: IToolsFrontend[];
+    media: IMediaFrontend[];
 }
 export interface IToolsFrontend {
+    name: string;
+}
+
+export interface IMediaFrontend {
     name: string;
 }
 
@@ -41,9 +51,8 @@ export interface IFineStepFrontend {
     timestamp_to: string;
     name: string;
     workload: number;
-    social_form: string;
     learning_env: string;
-    ve_approach: string;
+    learning_goal: string;
     tasks: ITaskFrontend[];
     evaluation_tools: string[];
     attachments?: string[];
@@ -56,9 +65,8 @@ export interface IFineStep {
     timestamp_to: string;
     name: string;
     workload: number;
-    social_form: string;
     learning_env: string;
-    ve_approach: string;
+    learning_goal: string;
     tasks: ITask[];
     evaluation_tools: string[];
     attachments?: string[];
@@ -70,16 +78,18 @@ export const defaultFormValueDataFineStepFrontend: IFineStepFrontend = {
     timestamp_to: '',
     name: '',
     workload: 0,
-    social_form: '',
     learning_env: '',
-    ve_approach: '',
+    learning_goal: '',
     evaluation_tools: ['', ''],
     tasks: [
         {
             title: '',
-            description: '',
             learning_goal: '',
+            task_formulation: '',
+            social_form: '',
+            description: '',
             tools: [{ name: '' }, { name: '' }],
+            media: [{ name: '' }, { name: '' }],
         },
     ],
 };
@@ -147,6 +157,9 @@ export default function FinePlanner() {
                                         tools: task.tools.map((tool) => ({
                                             name: tool,
                                         })),
+                                        media: task.media.map((media) => ({
+                                            name: media,
+                                        })),
                                     };
                                 }
                             );
@@ -170,6 +183,7 @@ export default function FinePlanner() {
             return {
                 ...task,
                 tools: task.tools.map((tool) => tool.name),
+                media: task.media.map((media) => media.name),
             };
         });
 
@@ -178,9 +192,8 @@ export default function FinePlanner() {
                 ? {
                       ...data,
                       workload: data.workload,
-                      social_form: data.social_form,
                       learning_env: data.learning_env,
-                      ve_approach: data.ve_approach,
+                      learning_goal: data.learning_goal,
                       tasks: currentStepTransformBackTools,
                   }
                 : step
