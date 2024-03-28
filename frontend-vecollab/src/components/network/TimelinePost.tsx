@@ -5,9 +5,9 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { IoIosSend } from "react-icons/io";
 import Dropdown from "../Dropdown";
-import { BackendPost, BackendPostAuthor, BackendPostFile, BackendSpace } from "@/interfaces/api/apiInterfaces";
+import { BackendPost, BackendPostAuthor, BackendPostComment, BackendPostFile, BackendSpace } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
-import { MdDeleteOutline, MdDoubleArrow, MdModeEdit,  MdOutlineComment, MdOutlineKeyboardDoubleArrowDown,  MdThumbUp } from "react-icons/md";
+import { MdDeleteOutline, MdDoubleArrow, MdModeEdit, MdOutlineKeyboardDoubleArrowDown,  MdThumbUp } from "react-icons/md";
 import { TiArrowForward, TiPin, TiPinOutline } from "react-icons/ti";
 import TimelinePostForm from "./TimelinePostForm";
 import PostHeader from "./PostHeader";
@@ -56,6 +56,8 @@ export default function TimelinePost(
     const [loadingLikers, setLoadingLikers] = useState<boolean>(false)
     const [likers, setLikers] = useState<BackendPostAuthor[]>([])
 
+    const [pinnedComments, setPinnedComments] = useState<BackendPostComment[]>( post.comments.filter(c => c.pinned) )
+    const [showPinnedComments, toggleShowPinnedComments] = useState<boolean>(false)
 
     // implement infinity scroll (detect intersection of window viewport with last post)
     useEffect(() => {
@@ -200,6 +202,24 @@ export default function TimelinePost(
         });
     }
 
+    const pinComment = async (comment: BackendPostComment) => {
+        try {
+            if (comment.pinned) {
+                await fetchDELETE( '/pin', { id: comment._id, pin_type: 'comment' }, session?.accessToken )
+            } else {
+                await fetchPOST( '/pin', { id: comment._id, pin_type: 'comment' }, session?.accessToken )
+            }
+            const newComments = post.comments.map(c => {
+                return c._id == comment._id ? { ...c, pinned: !comment.pinned } : c
+            })
+
+            updatePost( {...post, comments: newComments } )
+            setPinnedComments(newComments.filter(c => c.pinned))
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
     const SpacenameById = (spaceId: string) => {
         if (!allSpaces) return (<>{spaceId}</>)
         const space = allSpaces.find(space => space._id == spaceId)
@@ -230,6 +250,26 @@ export default function TimelinePost(
             </div>
         )
     }
+
+    const Comment = (comment: BackendPostComment) => (
+        <>
+            <div className={`flex items-center group/comment`}>
+                <PostHeader author={comment.author} date={comment.creation_date} />
+                <div className={`ml-auto opacity-0 transition-opacity group-hover/comment:opacity-100`}>
+                    {(space && userIsAdmin) && (
+                        <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={e => pinComment(comment)} title={post.pinned ? "Kommentar abheften" : "Kommentar anheften"}>
+                            {comment.pinned ? (
+                                <TiPin />
+                            ) : (
+                                <TiPinOutline />
+                            )}
+                        </button>
+                    )}
+                </div>
+            </div>
+            <div className='my-5'>{comment.text}</div>
+        </>
+    )
 
     const fileIsImage = (file: BackendPostFile) => {
         return file.file_type?.startsWith('image/')
@@ -366,7 +406,24 @@ export default function TimelinePost(
 
             {(post.comments.length > 0 || showCommentForm) && (
                 <div className='mt-4 pt-4 pl-4 border-t-2 border-ve-collab-blue/50'>
-                    <div className="mb-4 text-slate-900 font-bold text-lg">Kommentare</div>
+                    <div className="mb-4 text-slate-900 font-bold text-lg">
+                        Kommentare
+                        {pinnedComments.length > 0 && (
+                            <button className='py-2 px-3 ml-4 text-xs rounded-md p-2 border border-gray-800 m-1' onClick={e => toggleShowPinnedComments(!showPinnedComments)}>
+                                {pinnedComments.length} {pinnedComments.length > 1 ? ("Angeheftete Kommentare") : ("Angehefteter Kommentar")}
+                            </button>
+                        )}
+                    </div>
+
+                    {showPinnedComments && (
+                        <div className="border-l-2 pl-4 border-ve-collab-orange/50">
+                            {pinnedComments.map((comment, ci) => (
+                                <div key={ci}>
+                                    {Comment(comment)}
+                                </div>
+                            ))}
+                        </div>
+                    )}
 
                     <form onSubmit={onSubmitCommentForm} className="mb-2" ref={commentFormref}>
                         <input
@@ -380,14 +437,11 @@ export default function TimelinePost(
                     </form>
 
                     {post.comments.length > 0 && (
-                        <div className="pl-5 mt-5">
+                        <div className="px-5 mt-5">
                             {post.comments.reverse().map((comment, ci) => (
                                 <div key={ci}>
                                     <div className={`${ci >= showXComments ? "hidden" : ""}`}>
-                                        <div className={`flex items-center`}>
-                                            <PostHeader author={comment.author} date={comment.creation_date} />
-                                        </div>
-                                        <div className='my-5'>{comment.text}</div>
+                                        {Comment(comment)}
                                     </div>
                                     {(ci+1 == showXComments && post.comments.length > showXComments) && (
                                         <button className="py-2 px-5 rounded-lg" onClick={() => setShowXComments(showXComments+5)} title="Mehr">
