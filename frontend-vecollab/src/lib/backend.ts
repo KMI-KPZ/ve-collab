@@ -410,12 +410,15 @@ export function useGetPinnedPosts(
     mutate: KeyedMutator<any>;
 } {
     const { data, error, isLoading, mutate } = useSWR(
-        [`/timeline/space/${space}?limit=${limit || 3}`, accessToken],
+        space ?
+            [`/timeline/space/${space}?limit=${limit || 3}`, accessToken]
+            : null
+        ,
         ([url, token]) => GETfetcher(url, token)
     );
 
     return {
-        data: isLoading || error ? [] : data.pinned_posts,
+        data: isLoading || error || !space ? [] : data.pinned_posts,
         isLoading,
         error,
         mutate,

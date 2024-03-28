@@ -63,12 +63,8 @@ export default function Timeline({
 
     const {
         data: pinnedPosts,
-        isLoading: isLoadingPinnedPosts,
-        error: errorPinnedPosts,
         mutate: mutatePinnedPosts
-    } = space
-        ? useGetPinnedPosts(session!.accessToken, space!)
-        : { data: [], isLoading: false, error: undefined, mutate: undefined }
+    } = useGetPinnedPosts(session!.accessToken, space!)
 
     useEffect(() => {
         if (!newFetchedPosts.length) return

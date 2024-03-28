@@ -72,9 +72,7 @@ export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Prop
 
     const {
         data: pinnedPosts
-    } = space
-        ? useGetPinnedPosts(session!.accessToken, space._id)
-        : { data: [] }
+    } = useGetPinnedPosts(session!.accessToken, space._id)
 
     const handleOpenEditDialog = () => {
         setIsEditDialogOpen(true);
