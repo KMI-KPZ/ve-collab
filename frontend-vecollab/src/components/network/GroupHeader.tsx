@@ -312,41 +312,29 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                 height={180}
                             />
                         </div>
-                        <div className={'mr-auto'}>
+                        <div className={'flex grow items-center mt-6 text-slate-900 font-bold'}>
+                            <div className={'text-4xl pr-6'}>
+                                {space.name}
+                            </div>
+                        </div>
+                        <div className={'flex items-center mt-6'}>
                             <div className="mt-2 min-h-[2rem]">
                                 {userIsAdmin() && (
                                     <button
                                         className={
-                                            'border border-white bg-black/75 text-white rounded-lg px-3 py-1'
+                                            'border border-white bg-black/75 text-white rounded-lg px-3 py-2'
                                         }
                                         onClick={() => handleOpenEditDialog()}
                                     >
-                                        <span>Gruppe bearbeiten</span>
+                                        Gruppe bearbeiten
                                     </button>
                                 )}
                             </div>
-                            <div className={'mt-11 font-bold text-4xl text-slate-900'}>
-                                {space.name}
-                            </div>
-                        </div>
-                        <div className={'flex items-end mb-12'}>
-                            <button
-                                className={
-                                    'h-12 bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
-                                }
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    leaveSpace();
-                                }}
-                            >
-                                {' '}
-                                <span>Space verlassen</span>
-                            </button>
-                            <button className={'h-12 ml-2'}>
+                            {/* <button className={'h-12 ml-2'}>
                                 <span>
                                     <RxDotsVertical size={30} color={''} />
                                 </span>
-                            </button>
+                            </button> */}
                         </div>
                     </div>
                     <Dialog
@@ -838,6 +826,24 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                             </div>
                                         </>
                                     )}
+                                </div>
+                                <div tabname="Gruppe verlassen">
+                                    <div className="flex">
+                                        <div>
+                                            <button
+                                                className={
+                                                    'h-12 bg-red-500 border text-white py-3 px-6 rounded-lg shadow-xl'
+                                                }
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    leaveSpace();
+                                                }}
+                                            >
+                                                {' '}
+                                                <span>Gruppe verlassen</span>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </Tabs>
                         </div>
