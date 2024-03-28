@@ -268,7 +268,7 @@ export default function TimelinePost(
                         <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickLikeBtn}><HiOutlineHeart /></button>
                     )}
                     {space && (
-                        <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickPin} title="Beitrag anheften">
+                        <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickPin} title={post.pinned ? "Beitrag abheften" : "Beitrag anheften"}>
                             {post.pinned ? (
                                 <TiPin />
                             ) : (
@@ -276,7 +276,7 @@ export default function TimelinePost(
                             )}
                         </button>
                     )}
-                    <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickReplyBtn} title="Antworten"><TiArrowForward /></button>
+                    <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickReplyBtn} title="Beitrag zitieren"><TiArrowForward /></button>
                     {drOptions.length > 0 && (
                         <Dropdown options={drOptions} onSelect={handleSelectOption} />
                     )}
