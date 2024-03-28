@@ -2,7 +2,7 @@ import AuthenticatedImage from '../AuthenticatedImage';
 import { RxDotsVertical, RxTrash } from 'react-icons/rx';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { fetchDELETE, fetchGET, fetchPOST, useGetSpace } from '@/lib/backend';
+import { fetchDELETE, fetchGET, fetchPOST, useGetPinnedPosts, useGetSpace } from '@/lib/backend';
 import { ChangeEvent, useEffect, useState } from 'react';
 import Dialog from '../profile/Dialog';
 import Tabs from '../profile/Tabs';
@@ -16,9 +16,10 @@ import { BackendSearchResponse } from '@/interfaces/api/apiInterfaces';
 
 interface Props {
     userIsAdmin: () => boolean;
+    toggleShowPinnedPosts: () => void
 }
 
-export default function GroupHeader({ userIsAdmin }: Props) {
+export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Props) {
     const { data: session, status } = useSession();
     const router = useRouter();
 
@@ -68,6 +69,12 @@ export default function GroupHeader({ userIsAdmin }: Props) {
         error,
         mutate,
     } = useGetSpace(session!.accessToken, router.query.id as string);
+
+    const {
+        data: pinnedPosts
+    } = space
+        ? useGetPinnedPosts(session!.accessToken, space._id)
+        : { data: [] }
 
     const handleOpenEditDialog = () => {
         setIsEditDialogOpen(true);
@@ -316,6 +323,11 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                             <div className={'text-4xl pr-6'}>
                                 {space.name}
                             </div>
+                            {pinnedPosts.length > 0 && (
+                                <button className='py-2 px-3 rounded-md p-2 border border-gray-800 m-1' onClick={toggleShowPinnedPosts}>
+                                    {pinnedPosts.length} {pinnedPosts.length > 1 ? ("Angeheftete Beiträge") : ("Angehefteter Beitrag")}
+                                </button>
+                            )}
                         </div>
                         <div className={'flex items-center mt-6'}>
                             <div className="mt-2 min-h-[2rem]">

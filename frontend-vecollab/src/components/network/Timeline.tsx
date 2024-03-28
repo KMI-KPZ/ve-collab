@@ -9,14 +9,23 @@ import Timestamp from "../Timestamp";
 import { HiOutlineCalendar } from "react-icons/hi";
 import { format } from "date-fns";
 import React from "react";
+import { TiPin } from "react-icons/ti";
+import { MdKeyboardDoubleArrowUp } from "react-icons/md";
 
 interface Props {
     space?: string | undefined;
     user?: string | undefined;
+    showPinnedPosts?: boolean
+    toggleShowPinnedPosts?: () => void
 }
 
 Timeline.auth = true
-export default function Timeline({ space, user }: Props) {
+export default function Timeline({
+    space,
+    user,
+    showPinnedPosts,
+    toggleShowPinnedPosts
+}: Props) {
     const { data: session } = useSession();
     const [toDate, setToDate] = useState<Date>(new Date());
     const [sharedPost, setSharedPost] = useState<BackendPost|null>(null);
@@ -128,19 +137,10 @@ export default function Timeline({ space, user }: Props) {
 
     return (
         <>
-            <div className={'p-4 my-8 bg-white rounded shadow '}>
-                <TimelinePostForm
-                    space={space}
-                    sharedPost={sharedPost}
-                    onCancelRepost={() => setSharedPost(null)}
-                    onCreatedPost={afterCreatePost}
-                />
-            </div>
-
-            {pinnedPosts.length > 0 && (
-                <div className="mb-8 p-4 rounded-xl border-2 border-ve-collab-orange">
+            {(pinnedPosts.length > 0 && showPinnedPosts) && (
+                <div className="my-8">
                     <div className="mb-4 font-bold text-slate-900 text-xl">
-                        <button>Angeheftete Beiträge</button>
+                        <button><TiPin size={25} className="inline" /> {pinnedPosts.length > 1 ? ("Angeheftete Beiträge") : ("Angehefteter Beitrag")}</button>
                     </div>
                     {pinnedPosts.map((post, i) => (
                         <TimelinePost
@@ -156,8 +156,22 @@ export default function Timeline({ space, user }: Props) {
                             updatePinnedPosts={mutatePinnedPosts}
                         />
                     ))}
+                    <div className="relative text-center border-t-2 my-6 mx-2 border-ve-collab-orange/50">
+                        <button onClick={toggleShowPinnedPosts} className="absolute -top-[15px] shadow px-6 py-2 rounded-full bg-white hover:bg-slate-100" >
+                            <MdKeyboardDoubleArrowUp />
+                        </button>
+                    </div>
                 </div>
             )}
+
+            <div className={'p-4 my-8 bg-white rounded shadow '}>
+                <TimelinePostForm
+                    space={space}
+                    sharedPost={sharedPost}
+                    onCancelRepost={() => setSharedPost(null)}
+                    onCreatedPost={afterCreatePost}
+                />
+            </div>
 
             {Object.keys( groupedPosts ).map( (group, i) => {
                 const datePill = getDatePill(i)

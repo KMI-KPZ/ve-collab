@@ -30,7 +30,9 @@ export default function Space() {
         { name: '', profilePicUrl: '', institution: '', preferredUsername: '' },
     ]);
 
-    // TODO use conditional fetching with the swr hook to wait for the router to be ready, 
+    const [showPinnedPosts, setShowPinnedPosts] = useState<boolean>(false)
+
+    // TODO use conditional fetching with the swr hook to wait for the router to be ready,
     // because sometimes when the router is not yet ready, but the hook fires
     // an additional request with undefined id is made
     const {
@@ -42,7 +44,7 @@ export default function Space() {
     console.log(space);
     console.log(memberSnippets);
 
-    // TODO use conditional fetching with the swr hook to wait for the router to be ready, 
+    // TODO use conditional fetching with the swr hook to wait for the router to be ready,
     // because sometimes when the router is not yet ready, but the hook fires
     // an additional request with undefined id is made
     const { data: spaceACLEntry, isLoading: spaceACLEntryLoading } = useGetMySpaceACLEntry(
@@ -286,7 +288,10 @@ export default function Space() {
                         <>
                             <GroupBanner userIsAdmin={userIsAdmin} />
                             <div className={'mx-20 mb-2 px-5 relative -mt-16'}>
-                                <GroupHeader userIsAdmin={userIsAdmin} />
+                                <GroupHeader
+                                    userIsAdmin={userIsAdmin}
+                                    toggleShowPinnedPosts={() => setShowPinnedPosts(!showPinnedPosts)}
+                                />
                             </div>
                             <Container>
                                 <div className={'mx-20 flex'}>
@@ -294,7 +299,11 @@ export default function Space() {
                                         {(() => {
                                             switch (renderPicker) {
                                                 case 'timeline':
-                                                    return <Timeline space={space._id} />;
+                                                    return <Timeline
+                                                                space={space._id}
+                                                                showPinnedPosts={showPinnedPosts}
+                                                                toggleShowPinnedPosts={() => setShowPinnedPosts(!showPinnedPosts)}
+                                                            />;
                                                 case 'members':
                                                     return members();
                                                 case 'files':
