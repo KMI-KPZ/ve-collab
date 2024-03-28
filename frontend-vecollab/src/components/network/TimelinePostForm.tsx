@@ -3,7 +3,7 @@ import { useSession } from "next-auth/react";
 import { FormEvent, MouseEventHandler, useEffect } from "react";
 import { IoIosSend, IoMdClose } from "react-icons/io";
 import AuthenticatedImage from "../AuthenticatedImage";
-import { BackendPost, BackendPostAuthor } from "@/interfaces/api/apiInterfaces";
+import { BackendPost, BackendPostAuthor, BackendUserSnippet } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
 import PostHeader from "./PostHeader";
 import React, { useState } from 'react'
@@ -55,6 +55,17 @@ export default function TimelinePostForm(
     const [text, setText] = useState<string>('');
 
     const domParser = new DOMParser()
+
+    const [userProfileSnippet, setUserProfileSnippet] = useState<BackendUserSnippet>();
+
+    useEffect(() => {
+        if (!session?.user) return;
+
+        fetchPOST('/profile_snippets', { usernames: [session.user.preferred_username] }, session.accessToken)
+        .then((data) => {
+            setUserProfileSnippet(data.user_snippets[0])
+        });
+    }, [session]);
 
     useEffect(() => {
         if (postToEdit) {
@@ -202,7 +213,7 @@ export default function TimelinePostForm(
                 <div className="flex items-center mb-5">
                     {!postToEdit && (
                         <AuthenticatedImage
-                            imageId={"default_profile_pic.jpg"}
+                            imageId={userProfileSnippet ? userProfileSnippet.profile_pic : "default_profile_pic.jpg"}
                             alt={'Benutzerbild'}
                             width={40}
                             height={40}

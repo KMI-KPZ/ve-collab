@@ -2,7 +2,7 @@ import AuthenticatedImage from '../AuthenticatedImage';
 import { RxDotsVertical, RxTrash } from 'react-icons/rx';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { fetchDELETE, fetchGET, fetchPOST, useGetSpace } from '@/lib/backend';
+import { fetchDELETE, fetchGET, fetchPOST, useGetPinnedPosts, useGetSpace } from '@/lib/backend';
 import { ChangeEvent, useEffect, useState } from 'react';
 import Dialog from '../profile/Dialog';
 import Tabs from '../profile/Tabs';
@@ -16,9 +16,10 @@ import { BackendSearchResponse } from '@/interfaces/api/apiInterfaces';
 
 interface Props {
     userIsAdmin: () => boolean;
+    toggleShowPinnedPosts: () => void
 }
 
-export default function GroupHeader({ userIsAdmin }: Props) {
+export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Props) {
     const { data: session, status } = useSession();
     const router = useRouter();
 
@@ -68,6 +69,10 @@ export default function GroupHeader({ userIsAdmin }: Props) {
         error,
         mutate,
     } = useGetSpace(session!.accessToken, router.query.id as string);
+
+    const {
+        data: pinnedPosts
+    } = useGetPinnedPosts(session!.accessToken, space._id)
 
     const handleOpenEditDialog = () => {
         setIsEditDialogOpen(true);
@@ -312,41 +317,34 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                 height={180}
                             />
                         </div>
-                        <div className={'mr-auto'}>
+                        <div className={'flex grow items-center mt-6 text-slate-900 font-bold'}>
+                            <div className={'text-4xl pr-6'}>
+                                {space.name}
+                            </div>
+                            {pinnedPosts.length > 0 && (
+                                <button className='py-2 px-3 rounded-md p-2 border border-gray-800 m-1' onClick={toggleShowPinnedPosts}>
+                                    {pinnedPosts.length} {pinnedPosts.length > 1 ? ("Angeheftete Beiträge") : ("Angehefteter Beitrag")}
+                                </button>
+                            )}
+                        </div>
+                        <div className={'flex items-center mt-6'}>
                             <div className="mt-2 min-h-[2rem]">
                                 {userIsAdmin() && (
                                     <button
                                         className={
-                                            'border border-white bg-black/75 text-white rounded-lg px-3 py-1'
+                                            'border border-white bg-black/75 text-white rounded-lg px-3 py-2'
                                         }
                                         onClick={() => handleOpenEditDialog()}
                                     >
-                                        <span>Gruppe bearbeiten</span>
+                                        Gruppe bearbeiten
                                     </button>
                                 )}
                             </div>
-                            <div className={'mt-11 font-bold text-4xl text-slate-900'}>
-                                {space.name}
-                            </div>
-                        </div>
-                        <div className={'flex items-end mb-12'}>
-                            <button
-                                className={
-                                    'h-12 bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
-                                }
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    leaveSpace();
-                                }}
-                            >
-                                {' '}
-                                <span>Space verlassen</span>
-                            </button>
-                            <button className={'h-12 ml-2'}>
+                            {/* <button className={'h-12 ml-2'}>
                                 <span>
                                     <RxDotsVertical size={30} color={''} />
                                 </span>
-                            </button>
+                            </button> */}
                         </div>
                     </div>
                     <Dialog
@@ -838,6 +836,24 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                             </div>
                                         </>
                                     )}
+                                </div>
+                                <div tabname="Gruppe verlassen">
+                                    <div className="flex">
+                                        <div>
+                                            <button
+                                                className={
+                                                    'h-12 bg-red-500 border text-white py-3 px-6 rounded-lg shadow-xl'
+                                                }
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    leaveSpace();
+                                                }}
+                                            >
+                                                {' '}
+                                                <span>Gruppe verlassen</span>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </Tabs>
                         </div>

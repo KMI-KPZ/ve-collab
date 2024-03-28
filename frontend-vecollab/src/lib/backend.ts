@@ -32,6 +32,32 @@ const GETfetcher = (relativeUrl: string, accessToken?: string) =>
         return res.json();
     });
 
+const POSTfetcher = (relativeUrl: string, data?: Record<string, any>, accessToken?: string) =>
+    fetchPOST(relativeUrl, data, accessToken)
+    .then((res) => {
+        return res
+    });
+
+export function useGetProfileSnippets(usernames?: string[]): {
+    data: BackendUserSnippet[];
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data: session } = useSession();
+    const { data, error, isLoading, mutate } = useSWR(
+        ['/profile_snippets', session?.accessToken],
+        ([url, token]) => POSTfetcher(url, { usernames }, token)
+    );
+
+    return {
+        data: isLoading || error ? [] : data.user_snippets,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
 export function useGetAvailablePlans(accessToken: string): {
     data: PlanPreview[];
     isLoading: boolean;
@@ -367,6 +393,32 @@ export function useGetTimeline(
 
     return {
         data: isLoading || error ? [] : data.posts,
+        isLoading,
+        error,
+        mutate,
+    }
+}
+
+export function useGetPinnedPosts(
+    accessToken: string,
+    space: string,
+    limit?: number
+ ): {
+    data: BackendPost[];
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        space ?
+            [`/timeline/space/${space}?limit=${limit || 3}`, accessToken]
+            : null
+        ,
+        ([url, token]) => GETfetcher(url, token)
+    );
+
+    return {
+        data: isLoading || error || !space ? [] : data.pinned_posts,
         isLoading,
         error,
         mutate,
