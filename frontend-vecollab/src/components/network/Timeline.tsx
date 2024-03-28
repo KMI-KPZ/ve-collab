@@ -13,6 +13,7 @@ import { TiPin } from "react-icons/ti";
 import { MdKeyboardDoubleArrowUp } from "react-icons/md";
 
 interface Props {
+    userIsAdmin?: boolean
     space?: string | undefined;
     user?: string | undefined;
     showPinnedPosts?: boolean
@@ -21,6 +22,7 @@ interface Props {
 
 Timeline.auth = true
 export default function Timeline({
+    userIsAdmin=false,
     space,
     user,
     showPinnedPosts,
@@ -148,6 +150,7 @@ export default function Timeline({
                             post={post}
                             updatePost={updatePost}
                             space={space}
+                            userIsAdmin={userIsAdmin}
                             isLast={false}
                             allSpaces={allSpaces}
                             removePost={removePost}
@@ -201,6 +204,7 @@ export default function Timeline({
                                 post={post}
                                 updatePost={updatePost}
                                 space={space}
+                                userIsAdmin={userIsAdmin}
                                 isLast={i === Object.keys(groupedPosts).length-1 && j === groupedPosts[group].length-1}
                                 allSpaces={allSpaces}
                                 removePost={removePost}

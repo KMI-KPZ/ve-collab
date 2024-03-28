@@ -21,6 +21,7 @@ interface Props {
     post: BackendPost
     updatePost: (post: BackendPost) => void
     space?: string
+    userIsAdmin: boolean,
     isLast: boolean
     allSpaces?: BackendSpace[]
     removePost: (post: BackendPost) => void
@@ -35,6 +36,7 @@ export default function TimelinePost(
     post,
     updatePost,
     space,
+    userIsAdmin=false,
     isLast,
     allSpaces,
     removePost,
@@ -236,11 +238,15 @@ export default function TimelinePost(
     let drOptions = []
     if (
         (!post.isRepost && post.author.username == session?.user.preferred_username)
-        || post.isRepost && post.repostAuthor?.username == session?.user.preferred_username
+        || (post.isRepost && post.repostAuthor?.username == session?.user.preferred_username)
     ) {
         drOptions.push(
             { value: 'remove', label: 'löschen', icon: <MdDeleteOutline /> },
             { value: 'edit', label: 'bearbeiten', icon: <MdModeEdit /> }
+        )
+    } else if (userIsAdmin) {
+        drOptions.push(
+            { value: 'remove', label: 'löschen', icon: <MdDeleteOutline /> }
         )
     }
 
@@ -267,7 +273,7 @@ export default function TimelinePost(
                     ) : (
                         <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickLikeBtn}><HiOutlineHeart /></button>
                     )}
-                    {space && (
+                    {(space && userIsAdmin) && (
                         <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickPin} title={post.pinned ? "Beitrag abheften" : "Beitrag anheften"}>
                             {post.pinned ? (
                                 <TiPin />

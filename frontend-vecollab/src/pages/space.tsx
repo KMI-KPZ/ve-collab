@@ -301,6 +301,7 @@ export default function Space() {
                                                 case 'timeline':
                                                     return <Timeline
                                                                 space={space._id}
+                                                                userIsAdmin={userIsAdmin()}
                                                                 showPinnedPosts={showPinnedPosts}
                                                                 toggleShowPinnedPosts={() => setShowPinnedPosts(!showPinnedPosts)}
                                                             />;
