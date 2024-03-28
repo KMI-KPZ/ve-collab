@@ -208,7 +208,7 @@ export default function TimelinePost(
         if (!post.likers.length) return ( <></> )
 
         return (
-            <div className="group/likes w-10 text-sm mr-3 flex relative hover:cursor-pointer overflow-hidden hover:overflow-visible" onMouseOver={() => fetchLikers(post.likers)}>
+            <div className="group/likes w-10 text-sm mr-3 my-4 flex relative hover:cursor-pointer overflow-hidden hover:overflow-visible" onMouseOver={() => fetchLikers(post.likers)}>
                 <MdThumbUp className="" size={20} />&nbsp;{post.likers.length}
                 <div className="absolute w-40 overflow-y-auto max-h-32 left-1/2 -translate-x-1/2 p-2 mt-5 group-hover/likes:opacity-100 hover:!opacity-100 transition-opacity opacity-0 rounded-md bg-white shadow border">
                     {likers.map((liker, i) => (
@@ -262,11 +262,6 @@ export default function TimelinePost(
                 )}
 
                 <div className='ml-auto opacity-0 group-hover/post:opacity-100 transition-opacity'>
-                    {(post.comments.length == 0 && !showCommentForm) && (
-                        <button onClick={openCommentForm} title="Kommentar hinzufügen" className="p-2 rounded-full hover:bg-ve-collab-blue-light">
-                            <MdOutlineComment />
-                        </button>
-                    )}
                     {(post.likers.includes(session?.user.preferred_username as string)) ? (
                         <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickLikeBtn}><HiHeart /></button>
                     ) : (
@@ -355,13 +350,21 @@ export default function TimelinePost(
 
             <Likes />
 
+            {(post.comments.length == 0 && !showCommentForm) && (
+                <div className="mt-4 mb-2">
+                    <button onClick={openCommentForm} className="px-2 py-[6px] w-1/3 rounded-md border text-gray-400 text-left">
+                        Kommentar schreiben ...
+                    </button>
+                </div>
+            )}
+
             {(post.comments.length > 0 || showCommentForm) && (
                 <div className='mt-4 pt-4 pl-4 border-t-2 border-ve-collab-blue/50'>
                     <div className="mb-4 text-slate-900 font-bold text-lg">Kommentare</div>
 
                     <form onSubmit={onSubmitCommentForm} className="mb-2" ref={commentFormref}>
                         <input
-                            className={'border border-[#cccccc] rounded-md px-2 py-[6px]'}
+                            className={'w-1/3 border border-[#cccccc] rounded-md px-2 py-[6px]'}
                             type="text"
                             placeholder={'Kommentar schreiben ...'}
                             name='text'
