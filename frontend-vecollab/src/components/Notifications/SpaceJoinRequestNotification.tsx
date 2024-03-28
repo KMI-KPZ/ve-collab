@@ -1,5 +1,4 @@
 import { RxDotsVertical } from 'react-icons/rx';
-import SmallTimestamp from '../SmallTimestamp';
 import { Notification } from '@/interfaces/socketio';
 import { useEffect, useState } from 'react';
 import { fetchPOST } from '@/lib/backend';
@@ -7,6 +6,7 @@ import { useSession } from 'next-auth/react';
 import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
 import Dialog from '../profile/Dialog';
 import Link from 'next/link';
+import Timestamp from '@/components/Timestamp';
 
 interface Props {
     notification: Notification;
@@ -78,8 +78,8 @@ export default function SpaceJoinRequestNotification({
                         <b>{requestedUser?.name}</b> möchte deiner Gruppe{' '}
                         <b>{notification.payload.space_name}</b> beitreten.
                     </p>
-                    <SmallTimestamp
-                        className="text-gray-500"
+                    <Timestamp
+                        className="text-sm text-gray-500"
                         timestamp={notification.creation_timestamp}
                     />
                 </div>
