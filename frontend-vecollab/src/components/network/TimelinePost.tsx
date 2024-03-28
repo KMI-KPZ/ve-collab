@@ -26,7 +26,7 @@ interface Props {
     allSpaces?: BackendSpace[]
     removePost: (post: BackendPost) => void
     sharePost?: (post: BackendPost) => void
-    fetchNextPosts: Function
+    fetchNextPosts: () => void
     updatePinnedPosts: KeyedMutator<any> | undefined
 }
 
@@ -65,6 +65,7 @@ export default function TimelinePost(
 
         const observer = new IntersectionObserver(([entry]) => {
             if (isLast && entry.isIntersecting) {
+                // TODO es linter grubmles, but adding it to dependency array cals it too often ...
                 fetchNextPosts()
                 observer.unobserve(entry.target);
             }

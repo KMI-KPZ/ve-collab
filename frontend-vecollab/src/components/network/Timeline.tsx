@@ -7,7 +7,6 @@ import TimelinePostForm from "./TimelinePostForm";
 import { BackendPost } from "@/interfaces/api/apiInterfaces";
 import Timestamp from "../Timestamp";
 import { HiOutlineCalendar } from "react-icons/hi";
-import { format } from "date-fns";
 import React from "react";
 import { TiPin } from "react-icons/ti";
 import { MdKeyboardDoubleArrowUp } from "react-icons/md";
@@ -71,17 +70,17 @@ export default function Timeline({
 
         if (allPosts.some((post) => post._id == newFetchedPosts[0]._id) ) {
             // TODO sometimes this happens -> WHY???? Because of hot-refresh while development
-            console.warn('Fetched same postss as current [dev-only?!?]', {allPosts, newFetchedPosts, toDate});
+            // console.warn('Fetched same postss as current [dev-only?!?]', {allPosts, newFetchedPosts, toDate});
         } else {
             setAllPosts((prev) => [...prev, ...newFetchedPosts]);
         }
-    }, [newFetchedPosts])
+    }, [newFetchedPosts, allPosts])
 
     useEffect(() => {
         if (!allPosts.length) return
 
         setGroupedPosts( groupBy(allPosts, (p) => p.creation_date.replace(/T.+/, '')) )
-        console.log({allPosts, groupedPosts});
+        // console.log({allPosts, groupedPosts});
     }, [allPosts])
 
     function groupBy<T>(arr: T[], fn: (item: T) => any) {
@@ -93,9 +92,9 @@ export default function Timeline({
         }, {});
     }
 
-    const fetchNextPosts = (post: BackendPost, i: number) => {
+    const fetchNextPosts = () => {
         if (!allPosts.length) return
-        // console.log('Fetch next posts', {i, post, allPosts});
+        // console.log('Fetch next posts...', allPosts.length);
 
         const newToDate = new Date(allPosts[allPosts.length - 1].creation_date)
         newToDate.setMilliseconds(newToDate.getMilliseconds()+1)
@@ -205,7 +204,7 @@ export default function Timeline({
                                 allSpaces={allSpaces}
                                 removePost={removePost}
                                 sharePost={post => setSharedPost(post)}
-                                fetchNextPosts={() => fetchNextPosts(post, i)}
+                                fetchNextPosts={fetchNextPosts}
                                 updatePinnedPosts={mutatePinnedPosts}
                             />
                         )) }
