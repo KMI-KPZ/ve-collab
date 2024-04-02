@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import veCollabLogo from '@/images/veCollabLogo.png';
 import Link from 'next/link';
@@ -9,6 +9,8 @@ import { IoMdNotificationsOutline } from 'react-icons/io';
 import { MdArrowDropDown, MdOutlineMessage, MdSearch } from 'react-icons/md';
 import Dropdown from '../Dropdown';
 import AuthenticatedImage from '../AuthenticatedImage';
+import { fetchPOST } from '@/lib/backend';
+import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 
 interface Props {
     notificationEvents: Notification[];
@@ -27,6 +29,17 @@ export default function HeaderSection({
     const inactiveClass = 'rounded-md border-b-2 border-transparent hover:border-b-2 hover:border-ve-collab-orange'
     const activeClass = "rounded-md border-b-2 border-ve-collab-orange-light hover:border-b-2 hover:border-ve-collab-orange"
     const router = useRouter()
+
+    const [userProfileSnippet, setUserProfileSnippet] = useState<BackendUserSnippet>();
+
+    useEffect(() => {
+        if (!session?.user) return;
+
+        fetchPOST('/profile_snippets', { usernames: [session.user.preferred_username] }, session.accessToken)
+        .then((data) => {
+            setUserProfileSnippet(data.user_snippets[0])
+        });
+    }, [session]);
 
     useEffect(() => {
         //filter out the messages that the user sent himself --> they should not trigger a notification icon
@@ -57,8 +70,6 @@ export default function HeaderSection({
                 break;
         }
     }
-
-    const userImage = session?.user.image || "default_profile_pic.jpg"
 
     return (
         <header className="bg-white px-4 py-2.5 drop-shadow-lg relative z-40">
@@ -132,7 +143,7 @@ export default function HeaderSection({
                                         icon={
                                             <div className='flex items-center'>
                                                 <AuthenticatedImage
-                                                    imageId={userImage}
+                                                    imageId={userProfileSnippet ? userProfileSnippet.profile_pic : "default_profile_pic.jpg"}
                                                     alt={'Benutzerbild'}
                                                     width={30}
                                                     height={30}

@@ -261,6 +261,10 @@ class VEPlanHandler(BaseHandler):
                         "underlying_ve_model": "test",
                         "reflection": "test",
                         "good_practise_evaluation": "test",
+                        "evaluation_file": {                // or None instead
+                            "file_id": "<object_id_str>",
+                            "file_name": "test",
+                        },,
                         "progress": {
                             "name": "<completed|uncompleted|not_started>",
                             "institutions": "<completed|uncompleted|not_started>",
@@ -478,6 +482,10 @@ class VEPlanHandler(BaseHandler):
                         "underlying_ve_model": "test",
                         "reflection": "test",
                         "good_practise_evaluation": "test",
+                        "evaluation_file": {                // or None instead
+                            "file_id": "<object_id_str>",
+                            "file_name": "test",
+                        },
                         "progress": {
                             "name": "<completed|uncompleted|not_started>",
                             "institutions": "<completed|uncompleted|not_started>",
@@ -561,6 +569,9 @@ class VEPlanHandler(BaseHandler):
             (i.e. if you want to append a new step, send all other already existing steps as well).
             If you want to simple append or remove new objects to/from those list,
             use the append/remove-endpoints instead.
+
+            The only field that is not updateable via this endpoint is the `evaluation_file` attribute.
+            Use /planner/put_evaluation_file instead.
 
             query params:
                 "upsert" : <boolean>, Indicator to insert a new plan instead of updating an existing one,
@@ -652,6 +663,9 @@ class VEPlanHandler(BaseHandler):
             If you want to simple append or remove new objects to/from those list,
             use the append/remove-endpoints instead.
 
+            The only field that is not updateable via this endpoint is the `evaluation_file` attribute.
+            Use /planner/put_evaluation_file instead.
+
             Technically, one could also provide multiple update instructions to different plans
             as they are handled sequentially, though for clear structure it is not recommended.
 
@@ -712,6 +726,11 @@ class VEPlanHandler(BaseHandler):
                 (the http misses a required key)
                 {"success": False,
                  "reason": "missing_key_in_http_body:<missing_key>"}
+
+                400 Bad Request
+                (you tried to update the `evaluation_file` attribute, which is not allowed here)
+                {"success": False,
+                 "reason": "unsupported_field:evaluation_file"}
 
                 401 Unauthorized
                 (access token is not valid)
@@ -774,6 +793,43 @@ class VEPlanHandler(BaseHandler):
                         "custom_attributes": {"my_attr": "my_value"}
                     }
                 }
+
+        POST /planner/put_evaluation_file
+            Upload a file and store it under the given plan's `evaluation_file` attribute.
+            The file will be stored in the gridfs and the plan's `evaluation_file` attribute
+            will be set to the ObjectId of the uploaded file. Use this id to request the actual
+            file from gridfs using the static file endpoint (`GridFSStaticFileHandler`).
+
+            query params:
+                plan_id: the id of the plan to which the file should be attached
+
+            http body:
+                the file itself, as multipart/form-data
+
+            returns:
+                200 OK
+                (the file was successfully uploaded and attached to the plan)
+                {"success": True}
+
+                400 Bad Request
+                (the request misses the plan_id query parameter)
+                {"success": False,
+                 "reason": "missing_key:plan_id"}
+
+                401 Unauthorized
+                (access token is not valid)
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                (you don't have write access to the plan)
+                {"success": False,
+                 "reason": "insufficient_permission"}
+
+                409 Conflict
+                (No plan was found with the given plan_id)
+                {"success": False,
+                 "reason": "plan_doesnt_exist"}
 
         POST /planner/grant_access
             As the author of a plan, grant another user read and/or write access to
@@ -863,12 +919,14 @@ class VEPlanHandler(BaseHandler):
                  "reason": "plan_doesnt_exist"}
         """
 
-        try:
-            http_body = json.loads(self.request.body)
-        except json.JSONDecodeError:
-            self.set_status(400)
-            self.write({"success": False, "reason": "json_parsing_error"})
-            return
+        # all endpoints except "put_evaluation_file" require a json body
+        if slug != "put_evaluation_file":
+            try:
+                http_body = json.loads(self.request.body)
+            except json.JSONDecodeError:
+                self.set_status(400)
+                self.write({"success": False, "reason": "json_parsing_error"})
+                return
 
         # check that upsert query param is either "true" or "false"
         upsert = self.get_argument("upsert", "false")
@@ -1023,6 +1081,35 @@ class VEPlanHandler(BaseHandler):
                 step = Step.from_dict(http_body["step"])
 
                 self.append_step_to_plan(db, http_body["plan_id"], step)
+
+            elif slug == "put_evaluation_file":
+                try:
+                    plan_id = self.get_argument("plan_id")
+                except tornado.web.MissingArgumentError:
+                    self.set_status(400)
+                    self.write(
+                        {
+                            "success": False,
+                            "reason": MISSING_KEY_SLUG + "plan_id",
+                        }
+                    )
+                    return
+                if (
+                    "file" not in self.request.files
+                    or not self.request.files["file"][0]
+                ):
+                    self.set_status(400)
+                    self.write({"success": False, "reason": "missing_file:file"})
+                    return
+
+                file_obj = self.request.files["file"][0]
+                self.put_evaluation_file(
+                    plan_id,
+                    file_obj["filename"],
+                    file_obj["body"],
+                    file_obj["content_type"],
+                )
+                return
 
             elif slug == "grant_access":
                 if "plan_id" not in http_body:
@@ -1484,6 +1571,17 @@ class VEPlanHandler(BaseHandler):
         error_reason = None
         _id = None
 
+        # revoke the possibility to update the evaluation_file attribute
+        if field_name == "evaluation_file":
+            self.set_status(400)
+            self.write(
+                {
+                    "success": False,
+                    "reason": "unsupported_field:evaluation_file",
+                }
+            )
+            return
+
         try:
             plan_id = util.parse_object_id(plan_id)
             _id = planner.update_field(
@@ -1552,6 +1650,11 @@ class VEPlanHandler(BaseHandler):
         for update_instruction in update_instructions:
             error_reason = None
             error_status_code = None
+
+            # skip evaluation_file updates
+            if update_instruction["field_name"] == "evaluation_file":
+                continue
+
             try:
                 plan_id = util.parse_object_id(update_instruction["plan_id"])
                 planner.update_field(
@@ -1662,6 +1765,49 @@ class VEPlanHandler(BaseHandler):
             self.write({"success": False, "reason": error_reason})
         else:
             self.serialize_and_write({"success": True, "updated_id": _id})
+
+    def put_evaluation_file(
+        self,
+        plan_id: str | ObjectId,
+        file_name: str,
+        file_content: bytes,
+        content_type: str,
+    ) -> None:
+        """
+        add a new file to the plan, resembling the evaluation.
+        each plan has an own attribute `evaluation_file`, where the _id of the corresponding
+        file will be stored.
+        using this _id of the file that was just stored, you can retrieve the actual content
+        of the file using the `StaticFileHandler` on the uploads-endpoint using
+        /uploads/<file_id>
+        :param space_id: the _id of the space where to upload the new file
+        :param file_name: the name of the new file
+        :param file_content: the body of the file as raw bytes
+        """
+
+        plan_id = util.parse_object_id(plan_id)
+
+        with util.get_mongodb() as db:
+            planner = VEPlanResource(db)
+            try:
+                file_id = planner.put_evaluation_file(
+                    plan_id,
+                    file_name,
+                    file_content,
+                    content_type,
+                    self.current_user.username,
+                )
+            except PlanDoesntExistError:
+                self.set_status(409)
+                self.write({"success": False, "reason": PLAN_DOESNT_EXIST})
+                return
+            except NoWriteAccessError:
+                self.set_status(403)
+                self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
+                return
+
+        self.set_status(200)
+        self.serialize_and_write({"success": True, "inserted_file_id": file_id})
 
     def grant_acces_right(
         self,

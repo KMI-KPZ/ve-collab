@@ -1373,7 +1373,13 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
-            "files": [{"file_id": file_id, "file_name": "test.txt", "author": CURRENT_ADMIN.username}],
+            "files": [
+                {
+                    "file_id": file_id,
+                    "file_name": "test.txt",
+                    "author": CURRENT_ADMIN.username,
+                }
+            ],
             "comments": [],
             "likers": [],
         }
@@ -1433,7 +1439,13 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
-            "files": [{"file_id": file_id, "file_name": "test.txt", "author": CURRENT_ADMIN.username}],
+            "files": [
+                {
+                    "file_id": file_id,
+                    "file_name": "test.txt",
+                    "author": CURRENT_ADMIN.username,
+                }
+            ],
             "comments": [],
             "likers": [],
         }
@@ -4916,6 +4928,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "underlying_ve_model": "test",
             "reflection": "test",
             "good_practise_evaluation": "test",
+            "evaluation_file": None,
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",
@@ -4941,7 +4954,21 @@ class PlanResourceTest(BaseResourceTestCase):
     def tearDown(self) -> None:
         # delete all plans
         self.db.plans.delete_many({})
+
+        # delete all created files in gridfs
+        fs = gridfs.GridFS(self.db)
+        for fs_file in fs.find():
+            fs.delete(fs_file._id)
+
         return super().tearDown()
+
+    def test_check_plan_exists(self):
+        """
+        expect: True is returned if a plan with the given _id exists, False otherwise
+        """
+
+        self.assertTrue(self.planner._check_plan_exists(self.plan_id))
+        self.assertFalse(self.planner._check_plan_exists(ObjectId()))
 
     def test_get_plan(self):
         """
@@ -5006,6 +5033,9 @@ class PlanResourceTest(BaseResourceTestCase):
                 self.assertEqual(
                     plan.good_practise_evaluation,
                     self.default_plan["good_practise_evaluation"],
+                )
+                self.assertEqual(
+                    plan.evaluation_file, self.default_plan["evaluation_file"]
                 )
                 self.assertEqual(plan.timestamp_from, self.step.timestamp_from)
                 self.assertEqual(plan.timestamp_to, self.step.timestamp_to)
@@ -5075,6 +5105,13 @@ class PlanResourceTest(BaseResourceTestCase):
                     plan.underlying_ve_model, self.default_plan["underlying_ve_model"]
                 )
                 self.assertEqual(plan.reflection, self.default_plan["reflection"])
+                self.assertEqual(
+                    plan.good_practise_evaluation,
+                    self.default_plan["good_practise_evaluation"],
+                )
+                self.assertEqual(
+                    plan.evaluation_file, self.default_plan["evaluation_file"]
+                )
                 self.assertEqual(plan.progress, self.default_plan["progress"])
                 self.assertEqual(plan.timestamp_from, self.step.timestamp_from)
                 self.assertEqual(plan.timestamp_to, self.step.timestamp_to)
@@ -5171,6 +5208,10 @@ class PlanResourceTest(BaseResourceTestCase):
             plan.underlying_ve_model, self.default_plan["underlying_ve_model"]
         )
         self.assertEqual(plan.reflection, self.default_plan["reflection"])
+        self.assertEqual(
+            plan.good_practise_evaluation, self.default_plan["good_practise_evaluation"]
+        )
+        self.assertEqual(plan.evaluation_file, self.default_plan["evaluation_file"])
         self.assertEqual(plan.progress, self.default_plan["progress"])
         self.assertEqual(plan.timestamp_from, self.step.timestamp_from)
         self.assertEqual(plan.timestamp_to, self.step.timestamp_to)
@@ -5223,6 +5264,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "underlying_ve_model": "test",
                 "reflection": "test",
                 "good_practise_evaluation": "test",
+                "evaluation_file": None,
                 "progress": {
                     "name": "not_started",
                     "institutions": "not_started",
@@ -5275,6 +5317,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "underlying_ve_model": "test",
                 "reflection": "test",
                 "good_practise_evaluation": "test",
+                "evaluation_file": None,
                 "progress": {
                     "name": "not_started",
                     "institutions": "not_started",
@@ -5346,6 +5389,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "underlying_ve_model": "test",
             "reflection": "test",
             "good_practise_evaluation": "test",
+            "evaluation_file": None,
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",
@@ -5415,6 +5459,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "underlying_ve_model": "test",
             "reflection": "test",
             "good_practise_evaluation": "test",
+            "evaluation_file": None,
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",
@@ -6069,6 +6114,77 @@ class PlanResourceTest(BaseResourceTestCase):
             "name",
             "trying_update",
             False,
+            "user_with_no_access_rights",
+        )
+
+    def test_put_evaluation_file(self):
+        """
+        expect: successfully put evaluation file into the plan
+        """
+
+        file_id = self.planner.put_evaluation_file(
+            self.plan_id, "test_file", b"test", "image/jpg", None
+        )
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertEqual(
+            db_state["evaluation_file"],
+            {
+                "file_id": file_id,
+                "file_name": "test_file",
+            },
+        )
+        fs = gridfs.GridFS(self.db)
+        self.assertEqual(fs.get(file_id).read(), b"test")
+
+    def test_put_evaluation_file_with_user(self):
+        """
+        expect: successfully put evaluation file into the plan and passing access checks
+        """
+
+        file_id = self.planner.put_evaluation_file(
+            self.plan_id, "test_file", b"test", "image/jpg", CURRENT_USER.username
+        )
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertEqual(
+            db_state["evaluation_file"],
+            {
+                "file_id": file_id,
+                "file_name": "test_file",
+            },
+        )
+        fs = gridfs.GridFS(self.db)
+        self.assertEqual(fs.get(file_id).read(), b"test")
+
+    def test_put_evaluation_file_error_plan_doesnt_exist(self):
+        """
+        expect: PlanDoesntExistError is raised because no plan with the specified _id
+        exists
+        """
+
+        self.assertRaises(
+            PlanDoesntExistError,
+            self.planner.put_evaluation_file,
+            ObjectId(),
+            "test_file",
+            b"test",
+            "image/jpg",
+            None,
+        )
+
+    def test_put_evaluation_file_error_no_write_access(self):
+        """
+        expect: NoWriteAccessError is raised because user has no write access to the plan
+        """
+
+        self.assertRaises(
+            NoWriteAccessError,
+            self.planner.put_evaluation_file,
+            self.plan_id,
+            "test_file",
+            b"test",
+            "image/jpg",
             "user_with_no_access_rights",
         )
 

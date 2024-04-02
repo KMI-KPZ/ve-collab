@@ -3,11 +3,11 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { RxDotsVertical } from 'react-icons/rx';
-import SmallTimestamp from '../SmallTimestamp';
 import Dialog from '../profile/Dialog';
 import { fetchPOST } from '@/lib/backend';
 import { Notification } from '@/interfaces/socketio';
 import SuccessAlert from '../SuccessAlert';
+import Timestamp from '@/components/Timestamp';
 
 interface Props {
     notification: Notification;
@@ -84,8 +84,8 @@ export default function VeInvitationReplyNotification({
                         <b>{invitedUser?.name}</b> hat deine VE-Einladung{' '}
                         <b>{notification.payload.accepted === true ? 'akzeptiert' : 'abgelehnt'}</b>
                     </p>
-                    <SmallTimestamp
-                        className="text-gray-500"
+                    <Timestamp
+                        className="text-sm text-gray-500"
                         timestamp={notification.creation_timestamp}
                     />
                 </div>

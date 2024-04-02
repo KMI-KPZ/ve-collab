@@ -1,4 +1,4 @@
-import { useGetAllSpaces, useGetTimeline } from "@/lib/backend";
+import { useGetAllSpaces, useGetPinnedPosts, useGetTimeline } from "@/lib/backend";
 import { useSession } from "next-auth/react";
 import LoadingAnimation from "../LoadingAnimation";
 import TimelinePost from "./TimelinePost";
@@ -7,16 +7,26 @@ import TimelinePostForm from "./TimelinePostForm";
 import { BackendPost } from "@/interfaces/api/apiInterfaces";
 import Timestamp from "../Timestamp";
 import { HiOutlineCalendar } from "react-icons/hi";
-import { format } from "date-fns";
 import React from "react";
+import { TiPin } from "react-icons/ti";
+import { MdKeyboardDoubleArrowUp } from "react-icons/md";
 
 interface Props {
+    userIsAdmin?: boolean
     space?: string | undefined;
     user?: string | undefined;
+    showPinnedPosts?: boolean
+    toggleShowPinnedPosts?: () => void
 }
 
 Timeline.auth = true
-export default function Timeline({ space, user }: Props) {
+export default function Timeline({
+    userIsAdmin=false,
+    space,
+    user,
+    showPinnedPosts,
+    toggleShowPinnedPosts
+}: Props) {
     const { data: session } = useSession();
     const [toDate, setToDate] = useState<Date>(new Date());
     const [sharedPost, setSharedPost] = useState<BackendPost|null>(null);
@@ -50,25 +60,28 @@ export default function Timeline({ space, user }: Props) {
         mutate: mutateAllSpaces,
     } = useGetAllSpaces(session!.accessToken);
 
+    const {
+        data: pinnedPosts,
+        mutate: mutatePinnedPosts
+    } = useGetPinnedPosts(session!.accessToken, space!)
+
     useEffect(() => {
         if (!newFetchedPosts.length) return
 
         if (allPosts.some((post) => post._id == newFetchedPosts[0]._id) ) {
             // TODO sometimes this happens -> WHY???? Because of hot-refresh while development
-            console.error('ERROR: fetched posts are the same as current', {allPosts, newFetchedPosts, toDate});
+            // console.warn('Fetched same postss as current [dev-only?!?]', {allPosts, newFetchedPosts, toDate});
         } else {
             setAllPosts((prev) => [...prev, ...newFetchedPosts]);
         }
-    }, [newFetchedPosts])
+    }, [newFetchedPosts, allPosts])
 
     useEffect(() => {
         if (!allPosts.length) return
 
         setGroupedPosts( groupBy(allPosts, (p) => p.creation_date.replace(/T.+/, '')) )
-
+        // console.log({allPosts, groupedPosts});
     }, [allPosts])
-    // console.log({allPosts});
-    // console.log({groupedPosts, keys: Object.keys( groupedPosts )});
 
     function groupBy<T>(arr: T[], fn: (item: T) => any) {
         return arr.reduce<Record<string, T[]>>((prev, curr) => {
@@ -79,9 +92,9 @@ export default function Timeline({ space, user }: Props) {
         }, {});
     }
 
-    const fetchNextPosts = (post: BackendPost, i: number) => {
+    const fetchNextPosts = () => {
         if (!allPosts.length) return
-        // console.log('Fetch next posts', {i, post, allPosts});
+        // console.log('Fetch next posts...', allPosts.length);
 
         const newToDate = new Date(allPosts[allPosts.length - 1].creation_date)
         newToDate.setMilliseconds(newToDate.getMilliseconds()+1)
@@ -121,6 +134,34 @@ export default function Timeline({ space, user }: Props) {
 
     return (
         <>
+            {(pinnedPosts.length > 0 && showPinnedPosts) && (
+                <div className="my-8">
+                    <div className="mb-4 font-bold text-slate-900 text-xl">
+                        <button><TiPin size={25} className="inline" /> {pinnedPosts.length > 1 ? ("Angeheftete Beiträge") : ("Angehefteter Beitrag")}</button>
+                    </div>
+                    {pinnedPosts.map((post, i) => (
+                        <TimelinePost
+                            key={post._id}
+                            post={post}
+                            updatePost={updatePost}
+                            space={space}
+                            userIsAdmin={userIsAdmin}
+                            isLast={false}
+                            allSpaces={allSpaces}
+                            removePost={removePost}
+                            sharePost={post => setSharedPost(post)}
+                            fetchNextPosts={() => {}}
+                            updatePinnedPosts={mutatePinnedPosts}
+                        />
+                    ))}
+                    <div className="relative text-center border-t-2 my-6 mx-2 border-ve-collab-orange/50">
+                        <button onClick={toggleShowPinnedPosts} className="absolute -top-[15px] shadow px-6 py-2 rounded-full bg-white hover:bg-slate-100" >
+                            <MdKeyboardDoubleArrowUp />
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <div className={'p-4 my-8 bg-white rounded shadow '}>
                 <TimelinePostForm
                     space={space}
@@ -137,7 +178,7 @@ export default function Timeline({ space, user }: Props) {
                         style={{ borderColor: datePill.vg }}
                         className="-ml-7 pl-7 pb-4 border-l"
                     >
-                        <div className="relativ sticky z-20 -ml-[45px] top-[17px] mb-4 flex items-center font-bold">
+                        <div className="relativ sticky z-20 -ml-[47px] top-[17px] mb-4 flex items-center font-bold">
                             <div
                                 style={{ color: datePill.vg, borderColor: datePill.vg, backgroundColor:datePill.bg }}
                                 className="rounded-full border p-[2px] -mt-[11px] shadow"
@@ -158,11 +199,13 @@ export default function Timeline({ space, user }: Props) {
                                 post={post}
                                 updatePost={updatePost}
                                 space={space}
+                                userIsAdmin={userIsAdmin}
                                 isLast={i === Object.keys(groupedPosts).length-1 && j === groupedPosts[group].length-1}
                                 allSpaces={allSpaces}
                                 removePost={removePost}
                                 sharePost={post => setSharedPost(post)}
-                                fetchNextPosts={() => fetchNextPosts(post, i)}
+                                fetchNextPosts={fetchNextPosts}
+                                updatePinnedPosts={mutatePinnedPosts}
                             />
                         )) }
                     </div>

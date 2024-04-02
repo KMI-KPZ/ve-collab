@@ -1,7 +1,7 @@
 import { useSession } from 'next-auth/react';
 import SmallGreyText from '@/components/SmallGreyText';
-import SmallTimestamp from '@/components/SmallTimestamp';
 import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
+import Timestamp from '@/components/Timestamp';
 
 interface Props {
     plan: PlanPreview;
@@ -19,11 +19,11 @@ export default function PlanPreviewInformation({ plan }: Props) {
             )}
             <div className="mt-3">
                 <SmallGreyText text="Erstellt:" />
-                <SmallTimestamp timestamp={plan.creation_timestamp} />
+                <Timestamp timestamp={plan.creation_timestamp} className='text-sm' />
             </div>
             <div className="mt-3">
                 <SmallGreyText text="Zuletzt geändert:" />
-                <SmallTimestamp timestamp={plan.last_modified} />
+                <Timestamp timestamp={plan.last_modified} className='text-sm' />
             </div>
         </div>
     );
