@@ -223,7 +223,7 @@ class Task:
         """
         initialize a `Task`-object from a dictionary (`params`).
         All of the followings keys have to be present in the dict:
-        `"title"`, `learning_goal`, `task_formulation`, `social_form`, 
+        `"title"`, `learning_goal`, `task_formulation`, `social_form`,
         `"description"`, `"tools"`, `media`.
         However values are not required, any attributes may be
         initialized with None (title/description/learning_goal/task_formulation/social_form)
@@ -1190,7 +1190,7 @@ class PhysicalMobility:
         instance = cls()
         instance.__dict__.update(params)
         return instance
-    
+
 
 class Evaluation:
     EXPECTED_DICT_ENTRIES = {
@@ -1227,16 +1227,16 @@ class Evaluation:
 
     def __str__(self) -> str:
         return str(self.__dict__)
-    
+
     def __repr__(self) -> str:
         return str(self)
-    
+
     def __eq__(self, other: object) -> bool:
         if isinstance(other, self.__class__):
             return self.__dict__ == other.__dict__
         else:
             return False
-        
+
     def to_dict(self) -> Dict:
         """
         serialize all attributes of this instance into a dictionary
@@ -1251,7 +1251,7 @@ class Evaluation:
             "evaluation_while": self.evaluation_while,
             "evaluation_after": self.evaluation_after,
         }
-    
+
     @classmethod
     def from_dict(cls, params: Dict[str, Any]) -> Evaluation:
         """
@@ -1321,7 +1321,7 @@ class Evaluation:
                             type(params[key]),
                         )
                     )
-                
+
         # handle existence and correct type of object id's
         if "_id" in params:
             params["_id"] = util.parse_object_id(params["_id"])
@@ -1361,6 +1361,7 @@ class VEPlan:
         "underlying_ve_model": (str, type(None)),
         "reflection": (str, type(None)),
         "good_practise_evaluation": (str, type(None)),
+        "evaluation_file": (dict, type(None)),
         "progress": dict,
     }
 
@@ -1393,6 +1394,7 @@ class VEPlan:
         underlying_ve_model: str = None,
         reflection: str = None,
         good_practise_evaluation: str = None,
+        evaluation_file: dict = None,
         progress: Dict = {},
     ) -> None:
         """
@@ -1452,6 +1454,20 @@ class VEPlan:
         self.underlying_ve_model = underlying_ve_model
         self.reflection = reflection
         self.good_practise_evaluation = good_practise_evaluation
+
+        if evaluation_file:
+            if any([key not in evaluation_file for key in ["file_id", "file_name"]]):
+                raise MissingKeyError(
+                    "Missing a key in evaluation_file dictionary",
+                    "file or filename",
+                    "evaluation_file",
+                )
+            evaluation_file["file_id"] = util.parse_object_id(
+                evaluation_file["file_id"]
+            )
+            self.evaluation_file = evaluation_file
+        else:
+            self.evaluation_file = None
 
         if progress:
             # TODO check every expected key is inside as well
@@ -1583,6 +1599,7 @@ class VEPlan:
             "underlying_ve_model": self.underlying_ve_model,
             "reflection": self.reflection,
             "good_practise_evaluation": self.good_practise_evaluation,
+            "evaluation_file": self.evaluation_file,
             "progress": self.progress,
         }
 
@@ -1752,6 +1769,10 @@ class VEPlan:
                 "underlying_ve_model": None,
                 "reflection": None,
                 "good_practise_evaluation": None,
+                "evaluation_file": {                // or None instead
+                    "file_id": "<object_id_str>",
+                    "file_name": "test",
+                },
                 "progress": {
                     "name": "<completed|uncompleted|not_started>",
                     "institutions": "<completed|uncompleted|not_started>",
@@ -1822,6 +1843,21 @@ class VEPlan:
             params["_id"] = util.parse_object_id(params["_id"])
         else:
             params["_id"] = ObjectId()
+        if "evaluation_file" in params and params["evaluation_file"] is not None:
+            if any(
+                [
+                    key not in params["evaluation_file"]
+                    for key in ["file_id", "file_name"]
+                ]
+            ):
+                raise MissingKeyError(
+                    "Missing a key in evaluation_file dictionary",
+                    "file or filename",
+                    "evaluation_file",
+                )
+            params["evaluation_file"]["file_id"] = util.parse_object_id(
+                params["evaluation_file"]["file_id"]
+            )
 
         # if present, handle correct type of creation and modified timestamps
         if "creation_timestamp" in params:
