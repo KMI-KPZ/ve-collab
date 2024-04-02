@@ -2,7 +2,7 @@ import LoadingAnimation from '@/components/LoadingAnimation';
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
 import { Tooltip } from '@/components/Tooltip';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { ChangeEvent, useEffect, useState } from 'react';
 import { FiInfo } from 'react-icons/fi';
 import { defaultFineStepData } from './broadPlanner';
 import { IFineStep } from './fineplanner/[stepSlug]';
@@ -10,6 +10,8 @@ import { useRouter } from 'next/router';
 import WhiteBox from '@/components/Layout/WhiteBox';
 import { useSession } from 'next-auth/react';
 import { fetchGET, fetchPOST } from '@/lib/backend';
+import { AuthenticatedFile } from '@/components/AuthenticatedFile';
+import { RxFile } from 'react-icons/rx';
 
 AfterVE.auth = true;
 export default function AfterVE() {
@@ -23,6 +25,11 @@ export default function AfterVE() {
     const [veModel, setVeModel] = useState('');
     const [reflection, setReflection] = useState('');
     const [evaluation, setEvaluation] = useState('');
+    const [evaluationFile, setEvaluationFile] = useState<{
+        file_id: string;
+        file_name: string;
+    } | null>();
+    const [uploadFile, setUploadFile] = useState<Blob>();
 
     const onSubmit = async () => {
         await fetchPOST(
@@ -54,7 +61,47 @@ export default function AfterVE() {
             session?.accessToken
         );
 
+        if (uploadFile) {
+            await uploadToBackend();
+        }
+
         await router.push({ pathname: '/overviewProjects' });
+    };
+
+    const uploadToClient = (event: ChangeEvent<HTMLInputElement>) => {
+        if (event.target.files && event.target.files[0]) {
+            setUploadFile(event.target.files[0]);
+        }
+    };
+
+    const uploadToBackend = async () => {
+        // allow max 5 MB
+        if (uploadFile!.size > 5242880) {
+            alert('max. 5 MB erlaubt');
+            return;
+        }
+
+        const body = new FormData();
+        body.append('file', uploadFile!);
+
+        const headers: { Authorization?: string } = {};
+        headers['Authorization'] = 'Bearer ' + session!.accessToken;
+
+        // upload as form data instead of json
+        const response = await fetch(
+            process.env.NEXT_PUBLIC_BACKEND_BASE_URL +
+                `/planner/put_evaluation_file?plan_id=${router.query.plannerId}`,
+            {
+                method: 'POST',
+                headers: headers,
+                body,
+            }
+        );
+
+        const responseJson = await response.json();
+        console.log(responseJson);
+
+        setUploadFile(undefined);
     };
 
     useEffect(() => {
@@ -75,11 +122,12 @@ export default function AfterVE() {
                     setLoading(false);
                     if (data.plan.steps?.length > 0) {
                         setSteps(data.plan.steps);
-                        setShareAsGoodPractiseChosen(data.plan.is_good_practise);
-                        setVeModel(data.plan.underlying_ve_model);
-                        setReflection(data.plan.reflection);
-                        setEvaluation(data.plan.good_practise_evaluation);
                     }
+                    setShareAsGoodPractiseChosen(data.plan.is_good_practise);
+                    setVeModel(data.plan.underlying_ve_model);
+                    setReflection(data.plan.reflection);
+                    setEvaluation(data.plan.good_practise_evaluation);
+                    setEvaluationFile(data.plan.evaluation_file);
                 }
             );
         }
@@ -211,7 +259,8 @@ export default function AfterVE() {
                                                 <p>
                                                     Evaluationsergebnisse / Feedback der
                                                     Teilnehmenden: Fasse die Ergebnisse hier
-                                                    zusammen.
+                                                    zusammen. Falls vorhanden, kannst du gerne eine
+                                                    Datei hochladen.
                                                 </p>
                                                 <textarea
                                                     className="border border-gray-400 rounded-lg w-full p-2 mt-2"
@@ -219,6 +268,34 @@ export default function AfterVE() {
                                                     placeholder="Beschreibe die Evaluation der Teilnehmenden"
                                                     value={evaluation}
                                                     onChange={(e) => setEvaluation(e.target.value)}
+                                                />
+                                                {evaluationFile ? (
+                                                    <div
+                                                        className="max-w-[150px]"
+                                                        title={evaluationFile?.file_name}
+                                                    >
+                                                        <AuthenticatedFile
+                                                            url={`/uploads/${evaluationFile.file_id}`}
+                                                            filename={evaluationFile.file_name}
+                                                        >
+                                                            <div className="flex justify-center">
+                                                                <RxFile size={40} />
+                                                                {/* TODO preview for certain file types*/}
+                                                            </div>
+                                                            <div className="justify-center mx-2 px-1 my-1 font-bold text-slate-900 text-lg text-center truncate">
+                                                                {evaluationFile.file_name}
+                                                            </div>
+                                                        </AuthenticatedFile>
+                                                    </div>
+                                                ) : (
+                                                    <p className="px-1 my-1 text-gray-600">
+                                                        keine Datei vorhanden
+                                                    </p>
+                                                )}
+                                                <input
+                                                    type="file"
+                                                    className="my-2"
+                                                    onChange={uploadToClient}
                                                 />
                                             </li>
                                         </ol>

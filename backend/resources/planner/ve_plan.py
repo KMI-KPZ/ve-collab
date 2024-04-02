@@ -3,6 +3,7 @@ import datetime
 
 from bson import ObjectId
 from bson.errors import InvalidId
+import gridfs
 from pymongo.database import Database
 from pymongo.errors import DuplicateKeyError
 from typing import Any, Dict, List
@@ -221,6 +222,23 @@ class VEPlanResource:
 
         return username == result["author"] or username in result["partners"]
 
+    def _check_plan_exists(self, plan_id: str | ObjectId) -> bool:
+        """
+        Determine if a plan with the given _id exists in the database.
+
+        Returns True if the plan exists, False otherwise.
+        """
+
+        try:
+            plan_id = util.parse_object_id(plan_id)
+        except InvalidId:
+            return False
+
+        return (
+            self.db.plans.find_one({"_id": plan_id}, projection={"_id": True})
+            is not None
+        )
+
     def update_full_plan(
         self, plan: VEPlan, upsert: bool = False, requesting_username: str = None
     ) -> ObjectId:
@@ -289,7 +307,8 @@ class VEPlanResource:
         update a single field (i.e. attribute) of a VEPlan by specifying
         the _id of the plan to update, which field should be updated and
         the corresponding `value`. The `field_name` may be any attribute of
-        a VEPlan as indicated by `VEPlan.EXPECTED_DICT_ENTRIES`.
+        a VEPlan as indicated by `VEPlan.EXPECTED_DICT_ENTRIES`, except `evaluation_file`,
+        which has a separate updating function (`put_evaluation_file`).
 
         In case of a compound attribute like steps, audience, ... the full
         attributes of this object have to be passed within a list (because
@@ -524,6 +543,64 @@ class VEPlanResource:
         )
 
         return plan_id
+
+    def put_evaluation_file(
+        self,
+        plan_id: str | ObjectId,
+        file_name: str,
+        file_content: bytes,
+        content_type: str,
+        requesting_username: str = None,
+    ) -> ObjectId:
+        """
+        Upload a new evalution file to gridfs and associate it with the plan
+        given by its _id. the _id of the uploaded file is stored in the plan's
+        `evaluation_file` attribute and can be retrieved using the `GridFSStaticFileHandler`.
+
+        If the `requesting_username` is not None, sanity checks will be applied, i.e.
+        this user has to have write access to the plan (determined by his name being in the
+        write_access list). If this is not the case, a `NoWriteAccessError` is thrown.
+
+        Returns the _id of the uploaded file.
+
+        Raises `PlanDoesntExistError` if no plan with the same _id already exists.
+        Raises `NoWriteAccessError` if the requesting username (if supplied) has no write access
+        to the plan.
+        """
+
+        plan_id = util.parse_object_id(plan_id)
+
+        if not self._check_plan_exists(plan_id):
+            raise PlanDoesntExistError()
+
+        # if a user is given, check if he/she has appropriate write access
+        if requesting_username is not None:
+            if not self._check_write_access(plan_id, requesting_username):
+                raise NoWriteAccessError()
+
+        # store file in gridfs
+        # TODO: if there was a file before, delete the old one
+        fs = gridfs.GridFS(self.db)
+        _id = fs.put(
+            file_content,
+            filename=file_name,
+            content_type=content_type,
+            metadata={"uploader": requesting_username},
+        )
+
+        self.db.plans.update_one(
+            {"_id": plan_id},
+            {
+                "$set": {
+                    "evaluation_file": {
+                        "file_id": _id,
+                        "file_name": file_name,
+                    }
+                }
+            },
+        )
+
+        return _id
 
     def set_read_permissions(self, plan_id: str | ObjectId, username: str) -> None:
         """

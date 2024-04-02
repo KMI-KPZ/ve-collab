@@ -1814,7 +1814,7 @@ class VEPlanModelTest(TestCase):
             timestamp_from=datetime(2023, 1, 1),
             timestamp_to=datetime(2023, 1, 8),
         )
-    
+
     def create_evaluation(self, username: str = "test_admin") -> Evaluation:
         """
         convenience method to create a Evaluation object with non-default values
@@ -1860,6 +1860,7 @@ class VEPlanModelTest(TestCase):
         self.assertIsNone(plan.underlying_ve_model)
         self.assertIsNone(plan.reflection)
         self.assertIsNone(plan.good_practise_evaluation)
+        self.assertIsNone(plan.evaluation_file)
         self.assertEqual(plan.progress, self.default_progress)
         self.assertEqual(plan.duration, None)
         self.assertEqual(plan.workload, 0)
@@ -1900,6 +1901,10 @@ class VEPlanModelTest(TestCase):
             self.create_physical_mobility(),
         ]
         evaluation = [self.create_evaluation(), self.create_evaluation()]
+        evaluation_file = {
+            "file_id": ObjectId(),
+            "file_name": "test",
+        }
 
         plan = VEPlan(
             _id=_id,
@@ -1929,6 +1934,7 @@ class VEPlanModelTest(TestCase):
             underlying_ve_model="test",
             reflection="test",
             good_practise_evaluation="test",
+            evaluation_file=evaluation_file,
             progress={
                 "name": "completed",
                 "institutions": "not_started",
@@ -1975,6 +1981,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.underlying_ve_model, "test")
         self.assertEqual(plan.reflection, "test")
         self.assertEqual(plan.good_practise_evaluation, "test")
+        self.assertEqual(plan.evaluation_file, evaluation_file)
         self.assertEqual(plan.progress["name"], "completed")
         self.assertEqual(plan.workload, 20)
         self.assertEqual(plan.timestamp_from, datetime(2023, 1, 1))
@@ -2011,6 +2018,7 @@ class VEPlanModelTest(TestCase):
             underlying_ve_model="test",
             reflection="test",
             good_practise_evaluation="test",
+            evaluation_file=evaluation_file,
             progress={
                 "name": "completed",
                 "institutions": "not_started",
@@ -2051,6 +2059,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.underlying_ve_model, "test")
         self.assertEqual(plan.reflection, "test")
         self.assertEqual(plan.good_practise_evaluation, "test")
+        self.assertEqual(plan.evaluation_file, evaluation_file)
         self.assertEqual(plan.progress["name"], "completed")
         self.assertEqual(plan.workload, 10)
         self.assertEqual(plan.timestamp_from, datetime(2023, 1, 1))
@@ -2167,6 +2176,7 @@ class VEPlanModelTest(TestCase):
         self.assertIn("underlying_ve_model", plan_dict)
         self.assertIn("reflection", plan_dict)
         self.assertIn("good_practise_evaluation", plan_dict)
+        self.assertIn("evaluation_file", plan_dict)
         self.assertIn("progress", plan_dict)
         self.assertIsInstance(plan_dict["_id"], ObjectId)
         self.assertIsNone(plan_dict["author"])
@@ -2184,7 +2194,9 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan_dict["involved_parties"], [])
         self.assertIsNone(plan_dict["realization"])
         self.assertEqual(plan_dict["physical_mobility"], True)
-        self.assertEqual(plan_dict["physical_mobilities"], [physical_mobility.to_dict()])
+        self.assertEqual(
+            plan_dict["physical_mobilities"], [physical_mobility.to_dict()]
+        )
         self.assertIsNone(plan_dict["learning_env"])
         self.assertIsNone(plan_dict["new_content"])
         self.assertEqual(plan_dict["formalities"], [])
@@ -2195,6 +2207,7 @@ class VEPlanModelTest(TestCase):
         self.assertIsNone(plan_dict["underlying_ve_model"])
         self.assertIsNone(plan_dict["reflection"])
         self.assertIsNone(plan_dict["good_practise_evaluation"])
+        self.assertIsNone(plan_dict["evaluation_file"])
         self.assertEqual(plan_dict["progress"], expected_progress)
 
     def test_from_dict(self):
@@ -2211,6 +2224,10 @@ class VEPlanModelTest(TestCase):
         lecture = self.create_lecture("test")
         physical_mobility = self.create_physical_mobility("test")
         evaluation = self.create_evaluation("test")
+        evaluation_file = {
+            "file_id": ObjectId(),
+            "file_name": "test",
+        }
         plan_dict = {
             "_id": _id,
             "name": None,
@@ -2249,24 +2266,28 @@ class VEPlanModelTest(TestCase):
                 }
             ],
             "languages": [],
-            "evaluation": [{
-                "_id": evaluation._id,
-                "username": evaluation.username,
-                "is_graded": evaluation.is_graded,
-                "task_type": evaluation.task_type,
-                "assessment_type": evaluation.assessment_type,
-                "evaluation_while": evaluation.evaluation_while,
-                "evaluation_after": evaluation.evaluation_after,
-            }],
+            "evaluation": [
+                {
+                    "_id": evaluation._id,
+                    "username": evaluation.username,
+                    "is_graded": evaluation.is_graded,
+                    "task_type": evaluation.task_type,
+                    "assessment_type": evaluation.assessment_type,
+                    "evaluation_while": evaluation.evaluation_while,
+                    "evaluation_after": evaluation.evaluation_after,
+                }
+            ],
             "involved_parties": [],
             "realization": None,
             "physical_mobility": True,
-            "physical_mobilities": [{
-                "_id": physical_mobility._id,
-                "location": physical_mobility.location,
-                "timestamp_from": physical_mobility.timestamp_from,
-                "timestamp_to": physical_mobility.timestamp_to,
-            }],
+            "physical_mobilities": [
+                {
+                    "_id": physical_mobility._id,
+                    "location": physical_mobility.location,
+                    "timestamp_from": physical_mobility.timestamp_from,
+                    "timestamp_to": physical_mobility.timestamp_to,
+                }
+            ],
             "learning_env": None,
             "new_content": False,
             "formalities": [
@@ -2295,6 +2316,7 @@ class VEPlanModelTest(TestCase):
             "underlying_ve_model": "test",
             "reflection": "test",
             "good_practise_evaluation": "test",
+            "evaluation_file": evaluation_file,
             "progress": {
                 "name": "completed",
                 "institutions": "not_started",
@@ -2343,6 +2365,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.underlying_ve_model, "test")
         self.assertEqual(plan.reflection, "test")
         self.assertEqual(plan.good_practise_evaluation, "test")
+        self.assertEqual(plan.evaluation_file, evaluation_file)
         self.assertEqual(plan.progress["name"], "completed")
         self.assertEqual(plan.duration, step.duration)
         self.assertEqual(plan.timestamp_from, step.timestamp_from)
@@ -2386,22 +2409,26 @@ class VEPlanModelTest(TestCase):
                 }
             ],
             "languages": [],
-            "evaluation": [{
-                "username": evaluation.username,
-                "is_graded": evaluation.is_graded,
-                "task_type": evaluation.task_type,
-                "assessment_type": evaluation.assessment_type,
-                "evaluation_while": evaluation.evaluation_while,
-                "evaluation_after": evaluation.evaluation_after,
-            }],
+            "evaluation": [
+                {
+                    "username": evaluation.username,
+                    "is_graded": evaluation.is_graded,
+                    "task_type": evaluation.task_type,
+                    "assessment_type": evaluation.assessment_type,
+                    "evaluation_while": evaluation.evaluation_while,
+                    "evaluation_after": evaluation.evaluation_after,
+                }
+            ],
             "involved_parties": [],
             "realization": None,
             "physical_mobility": True,
-            "physical_mobilities": [{
-                "location": physical_mobility.location,
-                "timestamp_from": physical_mobility.timestamp_from,
-                "timestamp_to": physical_mobility.timestamp_to,
-            }],
+            "physical_mobilities": [
+                {
+                    "location": physical_mobility.location,
+                    "timestamp_from": physical_mobility.timestamp_from,
+                    "timestamp_to": physical_mobility.timestamp_to,
+                }
+            ],
             "learning_env": None,
             "new_content": False,
             "formalities": [
@@ -2429,6 +2456,7 @@ class VEPlanModelTest(TestCase):
             "underlying_ve_model": "test",
             "reflection": "test",
             "good_practise_evaluation": "test",
+            "evaluation_file": None,
             "progress": {
                 "name": "completed",
                 "institutions": "not_started",
@@ -2483,6 +2511,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.underlying_ve_model, "test")
         self.assertEqual(plan.reflection, "test")
         self.assertEqual(plan.good_practise_evaluation, "test")
+        self.assertIsNone(plan.evaluation_file)
         self.assertIsInstance(plan._id, ObjectId)
         self.assertIsInstance(plan.steps[0]._id, ObjectId)
         self.assertIsInstance(plan.audience[0]._id, ObjectId)
@@ -2533,6 +2562,7 @@ class VEPlanModelTest(TestCase):
             "underlying_ve_model": None,
             "reflection": None,
             "good_practise_evaluation": None,
+            "evaluation_file": None,
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",
@@ -2587,6 +2617,7 @@ class VEPlanModelTest(TestCase):
             "underlying_ve_model": None,
             "reflection": None,
             "good_practise_evaluation": None,
+            "evaluation_file": None,
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",
@@ -2694,6 +2725,10 @@ class VEPlanModelTest(TestCase):
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
         plan_dict["good_practise_evaluation"] = None
 
+        plan_dict["evaluation_file"] = 123
+        self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
+        plan_dict["evaluation_file"] = ObjectId()
+
         plan_dict["progress"] = 123
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
         plan_dict["progress"] = {}
@@ -2736,6 +2771,7 @@ class VEPlanModelTest(TestCase):
             "underlying_ve_model": None,
             "reflection": None,
             "good_practise_evaluation": None,
+            "evaluation_file": None,
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",
