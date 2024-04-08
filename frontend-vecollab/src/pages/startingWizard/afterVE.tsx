@@ -322,7 +322,10 @@ export default function AfterVE() {
                                     <button
                                         type="submit"
                                         className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg mr-2"
-                                        onClick={onSubmit}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            onSubmit();
+                                        }}
                                     >
                                         Speichern & zur Übersicht
                                     </button>
