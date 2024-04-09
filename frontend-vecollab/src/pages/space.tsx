@@ -53,7 +53,7 @@ export default function Space() {
         session!.accessToken,
         router.query.id as string
     );
-    console.log(spaceACLEntry);
+    console.log({spaceACLEntry});
 
     const handleCloseUploadDialog = () => {
         setIsUploadDialogOpen(false);
@@ -304,6 +304,7 @@ export default function Space() {
                                                     return <Timeline
                                                                 space={space._id}
                                                                 userIsAdmin={userIsAdmin()}
+                                                                spaceACL={spaceACLEntry}
                                                                 showPinnedPosts={showPinnedPosts}
                                                                 toggleShowPinnedPosts={() => setShowPinnedPosts(!showPinnedPosts)}
                                                             />;

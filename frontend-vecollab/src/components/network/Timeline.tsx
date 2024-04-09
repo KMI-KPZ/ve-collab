@@ -4,7 +4,7 @@ import LoadingAnimation from "../LoadingAnimation";
 import TimelinePost from "./TimelinePost";
 import { useEffect, useState } from "react";
 import TimelinePostForm from "./TimelinePostForm";
-import { BackendPost } from "@/interfaces/api/apiInterfaces";
+import { BackendPost, BackendSpaceACLEntry } from "@/interfaces/api/apiInterfaces";
 import Timestamp from "../Timestamp";
 import { HiOutlineCalendar } from "react-icons/hi";
 import React from "react";
@@ -14,6 +14,7 @@ import { MdKeyboardDoubleArrowUp } from "react-icons/md";
 interface Props {
     userIsAdmin?: boolean
     space?: string | undefined;
+    spaceACL?: BackendSpaceACLEntry | undefined
     user?: string | undefined;
     showPinnedPosts?: boolean
     toggleShowPinnedPosts?: () => void
@@ -23,6 +24,7 @@ Timeline.auth = true
 export default function Timeline({
     userIsAdmin=false,
     space,
+    spaceACL,
     user,
     showPinnedPosts,
     toggleShowPinnedPosts
@@ -148,6 +150,7 @@ export default function Timeline({
                             post={post}
                             updatePost={updatePost}
                             space={space}
+                            spaceACL={spaceACL}
                             userIsAdmin={userIsAdmin}
                             isLast={false}
                             allSpaces={allSpaces}
@@ -165,14 +168,16 @@ export default function Timeline({
                 </div>
             )}
 
-            <div className={'p-4 my-8 bg-white rounded shadow '}>
-                <TimelinePostForm
-                    space={space}
-                    sharedPost={sharedPost}
-                    onCancelRepost={() => setSharedPost(null)}
-                    onCreatedPost={afterCreatePost}
-                />
-            </div>
+            {(!spaceACL || spaceACL.post) && (
+                <div className={'p-4 my-8 bg-white rounded shadow '}>
+                    <TimelinePostForm
+                        space={space}
+                        sharedPost={sharedPost}
+                        onCancelRepost={() => setSharedPost(null)}
+                        onCreatedPost={afterCreatePost}
+                        />
+                </div>
+            )}
 
             {Object.keys( groupedPosts ).map( (group, i) => {
                 const datePill = getDatePill(i)
@@ -202,6 +207,7 @@ export default function Timeline({
                                 post={post}
                                 updatePost={updatePost}
                                 space={space}
+                                spaceACL={spaceACL}
                                 userIsAdmin={userIsAdmin}
                                 isLast={i === Object.keys(groupedPosts).length-1 && j === groupedPosts[group].length-1}
                                 allSpaces={allSpaces}
@@ -223,7 +229,15 @@ export default function Timeline({
             )}
 
             {isLoadingTimeline && (<LoadingAnimation />)}
-            {!isLoadingTimeline && allPosts.length == 0 && ( <div className="m-10 flex justify-center">Bisher keine Beiträge ...</div>)}
+            {!isLoadingTimeline && allPosts.length == 0 && (
+                <div className="m-10 flex justify-center">
+                    {space ? (
+                        "Bisher keine Beiträge in dieser Gruppe..."
+                    ) : (
+                        "Bisher keine Beiträge in deiner Timeline..."
+                    )}
+                </div>
+            )}
         </>
     );
 }
