@@ -38,7 +38,7 @@ const POSTfetcher = (relativeUrl: string, data?: Record<string, any>, accessToke
         return res
     });
 
-export function userIsGlobalAdmin(accessToken: string): boolean {
+export function useIsGlobalAdmin(accessToken: string): boolean {
     const { data } = useSWR(
         [`/admin_check`, accessToken]
         ,

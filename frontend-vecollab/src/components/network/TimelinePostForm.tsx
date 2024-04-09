@@ -284,7 +284,7 @@ export default function TimelinePostForm(
                         }}
                         className={`absolute p-2 rounded-md bg-white shadow border text-ve-collab-blue hover:underline after:content-[' '] after:absolute after:bottom-full after:left-1/2 after:-ml-2 after:border after:border-4 after:border-transparent after:border-b-gray-300`}
                     >
-                        <a href={cursorInLink.getAttribute('href') as string} target="_blank">{cursorInLink.getAttribute('href') as string}</a>
+                        <a href={cursorInLink.getAttribute('href') as string} target="_blank" rel="noreferrer">{cursorInLink.getAttribute('href') as string}</a>
                     </div>
                 )}
                 {loading && (
