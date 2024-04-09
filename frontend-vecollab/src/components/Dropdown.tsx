@@ -59,7 +59,7 @@ export default function MyDropdown({
                             key={i}
                             title={a.title}
                             onClick={() => _handleSelect(a.value)}
-                            className="flex items-center hover:cursor-pointer hover:bg-ve-collab-blue/50 rounded-lg"
+                            className="flex px-2 py-1 items-center hover:cursor-pointer hover:bg-ve-collab-blue/50 rounded-lg"
                         >
                             {a.icon}
                             <span className="mx-2">{a.label}</span>
