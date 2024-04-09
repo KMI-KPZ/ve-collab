@@ -1,30 +1,28 @@
 import { fetchPOST } from "@/lib/backend";
 import { useSession } from "next-auth/react";
-import { FormEvent, MouseEventHandler, useEffect } from "react";
+import React, { FormEvent, MouseEventHandler, useState, useEffect } from "react";
 import { IoIosSend, IoMdClose } from "react-icons/io";
 import AuthenticatedImage from "../AuthenticatedImage";
 import { BackendPost, BackendPostAuthor, BackendUserSnippet } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
 import PostHeader from "./PostHeader";
-import React, { useState } from 'react'
-import { MdAttachFile } from "react-icons/md";
+import { MdAttachFile, MdFormatClear, MdInsertLink, MdLinkOff } from "react-icons/md";
 import { RxFile } from "react-icons/rx";
 import LoadingAnimation from "../LoadingAnimation";
 import {
     BtnBold,
     BtnItalic,
     BtnUnderline,
-    BtnStrikeThrough,
     BtnBulletList,
     BtnNumberedList,
-    BtnLink,
-    BtnClearFormatting,
     Editor,
     EditorProvider,
-    Toolbar
+    Toolbar,
+    createButton,
   } from 'react-simple-wysiwyg';
 import TimelinePostText from "./TimelinePostText";
 import { sanitizedText } from "./sanitizedText";
+import Dialog from "../profile/Dialog";
 
 interface Props {
     post?: BackendPost | undefined;
@@ -57,6 +55,13 @@ export default function TimelinePostForm(
     const domParser = new DOMParser()
 
     const [userProfileSnippet, setUserProfileSnippet] = useState<BackendUserSnippet>();
+
+    const [isLinkDialogOpen, setIsLinkDialogOpen] = useState<boolean>(false);
+    const [selectedLinkText, setSelectedLinkText] = useState<{
+        parentNode: Node,
+        selectionStart: number,
+        selectionEnd: number} | undefined>();
+    const [cursorInLink, setCursorInLink] = useState<false | HTMLElement>(false);
 
     useEffect(() => {
         if (!session?.user) return;
@@ -201,9 +206,87 @@ export default function TimelinePostForm(
         setFilesToAttach(prev => prev ? prev.filter((a, i) => i != fileId) : null)
     }
 
+    var BtnClearFormatting = createButton('Clear formatting', <MdFormatClear className="m-auto" />, 'removeFormat');
+
+    var BtnLink = createButton(
+        cursorInLink ? 'Remove Link' : 'Create Link',
+        cursorInLink ? <MdLinkOff className="m-auto" /> : <MdInsertLink className="m-auto" />,
+        function (_a) {
+            var $selection = _a.$selection;
+            if (($selection === null || $selection === void 0 ? void 0 : $selection.nodeName) === 'A') {
+                if (window.getSelection()?.getRangeAt(0).toString() == '') {
+                    window.getSelection()?.selectAllChildren($selection as Node)
+                }
+                document.execCommand('unlink');
+                setCursorInLink(false)
+            } else if ($selection) {
+                setSelectedLinkText({
+                    parentNode: window.getSelection()?.focusNode as Node,
+                    selectionStart: window.getSelection()?.anchorOffset as number,
+                    selectionEnd: window.getSelection()?.focusOffset as number
+                })
+                setIsLinkDialogOpen(true)
+            }
+        }
+    );
+
+    const submitNewLinkDialog = (event: FormEvent) => {
+        event.preventDefault()
+        const target = event.currentTarget.querySelector('input')
+
+        if (selectedLinkText !== undefined) {
+            const range = new Range();
+            range.setStart(selectedLinkText.parentNode, selectedLinkText.selectionStart)
+            range.setEnd(selectedLinkText.parentNode, selectedLinkText.selectionEnd)
+            var selection = window.getSelection();
+            selection?.removeAllRanges();
+            selection?.addRange(range);
+        }
+
+        if (target?.value) {
+            document.execCommand('createLink', false, target.value );
+        }
+        setIsLinkDialogOpen(false)
+        setSelectedLinkText(undefined)
+    }
+
+    const editorCaretChanged = () => {
+        if (window.getSelection()?.focusNode?.parentNode?.nodeName === 'A') {
+            setCursorInLink(window.getSelection()?.focusNode?.parentNode as HTMLElement)
+        } else {
+            setCursorInLink(false)
+        }
+    }
+
     return (
         <>
+            <Dialog
+                isOpen={isLinkDialogOpen}
+                title={'Link'}
+                onClose={() => setIsLinkDialogOpen(false)}
+            >
+                <div className="w-[20vw]">
+                    <div>
+                        <form onSubmit={submitNewLinkDialog}>
+                            <input type="text" name="url" autoComplete="off" className="border border-[#cccccc] rounded-l px-2 py-1" />
+                            <button type="submit" className="my-2 py-2 px-5 rounded-lg bg-ve-collab-orange text-white">
+                                OK
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </Dialog>
             <form onSubmit={onSubmit} ref={ref} className="relative">
+                {cursorInLink && (
+                    <div style={{
+                            left: `${cursorInLink.offsetLeft-(cursorInLink.offsetWidth/2)}px`,
+                            top: `${2+cursorInLink.offsetHeight+cursorInLink.offsetTop}px`
+                        }}
+                        className={`absolute p-2 rounded-md bg-white shadow border text-ve-collab-blue hover:underline after:content-[' '] after:absolute after:bottom-full after:left-1/2 after:-ml-2 after:border after:border-4 after:border-transparent after:border-b-gray-300`}
+                    >
+                        <a href={cursorInLink.getAttribute('href') as string} target="_blank" rel="noreferrer">{cursorInLink.getAttribute('href') as string}</a>
+                    </div>
+                )}
                 {loading && (
                     <>
                         <div className="absolute w-full items-center top-10 z-20"><LoadingAnimation /></div>
@@ -227,12 +310,13 @@ export default function TimelinePostForm(
                                 value={text}
                                 placeholder="Beitrag schreiben..."
                                 onChange={(e) => setText(sanitizedText(e.target.value))}
+                                onKeyUp={editorCaretChanged}
+                                onClick={editorCaretChanged}
                             />
                             <Toolbar>
                                 <BtnBold />
                                 <BtnItalic />
                                 <BtnUnderline />
-                                <BtnStrikeThrough />
                                 <BtnBulletList style={{ paddingLeft: "5px" }} />
                                 <BtnNumberedList style={{ paddingLeft: "5px" }} />
                                 <BtnLink />

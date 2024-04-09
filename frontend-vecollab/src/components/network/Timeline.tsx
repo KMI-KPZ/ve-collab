@@ -4,7 +4,7 @@ import LoadingAnimation from "../LoadingAnimation";
 import TimelinePost from "./TimelinePost";
 import { useEffect, useState } from "react";
 import TimelinePostForm from "./TimelinePostForm";
-import { BackendPost } from "@/interfaces/api/apiInterfaces";
+import { BackendPost, BackendSpaceACLEntry } from "@/interfaces/api/apiInterfaces";
 import Timestamp from "../Timestamp";
 import { HiOutlineCalendar } from "react-icons/hi";
 import React from "react";
@@ -14,6 +14,7 @@ import { MdKeyboardDoubleArrowUp } from "react-icons/md";
 interface Props {
     userIsAdmin?: boolean
     space?: string | undefined;
+    spaceACL?: BackendSpaceACLEntry | undefined
     user?: string | undefined;
     showPinnedPosts?: boolean
     toggleShowPinnedPosts?: () => void
@@ -23,6 +24,7 @@ Timeline.auth = true
 export default function Timeline({
     userIsAdmin=false,
     space,
+    spaceACL,
     user,
     showPinnedPosts,
     toggleShowPinnedPosts
@@ -32,6 +34,8 @@ export default function Timeline({
     const [sharedPost, setSharedPost] = useState<BackendPost|null>(null);
     const [allPosts, setAllPosts] = useState<BackendPost[]>([]);
     const [groupedPosts, setGroupedPosts] = useState< Record<string, BackendPost[]> >({});
+    const [fetchCount, setFetchCount] = useState<number>(0);
+    const perFetchLimit = 10
 
     const datePillColors: { vg: string, bg: string}[] = [
         { vg: '#00748f', bg: '#d8f2f9' }, // blue
@@ -47,7 +51,7 @@ export default function Timeline({
     } = useGetTimeline(
         session!.accessToken,
         toDate.toISOString(),
-        10,
+        perFetchLimit,
         space,
         user
     )
@@ -72,6 +76,7 @@ export default function Timeline({
             // TODO sometimes this happens -> WHY???? Because of hot-refresh while development
             // console.warn('Fetched same postss as current [dev-only?!?]', {allPosts, newFetchedPosts, toDate});
         } else {
+            setFetchCount(prev => ++prev)
             setAllPosts((prev) => [...prev, ...newFetchedPosts]);
         }
     }, [newFetchedPosts, allPosts])
@@ -92,9 +97,9 @@ export default function Timeline({
         }, {});
     }
 
-    const fetchNextPosts = () => {
+    const fetchNextPosts = (force: boolean=false) => {
         if (!allPosts.length) return
-        // console.log('Fetch next posts...', allPosts.length);
+        if (force !== true && fetchCount % 2 == 0) return
 
         const newToDate = new Date(allPosts[allPosts.length - 1].creation_date)
         newToDate.setMilliseconds(newToDate.getMilliseconds()+1)
@@ -145,6 +150,7 @@ export default function Timeline({
                             post={post}
                             updatePost={updatePost}
                             space={space}
+                            spaceACL={spaceACL}
                             userIsAdmin={userIsAdmin}
                             isLast={false}
                             allSpaces={allSpaces}
@@ -162,14 +168,16 @@ export default function Timeline({
                 </div>
             )}
 
-            <div className={'p-4 my-8 bg-white rounded shadow '}>
-                <TimelinePostForm
-                    space={space}
-                    sharedPost={sharedPost}
-                    onCancelRepost={() => setSharedPost(null)}
-                    onCreatedPost={afterCreatePost}
-                />
-            </div>
+            {(!spaceACL || spaceACL.post) && (
+                <div className={'p-4 my-8 bg-white rounded shadow '}>
+                    <TimelinePostForm
+                        space={space}
+                        sharedPost={sharedPost}
+                        onCancelRepost={() => setSharedPost(null)}
+                        onCreatedPost={afterCreatePost}
+                        />
+                </div>
+            )}
 
             {Object.keys( groupedPosts ).map( (group, i) => {
                 const datePill = getDatePill(i)
@@ -199,6 +207,7 @@ export default function Timeline({
                                 post={post}
                                 updatePost={updatePost}
                                 space={space}
+                                spaceACL={spaceACL}
                                 userIsAdmin={userIsAdmin}
                                 isLast={i === Object.keys(groupedPosts).length-1 && j === groupedPosts[group].length-1}
                                 allSpaces={allSpaces}
@@ -211,9 +220,24 @@ export default function Timeline({
                     </div>
                 )
             } )}
+            {newFetchedPosts.length >= perFetchLimit && (
+                <div className="text-center">
+                    <button onClick={e => {fetchNextPosts(true)}} type="button" title="Weitere Beiträge laden ..." className="py-2 px-5 rounded-lg bg-ve-collab-orange text-white">
+                        Mehr
+                    </button>
+                </div>
+            )}
 
             {isLoadingTimeline && (<LoadingAnimation />)}
-            {!isLoadingTimeline && allPosts.length == 0 && ( <div className="m-10 flex justify-center">Bisher keine Beiträge ...</div>)}
+            {!isLoadingTimeline && allPosts.length == 0 && (
+                <div className="m-10 flex justify-center">
+                    {space ? (
+                        "Bisher keine Beiträge in dieser Gruppe..."
+                    ) : (
+                        "Bisher keine Beiträge in deiner Timeline..."
+                    )}
+                </div>
+            )}
         </>
     );
 }
