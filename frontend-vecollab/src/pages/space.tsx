@@ -9,7 +9,7 @@ import GroupBanner from '@/components/network/GroupBanner';
 import GroupHeader from '@/components/network/GroupHeader';
 import Dialog from '@/components/profile/Dialog';
 import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
-import { fetchPOST, useGetMySpaceACLEntry, useGetSpace } from '@/lib/backend';
+import { fetchPOST, useGetMySpaceACLEntry, useGetSpace, userIsGlobalAdmin } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { ChangeEvent, useEffect, useState } from 'react';
@@ -31,6 +31,8 @@ export default function Space() {
     ]);
 
     const [showPinnedPosts, setShowPinnedPosts] = useState<boolean>(false)
+
+    const isGlobalAdmin = userIsGlobalAdmin(session!.accessToken)
 
     // TODO use conditional fetching with the swr hook to wait for the router to be ready,
     // because sometimes when the router is not yet ready, but the hook fires
@@ -273,7 +275,7 @@ export default function Space() {
 
     // can only be called after space hook is loaded
     function userIsAdmin() {
-        return space.admins.includes(session?.user?.preferred_username as string);
+        return isGlobalAdmin || space.admins.includes(session?.user?.preferred_username as string);
     }
 
     return (
