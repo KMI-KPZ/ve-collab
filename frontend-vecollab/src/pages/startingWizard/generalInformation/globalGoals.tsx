@@ -15,7 +15,7 @@ import { MultiValue, ActionMeta } from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 import Link from 'next/link';
 import { Tooltip } from '@/components/Tooltip';
-import { FiInfo } from 'react-icons/fi';
+import { PiBookOpenText } from "react-icons/pi";
 
 GlobalGoals.auth = true;
 export default function GlobalGoals() {
@@ -117,7 +117,7 @@ export default function GlobalGoals() {
                                     Welche Richtlernziele sollen im VE erreicht werden?
                                     <Tooltip tooltipsText="Mehr zu Richtlernzielen findest du hier in den Selbstlernmaterialien …">
                                         <Link target="_blank" href={'/content/Potenziale'}>
-                                            <FiInfo size={30} color="#00748f" />
+                                            <PiBookOpenText size={30} color="#00748f" />
                                         </Link>
                                     </Tooltip>
                                 </div>

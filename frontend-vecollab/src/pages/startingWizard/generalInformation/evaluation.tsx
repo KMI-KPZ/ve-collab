@@ -13,7 +13,7 @@ import LoadingAnimation from '@/components/LoadingAnimation';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import Link from 'next/link';
 import { Tooltip } from '@/components/Tooltip';
-import { FiInfo } from 'react-icons/fi';
+import { PiBookOpenText } from "react-icons/pi";
 import WhiteBox from '@/components/Layout/WhiteBox';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { BackendProfileSnippetsResponse, BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
@@ -306,7 +306,7 @@ export default function Evaluation() {
                                         Bewertung / Evaluation
                                         <Tooltip tooltipsText="Mehr zur Evaluation von VE findest du hier in den Selbstlernmaterialien …">
                                             <Link target="_blank" href={'/content/Evaluation'}>
-                                                <FiInfo size={30} color="#00748f" />
+                                                <PiBookOpenText size={30} color="#00748f" />
                                             </Link>
                                         </Tooltip>
                                     </div>
