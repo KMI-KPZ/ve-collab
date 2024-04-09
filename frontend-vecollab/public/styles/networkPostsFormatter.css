@@ -63,7 +63,7 @@
     @apply text-ve-collab-blue;
 }
 .rsw-editor a:hover {
-    @apply underline;
+    /* @apply underline; */
     @apply cursor-pointer;
 }
 .rsw-editor ol {
