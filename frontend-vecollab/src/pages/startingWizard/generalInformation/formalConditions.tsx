@@ -17,6 +17,7 @@ import { FiInfo } from 'react-icons/fi';
 import { FormProvider, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import PopupSaveData from '@/components/StartingWizard/PopupSaveData';
 import SideProgressBarSectionBroadPlannerWithReactHookForm from '@/components/StartingWizard/SideProgressBarSectionBroadPlannerWithReactHookForm';
+import { BackendUserSnippet, BackendProfileSnippetsResponse } from '@/interfaces/api/apiInterfaces';
 
 export interface FormalConditionPartner {
     username: string;
@@ -44,6 +45,9 @@ export default function FormalConditions() {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
+    const [partnerProfileSnippets, setPartnerProfileSnippets] = useState<{
+        [Key: string]: BackendUserSnippet;
+    }>({});
     const [steps, setSteps] = useState<IFineStep[]>([]);
     const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
 
@@ -88,7 +92,6 @@ export default function FormalConditions() {
         if (session) {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
-                    setLoading(false);
                     if (data.plan.progress.length !== 0) {
                         setSideMenuStepsProgress(data.plan.progress);
                     }
@@ -100,6 +103,20 @@ export default function FormalConditions() {
                     ) {
                         methods.setValue('formalConditions', data.plan.formalities);
                     }
+
+                    // fetch profile snippets to be able to display the full name instead of username only
+                    fetchPOST(
+                        '/profile_snippets',
+                        { usernames: [...data.plan.partners, data.plan.author] },
+                        session.accessToken
+                    ).then((snippets: BackendProfileSnippetsResponse) => {
+                        let partnerSnippets: { [Key: string]: BackendUserSnippet } = {};
+                        snippets.user_snippets.forEach((element: BackendUserSnippet) => {
+                            partnerSnippets[element.username] = element;
+                        });
+                        setPartnerProfileSnippets(partnerSnippets);
+                        setLoading(false);
+                    });
                 }
             );
         }
@@ -142,7 +159,11 @@ export default function FormalConditions() {
             <div key={userCheckForm.id} className="flex justify-center">
                 <div className="w-4/5 space-y-3 py-8 flex flex-col">
                     <div className="flex justify-start items-center font-bold text-lg mb-4">
-                        {userCheckForm.username}
+                        {partnerProfileSnippets[userCheckForm.username]
+                            ? partnerProfileSnippets[userCheckForm.username].first_name +
+                              ' ' +
+                              partnerProfileSnippets[userCheckForm.username].last_name
+                            : userCheckForm.username}
                     </div>
                     <div className="flex justify-start items-center">
                         <input

@@ -1,30 +1,33 @@
 import { fetchDELETE, fetchPOST } from "@/lib/backend";
 import { useSession } from "next-auth/react";
-import { HiHeart, HiOutlineCalendar, HiOutlineHeart, HiOutlineShare } from "react-icons/hi";
+import { HiHeart, HiOutlineHeart } from "react-icons/hi";
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { IoIosSend } from "react-icons/io";
 import Dropdown from "../Dropdown";
 import { BackendPost, BackendPostAuthor, BackendPostComment, BackendPostFile, BackendSpace } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
-import { MdDeleteOutline, MdDoubleArrow, MdModeEdit, MdOutlineAddComment, MdOutlineKeyboardDoubleArrowDown, MdThumbUp } from "react-icons/md";
-import { TiArrowForward } from "react-icons/ti";
+import { MdDeleteOutline, MdDoubleArrow, MdModeEdit, MdOutlineKeyboardDoubleArrowDown,  MdThumbUp } from "react-icons/md";
+import { TiArrowForward, TiPin, TiPinOutline } from "react-icons/ti";
 import TimelinePostForm from "./TimelinePostForm";
 import PostHeader from "./PostHeader";
 import { AuthenticatedFile } from "../AuthenticatedFile";
 import { RxFile } from "react-icons/rx";
 import TimelinePostText from "./TimelinePostText";
 import AuthenticatedImage from "../AuthenticatedImage";
+import { KeyedMutator } from "swr";
 
 interface Props {
     post: BackendPost
     updatePost: (post: BackendPost) => void
     space?: string
+    userIsAdmin: boolean,
     isLast: boolean
     allSpaces?: BackendSpace[]
     removePost: (post: BackendPost) => void
     sharePost?: (post: BackendPost) => void
-    fetchNextPosts: Function
+    fetchNextPosts: () => void
+    updatePinnedPosts: KeyedMutator<any> | undefined
 }
 
 TimelinePost.auth = true
@@ -33,11 +36,13 @@ export default function TimelinePost(
     post,
     updatePost,
     space,
+    userIsAdmin=false,
     isLast,
     allSpaces,
     removePost,
     sharePost: replyPost,
-    fetchNextPosts
+    fetchNextPosts,
+    updatePinnedPosts
 }: Props) {
     const { data: session } = useSession();
     const ref = useRef<any>(null)
@@ -48,12 +53,19 @@ export default function TimelinePost(
     const [showXComments, setShowXComments] = useState<number>(3)
     const [editPost, setEditPost] = useState<boolean>(false)
 
+    const [loadingLikers, setLoadingLikers] = useState<boolean>(false)
+    const [likers, setLikers] = useState<BackendPostAuthor[]>([])
+
+    const [pinnedComments, setPinnedComments] = useState<BackendPostComment[]>( post.comments.filter(c => c.pinned) )
+    const [showPinnedComments, toggleShowPinnedComments] = useState<boolean>(false)
+
     // implement infinity scroll (detect intersection of window viewport with last post)
     useEffect(() => {
         if (!ref?.current) return;
 
         const observer = new IntersectionObserver(([entry]) => {
             if (isLast && entry.isIntersecting) {
+                // TODO es linter grubmles, but adding it to dependency array cals it too often ...
                 fetchNextPosts()
                 observer.unobserve(entry.target);
             }
@@ -114,6 +126,21 @@ export default function TimelinePost(
                 newLikers.push(session?.user.preferred_username as string)
             }
             updatePost( {...post, likers: newLikers} )
+            fetchLikers(newLikers)
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    const onClickPin = async () => {
+        try {
+            if (post.pinned) {
+                await fetchDELETE( '/pin', { id: post._id, pin_type: 'post' }, session?.accessToken )
+            } else {
+                await fetchPOST( '/pin', { id: post._id, pin_type: 'post' }, session?.accessToken )
+            }
+            updatePost( {...post, pinned: !post.pinned} )
+            if (updatePinnedPosts) updatePinnedPosts()
         } catch (error) {
             console.log(error);
         }
@@ -165,6 +192,35 @@ export default function TimelinePost(
         }, 1);
     }
 
+    const fetchLikers = (usernames: string[]) => {
+        if (likers.length == usernames.length || loadingLikers) return
+
+        setLoadingLikers(true)
+        fetchPOST('/profile_snippets', { usernames }, session?.accessToken)
+        .then(data => {
+            setLikers(data.user_snippets)
+            setLoadingLikers(false)
+        });
+    }
+
+    const pinComment = async (comment: BackendPostComment) => {
+        try {
+            if (comment.pinned) {
+                await fetchDELETE( '/pin', { id: comment._id, pin_type: 'comment' }, session?.accessToken )
+            } else {
+                await fetchPOST( '/pin', { id: comment._id, pin_type: 'comment' }, session?.accessToken )
+            }
+            const newComments = post.comments.map(c => {
+                return c._id == comment._id ? { ...c, pinned: !comment.pinned } : c
+            })
+
+            updatePost( {...post, comments: newComments } )
+            setPinnedComments(newComments.filter(c => c.pinned))
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
     const SpacenameById = (spaceId: string) => {
         if (!allSpaces) return (<>{spaceId}</>)
         const space = allSpaces.find(space => space._id == spaceId)
@@ -174,18 +230,47 @@ export default function TimelinePost(
     const Likes = () => {
         if (!post.likers.length) return ( <></> )
 
-        let hoverMsg = "Von "
-        if (post.likers.length == 1) hoverMsg += `${post.likers[0]}`
-        else if (post.likers.length == 2) hoverMsg += `${post.likers[0]} und ${post.likers[1]}`
-        else if (post.likers.length == 3) hoverMsg += `${post.likers.slice(0, 2).join(", ")} und ${post.likers[2]}`
-        else hoverMsg += `${post.likers.slice(0, 3).join(", ")} und anderen`
-
         return (
-            <span className="hover:cursor-pointer text-sm mr-3" title={hoverMsg}>
-                <MdThumbUp className="inline" size={20} /> {post.likers.length}
-            </span>
+            <div className="group/likes w-10 text-sm mr-3 my-4 flex relative hover:cursor-pointer overflow-hidden hover:overflow-visible" onMouseOver={() => fetchLikers(post.likers)}>
+                <MdThumbUp className="" size={20} />&nbsp;{post.likers.length}
+                <div className="absolute w-40 overflow-y-auto max-h-32 left-1/2 -translate-x-1/2 p-2 mt-5 group-hover/likes:opacity-100 hover:!opacity-100 transition-opacity opacity-0 rounded-md bg-white shadow border">
+                    {likers.map((liker, i) => (
+                        <Link key={i} href={`/profile?username=${liker.username}`} className='truncate'>
+                            <AuthenticatedImage
+                                imageId={liker.profile_pic}
+                                alt={'Benutzerbild'}
+                                width={20}
+                                height={20}
+                                className="rounded-full mr-3 inline"
+                            />
+                            {/* TODO use prefered username */}
+                            {liker.first_name} {liker.last_name}
+                        </Link>
+                    ))}
+                </div>
+            </div>
         )
     }
+
+    const Comment = (comment: BackendPostComment) => (
+        <>
+            <div className={`flex items-center group/comment`}>
+                <PostHeader author={comment.author} date={comment.creation_date} />
+                <div className={`ml-auto opacity-0 transition-opacity group-hover/comment:opacity-100`}>
+                    {(space && userIsAdmin) && (
+                        <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={e => pinComment(comment)} title={post.pinned ? "Kommentar abheften" : "Kommentar anheften"}>
+                            {comment.pinned ? (
+                                <TiPin />
+                            ) : (
+                                <TiPinOutline />
+                            )}
+                        </button>
+                    )}
+                </div>
+            </div>
+            <div className='my-5'>{comment.text}</div>
+        </>
+    )
 
     const fileIsImage = (file: BackendPostFile) => {
         return file.file_type?.startsWith('image/')
@@ -194,17 +279,21 @@ export default function TimelinePost(
     let drOptions = []
     if (
         (!post.isRepost && post.author.username == session?.user.preferred_username)
-        || post.isRepost && post.repostAuthor?.username == session?.user.preferred_username
+        || (post.isRepost && post.repostAuthor?.username == session?.user.preferred_username)
     ) {
         drOptions.push(
             { value: 'remove', label: 'löschen', icon: <MdDeleteOutline /> },
             { value: 'edit', label: 'bearbeiten', icon: <MdModeEdit /> }
         )
+    } else if (userIsAdmin) {
+        drOptions.push(
+            { value: 'remove', label: 'löschen', icon: <MdDeleteOutline /> }
+        )
     }
 
     return (
         <div ref={ref} className={`${wbRemoved ? "opacity-0 transition-opacity ease-in-out delay-50 duration-300" : "opacity-100 transition-none" }
-            p-4 mb-4 bg-white rounded shadow`}
+            group/post p-4 mb-4 bg-white rounded shadow`}
         >
             <div className="flex items-center">
                 {(post.isRepost && post.repostAuthor) ? (
@@ -219,13 +308,22 @@ export default function TimelinePost(
                     </div>
                 )}
 
-                <div className='ml-auto'>
+                <div className='ml-auto opacity-0 group-hover/post:opacity-100 transition-opacity'>
                     {(post.likers.includes(session?.user.preferred_username as string)) ? (
                         <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickLikeBtn}><HiHeart /></button>
                     ) : (
                         <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickLikeBtn}><HiOutlineHeart /></button>
                     )}
-                    <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickReplyBtn} title="Antworten"><TiArrowForward /></button>
+                    {(space && userIsAdmin) && (
+                        <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickPin} title={post.pinned ? "Beitrag abheften" : "Beitrag anheften"}>
+                            {post.pinned ? (
+                                <TiPin />
+                            ) : (
+                                <TiPinOutline />
+                            )}
+                        </button>
+                    )}
+                    <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickReplyBtn} title="Beitrag zitieren"><TiArrowForward /></button>
                     {drOptions.length > 0 && (
                         <Dropdown options={drOptions} onSelect={handleSelectOption} />
                     )}
@@ -298,48 +396,65 @@ export default function TimelinePost(
             )}
 
             <Likes />
-            {(post.comments.length == 0 && !showCommentForm)
-                ? (
-                    <button onClick={openCommentForm} title="Kommentar hinzufügen" className="align-middle px-3 py-2 rounded-full hover:bg-ve-collab-blue-light">
-                        <MdOutlineAddComment className="inline" size={20} />
+
+            {(post.comments.length == 0 && !showCommentForm) && (
+                <div className="mt-4 mb-2">
+                    <button onClick={openCommentForm} className="px-2 py-[6px] w-1/3 rounded-md border text-gray-400 text-left">
+                        Kommentar schreiben ...
                     </button>
-                ) : (
-                    <div className='mt-4 pt-4 pl-4 border-t-2 border-ve-collab-blue/50'>
-                        <div className="mb-4 text-slate-900 font-bold text-lg">Kommentare</div>
+                </div>
+            )}
 
-                        <form onSubmit={onSubmitCommentForm} className="mb-2" ref={commentFormref}>
-                            <input
-                                className={'border border-[#cccccc] rounded-md px-2 py-[6px]'}
-                                type="text"
-                                placeholder={'Kommentar schreiben ...'}
-                                name='text'
-                                autoComplete="off"
-                            />
-                            <button className="p-2" type='submit' title="Senden"><IoIosSend /></button>
-                        </form>
-
-                        {post.comments.length > 0 && (
-                            <div className="pl-5 mt-5">
-                                {post.comments.reverse().map((comment, ci) => (
-                                    <div key={ci}>
-                                        <div className={`${ci >= showXComments ? "hidden" : ""}`}>
-                                            <div className={`flex items-center`}>
-                                                <PostHeader author={comment.author} date={comment.creation_date} />
-                                            </div>
-                                            <div className='my-5'>{comment.text}</div>
-                                        </div>
-                                        {(ci+1 == showXComments && post.comments.length > showXComments) && (
-                                            <button className="py-2 px-5 rounded-lg" onClick={() => setShowXComments(showXComments+5)} title="Mehr">
-                                                <MdOutlineKeyboardDoubleArrowDown />
-                                            </button>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
+            {(post.comments.length > 0 || showCommentForm) && (
+                <div className='mt-4 pt-4 pl-4 border-t-2 border-ve-collab-blue/50'>
+                    <div className="mb-4 text-slate-900 font-bold text-lg">
+                        Kommentare
+                        {pinnedComments.length > 0 && (
+                            <button className='py-2 px-3 ml-4 text-xs rounded-md p-2 border border-gray-800 m-1' onClick={e => toggleShowPinnedComments(!showPinnedComments)}>
+                                {pinnedComments.length} {pinnedComments.length > 1 ? ("Angeheftete Kommentare") : ("Angehefteter Kommentar")}
+                            </button>
                         )}
                     </div>
-                )
-            }
+
+                    {showPinnedComments && (
+                        <div className="border-l-2 pl-4 border-ve-collab-orange/50">
+                            {pinnedComments.map((comment, ci) => (
+                                <div key={ci}>
+                                    {Comment(comment)}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    <form onSubmit={onSubmitCommentForm} className="mb-2" ref={commentFormref}>
+                        <input
+                            className={'w-1/3 border border-[#cccccc] rounded-md px-2 py-[6px]'}
+                            type="text"
+                            placeholder={'Kommentar schreiben ...'}
+                            name='text'
+                            autoComplete="off"
+                        />
+                        <button className="p-2" type='submit' title="Senden"><IoIosSend /></button>
+                    </form>
+
+                    {post.comments.length > 0 && (
+                        <div className="px-5 mt-5">
+                            {post.comments.reverse().map((comment, ci) => (
+                                <div key={ci}>
+                                    <div className={`${ci >= showXComments ? "hidden" : ""}`}>
+                                        {Comment(comment)}
+                                    </div>
+                                    {(ci+1 == showXComments && post.comments.length > showXComments) && (
+                                        <button className="py-2 px-5 rounded-lg" onClick={() => setShowXComments(showXComments+5)} title="Mehr">
+                                            <MdOutlineKeyboardDoubleArrowDown />
+                                        </button>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     );
 }

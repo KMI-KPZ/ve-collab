@@ -248,7 +248,7 @@ export default function Realization() {
                         }
                     </p>
                 </div>
-                <button type="button" onClick={() => handleDelete(index)}>
+                <button className="ml-3" type="button" onClick={() => handleDelete(index)}>
                     <RxMinus size={20} />
                 </button>
             </div>

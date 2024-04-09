@@ -16,6 +16,7 @@ import { Tooltip } from '@/components/Tooltip';
 import { FiInfo } from 'react-icons/fi';
 import WhiteBox from '@/components/Layout/WhiteBox';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
+import { BackendProfileSnippetsResponse, BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 
 export interface EvaluationPerPartner {
     username: string;
@@ -34,6 +35,9 @@ export default function Evaluation() {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
+    const [partnerProfileSnippets, setPartnerProfileSnippets] = useState<{
+        [Key: string]: BackendUserSnippet;
+    }>({});
     const [steps, setSteps] = useState<IFineStep[]>([]);
     const [evaluationInfo, setEvaluationInfo] = useState<EvaluationPerPartner[]>([
         {
@@ -68,8 +72,7 @@ export default function Evaluation() {
         // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
         if (session) {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
-                (data: {plan: IPlan}) => {
-                    setLoading(false);
+                (data: { plan: IPlan }) => {
                     console.log(data.plan);
                     setSideMenuStepsProgress(data.plan.progress);
                     setSteps(data.plan.steps);
@@ -77,7 +80,20 @@ export default function Evaluation() {
                     if (data.plan.evaluation && Array.isArray(data.plan.evaluation)) {
                         setEvaluationInfo(data.plan.evaluation);
                     }
-                
+
+                    // fetch profile snippets to be able to display the full name instead of username only
+                    fetchPOST(
+                        '/profile_snippets',
+                        { usernames: [...data.plan.partners, data.plan.author] },
+                        session.accessToken
+                    ).then((snippets: BackendProfileSnippetsResponse) => {
+                        let partnerSnippets: { [Key: string]: BackendUserSnippet } = {};
+                        snippets.user_snippets.forEach((element: BackendUserSnippet) => {
+                            partnerSnippets[element.username] = element;
+                        });
+                        setPartnerProfileSnippets(partnerSnippets);
+                        setLoading(false);
+                    });
                 }
             );
         }
@@ -162,7 +178,11 @@ export default function Evaluation() {
             <WhiteBox className="h-fit w-[28rem]">
                 <div className="flex flex-col">
                     <div className="font-bold text-lg mb-4 text-center">
-                        {evaluationPerPartner.username}
+                        {partnerProfileSnippets[evaluationPerPartner.username]
+                            ? partnerProfileSnippets[evaluationPerPartner.username].first_name +
+                              ' ' +
+                              partnerProfileSnippets[evaluationPerPartner.username].last_name
+                            : evaluationPerPartner.username}
                     </div>
                     <div className="flex items-center">
                         <p className="">Erfolgt eine Bewertung?</p>

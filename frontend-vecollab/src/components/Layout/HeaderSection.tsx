@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import veCollabLogo from '@/images/veCollabLogo.png';
 import Link from 'next/link';
@@ -9,6 +9,8 @@ import { IoMdNotificationsOutline } from 'react-icons/io';
 import { MdArrowDropDown, MdOutlineMessage, MdSearch } from 'react-icons/md';
 import Dropdown from '../Dropdown';
 import AuthenticatedImage from '../AuthenticatedImage';
+import { fetchPOST } from '@/lib/backend';
+import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 
 interface Props {
     notificationEvents: Notification[];
@@ -27,6 +29,17 @@ export default function HeaderSection({
     const inactiveClass = 'rounded-md border-b-2 border-transparent hover:border-b-2 hover:border-ve-collab-orange'
     const activeClass = "rounded-md border-b-2 border-ve-collab-orange-light hover:border-b-2 hover:border-ve-collab-orange"
     const router = useRouter()
+
+    const [userProfileSnippet, setUserProfileSnippet] = useState<BackendUserSnippet>();
+
+    useEffect(() => {
+        if (!session?.user) return;
+
+        fetchPOST('/profile_snippets', { usernames: [session.user.preferred_username] }, session.accessToken)
+        .then((data) => {
+            setUserProfileSnippet(data.user_snippets[0])
+        });
+    }, [session]);
 
     useEffect(() => {
         //filter out the messages that the user sent himself --> they should not trigger a notification icon
@@ -57,8 +70,6 @@ export default function HeaderSection({
                 break;
         }
     }
-
-    const userImage = session?.user.image || "default_profile_pic.jpg"
 
     return (
         <header className="bg-white px-4 py-2.5 drop-shadow-lg relative z-40">
@@ -100,8 +111,8 @@ export default function HeaderSection({
                             <li className={isActivePath('/overviewProjects') ? activeClass : inactiveClass}>
                                 <Link href="/overviewProjects" className='px-2 py-1'>VE Designer</Link>
                             </li>
-                            <li className={`!ml-2`}>
-                                <button className='p-2 rounded-full hover:bg-ve-collab-blue-light' onClick={e => toggleChatWindow()}>
+                            <li className={`!ml-2 relative`}>
+                                <button className='relative p-2 rounded-full hover:bg-ve-collab-blue-light' onClick={e => toggleChatWindow()}>
                                     <MdOutlineMessage size={20} />
                                 </button>
                                 {messageEventCount > 0 && (
@@ -111,12 +122,12 @@ export default function HeaderSection({
                                 )}
                             </li>
                             {/* TODO this may also will be a popup window */}
-                            <li className={`!ml-2`}>
+                            <li className={`!ml-2 relative`}>
                                 <button className='p-2 rounded-full hover:bg-ve-collab-blue-light' onClick={e => router.push('/notifications')}>
                                     <IoMdNotificationsOutline size={20} />
                                 </button>
                                 {notificationEvents.length > 0 && (
-                                    <span className="absolute top-[-10px] right-[-20px] py-1 px-2 rounded-[50%] bg-blue-400/75 text-xs">
+                                    <span className="absolute -ml-4 -mt-2 py-1 px-2 rounded-[50%] bg-blue-400/75 text-xs">
                                         {notificationEvents.length}
                                     </span>
                                 )}
@@ -132,7 +143,7 @@ export default function HeaderSection({
                                         icon={
                                             <div className='flex items-center'>
                                                 <AuthenticatedImage
-                                                    imageId={userImage}
+                                                    imageId={userProfileSnippet ? userProfileSnippet.profile_pic : "default_profile_pic.jpg"}
                                                     alt={'Benutzerbild'}
                                                     width={30}
                                                     height={30}

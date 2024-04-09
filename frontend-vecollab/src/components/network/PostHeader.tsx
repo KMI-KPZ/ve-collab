@@ -1,7 +1,7 @@
 import { BackendPostAuthor } from "@/interfaces/api/apiInterfaces";
 import AuthenticatedImage from "../AuthenticatedImage";
-import SmallTimestamp from "../SmallTimestamp";
 import Link from "next/link";
+import Timestamp from '@/components/Timestamp';
 
 interface Props {
     author: BackendPostAuthor,
@@ -13,10 +13,9 @@ export default function PostHeader({
     date
 }: Props) {
 
-    let authorName = ""
-    if (author.first_name != "") authorName = `${author.first_name} `
-    if (author.last_name != "") authorName = `${authorName}${author.last_name}`
-    if (author.username && authorName == "") authorName = author.username
+    const authorName = author.first_name != ""
+        ? `${author.first_name} ${author.last_name}`
+        : author.username
 
     return (
         <>
@@ -30,7 +29,7 @@ export default function PostHeader({
             <div className="flex flex-col">
                 <Link href={`/profile?username=${author.username}`} className='font-bold'>{authorName}</Link>
                 {date && (
-                    <SmallTimestamp timestamp={date} className='text-xs text-gray-500' />
+                    <Timestamp relative={true} timestamp={date} showTitle={true} className="text-xs text-gray-500" />
                 )}
             </div>
         </>
