@@ -5,7 +5,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { IoIosSend } from "react-icons/io";
 import Dropdown from "../Dropdown";
-import { BackendPost, BackendPostAuthor, BackendPostComment, BackendPostFile, BackendSpace } from "@/interfaces/api/apiInterfaces";
+import { BackendPost, BackendPostAuthor, BackendPostComment, BackendPostFile, BackendSpace, BackendSpaceACLEntry } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
 import { MdDeleteOutline, MdDoubleArrow, MdModeEdit, MdOutlineKeyboardDoubleArrowDown,  MdThumbUp } from "react-icons/md";
 import { TiArrowForward, TiPin, TiPinOutline } from "react-icons/ti";
@@ -21,7 +21,8 @@ interface Props {
     post: BackendPost
     updatePost: (post: BackendPost) => void
     space?: string
-    userIsAdmin: boolean,
+    spaceACL?: BackendSpaceACLEntry | undefined
+    userIsAdmin: boolean
     isLast: boolean
     allSpaces?: BackendSpace[]
     removePost: (post: BackendPost) => void
@@ -36,6 +37,7 @@ export default function TimelinePost(
     post,
     updatePost,
     space,
+    spaceACL,
     userIsAdmin=false,
     isLast,
     allSpaces,
@@ -397,7 +399,7 @@ export default function TimelinePost(
 
             <Likes />
 
-            {(post.comments.length == 0 && !showCommentForm) && (
+            {(post.comments.length == 0 && !showCommentForm && (!spaceACL || spaceACL.comment)) && (
                 <div className="mt-4 mb-2">
                     <button onClick={openCommentForm} className="px-2 py-[6px] w-1/3 rounded-md border text-gray-400 text-left">
                         Kommentar schreiben ...
@@ -426,16 +428,18 @@ export default function TimelinePost(
                         </div>
                     )}
 
-                    <form onSubmit={onSubmitCommentForm} className="mb-2" ref={commentFormref}>
-                        <input
-                            className={'w-1/3 border border-[#cccccc] rounded-md px-2 py-[6px]'}
-                            type="text"
-                            placeholder={'Kommentar schreiben ...'}
-                            name='text'
-                            autoComplete="off"
-                        />
-                        <button className="p-2" type='submit' title="Senden"><IoIosSend /></button>
-                    </form>
+                    {(!spaceACL || spaceACL.comment) && (
+                        <form onSubmit={onSubmitCommentForm} className="mb-2" ref={commentFormref}>
+                            <input
+                                className={'w-1/3 border border-[#cccccc] rounded-md px-2 py-[6px]'}
+                                type="text"
+                                placeholder={'Kommentar schreiben ...'}
+                                name='text'
+                                autoComplete="off"
+                            />
+                            <button className="p-2" type='submit' title="Senden"><IoIosSend /></button>
+                        </form>
+                    )}
 
                     {post.comments.length > 0 && (
                         <div className="px-5 mt-5">

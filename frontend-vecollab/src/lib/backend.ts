@@ -38,6 +38,16 @@ const POSTfetcher = (relativeUrl: string, data?: Record<string, any>, accessToke
         return res
     });
 
+export function useIsGlobalAdmin(accessToken: string): boolean {
+    const { data } = useSWR(
+        [`/admin_check`, accessToken]
+        ,
+        ([url, token]) => GETfetcher(url, token)
+    );
+
+    return data?.is_admin || false
+}
+
 export function useGetProfileSnippets(usernames?: string[]): {
     data: BackendUserSnippet[];
     isLoading: boolean;
