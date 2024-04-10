@@ -20,6 +20,11 @@ class GridFSStaticFileHandler(tornado.web.StaticFileHandler, BaseHandler):
     absolutely no use
     """
 
+    def options(self, slug):
+        # no body
+        self.set_status(200)
+        self.finish()
+
     @classmethod
     def get_content(
         cls, abspath: str, start: Optional[int] = None, end: Optional[int] = None

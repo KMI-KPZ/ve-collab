@@ -1,5 +1,6 @@
 import json
 import logging
+from bson import ObjectId
 
 import tornado.web
 
@@ -7,13 +8,13 @@ from handlers.base_handler import BaseHandler, auth_needed
 from resources.network.acl import ACL
 from resources.network.profile import Profiles, ProfileDoesntExistException
 from resources.network.space import Spaces, SpaceDoesntExistError
+import util
 
 
 logger = logging.getLogger(__name__)
 
 
 class RoleHandler(BaseHandler):
-
     @auth_needed
     async def get(self, slug):
         """
@@ -21,23 +22,22 @@ class RoleHandler(BaseHandler):
             request the role of the current user
         """
         if slug == "my":
-            with Profiles() as db_manager:
+            with util.get_mongodb() as db:
+                profile_manager = Profiles(db)
                 try:
-                    role_result = db_manager.get_role(self.current_user.username)
+                    role_result = profile_manager.get_role(self.current_user.username)
                     self.set_status(200)
-                    self.write(
-                        self.json_serialize_response(
-                            {
-                                "success": True,
-                                "username": self.current_user.username,
-                                "role": role_result,
-                            }
-                        )
+                    self.serialize_and_write(
+                        {
+                            "success": True,
+                            "username": self.current_user.username,
+                            "role": role_result,
+                        }
                     )
                     return
                 except ProfileDoesntExistException:
                     # if user has no profile, ensure to create one (as "guest" role)
-                    db_manager.ensure_profile_exists(self.current_user.username)
+                    profile_manager.ensure_profile_exists(self.current_user.username)
                     self.set_status(200)
                     self.write(
                         {
@@ -54,8 +54,9 @@ class RoleHandler(BaseHandler):
                 ret_list = []
                 user_list_kc = self.get_keycloak_user_list()
 
-                with Profiles() as db_manager:
-                    ret_list = db_manager.get_all_roles(user_list_kc)
+                with util.get_mongodb() as db:
+                    profile_manager = Profiles(db)
+                    ret_list = profile_manager.get_all_roles(user_list_kc)
 
                 self.set_status(200)
                 self.write(
@@ -69,8 +70,9 @@ class RoleHandler(BaseHandler):
 
         elif slug == "distinct":
             if self.is_current_user_lionet_admin():
-                with Profiles() as db_manager:
-                    roles = db_manager.get_distinct_roles()
+                with util.get_mongodb() as db:
+                    profile_manager = Profiles(db)
+                    roles = profile_manager.get_distinct_roles()
                 self.set_status(200)
                 self.write(
                     self.json_serialize_response(
@@ -160,10 +162,11 @@ class RoleHandler(BaseHandler):
                     )
                     return
 
-                with Profiles() as db_manager:
-                    db_manager.set_role(http_body["username"], http_body["role"])
+                with util.get_mongodb() as db:
+                    profile_manager = Profiles(db)
+                    acl_manager = ACL(db)
 
-                with ACL() as acl_manager:
+                    profile_manager.set_role(http_body["username"], http_body["role"])
                     acl_manager.ensure_acl_entries(http_body["role"])
 
                 self.set_status(200)
@@ -190,7 +193,9 @@ class GlobalACLHandler(BaseHandler):
             )
         )
 
-        with ACL() as acl:
+        with util.get_mongodb() as db:
+            acl = ACL(db)
+
             # if the role is admin, set everything to true instead of false
             # technically this should never happen, but better safe than sorry
             if role == "admin":
@@ -242,7 +247,8 @@ class GlobalACLHandler(BaseHandler):
             current_user_role = self.get_current_user_role()
             if current_user_role:
                 acl_entry = None
-                with ACL() as acl:
+                with util.get_mongodb() as db:
+                    acl = ACL(db)
                     acl_entry = acl.global_acl.get(current_user_role)
 
                 # inconsistency problem: the role exists, but no acl entry. construct a default entry
@@ -264,10 +270,12 @@ class GlobalACLHandler(BaseHandler):
         elif slug == "get_all":
             if self.is_current_user_lionet_admin():
                 entries = []
-                with ACL() as acl:
+                with util.get_mongodb() as db:
+                    acl = ACL(db)
+
                     # solve inconsistency problem of role existing but no acl_entry: whenever there is a role that has no acl_entry, create a default one
-                    with Profiles() as profile_manager:
-                        distinct_roles = profile_manager.get_distinct_roles()
+                    profile_manager = Profiles(db)
+                    distinct_roles = profile_manager.get_distinct_roles()
                     for role in distinct_roles:
                         if role not in [
                             entry["role"] for entry in acl.global_acl.get_all()
@@ -320,7 +328,8 @@ class GlobalACLHandler(BaseHandler):
                     )
                     return
 
-                with ACL() as acl:
+                with util.get_mongodb() as db:
+                    acl = ACL(db)
                     # check if the http body only contains valid keys (i.e. keys that exist in the acl)
                     if any(
                         key not in acl.global_acl.get_existing_keys()
@@ -363,17 +372,17 @@ class GlobalACLHandler(BaseHandler):
                         return
 
                     # reject setting an entry of a role that does not exist to prevent dangling entries
-                    with Profiles() as profile_manager:
-                        if not profile_manager.check_role_exists(http_body["role"]):
-                            self.set_status(409)
-                            self.write(
-                                {
-                                    "status": 409,
-                                    "success": False,
-                                    "reason": "role_doesnt_exist",
-                                }
-                            )
-                            return
+                    profile_manager = Profiles(db)
+                    if not profile_manager.check_role_exists(http_body["role"]):
+                        self.set_status(409)
+                        self.write(
+                            {
+                                "status": 409,
+                                "success": False,
+                                "reason": "role_doesnt_exist",
+                            }
+                        )
+                        return
 
                     acl.global_acl.set_all(http_body)
 
@@ -389,37 +398,46 @@ class GlobalACLHandler(BaseHandler):
 
 
 class SpaceACLHandler(BaseHandler):
-    def resolve_inconsistency(self, role: str, space: str) -> dict:
+    def resolve_inconsistency(self, username: str, space_id: str | ObjectId) -> dict:
         """
-        resolve inconsistency problem when the role exists,
+        resolve inconsistency problem when the username exists,
         but no acl entry for it: insert the default rule and return it
         """
 
         logger.warning(
-            "Inconsistency Problem: the role '{}' exists, but no Global ACL entry for it. Inserting default rule".format(
-                role
+            "Inconsistency Problem: the username '{}' exists, but no space ACL entry for it. Inserting default rule".format(
+                username
             )
         )
 
-        with ACL() as acl:
+        space_id = util.parse_object_id(space_id)
+
+        with util.get_mongodb() as db:
+            acl = ACL(db)
+            profile_manager = Profiles(db)
+
             # if the role is admin, set everything to true instead of false
             # technically this should never happen, but better safe than sorry
-            if role == "admin":
-                return acl.space_acl.insert_admin(space)
+            if profile_manager.get_role(username) == "admin":
+                return acl.space_acl.insert_admin(username, space_id)
             else:
-                return acl.space_acl.insert_default(role, space)
+                return acl.space_acl.insert_default(username, space_id)
+
+    def options(self, slug):
+        self.set_status(204)
+        self.finish()
 
     @auth_needed
     async def get(self, slug):
         """
         GET /space_acl/get
-            get the current user's role acl entry
+            get the current user's acl entry
 
             query param:
-                space: name of space
+                space: _id of space
 
             optional query param:
-                role: name of role (get the entry of the specified role, requires admin privileges)
+                username: name of user (get the entry of the specified user instead, requires admin privileges)
 
             returns:
                 200 OK,
@@ -440,7 +458,7 @@ class SpaceACLHandler(BaseHandler):
             get the full set of rules from the acl for a given space (requires either global or space admin)
 
             query param:
-                space: name of space
+                space: _id of space
 
             returns:
                 200 OK,
@@ -458,25 +476,27 @@ class SpaceACLHandler(BaseHandler):
         """
         # since space query param is needed for both requests in this handler, check it first
         try:
-            space_name = self.get_argument("space")
+            space_id = self.get_argument("space")
         except tornado.web.MissingArgumentError:
             self.set_status(400)
             self.write({"status": 400, "success": False, "reason": "missing_key:space"})
             return
 
-        if slug == "get":
+        space_id = util.parse_object_id(space_id)
 
+        if slug == "get":
             # if there is a role specified, query for this role
             # instead of the current_user's one. but in that case,
             # we need to be either global or space admin
-            optional_role = self.get_argument("role", None)
-            if optional_role:
-                try:
-                    with Spaces() as space_manager:
+            with util.get_mongodb() as db:
+                optional_username = self.get_argument("username", None)
+                if optional_username:
+                    try:
+                        space_manager = Spaces(db)
                         if not (
                             self.is_current_user_lionet_admin()
                             or space_manager.check_user_is_space_admin(
-                                space_name, self.current_user.username
+                                space_id, self.current_user.username
                             )
                         ):
                             self.set_status(403)
@@ -488,55 +508,48 @@ class SpaceACLHandler(BaseHandler):
                                 }
                             )
                             return
-                except SpaceDoesntExistError:
-                    self.set_status(400)
-                    self.write(
-                        {
-                            "status": 400,
-                            "success": False,
-                            "reason": "space_doesnt_exist",
-                        }
+                    except SpaceDoesntExistError:
+                        self.set_status(400)
+                        self.write(
+                            {
+                                "status": 400,
+                                "success": False,
+                                "reason": "space_doesnt_exist",
+                            }
+                        )
+                        return
+                    username_to_query = optional_username
+
+                # no role query parameter was passed, use current_user instead
+                else:
+                    username_to_query = self.current_user.username
+
+                # after determining which user to query for, request the acl entry
+                acl_entry = None
+                acl = ACL(db)
+                acl_entry = acl.space_acl.get(username_to_query, space_id)
+
+                # inconsistency problem: the username exists, but no acl entry.
+                # construct an acl entry that has all permissions set to false
+                if not acl_entry:
+                    acl_entry = self.resolve_inconsistency(username_to_query, space_id)
+
+                self.set_status(200)
+                self.write(
+                    self.json_serialize_response(
+                        {"status": 200, "success": True, "acl_entry": acl_entry}
                     )
-                    return
-                role_to_query = optional_role
-
-            # no role query parameter was passed, use current_user instead
-            # since acl is role-based, we need to query for the current user's role
-            else:
-                current_user_role = self.get_current_user_role()
-                if not current_user_role:
-                    self.set_status(409)
-                    self.write(
-                        {"status": 409, "success": False, "reason": "user_has_no_role"}
-                    )
-                    return
-                role_to_query = current_user_role
-
-            # after determining which role to query for, request the acl entry
-            acl_entry = None
-            with ACL() as acl:
-                acl_entry = acl.space_acl.get(role_to_query, space_name)
-
-            # inconsistency problem: the role exists, but no acl entry.
-            # construct an acl entry that has all permissions set to false
-            if not acl_entry:
-                acl_entry = self.resolve_inconsistency(role_to_query, space_name)
-
-            self.set_status(200)
-            self.write(
-                self.json_serialize_response(
-                    {"status": 200, "success": True, "acl_entry": acl_entry}
                 )
-            )
 
         elif slug == "get_all":
             # check if the user is either global admin or space admin, if not return
-            try:
-                with Spaces() as space_manager:
+            with util.get_mongodb() as db:
+                try:
+                    space_manager = Spaces(db)
                     if not (
                         self.is_current_user_lionet_admin()
                         or space_manager.check_user_is_space_admin(
-                            space_name, self.current_user.username
+                            space_id, self.current_user.username
                         )
                     ):
                         self.set_status(403)
@@ -548,27 +561,27 @@ class SpaceACLHandler(BaseHandler):
                             }
                         )
                         return
-            except SpaceDoesntExistError:
-                self.set_status(400)
+                except SpaceDoesntExistError:
+                    self.set_status(400)
+                    self.write(
+                        {
+                            "status": 400,
+                            "success": False,
+                            "reason": "space_doesnt_exist",
+                        }
+                    )
+                    return
+
+                entries = None
+                acl = ACL(db)
+                entries = acl.space_acl.get_all(space_id)
+
+                self.set_status(200)
                 self.write(
-                    {
-                        "status": 400,
-                        "success": False,
-                        "reason": "space_doesnt_exist",
-                    }
+                    self.json_serialize_response(
+                        {"status": 200, "success": True, "acl_entries": entries}
+                    )
                 )
-                return
-
-            entries = None
-            with ACL() as acl:
-                entries = acl.space_acl.get_all(space_name)
-
-            self.set_status(200)
-            self.write(
-                self.json_serialize_response(
-                    {"status": 200, "success": True, "acl_entries": entries}
-                )
-            )
 
         else:
             self.set_status(404)
@@ -581,8 +594,8 @@ class SpaceACLHandler(BaseHandler):
             an acl entry is of the following structure in the http body:
 
             {
-                "role": "<role>",
-                "space": "<space>",
+                "username": "<username>",
+                "space": "<space_id>",
                 "join_space": True/False,
                 "read_timeline": True/False,
                 "post": True/False,
@@ -605,7 +618,9 @@ class SpaceACLHandler(BaseHandler):
                 )
                 return
 
-            with ACL() as acl:
+            with util.get_mongodb() as db:
+                acl = ACL(db)
+
                 # check if the http body only contains valid keys (i.e. keys that exist in the acl)
                 if any(
                     key not in acl.space_acl.get_existing_keys() for key in http_body
@@ -620,9 +635,9 @@ class SpaceACLHandler(BaseHandler):
                     )
                     return
 
-                # check if http body only contains boolean values, except for the role and space attribute
+                # check if http body only contains boolean values, except for the username and space attribute
                 for key in http_body:
-                    if key != "role" and key != "space":
+                    if key != "username" and key != "space":
                         if not isinstance(http_body[key], bool):
                             self.set_status(400)
                             self.write(
@@ -634,53 +649,61 @@ class SpaceACLHandler(BaseHandler):
                             )
                             return
 
-                with Spaces() as space_manager:
-                    space = space_manager.get_space(
-                        http_body["space"], projection={"_id": False, "admins": True}
+                space_manager = Spaces(db)
+                space = space_manager.get_space(
+                    http_body["space"], projection={"_id": False, "admins": True}
+                )
+
+                # reject setting the acl entry if the space doesnt exist to prevent dangling entries
+                if not space:
+                    self.set_status(409)
+                    self.write(
+                        {
+                            "status": 409,
+                            "success": False,
+                            "reason": "space_doesnt_exist",
+                        }
                     )
+                    return
 
-                    # reject setting the acl entry if the space doesnt exist to prevent dangling entries
-                    if not space:
-                        self.set_status(409)
-                        self.write(
-                            {
-                                "status": 409,
-                                "success": False,
-                                "reason": "space_doesnt_exist",
-                            }
-                        )
-                        return
+                # check if the user is either global admin or space admin, if not return
+                if not (
+                    self.current_user.username in space["admins"]
+                    or self.is_current_user_lionet_admin()
+                ):
+                    self.set_status(403)
+                    self.write(
+                        {
+                            "status": 403,
+                            "success": False,
+                            "reason": "insufficient_permission",
+                        }
+                    )
+                    return
 
-                    # check if the user is either global admin or space admin, if not return
-                    if not (
-                        self.current_user.username in space["admins"]
-                        or self.is_current_user_lionet_admin()
-                    ):
-                        self.set_status(403)
-                        self.write(
-                            {
-                                "status": 403,
-                                "success": False,
-                                "reason": "insufficient_permission",
-                            }
-                        )
-                        return
+                # reject setting an entry of a user that does not exist to prevent dangling entries
+                profile_manager = Profiles(db)
+                try:
+                    profile_manager.get_profile(
+                        http_body["username"], projection={"_id": True}
+                    )
+                except ProfileDoesntExistException:
+                    self.set_status(409)
+                    self.write(
+                        {
+                            "status": 409,
+                            "success": False,
+                            "reason": "user_doesnt_exist",
+                        }
+                    )
+                    return
 
-                # reject setting an entry of a role that does not exist to prevent dangling entries
-                with Profiles() as profile_manager:
-                    if not profile_manager.check_role_exists(http_body["role"]):
-                        self.set_status(409)
-                        self.write(
-                            {
-                                "status": 409,
-                                "success": False,
-                                "reason": "role_doesnt_exist",
-                            }
-                        )
-                        return
-
-                # forbid any modifications to the admin role to avoid deadlocks
-                if http_body["role"] == "admin":
+                # forbid any modifications to admin users to avoid deadlocks
+                # (both global and space admins are immutable in the space)
+                if (
+                    profile_manager.get_role(http_body["username"]) == "admin"
+                    or http_body["username"] in space["admins"]
+                ):
                     self.set_status(409)
                     self.write(
                         {

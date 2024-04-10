@@ -4,7 +4,7 @@
 
 - Setup Wordpress and install [this](https://www.wpgraphql.com/) plugin, activate it afterwards. Add some Posts and categorize them.
 
-- Copy `.env.local.example` into `.env.local` and set the correct value for your Wordpress GraphQL-endpoint
+- Copy `.env.example` into `.env` and configure the values according to your needs.
 
 -   ```bash
     # check Node Version -> should be 18.14 (or above)

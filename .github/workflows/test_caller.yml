@@ -4,11 +4,11 @@ name: reusable test workflow
 on:
   workflow_call: # workflow only runs when being called by another workflow
     secrets:
-      CONFIG:
-        required: true
       MONGODB_USERNAME:
         required: true
       MONGODB_PASSWORD:
+        required: true
+      BACKEND_ENV:
         required: true
 
 jobs:
@@ -28,12 +28,18 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-    - name: Set up config from secrets
-      # tests need config, but might contain sensitive data, workaround:
-      # content of config.json has been base64 encoded in secrets (simple via base64 config.json)
-      # now decode it and create the config file again
+    - name: Create .env file
       run: |
-        echo -n '${{ secrets.CONFIG }}' | base64 --decode > config.json
+        echo "${{ secrets.BACKEND_ENV }}" > .env
+    - name: setup and start elasticsearch
+      uses: getong/elasticsearch-action@v1.2
+      with:
+        elasticsearch version: '8.8.0'
+        host port: 9200
+        container port: 9200
+        host node port: 9300
+        node port: 9300
+        discovery type: 'single-node'
     - name: setup and start MongoDB
       uses: supercharge/mongodb-github-action@1.8.0
       with:

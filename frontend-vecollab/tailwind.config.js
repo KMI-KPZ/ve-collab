@@ -14,6 +14,7 @@ module.exports = {
                 've-collab-orange': '#c4560b',
                 've-collab-orange-light': '#f7a670',
                 've-collab-blue': '#00748f',
+                've-collab-blue-light': '#d8f2f9',
             },
             fontSize: {
                 '5xl': '2.5rem',

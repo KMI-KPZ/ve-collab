@@ -1,37 +1,32 @@
 import datetime
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from bson.objectid import ObjectId
 import gridfs
-from pymongo import MongoClient
+from pymongo.database import Database
 
 from exceptions import (
     AlreadyLikerException,
     NotLikerException,
     PostNotExistingException,
 )
-import global_vars
+
 from resources.network.space import FileDoesntExistError, SpaceDoesntExistError, Spaces
+import util
 
 
 class Posts:
     """
-    implementation of Posts in the DB as a context manager, usage::
+    to use this class, acquire a mongodb connection first via::
 
-        with Posts() as db_manager:
-            db_manager.get_posts()
+        with util.get_mongodb() as db:
+            post_manager = Posts(db)
             ...
 
     """
 
-    def __init__(self):
-        self.client = MongoClient(
-            global_vars.mongodb_host,
-            global_vars.mongodb_port,
-            username=global_vars.mongodb_username,
-            password=global_vars.mongodb_password,
-        )
-        self.db = self.client[global_vars.mongodb_db_name]
+    def __init__(self, db: Database):
+        self.db = db
 
         self.post_attributes = [
             "author",
@@ -60,72 +55,51 @@ class Posts:
             "pinned",
         ]
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, exc_traceback):
-        self.client.close()
-
-    def _parse_object_id(self, obj_id: str | ObjectId) -> ObjectId:
-        """
-        parse a str-representation of a mongodb objectid into an
-        actual ObjectId-object. If the input id is already an ObjectId,
-        it is returned unchanged.
-        :param obj_id: the id to be transformed into a bson.ObjectId-object
-        :return: the id as a bson.ObjectId
-        """
-
-        if obj_id is None:
-            raise TypeError("_id cannot be None")
-        elif isinstance(obj_id, str):
-            return ObjectId(obj_id)
-        elif isinstance(obj_id, ObjectId):
-            return obj_id
-        else:
-            raise TypeError(
-                """invalid object_id type, 
-                can either be 'str' or 'bson.ObjectId', 
-                got: '{}'
-                """.format(
-                    type(obj_id)
-                )
-            )
-
-    def get_post(self, post_id: str, projection: dict = {}) -> Optional[Dict]:
+    def get_post(self, post_id: str, projection: dict = {}) -> Dict:
         """
         query a post from the database given its _id
+
+        Raises `PostNotExistingException` if no post with the given _id exists.
+
         :param post_id: str-representation of the post's _id (ObjectId)
         :param projection: optionally specify a projection to only return
                            a subset of the document's fields (limit your query
                            to only the necessary fields to increase performance)
-        :return: the post as a dictionary, or None, if no post matched
-                 the given id
+        :return: the post as a dictionary
         """
 
-        post_id = self._parse_object_id(post_id)
+        post_id = util.parse_object_id(post_id)
 
-        return self.db.posts.find_one({"_id": post_id}, projection=projection)
+        post = self.db.posts.find_one({"_id": post_id}, projection=projection)
+        if not post:
+            raise PostNotExistingException()
 
-    def get_post_by_comment_id(
-        self, comment_id: str, projection: dict = {}
-    ) -> Optional[Dict]:
+        return post
+
+    def get_post_by_comment_id(self, comment_id: str, projection: dict = {}) -> Dict:
         """
         query a post from the database given any of its comment's _id's.
         Since this operation does a full collection scan, it might be very slow
         and thus should be used sparingly.
+
+        Raises `PostNotExistingException` if no post with the given _id exists.
+
         :param comment_id: the _id of any of the comments belonging to the post
         :param projection: optionally specify a projection to only return
                            a subset of the document's fields (limit your query
                            to only the necessary fields to increase performance)
-        :return: the post as a dictionary, or None, if no comments of any post
-                 matched the given id
+        :return: the post as a dictionary
         """
 
-        comment_id = self._parse_object_id(comment_id)
+        comment_id = util.parse_object_id(comment_id)
 
-        return self.db.posts.find_one(
+        post = self.db.posts.find_one(
             {"comments._id": comment_id}, projection=projection
         )
+        if not post:
+            raise PostNotExistingException()
+
+        return post
 
     def get_posts_by_tags(self, tags: List[str], projection: dict = {}) -> List[Dict]:
         """
@@ -146,12 +120,15 @@ class Posts:
         :return: List of posts (as dicts) matching the query
         """
 
+        # TODO deprecate and use elasticsearch instead
+
         return list(self.db.posts.find({"$text": {"$search": query}}))
 
-    def insert_post(self, post: dict) -> None:
+    def insert_post(self, post: dict) -> ObjectId:
         """
         insert a new post into the db, validating the attributes beforehand.
         If the supplied post has an _id field, update the existing post instead.
+        Returns the _id of the inserted (or updated) post.
         :param post: the post to save as a dict
         """
 
@@ -165,14 +142,16 @@ class Posts:
         if not all(attr in post for attr in self.post_attributes):
             raise ValueError("Post misses required attribute")
 
-        self.db.posts.insert_one(post)
+        result = self.db.posts.insert_one(post)
 
-    def update_post_text(self, post_id: str | ObjectId, text: str) -> None:
+        return result.inserted_id
+
+    def update_post_text(self, post_id: str | ObjectId, text: str) -> ObjectId:
         """
         update the text of an existing post
         """
 
-        post_id = self._parse_object_id(post_id)
+        post_id = util.parse_object_id(post_id)
 
         # try to do the update
         update_result = self.db.posts.update_one(
@@ -183,48 +162,47 @@ class Posts:
         # we know that there was no post with the given _id
         if update_result.modified_count != 1:
             raise PostNotExistingException()
+        return post_id
 
     def delete_post(self, post_id: str | ObjectId) -> None:
         """
         delete a post by specifying its id
         """
 
-        post_id = self._parse_object_id(post_id)
+        post_id = util.parse_object_id(post_id)
 
-        post = self.get_post(post_id, projection={"space": True, "files": True})
-        if not post:
-            raise PostNotExistingException()
+        try:
+            post = self.get_post(post_id, projection={"space": True, "files": True})
+        except PostNotExistingException:
+            raise
 
         # delete files from gridfs and - if post was in a space,
         # from the space's repository
         if post["files"]:
             fs = gridfs.GridFS(self.db)
-            for file_id in post["files"]:
-                fs.delete(file_id)
+            for file_obj in post["files"]:
+                fs.delete(file_obj["file_id"])
             if post["space"]:
-                with Spaces() as space_manager:
-                    for file_id in post["files"]:
-                        try:
-                            space_manager.remove_post_file(post["space"], file_id)
-                        except SpaceDoesntExistError:
-                            pass
-                        except FileDoesntExistError:
-                            pass
+                space_manager = Spaces(self.db)
+                for file_obj in post["files"]:
+                    try:
+                        space_manager.remove_post_file(post["space"], file_obj["file_id"])
+                    except SpaceDoesntExistError:
+                        pass
+                    except FileDoesntExistError:
+                        pass
 
         # finally delete the post itself
-        delete_result = self.db.posts.delete_one({"_id": post_id})
+        self.db.posts.delete_one({"_id": post_id})
 
-        # if no documents have been removed by the delete
-        # we know that there was no post with the given _id
-        if delete_result.deleted_count != 1:
-            raise PostNotExistingException()
-
-    def delete_post_by_space(self, space_name: str) -> None:
+    def delete_post_by_space(self, space_id: str | ObjectId) -> None:
         """
-        delete all posts that were in the space given by its name
+        delete all posts that were in the space given by its _id
         """
 
-        self.db.posts.delete_many({"space": space_name})
+        space_id = util.parse_object_id(space_id)
+
+        self.db.posts.delete_many({"space": space_id})
 
     def like_post(self, post_id: str | ObjectId, username: str) -> None:
         """
@@ -233,21 +211,18 @@ class Posts:
         :param username: the username of the user
         """
 
-        post_id = self._parse_object_id(post_id)
-
-        # this time we cannot use the modified_count of the update_result to check
-        # existence of the post, because since we will add to a set, the user might
-        # already be a liker, so nothing would change, even though the post does exist
-        post = self.get_post(post_id, projection={"_id": True})
-        if not post:
-            raise PostNotExistingException()
+        post_id = util.parse_object_id(post_id)
 
         update_result = self.db.posts.update_one(
             {"_id": post_id},
             {"$addToSet": {"likers": username}},
         )
 
-        # we know that the post existed, so if this time no document was updated
+        # no match was found --> post doesnt exist
+        if update_result.matched_count != 1:
+            raise PostNotExistingException()
+
+        # we know that the post existed, so if no document was updated
         # the user already had liked the post before
         if update_result.modified_count != 1:
             raise AlreadyLikerException()
@@ -259,31 +234,29 @@ class Posts:
         :param username: the username of the user
         """
 
-        post_id = self._parse_object_id(post_id)
-
-        # this time we cannot use the modified_count of the update_result to check
-        # existence of the post, because since we will add to a set, the user might
-        # already be a liker, so nothing would change, even though the post does exist
-        post = self.get_post(post_id, projection={"_id": True})
-        if not post:
-            raise PostNotExistingException()
+        post_id = util.parse_object_id(post_id)
 
         update_result = self.db.posts.update_one(
             {"_id": post_id},
             {"$pull": {"likers": username}},
         )
 
+        # no match was found --> post doesnt exist
+        if update_result.matched_count != 1:
+            raise PostNotExistingException()
+
         # we know that the post existed, so if no document was updated, the user hadn't
         # liked the post before
         if update_result.modified_count != 1:
             raise NotLikerException()
 
-    def add_comment(self, post_id: str | ObjectId, comment: dict) -> None:
+    def add_comment(self, post_id: str | ObjectId, comment: dict) -> ObjectId:
         """
-        add the given comment to the post, validating the attributes beforehand
+        add the given comment to the post, validating the attributes beforehand 
+        and returning the comment _id
         """
 
-        post_id = self._parse_object_id(post_id)
+        post_id = util.parse_object_id(post_id)
 
         # verify comment has all the necessary attributes
         if not all(attr in comment for attr in self.comment_attributes):
@@ -296,10 +269,12 @@ class Posts:
             {"_id": post_id}, {"$push": {"comments": comment}}
         )
 
-        # if no documents have been modified by the update
+        # if no documents have been matched by the update
         # we know that there was no post with the given post_id
-        if update_result.modified_count != 1:
+        if update_result.matched_count != 1:
             raise PostNotExistingException()
+
+        return comment["_id"]
 
     def delete_comment(
         self, comment_id: str | ObjectId, post_id: str | ObjectId = None
@@ -313,11 +288,11 @@ class Posts:
                         to speed up the query
         """
 
-        comment_id = self._parse_object_id(comment_id)
+        comment_id = util.parse_object_id(comment_id)
 
         # use a faster query if the post_id is supplied, because it uses an index
         if post_id is not None:
-            post_id = self._parse_object_id(post_id)
+            post_id = util.parse_object_id(post_id)
             update_result = self.db.posts.update_one(
                 {"_id": post_id}, {"$pull": {"comments": {"_id": comment_id}}}
             )
@@ -331,14 +306,15 @@ class Posts:
 
         # if no documents have been removed by the delete
         # we know that there was no post with the given _id
-        if update_result.modified_count != 1:
+        if update_result.matched_count != 1:
             raise PostNotExistingException()
 
-    def insert_repost(self, repost: dict) -> None:
+    def insert_repost(self, repost: dict) -> ObjectId:
         """
         insert a repost, validating the attributes beforehand.
         If the supplied repost has an _id field,
         update the existing repost text instead.
+        Returns the _id of the inserted (or updated) repost.
         :param repost: the repost to save as a dict
         """
 
@@ -354,14 +330,16 @@ class Posts:
         ):
             raise ValueError("Post misses required attribute")
 
-        self.db.posts.insert_one(repost)
+        result = self.db.posts.insert_one(repost)
 
-    def update_repost_text(self, repost_id: str | ObjectId, text: str) -> None:
+        return result.inserted_id
+
+    def update_repost_text(self, repost_id: str | ObjectId, text: str) -> ObjectId:
         """
         update the text of an existing repost
         """
 
-        repost_id = self._parse_object_id(repost_id)
+        repost_id = util.parse_object_id(repost_id)
 
         # do the update
         update_result = self.db.posts.update_one(
@@ -372,6 +350,8 @@ class Posts:
         # we know that there was no post with the given _id
         if update_result.modified_count != 1:
             raise PostNotExistingException()
+        
+        return repost_id
 
     def pin_post(self, post_id: str | ObjectId) -> None:
         """
@@ -379,7 +359,7 @@ class Posts:
         :param post_id: the id of the post
         """
 
-        post_id = self._parse_object_id(post_id)
+        post_id = util.parse_object_id(post_id)
 
         update_result = self.db.posts.update_one(
             {"_id": post_id}, {"$set": {"pinned": True}}
@@ -387,7 +367,7 @@ class Posts:
 
         # if no documents have been modified by the update
         # we know that there was no post with the given _id
-        if update_result.modified_count != 1:
+        if update_result.matched_count != 1:
             raise PostNotExistingException()
 
     def unpin_post(self, post_id: str | ObjectId) -> None:
@@ -396,7 +376,7 @@ class Posts:
         :param post_id: the id of the post
         """
 
-        post_id = self._parse_object_id(post_id)
+        post_id = util.parse_object_id(post_id)
 
         update_result = self.db.posts.update_one(
             {"_id": post_id}, {"$set": {"pinned": False}}
@@ -404,7 +384,7 @@ class Posts:
 
         # if no documents have been modified by the update
         # we know that there was no post with the given _id
-        if update_result.modified_count != 1:
+        if update_result.matched_count != 1:
             raise PostNotExistingException()
 
     def pin_comment(self, comment_id: str | ObjectId) -> None:
@@ -413,7 +393,7 @@ class Posts:
         :param comment_id: the id of the comment
         """
 
-        comment_id = self._parse_object_id(comment_id)
+        comment_id = util.parse_object_id(comment_id)
 
         update_result = self.db.posts.update_one(
             {"comments._id": comment_id}, {"$set": {"comments.$.pinned": True}}
@@ -421,7 +401,10 @@ class Posts:
 
         # if no documents have been modified by the update
         # we know that there was no post with the given _id
-        if update_result.modified_count != 1:
+        # TODO actually this only tells us that the comment_id doesnt exist,
+        # but the post might still exist, either raise CommentNotExistingException
+        # or check for the post itself
+        if update_result.matched_count != 1:
             raise PostNotExistingException()
 
     def unpin_comment(self, comment_id: str | ObjectId) -> None:
@@ -430,7 +413,7 @@ class Posts:
         :param comment_id: the id of the comment
         """
 
-        comment_id = self._parse_object_id(comment_id)
+        comment_id = util.parse_object_id(comment_id)
 
         update_result = self.db.posts.update_one(
             {"comments._id": comment_id}, {"$set": {"comments.$.pinned": False}}
@@ -438,7 +421,10 @@ class Posts:
 
         # if no documents have been modified by the update
         # we know that there was no post with the given _id
-        if update_result.modified_count != 1:
+        # TODO actually this only tells us that the comment_id doesnt exist,
+        # but the post might still exist, either raise CommentNotExistingException
+        # or check for the post itself
+        if update_result.matched_count != 1:
             raise PostNotExistingException()
 
     def add_new_post_file(
@@ -474,37 +460,75 @@ class Posts:
         )
 
     def get_space_timeline(
-        self, space_name: str, time_from: datetime.datetime, time_to: datetime.datetime
-    ) -> List[Dict]:
+        self, space_id: str | ObjectId, time_to: datetime.datetime, limit: int = 10
+    ) -> Tuple[List[Dict], List[Dict]]:
         """
-        get the timeline of a space within the time window specified by time_from and time_to.
-        This will always include posts that are pinned, no matter if they fit the timeframe.
-        :param space_name: the name of the space to view the timeline of
-        :param time_from: the starting datetime of the window in utc time
-        :param time_to: the end datetime of the window in utc time
+        get the timeline of a space (as well as pinned posts).
+        The timeline will always include `limit` number of posts, that are older than the
+        `time_to` timestamp. So, e.g. achieve endless scrolling, retrieve the next `limit`
+        posts as kind of a pagination approach, use the oldest timestamp of your current
+        result set as the new starting point.
+
+        If there are not enough posts, the timeline will include as many
+        posts as possible. In turn, if there are less then `limit` posts returned,
+        this timeline does not contain any more posts, so further requests with an even
+        older timestamp will not yield any more results.
+
+        Returns a tuple of two lists, the first one containing the posts that match the
+        time & limit constraints in newest-first order, the second one containing the pinned
+        posts in the space (if any).
+
+
+        :param space_id: the _id of the space to view the timeline of
+        :param time_to: the maximum creation date of the posts to be returned (i.e. only
+                        posts older than this date will be returned)
+        :param limit: the maximum number of posts to be returned, default 10
         """
 
-        return list(
+        space_id = util.parse_object_id(space_id)
+
+        posts_in_timeframe = list(
             self.db.posts.find(
                 {
-                    "space": space_name,
+                    "space": space_id,
                     "$or": [
-                        {"creation_date": {"$gte": time_from, "$lte": time_to}},
-                        {"pinned": True},
+                        {"creation_date": {"$lte": time_to}},
                     ],
+                }, limit=limit, sort=[("creation_date", -1)]
+            )
+        )
+
+        pinned_posts = list(
+            self.db.posts.find(
+                {
+                    "space": space_id,
+                    "pinned": True,
                 }
             )
         )
 
+        return (posts_in_timeframe, pinned_posts)
+
     def get_user_timeline(
-        self, username: str, time_from: datetime.datetime, time_to: datetime.datetime
+        self, username: str, time_to: datetime.datetime, limit: int = 10
     ) -> List[Dict]:
         """
-        get the timeline of the given user (aka the timeline on his profile) within
-        the time windows specified by `time_from` and `time_to`.
+        get the timeline of the given user (aka the timeline on his profile)
+
+        The timeline will always include `limit` number of posts, that are older than the
+        `time_to` timestamp. So, e.g. achieve endless scrolling, retrieve the next `limit`
+        posts as kind of a pagination approach, use the oldest timestamp of your current
+        result set as the new starting point.
+
+        If there are not enough posts, the timeline will include as many
+        posts as possible. In turn, if there are less then `limit` posts returned,
+        this timeline does not contain any more posts, so further requests with an even
+        older timestamp will not yield any more results.
+
         :param username: the name of the user whose timeline is requested
-        :param time_from: the starting datetime of the window in utc time
-        :param time_to: the end datetime of the window in utc time
+        :param time_to: the maximum creation date of the posts to be returned (i.e. only
+                        posts older than this date will be returned)
+        :param limit: the maximum number of posts to be returned, default 10
         """
 
         # TODO what about posts in spaces? include? exclude?
@@ -512,16 +536,224 @@ class Posts:
         return list(
             self.db.posts.find(
                 {
-                    "creation_date": {"$gte": time_from, "$lte": time_to},
+                    "creation_date": {"$lte": time_to},
                     "author": username,
-                }
+                }, sort=[("creation_date", -1)], limit=limit
             )
         )
 
     def get_personal_timeline(
+        self, username: str, time_to: datetime.datetime, limit: int = 10
+    ) -> List[Dict]:
+        """
+        get the "personal" or rather frontpage timeline of a user, i.e.
+        - your own posts
+        - posts of people that you follow,
+        - posts in spaces that you are a member of
+
+        The timeline will always include `limit` number of posts, that are older than the
+        `time_to` timestamp. So, e.g. achieve endless scrolling, retrieve the next `limit`
+        posts as kind of a pagination approach, use the oldest timestamp of your current
+        result set as the new starting point.
+
+        If there are not enough posts, the timeline will include as many
+        posts as possible. In turn, if there are less then `limit` posts returned,
+        this timeline does not contain any more posts, so further requests with an even
+        older timestamp will not yield any more results.
+
+        :param username: the name of the user whose personal timeline is requested
+        :param time_to: the maximum creation date of the posts to be returned (i.e. only
+                        posts older than this date will be returned)
+        :param limit: the maximum number of posts to be returned, default 10
+        """
+
+        pipeline = self.db.posts.aggregate(
+            [
+                # add the current_user as a field,
+                # we need this because looksups have to be on fields
+                {"$addFields": {"curr_user": username}},
+                # join with the space collection on the space name
+                {
+                    "$lookup": {
+                        "from": "spaces",
+                        "localField": "space",
+                        "foreignField": "_id",
+                        "as": "space_obj",
+                    }
+                },
+                # join with the follows collection on the current user
+                {
+                    "$lookup": {
+                        "from": "profiles",
+                        "localField": "curr_user",
+                        "foreignField": "username",
+                        "as": "profile_obj",
+                    }
+                },
+                # lookup result is a list, but since it is a n:1-relation,
+                # we only expect one space and can safely flatten the list to a dict
+                {
+                    "$unwind": {
+                        "path": "$space_obj",
+                        "preserveNullAndEmptyArrays": True,
+                    }
+                },
+                # lookup result is a list, but since it is a n:1-relation,
+                # we only expect one follow-record
+                # and can safely flatten the list to a dict
+                {
+                    "$unwind": {
+                        "path": "$profile_obj",
+                        "preserveNullAndEmptyArrays": True,
+                    }
+                },
+                # to make our lives easier with matching later
+                # we extract the list of users the current_user follows from the dict
+                # and also append the current_user himself to it
+                # (that way we can simply match "author in flattened_follows").
+                # this is rather complex, because if the lookup doesnt find any match,
+                # the result is missing (instead of None or []), so we have to check for that
+                {
+                    "$addFields": {
+                        "flattened_follows": {
+                            "$cond": {
+                                "if": {"$ne": [{"$type": "$profile_obj"}, "missing"]},
+                                "then": {
+                                    "$concatArrays": [
+                                        "$profile_obj.follows",
+                                        [username],
+                                    ]
+                                },
+                                "else": {
+                                    "$concatArrays": [
+                                        [],
+                                        [username],
+                                    ]
+                                },
+                            }
+                        }
+                    }
+                },
+                # now the actual filtering begins:
+                # - we first check for the time frame to include only posts that are older than time_to
+                # we now have to check for the 3 cases described on top of the pipeline,
+                # that allow for the post to be in the timeline
+                {
+                    "$match": {
+                        "creation_date": {"$lte": time_to},
+                        "$or": [
+                            # this catches the first and the second case
+                            # (being either the author yourself or you are following
+                            # the author of the post)
+                            {"$expr": {"$in": ["$author", "$flattened_follows"]}},
+                            # this catches the third case, being a member of the space
+                            # the post was put into
+                            # same story as for the flattened_follows:
+                            # this is rather complex, because if the lookup doesnt find anything
+                            # the expected dict is not present (instead of None or []),
+                            # so we have to check existence, and only if it exists, if current_user
+                            # is really a member of the space
+                            {
+                                "$expr": {
+                                    "$in": [
+                                        username,
+                                        {
+                                            "$cond": {
+                                                "if": {
+                                                    "$ne": [
+                                                        {"$type": "$space_obj"},
+                                                        "missing",
+                                                    ]
+                                                },
+                                                "then": "$space_obj.members",
+                                                "else": [],
+                                            }
+                                        },
+                                    ]
+                                }
+                            },
+                        ],
+                        # the matches above actually cover all relevant cases, but one single detail is missing:
+                        # they include posts from user that i follow, that they have posted into spaces
+                        # where i am not a member.
+                        # since i am not a member of that space, i shouldnt be allowed to view that post,
+                        # so we have to filter those out as well by checking:
+                        #   author is not current_user
+                        #   AND post is in a space
+                        #   AND current_user is not member of that space
+                        # if that is true, we leave out the post
+                        "$expr": {
+                            "$eq": [
+                                False,
+                                {
+                                    "$cond": {
+                                        "if": {
+                                            "$and": [
+                                                # check author != cur_user
+                                                {
+                                                    "$ne": [
+                                                        "$author",
+                                                        "$curr_user",
+                                                    ]
+                                                },
+                                                # check space not None
+                                                {"$ne": ["$space", None]},
+                                                # check cur_user not member of space
+                                                {
+                                                    "$not": {
+                                                        "$in": [
+                                                            username,
+                                                            {
+                                                                "$cond": {
+                                                                    "if": {
+                                                                        "$ne": [
+                                                                            {
+                                                                                "$type": "$space_obj"
+                                                                            },
+                                                                            "missing",
+                                                                        ]
+                                                                    },
+                                                                    "then": "$space_obj.members",
+                                                                    "else": [],
+                                                                }
+                                                            },
+                                                        ]
+                                                    }
+                                                },
+                                            ]
+                                        },
+                                        "then": True,
+                                        "else": False,
+                                    }
+                                },
+                            ]
+                        },
+                    }
+                },
+                # sort by creation date, descending
+                {"$sort": {"creation_date": -1}},
+                # only include the last `limit` posts
+                {"$limit": limit},
+                # last step, cleanup all the extra fields we had to use along
+                {
+                    "$unset": [
+                        "curr_user",
+                        "flattened_follows",
+                        "profile_obj",
+                        "space_obj",
+                    ]
+                },
+            ]
+        )
+
+        return list(pipeline)
+
+    def get_personal_timeline_legacy(
         self, username: str, time_from: datetime.datetime, time_to: datetime.datetime
     ) -> List[Dict]:
         """
+        FOR BACKWARDS COMPATIBILITY ONLY
+
         get the "personal" or rather frontpage timeline of a user, i.e.
         - your own posts
         - posts of people that you follow,
@@ -546,7 +778,7 @@ class Posts:
                     "$lookup": {
                         "from": "spaces",
                         "localField": "space",
-                        "foreignField": "name",
+                        "foreignField": "_id",
                         "as": "space_obj",
                     }
                 },

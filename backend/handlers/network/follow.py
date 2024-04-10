@@ -1,11 +1,15 @@
 import tornado.web
 
 from handlers.base_handler import BaseHandler, auth_needed
-from resources.network.profile import AlreadyFollowedException, NotFollowedException, Profiles
+from resources.network.profile import (
+    AlreadyFollowedException,
+    NotFollowedException,
+    Profiles,
+)
+import util
 
 
 class FollowHandler(BaseHandler):
-
     @auth_needed
     def get(self):
         """
@@ -32,8 +36,9 @@ class FollowHandler(BaseHandler):
         if username is None:
             username = self.current_user.username
 
-        with Profiles() as db_manager:
-            follows = db_manager.get_follows(username)
+        with util.get_mongodb() as db:
+            profile_manager = Profiles(db)
+            follows = profile_manager.get_follows(username)
 
         self.set_status(200)
         self.write(
@@ -74,9 +79,10 @@ class FollowHandler(BaseHandler):
             self.write({"status": 400, "success": False, "reason": "missing_key:user"})
             return
 
-        with Profiles() as db_manager:
+        with util.get_mongodb() as db:
+            profile_manager = Profiles(db)
             try:
-                db_manager.add_follows(self.current_user.username, user_to_follow)
+                profile_manager.add_follows(self.current_user.username, user_to_follow)
             except AlreadyFollowedException:
                 self.set_status(304)
                 return
@@ -117,9 +123,10 @@ class FollowHandler(BaseHandler):
             self.write({"status": 400, "success": False, "reason": "missing_key:user"})
             return
 
-        with Profiles() as db_manager:
+        with util.get_mongodb() as db:
+            profile_manager = Profiles(db)
             try:
-                db_manager.remove_follows(self.current_user.username, username)
+                profile_manager.remove_follows(self.current_user.username, username)
             except NotFollowedException:
                 self.set_status(304)
                 return

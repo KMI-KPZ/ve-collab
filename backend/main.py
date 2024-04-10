@@ -1,18 +1,14 @@
-import asyncio
 import json
 import logging
 import logging.handlers
 import os
-import sys
 
-sys.path.append(os.path.dirname(__file__))
-if sys.platform == "win32":
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-
+from dotenv import load_dotenv
 import gridfs
 from keycloak import KeycloakOpenID, KeycloakAdmin
 import pymongo
 import pymongo.errors
+import socketio
 import tornado.httpserver
 import tornado.ioloop
 import tornado.locks
@@ -23,7 +19,12 @@ import tornado.web
 import global_vars
 from handlers.authentication import LoginHandler, LoginCallbackHandler, LogoutHandler
 from handlers.db_static_files import GridFSStaticFileHandler
+from handlers.healthcheck import HealthCheckHandler
+from handlers.import_personas import ImportDummyPersonasHandler
+from handlers.material_taxonomy import MaterialTaxonomyHandler
+from handlers.network.chat import RoomHandler
 from handlers.network.follow import FollowHandler
+from handlers.network.notifications import NotificationHandler
 from handlers.network.permissions import (
     GlobalACLHandler,
     RoleHandler,
@@ -36,11 +37,13 @@ from handlers.network.space import SpaceHandler
 from handlers.network.timeline import *
 from handlers.network.user import *
 from handlers.network.wordpress import WordpressCollectionHandler, WordpressPostHandler
-from resources.network.acl import ACL
+from resources.network.acl import ACL, cleanup_unused_rules
 from resources.network.profile import ProfileDoesntExistException, Profiles
 from resources.network.space import Spaces
+from handlers.planner.etherpad_integration import EtherpadIntegrationHandler
 from handlers.planner.ve_plan import VEPlanHandler
-
+from handlers.planner.ve_invite import VeInvitationHandler
+import util
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +61,27 @@ define(
     help="start application in test mode (bypass authentication) as a user. never run the app in this mode, it is purely for unit tests!",
 )
 
-def make_app(cookie_secret):
+# load environment variables from .env file
+load_dotenv()
+
+
+def make_app(cookie_secret: str, debug: bool = False):
+    # setup socketio server
+    global_vars.socket_io = socketio.AsyncServer(
+        async_mode="tornado", cors_allowed_origins="*"
+    )
+    # imports have to be done lazily here, because otherwise the socket_io server in global
+    # vars would not be ready, causing the event handling to crash
+    # but in turn if they don't get imported at all, the handler functions would not be
+    # invoked.
+    # that's the price we gotta pay, but atleast the socket server is accessible from anywhere
+    from handlers.socket_io import (
+        connect,
+        disconnect,
+        authenticate,
+        acknowledge_notification,
+    )
+
     return tornado.web.Application(
         [
             (r"/", MainRedirectHandler),
@@ -66,6 +89,7 @@ def make_app(cookie_secret):
             (r"/login/callback", LoginCallbackHandler),
             (r"/logout", LogoutHandler),
             (r"/main", MainHandler),
+            (r"/health", HealthCheckHandler),
             (r"/acl", ACLHandler),
             (r"/myprofile", MyProfileHandler),
             (r"/profile/(.+)", ProfileHandler),
@@ -83,7 +107,9 @@ def make_app(cookie_secret):
             (r"/timeline/space/(.+)", SpaceTimelineHandler),
             (r"/timeline/user/(.+)", UserTimelineHandler),
             (r"/timeline/you", PersonalTimelineHandler),
+            (r"/legacy/timeline/you", LegacyPersonalTimelineHandler),
             (r"/profileinformation", ProfileInformationHandler),
+            (r"/profile_snippets", BulkProfileSnippets),
             (r"/users/(.+)", UserHandler),
             (r"/role/(.+)", RoleHandler),
             (r"/global_acl/(.+)", GlobalACLHandler),
@@ -93,6 +119,16 @@ def make_app(cookie_secret):
             (r"/wordpress/posts", WordpressCollectionHandler),
             (r"/wordpress/posts/([0-9]+)", WordpressPostHandler),
             (r"/planner/(.+)", VEPlanHandler),
+            (r"/orcid", OrcidProfileHandler),
+            (r"/matching_exclusion_info", MatchingExclusionHandler),
+            (r"/matching", MatchingHandler),
+            (r"/etherpad_integration/(.+)", EtherpadIntegrationHandler),
+            (r"/ve_invitation/(.+)", VeInvitationHandler),
+            (r"/notifications", NotificationHandler),
+            (r"/chatroom/(.*)", RoomHandler),
+            (r"/material_taxonomy", MaterialTaxonomyHandler),
+            (r"/import_personas", ImportDummyPersonasHandler),
+            (r"/admin_check", AdminCheckHandler),
             (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
             (r"/assets/(.*)", tornado.web.StaticFileHandler, {"path": "./assets/"}),
             (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./html/"}),
@@ -102,9 +138,12 @@ def make_app(cookie_secret):
                 {"path": "./javascripts/"},
             ),
             (r"/uploads/(.*)", GridFSStaticFileHandler, {"path": ""}),
+            (r"/socket.io/", socketio.get_tornado_handler(global_vars.socket_io)),
+            (r"/knowledgeworker/(.*)", tornado.web.StaticFileHandler, {"path": "./knowledgeworker_courses", "default_filename": "index.html"}),
         ],
         cookie_secret=cookie_secret,
         template_path="html",
+        debug=debug,
     )
 
 
@@ -118,14 +157,7 @@ def init_indexes(force_rebuild: bool) -> None:
     :param force_rebuild: boolean switch to trigger a forced rebuild of the text indexes
     """
 
-    with pymongo.MongoClient(
-        global_vars.mongodb_host,
-        global_vars.mongodb_port,
-        username=global_vars.mongodb_username,
-        password=global_vars.mongodb_password,
-    ) as client:
-        db = client[global_vars.mongodb_db_name]
-
+    with util.get_mongodb() as db:
         # full text search index on posts
         if "posts" not in db.posts.index_information() or force_rebuild:
             try:
@@ -157,34 +189,6 @@ def init_indexes(force_rebuild: bool) -> None:
                 )
             )
 
-        # full text search index on profiles
-        if "profiles" not in db.profiles.index_information() or force_rebuild:
-            try:
-                db.profiles.drop_index("profiles")
-            except pymongo.errors.OperationFailure:
-                pass
-            db.profiles.create_index(
-                [
-                    ("bio", pymongo.TEXT),
-                    ("institution", pymongo.TEXT),
-                    ("projects", pymongo.TEXT),
-                    ("first_name", pymongo.TEXT),
-                    ("last_name", pymongo.TEXT),
-                    ("gender", pymongo.TEXT),
-                    ("address", pymongo.TEXT),
-                    ("birthday", pymongo.TEXT),
-                    ("experience", pymongo.TEXT),
-                    ("education", pymongo.TEXT),
-                    ("username", pymongo.TEXT),
-                ],
-                name="profiles",
-            )
-            logger.info(
-                "Built text index named {} on collection {}".format(
-                    "profiles", "profiles"
-                )
-            )
-
         # ascending index on "username" field in profiles
         if "profiles_username" not in db.profiles.index_information() or force_rebuild:
             try:
@@ -210,13 +214,16 @@ def init_indexes(force_rebuild: bool) -> None:
             )
 
 
-def create_initial_admin(username: str) -> None:
+def create_initial_admin() -> None:
     """
-    create an initial admin with the given username
+    create an initial admin based on INITIAL_ADMIN_USERNAME env-variable
+    or "admin" if not set
     """
 
-    with Profiles() as profile_manager:
+    username = os.getenv("INITIAL_ADMIN_USERNAME", "admin")
 
+    with util.get_mongodb() as db:
+        profile_manager = Profiles(db)
         # check if the user already has a non-admin role and issue a warning
         # about elevated permissions if so
         try:
@@ -239,73 +246,108 @@ def create_initial_admin(username: str) -> None:
         profile_manager.insert_default_admin_profile(username)
 
         # also insert admin acl rules
-        with (ACL() as acl, Spaces() as space_manager):
-            acl.global_acl.insert_admin()
+        acl = ACL(db)
+        space_manager = Spaces(db)
 
-            for space in space_manager.get_space_names():
-                acl.space_acl.insert_admin(space)
+        acl.global_acl.insert_admin()
+
+        for space in space_manager.get_space_names():
+            acl.space_acl.insert_admin(space)
 
         logger.info(
             "inserted admin user '{}' and corresponding ACL rules".format(username)
         )
 
-
-def set_global_vars(conf: dict) -> None:
+def load_default_taxonomy_if_exists() -> None:
     """
-    setup global_vars from config properties
+    If the db does not currently hold a taxonomy, load the default taxonomy from the assets folder
     """
 
-    # assure config contains expected keys
-    expected_config_keys = [
-        "port",
-        "domain",
-        "wordpress_url",
-        "cookie_secret",
-        "keycloak_base_url",
-        "keycloak_realm",
-        "keycloak_client_id",
-        "keycloak_client_secret",
-        "keycloak_admin_username",
-        "keycloak_admin_password",
-        "keycloak_callback_url",
-        "mongodb_host",
-        "mongodb_port",
-        "mongodb_username",
-        "mongodb_password",
-        "mongodb_db_name",
+    with util.get_mongodb() as db:
+        # db already has one, skip
+        if db.material_taxonomy.count_documents({}) > 0:
+            return
+        
+        # db is empty, but no default taxonomy file exists, skip
+        if not os.path.isfile("assets/default_taxonomy.json"):
+            logger.warning("tried to load default taxonomy from assets folder, but no file found")
+            return
+        
+        # db is empty and default taxonomy file exists, load it
+        with open("assets/default_taxonomy.json", "r") as f:
+            taxonomy = json.load(f)
+            if "taxonomy" in taxonomy:
+                db.material_taxonomy.insert_one(taxonomy)
+                logger.info("Loaded default taxonomy from assets folder")
+
+
+def set_global_vars() -> None:
+    """
+    setup global_vars from env properties
+    """
+
+    # assure config contains expected keys that do not have a default value
+    expected_env_keys = [
+        "COOKIE_SECRET",
+        "WORDPRESS_URL",
+        "KEYCLOAK_BASE_URL",
+        "KEYCLOAK_REALM",
+        "KEYCLOAK_CLIENT_ID",
+        "KEYCLOAK_CLIENT_SECRET",
+        "KEYCLOAK_CALLBACK_URL",
+        "KEYCLOAK_ADMIN_USERNAME",
+        "KEYCLOAK_ADMIN_PASSWORD",
+        "MONGODB_USERNAME",
+        "MONGODB_PASSWORD",
+        "ETHERPAD_BASE_URL",
+        "ETHERPAD_API_KEY",
+        "ELASTICSEARCH_BASE_URL",
+        "ELASTICSEARCH_PASSWORD",
+        "DUMMY_PERSONAS_PASSCODE",
     ]
 
-    for key in expected_config_keys:
-        if key not in conf:
-            raise RuntimeError("config misses {}".format(key))
+    for key in expected_env_keys:
+        if os.getenv(key) is None:
+            raise RuntimeError("environment misses variable {}".format(key))
 
     # set global vars from config
-    global_vars.port = conf["port"]
-    global_vars.domain = conf["domain"]
-    global_vars.wordpress_url = conf["wordpress_url"]
-    global_vars.mongodb_host = conf["mongodb_host"]
-    global_vars.mongodb_port = conf["mongodb_port"]
-    global_vars.mongodb_username = conf["mongodb_username"]
-    global_vars.mongodb_password = conf["mongodb_password"]
-    global_vars.mongodb_db_name = conf["mongodb_db_name"]
+    global_vars.port = int(os.getenv("PORT", "8888"))
+    global_vars.cookie_secret = os.getenv("COOKIE_SECRET")
+    global_vars.wordpress_url = os.getenv("WORDPRESS_URL")
+    global_vars.mongodb_host = os.getenv("MONGODB_HOST", "localhost")
+    global_vars.mongodb_port = int(os.getenv("MONGODB_PORT", "27017"))
+    global_vars.mongodb_username = os.getenv("MONGODB_USERNAME")
+    global_vars.mongodb_password = os.getenv("MONGODB_PASSWORD")
+    global_vars.mongodb_db_name = os.getenv("MONGODB_DB_NAME", "ve_collab")
+    global_vars.etherpad_base_url = os.getenv("ETHERPAD_BASE_URL")
+    global_vars.etherpad_api_key = os.getenv("ETHERPAD_API_KEY")
+    global_vars.elasticsearch_base_url = os.getenv("ELASTICSEARCH_BASE_URL")
+    global_vars.elasticsearch_username = os.getenv("ELASTICSEARCH_USERNAME", "elastic")
+    global_vars.elasticsearch_password = os.getenv("ELASTICSEARCH_PASSWORD")
+    global_vars.dummy_personas_passcode = os.getenv("DUMMY_PERSONAS_PASSCODE")
+    global_vars.keycloak_base_url = os.getenv("KEYCLOAK_BASE_URL")
+    global_vars.keycloak_realm = os.getenv("KEYCLOAK_REALM")
+    global_vars.keycloak_client_id = os.getenv("KEYCLOAK_CLIENT_ID")
+    global_vars.keycloak_client_secret = os.getenv("KEYCLOAK_CLIENT_SECRET")
+    global_vars.keycloak_callback_url = os.getenv("KEYCLOAK_CALLBACK_URL")
+    global_vars.keycloak_admin_username = os.getenv("KEYCLOAK_ADMIN_USERNAME")
+    global_vars.keycloak_admin_password = os.getenv("KEYCLOAK_ADMIN_PASSWORD")
 
     if not (options.test_admin or options.test_user):
         global_vars.keycloak = KeycloakOpenID(
-            conf["keycloak_base_url"],
-            realm_name=conf["keycloak_realm"],
-            client_id=conf["keycloak_client_id"],
-            client_secret_key=conf["keycloak_client_secret"],
+            global_vars.keycloak_base_url,
+            realm_name=global_vars.keycloak_realm,
+            client_id=global_vars.keycloak_client_id,
+            client_secret_key=global_vars.keycloak_client_secret,
         )
         global_vars.keycloak_admin = KeycloakAdmin(
-            conf["keycloak_base_url"],
-            realm_name=conf["keycloak_realm"],
-            username=conf["keycloak_admin_username"],
-            password=conf["keycloak_admin_password"],
+            global_vars.keycloak_base_url,
+            realm_name=global_vars.keycloak_realm,
+            username=global_vars.keycloak_admin_username,
+            password=global_vars.keycloak_admin_password,
             verify=True,
             auto_refresh_token=["get", "put", "post", "delete"],
         )
-    global_vars.keycloak_client_id = conf["keycloak_client_id"]
-    global_vars.keycloak_callback_url = conf["keycloak_callback_url"]
 
 
 def init_default_pictures():
@@ -381,13 +423,18 @@ def hook_tornado_access_log():
     handler.setFormatter(tornado.log.LogFormatter(color=False))
     tornado_access_logger.addHandler(handler)
 
+    # prevent propagation to top level logger that prints to stdout/stderr
+    # if the flag is set
+    if options.supress_stdout_access_log is True:
+        tornado_access_logger.propagate = False
 
-async def main():
+
+def main():
     define(
-        "config",
-        default="config.json",
-        type=str,
-        help="path to config file, defaults to config.json",
+        "debug",
+        default=False,
+        type=bool,
+        help="start application in debug mode (autoreload, etc.). don't use this flag in production",
     )
     define(
         "build_indexes",
@@ -396,21 +443,19 @@ async def main():
         help="force the application to (re)build the indexes for full text search and query optimization. Warning: this might take a long time depending on your database size",
     )
     define(
-        "create_admin",
-        default="admin",
-        type=str,
-        help="Create an initial admin user with this username in the ACL",
+        "supress_stdout_access_log",
+        default=False,
+        type=bool,
+        help="Prevent the tornado access logger from logging to stdout, only log file instead",
     )
 
     parse_command_line()
 
-    # setup global vars from config
-    with open(options.config, "r") as fp:
-        conf = json.load(fp)
-        set_global_vars(conf)
+    # setup global vars from env
+    set_global_vars()
 
     # insert default admin role and acl templates
-    create_initial_admin(options.create_admin)
+    create_initial_admin()
 
     # setup text indexes for searching
     init_indexes(options.build_indexes)
@@ -418,19 +463,24 @@ async def main():
     # setup default group and profile pictures
     init_default_pictures()
 
+    # load default taxonomy if none exists
+    load_default_taxonomy_if_exists()
+
     # write tornado access log to separate logfile
     hook_tornado_access_log()
 
+    # periodically schedule acl entry cleanup
+    # cleanup happens every  3,600,000 ms = 1 hour
+    tornado.ioloop.PeriodicCallback(cleanup_unused_rules, 3_600_000).start()
+
     # build and start server
-    cookie_secret = conf["cookie_secret"]
-    app = make_app(cookie_secret)
+    app = make_app(global_vars.cookie_secret, options.debug)
     server = tornado.httpserver.HTTPServer(app)
     logger.info("Starting server on port: " + str(global_vars.port))
     server.listen(global_vars.port)
 
-    shutdown_event = tornado.locks.Event()
-    await shutdown_event.wait()
+    tornado.ioloop.IOLoop.current().start()
 
 
 if __name__ == "__main__":
-    tornado.ioloop.IOLoop.current().run_sync(main)
+    main()
