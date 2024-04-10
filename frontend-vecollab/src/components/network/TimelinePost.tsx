@@ -7,12 +7,12 @@ import { IoIosSend } from "react-icons/io";
 import Dropdown from "../Dropdown";
 import { BackendPost, BackendPostAuthor, BackendPostComment, BackendPostFile, BackendSpace, BackendSpaceACLEntry } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
-import { MdDeleteOutline, MdDoubleArrow, MdModeEdit, MdOutlineKeyboardDoubleArrowDown,  MdThumbUp } from "react-icons/md";
+import { MdAudioFile, MdDeleteOutline, MdDoubleArrow, MdKeyboardDoubleArrowUp, MdModeEdit, MdOutlineKeyboardDoubleArrowDown, MdThumbUp, MdVideoFile } from "react-icons/md";
 import { TiArrowForward, TiPin, TiPinOutline } from "react-icons/ti";
 import TimelinePostForm from "./TimelinePostForm";
 import PostHeader from "./PostHeader";
 import { AuthenticatedFile } from "../AuthenticatedFile";
-import { RxFile } from "react-icons/rx";
+import { RxFile, RxFileText } from "react-icons/rx";
 import TimelinePostText from "./TimelinePostText";
 import AuthenticatedImage from "../AuthenticatedImage";
 import { KeyedMutator } from "swr";
@@ -245,8 +245,11 @@ export default function TimelinePost(
                                 height={20}
                                 className="rounded-full mr-3 inline"
                             />
-                            {/* TODO use prefered username */}
-                            {liker.first_name} {liker.last_name}
+                            {liker.first_name ? (
+                                <>{liker.first_name} {liker.last_name}</>
+                            ) : (
+                                <>{liker.username}</>
+                            )}
                         </Link>
                     ))}
                 </div>
@@ -254,13 +257,13 @@ export default function TimelinePost(
         )
     }
 
-    const Comment = (comment: BackendPostComment) => (
+    const Comment = ({comment}: {comment: BackendPostComment}) => (
         <>
             <div className={`flex items-center group/comment`}>
                 <PostHeader author={comment.author} date={comment.creation_date} />
                 <div className={`ml-auto opacity-0 transition-opacity group-hover/comment:opacity-100`}>
                     {(space && userIsAdmin) && (
-                        <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={e => pinComment(comment)} title={post.pinned ? "Kommentar abheften" : "Kommentar anheften"}>
+                        <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={e => pinComment(comment)} title={comment.pinned ? "Kommentar abheften" : "Kommentar anheften"}>
                             {comment.pinned ? (
                                 <TiPin />
                             ) : (
@@ -274,23 +277,50 @@ export default function TimelinePost(
         </>
     )
 
-    const fileIsImage = (file: BackendPostFile) => {
-        return file.file_type?.startsWith('image/')
+    const FileIcon = ({file}: {file: BackendPostFile}) => {
+        if (file.file_type.startsWith('image/')) {
+            return <AuthenticatedImage
+                    imageId={file.file_id}
+                    alt={file.file_name}
+                    width={50}
+                    height={50}
+                ></AuthenticatedImage>
+        }
+        else if (file.file_type.startsWith('video/')) {
+            return <div className="h-[50px] flex items-center"><MdVideoFile size={35} /></div>
+        }
+        else if (file.file_type.startsWith('audio/')) {
+            return <div className="h-[50px] flex items-center"><MdAudioFile size={35} /></div>
+        }
+        else if (file.file_type.startsWith('text/')) {
+            return <div className="h-[50px] flex items-center"><RxFileText size={35} /></div>
+        }
+        else {
+            return <div className="h-[50px] flex items-center"><RxFile size={35} /></div>
+        }
     }
 
-    let drOptions = []
-    if (
-        (!post.isRepost && post.author.username == session?.user.preferred_username)
-        || (post.isRepost && post.repostAuthor?.username == session?.user.preferred_username)
-    ) {
-        drOptions.push(
-            { value: 'remove', label: 'löschen', icon: <MdDeleteOutline /> },
-            { value: 'edit', label: 'bearbeiten', icon: <MdModeEdit /> }
-        )
-    } else if (userIsAdmin) {
-        drOptions.push(
-            { value: 'remove', label: 'löschen', icon: <MdDeleteOutline /> }
-        )
+    const PostHeaderDropdown = ({post}: {post: BackendPost}) => {
+        let options = []
+        if (
+            (!post.isRepost && post.author.username == session?.user.preferred_username)
+            || (post.isRepost && post.repostAuthor?.username == session?.user.preferred_username)
+        ) {
+            options.push(
+                { value: 'remove', label: 'löschen', icon: <MdDeleteOutline /> },
+                { value: 'edit', label: 'bearbeiten', icon: <MdModeEdit /> }
+            )
+        } else if (userIsAdmin) {
+            options.push(
+                { value: 'remove', label: 'löschen', icon: <MdDeleteOutline /> }
+            )
+        }
+
+        if (options.length > 0) {
+            return <Dropdown options={options} onSelect={handleSelectOption} />
+        } else {
+            return null
+        }
     }
 
     return (
@@ -326,9 +356,7 @@ export default function TimelinePost(
                         </button>
                     )}
                     <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickReplyBtn} title="Beitrag zitieren"><TiArrowForward /></button>
-                    {drOptions.length > 0 && (
-                        <Dropdown options={drOptions} onSelect={handleSelectOption} />
-                    )}
+                    <PostHeaderDropdown post={post} />
                 </div>
             </div>
 
@@ -375,18 +403,10 @@ export default function TimelinePost(
                                 key={index}
                                 url={`/uploads/${file.file_id}`}
                                 filename={file.file_name}
+                                title="Download file"
                             >
                                 <div className="flex justify-center">
-                                    {fileIsImage(file) ? (
-                                        <AuthenticatedImage
-                                            imageId={file.file_id}
-                                            alt={file.file_name}
-                                            width={50}
-                                            height={50}
-                                        ></AuthenticatedImage>
-                                    ) : (
-                                        <RxFile size={40} />
-                                    )}
+                                    <FileIcon file={file} />
                                 </div>
                                 <div className="max-w-1/2 justify-center mx-2 px-1 my-1 truncate">
                                     {file.file_name}
@@ -414,17 +434,23 @@ export default function TimelinePost(
                         {pinnedComments.length > 0 && (
                             <button className='py-2 px-3 ml-4 text-xs rounded-md p-2 border border-gray-800 m-1' onClick={e => toggleShowPinnedComments(!showPinnedComments)}>
                                 {pinnedComments.length} {pinnedComments.length > 1 ? ("Angeheftete Kommentare") : ("Angehefteter Kommentar")}
+                                {/* {showPinnedComments ? ( <MdKeyboardDoubleArrowDown /> ) : ( <MdKeyboardDoubleArrowUp /> )} */}
                             </button>
                         )}
                     </div>
 
                     {showPinnedComments && (
-                        <div className="border-l-2 pl-4 border-ve-collab-orange/50">
+                        <div className="px-4 mb-">
                             {pinnedComments.map((comment, ci) => (
                                 <div key={ci}>
-                                    {Comment(comment)}
+                                    <Comment comment={comment} />
                                 </div>
                             ))}
+                            <div className="relative text-center border-t-2 my-6 mx-2 border-ve-collab-orange/50">
+                                <button onClick={e => toggleShowPinnedComments(!showPinnedComments)}  className="absolute -top-[15px] shadow px-4 py-2 rounded-full bg-white hover:bg-slate-100" >
+                                    <MdKeyboardDoubleArrowUp />
+                                </button>
+                            </div>
                         </div>
                     )}
 
@@ -443,13 +469,11 @@ export default function TimelinePost(
 
                     {post.comments.length > 0 && (
                         <div className="px-5 mt-5">
-                            {post.comments.reverse().map((comment, ci) => (
+                            {post.comments.reverse().slice(0, showXComments).map((comment, ci) => (
                                 <div key={ci}>
-                                    <div className={`${ci >= showXComments ? "hidden" : ""}`}>
-                                        {Comment(comment)}
-                                    </div>
+                                    <Comment comment={comment} />
                                     {(ci+1 == showXComments && post.comments.length > showXComments) && (
-                                        <button className="py-2 px-5 rounded-lg" onClick={() => setShowXComments(showXComments+5)} title="Mehr">
+                                        <button className="py-2 px-5 rounded-full hover:bg-ve-collab-blue-light" onClick={() => setShowXComments(showXComments+5)} title="Weitere Kommentare anzeigen">
                                             <MdOutlineKeyboardDoubleArrowDown />
                                         </button>
                                     )}
