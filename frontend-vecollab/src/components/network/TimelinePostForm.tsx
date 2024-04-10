@@ -94,6 +94,7 @@ export default function TimelinePostForm(
 
     const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        // require domparser to check empty lines, eg `<p></p>`
         var newValueDoc = domParser.parseFromString(text, "text/html");
 
         if (text == "" || newValueDoc.body.innerText == '') return
@@ -268,7 +269,7 @@ export default function TimelinePostForm(
                 <div className="w-[20vw]">
                     <div>
                         <form onSubmit={submitNewLinkDialog}>
-                            <input type="text" name="url" autoComplete="off" className="border border-[#cccccc] rounded-l px-2 py-1" />
+                            <input type="text" name="url" autoComplete="off" autoFocus className="border border-[#cccccc] rounded-l px-2 py-1" />
                             <button type="submit" className="my-2 py-2 px-5 rounded-lg bg-ve-collab-orange text-white">
                                 OK
                             </button>
@@ -277,6 +278,14 @@ export default function TimelinePostForm(
                 </div>
             </Dialog>
             <form onSubmit={onSubmit} ref={ref} className="relative">
+                {loading && (
+                    <>
+                        <div className="absolute w-full items-center top-10 z-20"><LoadingAnimation /></div>
+                        <div className="absolute w-full h-full bg-white/50 z-10"></div>
+                    </>
+                )}
+
+                {/* show link tooltip  */}
                 {cursorInLink && (
                     <div style={{
                             left: `${cursorInLink.offsetLeft-(cursorInLink.offsetWidth/2)}px`,
@@ -287,12 +296,7 @@ export default function TimelinePostForm(
                         <a href={cursorInLink.getAttribute('href') as string} target="_blank" rel="noreferrer">{cursorInLink.getAttribute('href') as string}</a>
                     </div>
                 )}
-                {loading && (
-                    <>
-                        <div className="absolute w-full items-center top-10 z-20"><LoadingAnimation /></div>
-                        <div className="absolute w-full h-full bg-white/50 z-10"></div>
-                    </>
-                )}
+
                 <div className="flex items-center mb-5">
                     {!postToEdit && (
                         <AuthenticatedImage
@@ -327,8 +331,8 @@ export default function TimelinePostForm(
                 </div>
 
                 {postToRepost && (
-                    <div className="my-5 ml-[50px] p-3 rounded bg-slate-200">
-                        <div className="flex items-center">
+                    <div className="my-5 ml-[50px] p-3 rounded bg-slate-100">
+                        <div className="flex items-center mb-6">
                             {postToRepost.isRepost
                                 ? ( <PostHeader author={postToRepost.repostAuthor as BackendPostAuthor} date={postToRepost.creation_date} /> )
                                 : ( <PostHeader author={postToRepost.author} date={postToRepost.creation_date} /> )
@@ -375,10 +379,8 @@ export default function TimelinePostForm(
                                 <input type="file" multiple name="file" onChange={addFiles} className="hidden" ref={fileUploadRef} />
                             </>
                         )}
-                        <button type="submit" title="Senden" className="relative py-2 px-5 rounded-lg bg-ve-collab-orange text-white overflow-hidden transition-all before:absolute before:right-0 before:top-0 before:h-12 before:w-6 before:translate-x-12 before:rotate-6 before:bg-white before:opacity-10 before:duration-700 hover:before:-translate-x-40 ">
-                            <span className="relative">
-                                {postToEdit ? ( <>Aktualisieren</> ) : ( <><IoIosSend className="mr-2 inline" /> Senden</> )}
-                            </span>
+                        <button type="submit" className={`relative py-2 px-5 rounded-lg bg-ve-collab-orange text-white overflow-hidden ${text == '' ? 'cursor-default bg-ve-collab-orange/75' : ''}`}>
+                            {postToEdit ? ( <>Aktualisieren</> ) : ( <><IoIosSend className="mr-2 inline" /> Senden</> )}
                         </button>
                     </div>
                 </div>
