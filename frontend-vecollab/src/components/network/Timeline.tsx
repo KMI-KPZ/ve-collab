@@ -12,6 +12,7 @@ import { TiPin } from "react-icons/ti";
 import { MdKeyboardDoubleArrowDown, MdKeyboardDoubleArrowUp } from "react-icons/md";
 
 interface Props {
+    /** User is global admin or admin of current space */
     userIsAdmin?: boolean
     space?: string | undefined;
     spaceACL?: BackendSpaceACLEntry | undefined
