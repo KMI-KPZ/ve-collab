@@ -7,6 +7,7 @@ interface Props {
     prevNode?: IMaterialNode | null;
     nextNode?: IMaterialNode | null;
     bubbleSlug?: string;
+    bubbleSlug?: string;
     categorySlug?: string;
 }
 
@@ -15,6 +16,7 @@ export default function MainLearningContentLayout({
     contentChildren,
     prevNode,
     nextNode,
+    bubbleSlug,
     bubbleSlug,
     categorySlug,
 }: Props) {
@@ -30,11 +32,14 @@ export default function MainLearningContentLayout({
                 <div className={'mt-10 overflow-y-auto overflow-x-clip content-scrollbar'}>
                     {contentChildren}
                 </div>
+                <div className={'mt-10 overflow-y-auto overflow-x-clip content-scrollbar'}>
+                    {contentChildren}
+                </div>
                 <div className="flex mx-4 my-10">
                     {prevNode && (
                         <Link
                             className="mr-auto"
-                            href={`/content/${bubbleSlug}/${categorySlug}/${prevNode.text}`}
+                            href={`/content_bubbles/${bubbleSlug}/${categorySlug}/${prevNode.text}`}
                         >
                             <button
                                 className={'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'}
@@ -46,7 +51,7 @@ export default function MainLearningContentLayout({
                     {nextNode && (
                         <Link
                             className="ml-auto"
-                            href={`/content/${bubbleSlug}/${categorySlug}/${nextNode.text}`}
+                            href={`/content_bubbles/${bubbleSlug}/${categorySlug}/${nextNode.text}`}
                         >
                             <button
                                 className={'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'}
