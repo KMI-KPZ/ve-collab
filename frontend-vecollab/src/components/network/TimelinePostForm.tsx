@@ -6,7 +6,7 @@ import AuthenticatedImage from "../AuthenticatedImage";
 import { BackendPost, BackendPostAuthor, BackendUserSnippet } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
 import PostHeader from "./PostHeader";
-import { MdAttachFile, MdFormatClear, MdInsertLink, MdLinkOff } from "react-icons/md";
+import { MdAttachFile, MdEdit, MdFormatClear, MdInsertLink, MdLinkOff } from "react-icons/md";
 import { RxFile } from "react-icons/rx";
 import LoadingAnimation from "../LoadingAnimation";
 import {
@@ -57,7 +57,7 @@ export default function TimelinePostForm(
         parentNode: Node,
         selectionStart: number,
         selectionEnd: number} | undefined>();
-    const [cursorInLink, setCursorInLink] = useState<false | HTMLElement>(false);
+    const [cursorInLink, setCursorInLink] = useState<false | HTMLLinkElement>(false);
     const [formHadFocus, setFormHadFocus] = useState<boolean>(false)
     const domParser = new DOMParser()
 
@@ -237,23 +237,41 @@ export default function TimelinePostForm(
             return
         }
 
-        if (selectedLinkText !== undefined) {
+        if (cursorInLink !== false) {
+            // update existing link
+            cursorInLink.href = target.value
+        }
+        else if (selectedLinkText !== undefined) {
+            // create new link in selected range
             const range = new Range();
             range.setStart(selectedLinkText.parentNode, selectedLinkText.selectionStart)
             range.setEnd(selectedLinkText.parentNode, selectedLinkText.selectionEnd)
             var selection = window.getSelection();
             selection?.removeAllRanges();
             selection?.addRange(range);
+            document.execCommand('createLink', false, target.value );
         }
 
-        document.execCommand('createLink', false, target.value );
         setIsLinkDialogOpen(false)
         setSelectedLinkText(undefined)
     }
 
+    const openLinkEditor = (event: MouseEvent) => {
+        event.preventDefault()
+        if (!cursorInLink) return
+
+        var selection = window.getSelection();
+        var range = document.createRange();
+        range.selectNodeContents(cursorInLink);
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+
+        setIsLinkDialogOpen(true)
+    }
+
     const editorCaretChanged = () => {
         if (window.getSelection()?.focusNode?.parentNode?.nodeName === 'A') {
-            setCursorInLink(window.getSelection()?.focusNode?.parentNode as HTMLElement)
+            setCursorInLink(window.getSelection()?.focusNode?.parentNode as HTMLLinkElement)
         } else {
             setCursorInLink(false)
         }
@@ -269,7 +287,7 @@ export default function TimelinePostForm(
                 <div className="w-[20vw]">
                     <div>
                         <form onSubmit={submitNewLinkDialog}>
-                            <input type="url" name="url" autoComplete="off" autoFocus className="mr-2 p-2 border border-[#cccccc] rounded-md invalid:border-red-500" />
+                            <input type="url" name="url" defaultValue={cursorInLink ? cursorInLink.href : ''} autoComplete="off" autoFocus className="mr-2 p-2 border border-[#cccccc] rounded-md invalid:border-red-500" />
                             <button type="submit" className="my-2 py-2 px-5 rounded-lg bg-ve-collab-orange text-white">
                                 OK
                             </button>
@@ -285,15 +303,16 @@ export default function TimelinePostForm(
                     </>
                 )}
 
-                {/* show link tooltip  */}
+                {/* link tooltip  */}
                 {cursorInLink && (
                     <div style={{
                             left: `${cursorInLink.offsetLeft-(cursorInLink.offsetWidth/2)}px`,
                             top: `${2+cursorInLink.offsetHeight+cursorInLink.offsetTop}px`
                         }}
-                        className={`absolute p-2 rounded-md bg-white shadow border text-ve-collab-blue hover:underline after:content-[' '] after:absolute after:bottom-full after:left-1/2 after:-ml-2 after:border after:border-4 after:border-transparent after:border-b-gray-300`}
+                        className={`absolute p-2 rounded-md bg-white shadow border text-ve-collab-blue after:content-[' '] after:absolute after:bottom-full after:left-1/2 after:-ml-2 after:border after:border-4 after:border-transparent after:border-b-gray-300`}
                     >
-                        <a href={cursorInLink.getAttribute('href') as string} target="_blank" rel="noreferrer">{cursorInLink.getAttribute('href') as string}</a>
+                        <a href={cursorInLink.getAttribute('href') as string} className="hover:underline" title="Link öffnen" target="_blank" rel="noreferrer">{cursorInLink.getAttribute('href') as string}</a>
+                        <button onClick={e => openLinkEditor(e)} className="" title="Link bearbeiten"><MdEdit className="ml-2" /></button>
                     </div>
                 )}
 
