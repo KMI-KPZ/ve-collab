@@ -1,6 +1,6 @@
 import { fetchPOST } from "@/lib/backend";
 import { useSession } from "next-auth/react";
-import React, { FormEvent, MouseEventHandler, useState, useEffect } from "react";
+import React, { MouseEvent, FormEvent, MouseEventHandler, useState, useEffect } from "react";
 import { IoIosSend, IoMdClose } from "react-icons/io";
 import AuthenticatedImage from "../AuthenticatedImage";
 import { BackendPost, BackendPostAuthor, BackendUserSnippet } from "@/interfaces/api/apiInterfaces";
@@ -256,7 +256,7 @@ export default function TimelinePostForm(
         setSelectedLinkText(undefined)
     }
 
-    const openLinkEditor = (event: MouseEvent) => {
+    const openLinkEditor = (event: MouseEvent<HTMLButtonElement>) => {
         event.preventDefault()
         if (!cursorInLink) return
 
