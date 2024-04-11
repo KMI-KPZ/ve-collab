@@ -51,17 +51,15 @@ export default function TimelinePostForm(
     const [filesToAttach, setFilesToAttach] = useState<File[] | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [text, setText] = useState<string>('');
-
-    const domParser = new DOMParser()
-
     const [userProfileSnippet, setUserProfileSnippet] = useState<BackendUserSnippet>();
-
     const [isLinkDialogOpen, setIsLinkDialogOpen] = useState<boolean>(false);
     const [selectedLinkText, setSelectedLinkText] = useState<{
         parentNode: Node,
         selectionStart: number,
         selectionEnd: number} | undefined>();
     const [cursorInLink, setCursorInLink] = useState<false | HTMLElement>(false);
+    const [formHadFocus, setFormHadFocus] = useState<boolean>(false)
+    const domParser = new DOMParser()
 
     useEffect(() => {
         if (!session?.user) return;
@@ -316,16 +314,19 @@ export default function TimelinePostForm(
                                 onChange={(e) => setText(sanitizedText(e.target.value))}
                                 onKeyUp={editorCaretChanged}
                                 onClick={editorCaretChanged}
+                                onFocus={e => setFormHadFocus(true)}
                             />
-                            <Toolbar>
-                                <BtnBold />
-                                <BtnItalic />
-                                <BtnUnderline />
-                                <BtnBulletList style={{ paddingLeft: "5px" }} />
-                                <BtnNumberedList style={{ paddingLeft: "5px" }} />
-                                <BtnLink />
-                                <BtnClearFormatting />
-                            </Toolbar>
+                            {(postToEdit || postToRepost || formHadFocus) && (
+                                <Toolbar>
+                                    <BtnBold />
+                                    <BtnItalic />
+                                    <BtnUnderline />
+                                    <BtnBulletList style={{ paddingLeft: "5px" }} />
+                                    <BtnNumberedList style={{ paddingLeft: "5px" }} />
+                                    <BtnLink />
+                                    <BtnClearFormatting />
+                                </Toolbar>
+                            )}
                         </EditorProvider>
                     </div>
                 </div>
@@ -364,9 +365,9 @@ export default function TimelinePostForm(
                     </div>
                 )}
 
-                <div className="flex items-center">
+                <div className={`flex items-center ${(!postToEdit && !postToRepost && !formHadFocus) ? 'hidden' : ''}`}>
                     <div className="ml-auto">
-                        {postToEdit && (<button className={`mx-4 py-2 px-5 border border-ve-collab-orange rounded-lg`} title="Abbrechen" onClick={onCancel} type="button">
+                        {postToEdit && (<button className={`mx-4 py-2 px-5 border border-ve-collab-orange rounded-lg`} onClick={onCancel} type="button">
                             Abbrechen
                         </button>)}
                         {(!postToEdit && !postToRepost) && (
