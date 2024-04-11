@@ -259,7 +259,7 @@ export default function TimelinePost(
             <div className={`flex items-center group/comment`}>
                 <PostHeader author={comment.author} date={comment.creation_date} />
                 <div className={`ml-auto ${!comment.pinned ? 'opacity-0' : ''} transition-opacity group-hover/comment:opacity-100`}>
-                    {(space && userIsAdmin) && (
+                    {(userIsAdmin || comment.author.username == session?.user.preferred_username) ? (
                         <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={e => pinComment(comment)} title={comment.pinned ? "Kommentar abheften" : "Kommentar anheften"}>
                             {comment.pinned ? (
                                 <TiPin />
@@ -267,11 +267,15 @@ export default function TimelinePost(
                                 <TiPinOutline />
                             )}
                         </button>
+                    ) : (
+                        <>
+                        {comment.pinned && ( <TiPin /> )}
+                        </>
                     )}
                     <div className="inline opacity-0 group-hover/comment:opacity-100"><CommentHeaderDropdown comment={comment} /></div>
                 </div>
             </div>
-            <div className='my-5'>{comment.text}</div>
+            <div className='mt-3 mb-6'>{comment.text}</div>
         </>
     )
 
@@ -437,7 +441,7 @@ export default function TimelinePost(
             )}
 
             {(comments.length > 0 || showCommentForm) && (
-                <div className='mt-4 pt-4 pl-4 border-t-2 border-ve-collab-blue/50'>
+                <div className='mt-4 pt-4 px-4 border-t-2 border-ve-collab-blue/50'>
                     <div className="mb-4 text-slate-900 font-bold text-lg">
                         Kommentare
                     </div>
