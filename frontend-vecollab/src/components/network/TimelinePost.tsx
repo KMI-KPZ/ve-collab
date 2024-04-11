@@ -92,21 +92,11 @@ export default function TimelinePost(
 
         if (text === '')  return
 
-        const addNewComment = async () => {
-            const res = await fetchPOST(
-                '/comment',
-                {
-                    text,
-                    post_id: post._id
-                },
-                session?.accessToken
-            )
-            return res
-        }
-
         try {
-            const newComment = await addNewComment()
-            setComments(prev => [newComment.inserted_comment, ...prev])
+            const newComment = await fetchPOST('/comment', { text, post_id: post._id }, session?.accessToken )
+            if (newComment.inserted_comment) {
+                setComments(prev => [newComment.inserted_comment, ...prev])
+            }
             commentFormref.current?.reset()
         } catch (error) {
             console.error(error);
