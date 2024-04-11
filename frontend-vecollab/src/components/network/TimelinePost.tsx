@@ -51,15 +51,13 @@ export default function TimelinePost(
     const commentFormref = useRef<any>(null)
     const [wbRemoved, setWbRemoved] = useState<boolean>(false)
     const [repostExpand, setRepostExpand] = useState<boolean>(false)
+    const [comments, setComments] = useState<BackendPostComment[]>( post.comments.reverse() )
     const [showCommentForm, setShowCommentForm] = useState<boolean>(false)
     const [showXComments, setShowXComments] = useState<number>(3)
     const [editPost, setEditPost] = useState<boolean>(false)
 
     const [loadingLikers, setLoadingLikers] = useState<boolean>(false)
     const [likers, setLikers] = useState<BackendPostAuthor[]>([])
-
-    const [pinnedComments, setPinnedComments] = useState<BackendPostComment[]>( post.comments.filter(c => c.pinned) )
-    const [showPinnedComments, toggleShowPinnedComments] = useState<boolean>(false)
 
     // implement infinity scroll (detect intersection of window viewport with last post)
     useEffect(() => {
@@ -108,7 +106,7 @@ export default function TimelinePost(
 
         try {
             const newComment = await addNewComment()
-            updatePost( {...post, comments: [...post.comments, newComment.inserted_comment] } )
+            setComments(prev => [newComment.inserted_comment, ...prev])
             commentFormref.current?.reset()
         } catch (error) {
             console.error(error);
@@ -212,12 +210,10 @@ export default function TimelinePost(
             } else {
                 await fetchPOST( '/pin', { id: comment._id, pin_type: 'comment' }, session?.accessToken )
             }
-            const newComments = post.comments.map(c => {
-                return c._id == comment._id ? { ...c, pinned: !comment.pinned } : c
-            })
-
-            updatePost( {...post, comments: newComments } )
-            setPinnedComments(newComments.filter(c => c.pinned))
+            setComments(prev => prev.map(c => {
+                    return c._id == comment._id ? { ...c, pinned: !comment.pinned } : c
+                })
+            )
         } catch (error) {
             console.log(error);
         }
@@ -261,7 +257,7 @@ export default function TimelinePost(
         <>
             <div className={`flex items-center group/comment`}>
                 <PostHeader author={comment.author} date={comment.creation_date} />
-                <div className={`ml-auto opacity-0 transition-opacity group-hover/comment:opacity-100`}>
+                <div className={`ml-auto ${!comment.pinned ? 'opacity-0' : ''} transition-opacity group-hover/comment:opacity-100`}>
                     {(space && userIsAdmin) && (
                         <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={e => pinComment(comment)} title={comment.pinned ? "Kommentar abheften" : "Kommentar anheften"}>
                             {comment.pinned ? (
@@ -419,7 +415,7 @@ export default function TimelinePost(
 
             <Likes />
 
-            {(post.comments.length == 0 && !showCommentForm && (!spaceACL || spaceACL.comment)) && (
+            {(comments.length == 0 && !showCommentForm && (!spaceACL || spaceACL.comment)) && (
                 <div className="mt-4 mb-2">
                     <button onClick={openCommentForm} className="px-2 py-[6px] w-1/3 rounded-md border text-gray-400 text-left">
                         Kommentar schreiben ...
@@ -427,32 +423,11 @@ export default function TimelinePost(
                 </div>
             )}
 
-            {(post.comments.length > 0 || showCommentForm) && (
+            {(comments.length > 0 || showCommentForm) && (
                 <div className='mt-4 pt-4 pl-4 border-t-2 border-ve-collab-blue/50'>
                     <div className="mb-4 text-slate-900 font-bold text-lg">
                         Kommentare
-                        {pinnedComments.length > 0 && (
-                            <button className='py-2 px-3 ml-4 text-xs rounded-md p-2 border border-gray-800 m-1' onClick={e => toggleShowPinnedComments(!showPinnedComments)}>
-                                {pinnedComments.length} {pinnedComments.length > 1 ? ("Angeheftete Kommentare") : ("Angehefteter Kommentar")}
-                                {/* {showPinnedComments ? ( <MdKeyboardDoubleArrowDown /> ) : ( <MdKeyboardDoubleArrowUp /> )} */}
-                            </button>
-                        )}
                     </div>
-
-                    {showPinnedComments && (
-                        <div className="px-4 mb-">
-                            {pinnedComments.map((comment, ci) => (
-                                <div key={ci}>
-                                    <Comment comment={comment} />
-                                </div>
-                            ))}
-                            <div className="relative text-center border-t-2 my-6 mx-2 border-ve-collab-orange/50">
-                                <button onClick={e => toggleShowPinnedComments(!showPinnedComments)}  className="absolute -top-[15px] shadow px-4 py-2 rounded-full bg-white hover:bg-slate-100" >
-                                    <MdKeyboardDoubleArrowUp />
-                                </button>
-                            </div>
-                        </div>
-                    )}
 
                     {(!spaceACL || spaceACL.comment) && (
                         <form onSubmit={onSubmitCommentForm} className="mb-2" ref={commentFormref}>
@@ -467,12 +442,17 @@ export default function TimelinePost(
                         </form>
                     )}
 
-                    {post.comments.length > 0 && (
+                    {comments.length > 0 && (
                         <div className="px-5 mt-5">
-                            {post.comments.reverse().slice(0, showXComments).map((comment, ci) => (
+                            {comments.filter(c => c.pinned).map((comment, ci) => (
                                 <div key={ci}>
                                     <Comment comment={comment} />
-                                    {(ci+1 == showXComments && post.comments.length > showXComments) && (
+                                </div>
+                            ))}
+                            {comments.filter(c => !c.pinned).slice(0, showXComments).map((comment, ci) => (
+                                <div key={ci}>
+                                    <Comment comment={comment} />
+                                    {(ci+1 == showXComments && comments.filter(c => !c.pinned).length > showXComments) && (
                                         <button className="py-2 px-5 rounded-full hover:bg-ve-collab-blue-light" onClick={() => setShowXComments(showXComments+5)} title="Weitere Kommentare anzeigen">
                                             <MdOutlineKeyboardDoubleArrowDown />
                                         </button>
