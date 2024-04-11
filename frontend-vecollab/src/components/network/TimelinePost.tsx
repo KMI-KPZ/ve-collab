@@ -7,7 +7,7 @@ import { IoIosSend } from "react-icons/io";
 import Dropdown from "../Dropdown";
 import { BackendPost, BackendPostAuthor, BackendPostComment, BackendPostFile, BackendSpace, BackendSpaceACLEntry } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
-import { MdAudioFile, MdDeleteOutline, MdDoubleArrow, MdKeyboardDoubleArrowUp, MdModeEdit, MdOutlineKeyboardDoubleArrowDown, MdThumbUp, MdVideoFile } from "react-icons/md";
+import { MdAudioFile, MdDeleteOutline, MdDoubleArrow, MdModeEdit, MdOutlineKeyboardDoubleArrowDown, MdThumbUp, MdVideoFile } from "react-icons/md";
 import { TiArrowForward, TiPin, TiPinOutline } from "react-icons/ti";
 import TimelinePostForm from "./TimelinePostForm";
 import PostHeader from "./PostHeader";
@@ -163,7 +163,16 @@ export default function TimelinePost(
         }
     }
 
-    const handleSelectOption = (value: string) => {
+    const deleteComment = async (comment: BackendPostComment) => {
+        try {
+            await fetchDELETE( '/comment', { comment_id: comment._id }, session?.accessToken )
+            setComments(prev => prev.filter(c => c._id != comment._id) )
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    const handleSelectOption = (value: string, ...rest: any[]) => {
         switch (value) {
             case 'remove':
                 deletePost()
@@ -171,6 +180,8 @@ export default function TimelinePost(
             case 'edit':
                 setEditPost(true)
                 break;
+            case 'remove-comment':
+                deleteComment(rest[0])
             default:
                 break;
         }
@@ -267,11 +278,23 @@ export default function TimelinePost(
                             )}
                         </button>
                     )}
+                    <div className="inline opacity-0 group-hover/comment:opacity-100"><CommentHeaderDropdown comment={comment} /></div>
                 </div>
             </div>
             <div className='my-5'>{comment.text}</div>
         </>
     )
+
+    const CommentHeaderDropdown = ({comment}: {comment: BackendPostComment}) => {
+        if (comment.author.username == session?.user.preferred_username
+            || userIsAdmin
+        ) {
+            return <Dropdown options={[
+                { value: 'remove-comment', label: 'löschen', icon: <MdDeleteOutline /> }
+            ]} onSelect={value => { handleSelectOption(value, comment) }} />
+        }
+        return null
+    }
 
     const FileIcon = ({file}: {file: BackendPostFile}) => {
         if (file.file_type.startsWith('image/')) {
@@ -417,7 +440,7 @@ export default function TimelinePost(
 
             {(comments.length == 0 && !showCommentForm && (!spaceACL || spaceACL.comment)) && (
                 <div className="mt-4 mb-2">
-                    <button onClick={openCommentForm} className="px-2 py-[6px] w-1/3 rounded-md border text-gray-400 text-left">
+                    <button onClick={openCommentForm} className="px-2 py-[6px] w-1/3 rounded-md border text-gray-400 text-left text-nowrap overflow-hidden truncate">
                         Kommentar schreiben ...
                     </button>
                 </div>
