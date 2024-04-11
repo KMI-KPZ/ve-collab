@@ -15,7 +15,7 @@ import { MultiValue, ActionMeta } from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 import Link from 'next/link';
 import { Tooltip } from '@/components/Tooltip';
-import { PiBookOpenText } from "react-icons/pi";
+import { PiBookOpenText } from 'react-icons/pi';
 
 GlobalGoals.auth = true;
 export default function GlobalGoals() {
@@ -100,8 +100,6 @@ export default function GlobalGoals() {
     ): void {
         setLearningGoals(newValue.map((chosenOptions) => chosenOptions.value));
     }
-
-    console.log(learningGoals);
 
     return (
         <div className="flex bg-pattern-left-blue-small bg-no-repeat">

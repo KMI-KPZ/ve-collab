@@ -14,10 +14,11 @@ import WhiteBox from '@/components/Layout/WhiteBox';
 import Link from 'next/link';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { Tooltip } from '@/components/Tooltip';
-import { PiBookOpenText } from "react-icons/pi";
+import { PiBookOpenText } from 'react-icons/pi';
 import { FormProvider, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import PopupSaveData from '@/components/StartingWizard/PopupSaveData';
 import SideProgressBarSectionBroadPlannerWithReactHookForm from '@/components/StartingWizard/SideProgressBarSectionBroadPlannerWithReactHookForm';
+import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 
 export interface FormValues {
     courseFormat: string;
@@ -93,44 +94,48 @@ export default function Realization() {
         // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
         if (session) {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
-                (data) => {
-                    setLoading(false);
-                    if (data.plan.realization !== null) {
-                        methods.setValue('courseFormat', data.plan.realization);
-                    }
-                    if (data.plan.physical_mobility !== null) {
-                        methods.setValue(
-                            'usePhysicalMobility',
-                            String(data.plan.physical_mobility)
-                        );
-                    }
-                    if (
-                        data.plan.physical_mobilities !== null &&
-                        data.plan.physical_mobilities.length !== 0
-                    ) {
-                        const physical_mobilities: PhysicalMobility[] =
-                            data.plan.physical_mobilities.map(
-                                (physicalMobility: PhysicalMobility) => {
-                                    const { timestamp_from, timestamp_to, location } =
-                                        physicalMobility;
-                                    return {
-                                        location: location,
-                                        timestamp_from:
-                                            timestamp_from !== null
-                                                ? timestamp_from.split('T')[0]
-                                                : '', // react hook form only takes '2019-12-13'
-                                        timestamp_to:
-                                            timestamp_to !== null ? timestamp_to.split('T')[0] : '',
-                                    };
-                                }
+                (data: { plan: IPlan }) => {
+                    if (data.plan !== undefined) {
+                        setLoading(false);
+                        if (data.plan.realization !== null) {
+                            methods.setValue('courseFormat', data.plan.realization);
+                        }
+                        if (data.plan.physical_mobility !== null) {
+                            methods.setValue(
+                                'usePhysicalMobility',
+                                String(data.plan.physical_mobility)
                             );
-                        methods.setValue('physicalMobilities', physical_mobilities);
-                    }
+                        }
+                        if (
+                            data.plan.physical_mobilities !== null &&
+                            data.plan.physical_mobilities.length !== 0
+                        ) {
+                            const physical_mobilities: PhysicalMobility[] =
+                                data.plan.physical_mobilities.map(
+                                    (physicalMobility: PhysicalMobility) => {
+                                        const { timestamp_from, timestamp_to, location } =
+                                            physicalMobility;
+                                        return {
+                                            location: location,
+                                            timestamp_from:
+                                                timestamp_from !== null
+                                                    ? timestamp_from.split('T')[0]
+                                                    : '', // react hook form only takes '2019-12-13'
+                                            timestamp_to:
+                                                timestamp_to !== null
+                                                    ? timestamp_to.split('T')[0]
+                                                    : '',
+                                        };
+                                    }
+                                );
+                            methods.setValue('physicalMobilities', physical_mobilities);
+                        }
 
-                    setSteps(data.plan.steps);
+                        setSteps(data.plan.steps);
 
-                    if (data.plan.progress.length !== 0) {
-                        setSideMenuStepsProgress(data.plan.progress);
+                        if (data.plan.progress) {
+                            setSideMenuStepsProgress(data.plan.progress);
+                        }
                     }
                 }
             );
