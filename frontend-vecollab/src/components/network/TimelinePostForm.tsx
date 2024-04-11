@@ -6,7 +6,7 @@ import AuthenticatedImage from "../AuthenticatedImage";
 import { BackendPost, BackendPostAuthor, BackendUserSnippet } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
 import PostHeader from "./PostHeader";
-import { MdAttachFile, MdEdit, MdFormatClear, MdInsertLink, MdLinkOff } from "react-icons/md";
+import { MdArrowDropDown, MdAttachFile, MdEdit, MdFormatClear, MdInsertLink, MdLinkOff } from "react-icons/md";
 import { RxFile } from "react-icons/rx";
 import LoadingAnimation from "../LoadingAnimation";
 import {
@@ -23,6 +23,7 @@ import {
 import TimelinePostText from "./TimelinePostText";
 import { sanitizedText } from "./sanitizedText";
 import Dialog from "../profile/Dialog";
+import Dropdown from "../Dropdown";
 
 interface Props {
     post?: BackendPost | undefined;
@@ -59,6 +60,7 @@ export default function TimelinePostForm(
         selectionEnd: number} | undefined>();
     const [cursorInLink, setCursorInLink] = useState<false | HTMLLinkElement>(false);
     const [formHadFocus, setFormHadFocus] = useState<boolean>(false)
+    const [isPlanDialogOpen, setIsPlanDialogOpen] = useState<boolean>(false)
     const domParser = new DOMParser()
 
     useEffect(() => {
@@ -190,6 +192,21 @@ export default function TimelinePostForm(
         if (onCancelForm) onCancelForm()
     }
 
+    const chooseAttachMedia = (value: string) => {
+        switch (value) {
+            case 'local':
+                openFileOpenDialog()
+                break;
+
+            case 'plan':
+                setIsPlanDialogOpen(true)
+                break;
+
+            default:
+                break;
+        }
+    }
+
     const openFileOpenDialog = () => {
         if (fileUploadRef?.current) fileUploadRef.current.click()
     }
@@ -279,6 +296,7 @@ export default function TimelinePostForm(
 
     return (
         <>
+            {/* link dialog */}
             <Dialog
                 isOpen={isLinkDialogOpen}
                 title={'Link'}
@@ -295,6 +313,20 @@ export default function TimelinePostForm(
                     </div>
                 </div>
             </Dialog>
+
+            {/* VE plan dialog */}
+            <Dialog
+                isOpen={isPlanDialogOpen}
+                title={'VE Plan'}
+                onClose={() => setIsPlanDialogOpen(false)}
+            >
+                <div className="w-[40vw]">
+                    <div>
+                        ...
+                    </div>
+                </div>
+            </Dialog>
+
             <form onSubmit={onSubmit} ref={ref} className="relative">
                 {loading && (
                     <>
@@ -393,11 +425,16 @@ export default function TimelinePostForm(
                         </button>)}
                         {(!postToEdit && !postToRepost) && (
                             <>
-                                <button type="button" onClick={openFileOpenDialog} title="Datei hinzufügen" className="mx-4 px-5 py-2 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20">
-                                    <span className="relative">
-                                        <MdAttachFile className="mr-2 inline" /> Datei hinzufügen
-                                    </span>
-                                </button>
+                                <div title="Datei oder Plan hinzufügen" className="mx-4 px-5 py-2 inline rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20">
+                                    <Dropdown
+                                            options={[
+                                                {value: 'local', label: 'lokale Datei' },
+                                                {value: 'plan', label: 'VE Collab Plan' }
+                                            ]}
+                                            icon={<span className=""><MdAttachFile className="mr-2 inline" /> Medien hinzufügen <MdArrowDropDown className="inline" /></span>}
+                                            onSelect={value => {chooseAttachMedia(value)}}
+                                    />
+                                </div>
                                 <input type="file" multiple name="file" onChange={addFiles} className="hidden" ref={fileUploadRef} />
                             </>
                         )}
