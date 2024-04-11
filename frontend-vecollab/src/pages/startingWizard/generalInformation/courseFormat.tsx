@@ -31,6 +31,19 @@ export interface PhysicalMobility {
     timestamp_to: string;
 }
 
+const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
+    return (
+        formValues.courseFormat === '' &&
+        formValues.physicalMobilities.every((mobility) => {
+            return (
+                mobility.location === '' &&
+                mobility.timestamp_from === '' &&
+                mobility.timestamp_to === ''
+            );
+        })
+    );
+};
+
 Realization.auth = true;
 export default function Realization() {
     const { data: session, status } = useSession();
@@ -133,37 +146,39 @@ export default function Realization() {
     };
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        await fetchPOST(
-            '/planner/update_fields',
-            {
-                update: [
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'realization',
-                        value: data.courseFormat,
-                    },
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'physical_mobility',
-                        value: data.usePhysicalMobility === 'true',
-                    },
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'physical_mobilities',
-                        value: data.physicalMobilities,
-                    },
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'progress',
-                        value: {
-                            ...sideMenuStepsProgress,
-                            realization: ProgressState.completed,
+        if (!areAllFormValuesEmpty(data)) {
+            await fetchPOST(
+                '/planner/update_fields',
+                {
+                    update: [
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'realization',
+                            value: data.courseFormat,
                         },
-                    },
-                ],
-            },
-            session?.accessToken
-        );
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'physical_mobility',
+                            value: data.usePhysicalMobility === 'true',
+                        },
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'physical_mobilities',
+                            value: data.physicalMobilities,
+                        },
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'progress',
+                            value: {
+                                ...sideMenuStepsProgress,
+                                realization: ProgressState.completed,
+                            },
+                        },
+                    ],
+                },
+                session?.accessToken
+            );
+        }
     };
 
     const combinedSubmitRouteAndUpdate = async (data: FormValues, url: string) => {

@@ -25,6 +25,10 @@ interface FormValues {
     languages: Language[];
 }
 
+const areAllLanguagesEmpty = (languages: Language[]): boolean => {
+    return languages.every((languageObject) => languageObject.language === '');
+};
+
 Languages.auth = true;
 export default function Languages() {
     const { data: session, status } = useSession();
@@ -90,27 +94,29 @@ export default function Languages() {
     });
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        await fetchPOST(
-            '/planner/update_fields',
-            {
-                update: [
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'languages',
-                        value: data.languages.map((element) => element.language),
-                    },
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'progress',
-                        value: {
-                            ...sideMenuStepsProgress,
-                            languages: ProgressState.completed,
+        if (!areAllLanguagesEmpty(data.languages)) {
+            await fetchPOST(
+                '/planner/update_fields',
+                {
+                    update: [
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'languages',
+                            value: data.languages.map((element) => element.language),
                         },
-                    },
-                ],
-            },
-            session?.accessToken
-        );
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'progress',
+                            value: {
+                                ...sideMenuStepsProgress,
+                                languages: ProgressState.completed,
+                            },
+                        },
+                    ],
+                },
+                session?.accessToken
+            );
+        }
     };
 
     const combinedSubmitRouteAndUpdate = async (data: FormValues, url: string) => {

@@ -23,6 +23,10 @@ interface FormValues {
     externalParties: ExternalParty[];
 }
 
+const areAllExternalPartiesEmpty = (externalParties: ExternalParty[]): boolean => {
+    return externalParties.every((party) => party.externalParty === '');
+};
+
 ExternalPersons.auth = true;
 export default function ExternalPersons() {
     const { data: session, status } = useSession();
@@ -90,27 +94,29 @@ export default function ExternalPersons() {
     });
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        await fetchPOST(
-            '/planner/update_fields',
-            {
-                update: [
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'involved_parties',
-                        value: data.externalParties.map((element) => element.externalParty),
-                    },
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'progress',
-                        value: {
-                            ...sideMenuStepsProgress,
-                            involved_parties: ProgressState.completed,
+        if (!areAllExternalPartiesEmpty(data.externalParties)) {
+            await fetchPOST(
+                '/planner/update_fields',
+                {
+                    update: [
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'involved_parties',
+                            value: data.externalParties.map((element) => element.externalParty),
                         },
-                    },
-                ],
-            },
-            session?.accessToken
-        );
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'progress',
+                            value: {
+                                ...sideMenuStepsProgress,
+                                involved_parties: ProgressState.completed,
+                            },
+                        },
+                    ],
+                },
+                session?.accessToken
+            );
+        }
     };
 
     const combinedSubmitRouteAndUpdate = async (data: FormValues, url: string) => {
