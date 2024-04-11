@@ -11,12 +11,18 @@ interface Props {
 
 export default function LearningContentPreview({ title, slug, snippet, imgFilename }: Props) {
     const router = useRouter();
+    const browserBubbleSlug = router.query.bubble;
     const browserCategorySlug = router.query.category;
     const browserSlug = router.query.slug;
 
     return (
         <li className={' m-1 border hover:border-ve-collab-orange rounded-xl'}>
-            <Link scroll={false} href={'/content/' + browserCategorySlug + '/' + slug}>
+            <Link
+                scroll={false}
+                href={
+                    '/content_bubbles/' + browserBubbleSlug + '/' + browserCategorySlug + '/' + slug
+                }
+            >
                 <div
                     className={
                         'mx-4 my-2 flex' +
