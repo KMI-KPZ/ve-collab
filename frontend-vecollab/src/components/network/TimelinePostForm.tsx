@@ -233,6 +233,10 @@ export default function TimelinePostForm(
         event.preventDefault()
         const target = event.currentTarget.querySelector('input')
 
+        if (!target?.value || target.value == '' || !target.value.startsWith('http')) {
+            return
+        }
+
         if (selectedLinkText !== undefined) {
             const range = new Range();
             range.setStart(selectedLinkText.parentNode, selectedLinkText.selectionStart)
@@ -242,9 +246,7 @@ export default function TimelinePostForm(
             selection?.addRange(range);
         }
 
-        if (target?.value) {
-            document.execCommand('createLink', false, target.value );
-        }
+        document.execCommand('createLink', false, target.value );
         setIsLinkDialogOpen(false)
         setSelectedLinkText(undefined)
     }
@@ -267,7 +269,7 @@ export default function TimelinePostForm(
                 <div className="w-[20vw]">
                     <div>
                         <form onSubmit={submitNewLinkDialog}>
-                            <input type="text" name="url" autoComplete="off" autoFocus className="border border-[#cccccc] rounded-l px-2 py-1" />
+                            <input type="url" name="url" autoComplete="off" autoFocus className="mr-2 p-2 border border-[#cccccc] rounded-md invalid:border-red-500" />
                             <button type="submit" className="my-2 py-2 px-5 rounded-lg bg-ve-collab-orange text-white">
                                 OK
                             </button>
