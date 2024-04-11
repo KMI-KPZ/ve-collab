@@ -9,15 +9,13 @@ import Timestamp from "../Timestamp";
 import { HiOutlineCalendar } from "react-icons/hi";
 import React from "react";
 import { TiPin } from "react-icons/ti";
-import { MdKeyboardDoubleArrowUp } from "react-icons/md";
+import { MdKeyboardDoubleArrowDown, MdKeyboardDoubleArrowUp } from "react-icons/md";
 
 interface Props {
     userIsAdmin?: boolean
     space?: string | undefined;
     spaceACL?: BackendSpaceACLEntry | undefined
     user?: string | undefined;
-    showPinnedPosts?: boolean
-    toggleShowPinnedPosts?: () => void
 }
 
 Timeline.auth = true
@@ -25,15 +23,14 @@ export default function Timeline({
     userIsAdmin=false,
     space,
     spaceACL,
-    user,
-    showPinnedPosts,
-    toggleShowPinnedPosts
+    user
 }: Props) {
     const { data: session } = useSession();
     const [toDate, setToDate] = useState<Date>(new Date());
     const [sharedPost, setSharedPost] = useState<BackendPost|null>(null);
     const [allPosts, setAllPosts] = useState<BackendPost[]>([]);
     const [groupedPosts, setGroupedPosts] = useState< Record<string, BackendPost[]> >({});
+    const [pinnedPostsExpanded, setPinnedPostsExpanded] = useState(false)
     const [fetchCount, setFetchCount] = useState<number>(0);
     const perFetchLimit = 10
 
@@ -56,13 +53,7 @@ export default function Timeline({
         user
     )
 
-    // TODO may get all spaces from parent
-    const {
-        data: allSpaces,
-        isLoading: isLoadingAllSpaces,
-        error: errorAllSpaces,
-        mutate: mutateAllSpaces,
-    } = useGetAllSpaces(session!.accessToken);
+    const { data: allSpaces } = useGetAllSpaces(session!.accessToken);
 
     const {
         data: pinnedPosts,
@@ -139,33 +130,50 @@ export default function Timeline({
 
     return (
         <>
-            {(pinnedPosts.length > 0 && showPinnedPosts) && (
-                <div className="my-8">
-                    <div className="mb-4 font-bold text-slate-900 text-xl">
-                        <button><TiPin size={25} className="inline" /> {pinnedPosts.length > 1 ? ("Angeheftete Beiträge") : ("Angehefteter Beitrag")}</button>
+            {(pinnedPosts.length > 0) && (
+                <>
+                    <div className="mx-2 my-10 px-4 pb-4 rounded-md border border-2 border-gray-600 outline outline-1 outline-gray-400 outline-offset-4">
+                        <div className="font-bold text-slate-900 text-xl inline px-3 py-1 rounded-md relative -top-[20px] border border-2 border-gray-600 bg-[#e5e7eb]">
+                            <TiPin size={25} className="inline" /> {pinnedPosts.length > 1 ? ("Angeheftete Beiträge") : ("Angehefteter Beitrag")}
+                        </div>
+                        <div className={`${!pinnedPostsExpanded ? 'max-h-36' : ''} overflow-hidden relative`}>
+                            {pinnedPosts.map((post, i) => (
+                                <TimelinePost
+                                    key={post._id}
+                                    post={post}
+                                    updatePost={post => {
+                                        console.log('update pinned posts ...', post);
+                                        updatePost(post)
+                                        mutatePinnedPosts()
+                                    }}
+                                    space={space}
+                                    spaceACL={spaceACL}
+                                    userIsAdmin={userIsAdmin}
+                                    isLast={false}
+                                    allSpaces={allSpaces}
+                                    removePost={removePost}
+                                    sharePost={post => setSharedPost(post)}
+                                    fetchNextPosts={() => {}}
+                                    updatePinnedPosts={mutatePinnedPosts}
+                                />
+                            ))}
+                            {!pinnedPostsExpanded && (
+                                <div onClick={e => {setPinnedPostsExpanded(true)}} className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-t to-50% from-[#e5e7eb]"></div>
+                            )}
+                        </div>
                     </div>
-                    {pinnedPosts.map((post, i) => (
-                        <TimelinePost
-                            key={post._id}
-                            post={post}
-                            updatePost={updatePost}
-                            space={space}
-                            spaceACL={spaceACL}
-                            userIsAdmin={userIsAdmin}
-                            isLast={false}
-                            allSpaces={allSpaces}
-                            removePost={removePost}
-                            sharePost={post => setSharedPost(post)}
-                            fetchNextPosts={() => {}}
-                            updatePinnedPosts={mutatePinnedPosts}
-                        />
-                    ))}
-                    <div className="relative text-center border-t-2 my-6 mx-2 border-ve-collab-orange/50">
-                        <button onClick={toggleShowPinnedPosts} className="absolute -top-[15px] shadow px-6 py-2 rounded-full bg-white hover:bg-slate-100" >
-                            <MdKeyboardDoubleArrowUp />
-                        </button>
+                    <div className="w-full text-center m-0 -mt-[50px] p-0 relative z-1">
+                        {pinnedPostsExpanded ? (
+                            <button onClick={e => {setPinnedPostsExpanded(false)}} title="Weniger anzeigen" className="shadow px-6 py-2 -mt-2 rounded-full bg-white hover:bg-slate-100" >
+                                <MdKeyboardDoubleArrowUp />
+                            </button>
+                        ) : (
+                            <button onClick={e => {setPinnedPostsExpanded(true)}} title="Alles anzeigen" className="shadow px-6 py-2 -mt-2 rounded-full bg-white hover:bg-slate-100" >
+                                <MdKeyboardDoubleArrowDown />
+                            </button>
+                        ) }
                     </div>
-                </div>
+                </>
             )}
 
             {(!spaceACL || spaceACL.post) && (
