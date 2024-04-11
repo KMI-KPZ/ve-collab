@@ -20,7 +20,7 @@ import {
 } from '@/interfaces/startingWizard/sideProgressBar';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import { FormalConditionPartner } from '@/pages/startingWizard/generalInformation/formalConditions';
-import { FiInfo } from 'react-icons/fi';
+import { PiBookOpenText } from "react-icons/pi";
 import { Tooltip } from '@/components/Tooltip';
 import { EvaluationPerPartner } from './evaluation';
 
@@ -272,7 +272,7 @@ export default function Partners() {
                                         Wer ist am Projekt beteiligt?
                                         <Tooltip tooltipsText="Tipps für die Partnersuche findest du hier in den Selbstlernmaterialien …">
                                             <Link target="_blank" href={'/content/Partnersuche'}>
-                                                <FiInfo size={30} color="#00748f" />
+                                                <PiBookOpenText size={30} color="#00748f" />
                                             </Link>
                                         </Tooltip>
                                     </div>

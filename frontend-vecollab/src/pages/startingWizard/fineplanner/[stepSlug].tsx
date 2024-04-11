@@ -16,7 +16,7 @@ import {
 import SideProgressbarSectionFinePlanner from '@/components/StartingWizard/SideProgressbarSectionFinePlanner';
 import { Tooltip } from '@/components/Tooltip';
 import Link from 'next/link';
-import { FiInfo } from 'react-icons/fi';
+import { PiBookOpenText } from "react-icons/pi";
 
 export interface ITask {
     title: string;
@@ -295,7 +295,7 @@ export default function FinePlanner() {
                                             Feinplanung
                                             <Tooltip tooltipsText="Mehr Aspekte der Feinplanung findest du hier in den Selbstlernmaterialien …">
                                                 <Link target="_blank" href={'/content/VE-Planung'}>
-                                                    <FiInfo size={30} color="#00748f" />
+                                                    <PiBookOpenText size={30} color="#00748f" />
                                                 </Link>
                                             </Tooltip>
                                         </div>

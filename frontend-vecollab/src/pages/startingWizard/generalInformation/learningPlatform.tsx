@@ -13,7 +13,7 @@ import {
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import { Tooltip } from '@/components/Tooltip';
 import Link from 'next/link';
-import { FiInfo } from 'react-icons/fi';
+import { PiBookOpenText } from "react-icons/pi";
 import PopupSaveData from '@/components/StartingWizard/PopupSaveData';
 import SideProgressBarSectionBroadPlannerWithReactHookForm from '@/components/StartingWizard/SideProgressBarSectionBroadPlannerWithReactHookForm';
 
@@ -139,7 +139,7 @@ export default function LearningEnvironment() {
                                                 target="_blank"
                                                 href={'/content/Digitale%20Medien%20&%20Werkzeuge'}
                                             >
-                                                <FiInfo size={30} color="#00748f" />
+                                                <PiBookOpenText size={30} color="#00748f" />
                                             </Link>
                                         </Tooltip>
                                     </div>

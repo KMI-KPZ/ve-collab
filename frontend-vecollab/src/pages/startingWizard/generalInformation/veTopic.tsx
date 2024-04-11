@@ -13,7 +13,7 @@ import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import Link from 'next/link';
 import { Tooltip } from '@/components/Tooltip';
-import { FiInfo } from 'react-icons/fi';
+import { PiBookOpenText } from "react-icons/pi";
 import { FormProvider, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import PopupSaveData from '@/components/StartingWizard/PopupSaveData';
 import SideProgressBarSectionBroadPlannerWithReactHookForm from '@/components/StartingWizard/SideProgressBarSectionBroadPlannerWithReactHookForm';
@@ -157,7 +157,7 @@ export default function Topics() {
                                                 target="_blank"
                                                 href={'/content/Beispiele%20aus%20der%20Praxis'}
                                             >
-                                                <FiInfo size={30} color="#00748f" />
+                                                <PiBookOpenText size={30} color="#00748f" />
                                             </Link>
                                         </Tooltip>
                                     </div>

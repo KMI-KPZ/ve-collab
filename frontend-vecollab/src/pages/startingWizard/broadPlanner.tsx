@@ -27,7 +27,7 @@ import trash from '@/images/icons/startingWizard/trash.png';
 import Image from 'next/image';
 import { Tooltip } from '@/components/Tooltip';
 import Link from 'next/link';
-import { FiInfo } from 'react-icons/fi';
+import { PiBookOpenText } from "react-icons/pi";
 import SideProgressBarSectionBroadPlannerWithReactHookForm from '@/components/StartingWizard/SideProgressBarSectionBroadPlannerWithReactHookForm';
 import PopupSaveData from '@/components/StartingWizard/PopupSaveData';
 
@@ -349,7 +349,7 @@ export default function BroadPlanner() {
                                             Plane den groben Ablauf
                                             <Tooltip tooltipsText="Ausführliche Informationen zur Etappenplanung und verschiedenen Typen und Modellen von VA findest du hier in den Selbstlernmaterialien …">
                                                 <Link target="_blank" href={'/content/VE-Planung'}>
-                                                    <FiInfo size={30} color="#00748f" />
+                                                    <PiBookOpenText size={30} color="#00748f" />
                                                 </Link>
                                             </Tooltip>
                                         </div>
