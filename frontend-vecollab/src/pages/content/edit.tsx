@@ -244,10 +244,13 @@ export default function Edit() {
                                         <BoxHeadline title="Lehrmaterialien bearbeiten" />
                                         <div className="mx-2 mt-2 px-1">Struktur:</div>
                                         <p className="mx-2 mb-2 px-1">
-                                            Jede Hierarchieebene spiegelt eine Box in der oberen
-                                            Leiste wieder. Diese können beliebig viele Lehrinhalte
-                                            unter sich sammeln, die alle in der linken Seitleiste
-                                            auswählbar sind.
+                                            Bubbles sind die höchste Ebene und nicht modifizierbar,
+                                            auf erster Ebene keine anderen Knoten außer die Bubbles!
+                                            Darunter beliebig viele Hierarchieebenen nebeneinander
+                                            (= die Kategorien), die wiederum die Lehrinhalt-Knoten
+                                            enthalten. Bei korrekter Struktur ergibt sich eine
+                                            maximale Baumtiefe von 3: Bubble - Hierarchieebene -
+                                            Lehrinhalt
                                         </p>
                                         <DndProvider
                                             backend={MultiBackend}

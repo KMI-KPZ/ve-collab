@@ -31,7 +31,7 @@ type Props = {
 
 export const CustomNode: React.FC<Props> = (props) => {
     const [hover, setHover] = useState<boolean>(false);
-    const { id, droppable, text, data } = props.node;
+    const { id, parent, droppable, text, data } = props.node;
     const [visibleInput, setVisibleInput] = useState(false);
     const [labelText, setLabelText] = useState(text);
     const indent = props.depth * 24;
@@ -138,23 +138,30 @@ export const CustomNode: React.FC<Props> = (props) => {
                     )}
                     {hover && (
                         <div className="flex ml-10">
-                            {droppable && (
-                                <div className="mx-1">
-                                    <button onClick={handleShowInput}>
-                                        <IoMdCreate size={18} />
-                                    </button>
-                                </div>
+                            {/* the bubbles are immutable in the taxonomy, because changing their names or deleting them crashes the structure*/}
+                            {!['topBubble', 'leftBubble', 'bottomBubble', 'rightBubble'].includes(
+                                text
+                            ) && (
+                                <>
+                                    {droppable && (
+                                        <div className="mx-1">
+                                            <button onClick={handleShowInput}>
+                                                <IoMdCreate size={18} />
+                                            </button>
+                                        </div>
+                                    )}
+                                    <div className="mx-1">
+                                        <button onClick={() => props.onCopy(id)}>
+                                            <IoMdCopy size={18} />
+                                        </button>
+                                    </div>
+                                    <div className="mx-1">
+                                        <button onClick={() => props.onDelete(id)}>
+                                            <IoMdTrash size={18} />
+                                        </button>
+                                    </div>
+                                </>
                             )}
-                            <div className="mx-1">
-                                <button onClick={() => props.onCopy(id)}>
-                                    <IoMdCopy size={18} />
-                                </button>
-                            </div>
-                            <div className="mx-1">
-                                <button onClick={() => props.onDelete(id)}>
-                                    <IoMdTrash size={18} />
-                                </button>
-                            </div>
                         </div>
                     )}
                 </>
@@ -167,7 +174,7 @@ export const CustomNode: React.FC<Props> = (props) => {
                 }}
             >
                 <div className="">
-                    <div className='w-[40rem] h-[40rem] overflow-y-auto content-scrollbar '>
+                    <div className="w-[40rem] h-[40rem] overflow-y-auto content-scrollbar ">
                         <BoxHeadline title={'Name'} />
                         <div className="mb-10">
                             <input

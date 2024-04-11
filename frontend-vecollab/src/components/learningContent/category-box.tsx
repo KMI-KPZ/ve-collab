@@ -9,24 +9,27 @@ interface Props {
 
 export default function CategoryBox({ categoryName, slug }: Props) {
     const router = useRouter();
+    const browserBubbleSlug = router.query.bubble;
     const browserCategorySlug = router.query.category;
 
     return (
         <li>
-            <Link scroll={false} href={'/content/' + slug}>
+            <Link scroll={false} href={'/content_bubbles/' + browserBubbleSlug + '/' + slug}>
                 <div
                     className={
-                        'w-32 h-24 flex mx-2 px-0 hover:ring hover:ring-ve-collab-orange rounded-lg justify-center items-center ' +
+                        'w-44 h-24 flex mx-2 px-0 hover:ring hover:ring-ve-collab-orange rounded-lg justify-center cursor-pointer' +
                         (browserCategorySlug === slug
                             ? ' bg-ve-collab-orange-light '
                             : ' bg-white ')
                     }
                 >
-                    <div>
-                        <div className="flex justify-center">
+                    <div className="flex flex-col">
+                        <div className="flex justify-center h-7 mt-2">
                             <BiAlignMiddle className={'mb-1'} size={28} color={'#00748f'} />
                         </div>
-                        <p className={'mt-1 font-bold text-center'}>{categoryName}</p>
+                        <p className={'font-bold text-center flex flex-grow items-center'}>
+                            {categoryName}
+                        </p>
                     </div>
                 </div>
             </Link>
