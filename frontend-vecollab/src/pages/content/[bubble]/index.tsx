@@ -15,41 +15,16 @@ import blueBackground from '@/images/footer/KAVAQ_Footer.png';
 
 interface Props {
     nodesOfBubble: INode[];
-    leafNodes: IMaterialNode[];
-    bubbleSlug: string;
-    categorySlug: string;
 }
 
 // coming from landing page: category has been chosen, depending on categories, previews to the posts are shown on the left
-export default function PageCategorySelected(props: Props) {
-    const router = useRouter();
-
-    const nodePreviews = props.leafNodes.map((node) => (
-        <LearningContentPreview
-            key={node.id}
-            title={node.text}
-            slug={node.text}
-            snippet={node.data.description}
-            imgFilename={'/images/example_image.jpg'}
-        />
-    ));
-
-    useEffect(() => {
-        if (!router.isReady) return;
-
-        // if there are content nodes, immediately redirect to the first one
-        if (props.leafNodes.length > 0) {
-            router.push(
-                `/content_bubbles/${props.bubbleSlug}/${props.categorySlug}/${props.leafNodes[0].text}`
-            );
-        }
-    }, [router, props]);
+export default function BubbleSelected(props: Props) {
 
     return (
         <>
             <div className="container mx-auto mb-4 px-5">
                 <div className="mt-4">
-                    <Link href="/content_bubbles">
+                    <Link href="/content">
                         <div className="flex items-center">
                             <IoMdArrowRoundBack className="mr-2" />
                             <p className="text-ve-collab-orange underline">
@@ -76,23 +51,10 @@ export default function PageCategorySelected(props: Props) {
             <HorizontalDivider />
             <Container>
                 <MainLearningContentLayout
-                    previewChildren={nodePreviews}
+                    previewChildren={[]}
                     contentChildren={
                         <h1 className={'font-bold text-5xl text-center'}>
-                            {props.leafNodes.length > 0 ? (
-                                <>
-                                    Sie werden automatisch zur 1. Lektion weitergeleitet, falls dies
-                                    nicht funktioniert, klicken Sie bitte{' '}
-                                    <a
-                                        className="underline text-ve-collab-blue"
-                                        href={`/content_bubbles/${props.bubbleSlug}/${props.categorySlug}/${props.leafNodes[0].text}`}
-                                    >
-                                        hier
-                                    </a>
-                                </>
-                            ) : (
-                                'Leider gibt es noch keine Inhalte für diese Kategorie'
-                            )}
+                            Bitte wählen Sie eine Lektion aus
                         </h1>
                     }
                 />
@@ -105,14 +67,10 @@ export const getServerSideProps: GetServerSideProps = async ({
     params,
 }: GetServerSidePropsContext) => {
     const nodesOfBubble = await getChildrenOfNodeByText(params?.bubble as string);
-    const leafNodes = await getMaterialNodesOfNodeByText(params?.category as string);
 
     return {
         props: {
             nodesOfBubble,
-            leafNodes,
-            bubbleSlug: params?.bubble,
-            categorySlug: params?.category,
         },
     };
 };

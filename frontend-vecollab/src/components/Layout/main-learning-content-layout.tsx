@@ -34,7 +34,7 @@ export default function MainLearningContentLayout({
                     {prevNode && (
                         <Link
                             className="mr-auto"
-                            href={`/content_bubbles/${bubbleSlug}/${categorySlug}/${prevNode.text}`}
+                            href={`/content/${bubbleSlug}/${categorySlug}/${prevNode.text}`}
                         >
                             <button
                                 className={'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'}
@@ -46,7 +46,7 @@ export default function MainLearningContentLayout({
                     {nextNode && (
                         <Link
                             className="ml-auto"
-                            href={`/content_bubbles/${bubbleSlug}/${categorySlug}/${nextNode.text}`}
+                            href={`/content/${bubbleSlug}/${categorySlug}/${nextNode.text}`}
                         >
                             <button
                                 className={'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'}
