@@ -22,8 +22,6 @@ export default function Post() {
     } = useGetPost(
         session!.accessToken, router.query.id as string)
 
-    console.log('post', {post});
-
     // TODO wait for space?!
     // const {
     //     data: space,
@@ -33,15 +31,14 @@ export default function Post() {
     // } = useGetSpace(session!.accessToken, post?.space);
 
     useEffect(() => {
-        if (isLoading || !post) return
+        if (isLoading || !post?.space) return
 
         fetchGET(`/spaceadministration/info?id=${post.space}`, session!.accessToken)
         .then(data => {
             setSpace(data.space)
             setIsLoadingSpace(false)
         })
-    }, [post])
-    console.log('space', space);
+    }, [post, isLoading, session])
 
     const isGlobalAdmin = useIsGlobalAdmin(session!.accessToken)
 
@@ -57,7 +54,10 @@ export default function Post() {
     }
 
     function userIsAdmin() {
-        return isGlobalAdmin || space!.admins.includes(session?.user?.preferred_username as string);
+        if (space) {
+            return isGlobalAdmin || space.admins.includes(session?.user?.preferred_username as string);
+        }
+        return isGlobalAdmin;
     }
 
     const Wrapper = ({children}: {children: JSX.Element}) => {
@@ -77,7 +77,7 @@ export default function Post() {
         return (<Wrapper><>Error loading post. See console for details</></Wrapper>)
     }
 
-    if (isLoading || isLoadingSpace) {
+    if (isLoading) {
         return (<Wrapper><LoadingAnimation /></Wrapper>)
     }
 
