@@ -439,7 +439,7 @@ export default function TimelinePost(
                                     title="Download file"
                                 >
                                     <div className="flex justify-center">
-                                        <FileIcon file={file} />
+                                        <FileIcon _file={file} />
                                     </div>
                                     <div className="max-w-1/2 justify-center mx-2 px-1 my-1 truncate">
                                         {file.file_name}
