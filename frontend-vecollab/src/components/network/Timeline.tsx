@@ -1,4 +1,4 @@
-import { useGetAllSpaces, useGetPinnedPosts, useGetTimeline } from "@/lib/backend";
+import { fetchGET, useGetAllSpaces, useGetPinnedPosts, useGetTimeline } from "@/lib/backend";
 import { useSession } from "next-auth/react";
 import LoadingAnimation from "../LoadingAnimation";
 import TimelinePost from "./TimelinePost";
@@ -10,6 +10,7 @@ import { HiOutlineCalendar } from "react-icons/hi";
 import React from "react";
 import { TiPin } from "react-icons/ti";
 import { MdKeyboardDoubleArrowDown, MdKeyboardDoubleArrowUp } from "react-icons/md";
+import { useRouter } from "next/router";
 
 interface Props {
     /** User is global admin or admin of current space */
@@ -27,6 +28,7 @@ export default function Timeline({
     user
 }: Props) {
     const { data: session } = useSession();
+    const router = useRouter();
     const [toDate, setToDate] = useState<Date>(new Date());
     const [postToRepost, setPostToRepost] = useState<BackendPost|null>(null);
     const [allPosts, setAllPosts] = useState<BackendPost[]>([]);
@@ -79,6 +81,21 @@ export default function Timeline({
         setGroupedPosts( groupBy(allPosts, (p) => p.creation_date.replace(/T.+/, '')) )
         // console.log({allPosts, groupedPosts});
     }, [allPosts])
+
+    useEffect(() => {
+        if (isLoadingTimeline) return
+
+        if (router.query.repost) {
+            fetchGET(`/posts?post_id=${router.query.repost}`, session!.accessToken)
+            .then((data) => {
+                if (data.post) {
+                    setPostToRepost(data.post)
+                    const editor = document.querySelector(".rsw-ce") as HTMLElement
+                    if (editor) editor.focus()
+                }
+            })
+        }
+    }, [router])
 
     function groupBy<T>(arr: T[], fn: (item: T) => any) {
         return arr.reduce<Record<string, T[]>>((prev, curr) => {
