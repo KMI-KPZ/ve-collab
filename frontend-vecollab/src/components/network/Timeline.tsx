@@ -28,7 +28,7 @@ export default function Timeline({
 }: Props) {
     const { data: session } = useSession();
     const [toDate, setToDate] = useState<Date>(new Date());
-    const [sharedPost, setSharedPost] = useState<BackendPost|null>(null);
+    const [postToRepost, setPostToRepost] = useState<BackendPost|null>(null);
     const [allPosts, setAllPosts] = useState<BackendPost[]>([]);
     const [groupedPosts, setGroupedPosts] = useState< Record<string, BackendPost[]> >({});
     const [pinnedPostsExpanded, setPinnedPostsExpanded] = useState(false)
@@ -113,7 +113,7 @@ export default function Timeline({
 
     const afterCreatePost = (post: BackendPost) => {
         if (!post) return
-        if (post.isRepost) setSharedPost(null)
+        if (post.isRepost) setPostToRepost(null)
 
         // TODO may use mutate->populateCache instead ?!
         // https://github.com/KMI-KPZ/ve-collab/blob/a791a2ed9d68e71b6968488fe33dbf8bac000d4c/frontend-vecollab/src/components/network/Timeline.tsx
@@ -143,7 +143,6 @@ export default function Timeline({
                                     key={post._id}
                                     post={post}
                                     updatePost={post => {
-                                        console.log('update pinned posts ...', post);
                                         updatePost(post)
                                         mutatePinnedPosts()
                                     }}
@@ -153,7 +152,7 @@ export default function Timeline({
                                     isLast={false}
                                     allSpaces={allSpaces}
                                     removePost={removePost}
-                                    sharePost={post => setSharedPost(post)}
+                                    rePost={post => setPostToRepost(post)}
                                     fetchNextPosts={() => {}}
                                     updatePinnedPosts={mutatePinnedPosts}
                                 />
@@ -181,8 +180,8 @@ export default function Timeline({
                 <div className={'p-4 my-8 bg-white rounded shadow '}>
                     <TimelinePostForm
                         space={space}
-                        sharedPost={sharedPost}
-                        onCancelRepost={() => setSharedPost(null)}
+                        postToRepost={postToRepost}
+                        onCancelRepost={() => setPostToRepost(null)}
                         onCreatedPost={afterCreatePost}
                         />
                 </div>
@@ -221,7 +220,7 @@ export default function Timeline({
                                 isLast={i === Object.keys(groupedPosts).length-1 && j === groupedPosts[group].length-1}
                                 allSpaces={allSpaces}
                                 removePost={removePost}
-                                sharePost={post => setSharedPost(post)}
+                                rePost={post => setPostToRepost(post)}
                                 fetchNextPosts={fetchNextPosts}
                                 updatePinnedPosts={mutatePinnedPosts}
                             />

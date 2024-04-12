@@ -27,8 +27,7 @@ interface Props {
     isLast: boolean
     allSpaces?: BackendSpace[]
     removePost: (post: BackendPost) => void
-    // TODO rename to replyPost !
-    sharePost?: (post: BackendPost) => void
+    rePost?: (post: BackendPost) => void
     fetchNextPosts: () => void
     updatePinnedPosts: KeyedMutator<any> | undefined
 }
@@ -44,7 +43,7 @@ export default function TimelinePost(
     isLast,
     allSpaces,
     removePost,
-    sharePost: replyPost,
+    rePost,
     fetchNextPosts,
     updatePinnedPosts
 }: Props) {
@@ -138,8 +137,8 @@ export default function TimelinePost(
         }
     }
 
-    const onClickReplyBtn = () => {
-        if (replyPost) replyPost(post)
+    const onClickRepostBtn = () => {
+        if (rePost) rePost(post)
     }
 
     const deletePost = async () => {
@@ -388,7 +387,7 @@ export default function TimelinePost(
                                 )}
                             </button>
                         )}
-                        <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickReplyBtn} title="Beitrag zitieren"><TiArrowForward /></button>
+                        <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickRepostBtn} title="Beitrag zitieren"><TiArrowForward /></button>
                         <PostHeaderDropdown post={post} />
                     </div>
                 </div>

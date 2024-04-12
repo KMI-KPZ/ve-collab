@@ -28,7 +28,7 @@ import Dropdown from "../Dropdown";
 interface Props {
     post?: BackendPost | undefined;
     space?: string | undefined;
-    sharedPost?: BackendPost | null
+    postToRepost?: BackendPost | null
     onCancelForm?: Function;
     onCancelRepost?: MouseEventHandler;
     onUpdatedPost?: (text: string) => void
@@ -40,7 +40,7 @@ export default function TimelinePostForm(
 {
     post: postToEdit,
     space,
-    sharedPost: postToRepost,
+    postToRepost,
     onCancelForm,
     onCancelRepost,
     onCreatedPost,
