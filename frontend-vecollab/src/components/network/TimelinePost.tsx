@@ -52,7 +52,7 @@ export default function TimelinePost(
     const commentFormref = useRef<any>(null)
     const [wbRemoved, setWbRemoved] = useState<boolean>(false)
     const [repostExpand, setRepostExpand] = useState<boolean>(false)
-    const [comments, setComments] = useState<BackendPostComment[]>( post.comments.reverse() )
+    const [comments, setComments] = useState<BackendPostComment[]>( post.comments )
     const [showCommentForm, setShowCommentForm] = useState<boolean>(false)
     const [showXComments, setShowXComments] = useState<number>(3)
     const [editPost, setEditPost] = useState<boolean>(false)
@@ -96,7 +96,7 @@ export default function TimelinePost(
         try {
             const newComment = await fetchPOST('/comment', { text, post_id: post._id }, session?.accessToken )
             if (newComment.inserted_comment) {
-                setComments(prev => [newComment.inserted_comment, ...prev])
+                setComments(prev => [...prev, newComment.inserted_comment])
             }
             commentFormref.current?.reset()
         } catch (error) {
@@ -480,12 +480,12 @@ export default function TimelinePost(
 
                         {comments.length > 0 && (
                             <div className="px-5 mt-5">
-                                {comments.filter(c => c.pinned).map((comment, ci) => (
+                                {comments.filter(c => c.pinned).reverse().map((comment, ci) => (
                                     <div key={ci}>
                                         <Comment comment={comment} />
                                     </div>
                                 ))}
-                                {comments.filter(c => !c.pinned).slice(0, showXComments).map((comment, ci) => (
+                                {comments.filter(c => !c.pinned).reverse().slice(0, showXComments).map((comment, ci) => (
                                     <div key={ci}>
                                         <Comment comment={comment} />
                                         {(ci+1 == showXComments && comments.filter(c => !c.pinned).length > showXComments) && (
