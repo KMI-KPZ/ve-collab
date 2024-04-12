@@ -15,7 +15,7 @@ export default function CategoryBox({ categoryName, slug }: Props) {
 
     return (
         <li>
-            <Link scroll={false} href={'/content_bubbles/' + browserBubbleSlug + '/' + slug}>
+            <Link scroll={false} href={'/content/' + browserBubbleSlug + '/' + slug}>
                 <div
                     className={
                         'w-44 h-24 flex mx-2 px-0 hover:ring hover:ring-ve-collab-orange rounded-lg justify-center cursor-pointer' +
