@@ -37,7 +37,7 @@ export default function LearningContentView(props: Props) {
         <>
             <div className="container mx-auto mb-4 px-5">
                 <div className="mt-4">
-                    <Link href="/content_bubbles">
+                    <Link href="/content">
                         <div className="flex items-center">
                             <IoMdArrowRoundBack className="mr-2" />
                             <p className="text-ve-collab-orange underline">

@@ -20,7 +20,7 @@ export default function LearningContentPreview({ title, slug, snippet, imgFilena
             <Link
                 scroll={false}
                 href={
-                    '/content_bubbles/' + browserBubbleSlug + '/' + browserCategorySlug + '/' + slug
+                    '/content/' + browserBubbleSlug + '/' + browserCategorySlug + '/' + slug
                 }
             >
                 <div
