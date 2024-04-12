@@ -435,6 +435,31 @@ export function useGetPinnedPosts(
     }
 }
 
+export function useGetPost(
+    accessToken: string,
+    post_id: string
+ ): {
+    data: BackendPost;
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        post_id
+            ? [`/posts?post_id=${post_id}`, accessToken]
+            : null,
+        ([url, token]) => GETfetcher(url, token)
+    );
+
+    return {
+        data: isLoading || error ? '' : data.post,
+        isLoading,
+        error,
+        mutate,
+    }
+}
+
+
 export async function fetchGET(relativeUrl: string, accessToken?: string) {
     const headers: { Authorization?: string } = {};
 

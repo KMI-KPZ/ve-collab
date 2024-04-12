@@ -7,7 +7,7 @@ import { IoIosSend } from "react-icons/io";
 import Dropdown from "../Dropdown";
 import { BackendPost, BackendPostAuthor, BackendPostComment, BackendPostFile, BackendSpace, BackendSpaceACLEntry } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
-import { MdAudioFile, MdDeleteOutline, MdDoubleArrow, MdModeEdit, MdOutlineKeyboardDoubleArrowDown, MdThumbUp, MdVideoFile } from "react-icons/md";
+import { MdAudioFile, MdDeleteOutline, MdDoubleArrow, MdModeEdit, MdOutlineKeyboardDoubleArrowDown, MdShare, MdThumbUp, MdVideoFile } from "react-icons/md";
 import { TiArrowForward, TiPin, TiPinOutline } from "react-icons/ti";
 import TimelinePostForm from "./TimelinePostForm";
 import PostHeader from "./PostHeader";
@@ -16,6 +16,7 @@ import { RxFile, RxFileText } from "react-icons/rx";
 import TimelinePostText from "./TimelinePostText";
 import AuthenticatedImage from "../AuthenticatedImage";
 import { KeyedMutator } from "swr";
+import Dialog from "../profile/Dialog";
 
 interface Props {
     post: BackendPost
@@ -26,6 +27,7 @@ interface Props {
     isLast: boolean
     allSpaces?: BackendSpace[]
     removePost: (post: BackendPost) => void
+    // TODO rename to replyPost !
     sharePost?: (post: BackendPost) => void
     fetchNextPosts: () => void
     updatePinnedPosts: KeyedMutator<any> | undefined
@@ -55,7 +57,7 @@ export default function TimelinePost(
     const [showCommentForm, setShowCommentForm] = useState<boolean>(false)
     const [showXComments, setShowXComments] = useState<number>(3)
     const [editPost, setEditPost] = useState<boolean>(false)
-
+    const [shareDialogIsOpen, setShareDialogIsOpen] = useState<boolean>(false)
     const [loadingLikers, setLoadingLikers] = useState<boolean>(false)
     const [likers, setLikers] = useState<BackendPostAuthor[]>([])
 
@@ -164,6 +166,11 @@ export default function TimelinePost(
 
     const handleSelectOption = (value: string, ...rest: any[]) => {
         switch (value) {
+            case 'share':
+                // TODO copy to clipboard
+                // navigator.clipboard.writeText("...");
+                setShareDialogIsOpen(true)
+                break;
             case 'remove':
                 deletePost()
                 break;
@@ -314,7 +321,9 @@ export default function TimelinePost(
     }
 
     const PostHeaderDropdown = ({post}: {post: BackendPost}) => {
-        let options = []
+        let options = [
+            { value: 'share', label: 'Link teilen', icon: <MdShare /> }
+        ]
         if (
             (!post.isRepost && post.author.username == session?.user.preferred_username)
             || (post.isRepost && post.repostAuthor?.username == session?.user.preferred_username)
@@ -329,157 +338,168 @@ export default function TimelinePost(
             )
         }
 
-        if (options.length > 0) {
-            return <Dropdown options={options} onSelect={handleSelectOption} />
-        } else {
-            return null
-        }
+        return <Dropdown options={options} onSelect={handleSelectOption} />
     }
 
     return (
-        <div ref={ref} className={`${wbRemoved ? "opacity-0 transition-opacity ease-in-out delay-50 duration-300" : "opacity-100 transition-none" }
-            group/post p-4 mb-4 bg-white rounded shadow`}
-        >
-            <div className="flex items-center">
-                {(post.isRepost && post.repostAuthor) ? (
-                    <PostHeader author={post.repostAuthor} date={post.creation_date} />
-                ) : (
-                    <PostHeader author={post.author} date={post.creation_date} />
-                )}
-
-                {(!space && post.space) && (
-                    <div className='self-start leading-[1.6rem] text-xs text-gray-500 ml-1'>
-                        <MdDoubleArrow className="inline" /> <Link href={`/space/?id=${post.space}`} className="font-bold align-middle">{SpacenameById(post.space)}</Link>
+        <>
+            {/* share dialog */}
+            <Dialog
+                isOpen={shareDialogIsOpen}
+                title={'Link zum Beitrag'}
+                onClose={() => setShareDialogIsOpen(false)}
+            >
+                <div className="w-[30vw]">
+                    <div>
+                        <Link href={`/post?id=${post._id}`} className='text-ve-collab-blue hover:underline'>{window.location.origin}/?id={post._id}</Link>
                     </div>
-                )}
+                </div>
+            </Dialog>
 
-                <div className='ml-auto opacity-0 group-hover/post:opacity-100 transition-opacity'>
-                    {(post.likers.includes(session?.user.preferred_username as string)) ? (
-                        <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickLikeBtn}><HiHeart /></button>
+            <div ref={ref} className={`${wbRemoved ? "opacity-0 transition-opacity ease-in-out delay-50 duration-300" : "opacity-100 transition-none" }
+                group/post p-4 mb-4 bg-white rounded shadow`}
+            >
+                <div className="flex items-center">
+                    {(post.isRepost && post.repostAuthor) ? (
+                        <PostHeader author={post.repostAuthor} date={post.creation_date} />
                     ) : (
-                        <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickLikeBtn}><HiOutlineHeart /></button>
-                    )}
-                    {(space && userIsAdmin) && (
-                        <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickPin} title={post.pinned ? "Beitrag abheften" : "Beitrag anheften"}>
-                            {post.pinned ? (
-                                <TiPin />
-                            ) : (
-                                <TiPinOutline />
-                            )}
-                        </button>
-                    )}
-                    <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickReplyBtn} title="Beitrag zitieren"><TiArrowForward /></button>
-                    <PostHeaderDropdown post={post} />
-                </div>
-            </div>
-
-            {post.isRepost && (
-                <div className="my-5 ml-5 p-4 rounded bg-slate-100">
-                    <div className="flex items-center">
-                        <PostHeader author={post.repostAuthor as BackendPostAuthor} date={post.originalCreationDate as string} />
-                    </div>
-                    <div className={`${repostExpand ? "" : "max-h-40 overflow-hidden"} mt-5 whitespace-break-spaces relative repost-text`}>
-                        <TimelinePostText text={ post.text as string } />
-                        <span className={`${repostExpand ? "hidden" : ""} absolute left-0 bottom-0 w-full h-20 bg-gradient-to-b from-transparent to-[#e5f1f4]`}>
-                            <button className="absolute bottom-0 left-10 mx-4 p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={() => setRepostExpand(true)} title="Erweitern">
-                                <MdOutlineKeyboardDoubleArrowDown />
-                            </button>
-                        </span>
-                    </div>
-                </div>
-            )}
-
-            <div className='my-5'>
-                {editPost
-                    ? (
-                        <TimelinePostForm
-                            post={post}
-                            onCancelForm={() => setEditPost(false)}
-                            onUpdatedPost={updatePostText}
-                        />
-                    ) : (
-                        <TimelinePostText text={
-                            post.isRepost
-                                ? post.repostText as string
-                                : post.text as string
-                        } />
-                    )
-                }
-            </div>
-
-            {post.files.length > 0 && (
-                <div className="my-4">
-                    <div className="mb-2 text-slate-900 font-bold">Dateien</div>
-                    <div className="mb-8 flex flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
-                        {post.files.map((file, index) => (
-                            <AuthenticatedFile
-                                key={index}
-                                url={`/uploads/${file.file_id}`}
-                                filename={file.file_name}
-                                title="Download file"
-                            >
-                                <div className="flex justify-center">
-                                    <FileIcon file={file} />
-                                </div>
-                                <div className="max-w-1/2 justify-center mx-2 px-1 my-1 truncate">
-                                    {file.file_name}
-                                </div>
-                            </AuthenticatedFile>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            <Likes />
-
-            {(comments.length == 0 && !showCommentForm && (!spaceACL || spaceACL.comment)) && (
-                <div className="mt-4 mb-2">
-                    <button onClick={openCommentForm} className="px-2 py-[6px] w-1/3 rounded-md border text-gray-400 text-left text-nowrap overflow-hidden truncate">
-                        Kommentar schreiben ...
-                    </button>
-                </div>
-            )}
-
-            {(comments.length > 0 || showCommentForm) && (
-                <div className='mt-4 pt-4 px-4 border-t-2 border-ve-collab-blue/50'>
-                    <div className="mb-4 text-slate-900 font-bold text-lg">
-                        Kommentare
-                    </div>
-
-                    {(!spaceACL || spaceACL.comment) && (
-                        <form onSubmit={onSubmitCommentForm} className="mb-2" ref={commentFormref}>
-                            <input
-                                className={'w-1/3 border border-[#cccccc] rounded-md px-2 py-[6px]'}
-                                type="text"
-                                placeholder={'Kommentar schreiben ...'}
-                                name='text'
-                                autoComplete="off"
-                            />
-                            <button className="p-2" type='submit' title="Senden"><IoIosSend /></button>
-                        </form>
+                        <PostHeader author={post.author} date={post.creation_date} />
                     )}
 
-                    {comments.length > 0 && (
-                        <div className="px-5 mt-5">
-                            {comments.filter(c => c.pinned).map((comment, ci) => (
-                                <div key={ci}>
-                                    <Comment comment={comment} />
-                                </div>
-                            ))}
-                            {comments.filter(c => !c.pinned).slice(0, showXComments).map((comment, ci) => (
-                                <div key={ci}>
-                                    <Comment comment={comment} />
-                                    {(ci+1 == showXComments && comments.filter(c => !c.pinned).length > showXComments) && (
-                                        <button className="py-2 px-5 rounded-full hover:bg-ve-collab-blue-light" onClick={() => setShowXComments(showXComments+5)} title="Weitere Kommentare anzeigen">
-                                            <MdOutlineKeyboardDoubleArrowDown />
-                                        </button>
-                                    )}
-                                </div>
-                            ))}
+                    {(!space && post.space) && (
+                        <div className='self-start leading-[1.6rem] text-xs text-gray-500 ml-1'>
+                            <MdDoubleArrow className="inline" /> <Link href={`/space/?id=${post.space}`} className="font-bold align-middle">{SpacenameById(post.space)}</Link>
                         </div>
                     )}
+
+                    <div className='ml-auto opacity-0 group-hover/post:opacity-100 transition-opacity'>
+                        {(post.likers.includes(session?.user.preferred_username as string)) ? (
+                            <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickLikeBtn}><HiHeart /></button>
+                        ) : (
+                            <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickLikeBtn}><HiOutlineHeart /></button>
+                        )}
+                        {(space && userIsAdmin) && (
+                            <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickPin} title={post.pinned ? "Beitrag abheften" : "Beitrag anheften"}>
+                                {post.pinned ? (
+                                    <TiPin />
+                                ) : (
+                                    <TiPinOutline />
+                                )}
+                            </button>
+                        )}
+                        <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickReplyBtn} title="Beitrag zitieren"><TiArrowForward /></button>
+                        <PostHeaderDropdown post={post} />
+                    </div>
                 </div>
-            )}
-        </div>
+
+                {post.isRepost && (
+                    <div className="my-5 ml-5 p-4 rounded bg-slate-100">
+                        <div className="flex items-center">
+                            <PostHeader author={post.repostAuthor as BackendPostAuthor} date={post.originalCreationDate as string} />
+                        </div>
+                        <div className={`${repostExpand ? "" : "max-h-40 overflow-hidden"} mt-5 whitespace-break-spaces relative repost-text`}>
+                            <TimelinePostText text={ post.text as string } />
+                            <span className={`${repostExpand ? "hidden" : ""} absolute left-0 bottom-0 w-full h-20 bg-gradient-to-b from-transparent to-[#e5f1f4]`}>
+                                <button className="absolute bottom-0 left-10 mx-4 p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={() => setRepostExpand(true)} title="Erweitern">
+                                    <MdOutlineKeyboardDoubleArrowDown />
+                                </button>
+                            </span>
+                        </div>
+                    </div>
+                )}
+
+                <div className='my-5'>
+                    {editPost
+                        ? (
+                            <TimelinePostForm
+                                post={post}
+                                onCancelForm={() => setEditPost(false)}
+                                onUpdatedPost={updatePostText}
+                            />
+                        ) : (
+                            <TimelinePostText text={
+                                post.isRepost
+                                    ? post.repostText as string
+                                    : post.text as string
+                            } />
+                        )
+                    }
+                </div>
+
+                {post.files.length > 0 && (
+                    <div className="my-4">
+                        <div className="mb-2 text-slate-900 font-bold">Dateien</div>
+                        <div className="mb-8 flex flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
+                            {post.files.map((file, index) => (
+                                <AuthenticatedFile
+                                    key={index}
+                                    url={`/uploads/${file.file_id}`}
+                                    filename={file.file_name}
+                                    title="Download file"
+                                >
+                                    <div className="flex justify-center">
+                                        <FileIcon file={file} />
+                                    </div>
+                                    <div className="max-w-1/2 justify-center mx-2 px-1 my-1 truncate">
+                                        {file.file_name}
+                                    </div>
+                                </AuthenticatedFile>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                <Likes />
+
+                {(comments.length == 0 && !showCommentForm && (!spaceACL || spaceACL.comment)) && (
+                    <div className="mt-4 mb-2">
+                        <button onClick={openCommentForm} className="px-2 py-[6px] w-1/3 rounded-md border text-gray-400 text-left text-nowrap overflow-hidden truncate">
+                            Kommentar schreiben ...
+                        </button>
+                    </div>
+                )}
+
+                {(comments.length > 0 || showCommentForm) && (
+                    <div className='mt-4 pt-4 px-4 border-t-2 border-ve-collab-blue/50'>
+                        <div className="mb-4 text-slate-900 font-bold text-lg">
+                            Kommentare
+                        </div>
+
+                        {(!spaceACL || spaceACL.comment) && (
+                            <form onSubmit={onSubmitCommentForm} className="mb-2" ref={commentFormref}>
+                                <input
+                                    className={'w-1/3 border border-[#cccccc] rounded-md px-2 py-[6px]'}
+                                    type="text"
+                                    placeholder={'Kommentar schreiben ...'}
+                                    name='text'
+                                    autoComplete="off"
+                                />
+                                <button className="p-2" type='submit' title="Senden"><IoIosSend /></button>
+                            </form>
+                        )}
+
+                        {comments.length > 0 && (
+                            <div className="px-5 mt-5">
+                                {comments.filter(c => c.pinned).map((comment, ci) => (
+                                    <div key={ci}>
+                                        <Comment comment={comment} />
+                                    </div>
+                                ))}
+                                {comments.filter(c => !c.pinned).slice(0, showXComments).map((comment, ci) => (
+                                    <div key={ci}>
+                                        <Comment comment={comment} />
+                                        {(ci+1 == showXComments && comments.filter(c => !c.pinned).length > showXComments) && (
+                                            <button className="py-2 px-5 rounded-full hover:bg-ve-collab-blue-light" onClick={() => setShowXComments(showXComments+5)} title="Weitere Kommentare anzeigen">
+                                                <MdOutlineKeyboardDoubleArrowDown />
+                                            </button>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+        </>
     );
 }
