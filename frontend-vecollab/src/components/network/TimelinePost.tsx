@@ -179,6 +179,7 @@ export default function TimelinePost(
                 break;
             case 'remove-comment':
                 deleteComment(rest[0])
+                break;
             default:
                 break;
         }
@@ -297,22 +298,22 @@ export default function TimelinePost(
         return null
     }
 
-    const FileIcon = ({file}: {file: BackendPostFile}) => {
-        if (file.file_type.startsWith('image/')) {
+    const FileIcon = ({_file}: {_file: BackendPostFile}) => {
+        if (_file.file_type.startsWith('image/')) {
             return <AuthenticatedImage
-                    imageId={file.file_id}
-                    alt={file.file_name}
+                    imageId={_file.file_id}
+                    alt={_file.file_name}
                     width={50}
                     height={50}
                 ></AuthenticatedImage>
         }
-        else if (file.file_type.startsWith('video/')) {
+        else if (_file.file_type.startsWith('video/')) {
             return <div className="h-[50px] flex items-center"><MdVideoFile size={35} /></div>
         }
-        else if (file.file_type.startsWith('audio/')) {
+        else if (_file.file_type.startsWith('audio/')) {
             return <div className="h-[50px] flex items-center"><MdAudioFile size={35} /></div>
         }
-        else if (file.file_type.startsWith('text/')) {
+        else if (_file.file_type.startsWith('text/')) {
             return <div className="h-[50px] flex items-center"><RxFileText size={35} /></div>
         }
         else {
