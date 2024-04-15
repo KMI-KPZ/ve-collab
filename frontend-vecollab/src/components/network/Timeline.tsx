@@ -204,6 +204,8 @@ export default function Timeline({
                 </div>
             )}
 
+            {isLoadingTimeline && (<LoadingAnimation />)}
+
             {Object.keys( groupedPosts ).map( (group, i) => {
                 const datePill = getDatePill(i)
                 return (
@@ -253,7 +255,6 @@ export default function Timeline({
                 </div>
             )}
 
-            {isLoadingTimeline && (<LoadingAnimation />)}
             {!isLoadingTimeline && allPosts.length == 0 && (
                 <div className="m-10 flex justify-center">
                     {space ? (
