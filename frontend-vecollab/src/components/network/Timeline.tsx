@@ -16,6 +16,7 @@ interface Props {
     space?: string | undefined;
     spaceACL?: BackendSpaceACLEntry | undefined
     user?: string | undefined;
+    adminDashboard?: boolean
     showPinnedPosts?: boolean
     toggleShowPinnedPosts?: () => void
 }
@@ -26,6 +27,7 @@ export default function Timeline({
     space,
     spaceACL,
     user,
+    adminDashboard,
     showPinnedPosts,
     toggleShowPinnedPosts
 }: Props) {
@@ -53,7 +55,8 @@ export default function Timeline({
         toDate.toISOString(),
         perFetchLimit,
         space,
-        user
+        user,
+        adminDashboard
     )
 
     // TODO may get all spaces from parent

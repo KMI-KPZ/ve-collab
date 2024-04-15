@@ -12,6 +12,7 @@ import { signIn, useSession } from 'next-auth/react';
 import useSWR, { KeyedMutator } from 'swr';
 import { VEPlanSnippet } from '@/interfaces/profile/profileInterfaces';
 import { IMaterialNode, INode, ITopLevelNode } from '@/interfaces/material/materialInterfaces';
+import AdminDashboard from '@/pages/admin_dashboard';
 
 if (!process.env.NEXT_PUBLIC_BACKEND_BASE_URL) {
     throw new Error(`
@@ -129,6 +130,28 @@ export function useGetPublicPlansOfCurrentUser(
                       _id: plan._id,
                       name: plan.name,
                   })),
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
+export function useGetAllPlans(accessToken: string): {
+    data: IPlan[];
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        ['/planner/get_all', accessToken],
+        ([url, token]) => GETfetcher(url, token)
+    );
+
+    return {
+        data:
+            isLoading || error
+                ? []
+                : data.plans,
         isLoading,
         error,
         mutate,
@@ -375,7 +398,8 @@ export function useGetTimeline(
     toDate?: string,
     limit?: number,
     space?: string,
-    user?: string
+    user?: string,
+    adminDashboard?: boolean
  ): {
     data: BackendPost[];
     isLoading: boolean;
@@ -388,6 +412,9 @@ export function useGetTimeline(
     }
     else if (user) {
         endpointUrl += `/user/${user}`
+    }
+    else if (adminDashboard) {
+        // empty, adminDashboard requests to bare /timeline
     }
     else {
         endpointUrl += `/you`
