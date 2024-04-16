@@ -3,8 +3,11 @@ import TimelinePost from "@/components/network/TimelinePost";
 import { BackendPost, BackendSpace } from "@/interfaces/api/apiInterfaces";
 import { fetchGET, useGetPost, useGetSpace, useIsGlobalAdmin } from "@/lib/backend";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import { MdOutlineDeleteForever } from "react-icons/md";
+import { GiSadCrab } from 'react-icons/gi';
 
 Post.auth = true;
 export default function Post() {
@@ -42,10 +45,7 @@ export default function Post() {
 
     const isGlobalAdmin = useIsGlobalAdmin(session!.accessToken)
 
-
     const rePost = (post: BackendPost) => {
-        console.log('TODO: forward to timeline (may in space) with repost', post);
-
         if (post.space) {
             router.push(`/space?id=${post.space}&repost=${post._id}`)
         } else {
@@ -72,9 +72,19 @@ export default function Post() {
         )
     }
 
+    const BackToStart = () => (
+        <button className="px-6 py-2 m-4 bg-ve-collab-orange rounded-lg text-white">
+            <Link href="/">Zurück zur Startseite</Link>
+        </button>
+    )
+
     if (error) {
         console.error(error);
-        return (<Wrapper><>Error loading post. See console for details</></Wrapper>)
+        return (
+            <Wrapper>
+                <div className="font-bold text-xl text-slate-900">Error loading post. See console for details</div>
+            </Wrapper>
+        )
     }
 
     if (isLoading) {
@@ -82,11 +92,29 @@ export default function Post() {
     }
 
     if (deleted) {
-        return (<Wrapper><>Post deleted</></Wrapper>)
+        return (
+            <Wrapper>
+                <div className="flex items-center justify-center font-bold">
+                    <MdOutlineDeleteForever size={50} />
+                    <div className="text-xl text-slate-900">Beitrag gelöscht.</div>
+                    <BackToStart />
+                </div>
+            </Wrapper>
+        )
     }
 
     if (!post) {
-        return (<Wrapper><>Post not found</></Wrapper>)
+        return (
+            <Wrapper>
+                <div className="flex flex-col items-center justify-center font-bold">
+                    <div className="flex items-center">
+                        <GiSadCrab size={60} className="m-4" />
+                        <div className="text-xl text-slate-900">Dieser Beitrag wurde nicht gefunden.</div>
+                    </div>
+                    <BackToStart />
+                </div>
+            </Wrapper>
+        )
     }
 
     return (
