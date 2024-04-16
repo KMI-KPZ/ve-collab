@@ -15,11 +15,11 @@ control structures need to be added from outside:
 export default function Alert({ onClose, children }: Props) {
     return (
         <div className="fixed inset-0 z-50 items-center" onClick={onClose}>
-            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex bg-white rounded-lg p-2 border shadow">
-                <div className='m-2'>{children}</div>
-                <div className="m-2">
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-80 flex bg-ve-collab-blue/75 text-white rounded-lg p-2 border border-ve-collab-blue shadow-sm">
+                <div className='m-2 font-bold'>{children}</div>
+                <div className="m-2 ml-auto">
                     <button
-                        className="text-gray-500 hover:text-gray-700"
+                        className="text-white hover:text-gray-200"
                         onClick={onClose}
                         aria-label="Close"
                     >
