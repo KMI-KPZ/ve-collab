@@ -1,4 +1,4 @@
-import { useGetAllSpaces, useGetPinnedPosts, useGetTimeline } from "@/lib/backend";
+import { fetchGET, useGetAllSpaces, useGetPinnedPosts, useGetTimeline } from "@/lib/backend";
 import { useSession } from "next-auth/react";
 import LoadingAnimation from "../LoadingAnimation";
 import TimelinePost from "./TimelinePost";
@@ -9,15 +9,15 @@ import Timestamp from "../Timestamp";
 import { HiOutlineCalendar } from "react-icons/hi";
 import React from "react";
 import { TiPin } from "react-icons/ti";
-import { MdKeyboardDoubleArrowUp } from "react-icons/md";
+import { MdKeyboardDoubleArrowDown, MdKeyboardDoubleArrowUp } from "react-icons/md";
+import { useRouter } from "next/router";
 
 interface Props {
+    /** User is global admin or admin of current space */
     userIsAdmin?: boolean
     space?: string | undefined;
     spaceACL?: BackendSpaceACLEntry | undefined
     user?: string | undefined;
-    showPinnedPosts?: boolean
-    toggleShowPinnedPosts?: () => void
 }
 
 Timeline.auth = true
@@ -25,15 +25,15 @@ export default function Timeline({
     userIsAdmin=false,
     space,
     spaceACL,
-    user,
-    showPinnedPosts,
-    toggleShowPinnedPosts
+    user
 }: Props) {
     const { data: session } = useSession();
+    const router = useRouter();
     const [toDate, setToDate] = useState<Date>(new Date());
-    const [sharedPost, setSharedPost] = useState<BackendPost|null>(null);
+    const [postToRepost, setPostToRepost] = useState<BackendPost|null>(null);
     const [allPosts, setAllPosts] = useState<BackendPost[]>([]);
     const [groupedPosts, setGroupedPosts] = useState< Record<string, BackendPost[]> >({});
+    const [pinnedPostsExpanded, setPinnedPostsExpanded] = useState(false)
     const [fetchCount, setFetchCount] = useState<number>(0);
     const perFetchLimit = 10
 
@@ -56,13 +56,7 @@ export default function Timeline({
         user
     )
 
-    // TODO may get all spaces from parent
-    const {
-        data: allSpaces,
-        isLoading: isLoadingAllSpaces,
-        error: errorAllSpaces,
-        mutate: mutateAllSpaces,
-    } = useGetAllSpaces(session!.accessToken);
+    const { data: allSpaces } = useGetAllSpaces(session!.accessToken);
 
     const {
         data: pinnedPosts,
@@ -87,6 +81,21 @@ export default function Timeline({
         setGroupedPosts( groupBy(allPosts, (p) => p.creation_date.replace(/T.+/, '')) )
         // console.log({allPosts, groupedPosts});
     }, [allPosts])
+
+    useEffect(() => {
+        if (isLoadingTimeline) return
+
+        if (router.query.repost) {
+            fetchGET(`/posts?post_id=${router.query.repost}`, session!.accessToken)
+            .then((data) => {
+                if (data.post) {
+                    setPostToRepost(data.post)
+                    const editor = document.querySelector(".rsw-ce") as HTMLElement
+                    if (editor) editor.focus()
+                }
+            })
+        }
+    }, [router, isLoadingTimeline, session])
 
     function groupBy<T>(arr: T[], fn: (item: T) => any) {
         return arr.reduce<Record<string, T[]>>((prev, curr) => {
@@ -121,7 +130,7 @@ export default function Timeline({
 
     const afterCreatePost = (post: BackendPost) => {
         if (!post) return
-        if (post.isRepost) setSharedPost(null)
+        if (post.isRepost) setPostToRepost(null)
 
         // TODO may use mutate->populateCache instead ?!
         // https://github.com/KMI-KPZ/ve-collab/blob/a791a2ed9d68e71b6968488fe33dbf8bac000d4c/frontend-vecollab/src/components/network/Timeline.tsx
@@ -139,45 +148,63 @@ export default function Timeline({
 
     return (
         <>
-            {(pinnedPosts.length > 0 && showPinnedPosts) && (
-                <div className="my-8">
-                    <div className="mb-4 font-bold text-slate-900 text-xl">
-                        <button><TiPin size={25} className="inline" /> {pinnedPosts.length > 1 ? ("Angeheftete Beiträge") : ("Angehefteter Beitrag")}</button>
+            {(pinnedPosts.length > 0) && (
+                <>
+                    <div className="mx-2 my-10 px-4 pb-4 rounded-md border border-2 border-gray-600 outline outline-1 outline-gray-400 outline-offset-4">
+                        <div className="font-bold text-slate-900 text-xl inline px-3 py-1 rounded-md relative -top-[20px] border border-2 border-gray-600 bg-[#e5e7eb]">
+                            <TiPin size={25} className="inline" /> {pinnedPosts.length > 1 ? ("Angeheftete Beiträge") : ("Angehefteter Beitrag")}
+                        </div>
+                        <div className={`${!pinnedPostsExpanded ? 'max-h-36' : ''} overflow-hidden relative`}>
+                            {pinnedPosts.map((post, i) => (
+                                <TimelinePost
+                                    key={post._id}
+                                    post={post}
+                                    updatePost={post => {
+                                        updatePost(post)
+                                        mutatePinnedPosts()
+                                    }}
+                                    space={space}
+                                    spaceACL={spaceACL}
+                                    userIsAdmin={userIsAdmin}
+                                    isLast={false}
+                                    allSpaces={allSpaces}
+                                    removePost={removePost}
+                                    rePost={post => setPostToRepost(post)}
+                                    fetchNextPosts={() => {}}
+                                    updatePinnedPosts={mutatePinnedPosts}
+                                />
+                            ))}
+                            {!pinnedPostsExpanded && (
+                                <div onClick={e => {setPinnedPostsExpanded(true)}} className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-t to-50% from-[#e5e7eb]"></div>
+                            )}
+                        </div>
                     </div>
-                    {pinnedPosts.map((post, i) => (
-                        <TimelinePost
-                            key={post._id}
-                            post={post}
-                            updatePost={updatePost}
-                            space={space}
-                            spaceACL={spaceACL}
-                            userIsAdmin={userIsAdmin}
-                            isLast={false}
-                            allSpaces={allSpaces}
-                            removePost={removePost}
-                            sharePost={post => setSharedPost(post)}
-                            fetchNextPosts={() => {}}
-                            updatePinnedPosts={mutatePinnedPosts}
-                        />
-                    ))}
-                    <div className="relative text-center border-t-2 my-6 mx-2 border-ve-collab-orange/50">
-                        <button onClick={toggleShowPinnedPosts} className="absolute -top-[15px] shadow px-6 py-2 rounded-full bg-white hover:bg-slate-100" >
-                            <MdKeyboardDoubleArrowUp />
-                        </button>
+                    <div className="w-full text-center m-0 -mt-[50px] p-0 relative z-1">
+                        {pinnedPostsExpanded ? (
+                            <button onClick={e => {setPinnedPostsExpanded(false)}} title="Weniger anzeigen" className="shadow px-6 py-2 -mt-2 rounded-full bg-white hover:bg-slate-100" >
+                                <MdKeyboardDoubleArrowUp />
+                            </button>
+                        ) : (
+                            <button onClick={e => {setPinnedPostsExpanded(true)}} title="Alles anzeigen" className="shadow px-6 py-2 -mt-2 rounded-full bg-white hover:bg-slate-100" >
+                                <MdKeyboardDoubleArrowDown />
+                            </button>
+                        ) }
                     </div>
-                </div>
+                </>
             )}
 
             {(!spaceACL || spaceACL.post) && (
                 <div className={'p-4 my-8 bg-white rounded shadow '}>
                     <TimelinePostForm
                         space={space}
-                        sharedPost={sharedPost}
-                        onCancelRepost={() => setSharedPost(null)}
+                        postToRepost={postToRepost}
+                        onCancelRepost={() => setPostToRepost(null)}
                         onCreatedPost={afterCreatePost}
                         />
                 </div>
             )}
+
+            {isLoadingTimeline && (<LoadingAnimation />)}
 
             {Object.keys( groupedPosts ).map( (group, i) => {
                 const datePill = getDatePill(i)
@@ -212,7 +239,7 @@ export default function Timeline({
                                 isLast={i === Object.keys(groupedPosts).length-1 && j === groupedPosts[group].length-1}
                                 allSpaces={allSpaces}
                                 removePost={removePost}
-                                sharePost={post => setSharedPost(post)}
+                                rePost={post => setPostToRepost(post)}
                                 fetchNextPosts={fetchNextPosts}
                                 updatePinnedPosts={mutatePinnedPosts}
                             />
@@ -228,7 +255,6 @@ export default function Timeline({
                 </div>
             )}
 
-            {isLoadingTimeline && (<LoadingAnimation />)}
             {!isLoadingTimeline && allPosts.length == 0 && (
                 <div className="m-10 flex justify-center">
                     {space ? (

@@ -19,6 +19,7 @@ import {
     ResearchAndTeachingInformation,
 } from '@/interfaces/profile/profileInterfaces';
 import Timeline from '@/components/network/Timeline';
+import LoadingAnimation from '@/components/LoadingAnimation';
 
 Profile.auth = true;
 export default function Profile() {
@@ -92,7 +93,7 @@ export default function Profile() {
     const [foreignUser, setForeignUser] = useState(false);
 
     const { data: session, status } = useSession();
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const router = useRouter();
 
     useEffect(() => {
@@ -103,18 +104,12 @@ export default function Profile() {
         if (router.query.username) {
             username = router.query.username as string;
             if (username !== session!.user.preferred_username) {
-                setForeignUser((prev) => {
-                    return true;
-                });
+                setForeignUser(true);
             } else {
-                setForeignUser((prev) => {
-                    return false;
-                });
+                setForeignUser(false);
             }
         } else {
-            setForeignUser((prev) => {
-                return false;
-            });
+            setForeignUser(false);
         }
 
         // fetch profile information of the determined user
@@ -179,61 +174,65 @@ export default function Profile() {
 
     return (
         <>
-            <Container>
-                <ProfileBanner
-                    follows={follows}
-                    setFollows={setFollows}
-                    followers={followers}
-                    foreignUser={foreignUser}
-                    username={personalInformation.firstName + ' ' + personalInformation.lastName}
-                />
-                <div className={'mx-20 mb-2 px-5 relative -mt-16 z-10'}>
-                    <ProfileHeader
-                        name={personalInformation.firstName + ' ' + personalInformation.lastName}
-                        institution={personalInformation.institution}
-                        profilePictureUrl={profilePictureUrl}
-                        foreignUser={foreignUser}
-                        followers={followers}
-                        veReady={veReady}
-                    />
-                </div>
+            {loading ? (
+                <LoadingAnimation />
+            ) : (
                 <Container>
-                    <div className={'mx-20 flex'}>
-                        <div className={'w-3/4  mr-4'}>
-                            <WhiteBox>
-                                <ExtendedPersonalInformation
-                                    veInfo={veInformation}
-                                    researchAndTeachingInfo={researchandTeachingInformation}
-                                    cvInfo={{ educations, workExperience }}
-                                />
-                            </WhiteBox>
-                            <BoxHeadline title='Timeline' />
-                            {foreignUser
-                                ? ( <Timeline user={router.query.username as string} /> )
-                                : ( <Timeline /> )
-                            }
-                        </div>
-                        <div className={'w-1/4  ml-4'}>
-                            <WhiteBox>
-                                <PersonalData
-                                    name={
-                                        personalInformation.firstName +
-                                        ' ' +
-                                        personalInformation.lastName
-                                    }
-                                    bio={personalInformation.bio}
-                                    expertise={personalInformation.expertise}
-                                    birthday={personalInformation.birthday}
-                                    languages={personalInformation.languages}
-                                />
-                            </WhiteBox>
-                            <WhiteBox>
-                                <VEVitrine items={veWindowItems} />
-                            </WhiteBox>
-                        </div>
+                    <ProfileBanner
+                        follows={follows}
+                        setFollows={setFollows}
+                        followers={followers}
+                        foreignUser={foreignUser}
+                        username={personalInformation.firstName + ' ' + personalInformation.lastName}
+                    />
+                    <div className={'mx-20 mb-2 px-5 relative -mt-16 z-10'}>
+                        <ProfileHeader
+                            name={personalInformation.firstName + ' ' + personalInformation.lastName}
+                            institution={personalInformation.institution}
+                            profilePictureUrl={profilePictureUrl}
+                            foreignUser={foreignUser}
+                            followers={followers}
+                            veReady={veReady}
+                        />
                     </div>
+                    <Container>
+                        <div className={'mx-20 flex'}>
+                            <div className={'w-3/4  mr-4'}>
+                                <WhiteBox>
+                                    <ExtendedPersonalInformation
+                                        veInfo={veInformation}
+                                        researchAndTeachingInfo={researchandTeachingInformation}
+                                        cvInfo={{ educations, workExperience }}
+                                    />
+                                </WhiteBox>
+                                <BoxHeadline title='Timeline' />
+                                {foreignUser
+                                    ? ( <Timeline user={router.query.username as string} /> )
+                                    : ( <Timeline /> )
+                                }
+                            </div>
+                            <div className={'w-1/4  ml-4'}>
+                                <WhiteBox>
+                                    <PersonalData
+                                        name={
+                                            personalInformation.firstName +
+                                            ' ' +
+                                            personalInformation.lastName
+                                        }
+                                        bio={personalInformation.bio}
+                                        expertise={personalInformation.expertise}
+                                        birthday={personalInformation.birthday}
+                                        languages={personalInformation.languages}
+                                    />
+                                </WhiteBox>
+                                <WhiteBox>
+                                    <VEVitrine items={veWindowItems} />
+                                </WhiteBox>
+                            </div>
+                        </div>
+                    </Container>
                 </Container>
-            </Container>
+            )}
         </>
     );
 }

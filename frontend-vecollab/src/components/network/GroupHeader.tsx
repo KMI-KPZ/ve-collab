@@ -17,10 +17,9 @@ import Dropdown from '../Dropdown';
 
 interface Props {
     userIsAdmin: () => boolean;
-    toggleShowPinnedPosts: () => void
 }
 
-export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Props) {
+export default function GroupHeader({ userIsAdmin }: Props) {
     const { data: session, status } = useSession();
     const router = useRouter();
 
@@ -326,11 +325,6 @@ export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Prop
                             <div className={'text-4xl pr-6'}>
                                 {space.name}
                             </div>
-                            {pinnedPosts.length > 0 && (
-                                <button className='py-2 px-3 rounded-md p-2 border border-gray-800 m-1' onClick={toggleShowPinnedPosts}>
-                                    {pinnedPosts.length} {pinnedPosts.length > 1 ? ("Angeheftete Beiträge") : ("Angehefteter Beitrag")}
-                                </button>
-                            )}
                         </div>
                         <div className={'flex items-center mt-6'}>
                             <div className="mt-2 min-h-[2rem]">

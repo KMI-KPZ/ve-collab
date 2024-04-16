@@ -261,7 +261,7 @@ export function useGetCheckAdminUser(accessToken: string): {
 
 export function useGetSpace(
     accessToken: string,
-    spaceId: string
+    spaceId?: string
 ): {
     data: BackendSpace;
     isLoading: boolean;
@@ -269,11 +269,12 @@ export function useGetSpace(
     mutate: KeyedMutator<any>;
 } {
     const { data, error, isLoading, mutate } = useSWR(
-        [`/spaceadministration/info?id=${spaceId}`, accessToken],
+        spaceId
+            ? [`/spaceadministration/info?id=${spaceId}`, accessToken] : null,
         ([url, token]) => GETfetcher(url, token)
     );
     return {
-        data: isLoading || error ? [] : data.space,
+        data: isLoading || error || !spaceId ? null : data.space,
         isLoading,
         error,
         mutate,
@@ -352,18 +353,18 @@ export function useGetMySpaceRequests(accessToken: string): {
     };
 }
 
-export function useGetMySpaceACLEntry(accessToken: string, spaceId: string): {
+export function useGetMySpaceACLEntry(accessToken: string, spaceId?: string): {
     data: BackendSpaceACLEntry;
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;
 } {
     const { data, error, isLoading, mutate } = useSWR(
-        [`/space_acl/get?space=${spaceId}`, accessToken],
+        spaceId ? [`/space_acl/get?space=${spaceId}` , accessToken] : null,
         ([url, token]) => GETfetcher(url, token)
     );
     return {
-        data: isLoading || error ? '' : data.acl_entry,
+        data: isLoading || error || !spaceId ? null : data.acl_entry,
         isLoading,
         error,
         mutate,
@@ -434,6 +435,31 @@ export function useGetPinnedPosts(
         mutate,
     }
 }
+
+export function useGetPost(
+    accessToken: string,
+    post_id: string
+ ): {
+    data: BackendPost;
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        post_id
+            ? [`/posts?post_id=${post_id}`, accessToken]
+            : null,
+        ([url, token]) => GETfetcher(url, token)
+    );
+
+    return {
+        data: isLoading || error ? '' : data.post,
+        isLoading,
+        error,
+        mutate,
+    }
+}
+
 
 export async function fetchGET(relativeUrl: string, accessToken?: string) {
     const headers: { Authorization?: string } = {};
