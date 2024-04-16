@@ -474,14 +474,14 @@ export default function TimelinePost(
 
                         {comments.length > 0 && (
                             <div className="px-5 mt-5">
-                                {comments.filter(c => c.pinned).reverse().map((comment, ci) => (
+                                {comments.filter(c => c.pinned).reverse().map((cmnt, ci) => (
                                     <div key={ci}>
-                                        <Comment comment={comment} />
+                                        <Comment comment={cmnt} />
                                     </div>
                                 ))}
-                                {comments.filter(c => !c.pinned).reverse().slice(0, showXComments).map((comment, ci) => (
-                                    <div key={ci}>
-                                        <Comment comment={comment} />
+                                {comments.filter(c => !c.pinned).reverse().slice(0, showXComments).map((cmnt, ci) => (
+                                    <div key={cmnt._id}>
+                                        <Comment comment={cmnt} />
                                         {(ci+1 == showXComments && comments.filter(c => !c.pinned).length > showXComments) && (
                                             <button className="py-2 px-5 rounded-full hover:bg-ve-collab-blue-light" onClick={() => setShowXComments(showXComments+5)} title="Weitere Kommentare anzeigen">
                                                 <MdOutlineKeyboardDoubleArrowDown />
