@@ -1,11 +1,11 @@
 import LoadingAnimation from "@/components/LoadingAnimation";
 import TimelinePost from "@/components/network/TimelinePost";
-import { BackendPost, BackendSpace } from "@/interfaces/api/apiInterfaces";
-import { fetchGET, useGetPost, useGetSpace, useIsGlobalAdmin } from "@/lib/backend";
+import { BackendPost } from "@/interfaces/api/apiInterfaces";
+import { useGetAllSpaces, useGetMySpaceACLEntry, useGetPost, useGetSpace, useIsGlobalAdmin } from "@/lib/backend";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { MdOutlineDeleteForever } from "react-icons/md";
 import { GiSadCrab } from 'react-icons/gi';
 
@@ -13,35 +13,46 @@ Post.auth = true;
 export default function Post() {
     const { data: session, status } = useSession();
     const router = useRouter();
-    const [space, setSpace] = useState<BackendSpace>()
-    const [isLoadingSpace, setIsLoadingSpace] = useState<boolean>(true)
+    // const [space, setSpace] = useState<BackendSpace>()
+    // const [allSpaces, setAllSpaces] = useState<BackendSpace[]>()
+    // const [spaceACLEntry, setSpaceACLEntry] = useState<BackendSpaceACLEntry>()
+    // const [isLoading, setIsLoading] = useState<boolean>(false)
     const [deleted, setDeleted] = useState<boolean>(false)
 
     const {
         data: post,
-        isLoading,
+        isLoading: isLoadingPost,
         error,
         mutate,
     } = useGetPost(
         session!.accessToken, router.query.id as string)
 
-    // TODO wait for space?!
-    // const {
-    //     data: space,
-    //     isLoading: isLoadingSpace,
-    //     error: errorLoadingSpace,
-    //     mutate: mutateSpace,
-    // } = useGetSpace(session!.accessToken, post?.space);
+    const { data: space } = useGetSpace(session!.accessToken, post.space);
+    const { data: allSpaces } = useGetAllSpaces(session!.accessToken)
+    const { data: spaceACLEntry } = useGetMySpaceACLEntry(session!.accessToken, post.space)
 
-    useEffect(() => {
-        if (isLoading || !post?.space) return
+    // useEffect(() => {
+    //     if (isLoadingPost || !post?.space) return
 
-        fetchGET(`/spaceadministration/info?id=${post.space}`, session!.accessToken)
-        .then(data => {
-            setSpace(data.space)
-            setIsLoadingSpace(false)
-        })
-    }, [post, isLoading, session])
+    //     setIsLoading(true)
+
+    //     fetchGET(`/spaceadministration/info?id=${post.space}`, session!.accessToken)
+    //     .then(data => {
+    //         setSpace(data.space)
+
+    //         return fetchGET('/spaceadministration/list', session!.accessToken)
+    //     })
+    //     .then(data => {
+    //         setAllSpaces(data.spaces)
+
+    //         return fetchGET(`/space_acl/get?space=${post.space}`, session!.accessToken)
+    //     })
+    //     .then(data => {
+    //         setSpaceACLEntry(data.acl_entry)
+    //         setIsLoading(false)
+    //     })
+
+    // }, [post, isLoadingPost, session])
 
     const isGlobalAdmin = useIsGlobalAdmin(session!.accessToken)
 
@@ -87,7 +98,7 @@ export default function Post() {
         )
     }
 
-    if (isLoading) {
+    if (isLoadingPost) { // || isLoading
         return (<Wrapper><LoadingAnimation /></Wrapper>)
     }
 
@@ -121,6 +132,8 @@ export default function Post() {
         <Wrapper>
              <TimelinePost
                 post={post}
+                allSpaces={allSpaces}
+                spaceACL={spaceACLEntry}
                 updatePost={() => {mutate()}}
                 userIsAdmin={userIsAdmin()}
                 removePost={() => {setDeleted(true)}}
