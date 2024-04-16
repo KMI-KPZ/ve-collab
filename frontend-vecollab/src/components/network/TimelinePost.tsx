@@ -16,7 +16,7 @@ import { RxFile, RxFileText } from "react-icons/rx";
 import TimelinePostText from "./TimelinePostText";
 import AuthenticatedImage from "../AuthenticatedImage";
 import { KeyedMutator } from "swr";
-import Dialog from "../profile/Dialog";
+import Alert from "../Alert";
 
 interface Props {
     post: BackendPost
@@ -166,8 +166,7 @@ export default function TimelinePost(
     const handleSelectOption = (value: string, ...rest: any[]) => {
         switch (value) {
             case 'share':
-                // TODO copy to clipboard
-                // navigator.clipboard.writeText("...");
+                navigator.clipboard.writeText(`${window.location.origin}/post?id=${post._id}`);
                 setShareDialogIsOpen(true)
                 break;
             case 'remove':
@@ -322,7 +321,7 @@ export default function TimelinePost(
 
     const PostHeaderDropdown = ({post}: {post: BackendPost}) => {
         let options = [
-            { value: 'share', label: 'Link teilen', icon: <MdShare /> }
+            { value: 'share', label: 'Link kopieren', icon: <MdShare /> }
         ]
         if (
             (!post.isRepost && post.author.username == session?.user.preferred_username)
@@ -343,18 +342,13 @@ export default function TimelinePost(
 
     return (
         <>
-            {/* share dialog */}
-            <Dialog
-                isOpen={shareDialogIsOpen}
-                title={'Link zum Beitrag'}
-                onClose={() => setShareDialogIsOpen(false)}
-            >
-                <div className="w-[30vw]">
-                    <div>
-                        <Link href={`/post?id=${post._id}`} className='text-ve-collab-blue hover:underline'>{window.location.origin}/?id={post._id}</Link>
-                    </div>
-                </div>
-            </Dialog>
+
+            {shareDialogIsOpen && (
+                <Alert onClose={() => setShareDialogIsOpen(false)}>
+                    <>Link kopiert</>
+                </Alert>
+            )}
+
 
             <div ref={ref} className={`${wbRemoved ? "opacity-0 transition-opacity ease-in-out delay-50 duration-300" : "opacity-100 transition-none" }
                 group/post p-4 mb-4 bg-white rounded shadow`}
