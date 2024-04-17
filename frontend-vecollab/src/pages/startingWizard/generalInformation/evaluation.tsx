@@ -73,11 +73,11 @@ export default function Evaluation() {
                 },
                 {
                     username: 'Dozent*in 2',
-                    is_graded: true,
-                    task_type: 'Referat',
-                    assessment_type: 'Mündlich',
-                    evaluation_while: 'Feedback',
-                    evaluation_after: 'Notenvergabe',
+                    is_graded: false,
+                    task_type: '',
+                    assessment_type: '',
+                    evaluation_while: '',
+                    evaluation_after: '',
                 },
             ],
         },
@@ -231,7 +231,6 @@ export default function Evaluation() {
                                     <input
                                         type="text"
                                         className="border border-gray-400 rounded-lg p-2 ml-2 w-64"
-                                        value={evaluationPerPartner.task_type}
                                         {...methods.register(
                                             `evaluationPerPartner.${index}.task_type`
                                         )}
