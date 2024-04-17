@@ -15,14 +15,14 @@ import Link from 'next/link';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { Tooltip } from '@/components/Tooltip';
 import { PiBookOpenText } from 'react-icons/pi';
-import { FormProvider, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
+import { Controller, FormProvider, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import PopupSaveData from '@/components/StartingWizard/PopupSaveData';
 import SideProgressBarSectionBroadPlannerWithReactHookForm from '@/components/StartingWizard/SideProgressBarSectionBroadPlannerWithReactHookForm';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 
 export interface FormValues {
     courseFormat: string;
-    usePhysicalMobility: string;
+    usePhysicalMobility: boolean;
     physicalMobilities: PhysicalMobility[];
 }
 
@@ -70,7 +70,7 @@ export default function Realization() {
         mode: 'onChange',
         defaultValues: {
             courseFormat: '',
-            usePhysicalMobility: 'false',
+            usePhysicalMobility: false,
             physicalMobilities: [{ location: '', timestamp_from: '', timestamp_to: '' }],
         },
     });
@@ -101,10 +101,7 @@ export default function Realization() {
                             methods.setValue('courseFormat', data.plan.realization);
                         }
                         if (data.plan.physical_mobility !== null) {
-                            methods.setValue(
-                                'usePhysicalMobility',
-                                String(data.plan.physical_mobility)
-                            );
+                            methods.setValue('usePhysicalMobility', data.plan.physical_mobility);
                         }
                         if (
                             data.plan.physical_mobilities !== null &&
@@ -164,7 +161,7 @@ export default function Realization() {
                         {
                             plan_id: router.query.plannerId,
                             field_name: 'physical_mobility',
-                            value: data.usePhysicalMobility === 'true',
+                            value: data.usePhysicalMobility,
                         },
                         {
                             plan_id: router.query.plannerId,
@@ -275,6 +272,46 @@ export default function Realization() {
         ));
     };
 
+    function radioBooleanInput(control: any, name: any): JSX.Element {
+        return (
+            <Controller
+                control={control}
+                name={name}
+                render={({ field: { onChange, onBlur, value } }) => (
+                    <>
+                        <div className="flex my-1">
+                            <div>
+                                <label className="px-2 py-2">Ja</label>
+                            </div>
+                            <div>
+                                <input
+                                    type="radio"
+                                    className="border border-gray-400 rounded-lg p-2"
+                                    onBlur={onBlur} // notify when input is touched
+                                    onChange={() => onChange(true)} // send value to hook form
+                                    checked={value === true}
+                                />
+                            </div>
+                        </div>
+                        <div className="flex my-1">
+                            <div>
+                                <label className="px-2 py-2">Nein</label>
+                            </div>
+                            <div>
+                                <input
+                                    type="radio"
+                                    onBlur={onBlur} // notify when input is touched
+                                    onChange={() => onChange(false)} // send value to hook form
+                                    checked={value === false}
+                                />
+                            </div>
+                        </div>
+                    </>
+                )}
+            />
+        );
+    }
+
     return (
         <FormProvider {...methods}>
             <PopupSaveData
@@ -341,52 +378,13 @@ export default function Realization() {
                                                 begleitet?
                                             </p>
                                             <div className="flex w-40 justify-end gap-x-5">
-                                                <div className="flex my-1">
-                                                    <div>
-                                                        <label className="px-2 py-2">Ja</label>
-                                                    </div>
-                                                    <div>
-                                                        <input
-                                                            type="radio"
-                                                            className="border border-gray-400 rounded-lg p-2"
-                                                            value="true"
-                                                            {...methods.register(
-                                                                `usePhysicalMobility`,
-                                                                {
-                                                                    maxLength: {
-                                                                        value: 500,
-                                                                        message:
-                                                                            'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                                                                    },
-                                                                }
-                                                            )}
-                                                        />
-                                                    </div>
-                                                </div>
-                                                <div className="flex my-1">
-                                                    <div>
-                                                        <label className="px-2 py-2">Nein</label>
-                                                    </div>
-                                                    <div>
-                                                        <input
-                                                            type="radio"
-                                                            value="false"
-                                                            {...methods.register(
-                                                                `usePhysicalMobility`,
-                                                                {
-                                                                    maxLength: {
-                                                                        value: 500,
-                                                                        message:
-                                                                            'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                                                                    },
-                                                                }
-                                                            )}
-                                                        />
-                                                    </div>
-                                                </div>
+                                                {radioBooleanInput(
+                                                    methods.control,
+                                                    `usePhysicalMobility`
+                                                )}
                                             </div>
                                         </div>
-                                        {methods.watch('usePhysicalMobility') === 'true' && (
+                                        {methods.watch('usePhysicalMobility') && (
                                             <>
                                                 <div className="divide-y my-2 w-full">
                                                     {renderMobilitiesInputs()}

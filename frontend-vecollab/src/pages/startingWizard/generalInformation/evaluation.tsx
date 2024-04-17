@@ -177,8 +177,8 @@ export default function Evaluation() {
                             <div>
                                 <input
                                     type="radio"
-                                    onBlur={onBlur} // notify when input is touched
                                     className="border border-gray-400 rounded-lg p-2"
+                                    onBlur={onBlur} // notify when input is touched
                                     onChange={() => onChange(true)} // send value to hook form
                                     checked={value === true}
                                 />
@@ -191,6 +191,7 @@ export default function Evaluation() {
                             <div>
                                 <input
                                     type="radio"
+                                    className="border border-gray-400 rounded-lg p-2"
                                     onBlur={onBlur} // notify when input is touched
                                     onChange={() => onChange(false)} // send value to hook form
                                     checked={value === false}
