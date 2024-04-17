@@ -13,13 +13,13 @@ import LoadingAnimation from '../LoadingAnimation';
 import AsyncCreatableSelect from 'react-select/async-creatable';
 import Select from 'react-select';
 import { BackendSearchResponse } from '@/interfaces/api/apiInterfaces';
+import Dropdown from '../Dropdown';
 
 interface Props {
     userIsAdmin: () => boolean;
-    toggleShowPinnedPosts: () => void
 }
 
-export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Props) {
+export default function GroupHeader({ userIsAdmin }: Props) {
     const { data: session, status } = useSession();
     const router = useRouter();
 
@@ -298,6 +298,10 @@ export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Prop
         }
     }, [chosenPermissionUser, session, space]);
 
+    const handleClickGroupOptions = () => {
+        leaveSpace();
+    }
+
     return (
         <>
             {isLoading ? (
@@ -321,30 +325,26 @@ export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Prop
                             <div className={'text-4xl pr-6'}>
                                 {space.name}
                             </div>
-                            {pinnedPosts.length > 0 && (
-                                <button className='py-2 px-3 rounded-md p-2 border border-gray-800 m-1' onClick={toggleShowPinnedPosts}>
-                                    {pinnedPosts.length} {pinnedPosts.length > 1 ? ("Angeheftete Beiträge") : ("Angehefteter Beitrag")}
-                                </button>
-                            )}
                         </div>
                         <div className={'flex items-center mt-6'}>
                             <div className="mt-2 min-h-[2rem]">
-                                {userIsAdmin() && (
-                                    <button
-                                        className={
-                                            'border border-white bg-black/75 text-white rounded-lg px-3 py-2'
-                                        }
-                                        onClick={() => handleOpenEditDialog()}
-                                    >
-                                        Gruppe bearbeiten
-                                    </button>
-                                )}
+                                {userIsAdmin()
+                                    ? (
+                                        <button
+                                            className={
+                                                'border border-white bg-black/75 text-white rounded-lg px-3 py-2'
+                                            }
+                                            onClick={() => handleOpenEditDialog()}
+                                        >
+                                            Gruppe bearbeiten
+                                        </button>
+                                    ) : (
+                                        <Dropdown options={[
+                                            { value: 'leaveGroup', label: 'Gruppe verlassen' }
+                                        ]} onSelect={handleClickGroupOptions} />
+                                    )
+                                }
                             </div>
-                            {/* <button className={'h-12 ml-2'}>
-                                <span>
-                                    <RxDotsVertical size={30} color={''} />
-                                </span>
-                            </button> */}
                         </div>
                     </div>
                     <Dialog

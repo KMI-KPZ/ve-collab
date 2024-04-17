@@ -5,6 +5,12 @@ import logging
 from bson.objectid import ObjectId
 import tornado.web
 
+from error_reasons import (
+    INSUFFICIENT_PERMISSIONS,
+    MISSING_KEY_SLUG,
+    POST_DOESNT_EXIST,
+    SPACE_DOESNT_EXIST,
+)
 from handlers.base_handler import BaseHandler, auth_needed
 from resources.network.acl import ACL
 from resources.network.post import (
@@ -19,18 +25,104 @@ from resources.network.space import (
     Spaces,
     SpaceDoesntExistError,
 )
+from handlers.network.timeline import BaseTimelineHandler
 import util
 
 logger = logging.getLogger(__name__)
 
 
-class PostHandler(BaseHandler):
+class PostHandler(BaseTimelineHandler):
     """
     Make a new post
     """
 
     def get(self):
-        pass
+        """
+        GET /posts
+            retrieve a post by its id (obeying the visibility/access rules)
+
+            query params:
+                post_id: id of the post to retrieve
+
+            http body:
+                None
+
+            returns:
+                200 OK,
+                {"status": 200,
+                 "success": True,
+                 "post": {post}}
+
+                400 Bad Request,
+                {"status": 400,
+                 "success": False,
+                 "reason": "missing_query_param:post_id"}
+
+                401 Unauthorized,
+                {"status": 401,
+                 "success": False,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden,
+                {"status": 403,
+                 "success": False,
+                 "reason": "insufficient_permission"}
+
+                409 Conflict,
+                {"status": 409,
+                 "success": False,
+                 "reason": "post_doesnt_exist"}
+        """
+
+        try:
+            post_id = self.get_argument("post_id")
+        except tornado.web.MissingArgumentError:
+            self.set_status(400)
+            self.write({"success": False, "reason": MISSING_KEY_SLUG + "post_id"})
+            return
+
+        with util.get_mongodb() as db:
+            post_manager = Posts(db)
+
+            try:
+                post = post_manager.get_post(post_id)
+            except PostNotExistingException:
+                self.set_status(409)
+                self.write({"success": False, "reason": POST_DOESNT_EXIST})
+                return
+
+            # if the post is in a space, the user has to be a member and have
+            # read_timeline permissions to see the post
+            if post["space"]:
+                space_manager = Spaces(db)
+                space_id = util.parse_object_id(post["space"])
+                try:
+                    user_is_space_member = space_manager.check_user_is_member(
+                        space_id, self.current_user.username
+                    )
+                except SpaceDoesntExistError:
+                    self.set_status(409)
+                    self.write({"success": False, "reason": SPACE_DOESNT_EXIST})
+                    return
+
+                if not user_is_space_member:
+                    self.set_status(403)
+                    self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
+                    return
+
+                acl = ACL(db)
+                if not acl.space_acl.ask(
+                    self.current_user.username, space_id, "read_timeline"
+                ):
+                    self.set_status(403)
+                    self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
+                    return
+
+        # permissions are fine, enhance the post with author profile details
+        post = self.add_profile_information_to_author([post])[0]
+
+        self.set_status(200)
+        self.serialize_and_write({"success": True, "post": post})
 
     @auth_needed
     def post(self):
@@ -145,12 +237,14 @@ class PostHandler(BaseHandler):
                             self.current_user.username,
                         )
 
-                        files.append({
-                            "file_id": stored_id,
-                            "file_name": file_obj["filename"],
-                            "file_type": file_obj["content_type"],
-                            "author": self.current_user.username,
-                        })
+                        files.append(
+                            {
+                                "file_id": stored_id,
+                                "file_name": file_obj["filename"],
+                                "file_type": file_obj["content_type"],
+                                "author": self.current_user.username,
+                            }
+                        )
 
                         # if the post was in a space, also store the file in the repo,
                         # indicating it is part of a post by setting manually_uploaded to False

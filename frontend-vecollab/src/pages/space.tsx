@@ -9,7 +9,7 @@ import GroupBanner from '@/components/network/GroupBanner';
 import GroupHeader from '@/components/network/GroupHeader';
 import Dialog from '@/components/profile/Dialog';
 import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
-import { fetchPOST, useGetMySpaceACLEntry, useGetSpace } from '@/lib/backend';
+import { fetchPOST, useGetMySpaceACLEntry, useGetSpace, useIsGlobalAdmin } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { ChangeEvent, useEffect, useState } from 'react';
@@ -30,7 +30,7 @@ export default function Space() {
         { name: '', profilePicUrl: '', institution: '', preferredUsername: '' },
     ]);
 
-    const [showPinnedPosts, setShowPinnedPosts] = useState<boolean>(false)
+    const isGlobalAdmin = useIsGlobalAdmin(session!.accessToken)
 
     // TODO use conditional fetching with the swr hook to wait for the router to be ready,
     // because sometimes when the router is not yet ready, but the hook fires
@@ -51,7 +51,7 @@ export default function Space() {
         session!.accessToken,
         router.query.id as string
     );
-    console.log(spaceACLEntry);
+    console.log({spaceACLEntry});
 
     const handleCloseUploadDialog = () => {
         setIsUploadDialogOpen(false);
@@ -273,7 +273,7 @@ export default function Space() {
 
     // can only be called after space hook is loaded
     function userIsAdmin() {
-        return space.admins.includes(session?.user?.preferred_username as string);
+        return isGlobalAdmin || space.admins.includes(session?.user?.preferred_username as string);
     }
 
     return (
@@ -290,7 +290,6 @@ export default function Space() {
                             <div className={'mx-20 mb-2 px-5 relative -mt-16'}>
                                 <GroupHeader
                                     userIsAdmin={userIsAdmin}
-                                    toggleShowPinnedPosts={() => setShowPinnedPosts(!showPinnedPosts)}
                                 />
                             </div>
                             <Container>
@@ -302,8 +301,7 @@ export default function Space() {
                                                     return <Timeline
                                                                 space={space._id}
                                                                 userIsAdmin={userIsAdmin()}
-                                                                showPinnedPosts={showPinnedPosts}
-                                                                toggleShowPinnedPosts={() => setShowPinnedPosts(!showPinnedPosts)}
+                                                                spaceACL={spaceACLEntry}
                                                             />;
                                                 case 'members':
                                                     return members();
