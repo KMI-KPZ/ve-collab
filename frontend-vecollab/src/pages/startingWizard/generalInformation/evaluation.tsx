@@ -16,7 +16,7 @@ import { PiBookOpenText } from 'react-icons/pi';
 import WhiteBox from '@/components/Layout/WhiteBox';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { BackendProfileSnippetsResponse, BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
-import { FormProvider, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
+import { Controller, FormProvider, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import SideProgressBarSectionBroadPlannerWithReactHookForm from '@/components/StartingWizard/SideProgressBarSectionBroadPlannerWithReactHookForm';
 import PopupSaveData from '@/components/StartingWizard/PopupSaveData';
 
@@ -163,6 +163,46 @@ export default function Evaluation() {
         });
     };
 
+    function radioBooleanInput(control: any, name: any): JSX.Element {
+        return (
+            <Controller
+                control={control}
+                name={name}
+                render={({ field: { onChange, onBlur, value } }) => (
+                    <>
+                        <div className="flex my-1">
+                            <div>
+                                <label className="px-2 py-2">Ja</label>
+                            </div>
+                            <div>
+                                <input
+                                    type="radio"
+                                    onBlur={onBlur} // notify when input is touched
+                                    className="border border-gray-400 rounded-lg p-2"
+                                    onChange={() => onChange(true)} // send value to hook form
+                                    checked={value === true}
+                                />
+                            </div>
+                        </div>
+                        <div className="flex my-1">
+                            <div>
+                                <label className="px-2 py-2">Nein</label>
+                            </div>
+                            <div>
+                                <input
+                                    type="radio"
+                                    onBlur={onBlur} // notify when input is touched
+                                    onChange={() => onChange(false)} // send value to hook form
+                                    checked={value === false}
+                                />
+                            </div>
+                        </div>
+                    </>
+                )}
+            />
+        );
+    }
+
     function renderEvaluationInfoBox(): JSX.Element[] {
         return fields.map((evaluationPerPartner, index) => (
             <div key={evaluationPerPartner.id} className="flex justify-center mx-2">
@@ -178,36 +218,10 @@ export default function Evaluation() {
                         <div className="flex items-center">
                             <p className="">Erfolgt eine Bewertung?</p>
                             <div className="flex w-36 justify-end gap-x-3">
-                                <div className="flex my-1">
-                                    <div>
-                                        <label className="px-2 py-2">Ja</label>
-                                    </div>
-                                    <div>
-                                        <input
-                                            type="radio"
-                                            className="border border-gray-400 rounded-lg p-2"
-                                            {...methods.register(
-                                                `evaluationPerPartner.${index}.is_graded`,
-                                                { value: true }
-                                            )}
-                                        />
-                                    </div>
-                                </div>
-                                <div className="flex my-1">
-                                    <div>
-                                        <label className="px-2 py-2">Nein</label>
-                                    </div>
-                                    <div>
-                                        <input
-                                            type="radio"
-                                            className="border border-gray-400 rounded-lg p-2"
-                                            {...methods.register(
-                                                `evaluationPerPartner.${index}.is_graded`,
-                                                { value: false }
-                                            )}
-                                        />
-                                    </div>
-                                </div>
+                                {radioBooleanInput(
+                                    methods.control,
+                                    `evaluationPerPartner.${index}.is_graded`
+                                )}
                             </div>
                         </div>
                         {methods.watch(`evaluationPerPartner.${index}.is_graded`) && (
@@ -284,6 +298,7 @@ export default function Evaluation() {
                 }}
                 handleCancel={() => setIsPopupOpen(false)}
             />
+
             <div className="flex bg-pattern-left-blue-small bg-no-repeat">
                 <div className="flex flex-grow justify-center">
                     <div className="flex flex-col">
