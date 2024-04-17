@@ -13,7 +13,7 @@ import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import Link from 'next/link';
 import { TooltipList } from '@/components/TooltipList';
 import { Tooltip } from '@/components/Tooltip';
-import { FiInfo } from 'react-icons/fi';
+import { PiBookOpenText } from "react-icons/pi";
 import { FormProvider, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import PopupSaveData from '@/components/StartingWizard/PopupSaveData';
 import SideProgressBarSectionBroadPlannerWithReactHookForm from '@/components/StartingWizard/SideProgressBarSectionBroadPlannerWithReactHookForm';
@@ -36,6 +36,23 @@ export interface FormalConditionPartner {
 interface FormValues {
     formalConditions: FormalConditionPartner[];
 }
+
+const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
+    return formValues.formalConditions.every((formalCondition) => {
+        return (
+            !formalCondition.time &&
+            !formalCondition.format &&
+            !formalCondition.topic &&
+            !formalCondition.goals &&
+            !formalCondition.languages &&
+            !formalCondition.media &&
+            !formalCondition.technicalEquipment &&
+            !formalCondition.evaluation &&
+            !formalCondition.institutionalRequirements &&
+            !formalCondition.dataProtection
+        );
+    });
+};
 
 FormalConditions.auth = true;
 export default function FormalConditions() {
@@ -123,27 +140,29 @@ export default function FormalConditions() {
     }, [session, status, router, methods]);
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        await fetchPOST(
-            '/planner/update_fields',
-            {
-                update: [
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'formalities',
-                        value: data.formalConditions,
-                    },
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'progress',
-                        value: {
-                            ...sideMenuStepsProgress,
-                            formalities: ProgressState.completed,
+        if (!areAllFormValuesEmpty(data)) {
+            await fetchPOST(
+                '/planner/update_fields',
+                {
+                    update: [
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'formalities',
+                            value: data.formalConditions,
                         },
-                    },
-                ],
-            },
-            session?.accessToken
-        );
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'progress',
+                            value: {
+                                ...sideMenuStepsProgress,
+                                formalities: ProgressState.completed,
+                            },
+                        },
+                    ],
+                },
+                session?.accessToken
+            );
+        }
     };
 
     const combinedSubmitRouteAndUpdate = async (data: FormValues, url: string) => {
@@ -340,7 +359,7 @@ export default function FormalConditions() {
                                                 target="_blank"
                                                 href={'/content/Herausforderungen'}
                                             >
-                                                <FiInfo size={30} color="#00748f" />
+                                                <PiBookOpenText size={30} color="#00748f" />
                                             </Link>
                                         </Tooltip>
                                     </div>

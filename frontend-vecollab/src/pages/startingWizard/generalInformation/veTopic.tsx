@@ -13,7 +13,7 @@ import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import Link from 'next/link';
 import { Tooltip } from '@/components/Tooltip';
-import { FiInfo } from 'react-icons/fi';
+import { PiBookOpenText } from 'react-icons/pi';
 import { FormProvider, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import PopupSaveData from '@/components/StartingWizard/PopupSaveData';
 import SideProgressBarSectionBroadPlannerWithReactHookForm from '@/components/StartingWizard/SideProgressBarSectionBroadPlannerWithReactHookForm';
@@ -25,6 +25,12 @@ interface VeTopic {
 interface FormValues {
     veTopics: VeTopic[];
 }
+
+const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
+    return formValues.veTopics.every((veTopic) => {
+        return veTopic.name === '';
+    });
+};
 
 Topics.auth = true;
 export default function Topics() {
@@ -69,7 +75,6 @@ export default function Topics() {
         if (session) {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
-                    console.log(data.plan);
                     setLoading(false);
 
                     if (data.plan.topics.length > 0) {
@@ -96,27 +101,29 @@ export default function Topics() {
     });
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        await fetchPOST(
-            '/planner/update_fields',
-            {
-                update: [
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'topics',
-                        value: data.veTopics.map((element) => element.name),
-                    },
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'progress',
-                        value: {
-                            ...sideMenuStepsProgress,
-                            topics: ProgressState.completed,
+        if (!areAllFormValuesEmpty(data)) {
+            await fetchPOST(
+                '/planner/update_fields',
+                {
+                    update: [
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'topics',
+                            value: data.veTopics.map((element) => element.name),
                         },
-                    },
-                ],
-            },
-            session?.accessToken
-        );
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'progress',
+                            value: {
+                                ...sideMenuStepsProgress,
+                                topics: ProgressState.completed,
+                            },
+                        },
+                    ],
+                },
+                session?.accessToken
+            );
+        }
     };
 
     const combinedSubmitRouteAndUpdate = async (data: FormValues, url: string) => {
@@ -157,7 +164,7 @@ export default function Topics() {
                                                 target="_blank"
                                                 href={'/content/Beispiele%20aus%20der%20Praxis'}
                                             >
-                                                <FiInfo size={30} color="#00748f" />
+                                                <PiBookOpenText size={30} color="#00748f" />
                                             </Link>
                                         </Tooltip>
                                     </div>

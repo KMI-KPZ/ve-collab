@@ -14,7 +14,7 @@ import {
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import { Tooltip } from '@/components/Tooltip';
 import Link from 'next/link';
-import { FiInfo } from 'react-icons/fi';
+import { PiBookOpenText } from "react-icons/pi";
 import PopupSaveData from '@/components/StartingWizard/PopupSaveData';
 import SideProgressBarSectionBroadPlannerWithReactHookForm from '@/components/StartingWizard/SideProgressBarSectionBroadPlannerWithReactHookForm';
 
@@ -24,6 +24,10 @@ interface Language {
 interface FormValues {
     languages: Language[];
 }
+
+const areAllLanguagesEmpty = (languages: Language[]): boolean => {
+    return languages.every((languageObject) => languageObject.language === '');
+};
 
 Languages.auth = true;
 export default function Languages() {
@@ -90,27 +94,29 @@ export default function Languages() {
     });
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        await fetchPOST(
-            '/planner/update_fields',
-            {
-                update: [
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'languages',
-                        value: data.languages.map((element) => element.language),
-                    },
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'progress',
-                        value: {
-                            ...sideMenuStepsProgress,
-                            languages: ProgressState.completed,
+        if (!areAllLanguagesEmpty(data.languages)) {
+            await fetchPOST(
+                '/planner/update_fields',
+                {
+                    update: [
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'languages',
+                            value: data.languages.map((element) => element.language),
                         },
-                    },
-                ],
-            },
-            session?.accessToken
-        );
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'progress',
+                            value: {
+                                ...sideMenuStepsProgress,
+                                languages: ProgressState.completed,
+                            },
+                        },
+                    ],
+                },
+                session?.accessToken
+            );
+        }
     };
 
     const combinedSubmitRouteAndUpdate = async (data: FormValues, url: string) => {
@@ -183,7 +189,7 @@ export default function Languages() {
                                                 target="_blank"
                                                 href={'/content/sprachliche%20Aspekte'}
                                             >
-                                                <FiInfo size={30} color="#00748f" />
+                                                <PiBookOpenText size={30} color="#00748f" />
                                             </Link>
                                         </Tooltip>
                                     </div>

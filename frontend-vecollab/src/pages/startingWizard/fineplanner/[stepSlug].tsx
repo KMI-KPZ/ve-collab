@@ -16,7 +16,7 @@ import {
 import SideProgressbarSectionFinePlanner from '@/components/StartingWizard/SideProgressbarSectionFinePlanner';
 import { Tooltip } from '@/components/Tooltip';
 import Link from 'next/link';
-import { FiInfo } from 'react-icons/fi';
+import { PiBookOpenText } from 'react-icons/pi';
 
 export interface ITask {
     title: string;
@@ -92,6 +92,32 @@ export const defaultFormValueDataFineStepFrontend: IFineStepFrontend = {
             media: [{ name: '' }, { name: '' }],
         },
     ],
+};
+
+const areAllFormValuesEmpty = (formValues: IFineStepFrontend): boolean => {
+    return (
+        formValues.workload === 0 &&
+        formValues.learning_env === '' &&
+        formValues.learning_goal === '' &&
+        formValues.evaluation_tools.every((tool) => {
+            return tool === '';
+        }) &&
+        formValues.tasks.every((task) => {
+            return (
+                task.title === '' &&
+                task.learning_goal === '' &&
+                task.task_formulation === '' &&
+                task.social_form === '' &&
+                task.description === '' &&
+                task.tools.every((tool) => {
+                    return tool.name === '';
+                }) &&
+                task.media.every((media) => {
+                    return media.name === '';
+                })
+            );
+        })
+    );
 };
 
 FinePlanner.auth = true;
@@ -207,28 +233,29 @@ export default function FinePlanner() {
                     ? { [stepSlugDecoded]: ProgressState.completed }
                     : step
         );
-
-        await fetchPOST(
-            '/planner/update_fields',
-            {
-                update: [
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'steps',
-                        value: [...updateStepsData],
-                    },
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'progress',
-                        value: {
-                            ...sideMenuStepsProgress,
-                            steps: [...updateStepsProgress],
+        if (!areAllFormValuesEmpty(data)) {
+            await fetchPOST(
+                '/planner/update_fields',
+                {
+                    update: [
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'steps',
+                            value: [...updateStepsData],
                         },
-                    },
-                ],
-            },
-            session?.accessToken
-        );
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'progress',
+                            value: {
+                                ...sideMenuStepsProgress,
+                                steps: [...updateStepsProgress],
+                            },
+                        },
+                    ],
+                },
+                session?.accessToken
+            );
+        }
     };
 
     const combinedSubmitRouteAndUpdate = async (data: IFineStepFrontend, url: string) => {
@@ -295,7 +322,7 @@ export default function FinePlanner() {
                                             Feinplanung
                                             <Tooltip tooltipsText="Mehr Aspekte der Feinplanung findest du hier in den Selbstlernmaterialien …">
                                                 <Link target="_blank" href={'/content/VE-Planung'}>
-                                                    <FiInfo size={30} color="#00748f" />
+                                                    <PiBookOpenText size={30} color="#00748f" />
                                                 </Link>
                                             </Tooltip>
                                         </div>

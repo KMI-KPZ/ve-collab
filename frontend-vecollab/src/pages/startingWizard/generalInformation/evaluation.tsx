@@ -1,5 +1,4 @@
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
-import SideProgressBarSectionBroadPlanner from '@/components/StartingWizard/SideProgressBarSectionBroadPlanner';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -13,10 +12,13 @@ import LoadingAnimation from '@/components/LoadingAnimation';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import Link from 'next/link';
 import { Tooltip } from '@/components/Tooltip';
-import { FiInfo } from 'react-icons/fi';
+import { PiBookOpenText } from 'react-icons/pi';
 import WhiteBox from '@/components/Layout/WhiteBox';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { BackendProfileSnippetsResponse, BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
+import { Controller, FormProvider, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
+import SideProgressBarSectionBroadPlannerWithReactHookForm from '@/components/StartingWizard/SideProgressBarSectionBroadPlannerWithReactHookForm';
+import PopupSaveData from '@/components/StartingWizard/PopupSaveData';
 
 export interface EvaluationPerPartner {
     username: string;
@@ -26,6 +28,22 @@ export interface EvaluationPerPartner {
     evaluation_while: string;
     evaluation_after: string;
 }
+
+interface FormValues {
+    evaluationPerPartner: EvaluationPerPartner[];
+}
+
+const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
+    return formValues.evaluationPerPartner.every((partner) => {
+        return (
+            !partner.is_graded &&
+            partner.task_type === '' &&
+            partner.assessment_type === '' &&
+            partner.evaluation_while === '' &&
+            partner.evaluation_after === ''
+        );
+    });
+};
 
 Evaluation.auth = true;
 export default function Evaluation() {
@@ -39,24 +57,31 @@ export default function Evaluation() {
         [Key: string]: BackendUserSnippet;
     }>({});
     const [steps, setSteps] = useState<IFineStep[]>([]);
-    const [evaluationInfo, setEvaluationInfo] = useState<EvaluationPerPartner[]>([
-        {
-            username: 'Dozent*in 1',
-            is_graded: false,
-            task_type: '',
-            assessment_type: '',
-            evaluation_while: '',
-            evaluation_after: '',
+    const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
+
+    const methods = useForm<FormValues>({
+        mode: 'onChange',
+        defaultValues: {
+            evaluationPerPartner: [
+                {
+                    username: 'Dozent*in 1',
+                    is_graded: false,
+                    task_type: '',
+                    assessment_type: '',
+                    evaluation_while: '',
+                    evaluation_after: '',
+                },
+                {
+                    username: 'Dozent*in 2',
+                    is_graded: false,
+                    task_type: '',
+                    assessment_type: '',
+                    evaluation_while: '',
+                    evaluation_after: '',
+                },
+            ],
         },
-        {
-            username: 'Dozent*in 2',
-            is_graded: true,
-            task_type: 'Referat',
-            assessment_type: 'Mündlich',
-            evaluation_while: 'Feedback',
-            evaluation_after: 'Notenvergabe',
-        },
-    ]);
+    });
 
     useEffect(() => {
         // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
@@ -73,298 +98,273 @@ export default function Evaluation() {
         if (session) {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data: { plan: IPlan }) => {
-                    console.log(data.plan);
-                    setSideMenuStepsProgress(data.plan.progress);
-                    setSteps(data.plan.steps);
+                    if (data.plan !== undefined) {
+                        setSideMenuStepsProgress(data.plan.progress);
+                        setSteps(data.plan.steps);
+                        if (data.plan.evaluation.length !== 0) {
+                            methods.setValue('evaluationPerPartner', data.plan.evaluation);
+                        }
 
-                    if (data.plan.evaluation && Array.isArray(data.plan.evaluation)) {
-                        setEvaluationInfo(data.plan.evaluation);
-                    }
-
-                    // fetch profile snippets to be able to display the full name instead of username only
-                    fetchPOST(
-                        '/profile_snippets',
-                        { usernames: [...data.plan.partners, data.plan.author] },
-                        session.accessToken
-                    ).then((snippets: BackendProfileSnippetsResponse) => {
-                        let partnerSnippets: { [Key: string]: BackendUserSnippet } = {};
-                        snippets.user_snippets.forEach((element: BackendUserSnippet) => {
-                            partnerSnippets[element.username] = element;
+                        // fetch profile snippets to be able to display the full name instead of username only
+                        fetchPOST(
+                            '/profile_snippets',
+                            { usernames: [...data.plan.partners, data.plan.author] },
+                            session.accessToken
+                        ).then((snippets: BackendProfileSnippetsResponse) => {
+                            let partnerSnippets: { [Key: string]: BackendUserSnippet } = {};
+                            snippets.user_snippets.forEach((element: BackendUserSnippet) => {
+                                partnerSnippets[element.username] = element;
+                            });
+                            setPartnerProfileSnippets(partnerSnippets);
+                            setLoading(false);
                         });
-                        setPartnerProfileSnippets(partnerSnippets);
-                        setLoading(false);
-                    });
+                    }
                 }
             );
         }
-    }, [session, status, router]);
+    }, [session, status, router, methods]);
 
-    const handleSubmit = async () => {
-        await fetchPOST(
-            '/planner/update_fields',
-            {
-                update: [
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'evaluation',
-                        value: evaluationInfo,
-                    },
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'progress',
-                        value: {
-                            ...sideMenuStepsProgress,
-                            evaluation: ProgressState.completed,
+    const { fields } = useFieldArray({
+        name: 'evaluationPerPartner',
+        control: methods.control,
+    });
+
+    const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
+        if (!areAllFormValuesEmpty(data)) {
+            await fetchPOST(
+                '/planner/update_fields',
+                {
+                    update: [
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'evaluation',
+                            value: data.evaluationPerPartner,
                         },
-                    },
-                ],
-            },
-            session?.accessToken
-        );
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'progress',
+                            value: {
+                                ...sideMenuStepsProgress,
+                                evaluation: ProgressState.completed,
+                            },
+                        },
+                    ],
+                },
+                session?.accessToken
+            );
+        }
     };
 
-    const modifyIsGraded = (username: string, newGraded: boolean) => {
-        const newEvaluationInfo = evaluationInfo.map((evaluation) => {
-            if (evaluation.username === username) {
-                return { ...evaluation, is_graded: newGraded };
-            }
-            return evaluation;
+    const combinedSubmitRouteAndUpdate = async (data: FormValues, url: string) => {
+        onSubmit(data);
+        await router.push({
+            pathname: url,
+            query: { plannerId: router.query.plannerId },
         });
-        setEvaluationInfo(newEvaluationInfo);
     };
 
-    const modifyTaskType = (username: string, newTaskType: string) => {
-        const newEvaluationInfo = evaluationInfo.map((evaluation) => {
-            if (evaluation.username === username) {
-                return { ...evaluation, task_type: newTaskType };
-            }
-            return evaluation;
-        });
-        setEvaluationInfo(newEvaluationInfo);
-    };
-
-    const modifyAssessmentType = (username: string, newAssessmentType: string) => {
-        const newEvaluationInfo = evaluationInfo.map((evaluation) => {
-            if (evaluation.username === username) {
-                return { ...evaluation, assessment_type: newAssessmentType };
-            }
-            return evaluation;
-        });
-        setEvaluationInfo(newEvaluationInfo);
-    };
-
-    const modifyEvaluationWhile = (username: string, newEvaluationWhile: string) => {
-        const newEvaluationInfo = evaluationInfo.map((evaluation) => {
-            if (evaluation.username === username) {
-                return { ...evaluation, evaluation_while: newEvaluationWhile };
-            }
-            return evaluation;
-        });
-        setEvaluationInfo(newEvaluationInfo);
-    };
-
-    const modifyEvaluationAfter = (username: string, newEvaluationAfter: string) => {
-        const newEvaluationInfo = evaluationInfo.map((evaluation) => {
-            if (evaluation.username === username) {
-                return { ...evaluation, evaluation_after: newEvaluationAfter };
-            }
-            return evaluation;
-        });
-        setEvaluationInfo(newEvaluationInfo);
-    };
-
-    function renderEvaluationInfoBox(evaluationPerPartner: EvaluationPerPartner): JSX.Element {
+    function radioBooleanInput(control: any, name: any): JSX.Element {
         return (
-            <WhiteBox className="h-fit w-[28rem]">
-                <div className="flex flex-col">
-                    <div className="font-bold text-lg mb-4 text-center">
-                        {partnerProfileSnippets[evaluationPerPartner.username]
-                            ? partnerProfileSnippets[evaluationPerPartner.username].first_name +
-                              ' ' +
-                              partnerProfileSnippets[evaluationPerPartner.username].last_name
-                            : evaluationPerPartner.username}
-                    </div>
-                    <div className="flex items-center">
-                        <p className="">Erfolgt eine Bewertung?</p>
-                        <div className="flex w-36 justify-end gap-x-3">
-                            <div className="flex my-1">
-                                <div>
-                                    <label className="px-2 py-2">Ja</label>
-                                </div>
-                                <div>
-                                    <input
-                                        type="radio"
-                                        name={'physicalMobility' + evaluationPerPartner.username}
-                                        value="true"
-                                        checked={evaluationPerPartner.is_graded}
-                                        className="border border-gray-400 rounded-lg p-2"
-                                        onChange={() =>
-                                            modifyIsGraded(evaluationPerPartner.username, true)
-                                        }
-                                    />
-                                </div>
+            <Controller
+                control={control}
+                name={name}
+                render={({ field: { onChange, onBlur, value } }) => (
+                    <>
+                        <div className="flex my-1">
+                            <div>
+                                <label className="px-2 py-2">Ja</label>
                             </div>
-                            <div className="flex my-1">
-                                <div>
-                                    <label className="px-2 py-2">Nein</label>
-                                </div>
-                                <div>
-                                    <input
-                                        type="radio"
-                                        name={'physicalMobility' + evaluationPerPartner.username}
-                                        value="false"
-                                        checked={!evaluationPerPartner.is_graded}
-                                        className="border border-gray-400 rounded-lg p-2"
-                                        onChange={() =>
-                                            modifyIsGraded(evaluationPerPartner.username, false)
-                                        }
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {evaluationPerPartner.is_graded && (
-                        <>
-                            <div className="flex items-center justify-between my-1">
-                                <p className="">Art der Leistung</p>
+                            <div>
                                 <input
-                                    type="text"
-                                    className="border border-gray-400 rounded-lg p-2 ml-2 w-64"
-                                    value={evaluationPerPartner.task_type}
-                                    onChange={(e) =>
-                                        modifyTaskType(
-                                            evaluationPerPartner.username,
-                                            e.target.value
-                                        )
-                                    }
+                                    type="radio"
+                                    className="border border-gray-400 rounded-lg p-2"
+                                    onBlur={onBlur} // notify when input is touched
+                                    onChange={() => onChange(true)} // send value to hook form
+                                    checked={value === true}
                                 />
                             </div>
-                            <div className="flex items-center justify-between my-1">
-                                <p className="">Art der Bewertung</p>
+                        </div>
+                        <div className="flex my-1">
+                            <div>
+                                <label className="px-2 py-2">Nein</label>
+                            </div>
+                            <div>
                                 <input
-                                    type="text"
-                                    className="border border-gray-400 rounded-lg p-2 ml-2 w-64"
-                                    value={evaluationPerPartner.assessment_type}
-                                    onChange={(e) =>
-                                        modifyAssessmentType(
-                                            evaluationPerPartner.username,
-                                            e.target.value
-                                        )
-                                    }
-                                    placeholder="z.B. benotet, unbenotet"
+                                    type="radio"
+                                    className="border border-gray-400 rounded-lg p-2"
+                                    onBlur={onBlur} // notify when input is touched
+                                    onChange={() => onChange(false)} // send value to hook form
+                                    checked={value === false}
                                 />
                             </div>
-                        </>
-                    )}
-                    <p className="mt-10 mb-1">Wie erfolgt die Evaluation des VE?</p>
-                    <div className="flex items-center justify-between my-1">
-                        <div>
-                            <p>während des VE</p>
-                            <p>(formativ)</p>
                         </div>
-                        <textarea
-                            className="border border-gray-400 rounded-lg p-2 ml-2 w-64"
-                            value={evaluationPerPartner.evaluation_while}
-                            onChange={(e) =>
-                                modifyEvaluationWhile(evaluationPerPartner.username, e.target.value)
-                            }
-                            rows={2}
-                            placeholder="z. B. Teaching Analysis Poll, Feedback-Runden, etc."
-                        />
-                    </div>
-                    <div className="flex items-center justify-between my-1">
-                        <div>
-                            <p>nach dem VE</p>
-                            <p>(summativ)</p>
-                        </div>
-                        <textarea
-                            className="border border-gray-400 rounded-lg p-2 ml-2 w-64"
-                            value={evaluationPerPartner.evaluation_after}
-                            onChange={(e) =>
-                                modifyEvaluationAfter(evaluationPerPartner.username, e.target.value)
-                            }
-                            placeholder="z. B. anonymer Feedbackbogen, Zielscheibenfeedback, etc."
-                        />
-                    </div>
-                </div>
-            </WhiteBox>
+                    </>
+                )}
+            />
         );
     }
 
-    return (
-        <div className="flex bg-pattern-left-blue-small bg-no-repeat">
-            <div className="flex flex-grow justify-center">
-                <div className="flex flex-col">
-                    <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
-                    {loading ? (
-                        <LoadingAnimation />
-                    ) : (
-                        <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-center">
+    function renderEvaluationInfoBox(): JSX.Element[] {
+        return fields.map((evaluationPerPartner, index) => (
+            <div key={evaluationPerPartner.id} className="flex justify-center mx-2">
+                <WhiteBox className="h-fit w-[28rem]">
+                    <div className="flex flex-col">
+                        <div className="font-bold text-lg mb-4 text-center">
+                            {partnerProfileSnippets[evaluationPerPartner.username]
+                                ? partnerProfileSnippets[evaluationPerPartner.username].first_name +
+                                  ' ' +
+                                  partnerProfileSnippets[evaluationPerPartner.username].last_name
+                                : evaluationPerPartner.username}
+                        </div>
+                        <div className="flex items-center">
+                            <p className="">Erfolgt eine Bewertung?</p>
+                            <div className="flex w-36 justify-end gap-x-3">
+                                {radioBooleanInput(
+                                    methods.control,
+                                    `evaluationPerPartner.${index}.is_graded`
+                                )}
+                            </div>
+                        </div>
+                        {methods.watch(`evaluationPerPartner.${index}.is_graded`) && (
+                            <>
+                                <div className="flex items-center justify-between my-1">
+                                    <p className="">Art der Leistung</p>
+                                    <input
+                                        type="text"
+                                        className="border border-gray-400 rounded-lg p-2 ml-2 w-64"
+                                        {...methods.register(
+                                            `evaluationPerPartner.${index}.task_type`
+                                        )}
+                                    />
+                                </div>
+                                <div className="flex items-center justify-between my-1">
+                                    <p className="">Art der Bewertung</p>
+                                    <input
+                                        type="text"
+                                        className="border border-gray-400 rounded-lg p-2 ml-2 w-64"
+                                        {...methods.register(
+                                            `evaluationPerPartner.${index}.assessment_type`
+                                        )}
+                                        placeholder="z.B. benotet, unbenotet"
+                                    />
+                                </div>
+                            </>
+                        )}
+                        <p className="mt-10 mb-1">Wie erfolgt die Evaluation des VE?</p>
+                        <div className="flex items-center justify-between my-1">
                             <div>
-                                <div className="flex justify-center">
-                                    <div className={'font-bold text-4xl mb-2 w-fit relative'}>
-                                        Bewertung / Evaluation
-                                        <Tooltip tooltipsText="Mehr zur Evaluation von VE findest du hier in den Selbstlernmaterialien …">
-                                            <Link target="_blank" href={'/content/Evaluation'}>
-                                                <FiInfo size={30} color="#00748f" />
-                                            </Link>
-                                        </Tooltip>
+                                <p>während des VE</p>
+                                <p>(formativ)</p>
+                            </div>
+                            <textarea
+                                className="border border-gray-400 rounded-lg p-2 ml-2 w-64"
+                                {...methods.register(
+                                    `evaluationPerPartner.${index}.evaluation_while`
+                                )}
+                                rows={2}
+                                placeholder="z. B. Teaching Analysis Poll, Feedback-Runden, etc."
+                            />
+                        </div>
+                        <div className="flex items-center justify-between my-1">
+                            <div>
+                                <p>nach dem VE</p>
+                                <p>(summativ)</p>
+                            </div>
+                            <textarea
+                                className="border border-gray-400 rounded-lg p-2 ml-2 w-64"
+                                {...methods.register(
+                                    `evaluationPerPartner.${index}.evaluation_after`
+                                )}
+                                placeholder="z. B. anonymer Feedbackbogen, Zielscheibenfeedback, etc."
+                            />
+                        </div>
+                    </div>
+                </WhiteBox>
+            </div>
+        ));
+    }
+
+    return (
+        <FormProvider {...methods}>
+            <PopupSaveData
+                isOpen={isPopupOpen}
+                handleContinue={async () => {
+                    await router.push({
+                        pathname: '/startingWizard/generalInformation/languages',
+                        query: {
+                            plannerId: router.query.plannerId,
+                        },
+                    });
+                }}
+                handleCancel={() => setIsPopupOpen(false)}
+            />
+
+            <div className="flex bg-pattern-left-blue-small bg-no-repeat">
+                <div className="flex flex-grow justify-center">
+                    <div className="flex flex-col">
+                        <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
+                        {loading ? (
+                            <LoadingAnimation />
+                        ) : (
+                            <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-center">
+                                <div>
+                                    <div className="flex justify-center">
+                                        <div className={'font-bold text-4xl mb-2 w-fit relative'}>
+                                            Bewertung / Evaluation
+                                            <Tooltip tooltipsText="Mehr zur Evaluation von VE findest du hier in den Selbstlernmaterialien …">
+                                                <Link target="_blank" href={'/content/Evaluation'}>
+                                                    <PiBookOpenText size={30} color="#00748f" />
+                                                </Link>
+                                            </Tooltip>
+                                        </div>
+                                    </div>
+                                    <div className={'text-center mb-4'}>optional</div>
+                                    <div className="flex flex-wrap justify-center">
+                                        {renderEvaluationInfoBox()}
                                     </div>
                                 </div>
-                                <div className={'text-center mb-4'}>optional</div>
-                                <div className="flex flex-wrap justify-center">
-                                    {evaluationInfo.map((evaluation, index) => (
-                                        <div key={index} className="flex justify-center mx-2">
-                                            {renderEvaluationInfoBox(evaluation)}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                            <div className="flex justify-between w-full max-w-xl">
-                                <div>
-                                    <Link
-                                        href={{
-                                            pathname:
-                                                '/startingWizard/generalInformation/languages',
-                                            query: { plannerId: router.query.plannerId },
-                                        }}
-                                    >
+                                <div className="flex justify-between w-full max-w-xl">
+                                    <div>
                                         <button
                                             type="button"
                                             className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                            onClick={() => handleSubmit()}
+                                            onClick={methods.handleSubmit((data) =>
+                                                combinedSubmitRouteAndUpdate(
+                                                    data,
+                                                    '/startingWizard/generalInformation/languages'
+                                                )
+                                            )}
                                         >
                                             Zurück
                                         </button>
-                                    </Link>
-                                </div>
-                                <div>
-                                    <Link
-                                        href={{
-                                            pathname:
-                                                '/startingWizard/generalInformation/courseFormat',
-                                            query: { plannerId: router.query.plannerId },
-                                        }}
-                                    >
+                                    </div>
+                                    <div>
                                         <button
                                             type="button"
                                             className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                            onClick={() => handleSubmit()}
+                                            onClick={methods.handleSubmit(
+                                                (data) => {
+                                                    combinedSubmitRouteAndUpdate(
+                                                        data,
+                                                        '/startingWizard/generalInformation/courseFormat'
+                                                    );
+                                                },
+                                                async () => setIsPopupOpen(true)
+                                            )}
                                         >
                                             Weiter
                                         </button>
-                                    </Link>
+                                    </div>
                                 </div>
-                            </div>
-                        </form>
-                    )}
+                            </form>
+                        )}
+                    </div>
                 </div>
+                <SideProgressBarSectionBroadPlannerWithReactHookForm
+                    progressState={sideMenuStepsProgress}
+                    onSubmit={onSubmit}
+                />
             </div>
-            <SideProgressBarSectionBroadPlanner
-                progressState={sideMenuStepsProgress}
-                handleValidation={() => {}}
-                isValid={true}
-            />
-        </div>
+        </FormProvider>
     );
 }

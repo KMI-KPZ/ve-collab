@@ -20,7 +20,7 @@ import {
 } from '@/interfaces/startingWizard/sideProgressBar';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import { FormalConditionPartner } from '@/pages/startingWizard/generalInformation/formalConditions';
-import { FiInfo } from 'react-icons/fi';
+import { PiBookOpenText } from 'react-icons/pi';
 import { Tooltip } from '@/components/Tooltip';
 import { EvaluationPerPartner } from './evaluation';
 
@@ -122,53 +122,53 @@ export default function Partners() {
     const onSubmit = async () => {
         let updateFormalConditions: FormalConditionPartner[] = [];
         let updateEvaluationInfo: EvaluationPerPartner[] = [];
-        
+
         // the empty string is a placeholder to show to first input field,
         // but shouldnt be sent to the backend - so in order to not
         // crowd the partner-dependent attributes with the empty value,
         // only aggregate them if there are actual partners
-        if(!(partners.length === 1 && partners[0] === '')){
+        if (!(partners.length === 1 && partners[0] === '')) {
             updateFormalConditions = partners.map((partner) => {
                 const findFormalCondition = formalConditions.find(
                     (formalCondition) => formalCondition.username === partner
-                    );
-                    if (findFormalCondition) {
-                        return findFormalCondition;
-                    } else {
-                        return {
-                            username: partner,
-                            time: false,
-                            format: false,
-                            topic: false,
-                            goals: false,
-                            languages: false,
-                            media: false,
-                            technicalEquipment: false,
-                            evaluation: false,
-                            institutionalRequirements: false,
-                            dataProtection: false,
-                        };
-                    }
-                });
-                updateEvaluationInfo = partners.map((partner) => {
-                    const findEvaluationInfo = evaluationInfo.find(
-                        (evaluation) => evaluation.username === partner
-                        );
-                        if (findEvaluationInfo) {
-                            return findEvaluationInfo;
-                        } else {
-                            return {
-                                username: partner,
-                                is_graded: false,
-                                task_type: '',
-                                assessment_type: '',
-                                evaluation_while: '',
-                                evaluation_after: '',
-                            };
-                        }
-                    });
+                );
+                if (findFormalCondition) {
+                    return findFormalCondition;
+                } else {
+                    return {
+                        username: partner,
+                        time: false,
+                        format: false,
+                        topic: false,
+                        goals: false,
+                        languages: false,
+                        media: false,
+                        technicalEquipment: false,
+                        evaluation: false,
+                        institutionalRequirements: false,
+                        dataProtection: false,
+                    };
                 }
-                    
+            });
+            updateEvaluationInfo = partners.map((partner) => {
+                const findEvaluationInfo = evaluationInfo.find(
+                    (evaluation) => evaluation.username === partner
+                );
+                if (findEvaluationInfo) {
+                    return findEvaluationInfo;
+                } else {
+                    return {
+                        username: partner,
+                        is_graded: false,
+                        task_type: '',
+                        assessment_type: '',
+                        evaluation_while: '',
+                        evaluation_after: '',
+                    };
+                }
+            });
+        }
+
         // sanity check: if the author (i.e. creator of the plan) was not
         // manually added as a partner by the users, add their formal conditions
         // entry nonetheless, because otherwise he would not be included on the
@@ -197,37 +197,39 @@ export default function Partners() {
             });
         }
 
-        await fetchPOST(
-            '/planner/update_fields',
-            {
-                update: [
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'partners',
-                        value: partners,
-                    },
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'progress',
-                        value: {
-                            ...sideMenuStepsProgress,
-                            partners: ProgressState.completed,
+        if (partners.length <= 1 && partners[0] !== '') {
+            await fetchPOST(
+                '/planner/update_fields',
+                {
+                    update: [
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'partners',
+                            value: partners,
                         },
-                    },
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'formalities',
-                        value: updateFormalConditions,
-                    },
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'evaluation',
-                        value: updateEvaluationInfo,
-                    },
-                ],
-            },
-            session?.accessToken
-        );
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'progress',
+                            value: {
+                                ...sideMenuStepsProgress,
+                                partners: ProgressState.completed,
+                            },
+                        },
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'formalities',
+                            value: updateFormalConditions,
+                        },
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'evaluation',
+                            value: updateEvaluationInfo,
+                        },
+                    ],
+                },
+                session?.accessToken
+            );
+        }
 
         await router.push({
             pathname: '/startingWizard/generalInformation/externalParties',
@@ -272,7 +274,7 @@ export default function Partners() {
                                         Wer ist am Projekt beteiligt?
                                         <Tooltip tooltipsText="Tipps für die Partnersuche findest du hier in den Selbstlernmaterialien …">
                                             <Link target="_blank" href={'/content/Partnersuche'}>
-                                                <FiInfo size={30} color="#00748f" />
+                                                <PiBookOpenText size={30} color="#00748f" />
                                             </Link>
                                         </Tooltip>
                                     </div>

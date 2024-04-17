@@ -13,13 +13,17 @@ import {
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
 import { Tooltip } from '@/components/Tooltip';
 import Link from 'next/link';
-import { FiInfo } from 'react-icons/fi';
+import { PiBookOpenText } from 'react-icons/pi';
 import PopupSaveData from '@/components/StartingWizard/PopupSaveData';
 import SideProgressBarSectionBroadPlannerWithReactHookForm from '@/components/StartingWizard/SideProgressBarSectionBroadPlannerWithReactHookForm';
 
 interface FormValues {
     learningEnv: string;
 }
+
+const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
+    return formValues.learningEnv === '';
+};
 
 LearningEnvironment.auth = true;
 export default function LearningEnvironment() {
@@ -78,27 +82,29 @@ export default function LearningEnvironment() {
     }, [session, status, router, methods]);
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        await fetchPOST(
-            '/planner/update_fields',
-            {
-                update: [
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'learning_env',
-                        value: data.learningEnv,
-                    },
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'progress',
-                        value: {
-                            ...sideMenuStepsProgress,
-                            learning_env: ProgressState.completed,
+        if (!areAllFormValuesEmpty(data)) {
+            await fetchPOST(
+                '/planner/update_fields',
+                {
+                    update: [
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'learning_env',
+                            value: data.learningEnv,
                         },
-                    },
-                ],
-            },
-            session?.accessToken
-        );
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'progress',
+                            value: {
+                                ...sideMenuStepsProgress,
+                                learning_env: ProgressState.completed,
+                            },
+                        },
+                    ],
+                },
+                session?.accessToken
+            );
+        }
     };
 
     const combinedSubmitRouteAndUpdate = async (data: FormValues, url: string) => {
@@ -139,7 +145,7 @@ export default function LearningEnvironment() {
                                                 target="_blank"
                                                 href={'/content/Digitale%20Medien%20&%20Werkzeuge'}
                                             >
-                                                <FiInfo size={30} color="#00748f" />
+                                                <PiBookOpenText size={30} color="#00748f" />
                                             </Link>
                                         </Tooltip>
                                     </div>
