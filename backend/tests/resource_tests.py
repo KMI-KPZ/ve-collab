@@ -1004,6 +1004,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [self.default_comment],
             "likers": [],
@@ -1071,6 +1072,7 @@ class PostResourceTest(BaseResourceTestCase):
             post["wordpress_post_id"], self.default_post["wordpress_post_id"]
         )
         self.assertEqual(post["tags"], self.default_post["tags"])
+        self.assertEqual(post["plans"], self.default_post["plans"])
         self.assertEqual(post["files"], self.default_post["files"])
         self.assertEqual(post["comments"], self.default_post["comments"])
         self.assertEqual(post["likers"], self.default_post["likers"])
@@ -1089,6 +1091,7 @@ class PostResourceTest(BaseResourceTestCase):
             post["wordpress_post_id"], self.default_post["wordpress_post_id"]
         )
         self.assertEqual(post["tags"], self.default_post["tags"])
+        self.assertEqual(post["plans"], self.default_post["plans"])
         self.assertEqual(post["files"], self.default_post["files"])
         self.assertEqual(post["comments"], self.default_post["comments"])
         self.assertEqual(post["likers"], self.default_post["likers"])
@@ -1122,6 +1125,7 @@ class PostResourceTest(BaseResourceTestCase):
             post["wordpress_post_id"], self.default_post["wordpress_post_id"]
         )
         self.assertEqual(post["tags"], self.default_post["tags"])
+        self.assertEqual(post["plans"], self.default_post["plans"])
         self.assertEqual(post["files"], self.default_post["files"])
         self.assertEqual(post["comments"], self.default_post["comments"])
         self.assertEqual(post["likers"], self.default_post["likers"])
@@ -1140,6 +1144,7 @@ class PostResourceTest(BaseResourceTestCase):
             post["wordpress_post_id"], self.default_post["wordpress_post_id"]
         )
         self.assertEqual(post["tags"], self.default_post["tags"])
+        self.assertEqual(post["plans"], self.default_post["plans"])
         self.assertEqual(post["files"], self.default_post["files"])
         self.assertEqual(post["comments"], self.default_post["comments"])
         self.assertEqual(post["likers"], self.default_post["likers"])
@@ -1162,6 +1167,7 @@ class PostResourceTest(BaseResourceTestCase):
                 "isRepost": False,
                 "wordpress_post_id": None,
                 "tags": ["test", "test2"],
+                "plans": [],
                 "files": [],
                 "comments": [],
                 "likers": [],
@@ -1177,6 +1183,7 @@ class PostResourceTest(BaseResourceTestCase):
                 "isRepost": False,
                 "wordpress_post_id": None,
                 "tags": ["test2", "test3"],
+                "plans": [],
                 "files": [],
                 "comments": [],
                 "likers": [],
@@ -1211,6 +1218,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -1230,6 +1238,7 @@ class PostResourceTest(BaseResourceTestCase):
         self.assertEqual(post["isRepost"], new_post["isRepost"])
         self.assertEqual(post["wordpress_post_id"], new_post["wordpress_post_id"])
         self.assertEqual(post["tags"], new_post["tags"])
+        self.assertEqual(post["plans"], new_post["plans"])
         self.assertEqual(post["files"], new_post["files"])
         self.assertEqual(post["comments"], new_post["comments"])
         self.assertEqual(post["likers"], new_post["likers"])
@@ -1248,6 +1257,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -1272,6 +1282,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],  # change this too, expecting it to not be updated
             "likers": [],
@@ -1294,6 +1305,7 @@ class PostResourceTest(BaseResourceTestCase):
         self.assertEqual(post["isRepost"], new_post["isRepost"])
         self.assertEqual(post["wordpress_post_id"], new_post["wordpress_post_id"])
         self.assertEqual(post["tags"], new_post["tags"])
+        self.assertEqual(post["plans"], new_post["plans"])
         self.assertEqual(post["files"], new_post["files"])
         self.assertEqual(post["likers"], new_post["likers"])
 
@@ -1312,6 +1324,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -1373,6 +1386,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [
                 {
                     "file_id": file_id,
@@ -1439,6 +1453,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [
                 {
                     "file_id": file_id,
@@ -1493,6 +1508,7 @@ class PostResourceTest(BaseResourceTestCase):
                 "isRepost": False,
                 "wordpress_post_id": None,
                 "tags": ["test"],
+                "plans": [],
                 "files": [],
                 "comments": [],
                 "likers": [],
@@ -1507,6 +1523,7 @@ class PostResourceTest(BaseResourceTestCase):
                 "isRepost": False,
                 "wordpress_post_id": None,
                 "tags": ["test"],
+                "plans": [],
                 "files": [],
                 "comments": [],
                 "likers": [],
@@ -1725,6 +1742,7 @@ class PostResourceTest(BaseResourceTestCase):
             "pinned": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -1747,6 +1765,7 @@ class PostResourceTest(BaseResourceTestCase):
         self.assertEqual(post["pinned"], repost["pinned"])
         self.assertEqual(post["wordpress_post_id"], repost["wordpress_post_id"])
         self.assertEqual(post["tags"], repost["tags"])
+        self.assertEqual(post["plans"], repost["plans"])
         self.assertEqual(post["files"], repost["files"])
         self.assertEqual(post["comments"], repost["comments"])
         self.assertEqual(post["likers"], repost["likers"])
@@ -1771,6 +1790,7 @@ class PostResourceTest(BaseResourceTestCase):
             "pinned": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -1792,6 +1812,7 @@ class PostResourceTest(BaseResourceTestCase):
             "pinned": True,  # changed, but shouldnt be updated
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -1816,6 +1837,7 @@ class PostResourceTest(BaseResourceTestCase):
         self.assertNotEqual(post["pinned"], repost["pinned"])
         self.assertEqual(post["wordpress_post_id"], repost["wordpress_post_id"])
         self.assertEqual(post["tags"], repost["tags"])
+        self.assertEqual(post["plans"], repost["plans"])
         self.assertEqual(post["files"], repost["files"])
         self.assertEqual(post["comments"], repost["comments"])
         self.assertEqual(post["likers"], repost["likers"])
@@ -1837,6 +1859,7 @@ class PostResourceTest(BaseResourceTestCase):
             "pinned": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -1858,6 +1881,7 @@ class PostResourceTest(BaseResourceTestCase):
             "pinned": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -1884,6 +1908,7 @@ class PostResourceTest(BaseResourceTestCase):
             "pinned": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -2047,6 +2072,7 @@ class PostResourceTest(BaseResourceTestCase):
                 "isRepost": False,
                 "wordpress_post_id": None,
                 "tags": ["test"],
+                "plans": [],
                 "files": [],
                 "comments": [],
                 "likers": [],
@@ -2078,6 +2104,7 @@ class PostResourceTest(BaseResourceTestCase):
                 "isRepost": False,
                 "wordpress_post_id": None,
                 "tags": ["test"],
+                "plans": [],
                 "files": [],
                 "comments": [],
                 "likers": [],
@@ -2097,6 +2124,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -2129,6 +2157,7 @@ class PostResourceTest(BaseResourceTestCase):
                 "isRepost": False,
                 "wordpress_post_id": None,
                 "tags": ["test"],
+                "plans": [],
                 "files": [],
                 "comments": [],
                 "likers": [],
@@ -2169,6 +2198,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -2183,6 +2213,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -2215,6 +2246,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -2229,6 +2261,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -2245,6 +2278,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -2262,6 +2296,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -2309,6 +2344,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -2323,6 +2359,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -2355,6 +2392,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -2369,6 +2407,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -2385,6 +2424,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
