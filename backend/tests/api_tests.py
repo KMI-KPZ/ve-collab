@@ -1268,6 +1268,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
+                "plans": [],
                 "files": [],
                 "comments": [],
                 "likers": [],
@@ -1326,6 +1327,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
+                "plans": [],
                 "files": [],
                 "comments": [],
                 "likers": [],
@@ -1370,6 +1372,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
+                "plans": [],
                 "files": [],
                 "comments": [],
                 "likers": [],
@@ -1430,6 +1433,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
+                "plans": [],
                 "files": [],
                 "comments": [],
                 "likers": [],
@@ -1446,9 +1450,13 @@ class PostHandlerTest(BaseApiTestCase):
         expect: successfully create a new post
         """
 
+        plan_id1 = ObjectId()
+        plan_id2 = ObjectId()
+
         request_json = {
             "text": "unittest_test_post",
             "tags": json.dumps(["tag1", "tag2"]),
+            "plans": json.dumps([str(plan_id1), str(plan_id2)]),
         }
 
         request = MultipartEncoder(fields=request_json)
@@ -1475,6 +1483,7 @@ class PostHandlerTest(BaseApiTestCase):
         self.assertEqual(ObjectId(response["inserted_post"]["_id"]), db_state["_id"])
         self.assertEqual(response["inserted_post"]["text"], db_state["text"])
         self.assertEqual(response["inserted_post"]["tags"], db_state["tags"])
+        self.assertEqual(response["inserted_post"]["plans"], db_state["plans"])
         # the author has enhanced profile information to check for
         self.assertIn("author", response["inserted_post"])
         self.assertIn("username", response["inserted_post"]["author"])
@@ -1529,6 +1538,7 @@ class PostHandlerTest(BaseApiTestCase):
             "pinned",
             "wordpress_post_id",
             "tags",
+            "plans",
             "files",
         ]
         self.assertTrue(all(key in db_state for key in expected_keys))
@@ -1538,6 +1548,7 @@ class PostHandlerTest(BaseApiTestCase):
         self.assertFalse(db_state["pinned"])
         self.assertIsNone(db_state["wordpress_post_id"])
         self.assertEqual(db_state["tags"], json.loads(request_json["tags"]))
+        self.assertEqual(db_state["plans"], json.loads(request_json["plans"]))
         self.assertEqual(db_state["files"], [])
 
     def test_post_create_post_space(self):
@@ -1548,6 +1559,7 @@ class PostHandlerTest(BaseApiTestCase):
         request_json = {
             "text": "unittest_test_post",
             "tags": json.dumps(["tag1", "tag2"]),
+            "plans": json.dumps([]),
             "space": str(self.test_space_id),
         }
 
@@ -1579,6 +1591,7 @@ class PostHandlerTest(BaseApiTestCase):
             "pinned",
             "wordpress_post_id",
             "tags",
+            "plans",
             "files",
         ]
         self.assertTrue(all(key in db_state for key in expected_keys))
@@ -1588,6 +1601,7 @@ class PostHandlerTest(BaseApiTestCase):
         self.assertFalse(db_state["pinned"])
         self.assertIsNone(db_state["wordpress_post_id"])
         self.assertEqual(db_state["tags"], json.loads(request_json["tags"]))
+        self.assertEqual(db_state["plans"], json.loads(request_json["plans"]))
         self.assertEqual(db_state["files"], [])
 
     def test_post_create_post_space_with_file(self):
@@ -1603,6 +1617,7 @@ class PostHandlerTest(BaseApiTestCase):
         request_json = {
             "text": "unittest_test_post",
             "tags": json.dumps(["tag1", "tag2"]),
+            "plans": json.dumps([]),
             "space": str(self.test_space_id),
             "file_amount": "1",
             "file0": (self.test_file_name, file, "text/plain"),
@@ -1641,6 +1656,7 @@ class PostHandlerTest(BaseApiTestCase):
             "pinned",
             "wordpress_post_id",
             "tags",
+            "plans",
             "files",
         ]
         self.assertTrue(all(key in db_state for key in expected_keys))
@@ -1650,6 +1666,7 @@ class PostHandlerTest(BaseApiTestCase):
         self.assertFalse(db_state["pinned"])
         self.assertIsNone(db_state["wordpress_post_id"])
         self.assertEqual(db_state["tags"], json.loads(request_json["tags"]))
+        self.assertEqual(db_state["plans"], json.loads(request_json["plans"]))
         self.assertEqual(
             db_state["files"],
             [
@@ -1747,6 +1764,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
+                "plans": [],
                 "files": [],
             }
         )
@@ -1792,6 +1810,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
+                "plans": [],
                 "files": [],
             }
         )
@@ -1842,6 +1861,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
+                "plans": [],
                 "files": [],
             }
         )
@@ -1884,6 +1904,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
+                "plans": [],
                 "files": [],
             }
         )
@@ -1926,6 +1947,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
+                "plans": [],
                 "files": [],
             }
         )
@@ -1974,6 +1996,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
+                "plans": [],
                 "files": [],
             }
         )
@@ -2000,6 +2023,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
+                "plans": [],
                 "files": [],
             }
         )
@@ -2031,6 +2055,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
+                "plans": [],
                 "files": [],
             }
         )
@@ -2057,6 +2082,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
+                "plans": [],
                 "files": [],
             }
         )
@@ -2095,6 +2121,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
+                "plans": [],
                 "files": [],
             }
         )
@@ -2134,6 +2161,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
+                "plans": [],
                 "files": [
                     {
                         "file_id": _id,
@@ -2202,6 +2230,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
+                "plans": [],
                 "files": [],
             }
         )
@@ -2234,6 +2263,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
+                "plans": [],
                 "files": [],
             }
         )
@@ -2261,6 +2291,7 @@ class CommentHandlerTest(BaseApiTestCase):
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
+                "plans": [],
                 "files": [],
             }
         )
