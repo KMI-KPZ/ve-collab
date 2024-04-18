@@ -36,6 +36,7 @@ class Posts:
             "pinned",
             "wordpress_post_id",
             "tags",
+            "plans",
             "files",
             "comments",
             "likers",
