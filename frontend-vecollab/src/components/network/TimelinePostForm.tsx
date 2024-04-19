@@ -1,4 +1,4 @@
-import { fetchPOST } from "@/lib/backend";
+import { fetchGET, fetchPOST } from "@/lib/backend";
 import { useSession } from "next-auth/react";
 import React, { MouseEvent, FormEvent, MouseEventHandler, useState, useEffect } from "react";
 import { IoIosSend, IoMdClose } from "react-icons/io";
@@ -6,7 +6,7 @@ import AuthenticatedImage from "../AuthenticatedImage";
 import { BackendPost, BackendPostAuthor, BackendUserSnippet } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
 import PostHeader from "./PostHeader";
-import { MdArrowDropDown, MdAttachFile, MdEdit, MdFormatClear, MdInsertLink, MdLinkOff } from "react-icons/md";
+import { MdArrowDropDown, MdAttachFile, MdEdit, MdFormatClear, MdInsertLink, MdLinkOff, MdNewspaper } from "react-icons/md";
 import { RxFile } from "react-icons/rx";
 import LoadingAnimation from "../LoadingAnimation";
 import {
@@ -24,6 +24,9 @@ import TimelinePostText from "./TimelinePostText";
 import { sanitizedText } from "./sanitizedText";
 import Dialog from "../profile/Dialog";
 import Dropdown from "../Dropdown";
+import { PlanPreview } from "@/interfaces/planner/plannerInterfaces";
+import Link from "next/link";
+import Timestamp from "../Timestamp";
 
 interface Props {
     post?: BackendPost | undefined;
@@ -61,6 +64,9 @@ export default function TimelinePostForm(
     const [cursorInLink, setCursorInLink] = useState<false | HTMLLinkElement>(false);
     const [formHadFocus, setFormHadFocus] = useState<boolean>(false)
     const [isPlanDialogOpen, setIsPlanDialogOpen] = useState<boolean>(false)
+    const [loadingPlans, setLoadingPlans] = useState<boolean>(true)
+    const [plans, setPlans] = useState<PlanPreview[]>([])
+    const [plansToAttach, setPlansToAttach] = useState<PlanPreview[]>([])
     const domParser = new DOMParser()
 
     useEffect(() => {
@@ -125,6 +131,9 @@ export default function TimelinePostForm(
                             file_amount: filesToAttach.length,
                             ...filesToAttach.reduce((o, file, i) => ({ ...o, [`file${i}`]: file}), {})
                         }
+                        : {},
+                    plansToAttach.length
+                        ? { plans: JSON.stringify(plansToAttach.map(plan => plan._id.toString())) }
                         : {}
                 ),
                 session?.accessToken,
@@ -199,12 +208,33 @@ export default function TimelinePostForm(
                 break;
 
             case 'plan':
-                setIsPlanDialogOpen(true)
+                openPlanDialog()
                 break;
 
             default:
                 break;
         }
+    }
+
+    const openPlanDialog = () => {
+        setIsPlanDialogOpen(true)
+        if (plans.length) return
+
+        setLoadingPlans(true)
+
+        fetchGET('/planner/get_available', session?.accessToken)
+        .then(data => setPlans(data.plans))
+
+        setLoadingPlans(false)
+    }
+
+    const addPlanAttachment = (plan: PlanPreview) => {
+        setPlansToAttach(prev => [...prev, plan])
+        setIsPlanDialogOpen(false)
+    }
+
+    const removePlanAttachment = (plan: PlanPreview) => {
+        setPlansToAttach(prev => prev ? prev.filter((a, i) => a._id != plan._id) : [])
     }
 
     const openFileOpenDialog = () => {
@@ -294,6 +324,25 @@ export default function TimelinePostForm(
         }
     }
 
+    const PlansDialog = () => {
+        if (loadingPlans) return <LoadingAnimation />
+
+        if (!plans.length) return <>Noch keine Pläne erstellt. <Link href="/overviewProjects">Neuen Plan erstellen</Link></>
+
+        return (
+            <div className="flex flex-col max-h-96 overflow-y-auto">
+                {plans.map(plan => (
+                    <div key={plan._id} className="p-2 flex items-center gap-x-4 gap-y-6 rounded-md hover:bg-ve-collab-blue/25 hover:cursor-pointer" title="Auswählen" onClick={e => {addPlanAttachment(plan)}}>
+                        <MdNewspaper />
+                        <div className="text-xl font-bold grow-0">{plan.name}</div>
+                        <div className="text-sm text-gray-500 grow">{plan.author}</div>
+                        <Timestamp timestamp={plan.last_modified} className='text-sm' />
+                    </div>
+                ))}
+            </div>
+        )
+    }
+
     return (
         <>
             {/* link dialog */}
@@ -317,14 +366,10 @@ export default function TimelinePostForm(
             {/* VE plan dialog */}
             <Dialog
                 isOpen={isPlanDialogOpen}
-                title={'VE Plan'}
+                title={'Deine vorhandenen Pläne'}
                 onClose={() => setIsPlanDialogOpen(false)}
             >
-                <div className="w-[40vw]">
-                    <div>
-                        ...
-                    </div>
-                </div>
+                <div className="w-[40vw]"><PlansDialog /></div>
             </Dialog>
 
             <form onSubmit={onSubmit} ref={ref} className="relative">
@@ -410,7 +455,23 @@ export default function TimelinePostForm(
                                 <RxFile size={30} className="m-1" />
                                 {/* TODO preview for certain file types*/}
                                 <div className="truncate py-2">{file.name}</div>
-                                <button onClick={() => removeSelectedFile(index)} className="ml-2 p-2 rounded-full hover:bg-ve-collab-blue-light" title="Entfernen">
+                                <button onClick={() => removeSelectedFile(index)} className="ml-2 p-2 rounded-full hover:bg-ve-collab-blue-light" title="Datei Entfernen">
+                                        <IoMdClose />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {plansToAttach.length > 0 && (
+                    <div className="ml-16 mb-4 flex flex-col flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
+                        {plansToAttach.map((plan, index) => (
+                            <div className="mr-4 flex items-center gap-x-4 gap-y-6" key={index}>
+                                <MdNewspaper size={30} />
+                                <div className="truncate font-bold grow-0">{plan.name}</div>
+                                <div className="text-sm text-gray-500 gro">{plan.author}</div>
+                                <Timestamp timestamp={plan.last_modified} className='text-sm' />
+                                <button onClick={() => removePlanAttachment(plan)} className="ml-2 p-2 rounded-full hover:bg-ve-collab-blue-light" title="Plan Entfernen">
                                         <IoMdClose />
                                 </button>
                             </div>
