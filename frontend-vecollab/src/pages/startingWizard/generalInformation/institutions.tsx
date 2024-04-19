@@ -30,6 +30,18 @@ interface FormValues {
     institutions: Institution[];
 }
 
+const areAllFormValuesEmpty = (institutions: Institution[]): boolean => {
+    return institutions.every((institution) => {
+        return (
+            institution.name === '' &&
+            institution.school_type === '' &&
+            institution.country === '' &&
+            institution.departments.every((department) => department === '') &&
+            institution.academic_courses.every((course) => course === '')
+        );
+    });
+};
+
 Institutions.auth = true;
 export default function Institutions() {
     const { data: session, status } = useSession();
@@ -99,27 +111,29 @@ export default function Institutions() {
     });
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        await fetchPOST(
-            '/planner/update_fields',
-            {
-                update: [
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'institutions',
-                        value: data.institutions,
-                    },
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'progress',
-                        value: {
-                            ...sideMenuStepsProgress,
-                            institutions: ProgressState.completed,
+        if (!areAllFormValuesEmpty(data.institutions)) {
+            await fetchPOST(
+                '/planner/update_fields',
+                {
+                    update: [
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'institutions',
+                            value: data.institutions,
                         },
-                    },
-                ],
-            },
-            session?.accessToken
-        );
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'progress',
+                            value: {
+                                ...sideMenuStepsProgress,
+                                institutions: ProgressState.completed,
+                            },
+                        },
+                    ],
+                },
+                session?.accessToken
+            );
+        }
     };
 
     const combinedSubmitRouteAndUpdate = async (data: FormValues, url: string) => {

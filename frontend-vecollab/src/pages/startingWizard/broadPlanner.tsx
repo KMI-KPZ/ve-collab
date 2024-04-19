@@ -27,7 +27,7 @@ import trash from '@/images/icons/startingWizard/trash.png';
 import Image from 'next/image';
 import { Tooltip } from '@/components/Tooltip';
 import Link from 'next/link';
-import { FiInfo } from 'react-icons/fi';
+import { PiBookOpenText } from 'react-icons/pi';
 import SideProgressBarSectionBroadPlannerWithReactHookForm from '@/components/StartingWizard/SideProgressBarSectionBroadPlannerWithReactHookForm';
 import PopupSaveData from '@/components/StartingWizard/PopupSaveData';
 
@@ -40,6 +40,12 @@ interface BroadStep {
 interface FormValues {
     broadSteps: BroadStep[];
 }
+
+const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
+    return formValues.broadSteps.every((broadStep) => {
+        return broadStep.name === '' && broadStep.from === '' && broadStep.to === '';
+    });
+};
 
 export const defaultFineStepData: IFineStep = {
     name: '',
@@ -164,28 +170,30 @@ export default function BroadPlanner() {
         const sideMenuStateSteps: ISideProgressBarStateSteps[] = broadSteps.map((broadStep) => {
             return { [broadStep.name]: ProgressState.notStarted };
         });
-        const sideMenuStates: ISideProgressBarStates = {
-            ...sideMenuStepsProgress,
-            steps: sideMenuStateSteps,
-        };
-        await fetchPOST(
-            '/planner/update_fields',
-            {
-                update: [
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'steps',
-                        value: broadStepsData,
-                    },
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'progress',
-                        value: sideMenuStates,
-                    },
-                ],
-            },
-            session?.accessToken
-        );
+
+        if (!areAllFormValuesEmpty(data)) {
+            await fetchPOST(
+                '/planner/update_fields',
+                {
+                    update: [
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'steps',
+                            value: broadStepsData,
+                        },
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'progress',
+                            value: {
+                                ...sideMenuStepsProgress,
+                                steps: sideMenuStateSteps,
+                            },
+                        },
+                    ],
+                },
+                session?.accessToken
+            );
+        }
     };
 
     const combinedSubmitRouteAndUpdate = async (data: FormValues, url: string) => {
@@ -349,7 +357,7 @@ export default function BroadPlanner() {
                                             Plane den groben Ablauf
                                             <Tooltip tooltipsText="Ausführliche Informationen zur Etappenplanung und verschiedenen Typen und Modellen von VA findest du hier in den Selbstlernmaterialien …">
                                                 <Link target="_blank" href={'/content/VE-Planung'}>
-                                                    <FiInfo size={30} color="#00748f" />
+                                                    <PiBookOpenText size={30} color="#00748f" />
                                                 </Link>
                                             </Tooltip>
                                         </div>

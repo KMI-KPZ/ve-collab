@@ -32,6 +32,20 @@ interface FormValues {
     targetGroups: TargetGroup[];
 }
 
+const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
+    return formValues.targetGroups.every((targetGroup) => {
+        return (
+            targetGroup.name === '' &&
+            targetGroup.age_min === '' &&
+            targetGroup.age_max === '' &&
+            targetGroup.experience === '' &&
+            targetGroup.academic_course === '' &&
+            targetGroup.mother_tongue === '' &&
+            targetGroup.foreign_languages === ''
+        );
+    });
+};
+
 TargetGroups.auth = true;
 export default function TargetGroups() {
     const { data: session, status } = useSession();
@@ -104,27 +118,29 @@ export default function TargetGroups() {
     });
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        await fetchPOST(
-            '/planner/update_fields',
-            {
-                update: [
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'audience',
-                        value: data.targetGroups,
-                    },
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'progress',
-                        value: {
-                            ...sideMenuStepsProgress,
-                            audience: ProgressState.completed,
+        if (!areAllFormValuesEmpty(data)) {
+            await fetchPOST(
+                '/planner/update_fields',
+                {
+                    update: [
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'audience',
+                            value: data.targetGroups,
                         },
-                    },
-                ],
-            },
-            session?.accessToken
-        );
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'progress',
+                            value: {
+                                ...sideMenuStepsProgress,
+                                audience: ProgressState.completed,
+                            },
+                        },
+                    ],
+                },
+                session?.accessToken
+            );
+        }
     };
 
     const combinedSubmitRouteAndUpdate = async (data: FormValues, url: string) => {

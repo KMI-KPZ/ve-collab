@@ -14,14 +14,15 @@ import WhiteBox from '@/components/Layout/WhiteBox';
 import Link from 'next/link';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { Tooltip } from '@/components/Tooltip';
-import { FiInfo } from 'react-icons/fi';
-import { FormProvider, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
+import { PiBookOpenText } from 'react-icons/pi';
+import { Controller, FormProvider, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import PopupSaveData from '@/components/StartingWizard/PopupSaveData';
 import SideProgressBarSectionBroadPlannerWithReactHookForm from '@/components/StartingWizard/SideProgressBarSectionBroadPlannerWithReactHookForm';
+import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 
 export interface FormValues {
     courseFormat: string;
-    usePhysicalMobility: string;
+    usePhysicalMobility: boolean;
     physicalMobilities: PhysicalMobility[];
 }
 
@@ -30,6 +31,19 @@ export interface PhysicalMobility {
     timestamp_from: string;
     timestamp_to: string;
 }
+
+const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
+    return (
+        formValues.courseFormat === '' &&
+        formValues.physicalMobilities.every((mobility) => {
+            return (
+                mobility.location === '' &&
+                mobility.timestamp_from === '' &&
+                mobility.timestamp_to === ''
+            );
+        })
+    );
+};
 
 Realization.auth = true;
 export default function Realization() {
@@ -56,7 +70,7 @@ export default function Realization() {
         mode: 'onChange',
         defaultValues: {
             courseFormat: '',
-            usePhysicalMobility: 'false',
+            usePhysicalMobility: false,
             physicalMobilities: [{ location: '', timestamp_from: '', timestamp_to: '' }],
         },
     });
@@ -80,44 +94,45 @@ export default function Realization() {
         // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
         if (session) {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
-                (data) => {
-                    setLoading(false);
-                    if (data.plan.realization !== null) {
-                        methods.setValue('courseFormat', data.plan.realization);
-                    }
-                    if (data.plan.physical_mobility !== null) {
-                        methods.setValue(
-                            'usePhysicalMobility',
-                            String(data.plan.physical_mobility)
-                        );
-                    }
-                    if (
-                        data.plan.physical_mobilities !== null &&
-                        data.plan.physical_mobilities.length !== 0
-                    ) {
-                        const physical_mobilities: PhysicalMobility[] =
-                            data.plan.physical_mobilities.map(
-                                (physicalMobility: PhysicalMobility) => {
-                                    const { timestamp_from, timestamp_to, location } =
-                                        physicalMobility;
-                                    return {
-                                        location: location,
-                                        timestamp_from:
-                                            timestamp_from !== null
-                                                ? timestamp_from.split('T')[0]
-                                                : '', // react hook form only takes '2019-12-13'
-                                        timestamp_to:
-                                            timestamp_to !== null ? timestamp_to.split('T')[0] : '',
-                                    };
-                                }
-                            );
-                        methods.setValue('physicalMobilities', physical_mobilities);
-                    }
+                (data: { plan: IPlan }) => {
+                    if (data.plan !== undefined) {
+                        setLoading(false);
+                        if (data.plan.realization !== null) {
+                            methods.setValue('courseFormat', data.plan.realization);
+                        }
+                        if (data.plan.physical_mobility !== null) {
+                            methods.setValue('usePhysicalMobility', data.plan.physical_mobility);
+                        }
+                        if (
+                            data.plan.physical_mobilities !== null &&
+                            data.plan.physical_mobilities.length !== 0
+                        ) {
+                            const physical_mobilities: PhysicalMobility[] =
+                                data.plan.physical_mobilities.map(
+                                    (physicalMobility: PhysicalMobility) => {
+                                        const { timestamp_from, timestamp_to, location } =
+                                            physicalMobility;
+                                        return {
+                                            location: location,
+                                            timestamp_from:
+                                                timestamp_from !== null
+                                                    ? timestamp_from.split('T')[0]
+                                                    : '', // react hook form only takes '2019-12-13'
+                                            timestamp_to:
+                                                timestamp_to !== null
+                                                    ? timestamp_to.split('T')[0]
+                                                    : '',
+                                        };
+                                    }
+                                );
+                            methods.setValue('physicalMobilities', physical_mobilities);
+                        }
 
-                    setSteps(data.plan.steps);
+                        setSteps(data.plan.steps);
 
-                    if (data.plan.progress.length !== 0) {
-                        setSideMenuStepsProgress(data.plan.progress);
+                        if (data.plan.progress) {
+                            setSideMenuStepsProgress(data.plan.progress);
+                        }
                     }
                 }
             );
@@ -133,37 +148,39 @@ export default function Realization() {
     };
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        await fetchPOST(
-            '/planner/update_fields',
-            {
-                update: [
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'realization',
-                        value: data.courseFormat,
-                    },
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'physical_mobility',
-                        value: data.usePhysicalMobility === 'true',
-                    },
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'physical_mobilities',
-                        value: data.physicalMobilities,
-                    },
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'progress',
-                        value: {
-                            ...sideMenuStepsProgress,
-                            realization: ProgressState.completed,
+        if (!areAllFormValuesEmpty(data)) {
+            await fetchPOST(
+                '/planner/update_fields',
+                {
+                    update: [
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'realization',
+                            value: data.courseFormat,
                         },
-                    },
-                ],
-            },
-            session?.accessToken
-        );
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'physical_mobility',
+                            value: data.usePhysicalMobility,
+                        },
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'physical_mobilities',
+                            value: data.physicalMobilities,
+                        },
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'progress',
+                            value: {
+                                ...sideMenuStepsProgress,
+                                realization: ProgressState.completed,
+                            },
+                        },
+                    ],
+                },
+                session?.accessToken
+            );
+        }
     };
 
     const combinedSubmitRouteAndUpdate = async (data: FormValues, url: string) => {
@@ -255,6 +272,46 @@ export default function Realization() {
         ));
     };
 
+    function radioBooleanInput(control: any, name: any): JSX.Element {
+        return (
+            <Controller
+                control={control}
+                name={name}
+                render={({ field: { onChange, onBlur, value } }) => (
+                    <>
+                        <div className="flex my-1">
+                            <div>
+                                <label className="px-2 py-2">Ja</label>
+                            </div>
+                            <div>
+                                <input
+                                    type="radio"
+                                    className="border border-gray-400 rounded-lg p-2"
+                                    onBlur={onBlur} // notify when input is touched
+                                    onChange={() => onChange(true)} // send value to hook form
+                                    checked={value === true}
+                                />
+                            </div>
+                        </div>
+                        <div className="flex my-1">
+                            <div>
+                                <label className="px-2 py-2">Nein</label>
+                            </div>
+                            <div>
+                                <input
+                                    type="radio"
+                                    onBlur={onBlur} // notify when input is touched
+                                    onChange={() => onChange(false)} // send value to hook form
+                                    checked={value === false}
+                                />
+                            </div>
+                        </div>
+                    </>
+                )}
+            />
+        );
+    }
+
     return (
         <FormProvider {...methods}>
             <PopupSaveData
@@ -285,7 +342,7 @@ export default function Realization() {
                                                 target="_blank"
                                                 href={'/content/Digitale%20Medien%20&%20Werkzeuge'}
                                             >
-                                                <FiInfo size={30} color="#00748f" />
+                                                <PiBookOpenText size={30} color="#00748f" />
                                             </Link>
                                         </Tooltip>
                                     </div>
@@ -321,52 +378,13 @@ export default function Realization() {
                                                 begleitet?
                                             </p>
                                             <div className="flex w-40 justify-end gap-x-5">
-                                                <div className="flex my-1">
-                                                    <div>
-                                                        <label className="px-2 py-2">Ja</label>
-                                                    </div>
-                                                    <div>
-                                                        <input
-                                                            type="radio"
-                                                            className="border border-gray-400 rounded-lg p-2"
-                                                            value="true"
-                                                            {...methods.register(
-                                                                `usePhysicalMobility`,
-                                                                {
-                                                                    maxLength: {
-                                                                        value: 500,
-                                                                        message:
-                                                                            'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                                                                    },
-                                                                }
-                                                            )}
-                                                        />
-                                                    </div>
-                                                </div>
-                                                <div className="flex my-1">
-                                                    <div>
-                                                        <label className="px-2 py-2">Nein</label>
-                                                    </div>
-                                                    <div>
-                                                        <input
-                                                            type="radio"
-                                                            value="false"
-                                                            {...methods.register(
-                                                                `usePhysicalMobility`,
-                                                                {
-                                                                    maxLength: {
-                                                                        value: 500,
-                                                                        message:
-                                                                            'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                                                                    },
-                                                                }
-                                                            )}
-                                                        />
-                                                    </div>
-                                                </div>
+                                                {radioBooleanInput(
+                                                    methods.control,
+                                                    `usePhysicalMobility`
+                                                )}
                                             </div>
                                         </div>
-                                        {methods.watch('usePhysicalMobility') === 'true' && (
+                                        {methods.watch('usePhysicalMobility') && (
                                             <>
                                                 <div className="divide-y my-2 w-full">
                                                     {renderMobilitiesInputs()}
