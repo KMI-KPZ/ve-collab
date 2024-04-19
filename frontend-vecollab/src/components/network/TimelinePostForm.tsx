@@ -133,7 +133,7 @@ export default function TimelinePostForm(
                         }
                         : {},
                     plansToAttach.length
-                        ? { plans: plansToAttach.map(plan => plan._id) }
+                        ? { plans: JSON.stringify(plansToAttach.map(plan => plan._id.toString())) }
                         : {}
                 ),
                 session?.accessToken,
