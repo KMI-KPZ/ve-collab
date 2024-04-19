@@ -1,32 +1,21 @@
-import { fetchDELETE, fetchPOST, useGetAvailablePlans } from '@/lib/backend';
+import { fetchDELETE, useGetAvailablePlans } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
-import { useRouter } from 'next/router';
 import SuccessAlert from '@/components/SuccessAlert';
 import PlannerOverviewItem from '@/components/Plannner/PlannerOverviewItem';
 import Link from 'next/link';
 import LoadingAnimation from '@/components/LoadingAnimation';
+import ButtonNewPlan from '@/components/Plannner/ButtonNewPlan';
 
 // authentication is required on this page
 Overview.auth = true;
 export default function Overview() {
     const { data: session } = useSession();
-
-    const router = useRouter();
-
     const [successPopupOpen, setSuccessPopupOpen] = useState(false);
 
     // since using swr, plans is the new state based on the backend, which
     // can be refetched by calling mutate()
     const { data: plans, isLoading, error, mutate } = useGetAvailablePlans(session!.accessToken);
-
-    const createAndForwardNewPlanner = async () => {
-        const newPlanner = await fetchPOST('/planner/insert_empty', {}, session?.accessToken);
-        await router.push({
-            pathname: '/startingWizard/generalInformation/projectName',
-            query: { plannerId: newPlanner.inserted_id },
-        });
-    };
 
     const deletePlan = async (planId: string) => {
         const response = await fetchDELETE(
@@ -70,16 +59,7 @@ export default function Overview() {
                         )}
                     </div>
                     <div className="flex justify-around w-full">
-                        {session && (
-                            <div>
-                                <button
-                                    onClick={createAndForwardNewPlanner}
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                >
-                                    neuen Plan starten
-                                </button>
-                            </div>
-                        )}
+                        {session && (<ButtonNewPlan label='Neuen Plan starten' />)}
                         {!session && (
                             <div>
                                 <button

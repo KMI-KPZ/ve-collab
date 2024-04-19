@@ -27,9 +27,9 @@ export default function Post() {
     } = useGetPost(
         session!.accessToken, router.query.id as string)
 
-    const { data: space } = useGetSpace(session!.accessToken, post.space);
+    const { data: space } = useGetSpace(session!.accessToken, post?.space);
     const { data: allSpaces } = useGetAllSpaces(session!.accessToken)
-    const { data: spaceACLEntry } = useGetMySpaceACLEntry(session!.accessToken, post.space)
+    const { data: spaceACLEntry } = useGetMySpaceACLEntry(session!.accessToken, post?.space)
 
     // useEffect(() => {
     //     if (isLoadingPost || !post?.space) return
