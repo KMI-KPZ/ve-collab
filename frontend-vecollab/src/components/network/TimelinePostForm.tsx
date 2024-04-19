@@ -1,12 +1,12 @@
 import { fetchPOST } from "@/lib/backend";
 import { useSession } from "next-auth/react";
-import React, { FormEvent, MouseEventHandler, useState, useEffect } from "react";
+import React, { MouseEvent, FormEvent, MouseEventHandler, useState, useEffect } from "react";
 import { IoIosSend, IoMdClose } from "react-icons/io";
 import AuthenticatedImage from "../AuthenticatedImage";
 import { BackendPost, BackendPostAuthor, BackendUserSnippet } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
 import PostHeader from "./PostHeader";
-import { MdAttachFile, MdFormatClear, MdInsertLink, MdLinkOff } from "react-icons/md";
+import { MdArrowDropDown, MdAttachFile, MdEdit, MdFormatClear, MdInsertLink, MdLinkOff } from "react-icons/md";
 import { RxFile } from "react-icons/rx";
 import LoadingAnimation from "../LoadingAnimation";
 import {
@@ -23,11 +23,12 @@ import {
 import TimelinePostText from "./TimelinePostText";
 import { sanitizedText } from "./sanitizedText";
 import Dialog from "../profile/Dialog";
+import Dropdown from "../Dropdown";
 
 interface Props {
     post?: BackendPost | undefined;
     space?: string | undefined;
-    sharedPost?: BackendPost | null
+    postToRepost?: BackendPost | null
     onCancelForm?: Function;
     onCancelRepost?: MouseEventHandler;
     onUpdatedPost?: (text: string) => void
@@ -39,7 +40,7 @@ export default function TimelinePostForm(
 {
     post: postToEdit,
     space,
-    sharedPost: postToRepost,
+    postToRepost,
     onCancelForm,
     onCancelRepost,
     onCreatedPost,
@@ -51,17 +52,16 @@ export default function TimelinePostForm(
     const [filesToAttach, setFilesToAttach] = useState<File[] | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [text, setText] = useState<string>('');
-
-    const domParser = new DOMParser()
-
     const [userProfileSnippet, setUserProfileSnippet] = useState<BackendUserSnippet>();
-
     const [isLinkDialogOpen, setIsLinkDialogOpen] = useState<boolean>(false);
     const [selectedLinkText, setSelectedLinkText] = useState<{
         parentNode: Node,
         selectionStart: number,
         selectionEnd: number} | undefined>();
-    const [cursorInLink, setCursorInLink] = useState<false | HTMLElement>(false);
+    const [cursorInLink, setCursorInLink] = useState<false | HTMLLinkElement>(false);
+    const [formHadFocus, setFormHadFocus] = useState<boolean>(false)
+    const [isPlanDialogOpen, setIsPlanDialogOpen] = useState<boolean>(false)
+    const domParser = new DOMParser()
 
     useEffect(() => {
         if (!session?.user) return;
@@ -94,6 +94,7 @@ export default function TimelinePostForm(
 
     const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        // require domparser to check empty lines, eg `<p></p>`
         var newValueDoc = domParser.parseFromString(text, "text/html");
 
         if (text == "" || newValueDoc.body.innerText == '') return
@@ -191,6 +192,21 @@ export default function TimelinePostForm(
         if (onCancelForm) onCancelForm()
     }
 
+    const chooseAttachMedia = (value: string) => {
+        switch (value) {
+            case 'local':
+                openFileOpenDialog()
+                break;
+
+            case 'plan':
+                setIsPlanDialogOpen(true)
+                break;
+
+            default:
+                break;
+        }
+    }
+
     const openFileOpenDialog = () => {
         if (fileUploadRef?.current) fileUploadRef.current.click()
     }
@@ -234,25 +250,45 @@ export default function TimelinePostForm(
         event.preventDefault()
         const target = event.currentTarget.querySelector('input')
 
-        if (selectedLinkText !== undefined) {
+        if (!target?.value || target.value == '' || !target.value.startsWith('http')) {
+            return
+        }
+
+        if (cursorInLink !== false) {
+            // update existing link
+            cursorInLink.href = target.value
+        }
+        else if (selectedLinkText !== undefined) {
+            // create new link in selected range
             const range = new Range();
             range.setStart(selectedLinkText.parentNode, selectedLinkText.selectionStart)
             range.setEnd(selectedLinkText.parentNode, selectedLinkText.selectionEnd)
             var selection = window.getSelection();
             selection?.removeAllRanges();
             selection?.addRange(range);
-        }
-
-        if (target?.value) {
             document.execCommand('createLink', false, target.value );
         }
+
         setIsLinkDialogOpen(false)
         setSelectedLinkText(undefined)
     }
 
+    const openLinkEditor = (event: MouseEvent<HTMLButtonElement>) => {
+        event.preventDefault()
+        if (!cursorInLink) return
+
+        var selection = window.getSelection();
+        var range = document.createRange();
+        range.selectNodeContents(cursorInLink);
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+
+        setIsLinkDialogOpen(true)
+    }
+
     const editorCaretChanged = () => {
         if (window.getSelection()?.focusNode?.parentNode?.nodeName === 'A') {
-            setCursorInLink(window.getSelection()?.focusNode?.parentNode as HTMLElement)
+            setCursorInLink(window.getSelection()?.focusNode?.parentNode as HTMLLinkElement)
         } else {
             setCursorInLink(false)
         }
@@ -260,6 +296,7 @@ export default function TimelinePostForm(
 
     return (
         <>
+            {/* link dialog */}
             <Dialog
                 isOpen={isLinkDialogOpen}
                 title={'Link'}
@@ -268,7 +305,7 @@ export default function TimelinePostForm(
                 <div className="w-[20vw]">
                     <div>
                         <form onSubmit={submitNewLinkDialog}>
-                            <input type="text" name="url" autoComplete="off" className="border border-[#cccccc] rounded-l px-2 py-1" />
+                            <input type="url" name="url" defaultValue={cursorInLink ? cursorInLink.href : ''} autoComplete="off" autoFocus className="mr-2 p-2 border border-[#cccccc] rounded-md invalid:border-red-500" />
                             <button type="submit" className="my-2 py-2 px-5 rounded-lg bg-ve-collab-orange text-white">
                                 OK
                             </button>
@@ -276,23 +313,41 @@ export default function TimelinePostForm(
                     </div>
                 </div>
             </Dialog>
-            <form onSubmit={onSubmit} ref={ref} className="relative">
-                {cursorInLink && (
-                    <div style={{
-                            left: `${cursorInLink.offsetLeft-(cursorInLink.offsetWidth/2)}px`,
-                            top: `${2+cursorInLink.offsetHeight+cursorInLink.offsetTop}px`
-                        }}
-                        className={`absolute p-2 rounded-md bg-white shadow border text-ve-collab-blue hover:underline after:content-[' '] after:absolute after:bottom-full after:left-1/2 after:-ml-2 after:border after:border-4 after:border-transparent after:border-b-gray-300`}
-                    >
-                        <a href={cursorInLink.getAttribute('href') as string} target="_blank" rel="noreferrer">{cursorInLink.getAttribute('href') as string}</a>
+
+            {/* VE plan dialog */}
+            <Dialog
+                isOpen={isPlanDialogOpen}
+                title={'VE Plan'}
+                onClose={() => setIsPlanDialogOpen(false)}
+            >
+                <div className="w-[40vw]">
+                    <div>
+                        ...
                     </div>
-                )}
+                </div>
+            </Dialog>
+
+            <form onSubmit={onSubmit} ref={ref} className="relative">
                 {loading && (
                     <>
                         <div className="absolute w-full items-center top-10 z-20"><LoadingAnimation /></div>
                         <div className="absolute w-full h-full bg-white/50 z-10"></div>
                     </>
                 )}
+
+                {/* link tooltip  */}
+                {cursorInLink && (
+                    <div style={{
+                            left: `${cursorInLink.offsetLeft-(cursorInLink.offsetWidth/2)}px`,
+                            top: `${2+cursorInLink.offsetHeight+cursorInLink.offsetTop}px`
+                        }}
+                        className={`absolute p-2 rounded-md bg-white shadow border text-ve-collab-blue after:content-[' '] after:absolute after:bottom-full after:left-1/2 after:-ml-2 after:border after:border-4 after:border-transparent after:border-b-gray-300`}
+                    >
+                        <a href={cursorInLink.getAttribute('href') as string} className="hover:underline" title="Link öffnen" target="_blank" rel="noreferrer">{cursorInLink.getAttribute('href') as string}</a>
+                        <button onClick={e => openLinkEditor(e)} className="" title="Link bearbeiten"><MdEdit className="ml-2" /></button>
+                    </div>
+                )}
+
                 <div className="flex items-center mb-5">
                     {!postToEdit && (
                         <AuthenticatedImage
@@ -312,23 +367,26 @@ export default function TimelinePostForm(
                                 onChange={(e) => setText(sanitizedText(e.target.value))}
                                 onKeyUp={editorCaretChanged}
                                 onClick={editorCaretChanged}
+                                onFocus={e => setFormHadFocus(true)}
                             />
-                            <Toolbar>
-                                <BtnBold />
-                                <BtnItalic />
-                                <BtnUnderline />
-                                <BtnBulletList style={{ paddingLeft: "5px" }} />
-                                <BtnNumberedList style={{ paddingLeft: "5px" }} />
-                                <BtnLink />
-                                <BtnClearFormatting />
-                            </Toolbar>
+                            {(postToEdit || postToRepost || formHadFocus) && (
+                                <Toolbar>
+                                    <BtnBold />
+                                    <BtnItalic />
+                                    <BtnUnderline />
+                                    <BtnBulletList style={{ paddingLeft: "5px" }} />
+                                    <BtnNumberedList style={{ paddingLeft: "5px" }} />
+                                    <BtnLink />
+                                    <BtnClearFormatting />
+                                </Toolbar>
+                            )}
                         </EditorProvider>
                     </div>
                 </div>
 
                 {postToRepost && (
-                    <div className="my-5 ml-[50px] p-3 rounded bg-slate-200">
-                        <div className="flex items-center">
+                    <div className="my-5 ml-[50px] p-3 rounded bg-slate-100">
+                        <div className="flex items-center mb-6">
                             {postToRepost.isRepost
                                 ? ( <PostHeader author={postToRepost.repostAuthor as BackendPostAuthor} date={postToRepost.creation_date} /> )
                                 : ( <PostHeader author={postToRepost.author} date={postToRepost.creation_date} /> )
@@ -360,25 +418,28 @@ export default function TimelinePostForm(
                     </div>
                 )}
 
-                <div className="flex items-center">
+                <div className={`flex items-center ${(!postToEdit && !postToRepost && !formHadFocus) ? 'hidden' : ''}`}>
                     <div className="ml-auto">
-                        {postToEdit && (<button className={`mx-4 py-2 px-5 border border-ve-collab-orange rounded-lg`} title="Abbrechen" onClick={onCancel} type="button">
+                        {postToEdit && (<button className={`mx-4 py-2 px-5 border border-ve-collab-orange rounded-lg`} onClick={onCancel} type="button">
                             Abbrechen
                         </button>)}
                         {(!postToEdit && !postToRepost) && (
                             <>
-                                <button type="button" onClick={openFileOpenDialog} title="Datei hinzufügen" className="mx-4 px-5 py-2 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20">
-                                    <span className="relative">
-                                        <MdAttachFile className="mr-2 inline" /> Datei hinzufügen
-                                    </span>
-                                </button>
+                                <div title="Datei oder Plan hinzufügen" className="mx-4 px-5 py-2 inline rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20">
+                                    <Dropdown
+                                            options={[
+                                                {value: 'local', label: 'lokale Datei' },
+                                                {value: 'plan', label: 'VE Collab Plan' }
+                                            ]}
+                                            icon={<span className=""><MdAttachFile className="mr-2 inline" /> Medien hinzufügen <MdArrowDropDown className="inline" /></span>}
+                                            onSelect={value => {chooseAttachMedia(value)}}
+                                    />
+                                </div>
                                 <input type="file" multiple name="file" onChange={addFiles} className="hidden" ref={fileUploadRef} />
                             </>
                         )}
-                        <button type="submit" title="Senden" className="relative py-2 px-5 rounded-lg bg-ve-collab-orange text-white overflow-hidden transition-all before:absolute before:right-0 before:top-0 before:h-12 before:w-6 before:translate-x-12 before:rotate-6 before:bg-white before:opacity-10 before:duration-700 hover:before:-translate-x-40 ">
-                            <span className="relative">
-                                {postToEdit ? ( <>Aktualisieren</> ) : ( <><IoIosSend className="mr-2 inline" /> Senden</> )}
-                            </span>
+                        <button type="submit" className={`relative py-2 px-5 rounded-lg bg-ve-collab-orange text-white overflow-hidden ${text == '' ? 'cursor-default bg-ve-collab-orange/75' : ''}`}>
+                            {postToEdit ? ( <>Aktualisieren</> ) : ( <><IoIosSend className="mr-2 inline" /> Senden</> )}
                         </button>
                     </div>
                 </div>

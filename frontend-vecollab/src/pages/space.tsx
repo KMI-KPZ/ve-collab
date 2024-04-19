@@ -30,8 +30,6 @@ export default function Space() {
         { name: '', profilePicUrl: '', institution: '', preferredUsername: '' },
     ]);
 
-    const [showPinnedPosts, setShowPinnedPosts] = useState<boolean>(false)
-
     const isGlobalAdmin = useIsGlobalAdmin(session!.accessToken)
 
     // TODO use conditional fetching with the swr hook to wait for the router to be ready,
@@ -292,7 +290,6 @@ export default function Space() {
                             <div className={'mx-20 mb-2 px-5 relative -mt-16'}>
                                 <GroupHeader
                                     userIsAdmin={userIsAdmin}
-                                    toggleShowPinnedPosts={() => setShowPinnedPosts(!showPinnedPosts)}
                                 />
                             </div>
                             <Container>
@@ -305,8 +302,6 @@ export default function Space() {
                                                                 space={space._id}
                                                                 userIsAdmin={userIsAdmin()}
                                                                 spaceACL={spaceACLEntry}
-                                                                showPinnedPosts={showPinnedPosts}
-                                                                toggleShowPinnedPosts={() => setShowPinnedPosts(!showPinnedPosts)}
                                                             />;
                                                 case 'members':
                                                     return members();

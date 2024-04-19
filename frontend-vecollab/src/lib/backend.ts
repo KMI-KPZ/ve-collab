@@ -261,7 +261,7 @@ export function useGetCheckAdminUser(accessToken: string): {
 
 export function useGetSpace(
     accessToken: string,
-    spaceId: string
+    spaceId?: string
 ): {
     data: BackendSpace;
     isLoading: boolean;
@@ -269,11 +269,12 @@ export function useGetSpace(
     mutate: KeyedMutator<any>;
 } {
     const { data, error, isLoading, mutate } = useSWR(
-        [`/spaceadministration/info?id=${spaceId}`, accessToken],
+        spaceId
+            ? [`/spaceadministration/info?id=${spaceId}`, accessToken] : null,
         ([url, token]) => GETfetcher(url, token)
     );
     return {
-        data: isLoading || error ? [] : data.space,
+        data: isLoading || error || !spaceId ? null : data.space,
         isLoading,
         error,
         mutate,
@@ -352,18 +353,18 @@ export function useGetMySpaceRequests(accessToken: string): {
     };
 }
 
-export function useGetMySpaceACLEntry(accessToken: string, spaceId: string): {
+export function useGetMySpaceACLEntry(accessToken: string, spaceId?: string): {
     data: BackendSpaceACLEntry;
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;
 } {
     const { data, error, isLoading, mutate } = useSWR(
-        [`/space_acl/get?space=${spaceId}`, accessToken],
+        spaceId ? [`/space_acl/get?space=${spaceId}` , accessToken] : null,
         ([url, token]) => GETfetcher(url, token)
     );
     return {
-        data: isLoading || error ? '' : data.acl_entry,
+        data: isLoading || error || !spaceId ? null : data.acl_entry,
         isLoading,
         error,
         mutate,
@@ -434,6 +435,31 @@ export function useGetPinnedPosts(
         mutate,
     }
 }
+
+export function useGetPost(
+    accessToken: string,
+    post_id: string
+ ): {
+    data: BackendPost;
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        post_id
+            ? [`/posts?post_id=${post_id}`, accessToken]
+            : null,
+        ([url, token]) => GETfetcher(url, token)
+    );
+
+    return {
+        data: isLoading || error ? '' : data.post,
+        isLoading,
+        error,
+        mutate,
+    }
+}
+
 
 export async function fetchGET(relativeUrl: string, accessToken?: string) {
     const headers: { Authorization?: string } = {};
@@ -550,9 +576,20 @@ export async function fetchTaxonomy(): Promise<INode[]> {
     return data.taxonomy;
 }
 
-export async function getTopLevelNodes() {
+export async function getTopLevelNodes(): Promise<ITopLevelNode[]> {
     const taxonomy = await fetchTaxonomy();
-    return taxonomy.filter((node: any) => node.parent === 0);
+    return taxonomy.filter((node: any) => node.parent === 0) as ITopLevelNode[];
+}
+
+export async function getChildrenOfNode(nodeId: number): Promise<INode[]> {
+    const taxonomy = await fetchTaxonomy();
+    return taxonomy.filter((node: any) => node.parent === nodeId);
+}
+
+export async function getChildrenOfNodeByText(nodeText: string): Promise<INode[]> {
+    const taxonomy = await fetchTaxonomy();
+    const nodeId = taxonomy.find((node: INode) => node.text === nodeText)?.id;
+    return taxonomy.filter((node: INode) => node.parent === nodeId) as INode[];
 }
 
 export async function getMaterialNodesOfNodeByText(nodeText: string): Promise<IMaterialNode[]> {
