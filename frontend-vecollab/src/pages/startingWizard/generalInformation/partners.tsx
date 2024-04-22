@@ -1,28 +1,45 @@
 import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
-import SideProgressBarSectionBroadPlanner from '@/components/StartingWizard/SideProgressBarSectionBroadPlanner';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { FormEvent, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import AsyncCreatableSelect from 'react-select/async-creatable';
-import {
-    BackendProfileSnippetsResponse,
-    BackendSearchResponse,
-    BackendUserSnippet,
-} from '@/interfaces/api/apiInterfaces';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/startingWizard/sideProgressBar';
 import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
-import { FormalConditionPartner } from '@/pages/startingWizard/generalInformation/formalConditions';
 import { PiBookOpenText } from 'react-icons/pi';
 import { Tooltip } from '@/components/Tooltip';
-import { EvaluationPerPartner } from './evaluation';
+import { Controller, FormProvider, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
+import SideProgressBarSectionBroadPlannerWithReactHookForm from '@/components/StartingWizard/SideProgressBarSectionBroadPlannerWithReactHookForm';
+import PopupSaveData from '@/components/StartingWizard/PopupSaveData';
+import {
+    BackendProfileSnippetsResponse,
+    BackendSearchResponse,
+    BackendUserSnippet,
+} from '@/interfaces/api/apiInterfaces';
+import { FormalConditionPartner } from '@/pages/startingWizard/generalInformation/formalConditions';
+import { EvaluationPerPartner } from '@/pages/startingWizard/generalInformation/evaluation';
+
+export interface FormValues {
+    partners: Partner[];
+}
+
+interface Partner {
+    label: string;
+    value: string;
+}
+
+const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
+    return formValues.partners.every((partner) => {
+        return partner.label === '' && partner.value === '';
+    });
+};
 
 Partners.auth = true;
 export default function Partners() {
@@ -30,17 +47,15 @@ export default function Partners() {
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
-    const [formalConditions, setFormalConditions] = useState<FormalConditionPartner[]>([]);
-    const [evaluationInfo, setEvaluationInfo] = useState<EvaluationPerPartner[]>([]);
-    const [author, setAuthor] = useState<string>('');
-    const [partners, setPartners] = useState<string[]>(['']);
-    const [partnerProfileSnippets, setPartnerProfileSnippets] = useState<{
-        [Key: string]: BackendUserSnippet;
-    }>({});
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
     const [steps, setSteps] = useState<IFineStep[]>([]);
+    const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
+
+    const [formalConditions, setFormalConditions] = useState<FormalConditionPartner[]>([]);
+    const [evaluationInfo, setEvaluationInfo] = useState<EvaluationPerPartner[]>([]);
+    const [author, setAuthor] = useState<string>('');
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -51,12 +66,20 @@ export default function Partners() {
         }
     }, [session, status]);
 
+    const methods = useForm<FormValues>({
+        mode: 'onChange',
+        defaultValues: {
+            partners: [{ label: '', value: '' }],
+        },
+    });
+
     useEffect(() => {
         // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
         if (!router.isReady || status === 'loading') {
             setLoading(true);
             return;
         }
+
         // router is loaded, but still no plan ID in the query --> redirect to overview because we can't do anything without an ID
         if (!router.query.plannerId) {
             router.push('/overviewProjects');
@@ -66,25 +89,6 @@ export default function Partners() {
         if (session) {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
-                    if (data.plan.partners.length !== 0) {
-                        setPartners(data.plan.partners);
-
-                        // fetch profile snippets to be able to display the full name instead of username only
-                        fetchPOST(
-                            '/profile_snippets',
-                            { usernames: data.plan.partners },
-                            session.accessToken
-                        ).then((snippets: BackendProfileSnippetsResponse) => {
-                            let partnerSnippets: { [Key: string]: BackendUserSnippet } = {};
-                            snippets.user_snippets.forEach((element: BackendUserSnippet) => {
-                                partnerSnippets[element.username] = element;
-                            });
-                            setPartnerProfileSnippets(partnerSnippets);
-                            setLoading(false);
-                        });
-                    } else {
-                        setLoading(false);
-                    }
                     if (data.plan.progress.length !== 0) {
                         setSideMenuStepsProgress(data.plan.progress);
                     }
@@ -95,39 +99,65 @@ export default function Partners() {
                         setEvaluationInfo(data.plan.evaluation);
                     }
                     setAuthor(data.plan.author);
+                    if (data.plan.partners.length !== 0) {
+                        fetchPOST(
+                            '/profile_snippets',
+                            { usernames: data.plan.partners },
+                            session.accessToken
+                        ).then((snippets: BackendProfileSnippetsResponse) => {
+                            const usernameWithFirstAndLastName = data.plan.partners.map(
+                                (partner: string): Partner => {
+                                    const findFullUsername = snippets.user_snippets.find(
+                                        (backendUser: BackendUserSnippet) =>
+                                            backendUser.username === partner
+                                    );
+                                    if (findFullUsername !== undefined) {
+                                        return {
+                                            label:
+                                                findFullUsername.first_name +
+                                                ' ' +
+                                                findFullUsername.last_name +
+                                                ' - ' +
+                                                findFullUsername.username,
+                                            value: findFullUsername.username,
+                                        };
+                                    } else {
+                                        return {
+                                            label: partner,
+                                            value: partner,
+                                        };
+                                    }
+                                }
+                            );
+                            methods.setValue('partners', usernameWithFirstAndLastName);
+                        });
+                    }
                     setSteps(data.plan.steps);
                 }
             );
         }
-    }, [session, status, router]);
+    }, [session, status, methods, router]);
 
-    const modifyPartner = (index: number, value: string) => {
-        let newPartners = [...partners];
-        newPartners[index] = value;
-        setPartners(newPartners);
+    const { fields, append, remove, update } = useFieldArray({
+        name: 'partners',
+        control: methods.control,
+    });
+
+    const combinedSubmitRouteAndUpdate = async (data: FormValues, url: string) => {
+        onSubmit(data);
+        await router.push({
+            pathname: url,
+            query: { plannerId: router.query.plannerId },
+        });
     };
 
-    const addInputField = (e: FormEvent) => {
-        e.preventDefault();
-        setPartners([...partners, '']);
-    };
+    const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
+        const partners: string[] = data.partners.map((partner) => partner.value);
 
-    const removeInputField = (e: FormEvent) => {
-        e.preventDefault();
-        let copy = [...partners];
-        copy.pop();
-        setPartners(copy);
-    };
-
-    const onSubmit = async () => {
         let updateFormalConditions: FormalConditionPartner[] = [];
         let updateEvaluationInfo: EvaluationPerPartner[] = [];
 
-        // the empty string is a placeholder to show to first input field,
-        // but shouldnt be sent to the backend - so in order to not
-        // crowd the partner-dependent attributes with the empty value,
-        // only aggregate them if there are actual partners
-        if (!(partners.length === 1 && partners[0] === '')) {
+        if (partners.length >= 1 && partners[0] !== '') {
             updateFormalConditions = partners.map((partner) => {
                 const findFormalCondition = formalConditions.find(
                     (formalCondition) => formalCondition.username === partner
@@ -197,7 +227,7 @@ export default function Partners() {
             });
         }
 
-        if (partners.length <= 1 && partners[0] !== '') {
+        if (!areAllFormValuesEmpty(data)) {
             await fetchPOST(
                 '/planner/update_fields',
                 {
@@ -230,11 +260,14 @@ export default function Partners() {
                 session?.accessToken
             );
         }
+    };
 
-        await router.push({
-            pathname: '/startingWizard/generalInformation/externalParties',
-            query: { plannerId: router.query.plannerId },
-        });
+    const handleDelete = (index: number): void => {
+        if (fields.length > 1) {
+            remove(index);
+        } else {
+            update(index, { label: '', value: '' });
+        }
     };
 
     const loadOptions = (
@@ -256,98 +289,143 @@ export default function Partners() {
         }
     };
 
+    function createableAsyncSelect(control: any, name: any, index: number): JSX.Element {
+        return (
+            <Controller
+                name={name}
+                render={({ field: { onChange, onBlur, value } }) => (
+                    <AsyncCreatableSelect
+                        className="grow"
+                        instanceId={index.toString()}
+                        isClearable={true}
+                        loadOptions={loadOptions}
+                        onChange={onChange}
+                        onBlur={onBlur}
+                        value={value}
+                        placeholder={'Suche nach Nutzer:innen...'}
+                        getOptionLabel={(option) => option.label}
+                        formatCreateLabel={(inputValue) => (
+                            <span>
+                                kein Treffer? <b>{inputValue}</b> trotzdem verwenden
+                            </span>
+                        )}
+                    />
+                )}
+                control={control}
+            />
+        );
+    }
+
     return (
-        <div className="flex bg-pattern-left-blue-small bg-no-repeat">
-            <div className="flex flex-grow justify-center">
-                <div className="flex flex-col">
-                    <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
-                    {loading ? (
-                        <LoadingAnimation />
-                    ) : (
-                        <form
-                            onSubmit={onSubmit}
-                            className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between"
-                        >
-                            <div>
-                                <div className="flex">
-                                    <div className={'text-center font-bold text-4xl mb-2 relative'}>
-                                        Wer ist am Projekt beteiligt?
-                                        <Tooltip tooltipsText="Tipps für die Partnersuche findest du hier in den Selbstlernmaterialien …">
-                                            <Link target="_blank" href={'/content/Partnersuche'}>
-                                                <PiBookOpenText size={30} color="#00748f" />
-                                            </Link>
-                                        </Tooltip>
-                                    </div>
-                                </div>
-                                <div className={'text-center mb-20'}>optional</div>
-                                {partners.map((partner, index) => (
-                                    <div key={index} className="my-2">
-                                        <AsyncCreatableSelect
-                                            instanceId={index.toString()}
-                                            loadOptions={loadOptions}
-                                            onChange={(e) => modifyPartner(index, e!.value)}
-                                            value={{
-                                                label: partnerProfileSnippets[partner]
-                                                    ? `${partnerProfileSnippets[partner].first_name} ${partnerProfileSnippets[partner].last_name} - ${partner}`
-                                                    : `${partner}`,
-                                                value: partner,
-                                            }}
-                                            placeholder={'Suche nach Nutzer:innen...'}
-                                            getOptionLabel={(option) => option.label}
-                                            formatCreateLabel={(inputValue) => (
-                                                <span>
-                                                    kein Treffer? <b>{inputValue}</b> trotzdem
-                                                    verwenden
-                                                </span>
-                                            )}
-                                        />
-                                    </div>
-                                ))}
-                                <div className={'mt-3 flex justify-end'}>
-                                    <button onClick={removeInputField}>
-                                        <RxMinus size={20} />
-                                    </button>
-                                    <button onClick={addInputField}>
-                                        <RxPlus size={20} />
-                                    </button>
-                                </div>
-                            </div>
-                            <div className="flex justify-between w-full max-w-xl">
+        <FormProvider {...methods}>
+            <PopupSaveData
+                isOpen={isPopupOpen}
+                handleContinue={async () => {
+                    await router.push({
+                        pathname: '/startingWizard/generalInformation/institutions',
+                        query: {
+                            plannerId: router.query.plannerId,
+                        },
+                    });
+                }}
+                handleCancel={() => setIsPopupOpen(false)}
+            />
+            <div className="flex bg-pattern-left-blue-small bg-no-repeat">
+                <div className="flex flex-grow justify-center">
+                    <div className="flex flex-col">
+                        <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
+                        {loading ? (
+                            <LoadingAnimation />
+                        ) : (
+                            <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between">
                                 <div>
-                                    <Link
-                                        href={{
-                                            pathname:
-                                                '/startingWizard/generalInformation/projectName',
-                                            query: { plannerId: router.query.plannerId },
-                                        }}
-                                    >
+                                    <div className="flex">
+                                        <div
+                                            className={
+                                                'text-center font-bold text-4xl mb-2 relative'
+                                            }
+                                        >
+                                            Wer ist am Projekt beteiligt?
+                                            <Tooltip tooltipsText="Tipps für die Partnersuche findest du hier in den Selbstlernmaterialien …">
+                                                <Link
+                                                    target="_blank"
+                                                    href={'/content/Partnersuche'}
+                                                >
+                                                    <PiBookOpenText size={30} color="#00748f" />
+                                                </Link>
+                                            </Tooltip>
+                                        </div>
+                                    </div>
+                                    <div className={'text-center mb-20'}>optional</div>
+                                    {fields.map((partner, index) => (
+                                        <div
+                                            key={partner.id}
+                                            className=" flex my-2 justify-center items-center gap-x-3"
+                                        >
+                                            {createableAsyncSelect(
+                                                methods.control,
+                                                `partners.${index}`,
+                                                index
+                                            )}
+                                            <button onClick={() => handleDelete(index)}>
+                                                <RxMinus size={20} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                    <div className="flex justify-center mt-4">
+                                        <button
+                                            className="p-4 bg-white rounded-3xl shadow-2xl"
+                                            type="button"
+                                            onClick={() => {
+                                                append({ label: '', value: '' });
+                                            }}
+                                        >
+                                            <RxPlus size={20} />
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="flex justify-between w-full max-w-xl">
+                                    <div>
                                         <button
                                             type="button"
                                             className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                            onClick={methods.handleSubmit((data) => {
+                                                combinedSubmitRouteAndUpdate(
+                                                    data,
+                                                    '/startingWizard/generalInformation/projectName'
+                                                );
+                                            })}
                                         >
                                             Zurück
                                         </button>
-                                    </Link>
+                                    </div>
+                                    <div>
+                                        <button
+                                            type="button"
+                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                            onClick={methods.handleSubmit(
+                                                (data) => {
+                                                    combinedSubmitRouteAndUpdate(
+                                                        data,
+                                                        '/startingWizard/generalInformation/externalParties'
+                                                    );
+                                                },
+                                                async () => setIsPopupOpen(true)
+                                            )}
+                                        >
+                                            Weiter
+                                        </button>
+                                    </div>
                                 </div>
-                                <div>
-                                    <button
-                                        type="button"
-                                        onClick={onSubmit}
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                    >
-                                        Weiter
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    )}
+                            </form>
+                        )}
+                    </div>
                 </div>
+                <SideProgressBarSectionBroadPlannerWithReactHookForm
+                    progressState={sideMenuStepsProgress}
+                    onSubmit={onSubmit}
+                />
             </div>
-            <SideProgressBarSectionBroadPlanner
-                progressState={sideMenuStepsProgress}
-                handleValidation={() => {}}
-                isValid={true}
-            />
-        </div>
+        </FormProvider>
     );
 }
