@@ -1,5 +1,6 @@
 import json
 
+from resources.material_taxonomy import MaterialTaxonomyResource
 from error_reasons import MISSING_KEY_IN_HTTP_BODY_SLUG
 from handlers.base_handler import BaseHandler, auth_needed
 import util
@@ -133,3 +134,16 @@ class MaterialTaxonomyHandler(BaseHandler):
             )
 
         self.write({"success": True})
+
+
+class MBRTestHandler(BaseHandler):
+
+    def get(self):
+        with util.get_mongodb() as db:
+            tax = MaterialTaxonomyResource(db)
+            access_token = tax.acquire_mein_bildungsraum_access_token()
+            source_id = tax.get_mbr_source_id()
+            self.write({"access_token": access_token, "source_id": source_id})
+
+    def post(self):
+        pass

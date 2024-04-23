@@ -21,7 +21,7 @@ from handlers.authentication import LoginHandler, LoginCallbackHandler, LogoutHa
 from handlers.db_static_files import GridFSStaticFileHandler
 from handlers.healthcheck import HealthCheckHandler
 from handlers.import_personas import ImportDummyPersonasHandler
-from handlers.material_taxonomy import MaterialTaxonomyHandler
+from handlers.material_taxonomy import MBRTestHandler, MaterialTaxonomyHandler
 from handlers.network.chat import RoomHandler
 from handlers.network.follow import FollowHandler
 from handlers.network.notifications import NotificationHandler
@@ -129,6 +129,7 @@ def make_app(cookie_secret: str, debug: bool = False):
             (r"/material_taxonomy", MaterialTaxonomyHandler),
             (r"/import_personas", ImportDummyPersonasHandler),
             (r"/admin_check", AdminCheckHandler),
+            (r"/mbr_test", MBRTestHandler),
             (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
             (r"/assets/(.*)", tornado.web.StaticFileHandler, {"path": "./assets/"}),
             (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./html/"}),
@@ -304,6 +305,11 @@ def set_global_vars() -> None:
         "ELASTICSEARCH_BASE_URL",
         "ELASTICSEARCH_PASSWORD",
         "DUMMY_PERSONAS_PASSCODE",
+        "MBR_TOKEN_ENDPOINT",
+        "MBR_CLIENT_ID",
+        "MBR_CLIENT_SECRET",
+        "MBR_METADATA_BASE_ENDPOINT",
+        "MBR_METADATA_SOURCE_SLUG",
     ]
 
     for key in expected_env_keys:
@@ -325,6 +331,11 @@ def set_global_vars() -> None:
     global_vars.elasticsearch_username = os.getenv("ELASTICSEARCH_USERNAME", "elastic")
     global_vars.elasticsearch_password = os.getenv("ELASTICSEARCH_PASSWORD")
     global_vars.dummy_personas_passcode = os.getenv("DUMMY_PERSONAS_PASSCODE")
+    global_vars.mbr_token_endpoint = os.getenv("MBR_TOKEN_ENDPOINT")
+    global_vars.mbr_client_id = os.getenv("MBR_CLIENT_ID")
+    global_vars.mbr_client_secret = os.getenv("MBR_CLIENT_SECRET")
+    global_vars.mbr_metadata_base_endpoint = os.getenv("MBR_METADATA_BASE_ENDPOINT")
+    global_vars.mbr_metadata_source_slug = os.getenv("MBR_METADATA_SOURCE_SLUG")
     global_vars.keycloak_base_url = os.getenv("KEYCLOAK_BASE_URL")
     global_vars.keycloak_realm = os.getenv("KEYCLOAK_REALM")
     global_vars.keycloak_client_id = os.getenv("KEYCLOAK_CLIENT_ID")

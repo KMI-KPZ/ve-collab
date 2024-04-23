@@ -50,6 +50,11 @@ services:
       ELASTICSEARCH_PASSWORD:
       INITIAL_ADMIN_USERNAME:
       DUMMY_PERSONAS_PASSCODE:
+      MBR_TOKEN_ENDPOINT:
+      MBR_CLIENT_ID:
+      MBR_CLIENT_SECRET:
+      MBR_METADATA_BASE_ENDPOINT:
+      MBR_METADATA_SOURCE_SLUG:
     network_mode: host
     depends_on:
       mongodb:
