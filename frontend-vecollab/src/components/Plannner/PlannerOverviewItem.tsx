@@ -66,19 +66,23 @@ export default function PlannerOverviewItem({ plan, deleteCallback, refetchPlans
                 <div className='flex items-center'>
                 <div className='font-bold whitespace-nowrap'>{plan.name}</div>
                 {plan.author === session?.user.preferred_username && (
-                <div className='mx-2 flex text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity'>
-                    <button className='p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700' onClick={e => {
-                        e.stopPropagation()
-                        setIsShareDialogOpen(true);
-                    }}><MdShare /></button>
-                    <Link href={{
-                        pathname: '/startingWizard/generalInformation/projectName',
-                        query: { plannerId: plan._id }
-                    }}>
-                        <button className='p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700' onClick={e => e.stopPropagation()}><MdEdit /></button>
-                    </Link>
-                    <button className='p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700' onClick={e => deleteCallback(plan._id)}><MdDelete /></button>
-                </div>)}
+                    <div className='mx-2 flex text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity'>
+                        <button className='p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700' onClick={e => {
+                            e.stopPropagation()
+                            setIsShareDialogOpen(true);
+                        }}><MdShare /></button>
+                        <Link href={{
+                            pathname: '/startingWizard/generalInformation/projectName',
+                            query: { plannerId: plan._id }
+                        }}>
+                            <button className='p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700' onClick={e => e.stopPropagation()}><MdEdit /></button>
+                        </Link>
+                        <button className='p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700' onClick={e => {
+                            e.stopPropagation()
+                            deleteCallback(plan._id)
+                        }}><MdDelete /></button>
+                    </div>
+                )}
                 </div>
             </div>
             <div className='basis-1/6 px-3 '>{plan.author}</div>
