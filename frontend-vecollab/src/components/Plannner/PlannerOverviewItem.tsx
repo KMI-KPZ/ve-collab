@@ -5,12 +5,14 @@ import React, { useState } from 'react';
 import SharePlanForm from './SharePlanForm';
 import EditAccessList from './EditAccessList';
 import SuccessAlert from '@/components/SuccessAlert';
-import { RxArrowRight } from 'react-icons/rx';
-import PlanPreviewInformation from './PlanPreviewInformation';
-import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
-import PlanPreviewTopButtons from './PlanPreviewTopButtons';
-import Image from 'next/image';
-import imageInfoIcon from '@/images/icons/startingWizard/infoIcon.png';
+import { IPlan, PlanPreview } from '@/interfaces/planner/plannerInterfaces';
+import { ISideProgressBarStates, ProgressState } from '@/interfaces/startingWizard/sideProgressBar';
+import { MdCheck, MdShare, MdDelete, MdEdit } from 'react-icons/md';
+import Timestamp from '../Timestamp';
+import { useSession } from 'next-auth/react';
+import { fetchGET } from '@/lib/backend';
+import LoadingAnimation from '../LoadingAnimation';
+import { PlanOverview } from '../planSummary/planOverview';
 interface Props {
     plan: PlanPreview;
     deleteCallback: (planId: string) => Promise<void>;
@@ -18,50 +20,71 @@ interface Props {
 }
 
 export default function PlannerOverviewItem({ plan, deleteCallback, refetchPlansCallback }: Props) {
-    // sub components will use these setters to trigger the success popup display
-    // because it won't render if triggered within the Dialog for some reason
+
+    const { data: session } = useSession();
+
     const [successPopupOpen, setSuccessPopupOpen] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
 
     const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
 
-    const handleOpenShareDialog = () => {
-        setIsShareDialogOpen(true);
-    };
+    const [isSummaryOpen, setSummaryOpen] = useState(false);
+    const [loadingSummary, setLoadingSummary] = useState<boolean>(false)
+    const [planSummary, setPlanSummary] = useState<IPlan>()
+
     const handleCloseShareDialog = async () => {
         setIsShareDialogOpen(false);
         // refetch plans to have all up-to-date information without having to reload the page
         await refetchPlansCallback();
     };
 
+    const completedProgress: { [key: string]:  ProgressState } = {
+        name: ProgressState.completed
+    }
+
+    const isPlanProgressCompleted = (): boolean => {
+        return Object.keys(completedProgress).every(k => plan.progress[k as keyof ISideProgressBarStates] == completedProgress[k] )
+    }
+
+    const openPlanSummary = () => {
+        setSummaryOpen(true)
+        setLoadingSummary(true)
+
+        fetchGET(`/planner/get?_id=${plan._id}`, session?.accessToken)
+        .then(data => {
+            setPlanSummary(data.plan)
+            setLoadingSummary(false)
+        })
+    }
+
     return (
         <>
-            <div className="m-2">
-                <div className="flex rounded-lg shadow-md bg-gray-100 w-52 relative pb-6">
-                    <PlanPreviewTopButtons
-                        plan={plan}
-                        openShareDialogCallback={handleOpenShareDialog}
-                        deletePlanCallback={deleteCallback}
-                    />
-                    <PlanPreviewInformation plan={plan} />
-                    <Link
-                        href={{ pathname: `/planSummary/${plan._id}` }}
-                        className="absolute bg-gray-300 rounded-lg p-1.5 flex justify-center items-center bottom-0 left-0"
-                    >
-                        <Image src={imageInfoIcon} width={20} height={20} alt="info"></Image>
+            <div className='basis-1/12 px-3'>
+                {isPlanProgressCompleted() ?<MdCheck /> : <></>}
+            </div>
+            <div className='grow py-2 px-3 font-normal text-base group hover:cursor-pointer' onClick={() => openPlanSummary()}>
+                <div className='flex items-center'>
+                <div className='font-bold whitespace-nowrap'>{plan.name}</div>
+                {plan.author === session?.user.preferred_username && (
+                <div className='mx-2 flex text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity'>
+                    <button className='p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700' onClick={e => {
+                        e.stopPropagation()
+                        setIsShareDialogOpen(true);
+                    }}><MdShare /></button>
+                    <Link href={{
+                        pathname: '/startingWizard/generalInformation/projectName',
+                        query: { plannerId: plan._id }
+                    }}>
+                        <button className='p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700' onClick={e => e.stopPropagation()}><MdEdit /></button>
                     </Link>
-                    <Link
-                        href={{
-                            pathname: '/startingWizard/generalInformation/projectName',
-                            query: { plannerId: plan._id },
-                        }}
-                    >
-                        <button className="absolute bottom-0 right-0 bg-ve-collab-orange rounded-lg p-2 flex justify-center items-center">
-                            <RxArrowRight color="white" />
-                        </button>
-                    </Link>
+                    <button className='p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700' onClick={e => deleteCallback(plan._id)}><MdDelete /></button>
+                </div>)}
                 </div>
             </div>
+            <div className='basis-1/6 px-3 '>{plan.author}</div>
+            <div className='basis-1/6 px-3 '><Timestamp timestamp={plan.creation_timestamp} className='text-sm' /></div>
+            <div className='basis-1/6 px-3 '><Timestamp timestamp={plan.last_modified} className='text-sm' /></div>
+
             <Dialog isOpen={isShareDialogOpen} title={`Teilen`} onClose={handleCloseShareDialog}>
                 <div className="w-[30rem] h-[30rem] overflow-y-auto content-scrollbar relative">
                     <Tabs>
@@ -84,6 +107,29 @@ export default function PlannerOverviewItem({ plan, deleteCallback, refetchPlans
                     </Tabs>
                 </div>
             </Dialog>
+
+            <Dialog isOpen={isSummaryOpen} title={`Zusammenfassung des Plans`} onClose={() => {
+                setSummaryOpen(false)
+                setPlanSummary(undefined)
+
+            }}>
+                <div className="w-[70vw] h-[60vh] overflow-y-auto content-scrollbar relative">
+                    {loadingSummary
+                        ? (<LoadingAnimation />)
+                        : (
+                            <div className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-content">
+                                <div>
+                                    <div className={'text-center font-bold text-4xl mb-2'}>{plan.name}</div>
+                                </div>
+                                <div className="flex w-full">
+                                    <PlanOverview plan={planSummary!} />
+                                </div>
+                            </div>
+                        )
+                    }
+                </div>
+            </Dialog>
+
             {successPopupOpen && <SuccessAlert message={successMessage} />}
         </>
     );

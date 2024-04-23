@@ -15,6 +15,7 @@ export interface PlanPreview {
     write_access: string[];
     creation_timestamp: string;
     last_modified: string;
+    progress: ISideProgressBarStates;
 }
 
 export interface IPlan {

@@ -27,3 +27,11 @@ export function PlanOverview({ plan }: Props): JSX.Element {
         </div>
     );
 }
+
+export const showDataOrEmptySign = (data: any) => {
+    if (data === null || data === undefined || data === '') {
+        return '/';
+    } else {
+        return data;
+    }
+};
