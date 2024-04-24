@@ -1,4 +1,4 @@
-aiohttp==3.9.2
+aiohttp==3.9.4
 autopep8==1.7.0
 bidict==0.22.1
 black==24.3.0
