@@ -112,25 +112,33 @@ export default function PlannerOverviewItem({ plan, deleteCallback, refetchPlans
                 </div>
             </Dialog>
 
-            <Dialog isOpen={isSummaryOpen} title={`Zusammenfassung des Plans`} onClose={() => {
+            <Dialog isOpen={isSummaryOpen} title={`Zusammenfassung`} onClose={() => {
                 setSummaryOpen(false)
                 setPlanSummary(undefined)
 
             }}>
+                <div>
+                <button className='absolute top-0 right-10 m-4 p-2 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20' onClick={e => e.stopPropagation()}>
+                    <Link href={{
+                        pathname: '/startingWizard/generalInformation/projectName',
+                        query: { plannerId: plan._id }
+                    }}>
+                        <MdEdit className='inline' /> Bearbeiten
+                    </Link>
+                </button>
                 <div className="w-[70vw] h-[60vh] overflow-y-auto content-scrollbar relative">
                     {loadingSummary
                         ? (<LoadingAnimation />)
                         : (
                             <div className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-content">
-                                <div>
-                                    <div className={'text-center font-bold text-4xl mb-2'}>{plan.name}</div>
-                                </div>
+                                <div className={'text-center font-bold text-3xl mb-2'}>{plan.name}</div>
                                 <div className="flex w-full">
                                     <PlanOverview plan={planSummary!} />
                                 </div>
                             </div>
                         )
                     }
+                </div>
                 </div>
             </Dialog>
 
