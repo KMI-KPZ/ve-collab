@@ -8,6 +8,7 @@ import ButtonNewPlan from '@/components/Plannner/ButtonNewPlan';
 import Alert from '@/components/Alert';
 import { MdArrowDownward, MdArrowUpward } from 'react-icons/md';
 import { IPlan, PlanPreview } from '@/interfaces/planner/plannerInterfaces';
+import { ISideProgressBarStates } from '@/interfaces/startingWizard/sideProgressBar';
 
 // authentication is required on this page
 Overview.auth = true;
@@ -18,7 +19,12 @@ export default function Overview() {
     const [sortBy, setSortBy] = useState<string>('creation_timestamp')
     const [sortDesc, setSortDesc] = useState<boolean>(false)
 
-    const [filterBy, setFilterBy] = useState<string>()
+    const [filterBy, setFilterBy] = useState<{
+        planKey: keyof PlanPreview,
+        /** compare function to compare the plan[planKey].planValue of a plan   */
+        compare: (planValue: string|string[]|boolean|ISideProgressBarStates) => boolean
+        id?: string,
+    }[]>([])
 
     const { data: plans, isLoading, error, mutate } = useGetAvailablePlans(session!.accessToken);
 
@@ -29,15 +35,15 @@ export default function Overview() {
             let av = a[sortBy as keyof PlanPreview]?.toString() || ''
             let bv = b[sortBy as keyof PlanPreview]?.toString() || ''
 
-            if (!av || !bv) {
-                console.log('not av/bv', {av, bv, avs: a[sortBy as keyof PlanPreview], bvs: b[sortBy as keyof PlanPreview]});
-            }
-
             return sortDesc ? av.localeCompare(bv) : bv.localeCompare(av)
         });
 
-        if (filterBy) {
-            sortedPlans = sortedPlans.filter(p => p.name && p.name.toLowerCase().includes(filterBy.toLowerCase()))
+        if (filterBy && filterBy.length) {
+            filterBy.forEach(filter => {
+                sortedPlans = sortedPlans.filter(p => {
+                    return p[filter.planKey] && filter.compare(p[filter.planKey])
+                })
+            })
         }
 
         console.log({sortedPlans});
@@ -63,16 +69,18 @@ export default function Overview() {
         setTimeout(() => setSuccessPopupOpen(false), 2000);
     };
 
-    const applyFilter = (event: KeyboardEvent<HTMLInputElement>) => {
-        console.log('aply filter', event, event.currentTarget.value);
+    const handleFilterBy = (planKey: keyof PlanPreview, compare: (planValue: string|string[]|boolean|ISideProgressBarStates) => boolean, id?: string) => {
 
-        setFilterBy(event.currentTarget.value)
-
+        if (filterBy.find(f => f.planKey == planKey)) {
+            // update existing filter
+            setFilterBy(prev => prev.map(f => f.planKey == planKey ? {id, planKey, compare} : f) )
+        }
+        else {
+            setFilterBy(prev => [...prev, {id, planKey, compare}])
+        }
     }
 
     const SortArrow = ({by}: {by: keyof IPlan}) => {
-        // {sortBy == "name" && (<SortArrow by='' />)}
-
         if (by != sortBy) return <></>
 
         return <>{sortDesc
@@ -111,33 +119,66 @@ export default function Overview() {
                     </div>
 
                     <div>
-                        <div className='mb-4'>
+                        <div className='mb-4 flex items-center'>
 
-                            <input
-                                    className={'border border-[#cccccc] rounded-l px-2 py-1'}
-                                    type="text"
-                                    placeholder={'Nach Titel filtern ...'}
-                                    name='search'
-                                    autoComplete="off"
-                                    onKeyUp={e => applyFilter(e)}
-                            />
-                            {/* <MdFilterAlt /> */}
+                            <div className='flex flex-rows mr-4 divide-x divide-slate-900'>
+                                <div className='px-2'>
+                                    <button
+                                        className={`underline ${!filterBy.find(f => f.planKey == 'author') || filterBy.find(f => f.id == 'allAuthors') ? "text-blue-600": ""}`}
+                                        onClick={() => handleFilterBy('author', (planAuthor) => true, 'allAuthors')}
+                                    >Alle</button>
+                                </div>
+                                <div className='px-2'>
+                                    <button
+                                        className={`underline ${filterBy.find(f => f.id == 'iamAuthor') ? "text-blue-600": ""}`}
+                                        onClick={() => handleFilterBy('author', (planAuthor) => (planAuthor as string) == session?.user.preferred_username, 'iamAuthor')}
+                                    >Eigene</button>
+                                </div>
+                                <div className='px-2'>
+                                    <button
+                                        className={`underline ${filterBy.find(f => f.id == 'otherAuthor') ? "text-blue-600": ""}`}
+                                        onClick={() => handleFilterBy('author', (planAuthor) => (planAuthor as string) != session?.user.preferred_username, 'otherAuthor')}
+                                    >Mit mir geteilte</button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <input
+                                        className={'border border-[#cccccc] rounded-l px-2 py-1'}
+                                        type="text"
+                                        placeholder={'Nach Titel filtern ...'}
+                                        name='search'
+                                        autoComplete="off"
+                                        onKeyUp={event => {
+                                            // event.persist()
+                                            handleFilterBy('name', (planName) => {
+                                                // event currentTarget is not available even with prev event.persist(). Why??
+                                                return (planName as string).toLowerCase().includes((event.target as HTMLInputElement).value.toLowerCase())
+                                            } )
+                                        }}
+                                />
+                                {/* <MdFilterAlt /> */}
+                            </div>
 
                         </div>
 
                         <div className="rounded-lg shadow bg-white overflow-scroll md:overflow-auto w-full text-left border-1 border-gray-400">
-                            <div className='flex flex-row items-center bg-gray-300 rounded-t-lg text-base font-semibold'>
-                                    <div className='basis-1/12 px-3 '>Progress</div>
+                            <div className='flex flex-row space-x-3 items-center bg-gray-300 rounded-t-lg text-base font-semibold'>
+                                    <div className='basis-1/12 text-center'>
+                                        Progress
+                                    </div>
                                     <div className='grow p-3 hover:underline hover:cursor-pointer group' onClick={() => handleSortBy('name')}>
                                         Name
                                         <SortArrow by="name" />
                                     </div>
-                                    <div className='basis-1/6 px-3'>Autor</div>
-                                    <div className='basis-1/6 px-3 hover:underline hover:cursor-pointer group' onClick={() => handleSortBy('last_modified')}>
+                                    <div className='basis-1/6'>
+                                        Autor
+                                    </div>
+                                    <div className='basis-1/6 hover:underline hover:cursor-pointer group' onClick={() => handleSortBy('last_modified')}>
                                         Geändert
                                         <SortArrow by="last_modified" />
                                     </div>
-                                    <div className='basis-1/6 px-3 hover:underline hover:cursor-pointer group' onClick={() => handleSortBy('creation_timestamp')}>
+                                    <div className='basis-1/6 hover:underline hover:cursor-pointer group' onClick={() => handleSortBy('creation_timestamp')}>
                                         Erstellt
                                         <SortArrow by="creation_timestamp" />
                                     </div>
@@ -145,22 +186,20 @@ export default function Overview() {
 
                             <div>
                                 {isLoading
-                                    ? (<LoadingAnimation size='small' />)
-                                    : <>
-                                        {sortedPlans.length == 0
-                                            ? <>Noch keine Pläne erstellt</>
-                                            : (sortedPlans.map((plan, index) => (
-                                                <div key={index} className='flex flex-row items-center border-b border-bg-gray-300 hover:bg-gray-100'>
-                                                    <PlannerOverviewItem
-                                                        key={index}
-                                                        plan={plan}
-                                                        deleteCallback={deletePlan}
-                                                        refetchPlansCallback={mutate}
-                                                    />
-                                                </div>
-                                            )))
-                                        }
-                                    </>
+                                    ? ( <div className='m-12'><LoadingAnimation size='small' /> lade Pläne ...</div> )
+                                    : (sortedPlans.length == 0
+                                        ? <div className='m-12'>Noch keine Pläne erstellt</div>
+                                        : (sortedPlans.map((plan, index) => (
+                                            <div key={index} className='flex flex-row space-x-3 items-center border-b border-bg-gray-300 hover:bg-gray-100'>
+                                                <PlannerOverviewItem
+                                                    key={index}
+                                                    plan={plan}
+                                                    deleteCallback={deletePlan}
+                                                    refetchPlansCallback={mutate}
+                                                />
+                                            </div>
+                                        )))
+                                    )
                                 }
                             </div>
                         </div>
