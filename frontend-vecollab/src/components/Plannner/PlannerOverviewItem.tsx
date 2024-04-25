@@ -22,6 +22,7 @@ interface Props {
 export default function PlannerOverviewItem({ plan, deleteCallback, refetchPlansCallback }: Props) {
 
     const { data: session } = useSession();
+    const username = session?.user.preferred_username
 
     const [successPopupOpen, setSuccessPopupOpen] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
@@ -57,6 +58,9 @@ export default function PlannerOverviewItem({ plan, deleteCallback, refetchPlans
         })
     }
 
+    // ensures that we have the username in the next return ...
+    if (!session || !username) return (<></>)
+
     return (
         <>
             <div className='basis-1/12 px-3'>
@@ -65,12 +69,17 @@ export default function PlannerOverviewItem({ plan, deleteCallback, refetchPlans
             <div className='grow py-2 px-3 font-normal text-base group hover:cursor-pointer' onClick={() => openPlanSummary()}>
                 <div className='flex items-center'>
                 <div className='font-bold whitespace-nowrap'>{plan.name}</div>
-                {plan.author === session?.user.preferred_username && (
+                {plan.write_access.includes(username) && (
                     <div className='mx-2 flex text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity'>
                         <button className='p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700' onClick={e => {
                             e.stopPropagation()
                             setIsShareDialogOpen(true);
-                        }}><MdShare /></button>
+                        }}>
+                            {plan.write_access.length > 1 || plan.read_access.length > 1
+                                ? <MdShare className='text-lime-600' title='geteilt' />
+                                : <MdShare />
+                            }
+                        </button>
                         <Link href={{
                             pathname: '/startingWizard/generalInformation/projectName',
                             query: { plannerId: plan._id }
@@ -85,7 +94,13 @@ export default function PlannerOverviewItem({ plan, deleteCallback, refetchPlans
                 )}
                 </div>
             </div>
-            <div className='basis-1/6 px-3 '>{plan.author}</div>
+            <div className='basis-1/6 px-3 '>
+
+                {plan.author === username
+                    ? <>{plan.author}</>
+                    : <span title='geteilt von'><MdShare className='inline m-1 text-slate-900' /> {plan.author}</span>
+                }
+            </div>
             <div className='basis-1/6 px-3 '><Timestamp timestamp={plan.creation_timestamp} className='text-sm' /></div>
             <div className='basis-1/6 px-3 '><Timestamp timestamp={plan.last_modified} className='text-sm' /></div>
 
@@ -112,33 +127,35 @@ export default function PlannerOverviewItem({ plan, deleteCallback, refetchPlans
                 </div>
             </Dialog>
 
-            <Dialog isOpen={isSummaryOpen} title={`Zusammenfassung`} onClose={() => {
+            <Dialog isOpen={isSummaryOpen} title="Zusammenfassung" onClose={() => {
                 setSummaryOpen(false)
                 setPlanSummary(undefined)
 
             }}>
                 <div>
-                <button className='absolute top-0 right-10 m-4 p-2 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20' onClick={e => e.stopPropagation()}>
-                    <Link href={{
-                        pathname: '/startingWizard/generalInformation/projectName',
-                        query: { plannerId: plan._id }
-                    }}>
-                        <MdEdit className='inline' /> Bearbeiten
-                    </Link>
-                </button>
-                <div className="w-[70vw] h-[60vh] overflow-y-auto content-scrollbar relative">
-                    {loadingSummary
-                        ? (<LoadingAnimation />)
-                        : (
-                            <div className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col justify-content">
-                                <div className={'text-center font-bold text-3xl mb-2'}>{plan.name}</div>
-                                <div className="flex w-full">
-                                    <PlanOverview plan={planSummary!} />
+                    {plan.write_access.includes(username) && (
+                        <button className='absolute top-0 right-10 m-4 p-2 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20' onClick={e => e.stopPropagation()}>
+                            <Link href={{
+                                pathname: '/startingWizard/generalInformation/projectName',
+                                query: { plannerId: plan._id }
+                            }}>
+                                <MdEdit className='inline' /> Bearbeiten
+                            </Link>
+                        </button>
+                    )}
+                    <div className="w-[70vw] h-[60vh] overflow-y-auto content-scrollbar relative">
+                        {loadingSummary
+                            ? (<LoadingAnimation />)
+                            : (
+                                <div className="gap-y-6 w-full px-12 py-6 max-w-screen-2xl items-center flex flex-col justify-content">
+                                    <div className={'text-center font-bold text-3xl mb-2'}>{plan.name}</div>
+                                    <div className="flex w-full">
+                                        <PlanOverview plan={planSummary!} />
+                                    </div>
                                 </div>
-                            </div>
-                        )
-                    }
-                </div>
+                            )
+                        }
+                    </div>
                 </div>
             </Dialog>
 
