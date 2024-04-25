@@ -49,7 +49,7 @@ export default function Overview() {
         console.log({sortedPlans});
 
         setSortedPlans([...sortedPlans])
-    }, [plans, sortBy, sortDesc, filterBy])
+    }, [plans, isLoading, sortBy, sortDesc, filterBy])
 
     const handleSortBy = (key: keyof PlanPreview) => {
         setSortDesc(prev => !prev)
