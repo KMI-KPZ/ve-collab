@@ -69,7 +69,8 @@ export function useGetProfileSnippets(usernames?: string[]): {
 }
 
 export function useGetAvailablePlans(accessToken: string): {
-    data: PlanPreview[];
+    // data_preview: PlanPreview[];
+    data: PlanPreview[]
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;
