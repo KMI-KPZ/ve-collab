@@ -127,7 +127,7 @@ export default function Overview() {
 
                         <div className="rounded-lg shadow bg-white overflow-scroll md:overflow-auto w-full text-left border-1 border-gray-400">
                             <div className='flex flex-row items-center bg-gray-300 rounded-t-lg text-base font-semibold'>
-                                    <div className='basis-1/12 px-3 '>Status</div>
+                                    <div className='basis-1/12 px-3 '>Progress</div>
                                     <div className='grow p-3 hover:underline hover:cursor-pointer group' onClick={() => handleSortBy('name')}>
                                         Name
                                         <SortArrow by="name" />
@@ -145,19 +145,22 @@ export default function Overview() {
 
                             <div>
                                 {isLoading
-                                    ? (<LoadingAnimation />)
-                                    : (
-                                        sortedPlans.map((plan, index) => (
-                                            <div key={index} className='flex flex-row items-center border-b border-bg-gray-300 hover:bg-gray-100'>
-                                                <PlannerOverviewItem
-                                                    key={index}
-                                                    plan={plan}
-                                                    deleteCallback={deletePlan}
-                                                    refetchPlansCallback={mutate}
-                                                />
-                                            </div>
-                                        ))
-                                    )
+                                    ? (<LoadingAnimation size='small' />)
+                                    : <>
+                                        {sortedPlans.length == 0
+                                            ? <>Noch keine Pläne erstellt</>
+                                            : (sortedPlans.map((plan, index) => (
+                                                <div key={index} className='flex flex-row items-center border-b border-bg-gray-300 hover:bg-gray-100'>
+                                                    <PlannerOverviewItem
+                                                        key={index}
+                                                        plan={plan}
+                                                        deleteCallback={deletePlan}
+                                                        refetchPlansCallback={mutate}
+                                                    />
+                                                </div>
+                                            )))
+                                        }
+                                    </>
                                 }
                             </div>
                         </div>
