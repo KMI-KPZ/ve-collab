@@ -1,2 +1,0 @@
-(this["webpackJsonprre-openKnowledgeworker"]=this["webpackJsonprre-openKnowledgeworker"]||[]).push([[149],{2057:function(e,n,r){"use strict";r.r(n),r.d(n,"getPdfMake",(function(){return t}));var o=r(1914);const s=r(1915);s.vfs=o.pdfMake.vfs;const t=()=>s}}]);
-//# sourceMappingURL=https://sourcemaps.intern.chemmedia.de/rre-view-openKnowledgeworker/23.7.5296/pdfMake.7ddef1b5.chunk.js.map
