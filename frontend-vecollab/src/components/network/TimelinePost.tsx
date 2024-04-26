@@ -17,6 +17,7 @@ import TimelinePostText from "./TimelinePostText";
 import AuthenticatedImage from "../AuthenticatedImage";
 import { KeyedMutator } from "swr";
 import Alert from "../Alert";
+import ConfirmDialog from "../Confirm";
 
 interface Props {
     post: BackendPost
@@ -59,6 +60,7 @@ export default function TimelinePost(
     const [shareDialogIsOpen, setShareDialogIsOpen] = useState<boolean>(false)
     const [loadingLikers, setLoadingLikers] = useState<boolean>(false)
     const [likers, setLikers] = useState<BackendPostAuthor[]>([])
+    const [askDeletion, setAskDeletion] = useState<boolean>(false)
 
     // implement infinity scroll (detect intersection of window viewport with last post)
     useEffect(() => {
@@ -170,7 +172,7 @@ export default function TimelinePost(
                 setShareDialogIsOpen(true)
                 break;
             case 'remove':
-                deletePost()
+                setAskDeletion(true)
                 break;
             case 'edit':
                 setEditPost(true)
@@ -293,7 +295,7 @@ export default function TimelinePost(
                 { value: 'remove-comment', label: 'löschen', icon: <MdDeleteOutline /> }
             ]} onSelect={value => { handleSelectOption(value, comment) }} />
         }
-        return null
+        return <></>
     }
 
     const FileIcon = ({_file}: {_file: BackendPostFile}) => {
@@ -349,6 +351,12 @@ export default function TimelinePost(
                 </Alert>
             )}
 
+            {askDeletion && (
+                <ConfirmDialog message="Beitrag löschen?" handler={proceed => {
+                    if (proceed) deletePost()
+                    setAskDeletion(false)
+                }} />
+            )}
 
             <div ref={ref} className={`${wbRemoved ? "opacity-0 transition-opacity ease-in-out delay-50 duration-300" : "opacity-100 transition-none" }
                 group/post p-4 mb-4 bg-white rounded shadow`}
