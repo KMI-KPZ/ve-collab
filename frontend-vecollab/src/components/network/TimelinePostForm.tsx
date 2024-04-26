@@ -27,6 +27,7 @@ import Dropdown from "../Dropdown";
 import { PlanPreview } from "@/interfaces/planner/plannerInterfaces";
 import Link from "next/link";
 import Timestamp from "../Timestamp";
+import ButtonNewPlan from "../Plannner/ButtonNewPlan";
 
 interface Props {
     post?: BackendPost | undefined;
@@ -327,7 +328,7 @@ export default function TimelinePostForm(
     const PlansDialog = () => {
         if (loadingPlans) return <LoadingAnimation />
 
-        if (!plans.length) return <>Noch keine Pläne erstellt. <Link href="/overviewProjects">Neuen Plan erstellen</Link></>
+        if (!plans.length) return <>Noch keine Pläne erstellt. <ButtonNewPlan label="Neuen Plan erstellen" /></>
 
         return (
             <div className="flex flex-col max-h-96 overflow-y-auto">
@@ -335,8 +336,8 @@ export default function TimelinePostForm(
                     <div key={plan._id} className="p-2 flex items-center gap-x-4 gap-y-6 rounded-md hover:bg-ve-collab-blue/25 hover:cursor-pointer" title="Auswählen" onClick={e => {addPlanAttachment(plan)}}>
                         <MdNewspaper />
                         <div className="text-xl font-bold grow-0">{plan.name}</div>
-                        <div className="text-sm text-gray-500 grow">{plan.author}</div>
-                        <Timestamp timestamp={plan.last_modified} className='text-sm' />
+                        {/* <div className="text-sm text-gray-500 grow">{plan.author}</div> */}
+                        <span title="zuletzt geändert"><Timestamp timestamp={plan.last_modified} className='text-sm' /></span>
                     </div>
                 ))}
             </div>
@@ -366,7 +367,7 @@ export default function TimelinePostForm(
             {/* VE plan dialog */}
             <Dialog
                 isOpen={isPlanDialogOpen}
-                title={'Deine vorhandenen Pläne'}
+                title={'Deine Pläne'}
                 onClose={() => setIsPlanDialogOpen(false)}
             >
                 <div className="w-[40vw]"><PlansDialog /></div>

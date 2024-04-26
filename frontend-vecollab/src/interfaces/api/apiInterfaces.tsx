@@ -96,6 +96,7 @@ export interface BackendPost {
     files: BackendPostFile[];
     likers: string[];
     pinned: boolean;
+    plans: string;
     space: string;
     tags: string[];
     text: string;
