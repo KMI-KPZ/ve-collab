@@ -65,23 +65,20 @@ export default function Timeline({
 
     useEffect(() => {
         if (!newFetchedPosts.length) return
+        if (allPosts.some(a => newFetchedPosts.some(b => b._id == a._id)) ) return
 
-        if (allPosts.some((post) => post._id == newFetchedPosts[0]._id) ) {
-            // TODO sometimes this happens -> WHY???? Because of hot-refresh while development
-            // console.warn('Fetched same postss as current [dev-only?!?]', {allPosts, newFetchedPosts, toDate});
-        } else {
-            setFetchCount(prev => ++prev)
-            setAllPosts((prev) => [...prev, ...newFetchedPosts]);
-        }
+        setFetchCount(prev => ++prev)
+        setAllPosts((prev) => [...prev, ...newFetchedPosts]);
     }, [newFetchedPosts, allPosts])
 
     useEffect(() => {
         if (!allPosts.length) return
 
         setGroupedPosts( groupBy(allPosts, (p) => p.creation_date.replace(/T.+/, '')) )
-        // console.log({allPosts, groupedPosts});
+        // console.log({allPosts});
     }, [allPosts])
 
+    // may get repost from request query: ?repost=...
     useEffect(() => {
         if (isLoadingTimeline) return
 
@@ -247,9 +244,10 @@ export default function Timeline({
                     </div>
                 )
             } )}
-            {newFetchedPosts.length >= perFetchLimit && (
+
+            {!isLoadingTimeline && allPosts.length > 0 && newFetchedPosts.length >= perFetchLimit && (
                 <div className="text-center">
-                    <button onClick={e => {fetchNextPosts(true)}} type="button" title="Weitere Beiträge laden ..." className="py-2 px-5 rounded-lg bg-ve-collab-orange text-white">
+                    <button onClick={e => {  fetchNextPosts(true)}} type="button" title="Weitere Beiträge laden ..." className="py-2 px-5 rounded-lg bg-ve-collab-orange text-white">
                         Mehr
                     </button>
                 </div>
