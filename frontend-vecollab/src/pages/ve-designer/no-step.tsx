@@ -1,14 +1,14 @@
-import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
+import HeadProgressBarSection from '@/components/VE-designer/HeadProgressBarSection';
 import { fetchGET } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
-import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
 
-FinePlanner.auth = true;
-export default function FinePlanner() {
+NoStep.auth = true;
+export default function NoStep() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
@@ -56,13 +56,13 @@ export default function FinePlanner() {
                     ) : (
                         <div>
                             <div className=" flex justify-center font-bold text-xl mt-32 mb-20">
-                                Bitte legen Sie zuerst grobe Schritte fest bevor Sie mit der
-                                Feinplanung fortsetzen.
+                                Bitte legen Sie zuerst Schritte fest bevor Sie mit der Feinplanung
+                                fortsetzen.
                             </div>
                             <Link
                                 className="flex justify-center font-bold text-xl m-2 bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
                                 href={{
-                                    pathname: '/startingWizard/broadPlanner',
+                                    pathname: '/ve-designer/step-names',
                                     query: { plannerId: router.query.plannerId },
                                 }}
                             >
@@ -71,7 +71,7 @@ export default function FinePlanner() {
                             <Link
                                 className="flex justify-center font-bold text-xl m-2 bg-gray-400 text-white py-3 px-5 rounded-lg"
                                 href={{
-                                    pathname: '/startingWizard/finish',
+                                    pathname: '/ve-designer/finish',
                                     query: { plannerId: router.query.plannerId },
                                 }}
                             >

@@ -1,4 +1,4 @@
-import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
+import HeadProgressBarSection from '@/components/VE-designer/HeadProgressBarSection';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
@@ -8,16 +8,16 @@ import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
     ProgressState,
-} from '@/interfaces/startingWizard/sideProgressBar';
-import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+} from '@/interfaces/ve-designer/sideProgressBar';
+import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
 import WhiteBox from '@/components/Layout/WhiteBox';
 import Link from 'next/link';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { Tooltip } from '@/components/Tooltip';
 import { PiBookOpenText } from 'react-icons/pi';
 import { Controller, FormProvider, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
-import PopupSaveData from '@/components/StartingWizard/PopupSaveData';
-import SideProgressBarSectionBroadPlannerWithReactHookForm from '@/components/StartingWizard/SideProgressBarSectionBroadPlannerWithReactHookForm';
+import PopupSaveData from '@/components/VE-designer/PopupSaveData';
+import SideProgressBarWithReactHookForm from '@/components/VE-designer/SideProgressBarWithReactHookForm';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 
 export interface FormValues {
@@ -318,7 +318,7 @@ export default function Realization() {
                 isOpen={isPopupOpen}
                 handleContinue={async () => {
                     await router.push({
-                        pathname: '/startingWizard/generalInformation/learningPlatform',
+                        pathname: '/ve-designer/learning-environment',
                         query: {
                             plannerId: router.query.plannerId,
                         },
@@ -416,7 +416,7 @@ export default function Realization() {
                                             onClick={methods.handleSubmit((data) =>
                                                 combinedSubmitRouteAndUpdate(
                                                     data,
-                                                    '/startingWizard/generalInformation/evaluation'
+                                                    '/ve-designer/evaluation'
                                                 )
                                             )}
                                         >
@@ -431,7 +431,7 @@ export default function Realization() {
                                                 (data) => {
                                                     combinedSubmitRouteAndUpdate(
                                                         data,
-                                                        '/startingWizard/generalInformation/learningPlatform'
+                                                        '/ve-designer/learning-environment'
                                                     );
                                                 },
                                                 async () => setIsPopupOpen(true)
@@ -445,7 +445,7 @@ export default function Realization() {
                         )}
                     </div>
                 </div>
-                <SideProgressBarSectionBroadPlannerWithReactHookForm
+                <SideProgressBarWithReactHookForm
                     progressState={sideMenuStepsProgress}
                     onSubmit={onSubmit}
                 />

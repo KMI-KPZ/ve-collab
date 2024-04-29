@@ -1,35 +1,36 @@
-import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
+import HeadProgressBarSection from '@/components/VE-designer/HeadProgressBarSection';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
+import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
+import { FormProvider, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
     ProgressState,
-} from '@/interfaces/startingWizard/sideProgressBar';
-import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
-import CreatableSelect from 'react-select/creatable';
-import Link from 'next/link';
+} from '@/interfaces/ve-designer/sideProgressBar';
+import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
 import { Tooltip } from '@/components/Tooltip';
+import Link from 'next/link';
 import { PiBookOpenText } from 'react-icons/pi';
-import { Controller, FormProvider, SubmitHandler, useForm } from 'react-hook-form';
-import SideProgressBarSectionBroadPlannerWithReactHookForm from '@/components/StartingWizard/SideProgressBarSectionBroadPlannerWithReactHookForm';
-import PopupSaveData from '@/components/StartingWizard/PopupSaveData';
+import PopupSaveData from '@/components/VE-designer/PopupSaveData';
+import SideProgressBarWithReactHookForm from '@/components/VE-designer/SideProgressBarWithReactHookForm';
 
-export interface FormValues {
-    learningGoals: { value: string; label: string }[];
+interface Language {
+    language: string;
+}
+interface FormValues {
+    languages: Language[];
 }
 
-const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
-    return formValues.learningGoals.every((goal) => {
-        return goal.value === '' && goal.label === '';
-    });
+const areAllLanguagesEmpty = (languages: Language[]): boolean => {
+    return languages.every((languageObject) => languageObject.language === '');
 };
 
-GlobalGoals.auth = true;
-export default function GlobalGoals() {
+Languages.auth = true;
+export default function Languages() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
@@ -52,7 +53,7 @@ export default function GlobalGoals() {
     const methods = useForm<FormValues>({
         mode: 'onChange',
         defaultValues: {
-            learningGoals: [],
+            languages: [{ language: '' }],
         },
     });
 
@@ -72,39 +73,43 @@ export default function GlobalGoals() {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
                     setLoading(false);
-                    setSteps(data.plan.steps);
+                    if (data.plan.languages.length !== 0) {
+                        methods.setValue(
+                            'languages',
+                            data.plan.languages.map((element: string) => ({ language: element }))
+                        );
+                    }
                     if (data.plan.progress.length !== 0) {
                         setSideMenuStepsProgress(data.plan.progress);
                     }
-                    methods.setValue(
-                        'learningGoals',
-                        data.plan.learning_goals.map((goals: string) => ({
-                            value: goals,
-                            label: goals,
-                        }))
-                    );
+                    setSteps(data.plan.steps);
                 }
             );
         }
     }, [session, status, router, methods]);
 
+    const { fields, append, remove } = useFieldArray({
+        name: 'languages',
+        control: methods.control,
+    });
+
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        if (!areAllFormValuesEmpty(data)) {
+        if (!areAllLanguagesEmpty(data.languages)) {
             await fetchPOST(
                 '/planner/update_fields',
                 {
                     update: [
                         {
                             plan_id: router.query.plannerId,
-                            field_name: 'learning_goals',
-                            value: data.learningGoals.map((goal) => goal.value),
+                            field_name: 'languages',
+                            value: data.languages.map((element) => element.language),
                         },
                         {
                             plan_id: router.query.plannerId,
                             field_name: 'progress',
                             value: {
                                 ...sideMenuStepsProgress,
-                                learning_goals: ProgressState.completed,
+                                languages: ProgressState.completed,
                             },
                         },
                     ],
@@ -122,69 +127,37 @@ export default function GlobalGoals() {
         });
     };
 
-    const options: { value: string; label: string }[] = [
-        {
-            value: 'Förderung kritischen Denkens',
-            label: 'Förderung kritischen Denkens',
-        },
-        {
-            value: 'Förderung kreativen Denkens',
-            label: 'Förderung kreativen Denkens',
-        },
-        {
-            value: 'Förderung kollaborativen Arbeitens',
-            label: 'Förderung kollaborativen Arbeitens',
-        },
-        {
-            value: 'Förderung kommunikativer Fähigkeiten',
-            label: 'Förderung kommunikativer Fähigkeiten',
-        },
-        {
-            value: 'Förderung digitaler Kompetenzen',
-            label: 'Förderung digitaler Kompetenzen',
-        },
-        {
-            value: 'Förderung sozialer Kompetenzen',
-            label: 'Förderung sozialer Kompetenzen',
-        },
-        {
-            value: 'Förderung der kulturellen Kompetenz',
-            label: 'Förderung der kulturellen Kompetenz',
-        },
-        {
-            value: 'Förderung der Sprachkompetenz',
-            label: 'Förderung der Sprachkompetenz',
-        },
-        {
-            value: 'Förderung fachlicher Kompetenzen (Wissen, Fertigkeiten)',
-            label: 'Förderung fachlicher Kompetenzen (Wissen, Fertigkeiten)',
-        },
-    ];
-
-    function createableSelect(
-        control: any,
-        name: any,
-        options: { value: string; label: string }[]
-    ): JSX.Element {
-        return (
-            <Controller
-                name={name}
-                render={({ field: { onChange, onBlur, value } }) => (
-                    <CreatableSelect
-                        onChange={onChange}
-                        onBlur={onBlur}
-                        value={value}
-                        options={options}
-                        isClearable={true}
-                        isMulti
-                        closeMenuOnSelect={false}
-                        placeholder="Richtlernziele auswählen oder neue durch Tippen hinzufügen"
+    const renderLanguagesInputs = (): JSX.Element[] => {
+        return fields.map((language, index) => (
+            <div key={language.id} className="mt-2 flex flex-col justify-center items-center">
+                <div className="flex justify-center items-center w-full">
+                    <input
+                        type="text"
+                        placeholder="Sprache eingeben"
+                        className="border border-gray-300 rounded-lg w-1/2 p-2 mr-2"
+                        {...methods.register(`languages.${index}.language`, {
+                            maxLength: {
+                                value: 500,
+                                message: 'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
+                            },
+                            pattern: {
+                                value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
+                                message: 'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
+                            },
+                        })}
                     />
+                    <button type="button" onClick={() => remove(index)}>
+                        <RxMinus size={20} />
+                    </button>
+                </div>
+                {methods.formState.errors?.languages?.[index]?.language?.message && (
+                    <p className="text-red-600 pt-2">
+                        {methods.formState.errors?.languages?.[index]?.language?.message}
+                    </p>
                 )}
-                control={control}
-            />
-        );
-    }
+            </div>
+        ));
+    };
 
     return (
         <FormProvider {...methods}>
@@ -192,7 +165,7 @@ export default function GlobalGoals() {
                 isOpen={isPopupOpen}
                 handleContinue={async () => {
                     await router.push({
-                        pathname: '/startingWizard/generalInformation/learningPlatform',
+                        pathname: '/ve-designer/evaluation',
                         query: {
                             plannerId: router.query.plannerId,
                         },
@@ -210,15 +183,33 @@ export default function GlobalGoals() {
                             <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between">
                                 <div>
                                     <div className={'text-center font-bold text-4xl mb-2 relative'}>
-                                        Welche Richtlernziele sollen im VE erreicht werden?
-                                        <Tooltip tooltipsText="Mehr zu Richtlernzielen findest du hier in den Selbstlernmaterialien …">
-                                            <Link target="_blank" href={'/content/Potenziale'}>
+                                        In welchen Sprachen findet der VE (hauptsächlich) statt?
+                                        <Tooltip tooltipsText="Mehr zu Sprache(n) im VE findest du hier in den Selbstlernmaterialien …">
+                                            <Link
+                                                target="_blank"
+                                                href={'/content/sprachliche%20Aspekte'}
+                                            >
                                                 <PiBookOpenText size={30} color="#00748f" />
                                             </Link>
                                         </Tooltip>
                                     </div>
                                     <div className={'text-center mb-20'}>optional</div>
-                                    {createableSelect(methods.control, 'learningGoals', options)}
+                                    <div className="flex flex-col justify-center">
+                                        {renderLanguagesInputs()}
+                                    </div>
+                                    <div className="flex justify-center mt-4">
+                                        <button
+                                            className="p-4 bg-white rounded-3xl shadow-2xl"
+                                            type="button"
+                                            onClick={() => {
+                                                append({
+                                                    language: '',
+                                                });
+                                            }}
+                                        >
+                                            <RxPlus size={20} />
+                                        </button>
+                                    </div>
                                 </div>
                                 <div className="flex justify-between w-full max-w-xl">
                                     <div>
@@ -228,7 +219,7 @@ export default function GlobalGoals() {
                                             onClick={methods.handleSubmit((data) =>
                                                 combinedSubmitRouteAndUpdate(
                                                     data,
-                                                    '/startingWizard/generalInformation/targetGroups'
+                                                    '/ve-designer/topics'
                                                 )
                                             )}
                                         >
@@ -243,7 +234,7 @@ export default function GlobalGoals() {
                                                 (data) => {
                                                     combinedSubmitRouteAndUpdate(
                                                         data,
-                                                        '/startingWizard/generalInformation/veTopic'
+                                                        '/ve-designer/evaluation'
                                                     );
                                                 },
                                                 async () => setIsPopupOpen(true)
@@ -257,7 +248,7 @@ export default function GlobalGoals() {
                         )}
                     </div>
                 </div>
-                <SideProgressBarSectionBroadPlannerWithReactHookForm
+                <SideProgressBarWithReactHookForm
                     progressState={sideMenuStepsProgress}
                     onSubmit={onSubmit}
                 />

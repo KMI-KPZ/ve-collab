@@ -7,20 +7,21 @@ import {
     ProgressState,
     SideMenuStep,
     ISideProgressBarStates,
-} from '@/interfaces/startingWizard/sideProgressBar';
-import { useValidation } from '@/components/StartingWizard/ValidateRouteHook';
-import { sideMenuStepsData } from '@/data/sideMenuSteps';
+} from '@/interfaces/ve-designer/sideProgressBar';
+import { useValidation } from '@/components/VE-designer/ValidateRouteHook';
 
 interface SideProgressBarSectionProps {
     progressState?: ISideProgressBarStates;
     handleValidation(): Promise<void> | void;
     isValid: boolean;
+    sideMenuStepsData: SideMenuStep[];
 }
 
-export default function SideProgressBarSectionBroadPlanner({
+export default function SideProgressbarSectionFinePlanner({
     progressState,
     handleValidation,
     isValid,
+    sideMenuStepsData,
 }: SideProgressBarSectionProps): JSX.Element {
     const router = useRouter();
     const { validateAndRoute } = useValidation();

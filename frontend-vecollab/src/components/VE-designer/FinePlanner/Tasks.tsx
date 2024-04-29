@@ -1,7 +1,11 @@
 import React from 'react';
 import { useFieldArray, useFormContext } from 'react-hook-form';
-import { IFineStepFrontend, IMediaFrontend, IToolsFrontend } from '@/pages/startingWizard/fineplanner/[stepSlug]';
-import Tools from '@/components/StartingWizard/FinePlanner/Tools';
+import {
+    IFineStepFrontend,
+    IMediaFrontend,
+    IToolsFrontend,
+} from '@/pages/ve-designer/step-data/[stepName]';
+import Tools from '@/components/VE-designer/FinePlanner/Tools';
 import { RxPlus } from 'react-icons/rx';
 import Media from './Media';
 
@@ -14,11 +18,21 @@ const defaultValueMedia: IMediaFrontend = { name: '' };
 
 export default function Tasks({ taskIndex }: Props) {
     const { register, formState, control } = useFormContext<IFineStepFrontend>();
-    const { fields: fieldsTools, append: appendTools, remove: removeTools, update: updateTools } = useFieldArray<IFineStepFrontend>({
+    const {
+        fields: fieldsTools,
+        append: appendTools,
+        remove: removeTools,
+        update: updateTools,
+    } = useFieldArray<IFineStepFrontend>({
         name: `tasks.${taskIndex}.tools`,
         control,
     });
-    const { fields: fieldsMedia, append: appendMedia, remove: removeMedia, update: updateMedia } = useFieldArray<IFineStepFrontend>({
+    const {
+        fields: fieldsMedia,
+        append: appendMedia,
+        remove: removeMedia,
+        update: updateMedia,
+    } = useFieldArray<IFineStepFrontend>({
         name: `tasks.${taskIndex}.media`,
         control,
     });

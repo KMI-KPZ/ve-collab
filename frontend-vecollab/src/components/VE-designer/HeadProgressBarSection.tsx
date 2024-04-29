@@ -21,37 +21,40 @@ interface HeadProgressBar {
 export default function HeadProgressBarSection({ stage, linkFineStep }: HeadProgressBar) {
     const router = useRouter();
 
+    console.log(linkFineStep);
+    let linkFineplanner: string;
     if (linkFineStep === '' || linkFineStep === undefined) {
-        linkFineStep = '/startingWizard/fineplanner';
+        linkFineplanner = '/ve-designer/no-step';
+    } else {
+        linkFineplanner = `/ve-designer/step-data/${encodeURIComponent(linkFineStep)}`;
     }
 
     const headMenuProgressSteps: HeadMenuProgressStep[] = [
         {
             description: 'Allgemeine Informationen',
-            link: '/startingWizard/generalInformation/projectName',
+            link: '/ve-designer/name',
             image: imageGeneralInformation,
         },
         {
             description: 'Etappenplaner',
-            link: '/startingWizard/broadPlanner',
+            link: '/ve-designer/step-names',
             image: imageStagePlanner,
         },
         {
             description: 'Feinplanner',
-            link: `/startingWizard/fineplanner/${encodeURIComponent(linkFineStep)}`,
+            link: linkFineplanner,
             image: imageFinePlanner,
         },
         {
             description: 'Abschluss',
-            link: '/startingWizard/finish',
+            link: '/ve-designer/finish',
             image: imageFinish,
         },
         {
             description: 'Nachbearbeitung',
-            link: '/startingWizard/afterVE',
+            link: '/ve-designer/post-process',
             image: imageStagePlanner,
         },
-        
     ];
     const [stateMenuProgressData] = useState<HeadMenuProgressStep[]>(headMenuProgressSteps);
 
@@ -101,7 +104,7 @@ export default function HeadProgressBarSection({ stage, linkFineStep }: HeadProg
     }
 
     return (
-        <div className='h-36'>
+        <div className="h-36">
             <nav className="flex justify-center py-6">
                 {renderHeadProgressBar(headMenuProgressSteps)}
             </nav>

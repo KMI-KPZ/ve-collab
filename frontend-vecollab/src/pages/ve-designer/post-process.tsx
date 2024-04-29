@@ -1,11 +1,11 @@
 import LoadingAnimation from '@/components/LoadingAnimation';
-import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
+import HeadProgressBarSection from '@/components/VE-designer/HeadProgressBarSection';
 import { Tooltip } from '@/components/Tooltip';
 import Link from 'next/link';
 import { ChangeEvent, useEffect, useState } from 'react';
 import { FiInfo } from 'react-icons/fi';
-import { defaultFineStepData } from './broadPlanner';
-import { IFineStep } from './fineplanner/[stepSlug]';
+import { defaultFineStepData } from './step-names';
+import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
 import { useRouter } from 'next/router';
 import WhiteBox from '@/components/Layout/WhiteBox';
 import { useSession } from 'next-auth/react';
@@ -13,8 +13,8 @@ import { fetchGET, fetchPOST } from '@/lib/backend';
 import { AuthenticatedFile } from '@/components/AuthenticatedFile';
 import { RxFile } from 'react-icons/rx';
 
-AfterVE.auth = true;
-export default function AfterVE() {
+PostProcess.auth = true;
+export default function PostProcess() {
     const { data: session, status } = useSession();
     const router = useRouter();
 
@@ -214,8 +214,7 @@ export default function AfterVE() {
                                                     <Link
                                                         className="underline text-ve-collab-blue"
                                                         href={{
-                                                            pathname:
-                                                                '/startingWizard/broadPlanner',
+                                                            pathname: '/ve-designer/broadPlanner',
                                                             query: {
                                                                 plannerId: router.query.plannerId,
                                                             },
@@ -306,7 +305,7 @@ export default function AfterVE() {
                                 <div>
                                     <Link
                                         href={{
-                                            pathname: '/startingWizard/finish',
+                                            pathname: '/ve-designer/finish',
                                             query: { plannerId: router.query.plannerId },
                                         }}
                                     >

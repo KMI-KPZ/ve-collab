@@ -2,9 +2,9 @@ import { signIn, useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { fetchGET, fetchPOST } from '@/lib/backend';
-import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
+import HeadProgressBarSection from '@/components/VE-designer/HeadProgressBarSection';
 import LoadingAnimation from '@/components/LoadingAnimation';
-import Stage from '@/components/StartingWizard/FinePlanner/Stage';
+import Stage from '@/components/VE-designer/FinePlanner/Stage';
 import { SubmitHandler, useForm, FormProvider } from 'react-hook-form';
 import {
     initialSideProgressBarStates,
@@ -12,8 +12,8 @@ import {
     ISideProgressBarStateSteps,
     ProgressState,
     SideMenuStep,
-} from '@/interfaces/startingWizard/sideProgressBar';
-import SideProgressbarSectionFinePlanner from '@/components/StartingWizard/SideProgressbarSectionFinePlanner';
+} from '@/interfaces/ve-designer/sideProgressBar';
+import SideProgressbarSectionFinePlanner from '@/components/VE-designer/SideProgressbarSectionFinePlanner';
 import { Tooltip } from '@/components/Tooltip';
 import Link from 'next/link';
 import { PiBookOpenText } from 'react-icons/pi';
@@ -125,7 +125,7 @@ export default function FinePlanner() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
-    const { stepSlug } = router.query;
+    const { stepName } = router.query;
     const methods = useForm<IFineStepFrontend>({
         mode: 'onChange',
         defaultValues: {
@@ -172,9 +172,8 @@ export default function FinePlanner() {
                     if (data.plan.steps?.length > 0) {
                         setSteps(data.plan.steps);
                         const currentFineStepCopy: IFineStep | undefined = data.plan.steps.find(
-                            (item: IFineStep) => item.name === stepSlug
+                            (item: IFineStep) => item.name === stepName
                         );
-
                         if (currentFineStepCopy) {
                             const transformedTasks: ITaskFrontend[] = currentFineStepCopy.tasks.map(
                                 (task: ITask) => {
@@ -202,7 +201,7 @@ export default function FinePlanner() {
                 }
             );
         }
-    }, [session, status, router, stepSlug, methods]);
+    }, [session, status, router, stepName, methods]);
 
     const onSubmit: SubmitHandler<IFineStepFrontend> = async (data: IFineStepFrontend) => {
         const currentStepTransformBackTools: ITask[] = data.tasks.map((task: ITaskFrontend) => {
@@ -214,7 +213,7 @@ export default function FinePlanner() {
         });
 
         const updateStepsData = steps.map((step) =>
-            step.name === stepSlug
+            step.name === stepName
                 ? {
                       ...data,
                       workload: data.workload,
@@ -225,7 +224,7 @@ export default function FinePlanner() {
                 : step
         );
 
-        const stepSlugDecoded = decodeURI(stepSlug as string);
+        const stepSlugDecoded = decodeURI(stepName as string);
 
         const updateStepsProgress = sideMenuStepsProgress.steps.map(
             (step: ISideProgressBarStateSteps) =>
@@ -270,7 +269,7 @@ export default function FinePlanner() {
         return steps.map((step: IFineStep) => ({
             id: encodeURIComponent(step.name),
             text: step.name,
-            link: `/startingWizard/fineplanner/${encodeURIComponent(step.name)}`,
+            link: `/ve-designer/step-data/${encodeURIComponent(step.name)}`,
         }));
     };
 
@@ -286,7 +285,7 @@ export default function FinePlanner() {
         ) {
             return sideMenuStepsDataCopy[currentSideMenuStepIndex + 1].link;
         } else {
-            return '/startingWizard/finish';
+            return '/ve-designer/finish';
         }
     };
 
@@ -298,7 +297,7 @@ export default function FinePlanner() {
         if (currentSideMenuStepIndex > 0) {
             return sideMenuStepsDataCopy[currentSideMenuStepIndex - 1].link;
         } else {
-            return '/startingWizard/broadPlanner';
+            return '/ve-designer/step-names';
         }
     };
 

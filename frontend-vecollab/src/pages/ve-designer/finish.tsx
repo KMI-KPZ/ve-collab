@@ -1,4 +1,4 @@
-import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
+import HeadProgressBarSection from '@/components/VE-designer/HeadProgressBarSection';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
@@ -6,7 +6,7 @@ import { fetchGET, useGetPlanById } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import { PlanOverview } from '@/components/planSummary/planOverview';
 import LoadingAnimation from '@/components/LoadingAnimation';
-import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
 
 Finished.auth = true;
 export default function Finished() {
@@ -63,7 +63,7 @@ export default function Finished() {
                         <div>
                             <Link
                                 href={{
-                                    pathname: `/startingWizard/fineplanner/${encodeURIComponent(
+                                    pathname: `/ve-designer/step-data/${encodeURIComponent(
                                         steps[0]?.name
                                     )}`,
                                     query: { plannerId: router.query.plannerId },
@@ -86,10 +86,12 @@ export default function Finished() {
                                     Weiter zur Übersicht
                                 </button>
                             </Link>
-                            <Link href={{
-                                    pathname: `/startingWizard/afterVE`,
+                            <Link
+                                href={{
+                                    pathname: `/ve-designer/post-process`,
                                     query: { plannerId: router.query.plannerId },
-                                }}>
+                                }}
+                            >
                                 <button
                                     type="submit"
                                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg ml-2"

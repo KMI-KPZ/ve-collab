@@ -1,5 +1,5 @@
 import WhiteBox from '@/components/Layout/WhiteBox';
-import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
+import HeadProgressBarSection from '@/components/VE-designer/HeadProgressBarSection';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
@@ -11,31 +11,33 @@ import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
     ProgressState,
-} from '@/interfaces/startingWizard/sideProgressBar';
-import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
-import SideProgressBarSectionBroadPlannerWithReactHookForm from '@/components/StartingWizard/SideProgressBarSectionBroadPlannerWithReactHookForm';
-import PopupSaveData from '@/components/StartingWizard/PopupSaveData';
+} from '@/interfaces/ve-designer/sideProgressBar';
+import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
+import SideProgressBarWithReactHookForm from '@/components/VE-designer/SideProgressBarWithReactHookForm';
+import PopupSaveData from '@/components/VE-designer/PopupSaveData';
+import trash from '@/images/icons/ve-designer/trash.png';
 import Image from 'next/image';
-import trash from '@/images/icons/startingWizard/trash.png';
 
 export interface Lecture {
     name: string;
-    lecture_type: string;
-    lecture_format: string;
-    participants_amount: string;
+    school_type: string;
+    country: string;
+    departments: string[];
+    academic_courses: string[];
 }
 
 interface FormValues {
     lectures: Lecture[];
 }
 
-const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
-    return formValues.lectures.every((lecture) => {
+const areAllFormValuesEmpty = (lectures: Lecture[]): boolean => {
+    return lectures.every((institution) => {
         return (
-            lecture.name === '' &&
-            lecture.lecture_type === '' &&
-            lecture.lecture_format === '' &&
-            lecture.participants_amount === ''
+            institution.name === '' &&
+            institution.school_type === '' &&
+            institution.country === '' &&
+            institution.departments.every((department) => department === '') &&
+            institution.academic_courses.every((course) => course === '')
         );
     });
 };
@@ -48,14 +50,13 @@ export default function Lectures() {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
-    const [steps, setSteps] = useState<IFineStep[]>([]);
     const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
+    const [steps, setSteps] = useState<IFineStep[]>([]);
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
         if (status !== 'loading') {
             if (!session || session?.error === 'RefreshAccessTokenError') {
-                console.log('forced new signIn');
                 signIn('keycloak');
             }
         }
@@ -67,9 +68,10 @@ export default function Lectures() {
             lectures: [
                 {
                     name: '',
-                    lecture_type: '',
-                    lecture_format: '',
-                    participants_amount: '',
+                    school_type: '',
+                    country: '',
+                    departments: [],
+                    academic_courses: [],
                 },
             ],
         },
@@ -91,8 +93,8 @@ export default function Lectures() {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
                     setLoading(false);
-                    if (data.plan.lectures.length !== 0) {
-                        methods.setValue('lectures', data.plan.lectures);
+                    if (data.plan.institutions.length !== 0) {
+                        methods.setValue('lectures', data.plan.institutions);
                     }
                     if (data.plan.progress.length !== 0) {
                         setSideMenuStepsProgress(data.plan.progress);
@@ -109,14 +111,14 @@ export default function Lectures() {
     });
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        if (!areAllFormValuesEmpty(data)) {
+        if (!areAllFormValuesEmpty(data.lectures)) {
             await fetchPOST(
                 '/planner/update_fields',
                 {
                     update: [
                         {
                             plan_id: router.query.plannerId,
-                            field_name: 'lectures',
+                            field_name: 'institutions',
                             value: data.lectures,
                         },
                         {
@@ -124,7 +126,7 @@ export default function Lectures() {
                             field_name: 'progress',
                             value: {
                                 ...sideMenuStepsProgress,
-                                lectures: ProgressState.completed,
+                                institutions: ProgressState.completed,
                             },
                         },
                     ],
@@ -143,18 +145,20 @@ export default function Lectures() {
     };
 
     const renderLecturesInputs = (): JSX.Element[] => {
-        return fields.map((lecture, index) => (
-            <div key={lecture.id} className="mx-2">
+        return fields.map((lectures, index) => (
+            <div key={lectures.id} className="mx-2">
                 <WhiteBox>
                     <div className="mt-4 flex">
-                        <div className="w-1/4 flex items-center">
+                        <div className="w-1/3 flex items-center">
                             <label htmlFor="name" className="px-2 py-2">
                                 Name
                             </label>
                         </div>
-                        <div className="w-3/4">
+                        <div className="w-2/3">
                             <input
                                 type="text"
+                                placeholder="Name eingeben"
+                                className="border border-gray-400 rounded-lg w-full p-2"
                                 {...methods.register(`lectures.${index}.name`, {
                                     maxLength: {
                                         value: 500,
@@ -162,13 +166,11 @@ export default function Lectures() {
                                             'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                                     },
                                     pattern: {
-                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
+                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
                                         message:
-                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
+                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?-,',
                                     },
                                 })}
-                                placeholder="Name eingeben"
-                                className="border border-gray-400 rounded-lg w-full p-2"
                             />
                             <p className="text-red-600 pt-2">
                                 {methods.formState.errors?.lectures?.[index]?.name?.message}
@@ -176,89 +178,133 @@ export default function Lectures() {
                         </div>
                     </div>
                     <div className="mt-4 flex">
-                        <div className="w-1/4 flex items-center">
-                            <label htmlFor="type" className="px-2 py-2">
-                                Typ
+                        <div className="w-1/3 flex items-center">
+                            <label htmlFor="schoolType" className="px-2 py-2">
+                                Bildungseinrichtung
                             </label>
                         </div>
-                        <div className="w-3/4">
+                        <div className="w-2/3">
                             <select
-                                {...methods.register(`lectures.${index}.lecture_type`, {
+                                placeholder="Bildungseinrichtung eingeben"
+                                className="border border-gray-400 rounded-lg w-full px-1 py-2"
+                                {...methods.register(`lectures.${index}.school_type`, {
                                     maxLength: {
                                         value: 500,
                                         message:
                                             'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                                     },
                                 })}
-                                placeholder="z.B. Wahl, Wahlpflicht, Pflicht"
-                                className="border border-gray-400 rounded-lg w-full px-1 py-2"
                             >
-                                <option value="Pflichtveranstaltung">Pflichtveranstaltung</option>
-                                <option value="Wahlveranstaltung">Wahlveranstaltung</option>
+                                <option value="Hochschule/Universität/College">
+                                    Hochschule/Universität/College
+                                </option>
+                                <option value="Fachhochschule/University of Applied Sciences">
+                                    Fachhochschule/University of Applied Sciences
+                                </option>
+                                <option value="Berufsschule">Berufsschule</option>
+                                <option value="Schule – Primärbereich">
+                                    Schule – Primärbereich
+                                </option>
+                                <option value="Schule – Sekundarbereich">
+                                    Schule – Sekundarbereich
+                                </option>
+
+                                <option value="Sonstige">Sonstige</option>
                             </select>
                             <p className="text-red-600 pt-2">
-                                {methods.formState.errors?.lectures?.[index]?.lecture_type?.message}
+                                {methods.formState.errors?.lectures?.[index]?.school_type?.message}
                             </p>
                         </div>
                     </div>
                     <div className="mt-4 flex">
-                        <div className="w-1/4 flex items-center">
-                            <label htmlFor="format" className="px-2 py-2">
-                                Format
+                        <div className="w-1/3 flex items-center">
+                            <label htmlFor="country" className="px-2 py-2">
+                                Land
                             </label>
                         </div>
-                        <div className="w-3/4">
-                            <select
-                                {...methods.register(`lectures.${index}.lecture_format`, {
+                        <div className="w-2/3">
+                            <input
+                                type="text"
+                                placeholder="Land eingeben"
+                                className="border border-gray-400 rounded-lg w-full p-2"
+                                {...methods.register(`lectures.${index}.country`, {
                                     maxLength: {
                                         value: 500,
                                         message:
                                             'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                                     },
+                                    pattern: {
+                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
+                                        message:
+                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?,-',
+                                    },
                                 })}
-                                placeholder="z.B. online, hybrid, präsenz"
-                                className="border border-gray-400 rounded-lg w-full px-1 py-2"
-                            >
-                                <option value="Präsenz">Präsenz</option>
-                                <option value="Online">Online</option>
-                                <option value="Hybrid">Hybrid</option>
-                            </select>
+                            />
+                            <p className="text-red-600 pt-2">
+                                {methods.formState.errors?.lectures?.[index]?.country?.message}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="mt-4 flex">
+                        <div className="w-1/3 flex items-center">
+                            <label htmlFor="department" className="px-2 py-2">
+                                Fachbereich
+                            </label>
+                        </div>
+                        <div className="w-2/3">
+                            <input
+                                type="text"
+                                placeholder="Fachbereich eingeben"
+                                className="border border-gray-400 rounded-lg w-full p-2"
+                                {...methods.register(`lectures.${index}.departments.0`, {
+                                    maxLength: {
+                                        value: 500,
+                                        message:
+                                            'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
+                                    },
+                                    pattern: {
+                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
+                                        message:
+                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?,-',
+                                    },
+                                })}
+                            />
                             <p className="text-red-600 pt-2">
                                 {
-                                    methods.formState.errors?.lectures?.[index]?.lecture_format
+                                    methods.formState.errors?.lectures?.[index]?.departments?.[0]
                                         ?.message
                                 }
                             </p>
                         </div>
                     </div>
                     <div className="mt-4 flex">
-                        <div className="w-1/2 flex items-center">
-                            <label htmlFor="participants" className="px-2 py-2">
-                                Teilnehmendenanzahl
+                        <div className="w-1/3 flex items-center">
+                            <label htmlFor="academicCourses" className="px-2 py-2">
+                                beteiligte Studiengänge
                             </label>
                         </div>
-                        <div className="w-1/2">
+                        <div className="w-2/3">
                             <input
-                                type="number"
-                                min={0}
-                                {...methods.register(`lectures.${index}.participants_amount`, {
+                                type="text"
+                                placeholder="mehrere durch Komma trennen"
+                                className="border border-gray-400 rounded-lg w-full p-2"
+                                {...methods.register(`lectures.${index}.academic_courses.0`, {
                                     maxLength: {
-                                        value: 4,
-                                        message: 'Bitte geben sie eine realistische Zahl ein',
+                                        value: 500,
+                                        message:
+                                            'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                                     },
                                     pattern: {
-                                        value: /^\d+$/,
-                                        message: 'Bitte nur ganze postive Zahlen',
+                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
+                                        message:
+                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?,-',
                                     },
-                                    setValueAs: (v) => parseInt(v),
                                 })}
-                                placeholder="Anzahl eingeben"
-                                className="border border-gray-400 rounded-lg w-full p-2"
                             />
                             <p className="text-red-600 pt-2">
                                 {
-                                    methods.formState.errors?.lectures?.[index]?.participants_amount
-                                        ?.message
+                                    methods.formState.errors?.lectures?.[index]
+                                        ?.academic_courses?.[0]?.message
                                 }
                             </p>
                         </div>
@@ -277,13 +323,14 @@ export default function Lectures() {
             </div>
         ));
     };
+
     return (
         <FormProvider {...methods}>
             <PopupSaveData
                 isOpen={isPopupOpen}
                 handleContinue={async () => {
                     await router.push({
-                        pathname: '/startingWizard/generalInformation/formalConditions',
+                        pathname: '/ve-designer/participatingCourses',
                         query: {
                             plannerId: router.query.plannerId,
                         },
@@ -301,22 +348,23 @@ export default function Lectures() {
                             <form className="gap-y-6 w-full p-12 max-w-7xl items-center flex flex-col flex-grow justify-between">
                                 <div>
                                     <div className={'text-center font-bold text-4xl mb-2'}>
-                                        Im Rahmen welcher Lehrveranstaltungen wird der VE umgesetzt?
+                                        In welchen Institutionen wird der VE umgesetzt?
                                     </div>
                                     <div className={'text-center mb-20'}>optional</div>
-                                    <div className="flex flex-wrap justify-center">
+                                    <div className={'flex flex-wrap justify-center'}>
                                         {renderLecturesInputs()}
                                     </div>
-                                    <div className="flex justify-center ">
+                                    <div className="flex justify-center">
                                         <button
                                             className="p-4 bg-white rounded-3xl shadow-2xl"
                                             type="button"
                                             onClick={() => {
                                                 append({
                                                     name: '',
-                                                    lecture_type: '',
-                                                    lecture_format: '',
-                                                    participants_amount: '',
+                                                    school_type: '',
+                                                    country: '',
+                                                    departments: [],
+                                                    academic_courses: [],
                                                 });
                                             }}
                                         >
@@ -332,7 +380,7 @@ export default function Lectures() {
                                             onClick={methods.handleSubmit((data) => {
                                                 combinedSubmitRouteAndUpdate(
                                                     data,
-                                                    '/startingWizard/generalInformation/institutions'
+                                                    '/ve-designer/externalParties'
                                                 );
                                             })}
                                         >
@@ -347,7 +395,7 @@ export default function Lectures() {
                                                 (data) => {
                                                     combinedSubmitRouteAndUpdate(
                                                         data,
-                                                        '/startingWizard/generalInformation/targetGroups'
+                                                        '/ve-designer/participatingCourses'
                                                     );
                                                 },
                                                 async () => setIsPopupOpen(true)
@@ -361,7 +409,7 @@ export default function Lectures() {
                         )}
                     </div>
                 </div>
-                <SideProgressBarSectionBroadPlannerWithReactHookForm
+                <SideProgressBarWithReactHookForm
                     progressState={sideMenuStepsProgress}
                     onSubmit={onSubmit}
                 />

@@ -1,25 +1,25 @@
-import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
+import HeadProgressBarSection from '@/components/VE-designer/HeadProgressBarSection';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
     ProgressState,
-} from '@/interfaces/startingWizard/sideProgressBar';
+} from '@/interfaces/ve-designer/sideProgressBar';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import LoadingAnimation from '@/components/LoadingAnimation';
-import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
 import Link from 'next/link';
 import { TooltipList } from '@/components/TooltipList';
 import { Tooltip } from '@/components/Tooltip';
-import { PiBookOpenText } from "react-icons/pi";
+import { PiBookOpenText } from 'react-icons/pi';
 import { FormProvider, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
-import PopupSaveData from '@/components/StartingWizard/PopupSaveData';
-import SideProgressBarSectionBroadPlannerWithReactHookForm from '@/components/StartingWizard/SideProgressBarSectionBroadPlannerWithReactHookForm';
+import PopupSaveData from '@/components/VE-designer/PopupSaveData';
+import SideProgressBarWithReactHookForm from '@/components/VE-designer/SideProgressBarWithReactHookForm';
 import { BackendUserSnippet, BackendProfileSnippetsResponse } from '@/interfaces/api/apiInterfaces';
 
-export interface FormalConditionPartner {
+export interface CheckListPartner {
     username: string;
     time: boolean;
     format: boolean;
@@ -34,28 +34,28 @@ export interface FormalConditionPartner {
 }
 
 interface FormValues {
-    formalConditions: FormalConditionPartner[];
+    checklist: CheckListPartner[];
 }
 
 const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
-    return formValues.formalConditions.every((formalCondition) => {
+    return formValues.checklist.every((checkListPartner) => {
         return (
-            !formalCondition.time &&
-            !formalCondition.format &&
-            !formalCondition.topic &&
-            !formalCondition.goals &&
-            !formalCondition.languages &&
-            !formalCondition.media &&
-            !formalCondition.technicalEquipment &&
-            !formalCondition.evaluation &&
-            !formalCondition.institutionalRequirements &&
-            !formalCondition.dataProtection
+            !checkListPartner.time &&
+            !checkListPartner.format &&
+            !checkListPartner.topic &&
+            !checkListPartner.goals &&
+            !checkListPartner.languages &&
+            !checkListPartner.media &&
+            !checkListPartner.technicalEquipment &&
+            !checkListPartner.evaluation &&
+            !checkListPartner.institutionalRequirements &&
+            !checkListPartner.dataProtection
         );
     });
 };
 
-FormalConditions.auth = true;
-export default function FormalConditions() {
+Checklist.auth = true;
+export default function Checklist() {
     const router = useRouter();
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
@@ -71,7 +71,7 @@ export default function FormalConditions() {
     const methods = useForm<FormValues>({
         mode: 'onChange',
         defaultValues: {
-            formalConditions: [
+            checklist: [
                 {
                     username: 'loading...',
                     time: false,
@@ -90,7 +90,7 @@ export default function FormalConditions() {
     });
 
     const { fields } = useFieldArray({
-        name: 'formalConditions',
+        name: 'checklist',
         control: methods.control,
     });
 
@@ -118,7 +118,7 @@ export default function FormalConditions() {
                         Array.isArray(data.plan.formalities) &&
                         data.plan.formalities.length > 0
                     ) {
-                        methods.setValue('formalConditions', data.plan.formalities);
+                        methods.setValue('checklist', data.plan.formalities);
                     }
 
                     // fetch profile snippets to be able to display the full name instead of username only
@@ -148,7 +148,7 @@ export default function FormalConditions() {
                         {
                             plan_id: router.query.plannerId,
                             field_name: 'formalities',
-                            value: data.formalConditions,
+                            value: data.checklist,
                         },
                         {
                             plan_id: router.query.plannerId,
@@ -187,7 +187,7 @@ export default function FormalConditions() {
                     <div className="flex justify-start items-center">
                         <input
                             type="checkbox"
-                            {...methods.register(`formalConditions.${index}.time`)}
+                            {...methods.register(`checklist.${index}.time`)}
                             className="border border-gray-500 rounded-lg w-4 h-4 p-3 mr-6"
                         />
                         <TooltipList
@@ -203,7 +203,7 @@ export default function FormalConditions() {
                     <div className="flex justify-start items-center">
                         <input
                             type="checkbox"
-                            {...methods.register(`formalConditions.${index}.format`)}
+                            {...methods.register(`checklist.${index}.format`)}
                             className="border border-gray-500 rounded-lg w-4 h-4 p-3 mr-6"
                         />
                         <TooltipList tooltipsTextItems={['Format(e) des VE']}>
@@ -213,7 +213,7 @@ export default function FormalConditions() {
                     <div className="flex justify-start items-center">
                         <input
                             type="checkbox"
-                            {...methods.register(`formalConditions.${index}.topic`)}
+                            {...methods.register(`checklist.${index}.topic`)}
                             className="border border-gray-500 rounded-lg w-4 h-4 p-3 mr-6"
                         />
                         <TooltipList
@@ -227,7 +227,7 @@ export default function FormalConditions() {
                     <div className="flex justify-start items-center">
                         <input
                             type="checkbox"
-                            {...methods.register(`formalConditions.${index}.goals`)}
+                            {...methods.register(`checklist.${index}.goals`)}
                             className="border border-gray-500 rounded-lg w-4 h-4 p-3 mr-6"
                         />
                         <TooltipList
@@ -241,7 +241,7 @@ export default function FormalConditions() {
                     <div className="flex justify-start items-center">
                         <input
                             type="checkbox"
-                            {...methods.register(`formalConditions.${index}.languages`)}
+                            {...methods.register(`checklist.${index}.languages`)}
                             className="border border-gray-500 rounded-lg w-4 h-4 p-3 mr-6"
                         />
                         <TooltipList
@@ -255,7 +255,7 @@ export default function FormalConditions() {
                     <div className="flex justify-start items-center">
                         <input
                             type="checkbox"
-                            {...methods.register(`formalConditions.${index}.media`)}
+                            {...methods.register(`checklist.${index}.media`)}
                             className="border border-gray-500 rounded-lg w-4 h-4 p-3 mr-6"
                         />
                         <TooltipList
@@ -269,7 +269,7 @@ export default function FormalConditions() {
                     <div className="flex justify-start items-center">
                         <input
                             type="checkbox"
-                            {...methods.register(`formalConditions.${index}.technicalEquipment`)}
+                            {...methods.register(`checklist.${index}.technicalEquipment`)}
                             className="border border-gray-500 rounded-lg w-4 h-4 p-3 mr-6"
                         />
                         <TooltipList
@@ -284,7 +284,7 @@ export default function FormalConditions() {
                     <div className="flex justify-start items-center">
                         <input
                             type="checkbox"
-                            {...methods.register(`formalConditions.${index}.evaluation`)}
+                            {...methods.register(`checklist.${index}.evaluation`)}
                             className="border border-gray-500 rounded-lg w-4 h-4 p-3 mr-6"
                         />
                         <TooltipList
@@ -298,9 +298,7 @@ export default function FormalConditions() {
                     <div className="flex justify-start items-center">
                         <input
                             type="checkbox"
-                            {...methods.register(
-                                `formalConditions.${index}.institutionalRequirements`
-                            )}
+                            {...methods.register(`checklist.${index}.institutionalRequirements`)}
                             className="border border-gray-500 rounded-lg w-4 h-4 p-3 mr-6"
                         />
                         <TooltipList tooltipsTextItems={['Umgang mit Anwesenheit und Mitarbeit']}>
@@ -313,7 +311,7 @@ export default function FormalConditions() {
                     <div className="flex justify-start items-center">
                         <input
                             type="checkbox"
-                            {...methods.register(`formalConditions.${index}.dataProtection`)}
+                            {...methods.register(`checklist.${index}.dataProtection`)}
                             className="border border-gray-500 rounded-lg w-4 h-4 p-3 mr-6"
                         />
                         <TooltipList
@@ -335,7 +333,7 @@ export default function FormalConditions() {
                 isOpen={isPopupOpen}
                 handleContinue={async () => {
                     await router.push({
-                        pathname: '/startingWizard/broadPlanner',
+                        pathname: '/ve-designer/broadPlanner',
                         query: {
                             plannerId: router.query.plannerId,
                         },
@@ -353,8 +351,8 @@ export default function FormalConditions() {
                             <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-center">
                                 <div>
                                     <div className={'text-center font-bold text-4xl mb-2 relative'}>
-                                        Formale Rahmenbedingungen
-                                        <Tooltip tooltipsText="Mehr zu formalen Rahmenbedingungen findest du hier in den Selbstlernmaterialien …">
+                                        Checkliste
+                                        <Tooltip tooltipsText="Mehr zu der Checkliste findest du hier in den Selbstlernmaterialien …">
                                             <Link
                                                 target="_blank"
                                                 href={'/content/Herausforderungen'}
@@ -369,8 +367,8 @@ export default function FormalConditions() {
                                         losgeht:
                                     </div>
                                     <div className="text-center mb-10">
-                                        Sind die folgenden formalen Rahmenbedingungen bei allen
-                                        Beteiligten erfüllt?
+                                        Sind die folgenden Bedingungen bei allen Beteiligten
+                                        erfüllt?
                                     </div>
                                     <div className="grid grid-cols-3 gap-1 mt-7 mb-10">
                                         {renderCheckBoxes()}
@@ -384,7 +382,7 @@ export default function FormalConditions() {
                                             onClick={methods.handleSubmit((data) => {
                                                 combinedSubmitRouteAndUpdate(
                                                     data,
-                                                    '/startingWizard/generalInformation/learningPlatform'
+                                                    '/ve-designer/learning-environment'
                                                 );
                                             })}
                                         >
@@ -399,7 +397,7 @@ export default function FormalConditions() {
                                                 (data) => {
                                                     combinedSubmitRouteAndUpdate(
                                                         data,
-                                                        '/startingWizard/broadPlanner'
+                                                        '/ve-designer/step-names'
                                                     );
                                                 },
                                                 async () => setIsPopupOpen(true)
@@ -413,7 +411,7 @@ export default function FormalConditions() {
                         )}
                     </div>
                 </div>
-                <SideProgressBarSectionBroadPlannerWithReactHookForm
+                <SideProgressBarWithReactHookForm
                     progressState={sideMenuStepsProgress}
                     onSubmit={onSubmit}
                 />

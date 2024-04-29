@@ -1,34 +1,35 @@
-import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
-import React, { useEffect, useState } from 'react';
-import { RxMinus, RxPlus } from 'react-icons/rx';
-import { useRouter } from 'next/router';
-import { signIn, useSession } from 'next-auth/react';
-import { FormProvider, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
+import HeadProgressBarSection from '@/components/VE-designer/HeadProgressBarSection';
 import { fetchGET, fetchPOST } from '@/lib/backend';
+import { signIn, useSession } from 'next-auth/react';
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
     ProgressState,
-} from '@/interfaces/startingWizard/sideProgressBar';
-import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
-import PopupSaveData from '@/components/StartingWizard/PopupSaveData';
-import SideProgressBarSectionBroadPlannerWithReactHookForm from '@/components/StartingWizard/SideProgressBarSectionBroadPlannerWithReactHookForm';
+} from '@/interfaces/ve-designer/sideProgressBar';
+import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
+import CreatableSelect from 'react-select/creatable';
+import Link from 'next/link';
+import { Tooltip } from '@/components/Tooltip';
+import { PiBookOpenText } from 'react-icons/pi';
+import { Controller, FormProvider, SubmitHandler, useForm } from 'react-hook-form';
+import SideProgressBarWithReactHookForm from '@/components/VE-designer/SideProgressBarWithReactHookForm';
+import PopupSaveData from '@/components/VE-designer/PopupSaveData';
 
-interface ExternalParty {
-    externalParty: string;
+export interface FormValues {
+    learningGoals: { value: string; label: string }[];
 }
 
-interface FormValues {
-    externalParties: ExternalParty[];
-}
-
-const areAllExternalPartiesEmpty = (externalParties: ExternalParty[]): boolean => {
-    return externalParties.every((party) => party.externalParty === '');
+const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
+    return formValues.learningGoals.every((goal) => {
+        return goal.value === '' && goal.label === '';
+    });
 };
 
-ExternalPersons.auth = true;
-export default function ExternalPersons() {
+LearningGoals.auth = true;
+export default function LearningGoals() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
@@ -51,7 +52,7 @@ export default function ExternalPersons() {
     const methods = useForm<FormValues>({
         mode: 'onChange',
         defaultValues: {
-            externalParties: [{ externalParty: '' }],
+            learningGoals: [],
         },
     });
 
@@ -71,45 +72,39 @@ export default function ExternalPersons() {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
                     setLoading(false);
-                    if (data.plan.involved_parties.length !== 0) {
-                        methods.setValue(
-                            'externalParties',
-                            data.plan.involved_parties.map((element: string) => ({
-                                externalParty: element,
-                            }))
-                        );
-                    }
+                    setSteps(data.plan.steps);
                     if (data.plan.progress.length !== 0) {
                         setSideMenuStepsProgress(data.plan.progress);
                     }
-                    setSteps(data.plan.steps);
+                    methods.setValue(
+                        'learningGoals',
+                        data.plan.learning_goals.map((goals: string) => ({
+                            value: goals,
+                            label: goals,
+                        }))
+                    );
                 }
             );
         }
     }, [session, status, router, methods]);
 
-    const { fields, append, remove } = useFieldArray({
-        name: 'externalParties',
-        control: methods.control,
-    });
-
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        if (!areAllExternalPartiesEmpty(data.externalParties)) {
+        if (!areAllFormValuesEmpty(data)) {
             await fetchPOST(
                 '/planner/update_fields',
                 {
                     update: [
                         {
                             plan_id: router.query.plannerId,
-                            field_name: 'involved_parties',
-                            value: data.externalParties.map((element) => element.externalParty),
+                            field_name: 'learning_goals',
+                            value: data.learningGoals.map((goal) => goal.value),
                         },
                         {
                             plan_id: router.query.plannerId,
                             field_name: 'progress',
                             value: {
                                 ...sideMenuStepsProgress,
-                                involved_parties: ProgressState.completed,
+                                learning_goals: ProgressState.completed,
                             },
                         },
                     ],
@@ -127,33 +122,69 @@ export default function ExternalPersons() {
         });
     };
 
-    const renderExternalPartiesInputs = (): JSX.Element[] => {
-        return fields.map((externalParty, index) => (
-            <div key={externalParty.id} className="my-2">
-                <div className="flex justify-center items-center">
-                    <input
-                        type="text"
-                        placeholder="Externen eingeben"
-                        className="border border-gray-300 rounded-lg p-2 mr-2"
-                        {...methods.register(`externalParties.${index}.externalParty`, {
-                            maxLength: {
-                                value: 500,
-                                message: 'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                            },
-                        })}
+    const options: { value: string; label: string }[] = [
+        {
+            value: 'Förderung kritischen Denkens',
+            label: 'Förderung kritischen Denkens',
+        },
+        {
+            value: 'Förderung kreativen Denkens',
+            label: 'Förderung kreativen Denkens',
+        },
+        {
+            value: 'Förderung kollaborativen Arbeitens',
+            label: 'Förderung kollaborativen Arbeitens',
+        },
+        {
+            value: 'Förderung kommunikativer Fähigkeiten',
+            label: 'Förderung kommunikativer Fähigkeiten',
+        },
+        {
+            value: 'Förderung digitaler Kompetenzen',
+            label: 'Förderung digitaler Kompetenzen',
+        },
+        {
+            value: 'Förderung sozialer Kompetenzen',
+            label: 'Förderung sozialer Kompetenzen',
+        },
+        {
+            value: 'Förderung der kulturellen Kompetenz',
+            label: 'Förderung der kulturellen Kompetenz',
+        },
+        {
+            value: 'Förderung der Sprachkompetenz',
+            label: 'Förderung der Sprachkompetenz',
+        },
+        {
+            value: 'Förderung fachlicher Kompetenzen (Wissen, Fertigkeiten)',
+            label: 'Förderung fachlicher Kompetenzen (Wissen, Fertigkeiten)',
+        },
+    ];
+
+    function createableSelect(
+        control: any,
+        name: any,
+        options: { value: string; label: string }[]
+    ): JSX.Element {
+        return (
+            <Controller
+                name={name}
+                render={({ field: { onChange, onBlur, value } }) => (
+                    <CreatableSelect
+                        onChange={onChange}
+                        onBlur={onBlur}
+                        value={value}
+                        options={options}
+                        isClearable={true}
+                        isMulti
+                        closeMenuOnSelect={false}
+                        placeholder="Richtlernziele auswählen oder neue durch Tippen hinzufügen"
                     />
-                    <button type="button" onClick={() => remove(index)}>
-                        <RxMinus size={20} />
-                    </button>
-                </div>
-                {methods.formState.errors?.externalParties?.[index]?.externalParty?.message && (
-                    <p className="text-red-600 pt-2">
-                        {methods.formState.errors?.externalParties?.[index]?.externalParty?.message}
-                    </p>
                 )}
-            </div>
-        ));
-    };
+                control={control}
+            />
+        );
+    }
 
     return (
         <FormProvider {...methods}>
@@ -161,7 +192,7 @@ export default function ExternalPersons() {
                 isOpen={isPopupOpen}
                 handleContinue={async () => {
                     await router.push({
-                        pathname: '/startingWizard/generalInformation/institutions',
+                        pathname: '/ve-designer/topics',
                         query: {
                             plannerId: router.query.plannerId,
                         },
@@ -176,41 +207,30 @@ export default function ExternalPersons() {
                         {loading ? (
                             <LoadingAnimation />
                         ) : (
-                            <form
-                                onSubmit={methods.handleSubmit(onSubmit)}
-                                className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between"
-                            >
+                            <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between">
                                 <div>
-                                    <div className={'text-center font-bold text-4xl mb-2'}>
-                                        Gibt es externe Beteiligte?
+                                    <div className={'text-center font-bold text-4xl mb-2 relative'}>
+                                        Welche Richtlernziele sollen im VE erreicht werden?
+                                        <Tooltip tooltipsText="Mehr zu Richtlernzielen findest du hier in den Selbstlernmaterialien …">
+                                            <Link target="_blank" href={'/content/Potenziale'}>
+                                                <PiBookOpenText size={30} color="#00748f" />
+                                            </Link>
+                                        </Tooltip>
                                     </div>
                                     <div className={'text-center mb-20'}>optional</div>
-                                    {renderExternalPartiesInputs()}
-                                    <div className="flex justify-center mt-4">
-                                        <button
-                                            className="p-4 bg-white rounded-3xl shadow-2xl"
-                                            type="button"
-                                            onClick={() => {
-                                                append({
-                                                    externalParty: '',
-                                                });
-                                            }}
-                                        >
-                                            <RxPlus size={20} />
-                                        </button>
-                                    </div>
+                                    {createableSelect(methods.control, 'learningGoals', options)}
                                 </div>
                                 <div className="flex justify-between w-full max-w-xl">
                                     <div>
                                         <button
                                             type="button"
                                             className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                            onClick={methods.handleSubmit((data) => {
+                                            onClick={methods.handleSubmit((data) =>
                                                 combinedSubmitRouteAndUpdate(
                                                     data,
-                                                    '/startingWizard/generalInformation/partners'
-                                                );
-                                            })}
+                                                    '/ve-designer/target-groups'
+                                                )
+                                            )}
                                         >
                                             Zurück
                                         </button>
@@ -223,7 +243,7 @@ export default function ExternalPersons() {
                                                 (data) => {
                                                     combinedSubmitRouteAndUpdate(
                                                         data,
-                                                        '/startingWizard/generalInformation/institutions'
+                                                        '/ve-designer/topics'
                                                     );
                                                 },
                                                 async () => setIsPopupOpen(true)
@@ -237,7 +257,7 @@ export default function ExternalPersons() {
                         )}
                     </div>
                 </div>
-                <SideProgressBarSectionBroadPlannerWithReactHookForm
+                <SideProgressBarWithReactHookForm
                     progressState={sideMenuStepsProgress}
                     onSubmit={onSubmit}
                 />

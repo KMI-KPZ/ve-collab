@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
 import iconDropdown from '@/images/icons/planSummary/iconDropdown.png';
 import Image from 'next/image';
 import { showDataOrEmptySign } from './planOverview';
