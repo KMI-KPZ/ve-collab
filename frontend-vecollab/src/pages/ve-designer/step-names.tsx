@@ -1,5 +1,5 @@
 import WhiteBox from '@/components/Layout/WhiteBox';
-import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
+import HeadProgressBarSection from '@/components/VE-designer/HeadProgressBarSection';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
@@ -12,8 +12,8 @@ import {
     ISideProgressBarStates,
     ISideProgressBarStateSteps,
     ProgressState,
-} from '@/interfaces/startingWizard/sideProgressBar';
-import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+} from '@/interfaces/ve-designer/sideProgressBar';
+import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
 import {
     DragDropContext,
     Droppable,
@@ -22,27 +22,27 @@ import {
     DroppableProvided,
     DraggableProvided,
 } from '@hello-pangea/dnd';
-import iconUpAndDown from '@/images/icons/startingWizard/upAndDownArrow.png';
-import trash from '@/images/icons/startingWizard/trash.png';
+import iconUpAndDown from '@/images/icons/ve-designer/upAndDownArrow.png';
+import trash from '@/images/icons/ve-designer/trash.png';
 import Image from 'next/image';
 import { Tooltip } from '@/components/Tooltip';
 import Link from 'next/link';
 import { PiBookOpenText } from 'react-icons/pi';
-import SideProgressBarSectionBroadPlannerWithReactHookForm from '@/components/StartingWizard/SideProgressBarSectionBroadPlannerWithReactHookForm';
-import PopupSaveData from '@/components/StartingWizard/PopupSaveData';
+import SideProgressBarWithReactHookForm from '@/components/VE-designer/SideProgressBarWithReactHookForm';
+import PopupSaveData from '@/components/VE-designer/PopupSaveData';
 
-interface BroadStep {
+interface StepName {
     from: string;
     to: string;
     name: string;
 }
 
 interface FormValues {
-    broadSteps: BroadStep[];
+    stepNames: StepName[];
 }
 
 const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
-    return formValues.broadSteps.every((broadStep) => {
+    return formValues.stepNames.every((broadStep) => {
         return broadStep.name === '' && broadStep.from === '' && broadStep.to === '';
     });
 };
@@ -70,14 +70,14 @@ export const defaultFineStepData: IFineStep = {
     custom_attributes: {},
 };
 
-const emptyBroadStep: BroadStep = {
+const emptyBroadStep: StepName = {
     from: '',
     to: '',
     name: '',
 };
 
-BroadPlanner.auth = true;
-export default function BroadPlanner() {
+StepNames.auth = true;
+export default function StepNames() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
@@ -118,10 +118,10 @@ export default function BroadPlanner() {
                 (data) => {
                     setLoading(false);
                     setSteps(data.plan.steps);
-                    methods.setValue('broadSteps', [emptyBroadStep]);
+                    methods.setValue('stepNames', [emptyBroadStep]);
                     if (data.plan.steps?.length > 0) {
                         const steps: IFineStep[] = data.plan.steps;
-                        const broadSteps: BroadStep[] = steps.map((step) => {
+                        const stepNames: StepName[] = steps.map((step) => {
                             const { timestamp_from, timestamp_to, name } = step;
                             return {
                                 from: timestamp_from.split('T')[0], // react hook form only takes '2019-12-13'
@@ -129,7 +129,7 @@ export default function BroadPlanner() {
                                 name: name,
                             };
                         });
-                        methods.setValue('broadSteps', broadSteps);
+                        methods.setValue('stepNames', stepNames);
                     }
                     if (data.plan.progress.length !== 0) {
                         setSideMenuStepsProgress(data.plan.progress);
@@ -140,21 +140,21 @@ export default function BroadPlanner() {
     }, [session, status, router, methods]);
 
     const { fields, append, remove, move, update } = useFieldArray({
-        name: 'broadSteps',
+        name: 'stepNames',
         control: methods.control,
     });
 
-    const checkIfNamesAreUnique = (broadSteps: BroadStep[]): boolean => {
-        const broadStepNames = broadSteps.map((broadStep) => broadStep.name);
-        return new Set(broadStepNames).size !== broadSteps.length;
+    const checkIfNamesAreUnique = (stepNames: StepName[]): boolean => {
+        const stepNamesNames = stepNames.map((stepName) => stepName.name);
+        return new Set(stepNamesNames).size !== stepNames.length;
     };
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        const broadSteps: BroadStep[] = data.broadSteps;
+        const stepNames: StepName[] = data.stepNames;
         let payload: IFineStep = {
             ...defaultFineStepData,
         };
-        const broadStepsData = broadSteps.map((broadStep) => {
+        const stepNamesData = stepNames.map((broadStep) => {
             // TODO ids lieber vergleichen
             const fineStepBackend = steps.find((fineStep) => fineStep.name === broadStep.name);
             if (fineStepBackend !== undefined) {
@@ -167,7 +167,7 @@ export default function BroadPlanner() {
                 timestamp_to: broadStep.to,
             };
         });
-        const sideMenuStateSteps: ISideProgressBarStateSteps[] = broadSteps.map((broadStep) => {
+        const sideMenuStateSteps: ISideProgressBarStateSteps[] = stepNames.map((broadStep) => {
             return { [broadStep.name]: ProgressState.notStarted };
         });
 
@@ -179,7 +179,7 @@ export default function BroadPlanner() {
                         {
                             plan_id: router.query.plannerId,
                             field_name: 'steps',
-                            value: broadStepsData,
+                            value: stepNamesData,
                         },
                         {
                             plan_id: router.query.plannerId,
@@ -206,7 +206,7 @@ export default function BroadPlanner() {
 
     const validateDateRange = (fromValue: string, indexFromTo: number) => {
         const fromDate = new Date(fromValue);
-        const toDate = new Date(methods.watch(`broadSteps.${indexFromTo}.to`));
+        const toDate = new Date(methods.watch(`stepNames.${indexFromTo}.to`));
         if (fromDate > toDate) {
             return 'Das Startdatum muss vor dem Enddatum liegen';
         } else {
@@ -222,9 +222,9 @@ export default function BroadPlanner() {
         }
     };
 
-    const renderBroadStepsInputs = (): JSX.Element[] => {
+    const renderStepNamesInputs = (): JSX.Element[] => {
         return fields.map((step, index) => (
-            <Draggable key={`broadSteps.${index}`} draggableId={`step-${index}`} index={index}>
+            <Draggable key={`stepNames.${index}`} draggableId={`step-${index}`} index={index}>
                 {(provided: DraggableProvided) => (
                     <div key={step.id} {...provided.draggableProps} ref={provided.innerRef}>
                         <WhiteBox>
@@ -233,7 +233,7 @@ export default function BroadPlanner() {
                                     <label>von:</label>
                                     <input
                                         type="date"
-                                        {...methods.register(`broadSteps.${index}.from`, {
+                                        {...methods.register(`stepNames.${index}.from`, {
                                             required: {
                                                 value: true,
                                                 message: 'Bitte fülle das Felde "von" aus',
@@ -245,7 +245,7 @@ export default function BroadPlanner() {
                                     <label>bis:</label>
                                     <input
                                         type="date"
-                                        {...methods.register(`broadSteps.${index}.to`, {
+                                        {...methods.register(`stepNames.${index}.to`, {
                                             required: {
                                                 value: true,
                                                 message: 'Bitte fülle das Felde "bis" aus',
@@ -255,7 +255,7 @@ export default function BroadPlanner() {
                                     />
                                     <input
                                         type="text"
-                                        {...methods.register(`broadSteps.${index}.name`, {
+                                        {...methods.register(`stepNames.${index}.name`, {
                                             required: {
                                                 value: true,
                                                 message: 'Bitte fülle das Felde "Name" aus',
@@ -264,7 +264,7 @@ export default function BroadPlanner() {
                                                 unique: () => {
                                                     return (
                                                         !checkIfNamesAreUnique(
-                                                            methods.getValues('broadSteps')
+                                                            methods.getValues('stepNames')
                                                         ) || 'Bitte wähle einen einzigartigen Namen'
                                                     );
                                                 },
@@ -290,23 +290,23 @@ export default function BroadPlanner() {
                                         alt="deleteStep"
                                     ></Image>
                                 </div>
-                                {methods.formState.errors?.broadSteps?.[index]?.from && (
+                                {methods.formState.errors?.stepNames?.[index]?.from && (
                                     <p className="text-red-600 pt-2 flex justify-center">
                                         {
-                                            methods.formState.errors?.broadSteps?.[index]?.from
+                                            methods.formState.errors?.stepNames?.[index]?.from
                                                 ?.message
                                         }
                                     </p>
                                 )}
-                                {methods.formState.errors?.broadSteps?.[index]?.to && (
+                                {methods.formState.errors?.stepNames?.[index]?.to && (
                                     <p className="text-red-600 pt-2 flex justify-center">
-                                        {methods.formState.errors?.broadSteps?.[index]?.to?.message}
+                                        {methods.formState.errors?.stepNames?.[index]?.to?.message}
                                     </p>
                                 )}
-                                {methods.formState.errors?.broadSteps?.[index]?.name && (
+                                {methods.formState.errors?.stepNames?.[index]?.name && (
                                     <p className="text-red-600 pt-2 flex justify-center">
                                         {
-                                            methods.formState.errors?.broadSteps?.[index]?.name
+                                            methods.formState.errors?.stepNames?.[index]?.name
                                                 ?.message
                                         }
                                     </p>
@@ -331,7 +331,7 @@ export default function BroadPlanner() {
                 isOpen={isPopupOpen}
                 handleContinue={async () => {
                     await router.push({
-                        pathname: '/startingWizard/generalInformation/formalConditions',
+                        pathname: '/ve-designer/checklist',
                         query: {
                             plannerId: router.query.plannerId,
                         },
@@ -367,13 +367,13 @@ export default function BroadPlanner() {
                                         vergib für jede einen individuellen Namen
                                     </div>
                                     <DragDropContext onDragEnd={onDragEnd}>
-                                        <Droppable droppableId="broadsteps-items">
+                                        <Droppable droppableId="stepNames-items">
                                             {(provided: DroppableProvided) => (
                                                 <div
                                                     ref={provided.innerRef}
                                                     {...provided.droppableProps}
                                                 >
-                                                    {renderBroadStepsInputs()}
+                                                    {renderStepNamesInputs()}
                                                     {provided.placeholder}
                                                 </div>
                                             )}
@@ -404,7 +404,7 @@ export default function BroadPlanner() {
                                                 async (data) => {
                                                     await combinedSubmitRouteAndUpdate(
                                                         data,
-                                                        '/startingWizard/generalInformation/formalConditions'
+                                                        '/ve-designer/checklist'
                                                     );
                                                 },
                                                 async () => setIsPopupOpen(true)
@@ -420,8 +420,8 @@ export default function BroadPlanner() {
                                             onClick={methods.handleSubmit((data) =>
                                                 combinedSubmitRouteAndUpdate(
                                                     data,
-                                                    `/startingWizard/fineplanner/${encodeURIComponent(
-                                                        methods.watch('broadSteps')[0].name
+                                                    `/ve-designer/step-data/${encodeURIComponent(
+                                                        methods.watch('stepNames')[0].name
                                                     )}`
                                                 )
                                             )}
@@ -434,7 +434,7 @@ export default function BroadPlanner() {
                         )}
                     </div>
                 </div>
-                <SideProgressBarSectionBroadPlannerWithReactHookForm
+                <SideProgressBarWithReactHookForm
                     progressState={sideMenuStepsProgress}
                     onSubmit={onSubmit}
                 />

@@ -1,15 +1,15 @@
-import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
+import HeadProgressBarSection from '@/components/VE-designer/HeadProgressBarSection';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
     ProgressState,
-} from '@/interfaces/startingWizard/sideProgressBar';
+} from '@/interfaces/ve-designer/sideProgressBar';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import LoadingAnimation from '@/components/LoadingAnimation';
-import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
 import Link from 'next/link';
 import { Tooltip } from '@/components/Tooltip';
 import { PiBookOpenText } from 'react-icons/pi';
@@ -17,8 +17,8 @@ import WhiteBox from '@/components/Layout/WhiteBox';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { BackendProfileSnippetsResponse, BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import { Controller, FormProvider, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
-import SideProgressBarSectionBroadPlannerWithReactHookForm from '@/components/StartingWizard/SideProgressBarSectionBroadPlannerWithReactHookForm';
-import PopupSaveData from '@/components/StartingWizard/PopupSaveData';
+import SideProgressBarWithReactHookForm from '@/components/VE-designer/SideProgressBarWithReactHookForm';
+import PopupSaveData from '@/components/VE-designer/PopupSaveData';
 
 export interface EvaluationPerPartner {
     username: string;
@@ -290,7 +290,7 @@ export default function Evaluation() {
                 isOpen={isPopupOpen}
                 handleContinue={async () => {
                     await router.push({
-                        pathname: '/startingWizard/generalInformation/languages',
+                        pathname: '/ve-designer/teaching-formats',
                         query: {
                             plannerId: router.query.plannerId,
                         },
@@ -331,7 +331,7 @@ export default function Evaluation() {
                                             onClick={methods.handleSubmit((data) =>
                                                 combinedSubmitRouteAndUpdate(
                                                     data,
-                                                    '/startingWizard/generalInformation/languages'
+                                                    '/ve-designer/languages'
                                                 )
                                             )}
                                         >
@@ -346,7 +346,7 @@ export default function Evaluation() {
                                                 (data) => {
                                                     combinedSubmitRouteAndUpdate(
                                                         data,
-                                                        '/startingWizard/generalInformation/courseFormat'
+                                                        '/ve-designer/teaching-formats'
                                                     );
                                                 },
                                                 async () => setIsPopupOpen(true)
@@ -360,7 +360,7 @@ export default function Evaluation() {
                         )}
                     </div>
                 </div>
-                <SideProgressBarSectionBroadPlannerWithReactHookForm
+                <SideProgressBarWithReactHookForm
                     progressState={sideMenuStepsProgress}
                     onSubmit={onSubmit}
                 />

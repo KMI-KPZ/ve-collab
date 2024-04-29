@@ -6,7 +6,7 @@ import SharePlanForm from './SharePlanForm';
 import EditAccessList from './EditAccessList';
 import SuccessAlert from '@/components/SuccessAlert';
 import { IPlan, PlanPreview } from '@/interfaces/planner/plannerInterfaces';
-import { ISideProgressBarStates, ProgressState } from '@/interfaces/startingWizard/sideProgressBar';
+import { ISideProgressBarStates, ProgressState } from '@/interfaces/ve-designer/sideProgressBar';
 import { MdCheck, MdShare, MdDelete, MdEdit, MdPublic } from 'react-icons/md';
 import Timestamp from '../Timestamp';
 import { useSession } from 'next-auth/react';
@@ -20,9 +20,8 @@ interface Props {
 }
 
 export default function PlannerOverviewItem({ plan, deleteCallback, refetchPlansCallback }: Props) {
-
     const { data: session } = useSession();
-    const username = session?.user.preferred_username
+    const username = session?.user.preferred_username;
 
     const [successPopupOpen, setSuccessPopupOpen] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
@@ -30,8 +29,8 @@ export default function PlannerOverviewItem({ plan, deleteCallback, refetchPlans
     const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
 
     const [isSummaryOpen, setSummaryOpen] = useState(false);
-    const [loadingSummary, setLoadingSummary] = useState<boolean>(false)
-    const [planSummary, setPlanSummary] = useState<IPlan>()
+    const [loadingSummary, setLoadingSummary] = useState<boolean>(false);
+    const [planSummary, setPlanSummary] = useState<IPlan>();
 
     const handleCloseShareDialog = async () => {
         setIsShareDialogOpen(false);
@@ -47,23 +46,23 @@ export default function PlannerOverviewItem({ plan, deleteCallback, refetchPlans
     //     return Object.keys(completedProgress).every(k => plan.progress[k as keyof ISideProgressBarStates] == completedProgress[k] )
     // }
 
-    const getCompletedStates = () => (
-        Object.keys(plan.progress).filter(k => plan.progress[k as keyof ISideProgressBarStates] == ProgressState.completed).length
-    )
+    const getCompletedStates = () =>
+        Object.keys(plan.progress).filter(
+            (k) => plan.progress[k as keyof ISideProgressBarStates] == ProgressState.completed
+        ).length;
 
     const openPlanSummary = () => {
-        setSummaryOpen(true)
-        setLoadingSummary(true)
+        setSummaryOpen(true);
+        setLoadingSummary(true);
 
-        fetchGET(`/planner/get?_id=${plan._id}`, session?.accessToken)
-        .then(data => {
-            setPlanSummary(data.plan)
-            setLoadingSummary(false)
-        })
-    }
+        fetchGET(`/planner/get?_id=${plan._id}`, session?.accessToken).then((data) => {
+            setPlanSummary(data.plan);
+            setLoadingSummary(false);
+        });
+    };
 
     // ensures that we have the username in the next return ...
-    if (!session || !username) return (<></>)
+    if (!session || !username) return <></>;
 
     const ShareDialog = () => (
         <Dialog isOpen={isShareDialogOpen} title={`Teilen`} onClose={handleCloseShareDialog}>
@@ -88,83 +87,114 @@ export default function PlannerOverviewItem({ plan, deleteCallback, refetchPlans
                 </Tabs>
             </div>
         </Dialog>
-    )
+    );
 
     const SummaryDialog = () => (
-        <Dialog isOpen={isSummaryOpen} title="Zusammenfassung" onClose={() => {
-            setSummaryOpen(false)
-            setPlanSummary(undefined)
-
-        }}>
+        <Dialog
+            isOpen={isSummaryOpen}
+            title="Zusammenfassung"
+            onClose={() => {
+                setSummaryOpen(false);
+                setPlanSummary(undefined);
+            }}
+        >
             <div>
                 {plan.write_access.includes(username) && (
-                    <button className='absolute top-0 right-10 m-4 p-2 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20' onClick={e => e.stopPropagation()}>
-                        <Link href={{
-                            pathname: '/startingWizard/generalInformation/projectName',
-                            query: { plannerId: plan._id }
-                        }}>
-                            <MdEdit className='inline' /> Bearbeiten
+                    <button
+                        className="absolute top-0 right-10 m-4 p-2 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <Link
+                            href={{
+                                pathname: '/ve-designer/name',
+                                query: { plannerId: plan._id },
+                            }}
+                        >
+                            <MdEdit className="inline" /> Bearbeiten
                         </Link>
                     </button>
                 )}
                 <div className="w-[70vw] h-[60vh] overflow-y-auto content-scrollbar relative">
-                    {loadingSummary
-                        ? (<LoadingAnimation />)
-                        : (
-                            <div className="gap-y-6 w-full px-12 py-6 max-w-screen-2xl items-center flex flex-col justify-content">
-                                <div className={'text-center font-bold text-3xl mb-2'}>{plan.name}</div>
-                                <div className="flex w-full">
-                                    <PlanOverview plan={planSummary!} />
-                                </div>
+                    {loadingSummary ? (
+                        <LoadingAnimation />
+                    ) : (
+                        <div className="gap-y-6 w-full px-12 py-6 max-w-screen-2xl items-center flex flex-col justify-content">
+                            <div className={'text-center font-bold text-3xl mb-2'}>{plan.name}</div>
+                            <div className="flex w-full">
+                                <PlanOverview plan={planSummary!} />
                             </div>
-                        )
-                    }
+                        </div>
+                    )}
                 </div>
             </div>
         </Dialog>
-    )
+    );
 
     const EditButton = () => (
-        <Link href={{
-            pathname: '/startingWizard/generalInformation/projectName',
-            query: { plannerId: plan._id }
-        }}>
-            <button className='p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700' onClick={e => e.stopPropagation()}><MdEdit /></button>
+        <Link
+            href={{
+                pathname: '/ve-designer/generalInformation/projectName',
+                query: { plannerId: plan._id },
+            }}
+        >
+            <button
+                className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <MdEdit />
+            </button>
         </Link>
-    )
+    );
 
     const DeleteButton = () => (
-        <button className='p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700' onClick={e => {
-            e.stopPropagation()
-            deleteCallback(plan._id)
-        }}><MdDelete /></button>
-    )
+        <button
+            className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700"
+            onClick={(e) => {
+                e.stopPropagation();
+                deleteCallback(plan._id);
+            }}
+        >
+            <MdDelete />
+        </button>
+    );
 
     const ShareButton = () => (
-        <button className='p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700' onClick={e => {
-            e.stopPropagation()
-            setIsShareDialogOpen(true);
-        }}>
-            {plan.read_access.length > 1
-                ? <MdShare className='text-lime-600' title={`Plan geteilt mit ${plan.read_access.length-1} Benutzer${plan.read_access.length > 2 ? "n" : ""}`} />
-                : <MdShare />
-            }
+        <button
+            className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700"
+            onClick={(e) => {
+                e.stopPropagation();
+                setIsShareDialogOpen(true);
+            }}
+        >
+            {plan.read_access.length > 1 ? (
+                <MdShare
+                    className="text-lime-600"
+                    title={`Plan geteilt mit ${plan.read_access.length - 1} Benutzer${
+                        plan.read_access.length > 2 ? 'n' : ''
+                    }`}
+                />
+            ) : (
+                <MdShare />
+            )}
         </button>
-    )
+    );
 
     return (
         <>
-            <div className='basis-1/12 text-center'>
+            <div className="basis-1/12 text-center">
                 {/* {isPlanProgressCompleted() ?<MdCheck /> : <></>} */}
-                <span className='rounded-full border p-2'>
+                <span className="rounded-full border p-2">
                     {getCompletedStates()} / {Object.keys(plan.progress).length}
                 </span>
             </div>
-            <div className='grow p-3 font-normal text-base group hover:cursor-pointer' onClick={() => openPlanSummary()}>
-                <div className='flex items-center'>
-                    <div className='mr-2 font-bold whitespace-nowrap'>{plan.name}</div>
+            <div
+                className="grow p-3 font-normal text-base group hover:cursor-pointer"
+                onClick={() => openPlanSummary()}
+            >
+                <div className="flex items-center">
+                    <div className="mr-2 font-bold whitespace-nowrap">{plan.name}</div>
                     {plan.is_good_practise && (
-                        <div className='mr-2 text-slate-700'>
+                        <div className="mr-2 text-slate-700">
                             <MdPublic title='Plan ist als "good practice" markiert' />
                         </div>
                     )}
@@ -173,7 +203,7 @@ export default function PlannerOverviewItem({ plan, deleteCallback, refetchPlans
                             <MdShare title={`Plan geteilt mit ${plan.read_access.length-1} Benutzer${plan.read_access.length > 2 ? "n" : ""}`} />
                         </div>
                     )} */}
-                    <div className='flex text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity'>
+                    <div className="flex text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
                         {plan.author == username && (
                             <>
                                 <ShareButton />
@@ -181,20 +211,27 @@ export default function PlannerOverviewItem({ plan, deleteCallback, refetchPlans
                                 <DeleteButton />
                             </>
                         )}
-                        {(plan.author != username && plan.write_access.includes(username)) && (
+                        {plan.author != username && plan.write_access.includes(username) && (
                             <EditButton />
                         )}
                     </div>
                 </div>
             </div>
-            <div className='basis-1/6'>
-                {plan.author === username
-                    ? <>{plan.author}</>
-                    : <span title='geteilt von'><MdShare className='inline m-1 text-slate-900' /> {plan.author}</span>
-                }
+            <div className="basis-1/6">
+                {plan.author === username ? (
+                    <>{plan.author}</>
+                ) : (
+                    <span title="geteilt von">
+                        <MdShare className="inline m-1 text-slate-900" /> {plan.author}
+                    </span>
+                )}
             </div>
-            <div className='basis-1/6'><Timestamp timestamp={plan.creation_timestamp} className='text-sm' /></div>
-            <div className='basis-1/6'><Timestamp timestamp={plan.last_modified} className='text-sm' /></div>
+            <div className="basis-1/6">
+                <Timestamp timestamp={plan.creation_timestamp} className="text-sm" />
+            </div>
+            <div className="basis-1/6">
+                <Timestamp timestamp={plan.last_modified} className="text-sm" />
+            </div>
 
             <ShareDialog />
 

@@ -1,4 +1,4 @@
-import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
+import HeadProgressBarSection from '@/components/VE-designer/HeadProgressBarSection';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
@@ -11,20 +11,20 @@ import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
     ProgressState,
-} from '@/interfaces/startingWizard/sideProgressBar';
-import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+} from '@/interfaces/ve-designer/sideProgressBar';
+import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
 import { PiBookOpenText } from 'react-icons/pi';
 import { Tooltip } from '@/components/Tooltip';
 import { Controller, FormProvider, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
-import SideProgressBarSectionBroadPlannerWithReactHookForm from '@/components/StartingWizard/SideProgressBarSectionBroadPlannerWithReactHookForm';
-import PopupSaveData from '@/components/StartingWizard/PopupSaveData';
+import SideProgressBarWithReactHookForm from '@/components/VE-designer/SideProgressBarWithReactHookForm';
+import PopupSaveData from '@/components/VE-designer/PopupSaveData';
 import {
     BackendProfileSnippetsResponse,
     BackendSearchResponse,
     BackendUserSnippet,
 } from '@/interfaces/api/apiInterfaces';
-import { FormalConditionPartner } from '@/pages/startingWizard/generalInformation/formalConditions';
-import { EvaluationPerPartner } from '@/pages/startingWizard/generalInformation/evaluation';
+import { CheckListPartner } from '@/pages/ve-designer/checklist';
+import { EvaluationPerPartner } from '@/pages/ve-designer/evaluation';
 
 export interface FormValues {
     partners: Partner[];
@@ -53,7 +53,7 @@ export default function Partners() {
     const [steps, setSteps] = useState<IFineStep[]>([]);
     const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
 
-    const [formalConditions, setFormalConditions] = useState<FormalConditionPartner[]>([]);
+    const [formalConditions, setFormalConditions] = useState<CheckListPartner[]>([]);
     const [evaluationInfo, setEvaluationInfo] = useState<EvaluationPerPartner[]>([]);
     const [author, setAuthor] = useState<string>('');
 
@@ -154,7 +154,7 @@ export default function Partners() {
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         const partners: string[] = data.partners.map((partner) => partner.value);
 
-        let updateFormalConditions: FormalConditionPartner[] = [];
+        let updateFormalConditions: CheckListPartner[] = [];
         let updateEvaluationInfo: EvaluationPerPartner[] = [];
 
         if (partners.length >= 1 && partners[0] !== '') {
@@ -322,7 +322,7 @@ export default function Partners() {
                 isOpen={isPopupOpen}
                 handleContinue={async () => {
                     await router.push({
-                        pathname: '/startingWizard/generalInformation/institutions',
+                        pathname: '/ve-designer/externalParties',
                         query: {
                             plannerId: router.query.plannerId,
                         },
@@ -392,7 +392,7 @@ export default function Partners() {
                                             onClick={methods.handleSubmit((data) => {
                                                 combinedSubmitRouteAndUpdate(
                                                     data,
-                                                    '/startingWizard/generalInformation/projectName'
+                                                    '/ve-designer/name'
                                                 );
                                             })}
                                         >
@@ -407,7 +407,7 @@ export default function Partners() {
                                                 (data) => {
                                                     combinedSubmitRouteAndUpdate(
                                                         data,
-                                                        '/startingWizard/generalInformation/externalParties'
+                                                        '/ve-designer/externalParties'
                                                     );
                                                 },
                                                 async () => setIsPopupOpen(true)
@@ -421,7 +421,7 @@ export default function Partners() {
                         )}
                     </div>
                 </div>
-                <SideProgressBarSectionBroadPlannerWithReactHookForm
+                <SideProgressBarWithReactHookForm
                     progressState={sideMenuStepsProgress}
                     onSubmit={onSubmit}
                 />

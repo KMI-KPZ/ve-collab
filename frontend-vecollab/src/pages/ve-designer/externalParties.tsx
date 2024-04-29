@@ -1,32 +1,34 @@
-import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
-import { fetchGET, fetchPOST } from '@/lib/backend';
-import { signIn, useSession } from 'next-auth/react';
+import HeadProgressBarSection from '@/components/VE-designer/HeadProgressBarSection';
 import React, { useEffect, useState } from 'react';
+import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
+import { signIn, useSession } from 'next-auth/react';
+import { FormProvider, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
+import { fetchGET, fetchPOST } from '@/lib/backend';
 import LoadingAnimation from '@/components/LoadingAnimation';
-import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
     ProgressState,
-} from '@/interfaces/startingWizard/sideProgressBar';
-import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
-import { Tooltip } from '@/components/Tooltip';
-import Link from 'next/link';
-import { PiBookOpenText } from 'react-icons/pi';
-import PopupSaveData from '@/components/StartingWizard/PopupSaveData';
-import SideProgressBarSectionBroadPlannerWithReactHookForm from '@/components/StartingWizard/SideProgressBarSectionBroadPlannerWithReactHookForm';
+} from '@/interfaces/ve-designer/sideProgressBar';
+import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
+import PopupSaveData from '@/components/VE-designer/PopupSaveData';
+import SideProgressBarWithReactHookForm from '@/components/VE-designer/SideProgressBarWithReactHookForm';
 
-interface FormValues {
-    learningEnv: string;
+interface ExternalParty {
+    externalParty: string;
 }
 
-const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
-    return formValues.learningEnv === '';
+interface FormValues {
+    externalParties: ExternalParty[];
+}
+
+const areAllExternalPartiesEmpty = (externalParties: ExternalParty[]): boolean => {
+    return externalParties.every((party) => party.externalParty === '');
 };
 
-LearningEnvironment.auth = true;
-export default function LearningEnvironment() {
+ExternalPersons.auth = true;
+export default function ExternalPersons() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
@@ -49,7 +51,7 @@ export default function LearningEnvironment() {
     const methods = useForm<FormValues>({
         mode: 'onChange',
         defaultValues: {
-            learningEnv: '',
+            externalParties: [{ externalParty: '' }],
         },
     });
 
@@ -69,8 +71,13 @@ export default function LearningEnvironment() {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
                     setLoading(false);
-                    if (data.plan.learning_env !== null) {
-                        methods.setValue('learningEnv', data.plan.learning_env);
+                    if (data.plan.involved_parties.length !== 0) {
+                        methods.setValue(
+                            'externalParties',
+                            data.plan.involved_parties.map((element: string) => ({
+                                externalParty: element,
+                            }))
+                        );
                     }
                     if (data.plan.progress.length !== 0) {
                         setSideMenuStepsProgress(data.plan.progress);
@@ -81,23 +88,28 @@ export default function LearningEnvironment() {
         }
     }, [session, status, router, methods]);
 
+    const { fields, append, remove } = useFieldArray({
+        name: 'externalParties',
+        control: methods.control,
+    });
+
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        if (!areAllFormValuesEmpty(data)) {
+        if (!areAllExternalPartiesEmpty(data.externalParties)) {
             await fetchPOST(
                 '/planner/update_fields',
                 {
                     update: [
                         {
                             plan_id: router.query.plannerId,
-                            field_name: 'learning_env',
-                            value: data.learningEnv,
+                            field_name: 'involved_parties',
+                            value: data.externalParties.map((element) => element.externalParty),
                         },
                         {
                             plan_id: router.query.plannerId,
                             field_name: 'progress',
                             value: {
                                 ...sideMenuStepsProgress,
-                                learning_env: ProgressState.completed,
+                                involved_parties: ProgressState.completed,
                             },
                         },
                     ],
@@ -115,13 +127,41 @@ export default function LearningEnvironment() {
         });
     };
 
+    const renderExternalPartiesInputs = (): JSX.Element[] => {
+        return fields.map((externalParty, index) => (
+            <div key={externalParty.id} className="my-2">
+                <div className="flex justify-center items-center">
+                    <input
+                        type="text"
+                        placeholder="Externen eingeben"
+                        className="border border-gray-300 rounded-lg p-2 mr-2"
+                        {...methods.register(`externalParties.${index}.externalParty`, {
+                            maxLength: {
+                                value: 500,
+                                message: 'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
+                            },
+                        })}
+                    />
+                    <button type="button" onClick={() => remove(index)}>
+                        <RxMinus size={20} />
+                    </button>
+                </div>
+                {methods.formState.errors?.externalParties?.[index]?.externalParty?.message && (
+                    <p className="text-red-600 pt-2">
+                        {methods.formState.errors?.externalParties?.[index]?.externalParty?.message}
+                    </p>
+                )}
+            </div>
+        ));
+    };
+
     return (
         <FormProvider {...methods}>
             <PopupSaveData
                 isOpen={isPopupOpen}
                 handleContinue={async () => {
                     await router.push({
-                        pathname: '/startingWizard/generalInformation/formalConditions',
+                        pathname: '/ve-designer/lectures',
                         query: {
                             plannerId: router.query.plannerId,
                         },
@@ -136,36 +176,28 @@ export default function LearningEnvironment() {
                         {loading ? (
                             <LoadingAnimation />
                         ) : (
-                            <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between">
+                            <form
+                                onSubmit={methods.handleSubmit(onSubmit)}
+                                className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between"
+                            >
                                 <div>
-                                    <div className={'text-center font-bold text-4xl mb-2 relative'}>
-                                        In welcher digitalen Lernumgebung findet der VE statt?
-                                        <Tooltip tooltipsText="Mehr zu LMS findest du hier in den Selbstlernmaterialien …">
-                                            <Link
-                                                target="_blank"
-                                                href={'/content/Digitale%20Medien%20&%20Werkzeuge'}
-                                            >
-                                                <PiBookOpenText size={30} color="#00748f" />
-                                            </Link>
-                                        </Tooltip>
+                                    <div className={'text-center font-bold text-4xl mb-2'}>
+                                        Gibt es externe Beteiligte?
                                     </div>
                                     <div className={'text-center mb-20'}>optional</div>
-                                    <div className="mt-4 flex flex-col justify-center items-center">
-                                        <textarea
-                                            rows={5}
-                                            placeholder="Lernumgebung beschreiben"
-                                            className="border border-gray-300 rounded-lg w-3/4 p-2"
-                                            {...methods.register('learningEnv', {
-                                                maxLength: {
-                                                    value: 500,
-                                                    message:
-                                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                                                },
-                                            })}
-                                        />
-                                        <p className="text-red-600 pt-2">
-                                            {methods.formState.errors?.learningEnv?.message}
-                                        </p>
+                                    {renderExternalPartiesInputs()}
+                                    <div className="flex justify-center mt-4">
+                                        <button
+                                            className="p-4 bg-white rounded-3xl shadow-2xl"
+                                            type="button"
+                                            onClick={() => {
+                                                append({
+                                                    externalParty: '',
+                                                });
+                                            }}
+                                        >
+                                            <RxPlus size={20} />
+                                        </button>
                                     </div>
                                 </div>
                                 <div className="flex justify-between w-full max-w-xl">
@@ -173,12 +205,12 @@ export default function LearningEnvironment() {
                                         <button
                                             type="button"
                                             className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                            onClick={methods.handleSubmit((data) =>
+                                            onClick={methods.handleSubmit((data) => {
                                                 combinedSubmitRouteAndUpdate(
                                                     data,
-                                                    '/startingWizard/generalInformation/courseFormat'
-                                                )
-                                            )}
+                                                    '/ve-designer/partners'
+                                                );
+                                            })}
                                         >
                                             Zurück
                                         </button>
@@ -191,7 +223,7 @@ export default function LearningEnvironment() {
                                                 (data) => {
                                                     combinedSubmitRouteAndUpdate(
                                                         data,
-                                                        '/startingWizard/generalInformation/formalConditions'
+                                                        '/ve-designer/lectures'
                                                     );
                                                 },
                                                 async () => setIsPopupOpen(true)
@@ -205,7 +237,7 @@ export default function LearningEnvironment() {
                         )}
                     </div>
                 </div>
-                <SideProgressBarSectionBroadPlannerWithReactHookForm
+                <SideProgressBarWithReactHookForm
                     progressState={sideMenuStepsProgress}
                     onSubmit={onSubmit}
                 />

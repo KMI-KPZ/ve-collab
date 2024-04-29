@@ -1,10 +1,10 @@
-import Tasks from '@/components/StartingWizard/FinePlanner/Tasks';
+import Tasks from '@/components/VE-designer/FinePlanner/Tasks';
 import WhiteBox from '@/components/Layout/WhiteBox';
 import React from 'react';
-import { IFineStepFrontend, ITaskFrontend } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+import { IFineStepFrontend, ITaskFrontend } from '@/pages/ve-designer/step-data/[stepName]';
 import { useFormContext, useFieldArray } from 'react-hook-form';
 import Image from 'next/image';
-import imageTrashcan from '@/images/icons/startingWizard/trash.png';
+import imageTrashcan from '@/images/icons/ve-designer/trash.png';
 
 interface Props {
     fineStep: IFineStepFrontend;

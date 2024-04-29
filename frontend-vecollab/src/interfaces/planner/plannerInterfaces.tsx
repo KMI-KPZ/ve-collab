@@ -1,11 +1,11 @@
-import { ISideProgressBarStates } from '@/interfaces/startingWizard/sideProgressBar';
-import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
-import { TargetGroup } from '@/pages/startingWizard/generalInformation/targetGroups';
-import { Institution } from '@/pages/startingWizard/generalInformation/institutions';
-import { Lecture } from '@/pages/startingWizard/generalInformation/participatingCourses';
-import { PhysicalMobility } from '@/pages/startingWizard/generalInformation/courseFormat';
-import { FormalConditionPartner } from '@/pages/startingWizard/generalInformation/formalConditions';
-import { EvaluationPerPartner } from '@/pages/startingWizard/generalInformation/evaluation';
+import { ISideProgressBarStates } from '@/interfaces/ve-designer/sideProgressBar';
+import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
+import { TargetGroup } from '@/pages/ve-designer/target-groups';
+import { Lecture } from '@/pages/ve-designer/lectures';
+import { LectureOld } from '@/pages/ve-designer/participatingCourses';
+import { PhysicalMobility } from '@/pages/ve-designer/teaching-formats';
+import { CheckListPartner } from '@/pages/ve-designer/checklist';
+import { EvaluationPerPartner } from '@/pages/ve-designer/evaluation';
 
 export interface PlanPreview {
     _id: string;
@@ -16,7 +16,7 @@ export interface PlanPreview {
     creation_timestamp: string;
     last_modified: string;
     progress: ISideProgressBarStates;
-    is_good_practise: boolean
+    is_good_practise: boolean;
 }
 
 export interface IPlan {
@@ -25,15 +25,15 @@ export interface IPlan {
     author: string;
     creation_timestamp: string;
     duration: number | null;
-    formalities: FormalConditionPartner[];
-    institutions: Institution[];
+    formalities: CheckListPartner[];
+    institutions: Lecture[];
     involved_parties: string[];
     languages: string[];
     evaluation: EvaluationPerPartner[];
     last_modified: string;
     learning_env: string | null;
     learning_goals: string[];
-    lectures: Lecture[];
+    lectures: LectureOld[];
     name: string;
     new_content: boolean | null;
     partners: string[];

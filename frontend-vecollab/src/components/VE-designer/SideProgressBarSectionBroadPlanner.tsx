@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import completedImage from '@/images/icons/progressBar/completed.svg';
 import notStartedImage from '@/images/icons/progressBar/notStarted.svg';
 import Image from 'next/image';
@@ -7,26 +7,23 @@ import {
     ProgressState,
     SideMenuStep,
     ISideProgressBarStates,
-} from '@/interfaces/startingWizard/sideProgressBar';
+} from '@/interfaces/ve-designer/sideProgressBar';
+import { useValidation } from '@/components/VE-designer/ValidateRouteHook';
 import { sideMenuStepsData } from '@/data/sideMenuSteps';
-import { SubmitHandler, useFormContext } from 'react-hook-form';
-import PopupSaveData from '@/components/StartingWizard/PopupSaveData';
 
 interface SideProgressBarSectionProps {
     progressState?: ISideProgressBarStates;
-    onSubmit: SubmitHandler<any>;
+    handleValidation(): Promise<void> | void;
+    isValid: boolean;
 }
 
-export default function SideProgressBarSectionBroadPlannerWithReactHookForm({
+export default function SideProgressBarSectionBroadPlanner({
     progressState,
-    onSubmit,
+    handleValidation,
+    isValid,
 }: SideProgressBarSectionProps): JSX.Element {
     const router = useRouter();
-    const { handleSubmit } = useFormContext();
-    const [popUp, setPopUp] = useState<{ isOpen: boolean; continueLink: string }>({
-        isOpen: false,
-        continueLink: '/overviewProjects',
-    });
+    const { validateAndRoute } = useValidation();
 
     function renderIcon(state: ProgressState) {
         switch (state) {
@@ -42,11 +39,17 @@ export default function SideProgressBarSectionBroadPlannerWithReactHookForm({
 
     const getProgressState = (id: string): any => {
         const idDecrypted: string = decodeURI(id);
-        if (
-            progressState !== undefined &&
-            progressState[idDecrypted as keyof ISideProgressBarStates] !== undefined
-        ) {
-            return progressState[idDecrypted as keyof ISideProgressBarStates];
+        if (progressState !== undefined) {
+            if (progressState[id as keyof ISideProgressBarStates] !== undefined) {
+                return progressState[id as keyof ISideProgressBarStates];
+            } else {
+                const currentProgressStateObject = progressState.steps.find(
+                    (step) => step[idDecrypted] !== undefined
+                );
+                if (currentProgressStateObject !== undefined) {
+                    return currentProgressStateObject[idDecrypted];
+                }
+            }
         }
         return ProgressState.notStarted;
     };
@@ -58,18 +61,14 @@ export default function SideProgressBarSectionBroadPlannerWithReactHookForm({
                 <li key={index}>
                     <button
                         type="button"
-                        onClick={handleSubmit(
-                            async (data) => {
-                                await onSubmit(data);
-                                await router.push({
-                                    pathname: sideMenuStep.link,
-                                    query: {
-                                        plannerId: router.query.plannerId,
-                                    },
-                                });
-                            },
-                            async () => setPopUp({ isOpen: true, continueLink: sideMenuStep.link })
-                        )}
+                        onClick={() => {
+                            validateAndRoute(
+                                sideMenuStep.link,
+                                router.query.plannerId,
+                                handleValidation,
+                                isValid
+                            );
+                        }}
                         className={`flex bg-white p-2 w-full rounded-lg drop-shadow-lg`}
                     >
                         <Image
@@ -90,27 +89,16 @@ export default function SideProgressBarSectionBroadPlannerWithReactHookForm({
     }
 
     return (
-        <>
-            <PopupSaveData
-                isOpen={popUp.isOpen}
-                handleContinue={async () => {
-                    await router.push({
-                        pathname: popUp.continueLink,
-                        query: {
-                            plannerId: router.query.plannerId,
-                        },
-                    });
-                }}
-                handleCancel={() => setPopUp({ isOpen: false, continueLink: '/overviewProjects' })}
-            />
-            <nav className="flex flex-col text-center w-80 shadow-inner mt-3 mb-3 bg-white rounded-xl">
+        <div className="flex flex-col text-center w-80">
+            <div className="h-36" /> {/* apply same vertical spacing as header bar*/}
+            <div className="flex flex-col flex-grow shadow-inner my-3 bg-white rounded-xl">
                 <div className="shadow-sm mb-3 rounded">
-                    <h2 className="mt-5 mb-4 font-konnect font-medium">Schritte</h2>{' '}
+                    <h2 className="mt-5 mb-4 font-konnect font-medium">Schritte</h2>
                 </div>
-                <ul className="flex flex-col gap-1 bg-white p-3">
+                <ul className="flex flex-col gap-1 bg-white p-3 rounded-xl">
                     {renderStageSteps(sideMenuStepsData)}
                 </ul>
-            </nav>
-        </>
+            </div>
+        </div>
     );
 }

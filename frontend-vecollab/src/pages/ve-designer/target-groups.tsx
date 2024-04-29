@@ -1,5 +1,5 @@
 import WhiteBox from '@/components/Layout/WhiteBox';
-import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
+import HeadProgressBarSection from '@/components/VE-designer/HeadProgressBarSection';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
@@ -11,12 +11,12 @@ import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
     ProgressState,
-} from '@/interfaces/startingWizard/sideProgressBar';
-import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
-import SideProgressBarSectionBroadPlannerWithReactHookForm from '@/components/StartingWizard/SideProgressBarSectionBroadPlannerWithReactHookForm';
-import PopupSaveData from '@/components/StartingWizard/PopupSaveData';
+} from '@/interfaces/ve-designer/sideProgressBar';
+import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
+import SideProgressBarWithReactHookForm from '@/components/VE-designer/SideProgressBarWithReactHookForm';
+import PopupSaveData from '@/components/VE-designer/PopupSaveData';
 import Image from 'next/image';
-import trash from '@/images/icons/startingWizard/trash.png';
+import trash from '@/images/icons/ve-designer/trash.png';
 
 export interface TargetGroup {
     name: string;
@@ -387,7 +387,7 @@ export default function TargetGroups() {
                 isOpen={isPopupOpen}
                 handleContinue={async () => {
                     await router.push({
-                        pathname: '/startingWizard/generalInformation/veTopic',
+                        pathname: '/ve-designer/learning-goals',
                         query: {
                             plannerId: router.query.plannerId,
                         },
@@ -439,7 +439,7 @@ export default function TargetGroups() {
                                             onClick={methods.handleSubmit((data) =>
                                                 combinedSubmitRouteAndUpdate(
                                                     data,
-                                                    '/startingWizard/generalInformation/participatingCourses'
+                                                    '/ve-designer/participatingCourses'
                                                 )
                                             )}
                                         >
@@ -454,7 +454,7 @@ export default function TargetGroups() {
                                                 (data) => {
                                                     combinedSubmitRouteAndUpdate(
                                                         data,
-                                                        '/startingWizard/generalInformation/globalGoals'
+                                                        '/ve-designer/learning-goals'
                                                     );
                                                 },
                                                 async () => setIsPopupOpen(true)
@@ -468,7 +468,7 @@ export default function TargetGroups() {
                         )}
                     </div>
                 </div>
-                <SideProgressBarSectionBroadPlannerWithReactHookForm
+                <SideProgressBarWithReactHookForm
                     progressState={sideMenuStepsProgress}
                     onSubmit={onSubmit}
                 />

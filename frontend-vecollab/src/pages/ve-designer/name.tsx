@@ -1,6 +1,6 @@
 import LoadingAnimation from '@/components/LoadingAnimation';
-import HeadProgressBarSection from '@/components/StartingWizard/HeadProgressBarSection';
-import SideProgressBarSectionBroadPlanner from '@/components/StartingWizard/SideProgressBarSectionBroadPlanner';
+import HeadProgressBarSection from '@/components/VE-designer/HeadProgressBarSection';
+import SideProgressBarSectionBroadPlanner from '@/components/VE-designer/SideProgressBarSectionBroadPlanner';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
@@ -9,8 +9,8 @@ import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
     ProgressState,
-} from '@/interfaces/startingWizard/sideProgressBar';
-import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+} from '@/interfaces/ve-designer/sideProgressBar';
+import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
 import { SubmitHandler, useForm } from 'react-hook-form';
 
 interface FormValues {
@@ -156,7 +156,7 @@ export default function EssentialInformation() {
                                         onClick={handleSubmit((data) =>
                                             combinedSubmitRouteAndUpdate(
                                                 data,
-                                                '/startingWizard/generalInformation/partners'
+                                                '/ve-designer/partners'
                                             )
                                         )}
                                     >
