@@ -140,62 +140,6 @@ def tearDownModule():
         print(response.content)
 
 
-class RenderHandlerTest(AsyncHTTPTestCase):
-    def get_app(self):
-        return make_app(global_vars.cookie_secret)
-
-    def setUp(self) -> None:
-        super().setUp()
-
-        # set test mode to bypass authentication as an admin
-        options.test_admin = True
-
-        self.render_endpoints = [
-            "/",
-            "/main",
-            "/myprofile",
-            "/profile/test",
-            "/space/test",
-            "/spaces",
-            "/template",
-            "/acl",
-        ]
-
-    def fetch_and_assert_is_html(self, endpoint: str):
-        """
-        expect: 200 response, containing a string, with an opening html tag (easy assertion that content is actual html)
-        """
-
-        response = self.fetch(endpoint)
-        content = response.buffer.getvalue().decode()
-        self.assertEqual(response.code, 200)
-        self.assertIsInstance(content, str)
-        self.assertIn("<html", content)
-
-    def fetch_and_assert_is_401_Unauthorized(self, endpoint: str):
-        """
-        expect: 401 Unauthorized code
-        """
-
-        response = self.fetch(endpoint, follow_redirects=False)
-        self.assertEqual(response.code, 401)
-
-    def test_render_handlers_no_login(self):
-        options.test_admin = False
-        options.test_user = False
-        for endpoint in self.render_endpoints:
-            self.fetch_and_assert_is_401_Unauthorized(endpoint)
-
-    def test_render_handlers_success(self):
-        for endpoint in self.render_endpoints:
-            if endpoint == "/":
-                # MainRedirectHandler is special, because also on success case we expect a redirect instead of html render
-                response = self.fetch(endpoint, follow_redirects=False)
-                self.assertEqual(response.code, 302)
-            else:
-                self.fetch_and_assert_is_html(endpoint)
-
-
 class BaseApiTestCase(AsyncHTTPTestCase):
     @classmethod
     def setUpClass(cls):

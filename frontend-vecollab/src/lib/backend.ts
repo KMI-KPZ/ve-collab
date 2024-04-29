@@ -69,7 +69,7 @@ export function useGetProfileSnippets(usernames?: string[]): {
 }
 
 export function useGetAvailablePlans(accessToken: string): {
-    data: PlanPreview[];
+    data: PlanPreview[]
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;
@@ -400,8 +400,6 @@ export function useGetTimeline(
         ([url, token]) => GETfetcher(url, token)
     );
 
-    // console.log('backend.getTimneline', {endpointUrl, toDate});
-
     return {
         data: isLoading || error ? [] : data.posts,
         isLoading,
@@ -489,10 +487,8 @@ export async function fetchPOST(
     accessToken?: string,
     asFormData: boolean=false
 ) {
-    // const requestHeaders: HeadersInit = new Headers();
     const headers: { Authorization?: string } = {};
     if (accessToken) {
-        // requestHeaders.set('Authorization', 'Bearer ' + accessToken);
         headers['Authorization'] = 'Bearer ' + accessToken;
     }
 
