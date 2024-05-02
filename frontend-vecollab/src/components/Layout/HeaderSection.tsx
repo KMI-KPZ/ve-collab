@@ -98,10 +98,10 @@ export default function HeaderSection({
                 </div>
                 <ul className="flex flex-1 justify-center xl:justify-end items-center font-semibold space-x-2 xl:space-x-6">
                     <li className={isFrontpage() ? activeClass : inactiveClass}>
-                        <Link href="/" className='inline-block	px-2 py-1'>Start</Link>
+                        <Link href="/" className='px-2 py-1'>Start</Link>
                     </li>
                     <li className={isActivePath('/content') ? activeClass : inactiveClass}>
-                        <Link href="/content" className='inline-block	px-2 py-1'>Materialien</Link>
+                        <Link href="/content" className='px-2 py-1'>Materialien</Link>
                     </li>
                     {session && (
                         <>
@@ -109,7 +109,9 @@ export default function HeaderSection({
                                 <Link href="/groups" className='px-2 py-1'>Gruppen</Link>
                             </li>
                             <li className={isActivePath('/plans') ? activeClass : inactiveClass}>
-                                <Link href="/plans" className='px-2 py-1'>VE Designer</Link>
+                                <Link href="/plans" className='px-2 py-1'>
+                                    <span className='text-ve-collab-orange'>VE</span> <span className='text-ve-collab-blue'>Designer</span>
+                                </Link>
                             </li>
                             <li className={`!ml-2 relative`}>
                                 <button className='relative p-2 rounded-full hover:bg-ve-collab-blue-light' onClick={e => toggleChatWindow()}>
