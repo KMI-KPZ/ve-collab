@@ -1,8 +1,8 @@
 import AuthenticatedImage from '../AuthenticatedImage';
-import { RxDotsVertical, RxTrash } from 'react-icons/rx';
+import { RxTrash } from 'react-icons/rx';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { fetchDELETE, fetchGET, fetchPOST, useGetPinnedPosts, useGetGroup } from '@/lib/backend';
+import { fetchDELETE, fetchGET, fetchPOST, useGetGroup } from '@/lib/backend';
 import { ChangeEvent, useEffect, useState } from 'react';
 import Dialog from '../profile/Dialog';
 import Tabs from '../profile/Tabs';
@@ -69,10 +69,6 @@ export default function GroupHeader({ userIsAdmin }: Props) {
         error,
         mutate,
     } = useGetGroup(session!.accessToken, router.query.id as string);
-
-    const {
-        data: pinnedPosts
-    } = useGetPinnedPosts(session!.accessToken, group._id)
 
     const handleOpenEditDialog = () => {
         setIsEditDialogOpen(true);
