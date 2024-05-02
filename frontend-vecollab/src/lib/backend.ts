@@ -451,7 +451,7 @@ export function useGetPost(
     );
 
     return {
-        data: isLoading || error ? '' : data.post,
+        data: isLoading || error || !post_id ? '' : data.post,
         isLoading,
         error,
         mutate,

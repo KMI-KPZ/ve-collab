@@ -9,11 +9,14 @@ import { useState } from "react";
 import { MdOutlineDeleteForever } from "react-icons/md";
 import { GiSadCrab } from 'react-icons/gi';
 
+/**
+ * Single post view
+ */
+
 Post.auth = true;
 export default function Post() {
     const { data: session, status } = useSession();
     const router = useRouter();
-    const { groupId } = router.query;
     // const [space, setSpace] = useState<BackendSpace>()
     // const [allSpaces, setAllSpaces] = useState<BackendSpace[]>()
     // const [spaceACLEntry, setSpaceACLEntry] = useState<BackendSpaceACLEntry>()
@@ -26,7 +29,7 @@ export default function Post() {
         error,
         mutate,
     } = useGetPost(
-        session!.accessToken, groupId as string)
+        session!.accessToken, router.query.id as string)
 
     const { data: group } = useGetGroup(session!.accessToken, post?.space);
     const { data: allGroups } = useGetAllGroups(session!.accessToken)
