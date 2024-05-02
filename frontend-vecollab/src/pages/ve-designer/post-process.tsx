@@ -65,7 +65,7 @@ export default function PostProcess() {
             await uploadToBackend();
         }
 
-        await router.push({ pathname: '/overviewProjects' });
+        await router.push({ pathname: '/plans' });
     };
 
     const uploadToClient = (event: ChangeEvent<HTMLInputElement>) => {
@@ -112,7 +112,7 @@ export default function PostProcess() {
         }
         // router is loaded, but still no plan ID in the query --> redirect to overview because we can't do anything without an ID
         if (!router.query.plannerId) {
-            router.push('/overviewProjects');
+            router.push('/plans');
             return;
         }
 

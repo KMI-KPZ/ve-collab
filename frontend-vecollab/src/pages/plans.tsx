@@ -1,6 +1,6 @@
 import { fetchDELETE, useGetAvailablePlans } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import { KeyboardEvent, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import PlannerOverviewItem from '@/components/Plannner/PlannerOverviewItem';
 import Link from 'next/link';
 import LoadingAnimation from '@/components/LoadingAnimation';
@@ -11,8 +11,8 @@ import { IPlan, PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import { ISideProgressBarStates } from '@/interfaces/ve-designer/sideProgressBar';
 
 // authentication is required on this page
-Overview.auth = true;
-export default function Overview() {
+Plans.auth = true;
+export default function Plans() {
     const { data: session } = useSession();
     const [successPopupOpen, setSuccessPopupOpen] = useState(false);
     const [sortedPlans, setSortedPlans] = useState<PlanPreview[]>([]);

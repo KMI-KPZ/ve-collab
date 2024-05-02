@@ -25,7 +25,7 @@ export default function SideProgressBarWithReactHookForm({
     const { handleSubmit } = useFormContext();
     const [popUp, setPopUp] = useState<{ isOpen: boolean; continueLink: string }>({
         isOpen: false,
-        continueLink: '/overviewProjects',
+        continueLink: '/plans',
     });
 
     function renderIcon(state: ProgressState) {
@@ -101,7 +101,7 @@ export default function SideProgressBarWithReactHookForm({
                         },
                     });
                 }}
-                handleCancel={() => setPopUp({ isOpen: false, continueLink: '/overviewProjects' })}
+                handleCancel={() => setPopUp({ isOpen: false, continueLink: '/plans' })}
             />
             <nav className="flex flex-col text-center w-80 shadow-inner mt-3 mb-3 bg-white rounded-xl">
                 <div className="shadow-sm mb-3 rounded">

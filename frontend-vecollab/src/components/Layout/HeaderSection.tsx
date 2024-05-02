@@ -108,8 +108,8 @@ export default function HeaderSection({
                             <li className={isActivePath('/groups') ? activeClass : inactiveClass}>
                                 <Link href="/groups" className='px-2 py-1'>Gruppen</Link>
                             </li>
-                            <li className={isActivePath('/overviewProjects') ? activeClass : inactiveClass}>
-                                <Link href="/overviewProjects" className='px-2 py-1'>VE Designer</Link>
+                            <li className={isActivePath('/plans') ? activeClass : inactiveClass}>
+                                <Link href="/plans" className='px-2 py-1'>VE Designer</Link>
                             </li>
                             <li className={`!ml-2 relative`}>
                                 <button className='relative p-2 rounded-full hover:bg-ve-collab-blue-light' onClick={e => toggleChatWindow()}>
