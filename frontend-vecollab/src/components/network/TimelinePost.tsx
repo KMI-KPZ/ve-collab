@@ -17,6 +17,7 @@ import TimelinePostText from "./TimelinePostText";
 import AuthenticatedImage from "../AuthenticatedImage";
 import { KeyedMutator } from "swr";
 import Alert from "../Alert";
+import ConfirmDialog from "../Confirm";
 
 interface Props {
     post: BackendPost
@@ -50,7 +51,7 @@ export default function TimelinePost(
     const { data: session } = useSession();
     const ref = useRef<any>(null)
     const commentFormref = useRef<any>(null)
-    const [wbRemoved, setWbRemoved] = useState<boolean>(false)
+    const [willRemvoe, setWillRemove] = useState<boolean>(false)
     const [repostExpand, setRepostExpand] = useState<boolean>(false)
     const [comments, setComments] = useState<BackendPostComment[]>( post.comments )
     const [showCommentForm, setShowCommentForm] = useState<boolean>(false)
@@ -59,20 +60,26 @@ export default function TimelinePost(
     const [shareDialogIsOpen, setShareDialogIsOpen] = useState<boolean>(false)
     const [loadingLikers, setLoadingLikers] = useState<boolean>(false)
     const [likers, setLikers] = useState<BackendPostAuthor[]>([])
+    const [askDeletion, setAskDeletion] = useState<boolean>(false)
 
-    // implement infinity scroll (detect intersection of window viewport with last post)
+    // infinity scroll (detect intersection of window viewport with last post)
     useEffect(() => {
         if (!ref?.current) return;
 
         const observer = new IntersectionObserver(([entry]) => {
-            if (isLast && entry.isIntersecting) {
-                // TODO es linter grubmles, but adding it to dependency array cals it too often ...
-                fetchNextPosts()
+            if (entry.isIntersecting) {
+                // TODO es linter grumbles
+                //  but adding 'fetchNextPosts' to dependency array calls the fetchNextPosts zwice...
+                //  tried useCallback, timeouts - nothing helped yet ...
                 observer.unobserve(entry.target);
+                fetchNextPosts()
             }
         });
 
-        observer.observe(ref.current);
+        if (isLast) {
+            observer.observe(ref.current);
+        }
+
     }, [isLast])
 
     // may collapse/expand repost
@@ -143,12 +150,12 @@ export default function TimelinePost(
 
     const deletePost = async () => {
         try {
+            setWillRemove(true)
             await fetchDELETE( '/posts', { post_id: post._id }, session?.accessToken )
-            setWbRemoved(true)
-            // wait until transition is done
+            // wait until transition animation is done
             await new Promise(resolve => setTimeout(resolve, 450))
             removePost(post)
-            setWbRemoved(false)
+            setWillRemove(false)
         } catch (error) {
             console.error(error);
         }
@@ -170,7 +177,7 @@ export default function TimelinePost(
                 setShareDialogIsOpen(true)
                 break;
             case 'remove':
-                deletePost()
+                setAskDeletion(true)
                 break;
             case 'edit':
                 setEditPost(true)
@@ -293,11 +300,11 @@ export default function TimelinePost(
                 { value: 'remove-comment', label: 'löschen', icon: <MdDeleteOutline /> }
             ]} onSelect={value => { handleSelectOption(value, comment) }} />
         }
-        return null
+        return <></>
     }
 
     const FileIcon = ({_file}: {_file: BackendPostFile}) => {
-        if (_file.file_type.startsWith('image/')) {
+        if (_file.file_type?.startsWith('image/')) {
             return <AuthenticatedImage
                     imageId={_file.file_id}
                     alt={_file.file_name}
@@ -305,13 +312,13 @@ export default function TimelinePost(
                     height={50}
                 ></AuthenticatedImage>
         }
-        else if (_file.file_type.startsWith('video/')) {
+        else if (_file.file_type?.startsWith('video/')) {
             return <div className="h-[50px] flex items-center"><MdVideoFile size={35} /></div>
         }
-        else if (_file.file_type.startsWith('audio/')) {
+        else if (_file.file_type?.startsWith('audio/')) {
             return <div className="h-[50px] flex items-center"><MdAudioFile size={35} /></div>
         }
-        else if (_file.file_type.startsWith('text/')) {
+        else if (_file.file_type?.startsWith('text/')) {
             return <div className="h-[50px] flex items-center"><RxFileText size={35} /></div>
         }
         else {
@@ -349,8 +356,14 @@ export default function TimelinePost(
                 </Alert>
             )}
 
+            {askDeletion && (
+                <ConfirmDialog message="Beitrag löschen?" handler={proceed => {
+                    if (proceed) deletePost()
+                    setAskDeletion(false)
+                }} />
+            )}
 
-            <div ref={ref} className={`${wbRemoved ? "opacity-0 transition-opacity ease-in-out delay-50 duration-300" : "opacity-100 transition-none" }
+            <div ref={ref} className={`${willRemvoe ? "opacity-0 transition-opacity ease-in-out delay-50 duration-300" : "opacity-100 transition-none" }
                 group/post p-4 mb-4 bg-white rounded shadow`}
             >
                 <div className="flex items-center">
