@@ -14,7 +14,7 @@ interface Props {
     removeNotificationCallback: (notificationId: string) => void;
 }
 
-export default function SpaceJoinRequestNotification({
+export default function GroupJoinRequestNotification({
     notification,
     acknowledgeNotificationCallback,
     removeNotificationCallback,
@@ -108,14 +108,14 @@ export default function SpaceJoinRequestNotification({
                                 <b>{requestedUser?.name}</b>
                             </Link>{' '}
                             möchte deiner Gruppe{' '}
-                            <Link href={`/space?id=${notification.payload.space_id}`}>
+                            <Link href={`/group?id=${notification.payload.space_id}`}>
                                 <b>{notification.payload.space_name}</b>
                             </Link>{' '}
                             beitreten.
                         </p>
                         <p className="my-4">
                             Du kannst die Anfrage sofort beantworten, oder später in den Einstellungen der{' '}
-                            <Link href={`/space?id=${notification.payload.space_id}`}>
+                            <Link href={`/group?id=${notification.payload.space_id}`}>
                                 {/* TODO direct link to correct tab in space settings*/}
                                 <b>Gruppe</b>
                             </Link>

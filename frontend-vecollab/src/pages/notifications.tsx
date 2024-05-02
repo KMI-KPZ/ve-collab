@@ -1,8 +1,8 @@
 import WhiteBox from '@/components/Layout/WhiteBox';
 import Container from '@/components/Layout/container';
 import AllNotifications from '@/components/Notifications/AllNotifications';
-import SpaceInvitationNotification from '@/components/Notifications/SpaceInvitationNotification';
-import SpaceJoinRequestNotification from '@/components/Notifications/SpaceJoinRequestNotification';
+import GroupInvitationNotification from '@/components/Notifications/GroupInvitationNotification';
+import GroupJoinRequestNotification from '@/components/Notifications/GroupJoinRequestNotification';
 import VeInvitationNotification from '@/components/Notifications/VeInvitationNotification';
 import VeInvitationReplyNotification from '@/components/Notifications/VeInvitationReplyNotification';
 import Tabs from '@/components/profile/Tabs';
@@ -65,7 +65,7 @@ export default function Notifications({
                                                 />
                                             )}
                                             {notification.type === 'space_invitation' && (
-                                                <SpaceInvitationNotification
+                                                <GroupInvitationNotification
                                                     notification={notification}
                                                     acknowledgeNotificationCallback={acknowledgeNotification}
                                                     removeNotificationCallback={
@@ -74,7 +74,7 @@ export default function Notifications({
                                                 />
                                             )}
                                             {notification.type === 'space_join_request' && (
-                                                <SpaceJoinRequestNotification
+                                                <GroupJoinRequestNotification
                                                     notification={notification}
                                                     acknowledgeNotificationCallback={acknowledgeNotification}
                                                     removeNotificationCallback={

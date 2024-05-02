@@ -1,10 +1,10 @@
-import { fetchGET, useGetAllSpaces, useGetPinnedPosts, useGetTimeline } from "@/lib/backend";
+import { fetchGET, useGetAllGroups, useGetPinnedPosts, useGetTimeline } from "@/lib/backend";
 import { useSession } from "next-auth/react";
 import LoadingAnimation from "../LoadingAnimation";
 import TimelinePost from "./TimelinePost";
 import { useEffect, useState } from "react";
 import TimelinePostForm from "./TimelinePostForm";
-import { BackendPost, BackendSpaceACLEntry } from "@/interfaces/api/apiInterfaces";
+import { BackendPost, BackendGroupACLEntry } from "@/interfaces/api/apiInterfaces";
 import Timestamp from "../Timestamp";
 import { HiOutlineCalendar } from "react-icons/hi";
 import React from "react";
@@ -13,18 +13,18 @@ import { MdKeyboardDoubleArrowDown, MdKeyboardDoubleArrowUp } from "react-icons/
 import { useRouter } from "next/router";
 
 interface Props {
-    /** User is global admin or admin of current space */
+    /** User is global admin or admin of current group */
     userIsAdmin?: boolean
-    space?: string | undefined;
-    spaceACL?: BackendSpaceACLEntry | undefined
+    group?: string | undefined;
+    groupACL?: BackendGroupACLEntry | undefined
     user?: string | undefined;
 }
 
 Timeline.auth = true
 export default function Timeline({
     userIsAdmin=false,
-    space,
-    spaceACL,
+    group,
+    groupACL,
     user
 }: Props) {
     const { data: session } = useSession();
@@ -52,16 +52,16 @@ export default function Timeline({
         session!.accessToken,
         toDate.toISOString(),
         perFetchLimit,
-        space,
+        group,
         user
     )
 
-    const { data: allSpaces } = useGetAllSpaces(session!.accessToken);
+    const { data: allGroups } = useGetAllGroups(session!.accessToken);
 
     const {
         data: pinnedPosts,
         mutate: mutatePinnedPosts
-    } = useGetPinnedPosts(session!.accessToken, space!)
+    } = useGetPinnedPosts(session!.accessToken, group!)
 
     useEffect(() => {
         if (!newFetchedPosts.length) return
@@ -160,11 +160,11 @@ export default function Timeline({
                                         updatePost(post)
                                         mutatePinnedPosts()
                                     }}
-                                    space={space}
-                                    spaceACL={spaceACL}
+                                    group={group}
+                                    groupACL={groupACL}
                                     userIsAdmin={userIsAdmin}
                                     isLast={false}
-                                    allSpaces={allSpaces}
+                                    allGroups={allGroups}
                                     removePost={removePost}
                                     rePost={post => setPostToRepost(post)}
                                     fetchNextPosts={() => {}}
@@ -190,10 +190,10 @@ export default function Timeline({
                 </>
             )}
 
-            {(!spaceACL || spaceACL.post) && (
+            {(!groupACL || groupACL.post) && (
                 <div className={'p-4 my-8 bg-white rounded shadow '}>
                     <TimelinePostForm
-                        space={space}
+                        group={group}
                         postToRepost={postToRepost}
                         onCancelRepost={() => setPostToRepost(null)}
                         onCreatedPost={afterCreatePost}
@@ -228,11 +228,11 @@ export default function Timeline({
                                 key={post._id}
                                 post={post}
                                 updatePost={updatePost}
-                                space={space}
-                                spaceACL={spaceACL}
+                                group={group}
+                                groupACL={groupACL}
                                 userIsAdmin={userIsAdmin}
                                 isLast={i === Object.keys(groupedPosts).length-1 && j === groupedPosts[group].length-1}
-                                allSpaces={allSpaces}
+                                allGroups={allGroups}
                                 removePost={removePost}
                                 rePost={post => setPostToRepost(post)}
                                 fetchNextPosts={fetchNextPosts}
@@ -255,7 +255,7 @@ export default function Timeline({
 
             {!isLoadingTimeline && allPosts.length == 0 && (
                 <div className="m-10 flex justify-center">
-                    {space ? (
+                    {group ? (
                         "Bisher keine Beiträge in dieser Gruppe..."
                     ) : (
                         "Bisher keine Beiträge in deiner Timeline..."

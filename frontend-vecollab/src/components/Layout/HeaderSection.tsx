@@ -105,8 +105,8 @@ export default function HeaderSection({
                     </li>
                     {session && (
                         <>
-                            <li className={isActivePath('/space') ? activeClass : inactiveClass}>
-                                <Link href="/spaces" className='px-2 py-1'>Gruppen</Link>
+                            <li className={isActivePath('/groups') ? activeClass : inactiveClass}>
+                                <Link href="/groups" className='px-2 py-1'>Gruppen</Link>
                             </li>
                             <li className={isActivePath('/overviewProjects') ? activeClass : inactiveClass}>
                                 <Link href="/overviewProjects" className='px-2 py-1'>VE Designer</Link>

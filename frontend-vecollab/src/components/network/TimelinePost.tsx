@@ -5,7 +5,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { IoIosSend } from "react-icons/io";
 import Dropdown from "../Dropdown";
-import { BackendPost, BackendPostAuthor, BackendPostComment, BackendPostFile, BackendSpace, BackendSpaceACLEntry } from "@/interfaces/api/apiInterfaces";
+import { BackendPost, BackendPostAuthor, BackendPostComment, BackendPostFile, BackendGroup, BackendGroupACLEntry } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
 import { MdAudioFile, MdDeleteOutline, MdDoubleArrow, MdModeEdit, MdOutlineKeyboardDoubleArrowDown, MdShare, MdThumbUp, MdVideoFile } from "react-icons/md";
 import { TiArrowForward, TiPin, TiPinOutline } from "react-icons/ti";
@@ -22,11 +22,11 @@ import ConfirmDialog from "../Confirm";
 interface Props {
     post: BackendPost
     updatePost: (post: BackendPost) => void
-    space?: string
-    spaceACL?: BackendSpaceACLEntry | undefined
+    group?: string
+    groupACL?: BackendGroupACLEntry | undefined
     userIsAdmin: boolean
     isLast: boolean
-    allSpaces?: BackendSpace[]
+    allGroups?: BackendGroup[]
     removePost: (post: BackendPost) => void
     rePost?: (post: BackendPost) => void
     fetchNextPosts: () => void
@@ -38,11 +38,11 @@ export default function TimelinePost(
 {
     post,
     updatePost,
-    space,
-    spaceACL,
+    group,
+    groupACL,
     userIsAdmin=false,
     isLast,
-    allSpaces,
+    allGroups,
     removePost,
     rePost,
     fetchNextPosts,
@@ -233,10 +233,10 @@ export default function TimelinePost(
         }
     }
 
-    const SpacenameById = (spaceId: string) => {
-        if (!allSpaces) return (<>{spaceId}</>)
-        const space = allSpaces.find(space => space._id == spaceId)
-        return ( <>{ space?.name }</> )
+    const GroupnameById = (groupId: string) => {
+        if (!allGroups) return (<>{groupId}</>)
+        const group = allGroups.find(group => group._id == groupId)
+        return ( <>{ group?.name }</> )
     }
 
     const Likes = () => {
@@ -373,9 +373,9 @@ export default function TimelinePost(
                         <PostHeader author={post.author} date={post.creation_date} />
                     )}
 
-                    {(!space && post.space) && (
+                    {(!group && post.group) && (
                         <div className='self-start leading-[1.6rem] text-xs text-gray-500 ml-1'>
-                            <MdDoubleArrow className="inline" /> <Link href={`/space/?id=${post.space}`} className="font-bold align-middle">{SpacenameById(post.space)}</Link>
+                            <MdDoubleArrow className="inline" /> <Link href={`/space/?id=${post.group}`} className="font-bold align-middle">{GroupnameById(post.group)}</Link>
                         </div>
                     )}
 
@@ -385,7 +385,7 @@ export default function TimelinePost(
                         ) : (
                             <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickLikeBtn}><HiOutlineHeart /></button>
                         )}
-                        {(space && userIsAdmin) && (
+                        {(group && userIsAdmin) && (
                             <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickPin} title={post.pinned ? "Beitrag abheften" : "Beitrag anheften"}>
                                 {post.pinned ? (
                                     <TiPin />
@@ -458,7 +458,7 @@ export default function TimelinePost(
 
                 <Likes />
 
-                {(comments.length == 0 && !showCommentForm && (!spaceACL || spaceACL.comment)) && (
+                {(comments.length == 0 && !showCommentForm && (!groupACL || groupACL.comment)) && (
                     <div className="mt-4 mb-2">
                         <button onClick={openCommentForm} className="px-2 py-[6px] w-1/3 rounded-md border text-gray-400 text-left text-nowrap overflow-hidden truncate">
                             Kommentar schreiben ...
@@ -472,7 +472,7 @@ export default function TimelinePost(
                             Kommentare
                         </div>
 
-                        {(!spaceACL || spaceACL.comment) && (
+                        {(!groupACL || groupACL.comment) && (
                             <form onSubmit={onSubmitCommentForm} className="mb-2" ref={commentFormref}>
                                 <input
                                     className={'w-1/3 border border-[#cccccc] rounded-md px-2 py-[6px]'}

@@ -1,7 +1,7 @@
 import LoadingAnimation from "@/components/LoadingAnimation";
 import TimelinePost from "@/components/network/TimelinePost";
 import { BackendPost } from "@/interfaces/api/apiInterfaces";
-import { useGetAllSpaces, useGetMySpaceACLEntry, useGetPost, useGetSpace, useIsGlobalAdmin } from "@/lib/backend";
+import { useGetAllGroups, useGetMyGroupACLEntry, useGetPost, useGetGroup, useIsGlobalAdmin } from "@/lib/backend";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -27,9 +27,9 @@ export default function Post() {
     } = useGetPost(
         session!.accessToken, router.query.id as string)
 
-    const { data: space } = useGetSpace(session!.accessToken, post?.space);
-    const { data: allSpaces } = useGetAllSpaces(session!.accessToken)
-    const { data: spaceACLEntry } = useGetMySpaceACLEntry(session!.accessToken, post?.space)
+    const { data: group } = useGetGroup(session!.accessToken, post?.group);
+    const { data: allGroups } = useGetAllGroups(session!.accessToken)
+    const { data: groupACLEntry } = useGetMyGroupACLEntry(session!.accessToken, post?.group)
 
     // useEffect(() => {
     //     if (isLoadingPost || !post?.space) return
@@ -57,16 +57,16 @@ export default function Post() {
     const isGlobalAdmin = useIsGlobalAdmin(session!.accessToken)
 
     const rePost = (post: BackendPost) => {
-        if (post.space) {
-            router.push(`/space?id=${post.space}&repost=${post._id}`)
+        if (post.group) {
+            router.push(`/group?id=${post.group}&repost=${post._id}`)
         } else {
             router.push(`/?repost=${post._id}`)
         }
     }
 
     function userIsAdmin() {
-        if (space) {
-            return isGlobalAdmin || space.admins.includes(session?.user?.preferred_username as string);
+        if (group) {
+            return isGlobalAdmin || group.admins.includes(session?.user?.preferred_username as string);
         }
         return isGlobalAdmin;
     }
@@ -132,8 +132,8 @@ export default function Post() {
         <Wrapper>
              <TimelinePost
                 post={post}
-                allSpaces={allSpaces}
-                spaceACL={spaceACLEntry}
+                allGroups={allGroups}
+                groupACL={groupACLEntry}
                 updatePost={() => {mutate()}}
                 userIsAdmin={userIsAdmin()}
                 removePost={() => {setDeleted(true)}}

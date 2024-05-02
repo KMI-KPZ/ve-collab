@@ -4,20 +4,20 @@ import BoxHeadline from '@/components/BoxHeadline';
 import WhiteBox from '@/components/Layout/WhiteBox';
 import Container from '@/components/Layout/container';
 import LoadingAnimation from '@/components/LoadingAnimation';
-import { SpaceAccessDenied } from '@/components/network/SpaceAccessDenied';
+import { AccessDenied } from '@/components/network/AccessDenied';
 import GroupBanner from '@/components/network/GroupBanner';
 import GroupHeader from '@/components/network/GroupHeader';
 import Dialog from '@/components/profile/Dialog';
 import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
-import { fetchPOST, useGetMySpaceACLEntry, useGetSpace, useIsGlobalAdmin } from '@/lib/backend';
+import { fetchPOST, useGetMyGroupACLEntry, useGetGroup, useIsGlobalAdmin } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { ChangeEvent, useEffect, useState } from 'react';
 import { RxFile, RxPlus } from 'react-icons/rx';
 import Timeline from '@/components/network/Timeline';
 
-Space.auth = true;
-export default function Space() {
+Group.auth = true;
+export default function Group() {
     const { data: session, status } = useSession();
     const router = useRouter();
 
@@ -36,22 +36,21 @@ export default function Space() {
     // because sometimes when the router is not yet ready, but the hook fires
     // an additional request with undefined id is made
     const {
-        data: space,
+        data: group,
         isLoading,
         error,
         mutate,
-    } = useGetSpace(session!.accessToken, router.query.id as string);
-    console.log(space);
-    console.log(memberSnippets);
+    } = useGetGroup(session!.accessToken, router.query.id as string);
+    console.log({group});
 
     // TODO use conditional fetching with the swr hook to wait for the router to be ready,
     // because sometimes when the router is not yet ready, but the hook fires
     // an additional request with undefined id is made
-    const { data: spaceACLEntry, isLoading: spaceACLEntryLoading } = useGetMySpaceACLEntry(
+    const { data: groupACLEntry, isLoading: groupACLEntryLoading } = useGetMyGroupACLEntry(
         session!.accessToken,
         router.query.id as string
     );
-    console.log({spaceACLEntry});
+    console.log({groupACLEntry});
 
     const handleCloseUploadDialog = () => {
         setIsUploadDialogOpen(false);
@@ -79,7 +78,7 @@ export default function Space() {
         // upload as form data instead of json
         const response = await fetch(
             process.env.NEXT_PUBLIC_BACKEND_BASE_URL +
-                `/spaceadministration/put_file?id=${space._id}`,
+                `/spaceadministration/put_file?id=${group._id}`,
             {
                 method: 'POST',
                 headers: headers,
@@ -99,7 +98,7 @@ export default function Space() {
         if (isLoading) {
             return;
         }
-        fetchPOST('/profile_snippets', { usernames: space.members }, session?.accessToken).then(
+        fetchPOST('/profile_snippets', { usernames: group.members }, session?.accessToken).then(
             (data) => {
                 setMemberSnippets(
                     data.user_snippets.map((snippet: any) => ({
@@ -111,15 +110,15 @@ export default function Space() {
                 );
             }
         );
-    }, [space, isLoading, session]);
+    }, [group, isLoading, session]);
 
-    console.log(space);
+    console.log(group);
 
     function files() {
         return (
             <>
                 <WhiteBox className="relative">
-                    {spaceACLEntryLoading ? (
+                    {groupACLEntryLoading ? (
                         <LoadingAnimation />
                     ) : (
                         <>
@@ -128,11 +127,11 @@ export default function Space() {
                                 <button
                                     className={
                                         'bg-ve-collab-orange text-white rounded-lg p-1 flex justify-center items-center ' +
-                                        (!spaceACLEntry?.write_files
+                                        (!groupACLEntry?.write_files
                                             ? 'opacity-50 cursor-not-allowed'
                                             : '')
                                     }
-                                    disabled={!spaceACLEntry?.write_files}
+                                    disabled={!groupACLEntry?.write_files}
                                     onClick={() => {
                                         setIsUploadDialogOpen(true);
                                     }}
@@ -143,9 +142,9 @@ export default function Space() {
                             </div>
                             <hr className="h-px mt-2 mb-6 bg-gray-200 border-0" />
                             <div className="mb-8 flex flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
-                                {spaceACLEntry.read_files ? (
+                                {groupACLEntry.read_files ? (
                                     <>
-                                        {space.files.map((file, index) => (
+                                        {group.files.map((file, index) => (
                                             <AuthenticatedFile
                                                 key={index}
                                                 url={`/uploads/${file.file_id}`}
@@ -199,7 +198,7 @@ export default function Space() {
                 <BoxHeadline title={'Admins'} />
                 <hr className="h-px mt-2 mb-6 bg-gray-200 border-0" />
                 <div className="mb-8 flex flex-wrap max-h-72 overflow-y-auto content-scrollbar">
-                    {space.admins.map((admin, index) => (
+                    {group.admins.map((admin, index) => (
                         <div
                             key={index}
                             className="mx-6 my-1 cursor-pointer"
@@ -231,8 +230,8 @@ export default function Space() {
                 <BoxHeadline title={'Mitglieder'} />
                 <hr className="h-px mt-2 mb-6 bg-gray-200 border-0" />
                 <div className="flex flex-wrap max-h-72 overflow-y-auto content-scrollbar">
-                    {space.members
-                        .filter((member) => !space.admins.includes(member))
+                    {group.members
+                        .filter((member) => !group.admins.includes(member))
                         .map((member, index) => (
                             <div
                                 key={index}
@@ -266,14 +265,14 @@ export default function Space() {
         );
     }
 
-    // can only be called after space hook is loaded
+    // can only be called after group hook is loaded
     function userIsMember() {
-        return space.members.includes(session?.user?.preferred_username as string);
+        return group.members.includes(session?.user?.preferred_username as string);
     }
 
-    // can only be called after space hook is loaded
+    // can only be called after group hook is loaded
     function userIsAdmin() {
-        return isGlobalAdmin || space.admins.includes(session?.user?.preferred_username as string);
+        return isGlobalAdmin || group.admins.includes(session?.user?.preferred_username as string);
     }
 
     return (
@@ -283,7 +282,7 @@ export default function Space() {
             ) : (
                 <>
                     {!(userIsMember() || userIsAdmin()) ? (
-                        <SpaceAccessDenied />
+                        <AccessDenied />
                     ) : (
                         <>
                             <GroupBanner userIsAdmin={userIsAdmin} />
@@ -299,9 +298,9 @@ export default function Space() {
                                             switch (renderPicker) {
                                                 case 'timeline':
                                                     return <Timeline
-                                                                space={space._id}
+                                                                group={group._id}
                                                                 userIsAdmin={userIsAdmin()}
-                                                                spaceACL={spaceACLEntry}
+                                                                groupACL={groupACLEntry}
                                                             />;
                                                 case 'members':
                                                     return members();
@@ -351,8 +350,8 @@ export default function Space() {
                                             <BoxHeadline title={'Beschreibung'} />
                                             <div className="min-h-[20vh] mx-2 my-4 px-1">
                                                 <div className={'text-gray-500'}>
-                                                    {space?.space_description
-                                                        ? space.space_description
+                                                    {group?.space_description
+                                                        ? group.space_description
                                                         : 'Keine Beschreibung vorhanden.'}
                                                 </div>
                                             </div>

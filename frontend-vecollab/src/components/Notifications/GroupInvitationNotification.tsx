@@ -14,7 +14,7 @@ interface Props {
     removeNotificationCallback: (notificationId: string) => void;
 }
 
-export default function SpaceInvitationNotification({
+export default function GroupInvitationNotification({
     notification,
     acknowledgeNotificationCallback,
     removeNotificationCallback,
@@ -108,14 +108,14 @@ export default function SpaceInvitationNotification({
                                 <b>{invitedFromUser?.name}</b>
                             </Link>{' '}
                             hat dich in die Gruppe{' '}
-                            <Link href={`/space?id=${notification.payload.space_id}`}>
+                            <Link href={`/group?id=${notification.payload.space_id}`}>
                                 <b>{notification.payload.space_name}</b>
                             </Link>{' '}
                             eingeladen.
                         </p>
                         <p className="my-4">
                             Du kannst die Einladung sofort beantworten, oder später in deinen{' '}
-                            <Link href={'/spaces'}>
+                            <Link href={'/groups'}>
                                 {/* TODO direct link to correct tab in spaces overview*/}
                                 <b>gesammelten Anfragen</b>
                             </Link>

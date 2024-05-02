@@ -8,130 +8,122 @@ import VerticalTabs from '@/components/profile/VerticalTabs';
 import {
     fetchGET,
     fetchPOST,
-    useGetAllSpaces,
-    useGetMySpaceInvites,
-    useGetMySpaceRequests,
-    useGetMySpaces,
+    useGetAllGroups,
+    useGetMyGroupInvites,
+    useGetMyGroupRequests,
+    useGetMyGroups,
 } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { RxDotsVertical } from 'react-icons/rx';
-import { BackendSpace } from '@/interfaces/api/apiInterfaces';
+import { BackendGroup } from '@/interfaces/api/apiInterfaces';
 
-Spaces.auth = true;
-export default function Spaces() {
+Groups.auth = true;
+export default function Groups() {
     const { data: session, status } = useSession();
-    const [searchSpaceInput, setSearchSpaceInput] = useState('');
-    const [newSpaceInput, setNewSpaceInput] = useState('');
-    const [newSpaceInvisibleCheckboxChecked, setNewSpaceInvisibleCheckboxChecked] = useState(false);
-    const [newSpaceJoinableCheckboxChecked, setNewSpaceJoinableCheckboxChecked] = useState(false);
-    const [searchSpaceResults, setSearchSpaceResults] = useState<BackendSpace[]>([]);
+    const [searchInput, setSearchInput] = useState('');
+    const [newInput, setNewInput] = useState('');
+    const [newGroupInvisibleCheckboxChecked, setNewGroupInvisibleCheckboxChecked] = useState(false);
+    const [newGroupJoinableCheckboxChecked, setNewGroupJoinableCheckboxChecked] = useState(false);
+    const [searchResults, setSearchResults] = useState<BackendGroup[]>([]);
 
-    const [isNewSpaceDialogOpen, setIsNewSpaceDialogOpen] = useState(false);
-
-    const {
-        data: mySpaces,
-        isLoading: isLoadingMySpaces,
-        error: errorMySpaces,
-        mutate: mutateMySpaces,
-    } = useGetMySpaces(session!.accessToken);
-    const {
-        data: allSpaces,
-        isLoading: isLoadingAllSpaces,
-        error: errorAllSpaces,
-        mutate: mutateAllSpaces,
-    } = useGetAllSpaces(session!.accessToken);
+    const [isNewDialogOpen, setIsNewDialogOpen] = useState(false);
 
     const {
-        data: mySpaceInvites,
-        isLoading: isLoadingMySpaceInvites,
-        error: errorMySpaceInvites,
-        mutate: mutateMySpaceInvites,
-    } = useGetMySpaceInvites(session!.accessToken);
-    console.log(mySpaceInvites);
+        data: myGroups,
+        mutate: mutateMyGroups,
+    } = useGetMyGroups(session!.accessToken);
+    const {
+        data: allGroups,
+        mutate: mutateAllGroups,
+    } = useGetAllGroups(session!.accessToken);
 
     const {
-        data: mySpaceRequests,
-        isLoading: isLoadingMySpaceRequests,
-        error: errorMySpaceRequests,
-        mutate: mutateMySpaceRequests,
-    } = useGetMySpaceRequests(session!.accessToken);
-    console.log(mySpaceRequests);
+        data: myGroupInvites,
+        mutate: mutateMyGroupInvites,
+    } = useGetMyGroupInvites(session!.accessToken);
+    // console.log(myGroupInvites);
 
-    const handleSearchSpaceInput = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setSearchSpaceInput(event.target.value);
+    const {
+        data: myGroupRequests,
+        mutate: mutateMyGroupRequests,
+    } = useGetMyGroupRequests(session!.accessToken);
+    // console.log(myGroupRequests);
+
+    const handleSearchInput = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchInput(event.target.value);
         fetchGET(`/search?spaces=true&query=${event.target.value}`, session!.accessToken).then(
             (data) => {
                 console.log(data);
-                setSearchSpaceResults(data.spaces);
+                setSearchResults(data.spaces);
             }
         );
     };
 
-    const handleCloseNewSpaceDialog = () => {
-        setIsNewSpaceDialogOpen(false);
+    const handleCloseNewDialog = () => {
+        setIsNewDialogOpen(false);
     };
 
-    const createNewSpace = () => {
+    const createNewGroup = () => {
         fetchPOST(
-            `/spaceadministration/create?name=${newSpaceInput}&invisible=${newSpaceInvisibleCheckboxChecked}&joinable=${!newSpaceJoinableCheckboxChecked}`,
+            `/spaceadministration/create?name=${newInput}&invisible=${newGroupInvisibleCheckboxChecked}&joinable=${!newGroupJoinableCheckboxChecked}`,
             {},
             session!.accessToken
         );
-        mutateMySpaces();
-        mutateAllSpaces();
+        mutateMyGroups();
+        mutateAllGroups();
     };
 
-    function sendJoinRequest(spaceId: string): void {
-        fetchPOST(`/spaceadministration/join?id=${spaceId}`, {}, session!.accessToken).then((data) => {
-            mutateMySpaces();
-            mutateAllSpaces();
-            mutateMySpaceRequests();
+    function sendJoinRequest(groupId: string): void {
+        fetchPOST(`/spaceadministration/join?id=${groupId}`, {}, session!.accessToken).then((data) => {
+            mutateMyGroups();
+            mutateAllGroups();
+            mutateMyGroupRequests();
 
-            // if space is joinable, user is automatically joined
-            // and therefore remove the space from the list
+            // if group is joinable, user is automatically joined
+            // and therefore remove the group from the list
             if(data.join_type === "joined") {
-                searchSpaceResults.splice(searchSpaceResults.findIndex((space) => space._id === spaceId), 1);
+                searchResults.splice(searchResults.findIndex(group => group._id === groupId), 1);
             }
             else if(data.join_type === "requested_join") {
-                searchSpaceResults.find((space) => space._id === spaceId)!.requests.push(session!.user.preferred_username!);
+                searchResults.find(group => group._id === groupId)!.requests.push(session!.user.preferred_username!);
             }
         });
     }
 
-    function acceptInvite(spaceId: string): void {
+    function acceptInvite(groupId: string): void {
         fetchPOST(
-            `/spaceadministration/accept_invite?id=${spaceId}`,
+            `/spaceadministration/accept_invite?id=${groupId}`,
             {},
             session!.accessToken
         ).then(() => {
-            mutateMySpaces();
-            mutateAllSpaces();
-            mutateMySpaceInvites();
+            mutateMyGroups();
+            mutateAllGroups();
+            mutateMyGroupInvites();
         });
     }
 
-    function declineInvite(spaceId: string): void {
+    function declineInvite(groupId: string): void {
         fetchPOST(
-            `/spaceadministration/decline_invite?id=${spaceId}`,
+            `/spaceadministration/decline_invite?id=${groupId}`,
             {},
             session!.accessToken
         ).then(() => {
-            mutateMySpaces();
-            mutateAllSpaces();
-            mutateMySpaceInvites();
+            mutateMyGroups();
+            mutateAllGroups();
+            mutateMyGroupInvites();
         });
     }
 
-    function revokeRequest(spaceId: string) {
+    function revokeRequest(groupId: string) {
         fetchPOST(
-            `/spaceadministration/revoke_request?id=${spaceId}`,
+            `/spaceadministration/revoke_request?id=${groupId}`,
             {},
             session!.accessToken
         ).then(() => {
-            mutateAllSpaces();
-            mutateMySpaceRequests();
+            mutateAllGroups();
+            mutateMyGroupRequests();
         });
     }
 
@@ -141,17 +133,17 @@ export default function Spaces() {
                 <VerticalTabs>
                     <div tabname="meine Gruppen">
                         <div className="min-h-[63vh]">
-                            <BoxHeadline title={'Du bist Mitglied in diesen Spaces'} />
+                            <BoxHeadline title={'Du bist Mitglied in diesen Gruppen'} />
                             <div className="divide-y my-4">
-                                {mySpaces.map((space, index) => (
+                                {myGroups.map((group, index) => (
                                     <div key={index} className="px-2 py-5">
                                         <Link
-                                            href={`/space?id=${space._id}`}
+                                            href={`/group?id=${group._id}`}
                                             className="flex cursor-pointer"
                                         >
                                             <div>
                                                 <AuthenticatedImage
-                                                    imageId={space.space_pic}
+                                                    imageId={group.space_pic}
                                                     alt={'Gruppenbild'}
                                                     width={60}
                                                     height={60}
@@ -159,10 +151,10 @@ export default function Spaces() {
                                                 ></AuthenticatedImage>
                                             </div>
                                             <div>
-                                                <BoxHeadline title={space.name} />
+                                                <BoxHeadline title={group.name} />
                                                 <div className="mx-2 px-1 my-1 text-gray-600">
-                                                    {space.space_description
-                                                        ? space.space_description
+                                                    {group.space_description
+                                                        ? group.space_description
                                                         : 'Keine Beschreibung vorhanden'}
                                                 </div>
                                             </div>
@@ -186,12 +178,12 @@ export default function Spaces() {
                                     }
                                     type="text"
                                     placeholder={
-                                        'Suche nach Spaces, z.B. nach dem Namen oder der Beschreibung'
+                                        'Suche nach Gruppen, z.B. nach dem Namen oder der Beschreibung'
                                     }
-                                    value={searchSpaceInput}
-                                    onChange={handleSearchSpaceInput}
+                                    value={searchInput}
+                                    onChange={handleSearchInput}
                                 />
-                                {searchSpaceInput && searchSpaceResults.length === 0 ? (
+                                {searchInput && searchResults.length === 0 ? (
                                     <div className="px-2 py-5">
                                         <div className="mx-2 px-1 my-1 text-gray-600">
                                             leider keine Ergebnisse gefunden
@@ -199,12 +191,12 @@ export default function Spaces() {
                                     </div>
                                 ) : (
                                     <>
-                                        {searchSpaceResults.map((space, index) => (
+                                        {searchResults.map((group, index) => (
                                             <div key={index} className="px-2 py-5">
                                                 <div className="flex cursor-pointer">
                                                     <div>
                                                         <AuthenticatedImage
-                                                            imageId={space.space_pic}
+                                                            imageId={group.space_pic}
                                                             alt={'Profilbild'}
                                                             width={60}
                                                             height={60}
@@ -212,10 +204,10 @@ export default function Spaces() {
                                                         ></AuthenticatedImage>
                                                     </div>
                                                     <div>
-                                                        <BoxHeadline title={space.name} />
+                                                        <BoxHeadline title={group.name} />
                                                         <div className="mx-2 px-1 my-1 text-gray-600">
-                                                            {space.space_description
-                                                                ? space.space_description
+                                                            {group.space_description
+                                                                ? group.space_description
                                                                 : 'keine Beschreibung vorhanden'}
                                                         </div>
                                                     </div>
@@ -223,17 +215,17 @@ export default function Spaces() {
                                                         <div className="flex items-center">
                                                             {/* if user is already member (or admin), no button is rendered */}
                                                             {!(
-                                                                space.members.includes(
+                                                                group.members.includes(
                                                                     session!.user
                                                                         .preferred_username!
                                                                 ) ||
-                                                                space.admins.includes(
+                                                                group.admins.includes(
                                                                     session!.user
                                                                         .preferred_username!
                                                                 )
                                                             ) &&
-                                                                // if space is joinable, render join button
-                                                                (space.joinable ? (
+                                                                // if group is joinable, render join button
+                                                                (group.joinable ? (
                                                                     <button
                                                                         className={
                                                                             'h-10 bg-ve-collab-orange text-white px-4 mx-2 rounded-lg shadow-xl'
@@ -241,14 +233,14 @@ export default function Spaces() {
                                                                         onClick={(e) => {
                                                                             e.preventDefault();
                                                                             sendJoinRequest(
-                                                                                space._id
+                                                                                group._id
                                                                             );
                                                                         }}
                                                                     >
                                                                         <span>Beitreten</span>
                                                                     </button>
-                                                                ) : // if space is not joinable and user has already requested to join, render disabled "already requested" button
-                                                                space.requests.includes(
+                                                                ) : // if group is not joinable and user has already requested to join, render disabled "already requested" button
+                                                                group.requests.includes(
                                                                       session!.user
                                                                           .preferred_username!
                                                                   ) ? (
@@ -269,7 +261,7 @@ export default function Spaces() {
                                                                         onClick={(e) => {
                                                                             e.preventDefault();
                                                                             sendJoinRequest(
-                                                                                space._id
+                                                                                group._id
                                                                             );
                                                                         }}
                                                                     >
@@ -292,9 +284,9 @@ export default function Spaces() {
                                     className={
                                         'h-10 bg-ve-collab-orange text-white px-4 mx-2 my-2 rounded-lg shadow-xl'
                                     }
-                                    onClick={() => setIsNewSpaceDialogOpen(true)}
+                                    onClick={() => setIsNewDialogOpen(true)}
                                 >
-                                    <span>neuen Space erstellen</span>
+                                    <span>neue Gruppe erstellen</span>
                                 </button>
                             </div>
                         </div>
@@ -302,15 +294,15 @@ export default function Spaces() {
                     <div tabname="alle">
                         <div className="min-h-[63vh]">
                             <div className="h-[50vh] overflow-y-auto content-scrollbar">
-                                {allSpaces.map((space, index) => (
+                                {allGroups.map((group, index) => (
                                     <div key={index} className="px-2 py-5">
                                         <Link
-                                            href={`/space?id=${space._id}`}
+                                            href={`/group?id=${group._id}`}
                                             className="flex cursor-pointer"
                                         >
                                             <div>
                                                 <AuthenticatedImage
-                                                    imageId={space.space_pic}
+                                                    imageId={group.space_pic}
                                                     alt={'Gruppenbild'}
                                                     width={60}
                                                     height={60}
@@ -318,10 +310,10 @@ export default function Spaces() {
                                                 ></AuthenticatedImage>
                                             </div>
                                             <div>
-                                                <BoxHeadline title={space.name} />
+                                                <BoxHeadline title={group.name} />
                                                 <div className="mx-2 px-1 my-1 text-gray-600">
-                                                    {space.space_description
-                                                        ? space.space_description
+                                                    {group.space_description
+                                                        ? group.space_description
                                                         : 'Keine Beschreibung vorhanden'}
                                                 </div>
                                             </div>
@@ -329,28 +321,28 @@ export default function Spaces() {
                                                 <div className="flex items-center">
                                                     {/* if user is already member (or admin), no button is rendered */}
                                                     {!(
-                                                        space.members.includes(
+                                                        group.members.includes(
                                                             session!.user.preferred_username!
                                                         ) ||
-                                                        space.admins.includes(
+                                                        group.admins.includes(
                                                             session!.user.preferred_username!
                                                         )
                                                     ) &&
-                                                        // if space is joinable, render join button
-                                                        (space.joinable ? (
+                                                        // if group is joinable, render join button
+                                                        (group.joinable ? (
                                                             <button
                                                                 className={
                                                                     'h-10 bg-ve-collab-orange text-white px-4 mx-2 rounded-lg shadow-xl'
                                                                 }
                                                                 onClick={(e) => {
                                                                     e.preventDefault();
-                                                                    sendJoinRequest(space._id);
+                                                                    sendJoinRequest(group._id);
                                                                 }}
                                                             >
                                                                 <span>Beitreten</span>
                                                             </button>
-                                                        ) : // if space is not joinable and user has already requested to join, render disabled "already requested" button
-                                                        space.requests.includes(
+                                                        ) : // if group is not joinable and user has already requested to join, render disabled "already requested" button
+                                                        group.requests.includes(
                                                               session!.user.preferred_username!
                                                           ) ? (
                                                             <button
@@ -362,14 +354,14 @@ export default function Spaces() {
                                                                 <span>angefragt</span>
                                                             </button>
                                                         ) : (
-                                                            // if space is not joinable and user has not already requested to join, render request button
+                                                            // if group is not joinable and user has not already requested to join, render request button
                                                             <button
                                                                 className={
                                                                     'h-10 bg-transparent border border-ve-collab-orange text-ve-collab-orange  px-4 mx-2 rounded-lg shadow-xl'
                                                                 }
                                                                 onClick={(e) => {
                                                                     e.preventDefault();
-                                                                    sendJoinRequest(space._id);
+                                                                    sendJoinRequest(group._id);
                                                                 }}
                                                             >
                                                                 <span>Beitritt anfragen</span>
@@ -387,9 +379,9 @@ export default function Spaces() {
                                     className={
                                         'h-10 bg-ve-collab-orange text-white px-4 mx-2 my-2 rounded-lg shadow-xl'
                                     }
-                                    onClick={() => setIsNewSpaceDialogOpen(true)}
+                                    onClick={() => setIsNewDialogOpen(true)}
                                 >
-                                    <span>neuen Space erstellen</span>
+                                    <span>neue Gruppe erstellen</span>
                                 </button>
                             </div>
                         </div>
@@ -398,15 +390,15 @@ export default function Spaces() {
                         <div className="min-h-[63vh]">
                             <BoxHeadline title={'ausstehende Einladungen'} />
                             <div className="h-[25vh] mb-10 overflow-y-auto content-scrollbar">
-                                {mySpaceInvites.map((space, index) => (
+                                {myGroupInvites.map((group, index) => (
                                     <div key={index} className="px-2 py-5">
                                         <Link
-                                            href={`/space?id=${space._id}`}
+                                            href={`/group?id=${group._id}`}
                                             className="flex cursor-pointer"
                                         >
                                             <div>
                                                 <AuthenticatedImage
-                                                    imageId={space.space_pic}
+                                                    imageId={group.space_pic}
                                                     alt={'Gruppenbild'}
                                                     width={60}
                                                     height={60}
@@ -414,10 +406,10 @@ export default function Spaces() {
                                                 ></AuthenticatedImage>
                                             </div>
                                             <div>
-                                                <BoxHeadline title={space.name} />
+                                                <BoxHeadline title={group.name} />
                                                 <div className="mx-2 px-1 my-1 text-gray-600">
-                                                    {space.space_description
-                                                        ? space.space_description
+                                                    {group.space_description
+                                                        ? group.space_description
                                                         : 'Keine Beschreibung vorhanden'}
                                                 </div>
                                             </div>
@@ -429,7 +421,7 @@ export default function Spaces() {
                                                         }
                                                         onClick={(e) => {
                                                             e.preventDefault();
-                                                            acceptInvite(space._id);
+                                                            acceptInvite(group._id);
                                                         }}
                                                     >
                                                         <span>Annehmen</span>
@@ -440,7 +432,7 @@ export default function Spaces() {
                                                         }
                                                         onClick={(e) => {
                                                             e.preventDefault();
-                                                            declineInvite(space._id);
+                                                            declineInvite(group._id);
                                                         }}
                                                     >
                                                         <span>Ablehnen</span>
@@ -453,15 +445,15 @@ export default function Spaces() {
                             </div>
                             <BoxHeadline title={'ausstehende Anfragen'} />
                             <div className="h-[25vh] overflow-y-auto content-scrollbar">
-                                {mySpaceRequests.map((space, index) => (
+                                {myGroupRequests.map((group, index) => (
                                     <div key={index} className="px-2 py-5">
                                         <Link
-                                            href={`/space?id=${space._id}`}
+                                            href={`/group?id=${group._id}`}
                                             className="flex cursor-pointer"
                                         >
                                             <div>
                                                 <AuthenticatedImage
-                                                    imageId={space.space_pic}
+                                                    imageId={group.space_pic}
                                                     alt={'Gruppenbild'}
                                                     width={60}
                                                     height={60}
@@ -469,10 +461,10 @@ export default function Spaces() {
                                                 ></AuthenticatedImage>
                                             </div>
                                             <div>
-                                                <BoxHeadline title={space.name} />
+                                                <BoxHeadline title={group.name} />
                                                 <div className="mx-2 px-1 my-1 text-gray-600">
-                                                    {space.space_description
-                                                        ? space.space_description
+                                                    {group.space_description
+                                                        ? group.space_description
                                                         : 'Keine Beschreibung vorhanden'}
                                                 </div>
                                             </div>
@@ -484,7 +476,7 @@ export default function Spaces() {
                                                         }
                                                         onClick={(e) => {
                                                             e.preventDefault();
-                                                            revokeRequest(space._id);
+                                                            revokeRequest(group._id);
                                                         }}
                                                     >
                                                         <span>Anfrage zurückziehen</span>
@@ -500,9 +492,9 @@ export default function Spaces() {
                 </VerticalTabs>
             </WhiteBox>
             <Dialog
-                isOpen={isNewSpaceDialogOpen}
-                title={'neuen Space erstellen'}
-                onClose={handleCloseNewSpaceDialog}
+                isOpen={isNewDialogOpen}
+                title={'neue Gruppe erstellen'}
+                onClose={handleCloseNewDialog}
             >
                 <div className="w-[25vw] h-[30vh] relative">
                     <div>Name:</div>
@@ -510,17 +502,17 @@ export default function Spaces() {
                         className={'border border-gray-500 rounded-lg px-2 py-1 my-2 w-full'}
                         type="text"
                         placeholder={'Namen eingeben'}
-                        value={newSpaceInput}
-                        onChange={(e) => setNewSpaceInput(e.target.value)}
+                        value={newInput}
+                        onChange={(e) => setNewInput(e.target.value)}
                     />
                     <div className="flex my-2">
                         <input
                             type="checkbox"
                             className="mr-2"
-                            checked={newSpaceInvisibleCheckboxChecked}
+                            checked={newGroupInvisibleCheckboxChecked}
                             onChange={(e) =>
-                                setNewSpaceInvisibleCheckboxChecked(
-                                    !newSpaceInvisibleCheckboxChecked
+                                setNewGroupInvisibleCheckboxChecked(
+                                    !newGroupInvisibleCheckboxChecked
                                 )
                             }
                         />
@@ -530,9 +522,9 @@ export default function Spaces() {
                         <input
                             type="checkbox"
                             className="mr-2"
-                            checked={newSpaceJoinableCheckboxChecked}
+                            checked={newGroupJoinableCheckboxChecked}
                             onChange={(e) =>
-                                setNewSpaceJoinableCheckboxChecked(!newSpaceJoinableCheckboxChecked)
+                                setNewGroupJoinableCheckboxChecked(!newGroupJoinableCheckboxChecked)
                             }
                         />
                         <p>privat</p>
@@ -542,7 +534,7 @@ export default function Spaces() {
                             className={
                                 'w-40 h-12 bg-transparent border border-gray-500 py-3 px-6 mr-auto rounded-lg shadow-lg'
                             }
-                            onClick={handleCloseNewSpaceDialog}
+                            onClick={handleCloseNewDialog}
                         >
                             <span>Abbrechen</span>
                         </button>
@@ -551,8 +543,8 @@ export default function Spaces() {
                                 'w-40 h-12 bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
                             }
                             onClick={(e) => {
-                                createNewSpace();
-                                handleCloseNewSpaceDialog();
+                                createNewGroup();
+                                handleCloseNewDialog();
                             }}
                         >
                             <span>Erstellen</span>
