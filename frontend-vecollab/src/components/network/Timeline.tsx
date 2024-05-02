@@ -104,8 +104,8 @@ export default function Timeline({
     }
 
     const fetchNextPosts = (force: boolean=false) => {
-        if (!allPosts.length) return
-        if (force !== true && fetchCount % 2 == 0) return
+        if (!allPosts.length || isLoadingTimeline) return
+        if (force !== true && fetchCount % 3 == 0) return
 
         const newToDate = new Date(allPosts[allPosts.length - 1].creation_date)
         newToDate.setMilliseconds(newToDate.getMilliseconds()+1)
@@ -201,8 +201,6 @@ export default function Timeline({
                 </div>
             )}
 
-            {isLoadingTimeline && (<LoadingAnimation />)}
-
             {Object.keys( groupedPosts ).map( (group, i) => {
                 const datePill = getDatePill(i)
                 return (
@@ -245,10 +243,12 @@ export default function Timeline({
                 )
             } )}
 
+            {isLoadingTimeline && (<LoadingAnimation />)}
+
             {!isLoadingTimeline && allPosts.length > 0 && newFetchedPosts.length >= perFetchLimit && (
                 <div className="text-center">
-                    <button onClick={e => {  fetchNextPosts(true)}} type="button" title="Weitere Beiträge laden ..." className="py-2 px-5 rounded-lg bg-ve-collab-orange text-white">
-                        Mehr
+                    <button onClick={e => { fetchNextPosts(true)}} type="button" title="Weitere Beiträge laden ..." className="py-2 px-5 rounded-lg bg-ve-collab-orange text-white">
+                        Weitere Beiträge anzeigen
                     </button>
                 </div>
             )}
