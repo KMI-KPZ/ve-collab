@@ -16,12 +16,14 @@ interface Props {
     notificationEvents: Notification[];
     headerBarMessageEvents: any[];
     toggleChatWindow: () => void
+    toggleNotifWindow: () => void
 }
 
 export default function HeaderSection({
     notificationEvents,
     headerBarMessageEvents,
-    toggleChatWindow
+    toggleChatWindow,
+    toggleNotifWindow
 }: Props) {
     const { data: session } = useSession();
     const [messageEventCount, setMessageEventCount] = useState<number>(0);
@@ -115,7 +117,7 @@ export default function HeaderSection({
                                 </Link>
                             </li>
                             <li className={`!ml-2 relative`}>
-                                <button className='relative p-2 rounded-full hover:bg-ve-collab-blue-light' onClick={e => toggleChatWindow()}>
+                                <button className='relative p-2 rounded-full hover:bg-ve-collab-blue-light' onClick={e => toggleChatWindow()} title='Chat Fenster öffnen'>
                                     <MdOutlineMessage size={20} />
                                 </button>
                                 {messageEventCount > 0 && (
@@ -124,9 +126,8 @@ export default function HeaderSection({
                                     </span>
                                 )}
                             </li>
-                            {/* TODO this may also will be a popup window */}
                             <li className={`!ml-2 relative`}>
-                                <button className='p-2 rounded-full hover:bg-ve-collab-blue-light' onClick={e => router.push('/notifications')}>
+                                <button className='p-2 rounded-full hover:bg-ve-collab-blue-light' onClick={e => toggleNotifWindow()} title='Notifications Fenster öffnen'>
                                     <IoMdNotificationsOutline size={20} />
                                 </button>
                                 {notificationEvents.length > 0 && (
