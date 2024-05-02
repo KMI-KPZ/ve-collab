@@ -104,7 +104,7 @@ export default function GroupInvitationNotification({
                 <div className="w-[30rem] min-h-[10rem] relative">
                     <div>
                         <p>
-                            <Link href={`/profile?username=${invitedFromUser?.preferredUsername}`}>
+                            <Link href={`/profile/user/${invitedFromUser?.preferredUsername}`}>
                                 <b>{invitedFromUser?.name}</b>
                             </Link>{' '}
                             hat dich in die Gruppe{' '}

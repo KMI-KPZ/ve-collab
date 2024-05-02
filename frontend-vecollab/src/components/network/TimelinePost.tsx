@@ -247,7 +247,7 @@ export default function TimelinePost(
                 <MdThumbUp className="" size={20} />&nbsp;{post.likers.length}
                 <div className="absolute w-40 overflow-y-auto max-h-32 left-1/2 -translate-x-1/2 p-2 mt-5 group-hover/likes:opacity-100 hover:!opacity-100 transition-opacity opacity-0 rounded-md bg-white shadow border">
                     {likers.map((liker, i) => (
-                        <Link key={i} href={`/profile?username=${liker.username}`} className='truncate'>
+                        <Link key={i} href={`/profile/user/${liker.username}`} className='truncate'>
                             <AuthenticatedImage
                                 imageId={liker.profile_pic}
                                 alt={'Benutzerbild'}

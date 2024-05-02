@@ -105,7 +105,7 @@ export default function VeInvitationNotification({
                 <div className="w-[30rem] h-[30rem] overflow-y-auto content-scrollbar relative">
                     <div>
                         <p>
-                            <Link href={'/profile?username=test_admin'}>
+                            <Link href={`/profile/user/${invitedFromUser?.preferredUsername}`}>
                                 <b>{invitedFromUser?.name}</b>
                             </Link>{' '}
                             hat dich eingeladen:
@@ -117,7 +117,7 @@ export default function VeInvitationNotification({
                     {invitedVePlan !== undefined && (
                         <div>
                             <p>
-                                <Link href={'/profile?username=test_admin'}>
+                                <Link href={`/profile/user/${invitedFromUser?.preferredUsername}`}>
                                     <b>{invitedFromUser?.name}</b>
                                 </Link>{' '}
                                 hat bereits vorgearbeitet, sieh dir den zugehörigen Plan an:

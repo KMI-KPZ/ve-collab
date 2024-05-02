@@ -104,7 +104,7 @@ export default function GroupJoinRequestNotification({
                 <div className="w-[30rem] min-h-[10rem] relative">
                     <div>
                         <p>
-                            <Link href={`/profile?username=${requestedUser?.preferredUsername}`}>
+                            <Link href={`/profile/user/${requestedUser?.preferredUsername}`}>
                                 <b>{requestedUser?.name}</b>
                             </Link>{' '}
                             möchte deiner Gruppe{' '}

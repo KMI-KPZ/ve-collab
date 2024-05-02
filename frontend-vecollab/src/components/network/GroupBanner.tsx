@@ -121,7 +121,7 @@ export default function GroupBanner({ userIsAdmin }: Props) {
                                         onClick={(e) => {
                                             e.preventDefault();
                                             router.push(
-                                                `/profile?username=${snippet.preferredUsername}`
+                                                `/profile/user/${snippet.preferredUsername}`
                                             );
                                             handleCloseMemberDialog();
                                         }}

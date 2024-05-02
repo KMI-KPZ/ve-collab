@@ -27,7 +27,7 @@ export default function PostHeader({
                 className="rounded-full mr-3"
             ></AuthenticatedImage>
             <div className="flex flex-col">
-                <Link href={`/profile?username=${author.username}`} className='font-bold'>{authorName}</Link>
+                <Link href={`/profile/user/${author.username}`} className='font-bold'>{authorName}</Link>
                 {date && (
                     <Timestamp relative={true} timestamp={date} showTitle={true} className="text-xs text-gray-500" />
                 )}

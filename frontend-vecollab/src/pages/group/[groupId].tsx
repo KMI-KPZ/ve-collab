@@ -204,7 +204,7 @@ export default function Group() {
                         <div
                             key={index}
                             className="mx-6 my-1 cursor-pointer"
-                            onClick={() => router.push(`/profile?username=${admin}`)}
+                            onClick={() => router.push(`/profile/user/${admin}`)}
                         >
                             <div className="flex justify-center">
                                 <AuthenticatedImage
@@ -238,7 +238,7 @@ export default function Group() {
                             <div
                                 key={index}
                                 className="mx-6 my-1 cursor-pointer"
-                                onClick={() => router.push(`/profile?username=${member}`)}
+                                onClick={() => router.push(`/profile/user/${member}`)}
                             >
                                 <div className="flex justify-center">
                                     <AuthenticatedImage
