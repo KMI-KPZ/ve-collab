@@ -18,10 +18,6 @@ export default function Post() {
     const { data: session, status } = useSession();
     const router = useRouter();
     const { postId } = router.query
-    // const [space, setSpace] = useState<BackendSpace>()
-    // const [allSpaces, setAllSpaces] = useState<BackendSpace[]>()
-    // const [spaceACLEntry, setSpaceACLEntry] = useState<BackendSpaceACLEntry>()
-    // const [isLoading, setIsLoading] = useState<boolean>(false)
     const [deleted, setDeleted] = useState<boolean>(false)
 
     const {
@@ -35,29 +31,6 @@ export default function Post() {
     const { data: group } = useGetGroup(session!.accessToken, post?.space);
     const { data: allGroups } = useGetAllGroups(session!.accessToken)
     const { data: groupACLEntry } = useGetMyGroupACLEntry(session!.accessToken, post?.space)
-
-    // useEffect(() => {
-    //     if (isLoadingPost || !post?.space) return
-
-    //     setIsLoading(true)
-
-    //     fetchGET(`/spaceadministration/info?id=${post.space}`, session!.accessToken)
-    //     .then(data => {
-    //         setSpace(data.space)
-
-    //         return fetchGET('/spaceadministration/list', session!.accessToken)
-    //     })
-    //     .then(data => {
-    //         setAllSpaces(data.spaces)
-
-    //         return fetchGET(`/space_acl/get?space=${post.space}`, session!.accessToken)
-    //     })
-    //     .then(data => {
-    //         setSpaceACLEntry(data.acl_entry)
-    //         setIsLoading(false)
-    //     })
-
-    // }, [post, isLoadingPost, session])
 
     const isGlobalAdmin = useIsGlobalAdmin(session!.accessToken)
 
