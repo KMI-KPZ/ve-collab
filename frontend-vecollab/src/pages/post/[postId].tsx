@@ -17,6 +17,7 @@ Post.auth = true;
 export default function Post() {
     const { data: session, status } = useSession();
     const router = useRouter();
+    const { postId } = router.query
     // const [space, setSpace] = useState<BackendSpace>()
     // const [allSpaces, setAllSpaces] = useState<BackendSpace[]>()
     // const [spaceACLEntry, setSpaceACLEntry] = useState<BackendSpaceACLEntry>()
@@ -29,7 +30,7 @@ export default function Post() {
         error,
         mutate,
     } = useGetPost(
-        session!.accessToken, router.query.id as string)
+        session!.accessToken, postId as string)
 
     const { data: group } = useGetGroup(session!.accessToken, post?.space);
     const { data: allGroups } = useGetAllGroups(session!.accessToken)

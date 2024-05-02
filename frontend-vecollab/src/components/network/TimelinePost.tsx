@@ -173,7 +173,7 @@ export default function TimelinePost(
     const handleSelectOption = (value: string, ...rest: any[]) => {
         switch (value) {
             case 'share':
-                navigator.clipboard.writeText(`${window.location.origin}/post?id=${post._id}`);
+                navigator.clipboard.writeText(`${window.location.origin}/post/${post._id}`);
                 setShareDialogIsOpen(true)
                 break;
             case 'remove':
