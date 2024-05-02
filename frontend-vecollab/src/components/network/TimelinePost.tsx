@@ -62,19 +62,24 @@ export default function TimelinePost(
     const [likers, setLikers] = useState<BackendPostAuthor[]>([])
     const [askDeletion, setAskDeletion] = useState<boolean>(false)
 
-    // implement infinity scroll (detect intersection of window viewport with last post)
+    // infinity scroll (detect intersection of window viewport with last post)
     useEffect(() => {
         if (!ref?.current) return;
 
         const observer = new IntersectionObserver(([entry]) => {
-            if (isLast && entry.isIntersecting) {
-                // TODO es linter grumbles, but adding it to dependency array cals the fetchNextPosts zwice...
-                fetchNextPosts()
+            if (entry.isIntersecting) {
+                // TODO es linter grumbles
+                //  but adding 'fetchNextPosts' to dependency array calls the fetchNextPosts zwice...
+                //  tried useCallback, timeouts - nothing helped yet ...
                 observer.unobserve(entry.target);
+                fetchNextPosts()
             }
         });
 
-        observer.observe(ref.current);
+        if (isLast) {
+            observer.observe(ref.current);
+        }
+
     }, [isLast])
 
     // may collapse/expand repost
