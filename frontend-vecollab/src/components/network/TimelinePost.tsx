@@ -373,9 +373,9 @@ export default function TimelinePost(
                         <PostHeader author={post.author} date={post.creation_date} />
                     )}
 
-                    {(!group && post.group) && (
+                    {(!group && post.space) && (
                         <div className='self-start leading-[1.6rem] text-xs text-gray-500 ml-1'>
-                            <MdDoubleArrow className="inline" /> <Link href={`/space/?id=${post.group}`} className="font-bold align-middle">{GroupnameById(post.group)}</Link>
+                            <MdDoubleArrow className="inline" /> <Link href={`/group/${post.space}`} className="font-bold align-middle">{GroupnameById(post.space)}</Link>
                         </div>
                     )}
 

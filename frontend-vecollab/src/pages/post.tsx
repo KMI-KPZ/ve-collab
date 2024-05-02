@@ -13,6 +13,7 @@ Post.auth = true;
 export default function Post() {
     const { data: session, status } = useSession();
     const router = useRouter();
+    const { groupId } = router.query;
     // const [space, setSpace] = useState<BackendSpace>()
     // const [allSpaces, setAllSpaces] = useState<BackendSpace[]>()
     // const [spaceACLEntry, setSpaceACLEntry] = useState<BackendSpaceACLEntry>()
@@ -25,11 +26,11 @@ export default function Post() {
         error,
         mutate,
     } = useGetPost(
-        session!.accessToken, router.query.id as string)
+        session!.accessToken, groupId as string)
 
-    const { data: group } = useGetGroup(session!.accessToken, post?.group);
+    const { data: group } = useGetGroup(session!.accessToken, post?.space);
     const { data: allGroups } = useGetAllGroups(session!.accessToken)
-    const { data: groupACLEntry } = useGetMyGroupACLEntry(session!.accessToken, post?.group)
+    const { data: groupACLEntry } = useGetMyGroupACLEntry(session!.accessToken, post?.space)
 
     // useEffect(() => {
     //     if (isLoadingPost || !post?.space) return
@@ -57,8 +58,8 @@ export default function Post() {
     const isGlobalAdmin = useIsGlobalAdmin(session!.accessToken)
 
     const rePost = (post: BackendPost) => {
-        if (post.group) {
-            router.push(`/group?id=${post.group}&repost=${post._id}`)
+        if (post.space) {
+            router.push(`/group/${post.space}?repost=${post._id}`)
         } else {
             router.push(`/?repost=${post._id}`)
         }

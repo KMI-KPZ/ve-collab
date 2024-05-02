@@ -22,6 +22,7 @@ interface Props {
 export default function GroupHeader({ userIsAdmin }: Props) {
     const { data: session, status } = useSession();
     const router = useRouter();
+    const { groupId } = router.query;
 
     const [toggleJoinable, setToggleJoinable] = useState(true);
     const [toggleInvisible, setToggleInvisible] = useState(true);
@@ -68,7 +69,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
         isLoading,
         error,
         mutate,
-    } = useGetGroup(session!.accessToken, router.query.id as string);
+    } = useGetGroup(session!.accessToken, groupId as string);
 
     const handleOpenEditDialog = () => {
         setIsEditDialogOpen(true);

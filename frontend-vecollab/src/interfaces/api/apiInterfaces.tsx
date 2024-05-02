@@ -96,7 +96,7 @@ export interface BackendPost {
     files: BackendPostFile[];
     likers: string[];
     pinned: boolean;
-    group: string;
+    space: string;
     tags: string[];
     text: string;
     // wordpress_post_id: string // deprecated

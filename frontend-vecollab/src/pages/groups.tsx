@@ -138,7 +138,7 @@ export default function Groups() {
                                 {myGroups.map((group, index) => (
                                     <div key={index} className="px-2 py-5">
                                         <Link
-                                            href={`/group?id=${group._id}`}
+                                            href={`/group/${group._id}`}
                                             className="flex cursor-pointer"
                                         >
                                             <div>
@@ -297,7 +297,7 @@ export default function Groups() {
                                 {allGroups.map((group, index) => (
                                     <div key={index} className="px-2 py-5">
                                         <Link
-                                            href={`/group?id=${group._id}`}
+                                            href={`/group/${group._id}`}
                                             className="flex cursor-pointer"
                                         >
                                             <div>
@@ -393,7 +393,7 @@ export default function Groups() {
                                 {myGroupInvites.map((group, index) => (
                                     <div key={index} className="px-2 py-5">
                                         <Link
-                                            href={`/group?id=${group._id}`}
+                                            href={`/group/${group._id}`}
                                             className="flex cursor-pointer"
                                         >
                                             <div>
@@ -448,7 +448,7 @@ export default function Groups() {
                                 {myGroupRequests.map((group, index) => (
                                     <div key={index} className="px-2 py-5">
                                         <Link
-                                            href={`/group?id=${group._id}`}
+                                            href={`/group/${group._id}`}
                                             className="flex cursor-pointer"
                                         >
                                             <div>

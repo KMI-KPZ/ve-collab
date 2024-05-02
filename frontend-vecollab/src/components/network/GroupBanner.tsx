@@ -18,6 +18,8 @@ interface Props {
 export default function GroupBanner({ userIsAdmin }: Props) {
     const { data: session, status } = useSession();
     const router = useRouter();
+    const { groupId } = router.query;
+
 
     const [loading, setLoading] = useState(false);
 
@@ -31,7 +33,7 @@ export default function GroupBanner({ userIsAdmin }: Props) {
         isLoading,
         error,
         mutate,
-    } = useGetGroup(session!.accessToken, router.query.id as string);
+    } = useGetGroup(session!.accessToken, groupId as string);
 
     const handleOpenMemberDialog = () => {
         setIsMemberDialogOpen(true);

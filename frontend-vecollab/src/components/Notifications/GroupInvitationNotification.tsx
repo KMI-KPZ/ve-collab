@@ -108,7 +108,7 @@ export default function GroupInvitationNotification({
                                 <b>{invitedFromUser?.name}</b>
                             </Link>{' '}
                             hat dich in die Gruppe{' '}
-                            <Link href={`/group?id=${notification.payload.space_id}`}>
+                            <Link href={`/group/${notification.payload.space_id}`}>
                                 <b>{notification.payload.space_name}</b>
                             </Link>{' '}
                             eingeladen.

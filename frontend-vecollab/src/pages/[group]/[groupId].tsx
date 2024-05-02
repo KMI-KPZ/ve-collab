@@ -21,6 +21,8 @@ export default function Group() {
     const { data: session, status } = useSession();
     const router = useRouter();
 
+    const { groupId } = router.query;
+
     const [renderPicker, setRenderPicker] = useState<'timeline' | 'members' | 'files'>('timeline');
 
     const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
@@ -40,7 +42,7 @@ export default function Group() {
         isLoading,
         error,
         mutate,
-    } = useGetGroup(session!.accessToken, router.query.id as string);
+    } = useGetGroup(session!.accessToken, groupId as string);
     console.log({group});
 
     // TODO use conditional fetching with the swr hook to wait for the router to be ready,
@@ -48,7 +50,7 @@ export default function Group() {
     // an additional request with undefined id is made
     const { data: groupACLEntry, isLoading: groupACLEntryLoading } = useGetMyGroupACLEntry(
         session!.accessToken,
-        router.query.id as string
+        groupId as string
     );
     console.log({groupACLEntry});
 
