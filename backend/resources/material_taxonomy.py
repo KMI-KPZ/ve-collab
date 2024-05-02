@@ -1,3 +1,4 @@
+from datetime import datetime
 import requests
 import logging
 
@@ -117,16 +118,107 @@ class MaterialTaxonomyResource:
         if not source_id:
             source_id = self.get_mbr_source_id()
 
-        # for now return non-amb payload,
-        # TODO implement AMB standard
-        payload = {
-            "title": node["text"],
-            "description": "Lorem Ipsum test",
-            "sourceId": source_id,
-            "externalId": str(node["id"]),
-        }
+        # if no data or no metadata inside the data attribute is present in the node, create the most basic payload possible
+        if "data" not in node or "metadata" not in node["data"]:
+            return {
+                "title": node["text"],
+                "description": "",
+                "sourceId": source_id,
+                "externalId": str(node["id"]),
+                "metadata": {
+                    "@context": [
+                        "https://w3id.org/kim/amb/context.jsonld",
+                        "https://schema.org",
+                        {"@language": "de"},
+                    ],
+                    "id": "https://ve-collab.org/materialPermalink/0",
+                    "type": ["LearningResource"],
+                    "name": node["text"],
+                },
+            }
+        else:
+            # metadata is present, create an AMB payload with actual content
+            node_metadata = node["data"]["metadata"]
+            payload = {
+                "title": node_metadata["name"],
+                "description": node_metadata["description"],
+                "sourceId": source_id,
+                "externalId": str(node["id"]),
+                "metadata": {
+                    "@context": [
+                        "https://w3id.org/kim/amb/context.jsonld",
+                        "https://schema.org",
+                        {"@language": "de"},
+                    ],
+                    "id": "https://ve-collab.org/materialPermalink/" + str(node["id"]),
+                    "type": ["LearningResource"],
+                    "name": node_metadata["name"],
+                    "description": node_metadata["description"],
+                    "keywords": node_metadata["keywords"],
+                    "inLanguage": ["de"],
+                    "dateCreated": node_metadata["date"],
+                    "datepublished": node_metadata["date"],
+                    "dateModified": datetime.now().isoformat(),
+                    "isAccessibleForFree": True,
+                    "conditionsOfAccess": {
+                        "type": "Concept",
+                        "id": "http://w3id.org/kim/conditionsOfAccess/no_login",
+                        "prefLabel": {"de": "kein Login erforderlich"},
+                    },
+                    "license": {
+                        "id": "https://creativecommons.org/licenses/by-nc-nd/4.0/"
+                    },
+                    "learningResourceType": [
+                        {
+                            "type": "Concept",
+                            "id": "http://w3id.org/openeduhub/vocabs/new_lrt/4fe167ea-1f40-44b7-8c17-355f256b4fc9",
+                            "prefLabel": {"de": "Fortbildungsangebot"},
+                        }
+                    ],
+                    "audience": [
+                        {
+                            "type": "Concept",
+                            "id": "http://purl.org/dcx/lrmi-vocabs/educationalAudienceRole/teacher",
+                            "prefLabel": {"de": "Lehrperson"},
+                        }
+                    ],
+                    "educationalLevel": [
+                        {
+                            "type": "Concept",
+                            "id": "https://w3id.org/kim/educationalLevel/level_A",
+                            "prefLabel": {"de": "Hochschule"},
+                        }
+                    ],
+                    "interactivityType": {
+                        "type": "Concept",
+                        "id": "https://w3id.org/kim/interactivityType/active",
+                        "prefLabel": {"de": "aktiv (eher selbstgesteuert)"},
+                    },
+                },
+            }
 
-        return payload
+            # handle creator separately because its type lets the attributes differ
+            if "creator" in node_metadata:
+                if node_metadata["creator"]["type"] == "Person":
+                    creator = {
+                        "type": "Person",
+                        "name": node_metadata["creator"]["name"],
+                        "id": node_metadata["creator"]["uri"],
+                        "affiliation": {
+                            "type": "Organization",
+                            "name": node_metadata["creator"]["affiliation"],
+                            "id": node_metadata["creator"]["affiliationUri"],
+                        },
+                    }
+                else:
+                    creator = {
+                        "type": "Organization",
+                        "name": node_metadata["creator"]["name"],
+                        "id": node_metadata["creator"]["uri"],
+                    }
+                payload["metadata"]["creator"] = creator
+
+            return payload
 
     def sync_metadata_to_mbr(self):
         """
