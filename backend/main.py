@@ -21,7 +21,11 @@ from handlers.authentication import LoginHandler, LoginCallbackHandler, LogoutHa
 from handlers.db_static_files import GridFSStaticFileHandler
 from handlers.healthcheck import HealthCheckHandler
 from handlers.import_personas import ImportDummyPersonasHandler
-from handlers.material_taxonomy import MBRTestHandler, MaterialTaxonomyHandler
+from handlers.material_taxonomy import (
+    MBRSyncHandler,
+    MBRTestHandler,
+    MaterialTaxonomyHandler,
+)
 from handlers.network.chat import RoomHandler
 from handlers.network.follow import FollowHandler
 from handlers.network.notifications import NotificationHandler
@@ -129,6 +133,7 @@ def make_app(cookie_secret: str, debug: bool = False):
             (r"/material_taxonomy", MaterialTaxonomyHandler),
             (r"/import_personas", ImportDummyPersonasHandler),
             (r"/admin_check", AdminCheckHandler),
+            (r"/mbr_sync", MBRSyncHandler),
             (r"/mbr_test", MBRTestHandler),
             (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
             (r"/assets/(.*)", tornado.web.StaticFileHandler, {"path": "./assets/"}),
@@ -140,7 +145,11 @@ def make_app(cookie_secret: str, debug: bool = False):
             ),
             (r"/uploads/(.*)", GridFSStaticFileHandler, {"path": ""}),
             (r"/socket.io/", socketio.get_tornado_handler(global_vars.socket_io)),
-            (r"/knowledgeworker/(.*)", tornado.web.StaticFileHandler, {"path": "./knowledgeworker_courses", "default_filename": "index.html"}),
+            (
+                r"/knowledgeworker/(.*)",
+                tornado.web.StaticFileHandler,
+                {"path": "./knowledgeworker_courses", "default_filename": "index.html"},
+            ),
         ],
         cookie_secret=cookie_secret,
         template_path="html",
@@ -259,6 +268,7 @@ def create_initial_admin() -> None:
             "inserted admin user '{}' and corresponding ACL rules".format(username)
         )
 
+
 def load_default_taxonomy_if_exists() -> None:
     """
     If the db does not currently hold a taxonomy, load the default taxonomy from the assets folder
@@ -268,12 +278,14 @@ def load_default_taxonomy_if_exists() -> None:
         # db already has one, skip
         if db.material_taxonomy.count_documents({}) > 0:
             return
-        
+
         # db is empty, but no default taxonomy file exists, skip
         if not os.path.isfile("assets/default_taxonomy.json"):
-            logger.warning("tried to load default taxonomy from assets folder, but no file found")
+            logger.warning(
+                "tried to load default taxonomy from assets folder, but no file found"
+            )
             return
-        
+
         # db is empty and default taxonomy file exists, load it
         with open("assets/default_taxonomy.json", "r") as f:
             taxonomy = json.load(f)

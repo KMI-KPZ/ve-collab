@@ -128,7 +128,7 @@ class MaterialTaxonomyResource:
 
         return payload
 
-    def insert_or_update_metadata_to_mbr(self):
+    def sync_metadata_to_mbr(self):
         """
         Insert or update the metadata of our material taxonomy into Mein Bildungsraum.
 

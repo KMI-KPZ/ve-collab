@@ -36,7 +36,7 @@ export type Metadata = {
 export type CustomData = {
     description: string;
     url: string;
-    metadata?: Metadata
+    metadata?: Metadata;
 };
 
 export type NodeModel<T = unknown> = {
@@ -242,6 +242,18 @@ export default function Edit() {
         setTreeData(newTree);
     };
 
+    function triggerMBRSync() {
+        // TODO confirmation dialog before actually syncing
+
+        fetchPOST('/mbr_sync', {}, session?.accessToken);
+
+        // render success message that disappears after 2 seconds
+        setSuccessPopupOpen(true);
+        setTimeout(() => {
+            setSuccessPopupOpen((successPopupOpen) => false);
+        }, 2000);
+    }
+
     console.log(treeData);
 
     return (
@@ -307,7 +319,9 @@ export default function Edit() {
                                                 </div>
                                                 <button
                                                     className="flex justify-center items-center bg-ve-collab-orange rounded-md px-2 py-1 mx-2 text-white"
-                                                    onClick={(e) => {}}
+                                                    onClick={(e) => {
+                                                        triggerMBRSync();
+                                                    }}
                                                 >
                                                     Metadaten mit MeinBildungsraum synchronisieren
                                                 </button>

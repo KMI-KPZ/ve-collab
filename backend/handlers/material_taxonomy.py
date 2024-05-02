@@ -134,6 +134,61 @@ class MaterialTaxonomyHandler(BaseHandler):
         self.write({"success": True})
 
 
+class MBRSyncHandler(BaseHandler):
+    """
+    trigger the synchronization of our metadata with Mein Bildungsraum
+    """
+
+    def get(self):
+        pass
+
+    @auth_needed
+    def post(self):
+        """
+        POST /mbr_sync
+            trigger the synchronization of our metadata with Mein Bildungsraum
+
+            query params:
+                None
+
+            http body:
+                None
+
+            returns:
+                200 OK
+                (successfully triggered synchronization)
+                {"success": True}
+
+                401 Unauthorized
+                (access token is not valid)
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                (you are not an admin)
+                {"success": False,
+                 "reason": "insufficient_permission"}
+        """
+
+        # abort if user is not an admin
+        if not self.is_current_user_lionet_admin():
+            self.set_status(403)
+            self.write(
+                {
+                    "success": False,
+                    "reason": "insufficient_permission",
+                }
+            )
+            return
+
+        # trigger synchronization
+        with util.get_mongodb() as db:
+            tax = MaterialTaxonomyResource(db)
+            tax.sync_metadata_to_mbr()
+
+        self.write({"success": True})
+
+
 class MBRTestHandler(BaseHandler):
 
     def get(self):
@@ -143,7 +198,7 @@ class MBRTestHandler(BaseHandler):
             our_taxonomy_material_nodes = tax.get_our_taxonomy_material_nodes()
             access_token = tax.acquire_mein_bildungsraum_access_token()
             source_id = tax.get_mbr_source_id()
-            tax.insert_or_update_metadata_to_mbr()
+            #tax.sync_metadata_to_mbr()
             our_metadata = tax.get_our_metadata_from_mbr()
             self.serialize_and_write(
                 {
