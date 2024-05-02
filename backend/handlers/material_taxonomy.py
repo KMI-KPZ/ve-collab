@@ -104,9 +104,7 @@ class MaterialTaxonomyHandler(BaseHandler):
         # validate structure of each node
         # TODO only if dropppable is false, data has to be present
         for node in taxonomy:
-            if not all(
-                key in node for key in ["id", "parent", "droppable", "text"]
-            ):
+            if not all(key in node for key in ["id", "parent", "droppable", "text"]):
                 self.set_status(400)
                 self.write(
                     {
@@ -141,9 +139,21 @@ class MBRTestHandler(BaseHandler):
     def get(self):
         with util.get_mongodb() as db:
             tax = MaterialTaxonomyResource(db)
+            our_taxonomy = tax.get_our_taxonomy()
+            our_taxonomy_material_nodes = tax.get_our_taxonomy_material_nodes()
             access_token = tax.acquire_mein_bildungsraum_access_token()
             source_id = tax.get_mbr_source_id()
-            self.write({"access_token": access_token, "source_id": source_id})
+            tax.insert_or_update_metadata_to_mbr()
+            our_metadata = tax.get_our_metadata_from_mbr()
+            self.serialize_and_write(
+                {
+                    "our_taxonomy": our_taxonomy,
+                    "our_taxonomy_material_nodes": our_taxonomy_material_nodes,
+                    "access_token": access_token,
+                    "source_id": source_id,
+                    "our_metadata": our_metadata,
+                }
+            )
 
     def post(self):
         pass
