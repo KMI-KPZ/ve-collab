@@ -49,9 +49,10 @@ export default function HeaderSection({
         setMessageEventCount(filteredMessageEvents.length);
     }, [headerBarMessageEvents, session]);
 
-    const isActivePath = (path: string) => {
-        return currentPath?.startsWith(path)
-    }
+    const isActivePath = (path: string|string[]) =>
+        Array.isArray(path)
+            ? path.some(p => currentPath?.startsWith(p))
+            : currentPath?.startsWith(path)
 
     const isFrontpage = () => currentPath == '/'
 
@@ -103,12 +104,12 @@ export default function HeaderSection({
                     <li className={isActivePath('/content') ? activeClass : inactiveClass}>
                         <Link href="/content" className='px-2 py-1'>Materialien</Link>
                     </li>
-                    {session && (
+                    {session ? (
                         <>
-                            <li className={isActivePath('/groups') ? activeClass : inactiveClass}>
+                            <li className={isActivePath('/group') ? activeClass : inactiveClass}>
                                 <Link href="/groups" className='px-2 py-1'>Gruppen</Link>
                             </li>
-                            <li className={isActivePath('/plans') ? activeClass : inactiveClass}>
+                            <li className={isActivePath(['/plans', '/ve-designer']) ? activeClass : inactiveClass}>
                                 <Link href="/plans" className='px-2 py-1'>
                                     <span className='text-ve-collab-orange'>VE</span> <span className='text-ve-collab-blue'>Designer</span>
                                 </Link>
@@ -161,8 +162,7 @@ export default function HeaderSection({
                                 </div>
                             </li>
                         </>
-                    )}
-                    {!session && (
+                    ) : (
                         <>
                             <li>
                                 <button onClick={() => signIn('keycloak')} className={`${inactiveClass} px-2 py-1`}>Login</button>
