@@ -484,7 +484,7 @@ export default function TimelinePost(
                                 <Link
                                     key={index}
                                     href={{
-                                        pathname: '/startingWizard/generalInformation/projectName',
+                                        pathname: '/ve-designer/name',
                                         query: { plannerId: plan._id },
                                     }}
                                 >
