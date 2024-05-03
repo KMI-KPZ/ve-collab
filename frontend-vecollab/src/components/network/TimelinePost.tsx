@@ -369,7 +369,6 @@ export default function TimelinePost(
 
     return (
         <>
-
             {shareDialogIsOpen && (
                 <Alert onClose={() => setShareDialogIsOpen(false)}>
                     <>Link kopiert</>
@@ -483,10 +482,7 @@ export default function TimelinePost(
                             {plans.map((plan, index) => (
                                 <Link
                                     key={index}
-                                    href={{
-                                        pathname: '/ve-designer/name',
-                                        query: { plannerId: plan._id },
-                                    }}
+                                    href={{pathname: `/plan/${plan._id}`}}
                                 >
                                     <div className="flex justify-center">
                                         <MdOutlineDocumentScanner size={50} />
