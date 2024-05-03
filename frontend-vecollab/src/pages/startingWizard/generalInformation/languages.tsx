@@ -187,7 +187,7 @@ export default function Languages() {
                                         <Tooltip tooltipsText="Mehr zu Sprache(n) im VE findest du hier in den Selbstlernmaterialien …">
                                             <Link
                                                 target="_blank"
-                                                href={'/content/sprachliche%20Aspekte'}
+                                                href={'/learning-material/bottomBubble/sprachliche%20Aspekte'}
                                             >
                                                 <PiBookOpenText size={30} color="#00748f" />
                                             </Link>

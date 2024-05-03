@@ -5,39 +5,26 @@ import MainLearningContentLayout from '@/components/Layout/main-learning-content
 import { GetServerSideProps, GetServerSidePropsContext } from 'next';
 import { getChildrenOfNodeByText, getMaterialNodesOfNodeByText } from '@/lib/backend';
 import { IMaterialNode, INode } from '@/interfaces/material/materialInterfaces';
+import { useEffect } from 'react';
+import { useRouter } from 'next/router';
+import CategoryBox from '@/components/learningContent/category-box';
 import Link from 'next/link';
 import { IoMdArrowRoundBack } from 'react-icons/io';
 import Image from 'next/image';
 import blueBackground from '@/images/footer/KAVAQ_Footer.png';
-import CategoryBox from '@/components/learningContent/category-box';
 
 interface Props {
     nodesOfBubble: INode[];
-    leafNodes: IMaterialNode[];
-    materialNode: IMaterialNode;
-    prevNode: IMaterialNode | null;
-    nextNode: IMaterialNode | null;
-    bubbleSlug: string;
-    categorySlug: string;
 }
 
-// coming from previous page (only category chosen), a pos preview has been selected and therefore the content of the post is rendered as well
-export default function LearningContentView(props: Props) {
-    const nodePreviews = props.leafNodes.map((node) => (
-        <LearningContentPreview
-            key={node.id}
-            title={node.text}
-            slug={node.text}
-            snippet={node.data.description}
-            imgFilename={'/images/example_image.jpg'}
-        />
-    ));
+// coming from landing page: category has been chosen, depending on categories, previews to the posts are shown on the left
+export default function BubbleSelected(props: Props) {
 
     return (
         <>
             <div className="container mx-auto mb-4 px-5">
                 <div className="mt-4">
-                    <Link href="/content">
+                    <Link href="/learning-material">
                         <div className="flex items-center">
                             <IoMdArrowRoundBack className="mr-2" />
                             <p className="text-ve-collab-orange underline">
@@ -61,19 +48,15 @@ export default function LearningContentView(props: Props) {
                 </ul>
             </div>
             <HorizontalDivider />
+            <HorizontalDivider />
             <Container>
                 <MainLearningContentLayout
-                    previewChildren={nodePreviews}
+                    previewChildren={[]}
                     contentChildren={
-                        <iframe
-                            className="rounded-xl mx-1 h-[90vh]"
-                            src={props.materialNode.data.url}
-                        ></iframe>
+                        <h1 className={'font-bold text-5xl text-center'}>
+                            Bitte wählen Sie eine Lektion aus
+                        </h1>
                     }
-                    prevNode={props.prevNode}
-                    nextNode={props.nextNode}
-                    bubbleSlug={props.bubbleSlug}
-                    categorySlug={props.categorySlug}
                 />
             </Container>
         </>
@@ -84,24 +67,10 @@ export const getServerSideProps: GetServerSideProps = async ({
     params,
 }: GetServerSidePropsContext) => {
     const nodesOfBubble = await getChildrenOfNodeByText(params?.bubble as string);
-    const leafNodes = await getMaterialNodesOfNodeByText(params?.category as string);
-    const materialNode = leafNodes.find((node) => node.text === params?.slug);
-
-    // compute previous and next sibling in the taxonomy for back/next button navigations
-    const prevNodeIndex = leafNodes.indexOf(materialNode!) - 1;
-    const nextNodeIndex = leafNodes.indexOf(materialNode!) + 1;
-    const prevNode = prevNodeIndex >= 0 ? leafNodes[prevNodeIndex] : null;
-    const nextNode = nextNodeIndex < leafNodes.length ? leafNodes[nextNodeIndex] : null;
 
     return {
         props: {
             nodesOfBubble,
-            leafNodes,
-            materialNode,
-            prevNode,
-            nextNode,
-            bubbleSlug: params?.bubble,
-            categorySlug: params?.category,
         },
     };
 };

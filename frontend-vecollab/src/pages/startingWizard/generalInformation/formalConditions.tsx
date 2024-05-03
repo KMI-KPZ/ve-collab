@@ -357,7 +357,7 @@ export default function FormalConditions() {
                                         <Tooltip tooltipsText="Mehr zu formalen Rahmenbedingungen findest du hier in den Selbstlernmaterialien …">
                                             <Link
                                                 target="_blank"
-                                                href={'/content/Herausforderungen'}
+                                                href={'/learning-material/topBubble/Herausforderungen'}
                                             >
                                                 <PiBookOpenText size={30} color="#00748f" />
                                             </Link>
