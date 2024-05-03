@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { FormEvent, useEffect, useState } from 'react';
 import Image from 'next/image';
 import veCollabLogo from '@/images/veCollabLogo.png';
 import Link from 'next/link';
@@ -74,6 +74,12 @@ export default function HeaderSection({
         }
     }
 
+    const handleSearchSubmit = (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
+        if (!e.currentTarget.search.value) return
+        router.push(`/search?query=${e.currentTarget.search.value}`)
+    }
+
     return (
         <header className="bg-white px-4 py-2.5 drop-shadow-lg relative z-40">
             <nav className="flex flex-wrap items-center mx-auto max-w-screen-2xl">
@@ -86,7 +92,7 @@ export default function HeaderSection({
                             className="duration-300 hover:scale-110"
                         ></Image>
                     </Link>
-                    <form className='mx-10 flex items-stretch'>
+                    <form className='mx-10 flex items-stretch' onSubmit={e => handleSearchSubmit(e)}>
                         <input
                                 className={'border border-[#cccccc] rounded-l px-2 py-1'}
                                 type="text"
