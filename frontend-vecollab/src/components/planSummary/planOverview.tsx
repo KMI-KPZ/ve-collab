@@ -9,7 +9,7 @@ interface Props {
 }
 
 export function PlanOverview({ plan }: Props): JSX.Element {
-    console.log(plan);
+    // console.log(plan);
     return (
         <div className="bg-white rounded-lg p-4 w-full">
             <ViewAttributes plan={plan} />
