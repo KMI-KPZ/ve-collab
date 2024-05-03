@@ -126,7 +126,7 @@ export default function VeInvitationNotification({
                                 {/* todo this should link to a read-only view of the plan*/}
                                 <Link
                                     target="_blank"
-                                    href={`/startingWizard/generalInformation/projectName?plannerId=${notification.payload.plan_id}`}
+                                    href={`/ve-designer/name?plannerId=${notification.payload.plan_id}`}
                                 >
                                     {invitedVePlan?.name}
                                 </Link>
