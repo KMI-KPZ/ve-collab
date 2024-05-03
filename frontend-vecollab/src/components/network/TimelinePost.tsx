@@ -1,4 +1,4 @@
-import { fetchDELETE, fetchPOST } from "@/lib/backend";
+import { fetchDELETE, fetchGET, fetchPOST } from "@/lib/backend";
 import { useSession } from "next-auth/react";
 import { HiHeart, HiOutlineHeart } from "react-icons/hi";
 import Link from "next/link";
@@ -7,7 +7,7 @@ import { IoIosSend } from "react-icons/io";
 import Dropdown from "../Dropdown";
 import { BackendPost, BackendPostAuthor, BackendPostComment, BackendPostFile, BackendGroup, BackendGroupACLEntry } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
-import { MdAudioFile, MdDeleteOutline, MdDoubleArrow, MdModeEdit, MdOutlineKeyboardDoubleArrowDown, MdShare, MdThumbUp, MdVideoFile } from "react-icons/md";
+import { MdAudioFile, MdDeleteOutline, MdDoubleArrow, MdModeEdit, MdOutlineDocumentScanner, MdOutlineKeyboardDoubleArrowDown, MdShare, MdThumbUp, MdVideoFile } from "react-icons/md";
 import { TiArrowForward, TiPin, TiPinOutline } from "react-icons/ti";
 import TimelinePostForm from "./TimelinePostForm";
 import PostHeader from "./PostHeader";
@@ -18,6 +18,7 @@ import AuthenticatedImage from "../AuthenticatedImage";
 import { KeyedMutator } from "swr";
 import Alert from "../Alert";
 import ConfirmDialog from "../Confirm";
+import { PlanPreview } from "@/interfaces/planner/plannerInterfaces";
 
 interface Props {
     post: BackendPost
@@ -61,6 +62,25 @@ export default function TimelinePost(
     const [loadingLikers, setLoadingLikers] = useState<boolean>(false)
     const [likers, setLikers] = useState<BackendPostAuthor[]>([])
     const [askDeletion, setAskDeletion] = useState<boolean>(false)
+
+    const [plans, setPlans] = useState<PlanPreview[]>([])
+
+    useEffect(() => {
+        if (post.plans && post.plans.length) {
+
+            let requests: Promise<PlanPreview>[] = [];
+
+            (JSON.parse(post.plans) as Array<string>).forEach(planId => {
+                requests.push(
+                    fetchGET(`/planner/get?_id=${planId}`, session!.accessToken)
+                    .then(data => data.plan)
+                )
+            })
+
+            Promise.all(requests)
+            .then(data => setPlans(data) )
+        }
+    }, [post, session])
 
     // infinity scroll (detect intersection of window viewport with last post)
     useEffect(() => {
@@ -451,6 +471,31 @@ export default function TimelinePost(
                                         {file.file_name}
                                     </div>
                                 </AuthenticatedFile>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {plans.length > 0 && (
+                    <div className="my-4">
+                        <div className="mb-2 text-slate-900 font-bold">Pläne</div>
+                        <div className="mb-8 flex flex-wrap space-x-4 max-h-[40vh] overflow-y-auto content-scrollbar">
+                            {plans.map((plan, index) => (
+                                <Link
+                                    key={index}
+                                    href={{
+                                        pathname: '/ve-designer/name',
+                                        query: { plannerId: plan._id },
+                                    }}
+                                >
+                                    <div className="flex justify-center">
+                                        <MdOutlineDocumentScanner size={50} />
+                                    </div>
+                                    <div className="max-w-1/2 justify-center mx-2 px-1 my-1 truncate">
+                                        {plan.name}
+                                    </div>
+                                </Link>
+
                             ))}
                         </div>
                     </div>
