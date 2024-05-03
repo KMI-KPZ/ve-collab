@@ -212,7 +212,7 @@ export default function LearningGoals() {
                                     <div className={'text-center font-bold text-4xl mb-2 relative'}>
                                         Welche Richtlernziele sollen im VE erreicht werden?
                                         <Tooltip tooltipsText="Mehr zu Richtlernzielen findest du hier in den Selbstlernmaterialien …">
-                                            <Link target="_blank" href={'/content/Potenziale'}>
+                                            <Link target="_blank" href={'/learning-material/topBubble/Potenziale'}>
                                                 <PiBookOpenText size={30} color="#00748f" />
                                             </Link>
                                         </Tooltip>

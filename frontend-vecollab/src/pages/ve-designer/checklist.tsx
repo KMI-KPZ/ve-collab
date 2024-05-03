@@ -355,7 +355,7 @@ export default function Checklist() {
                                         <Tooltip tooltipsText="Mehr zu der Checkliste findest du hier in den Selbstlernmaterialien …">
                                             <Link
                                                 target="_blank"
-                                                href={'/content/Herausforderungen'}
+                                                href={'/learning-material/topBubble/Herausforderungen'}
                                             >
                                                 <PiBookOpenText size={30} color="#00748f" />
                                             </Link>

@@ -143,7 +143,7 @@ export default function LearningEnvironment() {
                                         <Tooltip tooltipsText="Mehr zu LMS findest du hier in den Selbstlernmaterialien …">
                                             <Link
                                                 target="_blank"
-                                                href={'/content/Digitale%20Medien%20&%20Werkzeuge'}
+                                                href={'/learning-material/rightBubble/Digitale%20Medien%20&%20Werkzeuge'}
                                             >
                                                 <PiBookOpenText size={30} color="#00748f" />
                                             </Link>

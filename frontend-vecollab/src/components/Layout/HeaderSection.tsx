@@ -103,8 +103,8 @@ export default function HeaderSection({
                     <li className={isFrontpage() ? activeClass : inactiveClass}>
                         <Link href="/" className='px-2 py-1'>Start</Link>
                     </li>
-                    <li className={isActivePath('/content') ? activeClass : inactiveClass}>
-                        <Link href="/content" className='px-2 py-1'>Materialien</Link>
+                    <li className={isActivePath('/learning-material') ? activeClass : inactiveClass}>
+                        <Link href="/learning-material" className='px-2 py-1'>Materialien</Link>
                     </li>
                     {session ? (
                         <>
