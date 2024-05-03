@@ -119,21 +119,23 @@ class MaterialTaxonomyResource:
             source_id = self.get_mbr_source_id()
 
         # if no data or no metadata inside the data attribute is present in the node, create the most basic payload possible
-        if "data" not in node or "metadata" not in node["data"]:
+        if ("data" not in node) or ("metadata" not in node["data"]):
             return {
                 "title": node["text"],
                 "description": "",
                 "sourceId": source_id,
                 "externalId": str(node["id"]),
                 "metadata": {
-                    "@context": [
-                        "https://w3id.org/kim/amb/context.jsonld",
-                        "https://schema.org",
-                        {"@language": "de"},
-                    ],
-                    "id": "https://ve-collab.org/materialPermalink/0",
-                    "type": ["LearningResource"],
-                    "name": node["text"],
+                    "Amb": {
+                        "@context": [
+                            "https://w3id.org/kim/amb/context.jsonld",
+                            "https://schema.org",
+                            {"@language": "de"},
+                        ],
+                        "id": "https://ve-collab.org/materialPermalink/0",
+                        "type": ["LearningResource"],
+                        "name": node["text"],
+                    }
                 },
             }
         else:
@@ -145,54 +147,57 @@ class MaterialTaxonomyResource:
                 "sourceId": source_id,
                 "externalId": str(node["id"]),
                 "metadata": {
-                    "@context": [
-                        "https://w3id.org/kim/amb/context.jsonld",
-                        "https://schema.org",
-                        {"@language": "de"},
-                    ],
-                    "id": "https://ve-collab.org/materialPermalink/" + str(node["id"]),
-                    "type": ["LearningResource"],
-                    "name": node_metadata["name"],
-                    "description": node_metadata["description"],
-                    "keywords": node_metadata["keywords"],
-                    "inLanguage": ["de"],
-                    "dateCreated": node_metadata["date"],
-                    "datepublished": node_metadata["date"],
-                    "dateModified": datetime.now().isoformat(),
-                    "isAccessibleForFree": True,
-                    "conditionsOfAccess": {
-                        "type": "Concept",
-                        "id": "http://w3id.org/kim/conditionsOfAccess/no_login",
-                        "prefLabel": {"de": "kein Login erforderlich"},
-                    },
-                    "license": {
-                        "id": "https://creativecommons.org/licenses/by-nc-nd/4.0/"
-                    },
-                    "learningResourceType": [
-                        {
+                    "Amb": {
+                        "@context": [
+                            "https://w3id.org/kim/amb/context.jsonld",
+                            "https://schema.org",
+                            {"@language": "de"},
+                        ],
+                        "id": "https://ve-collab.org/materialPermalink/"
+                        + str(node["id"]),
+                        "type": ["LearningResource"],
+                        "name": node_metadata["name"],
+                        "description": node_metadata["description"],
+                        "keywords": node_metadata["keywords"],
+                        "inLanguage": ["de"],
+                        "dateCreated": node_metadata["date"],
+                        "datepublished": node_metadata["date"],
+                        "dateModified": datetime.now().isoformat(),
+                        "isAccessibleForFree": True,
+                        "conditionsOfAccess": {
                             "type": "Concept",
-                            "id": "http://w3id.org/openeduhub/vocabs/new_lrt/4fe167ea-1f40-44b7-8c17-355f256b4fc9",
-                            "prefLabel": {"de": "Fortbildungsangebot"},
-                        }
-                    ],
-                    "audience": [
-                        {
+                            "id": "http://w3id.org/kim/conditionsOfAccess/no_login",
+                            "prefLabel": {"de": "kein Login erforderlich"},
+                        },
+                        "license": {
+                            "id": "https://creativecommons.org/licenses/by-nc-nd/4.0/"
+                        },
+                        "learningResourceType": [
+                            {
+                                "type": "Concept",
+                                "id": "http://w3id.org/openeduhub/vocabs/new_lrt/4fe167ea-1f40-44b7-8c17-355f256b4fc9",
+                                "prefLabel": {"de": "Fortbildungsangebot"},
+                            }
+                        ],
+                        "audience": [
+                            {
+                                "type": "Concept",
+                                "id": "http://purl.org/dcx/lrmi-vocabs/educationalAudienceRole/teacher",
+                                "prefLabel": {"de": "Lehrperson"},
+                            }
+                        ],
+                        "educationalLevel": [
+                            {
+                                "type": "Concept",
+                                "id": "https://w3id.org/kim/educationalLevel/level_A",
+                                "prefLabel": {"de": "Hochschule"},
+                            }
+                        ],
+                        "interactivityType": {
                             "type": "Concept",
-                            "id": "http://purl.org/dcx/lrmi-vocabs/educationalAudienceRole/teacher",
-                            "prefLabel": {"de": "Lehrperson"},
-                        }
-                    ],
-                    "educationalLevel": [
-                        {
-                            "type": "Concept",
-                            "id": "https://w3id.org/kim/educationalLevel/level_A",
-                            "prefLabel": {"de": "Hochschule"},
-                        }
-                    ],
-                    "interactivityType": {
-                        "type": "Concept",
-                        "id": "https://w3id.org/kim/interactivityType/active",
-                        "prefLabel": {"de": "aktiv (eher selbstgesteuert)"},
+                            "id": "http://purl.org/dcx/lrmi-vocabs/interactivityType/active",
+                            "prefLabel": {"de": "aktiv (eher selbstgesteuert)"},
+                        },
                     },
                 },
             }
@@ -254,7 +259,8 @@ class MaterialTaxonomyResource:
         res = requests.put(
             global_vars.mbr_metadata_base_endpoint
             + "/api/core/nodes/"
-            + node["data"]["mbr_id"],
+            + node["data"]["mbr_id"]
+            + "?metadataValidation=Amb",
             headers={"Authorization": "Bearer " + self.access_token["access_token"]},
             json=self.create_amb_payload(node, source_id),
         )
@@ -275,7 +281,9 @@ class MaterialTaxonomyResource:
 
         # create a new Mein Bildungsraum node
         res = requests.post(
-            global_vars.mbr_metadata_base_endpoint + "/api/core/nodes",
+            global_vars.mbr_metadata_base_endpoint
+            + "/api/core/nodes"
+            + "?metadataValidation=Amb",
             headers={"Authorization": "Bearer " + self.access_token["access_token"]},
             json=self.create_amb_payload(node, source_id),
         )

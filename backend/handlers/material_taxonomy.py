@@ -2,6 +2,7 @@ import json
 
 from resources.material_taxonomy import MaterialTaxonomyResource
 from error_reasons import MISSING_KEY_IN_HTTP_BODY_SLUG
+from exceptions import MbrAPIError
 from handlers.base_handler import BaseHandler, auth_needed
 import util
 
@@ -184,7 +185,10 @@ class MBRSyncHandler(BaseHandler):
         # trigger synchronization
         with util.get_mongodb() as db:
             tax = MaterialTaxonomyResource(db)
-            tax.sync_metadata_to_mbr()
+            try:
+                tax.sync_metadata_to_mbr()
+            except MbrAPIError as e:
+                print(e.response)
 
         self.write({"success": True})
 

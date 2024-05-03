@@ -25,6 +25,7 @@ export type CustomData = {
     description: string;
     url: string;
     metadata?: Metadata;
+    mbr_id?: string;
 };
 
 export type NodeModel<T = unknown> = {
@@ -100,6 +101,7 @@ export const CustomNode: React.FC<Props> = (props) => {
             description: currentMaterialInputDescription,
             url: currentMaterialInputLink,
             metadata: currentMaterialMetadata,
+            mbr_id: data?.mbr_id,
         });
 
         setCurrentMaterialInputName('');
@@ -269,7 +271,7 @@ export const CustomNode: React.FC<Props> = (props) => {
                                 onChange={(e) =>
                                     setCurrentMaterialMetadata({
                                         ...currentMaterialMetadata,
-                                        keywords: e.target.value.split(',').map((k) => k.trim()),
+                                        keywords: e.target.value.split(', '),
                                     })
                                 }
                             />

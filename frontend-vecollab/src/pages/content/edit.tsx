@@ -37,6 +37,7 @@ export type CustomData = {
     description: string;
     url: string;
     metadata?: Metadata;
+    mbr_id?: string;
 };
 
 export type NodeModel<T = unknown> = {
