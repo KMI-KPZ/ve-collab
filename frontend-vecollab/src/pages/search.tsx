@@ -28,7 +28,7 @@ export default function SearchResult() {
     return (
         <Wrapper>
              <>
-                <div className="font-bold text-4xl mb-2">Search Results for "{router.query.query}"</div>
+                <div className="font-bold text-4xl mb-2">Search Results for &quot;{router.query.query}&quot;</div>
                 {loading ? (<LoadingAnimation />) : (<>TODO</>)}
              </>
         </Wrapper>
