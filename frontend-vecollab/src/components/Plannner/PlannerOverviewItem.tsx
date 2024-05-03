@@ -100,11 +100,8 @@ export default function PlannerOverviewItem({ plan, deleteCallback, refetchPlans
         >
             <div>
                 {plan.write_access.includes(username) && (
-                    <button
-                        className="absolute top-0 right-10 m-4 p-2 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
-                        onClick={(e) => e.stopPropagation()}
-                    >
                         <Link
+                            className='absolute top-0 right-10 m-4 p-2 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20'
                             href={{
                                 pathname: '/ve-designer/name',
                                 query: { plannerId: plan._id },
@@ -112,7 +109,6 @@ export default function PlannerOverviewItem({ plan, deleteCallback, refetchPlans
                         >
                             <MdEdit className="inline" /> Bearbeiten
                         </Link>
-                    </button>
                 )}
                 <div className="w-[70vw] h-[60vh] overflow-y-auto content-scrollbar relative">
                     {loadingSummary ? (
@@ -133,7 +129,7 @@ export default function PlannerOverviewItem({ plan, deleteCallback, refetchPlans
     const EditButton = () => (
         <Link
             href={{
-                pathname: '/ve-designer/generalInformation/projectName',
+                pathname: '/ve-designer/name',
                 query: { plannerId: plan._id },
             }}
         >
@@ -192,7 +188,11 @@ export default function PlannerOverviewItem({ plan, deleteCallback, refetchPlans
                 onClick={() => openPlanSummary()}
             >
                 <div className="flex items-center">
-                    <div className="mr-2 font-bold whitespace-nowrap">{plan.name}</div>
+                    <div className="mr-2 font-bold whitespace-nowrap">
+                        <Link href={`/plan/${plan._id}`} onClick={e => e.preventDefault()}>
+                            {plan.name}
+                        </Link>
+                    </div>
                     {plan.is_good_practise && (
                         <div className="mr-2 text-slate-700">
                             <MdPublic title='Plan ist als "good practice" markiert' />
