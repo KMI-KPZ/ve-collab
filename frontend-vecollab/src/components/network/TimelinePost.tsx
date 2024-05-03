@@ -5,7 +5,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { IoIosSend } from "react-icons/io";
 import Dropdown from "../Dropdown";
-import { BackendPost, BackendPostAuthor, BackendPostComment, BackendPostFile, BackendSpace, BackendSpaceACLEntry } from "@/interfaces/api/apiInterfaces";
+import { BackendPost, BackendPostAuthor, BackendPostComment, BackendPostFile, BackendGroup, BackendGroupACLEntry } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
 import { MdAudioFile, MdDeleteOutline, MdDoubleArrow, MdModeEdit, MdOutlineDocumentScanner, MdOutlineKeyboardDoubleArrowDown, MdShare, MdThumbUp, MdVideoFile } from "react-icons/md";
 import { TiArrowForward, TiPin, TiPinOutline } from "react-icons/ti";
@@ -17,16 +17,17 @@ import TimelinePostText from "./TimelinePostText";
 import AuthenticatedImage from "../AuthenticatedImage";
 import { KeyedMutator } from "swr";
 import Alert from "../Alert";
+import ConfirmDialog from "../Confirm";
 import { PlanPreview } from "@/interfaces/planner/plannerInterfaces";
 
 interface Props {
     post: BackendPost
     updatePost: (post: BackendPost) => void
-    space?: string
-    spaceACL?: BackendSpaceACLEntry | undefined
+    group?: string
+    groupACL?: BackendGroupACLEntry | undefined
     userIsAdmin: boolean
     isLast: boolean
-    allSpaces?: BackendSpace[]
+    allGroups?: BackendGroup[]
     removePost: (post: BackendPost) => void
     rePost?: (post: BackendPost) => void
     fetchNextPosts: () => void
@@ -38,11 +39,11 @@ export default function TimelinePost(
 {
     post,
     updatePost,
-    space,
-    spaceACL,
+    group,
+    groupACL,
     userIsAdmin=false,
     isLast,
-    allSpaces,
+    allGroups,
     removePost,
     rePost,
     fetchNextPosts,
@@ -51,7 +52,7 @@ export default function TimelinePost(
     const { data: session } = useSession();
     const ref = useRef<any>(null)
     const commentFormref = useRef<any>(null)
-    const [wbRemoved, setWbRemoved] = useState<boolean>(false)
+    const [willRemvoe, setWillRemove] = useState<boolean>(false)
     const [repostExpand, setRepostExpand] = useState<boolean>(false)
     const [comments, setComments] = useState<BackendPostComment[]>( post.comments )
     const [showCommentForm, setShowCommentForm] = useState<boolean>(false)
@@ -60,6 +61,7 @@ export default function TimelinePost(
     const [shareDialogIsOpen, setShareDialogIsOpen] = useState<boolean>(false)
     const [loadingLikers, setLoadingLikers] = useState<boolean>(false)
     const [likers, setLikers] = useState<BackendPostAuthor[]>([])
+    const [askDeletion, setAskDeletion] = useState<boolean>(false)
 
     const [plans, setPlans] = useState<PlanPreview[]>([])
 
@@ -80,19 +82,24 @@ export default function TimelinePost(
         }
     }, [post, session])
 
-    // implement infinity scroll (detect intersection of window viewport with last post)
+    // infinity scroll (detect intersection of window viewport with last post)
     useEffect(() => {
         if (!ref?.current) return;
 
         const observer = new IntersectionObserver(([entry]) => {
-            if (isLast && entry.isIntersecting) {
-                // TODO es linter grubmles, but adding it to dependency array cals it too often ...
-                fetchNextPosts()
+            if (entry.isIntersecting) {
+                // TODO es linter grumbles
+                //  but adding 'fetchNextPosts' to dependency array calls the fetchNextPosts zwice...
+                //  tried useCallback, timeouts - nothing helped yet ...
                 observer.unobserve(entry.target);
+                fetchNextPosts()
             }
         });
 
-        observer.observe(ref.current);
+        if (isLast) {
+            observer.observe(ref.current);
+        }
+
     }, [isLast])
 
     // may collapse/expand repost
@@ -163,12 +170,12 @@ export default function TimelinePost(
 
     const deletePost = async () => {
         try {
+            setWillRemove(true)
             await fetchDELETE( '/posts', { post_id: post._id }, session?.accessToken )
-            setWbRemoved(true)
-            // wait until transition is done
+            // wait until transition animation is done
             await new Promise(resolve => setTimeout(resolve, 450))
             removePost(post)
-            setWbRemoved(false)
+            setWillRemove(false)
         } catch (error) {
             console.error(error);
         }
@@ -186,11 +193,11 @@ export default function TimelinePost(
     const handleSelectOption = (value: string, ...rest: any[]) => {
         switch (value) {
             case 'share':
-                navigator.clipboard.writeText(`${window.location.origin}/post?id=${post._id}`);
+                navigator.clipboard.writeText(`${window.location.origin}/post/${post._id}`);
                 setShareDialogIsOpen(true)
                 break;
             case 'remove':
-                deletePost()
+                setAskDeletion(true)
                 break;
             case 'edit':
                 setEditPost(true)
@@ -246,10 +253,10 @@ export default function TimelinePost(
         }
     }
 
-    const SpacenameById = (spaceId: string) => {
-        if (!allSpaces) return (<>{spaceId}</>)
-        const space = allSpaces.find(space => space._id == spaceId)
-        return ( <>{ space?.name }</> )
+    const GroupnameById = (groupId: string) => {
+        if (!allGroups) return (<>{groupId}</>)
+        const group = allGroups.find(group => group._id == groupId)
+        return ( <>{ group?.name }</> )
     }
 
     const Likes = () => {
@@ -260,7 +267,7 @@ export default function TimelinePost(
                 <MdThumbUp className="" size={20} />&nbsp;{post.likers.length}
                 <div className="absolute w-40 overflow-y-auto max-h-32 left-1/2 -translate-x-1/2 p-2 mt-5 group-hover/likes:opacity-100 hover:!opacity-100 transition-opacity opacity-0 rounded-md bg-white shadow border">
                     {likers.map((liker, i) => (
-                        <Link key={i} href={`/profile?username=${liker.username}`} className='truncate'>
+                        <Link key={i} href={`/profile/user/${liker.username}`} className='truncate'>
                             <AuthenticatedImage
                                 imageId={liker.profile_pic}
                                 alt={'Benutzerbild'}
@@ -313,11 +320,11 @@ export default function TimelinePost(
                 { value: 'remove-comment', label: 'löschen', icon: <MdDeleteOutline /> }
             ]} onSelect={value => { handleSelectOption(value, comment) }} />
         }
-        return null
+        return <></>
     }
 
     const FileIcon = ({_file}: {_file: BackendPostFile}) => {
-        if (_file.file_type.startsWith('image/')) {
+        if (_file.file_type?.startsWith('image/')) {
             return <AuthenticatedImage
                     imageId={_file.file_id}
                     alt={_file.file_name}
@@ -325,13 +332,13 @@ export default function TimelinePost(
                     height={50}
                 ></AuthenticatedImage>
         }
-        else if (_file.file_type.startsWith('video/')) {
+        else if (_file.file_type?.startsWith('video/')) {
             return <div className="h-[50px] flex items-center"><MdVideoFile size={35} /></div>
         }
-        else if (_file.file_type.startsWith('audio/')) {
+        else if (_file.file_type?.startsWith('audio/')) {
             return <div className="h-[50px] flex items-center"><MdAudioFile size={35} /></div>
         }
-        else if (_file.file_type.startsWith('text/')) {
+        else if (_file.file_type?.startsWith('text/')) {
             return <div className="h-[50px] flex items-center"><RxFileText size={35} /></div>
         }
         else {
@@ -369,8 +376,14 @@ export default function TimelinePost(
                 </Alert>
             )}
 
+            {askDeletion && (
+                <ConfirmDialog message="Beitrag löschen?" handler={proceed => {
+                    if (proceed) deletePost()
+                    setAskDeletion(false)
+                }} />
+            )}
 
-            <div ref={ref} className={`${wbRemoved ? "opacity-0 transition-opacity ease-in-out delay-50 duration-300" : "opacity-100 transition-none" }
+            <div ref={ref} className={`${willRemvoe ? "opacity-0 transition-opacity ease-in-out delay-50 duration-300" : "opacity-100 transition-none" }
                 group/post p-4 mb-4 bg-white rounded shadow`}
             >
                 <div className="flex items-center">
@@ -380,9 +393,9 @@ export default function TimelinePost(
                         <PostHeader author={post.author} date={post.creation_date} />
                     )}
 
-                    {(!space && post.space) && (
+                    {(!group && post.space) && (
                         <div className='self-start leading-[1.6rem] text-xs text-gray-500 ml-1'>
-                            <MdDoubleArrow className="inline" /> <Link href={`/space/?id=${post.space}`} className="font-bold align-middle">{SpacenameById(post.space)}</Link>
+                            <MdDoubleArrow className="inline" /> <Link href={`/group/${post.space}`} className="font-bold align-middle">{GroupnameById(post.space)}</Link>
                         </div>
                     )}
 
@@ -392,7 +405,7 @@ export default function TimelinePost(
                         ) : (
                             <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickLikeBtn}><HiOutlineHeart /></button>
                         )}
-                        {(space && userIsAdmin) && (
+                        {(group && userIsAdmin) && (
                             <button className="p-2 rounded-full hover:bg-ve-collab-blue-light" onClick={onClickPin} title={post.pinned ? "Beitrag abheften" : "Beitrag anheften"}>
                                 {post.pinned ? (
                                     <TiPin />
@@ -490,7 +503,7 @@ export default function TimelinePost(
 
                 <Likes />
 
-                {(comments.length == 0 && !showCommentForm && (!spaceACL || spaceACL.comment)) && (
+                {(comments.length == 0 && !showCommentForm && (!groupACL || groupACL.comment)) && (
                     <div className="mt-4 mb-2">
                         <button onClick={openCommentForm} className="px-2 py-[6px] w-1/3 rounded-md border text-gray-400 text-left text-nowrap overflow-hidden truncate">
                             Kommentar schreiben ...
@@ -504,7 +517,7 @@ export default function TimelinePost(
                             Kommentare
                         </div>
 
-                        {(!spaceACL || spaceACL.comment) && (
+                        {(!groupACL || groupACL.comment) && (
                             <form onSubmit={onSubmitCommentForm} className="mb-2" ref={commentFormref}>
                                 <input
                                     className={'w-1/3 border border-[#cccccc] rounded-md px-2 py-[6px]'}

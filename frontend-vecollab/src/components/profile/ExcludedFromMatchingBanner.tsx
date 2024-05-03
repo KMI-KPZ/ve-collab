@@ -5,7 +5,7 @@ export default function ExcludedFromMatchingBanner() {
         <div className="w-full h-12 flex justify-center items-center bg-red-500 text-white">
             <p>
                 aktuell vom Matching ausgeschlossen,{' '}
-                <Link className="underline" href={'/editProfile'}>
+                <Link className="underline" href={'/profile/edit'}>
                     hier
                 </Link>{' '}
                 ändern!

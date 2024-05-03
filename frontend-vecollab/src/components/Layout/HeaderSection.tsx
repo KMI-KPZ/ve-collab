@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { FormEvent, useEffect, useState } from 'react';
 import Image from 'next/image';
 import veCollabLogo from '@/images/veCollabLogo.png';
 import Link from 'next/link';
@@ -16,12 +16,14 @@ interface Props {
     notificationEvents: Notification[];
     headerBarMessageEvents: any[];
     toggleChatWindow: () => void
+    toggleNotifWindow: () => void
 }
 
 export default function HeaderSection({
     notificationEvents,
     headerBarMessageEvents,
-    toggleChatWindow
+    toggleChatWindow,
+    toggleNotifWindow
 }: Props) {
     const { data: session } = useSession();
     const [messageEventCount, setMessageEventCount] = useState<number>(0);
@@ -49,9 +51,10 @@ export default function HeaderSection({
         setMessageEventCount(filteredMessageEvents.length);
     }, [headerBarMessageEvents, session]);
 
-    const isActivePath = (path: string) => {
-        return currentPath?.startsWith(path)
-    }
+    const isActivePath = (path: string|string[]) =>
+        Array.isArray(path)
+            ? path.some(p => currentPath?.startsWith(p))
+            : currentPath?.startsWith(path)
 
     const isFrontpage = () => currentPath == '/'
 
@@ -71,6 +74,12 @@ export default function HeaderSection({
         }
     }
 
+    const handleSearchSubmit = (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
+        if (!e.currentTarget.search.value) return
+        router.push(`/search?query=${e.currentTarget.search.value}`)
+    }
+
     return (
         <header className="bg-white px-4 py-2.5 drop-shadow-lg relative z-40">
             <nav className="flex flex-wrap items-center mx-auto max-w-screen-2xl">
@@ -83,7 +92,7 @@ export default function HeaderSection({
                             className="duration-300 hover:scale-110"
                         ></Image>
                     </Link>
-                    <form className='mx-10 flex items-stretch'>
+                    <form className='mx-10 flex items-stretch' onSubmit={e => handleSearchSubmit(e)}>
                         <input
                                 className={'border border-[#cccccc] rounded-l px-2 py-1'}
                                 type="text"
@@ -98,21 +107,23 @@ export default function HeaderSection({
                 </div>
                 <ul className="flex flex-1 justify-center xl:justify-end items-center font-semibold space-x-2 xl:space-x-6">
                     <li className={isFrontpage() ? activeClass : inactiveClass}>
-                        <Link href="/" className='inline-block	px-2 py-1'>Start</Link>
+                        <Link href="/" className='px-2 py-1'>Start</Link>
                     </li>
-                    <li className={isActivePath('/content') ? activeClass : inactiveClass}>
-                        <Link href="/content" className='inline-block	px-2 py-1'>Materialien</Link>
+                    <li className={isActivePath('/learning-material') ? activeClass : inactiveClass}>
+                        <Link href="/learning-material" className='px-2 py-1'>Materialien</Link>
                     </li>
-                    {session && (
+                    {session ? (
                         <>
-                            <li className={isActivePath('/space') ? activeClass : inactiveClass}>
-                                <Link href="/spaces" className='px-2 py-1'>Gruppen</Link>
+                            <li className={isActivePath('/group') ? activeClass : inactiveClass}>
+                                <Link href="/groups" className='px-2 py-1'>Gruppen</Link>
                             </li>
-                            <li className={isActivePath('/overviewProjects') ? activeClass : inactiveClass}>
-                                <Link href="/overviewProjects" className='px-2 py-1'>VE Designer</Link>
+                            <li className={isActivePath(['/plans', '/ve-designer']) ? activeClass : inactiveClass}>
+                                <Link href="/plans" className='px-2 py-1'>
+                                    <span className='text-ve-collab-orange'>VE</span> <span className='text-ve-collab-blue'>Designer</span>
+                                </Link>
                             </li>
                             <li className={`!ml-2 relative`}>
-                                <button className='relative p-2 rounded-full hover:bg-ve-collab-blue-light' onClick={e => toggleChatWindow()}>
+                                <button className='relative p-2 rounded-full hover:bg-ve-collab-blue-light' onClick={e => toggleChatWindow()} title='Chat Fenster öffnen'>
                                     <MdOutlineMessage size={20} />
                                 </button>
                                 {messageEventCount > 0 && (
@@ -121,9 +132,8 @@ export default function HeaderSection({
                                     </span>
                                 )}
                             </li>
-                            {/* TODO this may also will be a popup window */}
                             <li className={`!ml-2 relative`}>
-                                <button className='p-2 rounded-full hover:bg-ve-collab-blue-light' onClick={e => router.push('/notifications')}>
+                                <button className='p-2 rounded-full hover:bg-ve-collab-blue-light' onClick={e => toggleNotifWindow()} title='Notifications Fenster öffnen'>
                                     <IoMdNotificationsOutline size={20} />
                                 </button>
                                 {notificationEvents.length > 0 && (
@@ -159,8 +169,7 @@ export default function HeaderSection({
                                 </div>
                             </li>
                         </>
-                    )}
-                    {!session && (
+                    ) : (
                         <>
                             <li>
                                 <button onClick={() => signIn('keycloak')} className={`${inactiveClass} px-2 py-1`}>Login</button>

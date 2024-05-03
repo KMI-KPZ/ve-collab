@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { showDataOrEmptySign } from '@/pages/planSummary/[planSummarySlug]';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import iconDropdown from '@/images/icons/planSummary/iconDropdown.png';
 import Image from 'next/image';
+import { showDataOrEmptySign } from './planOverview';
 
 interface Props {
     plan: IPlan;

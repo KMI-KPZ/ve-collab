@@ -6,7 +6,7 @@ import Timeline from '@/components/network/Timeline';
 import ButtonNewPlan from '@/components/Plannner/ButtonNewPlan';
 
 export default function Home() {
-    const { data: session } = useSession();
+    const { data: session, status } = useSession();
 
     return (
         <div className="bg-slate-100">
@@ -31,21 +31,20 @@ export default function Home() {
                     wir zudem den aktiven kollegialen (virtuellen) Austausch.
                 </p>
 
-                {session && (
-                    <>
-                        <ButtonNewPlan label='Neuen VA planen' />
-                        <div className="w-1/2">
-                            <Timeline />
+                {status != 'loading' && (
+                    <> { session
+                        ? <>
+                            <ButtonNewPlan label='Neuen VA planen' />
+                                <div className="w-1/2">
+                                    <Timeline />
+                                </div>
+                        </> : <div
+                            onClick={() => signIn('keycloak')}
+                            className="py-4 pr-6 pl-5 m-10 bg-ve-collab-orange rounded-lg text-white cursor-pointer"
+                            >
+                                Logge dich ein, um einen neuen VA zu planen
                         </div>
-                    </>
-                )}
-                {!session && (
-                    <div
-                        onClick={() => signIn('keycloak')}
-                        className="py-4 pr-6 pl-5 m-10 bg-ve-collab-orange rounded-lg text-white cursor-pointer"
-                    >
-                        Logge dich ein, um einen neuen VA zu planen
-                    </div>
+                    } </>
                 )}
             </div>
         </div>

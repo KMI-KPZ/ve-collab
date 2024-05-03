@@ -1,22 +1,18 @@
-import { fetchPOST } from "@/lib/backend";
-import { useSession } from "next-auth/react";
-import router from "next/router";
+import { fetchPOST } from '@/lib/backend';
+import { useSession } from 'next-auth/react';
+import router from 'next/router';
 
 interface Props {
-    label: string
-    className?: string
-
+    label: string;
+    className?: string;
 }
-export default function ButtonNewPlan({
-    label,
-    className
-}: Props) {
-    const {data: session} = useSession();
+export default function ButtonNewPlan({ label, className }: Props) {
+    const { data: session } = useSession();
 
     const createAndForwardNewPlanner = async () => {
         const newPlanner = await fetchPOST('/planner/insert_empty', {}, session?.accessToken);
         await router.push({
-            pathname: '/startingWizard/generalInformation/projectName',
+            pathname: '/ve-designer/name',
             query: { plannerId: newPlanner.inserted_id },
         });
     };
@@ -24,7 +20,11 @@ export default function ButtonNewPlan({
     return (
         <button
             onClick={createAndForwardNewPlanner}
-            className={`${className ? className : 'py-4 pr-6 pl-5 m-10 bg-ve-collab-orange rounded-lg text-white'}`}
+            className={`${
+                className
+                    ? className
+                    : 'py-4 pr-6 pl-5 m-10 bg-ve-collab-orange rounded-lg text-white'
+            }`}
         >
             {label}
         </button>

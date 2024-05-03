@@ -31,7 +31,7 @@ import ButtonNewPlan from "../Plannner/ButtonNewPlan";
 
 interface Props {
     post?: BackendPost | undefined;
-    space?: string | undefined;
+    group?: string | undefined;
     postToRepost?: BackendPost | null
     onCancelForm?: Function;
     onCancelRepost?: MouseEventHandler;
@@ -43,7 +43,7 @@ TimelinePostForm.auth = true
 export default function TimelinePostForm(
 {
     post: postToEdit,
-    space,
+    group,
     postToRepost,
     onCancelForm,
     onCancelRepost,
@@ -125,7 +125,7 @@ export default function TimelinePostForm(
                 '/posts',
                 Object.assign({},
                     { tags: [] },
-                    space ? { space } : {},
+                    group ? { space: group } : {},
                     { text },
                     filesToAttach
                         ? {
@@ -150,7 +150,7 @@ export default function TimelinePostForm(
                         post_id: postToRepost?._id,
                         text
                     },
-                    space ? { space } : { space: null }
+                    group ? { space: group } : { space: null }
                 ),
                 session?.accessToken
             )
