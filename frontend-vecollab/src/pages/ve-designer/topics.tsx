@@ -68,7 +68,7 @@ export default function Topics() {
         }
         // router is loaded, but still no plan ID in the query --> redirect to overview because we can't do anything without an ID
         if (!router.query.plannerId) {
-            router.push('/overviewProjects');
+            router.push('/plans');
             return;
         }
         // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
@@ -162,7 +162,7 @@ export default function Topics() {
                                         <Tooltip tooltipsText="Inspiration zu fachbezogenen Themen verschiedener Disziplinen findest du hier in den Selbstlernmaterialien …">
                                             <Link
                                                 target="_blank"
-                                                href={'/content/Beispiele%20aus%20der%20Praxis'}
+                                                href={'/learning-material/top-bubble/Beispiele%20aus%20der%20Praxis'}
                                             >
                                                 <PiBookOpenText size={30} color="#00748f" />
                                             </Link>

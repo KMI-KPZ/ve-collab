@@ -112,7 +112,7 @@ export default function VeInvitationReplyNotification({
                         <div className="w-full h-[26rem] overflow-y-auto content-scrollbar relative">
                             <div className="my-2 h-4/5">
                                 <Link
-                                    href={`/profile?username=${invitedUser?.preferredUsername}`}
+                                    href={`/profile/user/${invitedUser?.preferredUsername}`}
                                     className="font-bold my-2"
                                 >
                                     {invitedUser?.name}
@@ -160,7 +160,7 @@ export default function VeInvitationReplyNotification({
                             <p>
                                 Leider hat{' '}
                                 <Link
-                                    href={`/profile?username=${invitedUser?.preferredUsername}`}
+                                    href={`/profile/user/${invitedUser?.preferredUsername}`}
                                     className="font-bold my-2"
                                 >
                                     {invitedUser?.name}

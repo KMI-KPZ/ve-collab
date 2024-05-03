@@ -97,7 +97,7 @@ export default function ProfileHeader({
                 <div className="mt-2 min-h-[2rem]">
                     {!foreignUser && (
                         <>
-                            <Link href={'/editProfile'}>
+                            <Link href={'/profile/edit'}>
                                 <button
                                     className={
                                         'border border-white bg-black/75 text-white rounded-lg px-3 py-1'

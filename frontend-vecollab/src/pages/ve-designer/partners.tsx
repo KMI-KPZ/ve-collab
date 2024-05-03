@@ -82,7 +82,7 @@ export default function Partners() {
 
         // router is loaded, but still no plan ID in the query --> redirect to overview because we can't do anything without an ID
         if (!router.query.plannerId) {
-            router.push('/overviewProjects');
+            router.push('/plans');
             return;
         }
         // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
@@ -349,7 +349,7 @@ export default function Partners() {
                                             <Tooltip tooltipsText="Tipps für die Partnersuche findest du hier in den Selbstlernmaterialien …">
                                                 <Link
                                                     target="_blank"
-                                                    href={'/content/Partnersuche'}
+                                                    href={'/learning-material/left-bubble/Partnersuche'}
                                                 >
                                                     <PiBookOpenText size={30} color="#00748f" />
                                                 </Link>

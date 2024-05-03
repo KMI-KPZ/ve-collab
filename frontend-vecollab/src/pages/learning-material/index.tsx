@@ -15,7 +15,7 @@ interface Props {
     mapping: { [key: string]: INode[] };
 }
 
-// Landing Page: no category (and therefore no content is chosen)
+// Landing Page: no category (and therefore no learning-material is chosen)
 export default function PageCategoryNotSelected(props: Props) {
     const { data: session, status } = useSession();
 
@@ -58,7 +58,7 @@ export default function PageCategoryNotSelected(props: Props) {
                         <div className="absolute top-5 right-5">
                             <Link
                                 className={'bg-ve-collab-orange text-white rounded-lg px-4 py-2'}
-                                href={'/content/edit'}
+                                href={'/learning-material/edit'}
                             >
                                 Bearbeiten
                             </Link>
@@ -70,27 +70,27 @@ export default function PageCategoryNotSelected(props: Props) {
                     {/* top bubble*/}
                     <div className="absolute left-1/2 -translate-x-1/2">
                         <div className="relative">
-                            <Link href={`/content/topBubble/${props.mapping['topBubble'][0].text}`}>
+                            <Link href={`/learning-material/top-bubble/${props.mapping['top-bubble'][0].text}`}>
                                 <div className="h-36 w-36 absolute -z-10 -top-16 -left-[5rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
-                                    {props.mapping['topBubble'][0].text}
+                                    {props.mapping['top-bubble'][0].text}
                                 </div>
                             </Link>
-                            <Link href={`/content/topBubble/${props.mapping['topBubble'][1].text}`}>
+                            <Link href={`/learning-material/top-bubble/${props.mapping['top-bubble'][1].text}`}>
                                 <div className="h-36 w-36 absolute -z-10 -top-8 -right-[6rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
-                                    {props.mapping['topBubble'][1].text}
+                                    {props.mapping['top-bubble'][1].text}
                                 </div>
                             </Link>
-                            <Link href={`/content/topBubble/${props.mapping['topBubble'][2].text}`}>
+                            <Link href={`/learning-material/top-bubble/${props.mapping['top-bubble'][2].text}`}>
                                 <div className="h-40 w-40 absolute -z-10 -bottom-14 -right-[7rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
-                                    {props.mapping['topBubble'][2].text}
+                                    {props.mapping['top-bubble'][2].text}
                                 </div>
                             </Link>
-                            <Link href={`/content/topBubble/${props.mapping['topBubble'][3].text}`}>
+                            <Link href={`/learning-material/top-bubble/${props.mapping['top-bubble'][3].text}`}>
                                 <div className="h-36 w-36 absolute -z-10 -bottom-8 -left-[6rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
-                                    {props.mapping['topBubble'][3].text}
+                                    {props.mapping['top-bubble'][3].text}
                                 </div>
                             </Link>
-                            <Link href="/content/topBubble">
+                            <Link href="/learning-material/top-bubble">
                                 <div className="h-72 w-72 rounded-full bg-ve-collab-blue flex justify-center items-center">
                                     <TbBulb
                                         size={150}
@@ -104,41 +104,41 @@ export default function PageCategoryNotSelected(props: Props) {
                     <div className="absolute left-[10%] top-2/3 -translate-y-2/3 -translate-x-[10%]">
                         <div className="relative">
                             <Link
-                                href={`/content/leftBubble/${props.mapping['leftBubble'][0].text}`}
+                                href={`/learning-material/left-bubble/${props.mapping['left-bubble'][0].text}`}
                             >
                                 <div className="h-36 w-36 absolute -z-10 -top-8 -left-[6rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
-                                    {props.mapping['leftBubble'][0].text}
+                                    {props.mapping['left-bubble'][0].text}
                                 </div>
                             </Link>
                             <Link
-                                href={`/content/leftBubble/${props.mapping['leftBubble'][1].text}`}
+                                href={`/learning-material/left-bubble/${props.mapping['left-bubble'][1].text}`}
                             >
                                 <div className="h-40 w-40 absolute -z-10 -top-[7rem] -right-[1rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
-                                    {props.mapping['leftBubble'][1].text}
+                                    {props.mapping['left-bubble'][1].text}
                                 </div>
                             </Link>
                             <Link
-                                href={`/content/leftBubble/${props.mapping['leftBubble'][2].text}`}
+                                href={`/learning-material/left-bubble/${props.mapping['left-bubble'][2].text}`}
                             >
                                 <div className="h-40 w-40 absolute -z-10 -bottom-6 -right-[8rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
-                                    {props.mapping['leftBubble'][2].text}
+                                    {props.mapping['left-bubble'][2].text}
                                 </div>
                             </Link>
                             <Link
-                                href={`/content/leftBubble/${props.mapping['leftBubble'][3].text}`}
+                                href={`/learning-material/left-bubble/${props.mapping['left-bubble'][3].text}`}
                             >
                                 <div className="h-36 w-36 absolute -z-10 -bottom-[7rem] left-[4rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
-                                    {props.mapping['leftBubble'][3].text}
+                                    {props.mapping['left-bubble'][3].text}
                                 </div>
                             </Link>
                             <Link
-                                href={`/content/leftBubble/${props.mapping['leftBubble'][4].text}`}
+                                href={`/learning-material/left-bubble/${props.mapping['left-bubble'][4].text}`}
                             >
                                 <div className="h-36 w-36 absolute -z-10 -bottom-3 -left-[6rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
-                                    {props.mapping['leftBubble'][4].text}
+                                    {props.mapping['left-bubble'][4].text}
                                 </div>
                             </Link>
-                            <Link href="/content/leftBubble">
+                            <Link href="/learning-material/left-bubble">
                                 <div className="h-72 w-72 rounded-full bg-ve-collab-blue flex justify-center items-center">
                                     <TbClipboardList
                                         size={150}
@@ -152,27 +152,27 @@ export default function PageCategoryNotSelected(props: Props) {
                     <div className="absolute left-[55%] top-[90%] -translate-y-[90%] -translate-x-[55%]">
                         <div className="relative">
                             <Link
-                                href={`/content/bottomBubble/${props.mapping['bottomBubble'][0].text}`}
+                                href={`/learning-material/bottom-bubble/${props.mapping['bottom-bubble'][0].text}`}
                             >
                                 <div className="h-36 w-36 absolute -z-10 bottom-4 -left-[8rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
-                                    {props.mapping['bottomBubble'][0].text}
+                                    {props.mapping['bottom-bubble'][0].text}
                                 </div>
                             </Link>
                             <Link
-                                href={`/content/bottomBubble/${props.mapping['bottomBubble'][1].text}`}
+                                href={`/learning-material/bottom-bubble/${props.mapping['bottom-bubble'][1].text}`}
                             >
                                 <div className="h-36 w-36 absolute -z-10 -top-[5rem] -right-[2rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
-                                    {props.mapping['bottomBubble'][1].text}
+                                    {props.mapping['bottom-bubble'][1].text}
                                 </div>
                             </Link>
                             <Link
-                                href={`/content/bottomBubble/${props.mapping['bottomBubble'][2].text}`}
+                                href={`/learning-material/bottom-bubble/${props.mapping['bottom-bubble'][2].text}`}
                             >
                                 <div className="h-36 w-36 absolute -z-10 -bottom-6 -right-[6rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
-                                    {props.mapping['bottomBubble'][2].text}
+                                    {props.mapping['bottom-bubble'][2].text}
                                 </div>
                             </Link>
-                            <Link href="/content/bottomBubble">
+                            <Link href="/learning-material/bottom-bubble">
                                 <div className="h-72 w-72 rounded-full bg-ve-collab-blue flex justify-center items-center">
                                     <GiPuzzle
                                         size={150}
@@ -186,20 +186,20 @@ export default function PageCategoryNotSelected(props: Props) {
                     <div className="absolute left-[90%] top-1/3 -translate-y-1/3 -translate-x-[90%]">
                         <div className="relative">
                             <Link
-                                href={`/content/rightBubble/${props.mapping['rightBubble'][0].text}`}
+                                href={`/learning-material/right-bubble/${props.mapping['right-bubble'][0].text}`}
                             >
                                 <div className="h-36 w-36 absolute -z-10 -top-[5rem] -left-[4rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
-                                    {props.mapping['rightBubble'][0].text}
+                                    {props.mapping['right-bubble'][0].text}
                                 </div>
                             </Link>
                             <Link
-                                href={`/content/rightBubble/${props.mapping['rightBubble'][1].text}`}
+                                href={`/learning-material/right-bubble/${props.mapping['right-bubble'][1].text}`}
                             >
                                 <div className="h-36 w-36 absolute -z-10 -bottom-[7rem] right-[1rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
-                                    {props.mapping['rightBubble'][1].text}
+                                    {props.mapping['right-bubble'][1].text}
                                 </div>
                             </Link>
-                            <Link href="/content/rightBubble">
+                            <Link href="/learning-material/right-bubble">
                             <div className="h-72 w-72 rounded-full bg-ve-collab-blue flex justify-center items-center">
                                 <FaLaptop size={150} className='text-white hover:text-ve-collab-orange' />
                             </div>
