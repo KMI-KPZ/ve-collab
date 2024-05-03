@@ -349,7 +349,7 @@ export default function Partners() {
                                             <Tooltip tooltipsText="Tipps für die Partnersuche findest du hier in den Selbstlernmaterialien …">
                                                 <Link
                                                     target="_blank"
-                                                    href={'/learning-material/leftBubble/Partnersuche'}
+                                                    href={'/learning-material/left-bubble/Partnersuche'}
                                                 >
                                                     <PiBookOpenText size={30} color="#00748f" />
                                                 </Link>

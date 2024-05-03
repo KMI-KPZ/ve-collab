@@ -151,7 +151,7 @@ export default function PostProcess() {
                                     >
                                         Nach dem VE
                                         <Tooltip tooltipsText="Ausführliche Informationen zur Etappenplanung und verschiedenen Typen und Modellen von VA findest du hier in den Selbstlernmaterialien …">
-                                            <Link target="_blank" href={'/learning-material/leftBubble/Etappenplanung'}>
+                                            <Link target="_blank" href={'/learning-material/left-bubble/Etappenplanung'}>
                                                 <FiInfo size={30} color="#00748f" />
                                             </Link>
                                         </Tooltip>

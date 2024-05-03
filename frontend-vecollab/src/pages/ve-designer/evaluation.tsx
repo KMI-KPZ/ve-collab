@@ -312,7 +312,7 @@ export default function Evaluation() {
                                         <div className={'font-bold text-4xl mb-2 w-fit relative'}>
                                             Bewertung / Evaluation
                                             <Tooltip tooltipsText="Mehr zur Evaluation von VE findest du hier in den Selbstlernmaterialien …">
-                                                <Link target="_blank" href={'/learning-material/leftBubble/Evaluation'}>
+                                                <Link target="_blank" href={'/learning-material/left-bubble/Evaluation'}>
                                                     <PiBookOpenText size={30} color="#00748f" />
                                                 </Link>
                                             </Tooltip>
