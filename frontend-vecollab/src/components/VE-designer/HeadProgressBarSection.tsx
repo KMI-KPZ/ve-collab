@@ -110,7 +110,7 @@ export default function HeadProgressBarSection({ stage, linkFineStep }: HeadProg
             </nav>
             <div className="flex justify-center">
                 <Link
-                    href={`/etherpad?planID=${router.query.plannerId}`}
+                    href={`/etherpad/${router.query.plannerId}`}
                     target="_blank"
                     className="mx-2"
                 >
@@ -122,7 +122,7 @@ export default function HeadProgressBarSection({ stage, linkFineStep }: HeadProg
                     </button>
                 </Link>
                 <Link
-                    href={`/meeting?meetingId=${router.query.plannerId}`}
+                    href={`/meeting/${router.query.plannerId}`}
                     target="_blank"
                     className="mx-2"
                 >
