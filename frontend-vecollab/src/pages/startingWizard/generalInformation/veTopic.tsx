@@ -162,7 +162,7 @@ export default function Topics() {
                                         <Tooltip tooltipsText="Inspiration zu fachbezogenen Themen verschiedener Disziplinen findest du hier in den Selbstlernmaterialien …">
                                             <Link
                                                 target="_blank"
-                                                href={'/learning-material/topBubble/Beispiele%20aus%20der%20Praxis'}
+                                                href={'/learning-material/top-bubble/Beispiele%20aus%20der%20Praxis'}
                                             >
                                                 <PiBookOpenText size={30} color="#00748f" />
                                             </Link>

@@ -340,7 +340,7 @@ export default function Realization() {
                                         <Tooltip tooltipsText="Mehr zu Formaten findest du hier in den Selbstlernmaterialien …">
                                             <Link
                                                 target="_blank"
-                                                href={'/learning-material/rightBubble/Digitale%20Medien%20&%20Werkzeuge'}
+                                                href={'/learning-material/right-bubble/Digitale%20Medien%20&%20Werkzeuge'}
                                             >
                                                 <PiBookOpenText size={30} color="#00748f" />
                                             </Link>
