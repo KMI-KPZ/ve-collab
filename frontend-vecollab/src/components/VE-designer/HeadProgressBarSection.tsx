@@ -21,7 +21,6 @@ interface HeadProgressBar {
 export default function HeadProgressBarSection({ stage, linkFineStep }: HeadProgressBar) {
     const router = useRouter();
 
-    console.log(linkFineStep);
     let linkFineplanner: string;
     if (linkFineStep === '' || linkFineStep === undefined) {
         linkFineplanner = '/ve-designer/no-step';
@@ -109,11 +108,7 @@ export default function HeadProgressBarSection({ stage, linkFineStep }: HeadProg
                 {renderHeadProgressBar(headMenuProgressSteps)}
             </nav>
             <div className="flex justify-center">
-                <Link
-                    href={`/etherpad/${router.query.plannerId}`}
-                    target="_blank"
-                    className="mx-2"
-                >
+                <Link href={`/etherpad/${router.query.plannerId}`} target="_blank" className="mx-2">
                     <button
                         type="submit"
                         className="items-end border border-ve-collab-orange text-ve-collab-orange py-3 px-5 rounded-lg w-60"
@@ -121,11 +116,7 @@ export default function HeadProgressBarSection({ stage, linkFineStep }: HeadProg
                         kollaboratives Pad öffnen
                     </button>
                 </Link>
-                <Link
-                    href={`/meeting/${router.query.plannerId}`}
-                    target="_blank"
-                    className="mx-2"
-                >
+                <Link href={`/meeting/${router.query.plannerId}`} target="_blank" className="mx-2">
                     <button
                         type="submit"
                         className="items-end border border-ve-collab-orange text-ve-collab-orange py-3 px-5 rounded-lg w-60"
