@@ -28,6 +28,11 @@ import { EvaluationPerPartner } from '@/pages/ve-designer/evaluation';
 
 export interface FormValues {
     partners: Partner[];
+    externalParties: ExternalParty[];
+}
+
+interface ExternalParty {
+    externalParty: string;
 }
 
 interface Partner {
@@ -36,9 +41,12 @@ interface Partner {
 }
 
 const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
-    return formValues.partners.every((partner) => {
-        return partner.label === '' && partner.value === '';
-    });
+    return (
+        formValues.externalParties.every((party) => party.externalParty === '') &&
+        formValues.partners.every((partner) => {
+            return partner.label === '' && partner.value === '';
+        })
+    );
 };
 
 Partners.auth = true;
@@ -70,6 +78,7 @@ export default function Partners() {
         mode: 'onChange',
         defaultValues: {
             partners: [{ label: '', value: '' }],
+            externalParties: [{ externalParty: '' }],
         },
     });
 
@@ -99,6 +108,14 @@ export default function Partners() {
                         setEvaluationInfo(data.plan.evaluation);
                     }
                     setAuthor(data.plan.author);
+                    if (data.plan.involved_parties.length !== 0) {
+                        methods.setValue(
+                            'externalParties',
+                            data.plan.involved_parties.map((element: string) => ({
+                                externalParty: element,
+                            }))
+                        );
+                    }
                     if (data.plan.partners.length !== 0) {
                         fetchPOST(
                             '/profile_snippets',
@@ -138,8 +155,23 @@ export default function Partners() {
         }
     }, [session, status, methods, router]);
 
-    const { fields, append, remove, update } = useFieldArray({
+    const {
+        fields: fieldsPartners,
+        append: appendPartners,
+        remove: removePartners,
+        update: updatePartners,
+    } = useFieldArray({
         name: 'partners',
+        control: methods.control,
+    });
+
+    const {
+        fields: fieldsExternalParties,
+        append: appendExternalParties,
+        remove: removeExternalParties,
+        update: updateExternalParties,
+    } = useFieldArray({
+        name: 'externalParties',
         control: methods.control,
     });
 
@@ -239,6 +271,11 @@ export default function Partners() {
                         },
                         {
                             plan_id: router.query.plannerId,
+                            field_name: 'involved_parties',
+                            value: data.externalParties.map((element) => element.externalParty),
+                        },
+                        {
+                            plan_id: router.query.plannerId,
                             field_name: 'progress',
                             value: {
                                 ...sideMenuStepsProgress,
@@ -262,11 +299,19 @@ export default function Partners() {
         }
     };
 
-    const handleDelete = (index: number): void => {
-        if (fields.length > 1) {
-            remove(index);
+    const handleDeletePartners = (index: number): void => {
+        if (fieldsPartners.length > 1) {
+            removePartners(index);
         } else {
-            update(index, { label: '', value: '' });
+            updatePartners(index, { label: '', value: '' });
+        }
+    };
+
+    const handleDeleteExternalParties = (index: number): void => {
+        if (fieldsExternalParties.length > 1) {
+            removeExternalParties(index);
+        } else {
+            updateExternalParties(index, { externalParty: '' });
         }
     };
 
@@ -316,6 +361,34 @@ export default function Partners() {
         );
     }
 
+    const renderExternalPartiesInputs = (): JSX.Element[] => {
+        return fieldsExternalParties.map((externalParty, index) => (
+            <div key={externalParty.id} className="my-2">
+                <div className="flex justify-center items-center">
+                    <input
+                        type="text"
+                        placeholder="Externen eingeben"
+                        className="border border-gray-300 rounded-lg p-2 mr-2"
+                        {...methods.register(`externalParties.${index}.externalParty`, {
+                            maxLength: {
+                                value: 500,
+                                message: 'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
+                            },
+                        })}
+                    />
+                    <button type="button" onClick={() => handleDeleteExternalParties(index)}>
+                        <RxMinus size={20} />
+                    </button>
+                </div>
+                {methods.formState.errors?.externalParties?.[index]?.externalParty?.message && (
+                    <p className="text-red-600 pt-2">
+                        {methods.formState.errors?.externalParties?.[index]?.externalParty?.message}
+                    </p>
+                )}
+            </div>
+        ));
+    };
+
     return (
         <FormProvider {...methods}>
             <PopupSaveData
@@ -349,7 +422,9 @@ export default function Partners() {
                                             <Tooltip tooltipsText="Tipps für die Partnersuche findest du hier in den Selbstlernmaterialien …">
                                                 <Link
                                                     target="_blank"
-                                                    href={'/learning-material/left-bubble/Partnersuche'}
+                                                    href={
+                                                        '/learning-material/left-bubble/Partnersuche'
+                                                    }
                                                 >
                                                     <PiBookOpenText size={30} color="#00748f" />
                                                 </Link>
@@ -357,7 +432,10 @@ export default function Partners() {
                                         </div>
                                     </div>
                                     <div className={'text-center mb-20'}>optional</div>
-                                    {fields.map((partner, index) => (
+                                    <div className={'text-center font-bold text-2xl mb-8'}>
+                                        Beteiligte
+                                    </div>
+                                    {fieldsPartners.map((partner, index) => (
                                         <div
                                             key={partner.id}
                                             className=" flex my-2 justify-center items-center gap-x-3"
@@ -367,7 +445,7 @@ export default function Partners() {
                                                 `partners.${index}`,
                                                 index
                                             )}
-                                            <button onClick={() => handleDelete(index)}>
+                                            <button onClick={() => handleDeletePartners(index)}>
                                                 <RxMinus size={20} />
                                             </button>
                                         </div>
@@ -377,14 +455,33 @@ export default function Partners() {
                                             className="p-4 bg-white rounded-3xl shadow-2xl"
                                             type="button"
                                             onClick={() => {
-                                                append({ label: '', value: '' });
+                                                appendPartners({ label: '', value: '' });
                                             }}
                                         >
                                             <RxPlus size={20} />
                                         </button>
                                     </div>
                                 </div>
-                                <div className="flex justify-between w-full max-w-xl">
+                                <div>
+                                    <div className={'text-center font-bold text-2xl mb-8 mt-10'}>
+                                        Extern Beteiligte
+                                    </div>
+                                    {renderExternalPartiesInputs()}
+                                    <div className="flex justify-center mt-4">
+                                        <button
+                                            className="p-4 bg-white rounded-3xl shadow-2xl"
+                                            type="button"
+                                            onClick={() => {
+                                                appendExternalParties({
+                                                    externalParty: '',
+                                                });
+                                            }}
+                                        >
+                                            <RxPlus size={20} />
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="flex justify-between w-full max-w-xl mt-14">
                                     <div>
                                         <button
                                             type="button"
@@ -407,7 +504,7 @@ export default function Partners() {
                                                 (data) => {
                                                     combinedSubmitRouteAndUpdate(
                                                         data,
-                                                        '/ve-designer/externalParties'
+                                                        '/ve-designer/lectures'
                                                     );
                                                 },
                                                 async () => setIsPopupOpen(true)
