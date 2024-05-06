@@ -41,7 +41,7 @@ export const getServerSideProps: GetServerSideProps = async ({
     const path = await getMaterialNodePath(Number.parseInt(params?.id as string));
 
     const uri =
-        '/content/' + path.bubble.text + '/' + path.category.text + '/' + path.material.text;
+        '/learning-material/' + path.bubble.text + '/' + path.category.text + '/' + path.material.text;
 
     return {
         props: {
