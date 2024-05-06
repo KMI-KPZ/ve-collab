@@ -99,6 +99,12 @@ export default function StepNames() {
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
+        defaultValues: {
+            stepNames: [
+                { from: '', to: '', name: 'Kennenlernen' },
+                { from: '', to: '', name: 'Evaluation' },
+            ],
+        },
     });
 
     useEffect(() => {
@@ -118,7 +124,6 @@ export default function StepNames() {
                 (data) => {
                     setLoading(false);
                     setSteps(data.plan.steps);
-                    methods.setValue('stepNames', [emptyBroadStep]);
                     if (data.plan.steps?.length > 0) {
                         const steps: IFineStep[] = data.plan.steps;
                         const stepNames: StepName[] = steps.map((step) => {
@@ -354,17 +359,24 @@ export default function StepNames() {
                                                 'text-center font-bold text-4xl mb-2 relative w-fit'
                                             }
                                         >
-                                            Plane den groben Ablauf
+                                            Grobplanung des Ablaufs
                                             <Tooltip tooltipsText="Ausführliche Informationen zur Etappenplanung und verschiedenen Typen und Modellen von VA findest du hier in den Selbstlernmaterialien …">
-                                                <Link target="_blank" href={'/learning-material/left-bubble/Etappenplanung'}>
+                                                <Link
+                                                    target="_blank"
+                                                    href={
+                                                        '/learning-material/left-bubble/Etappenplanung'
+                                                    }
+                                                >
                                                     <PiBookOpenText size={30} color="#00748f" />
                                                 </Link>
                                             </Tooltip>
                                         </div>
                                     </div>
                                     <div className={'text-center mb-20'}>
-                                        erstelle beliebig viele Etappen, setze deren Daten und
-                                        vergib für jede einen individuellen Namen
+                                        Erstellt beliebig viele Etappen und legt für jede Etappe
+                                        einen Zeitraum fest. Wichtig: Jede Phase braucht einen
+                                        individuellen Namen (z.B. Kennenlernphase I, Kennenlernphase
+                                        II).
                                     </div>
                                     <DragDropContext onDragEnd={onDragEnd}>
                                         <Droppable droppableId="stepNames-items">
