@@ -21,8 +21,8 @@ import {
 import Timeline from '@/components/network/Timeline';
 import LoadingAnimation from '@/components/LoadingAnimation';
 
-Profile.auth = true;
-export default function Profile() {
+UserProfile.auth = true;
+export default function UserProfile() {
     const [personalInformation, setPersonalInformation] = useState<PersonalInformation>({
         firstName: '',
         lastName: '',
@@ -129,7 +129,7 @@ export default function Profile() {
                         data.profile.first_name === '' ||
                         data.profile.last_name === ''
                     ) {
-                        router.push('/editProfile');
+                        router.push('/profile/edit');
                     }
                 }
                 setPersonalInformation({

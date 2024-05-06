@@ -1,7 +1,7 @@
 import LoadingAnimation from "@/components/LoadingAnimation";
 import TimelinePost from "@/components/network/TimelinePost";
 import { BackendPost } from "@/interfaces/api/apiInterfaces";
-import { useGetAllSpaces, useGetMySpaceACLEntry, useGetPost, useGetSpace, useIsGlobalAdmin } from "@/lib/backend";
+import { useGetAllGroups, useGetMyGroupACLEntry, useGetPost, useGetGroup, useIsGlobalAdmin } from "@/lib/backend";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -9,14 +9,15 @@ import { useState } from "react";
 import { MdOutlineDeleteForever } from "react-icons/md";
 import { GiSadCrab } from 'react-icons/gi';
 
+/**
+ * Single post view
+ */
+
 Post.auth = true;
 export default function Post() {
     const { data: session, status } = useSession();
     const router = useRouter();
-    // const [space, setSpace] = useState<BackendSpace>()
-    // const [allSpaces, setAllSpaces] = useState<BackendSpace[]>()
-    // const [spaceACLEntry, setSpaceACLEntry] = useState<BackendSpaceACLEntry>()
-    // const [isLoading, setIsLoading] = useState<boolean>(false)
+    const { postId } = router.query
     const [deleted, setDeleted] = useState<boolean>(false)
 
     const {
@@ -25,48 +26,25 @@ export default function Post() {
         error,
         mutate,
     } = useGetPost(
-        session!.accessToken, router.query.id as string)
+        session!.accessToken, postId as string)
 
-    const { data: space } = useGetSpace(session!.accessToken, post?.space);
-    const { data: allSpaces } = useGetAllSpaces(session!.accessToken)
-    const { data: spaceACLEntry } = useGetMySpaceACLEntry(session!.accessToken, post?.space)
-
-    // useEffect(() => {
-    //     if (isLoadingPost || !post?.space) return
-
-    //     setIsLoading(true)
-
-    //     fetchGET(`/spaceadministration/info?id=${post.space}`, session!.accessToken)
-    //     .then(data => {
-    //         setSpace(data.space)
-
-    //         return fetchGET('/spaceadministration/list', session!.accessToken)
-    //     })
-    //     .then(data => {
-    //         setAllSpaces(data.spaces)
-
-    //         return fetchGET(`/space_acl/get?space=${post.space}`, session!.accessToken)
-    //     })
-    //     .then(data => {
-    //         setSpaceACLEntry(data.acl_entry)
-    //         setIsLoading(false)
-    //     })
-
-    // }, [post, isLoadingPost, session])
+    const { data: group } = useGetGroup(session!.accessToken, post?.space);
+    const { data: allGroups } = useGetAllGroups(session!.accessToken)
+    const { data: groupACLEntry } = useGetMyGroupACLEntry(session!.accessToken, post?.space)
 
     const isGlobalAdmin = useIsGlobalAdmin(session!.accessToken)
 
     const rePost = (post: BackendPost) => {
         if (post.space) {
-            router.push(`/space?id=${post.space}&repost=${post._id}`)
+            router.push(`/group/${post.space}?repost=${post._id}`)
         } else {
             router.push(`/?repost=${post._id}`)
         }
     }
 
     function userIsAdmin() {
-        if (space) {
-            return isGlobalAdmin || space.admins.includes(session?.user?.preferred_username as string);
+        if (group) {
+            return isGlobalAdmin || group.admins.includes(session?.user?.preferred_username as string);
         }
         return isGlobalAdmin;
     }
@@ -132,8 +110,8 @@ export default function Post() {
         <Wrapper>
              <TimelinePost
                 post={post}
-                allSpaces={allSpaces}
-                spaceACL={spaceACLEntry}
+                allGroups={allGroups}
+                groupACL={groupACLEntry}
                 updatePost={() => {mutate()}}
                 userIsAdmin={userIsAdmin()}
                 removePost={() => {setDeleted(true)}}

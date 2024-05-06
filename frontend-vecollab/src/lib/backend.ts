@@ -2,8 +2,8 @@ import {
     BackendChatMessage,
     BackendChatroomSnippet,
     BackendPost,
-    BackendSpace,
-    BackendSpaceACLEntry,
+    BackendGroup,
+    BackendGroupACLEntry,
     BackendUserSnippet,
 } from '@/interfaces/api/apiInterfaces';
 import { Notification } from '@/interfaces/socketio';
@@ -259,30 +259,30 @@ export function useGetCheckAdminUser(accessToken: string): {
     };
 }
 
-export function useGetSpace(
+export function useGetGroup(
     accessToken: string,
-    spaceId?: string
+    groupId?: string
 ): {
-    data: BackendSpace;
+    data: BackendGroup;
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;
 } {
     const { data, error, isLoading, mutate } = useSWR(
-        spaceId
-            ? [`/spaceadministration/info?id=${spaceId}`, accessToken] : null,
+        groupId
+            ? [`/spaceadministration/info?id=${groupId}`, accessToken] : null,
         ([url, token]) => GETfetcher(url, token)
     );
     return {
-        data: isLoading || error || !spaceId ? null : data.space,
+        data: isLoading || error || !groupId ? null : data.space,
         isLoading,
         error,
         mutate,
     };
 }
 
-export function useGetAllSpaces(accessToken: string): {
-    data: BackendSpace[];
+export function useGetAllGroups(accessToken: string): {
+    data: BackendGroup[];
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;
@@ -299,8 +299,8 @@ export function useGetAllSpaces(accessToken: string): {
     };
 }
 
-export function useGetMySpaces(accessToken: string): {
-    data: BackendSpace[];
+export function useGetMyGroups(accessToken: string): {
+    data: BackendGroup[];
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;
@@ -317,8 +317,8 @@ export function useGetMySpaces(accessToken: string): {
     };
 }
 
-export function useGetMySpaceInvites(accessToken: string): {
-    data: BackendSpace[];
+export function useGetMyGroupInvites(accessToken: string): {
+    data: BackendGroup[];
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;
@@ -335,8 +335,8 @@ export function useGetMySpaceInvites(accessToken: string): {
     };
 }
 
-export function useGetMySpaceRequests(accessToken: string): {
-    data: BackendSpace[];
+export function useGetMyGroupRequests(accessToken: string): {
+    data: BackendGroup[];
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;
@@ -353,18 +353,18 @@ export function useGetMySpaceRequests(accessToken: string): {
     };
 }
 
-export function useGetMySpaceACLEntry(accessToken: string, spaceId?: string): {
-    data: BackendSpaceACLEntry;
+export function useGetMyGroupACLEntry(accessToken: string, groupId?: string): {
+    data: BackendGroupACLEntry;
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;
 } {
     const { data, error, isLoading, mutate } = useSWR(
-        spaceId ? [`/space_acl/get?space=${spaceId}` , accessToken] : null,
+        groupId ? [`/space_acl/get?space=${groupId}` , accessToken] : null,
         ([url, token]) => GETfetcher(url, token)
     );
     return {
-        data: isLoading || error || !spaceId ? null : data.acl_entry,
+        data: isLoading || error || !groupId ? null : data.acl_entry,
         isLoading,
         error,
         mutate,
@@ -375,7 +375,7 @@ export function useGetTimeline(
     accessToken: string,
     toDate?: string,
     limit?: number,
-    space?: string,
+    group?: string,
     user?: string
  ): {
     data: BackendPost[];
@@ -384,8 +384,8 @@ export function useGetTimeline(
     mutate: KeyedMutator<any>;
 } {
     let endpointUrl = "/timeline"
-    if (space) {
-        endpointUrl += `/space/${space}`
+    if (group) {
+        endpointUrl += `/space/${group}`
     }
     else if (user) {
         endpointUrl += `/user/${user}`
@@ -410,7 +410,7 @@ export function useGetTimeline(
 
 export function useGetPinnedPosts(
     accessToken: string,
-    space: string,
+    group: string,
     limit?: number
  ): {
     data: BackendPost[];
@@ -419,15 +419,15 @@ export function useGetPinnedPosts(
     mutate: KeyedMutator<any>;
 } {
     const { data, error, isLoading, mutate } = useSWR(
-        space ?
-            [`/timeline/space/${space}?limit=${limit || 3}`, accessToken]
+        group ?
+            [`/timeline/space/${group}?limit=${limit || 3}`, accessToken]
             : null
         ,
         ([url, token]) => GETfetcher(url, token)
     );
 
     return {
-        data: isLoading || error || !space ? [] : data.pinned_posts,
+        data: isLoading || error || !group ? [] : data.pinned_posts,
         isLoading,
         error,
         mutate,
@@ -451,7 +451,7 @@ export function useGetPost(
     );
 
     return {
-        data: isLoading || error ? '' : data.post,
+        data: isLoading || error || !post_id ? '' : data.post,
         isLoading,
         error,
         mutate,

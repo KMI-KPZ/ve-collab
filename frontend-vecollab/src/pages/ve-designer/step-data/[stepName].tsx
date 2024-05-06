@@ -161,7 +161,7 @@ export default function FinePlanner() {
         }
         // router is loaded, but still no plan ID in the query --> redirect to overview because we can't do anything without an ID
         if (!router.query.plannerId) {
-            router.push('/overviewProjects');
+            router.push('/plans');
             return;
         }
 
@@ -320,7 +320,7 @@ export default function FinePlanner() {
                                         >
                                             Feinplanung
                                             <Tooltip tooltipsText="Mehr Aspekte der Feinplanung findest du hier in den Selbstlernmaterialien …">
-                                                <Link target="_blank" href={'/content/VE-Planung'}>
+                                                <Link target="_blank" href={'/learning-material/left-bubble/Etappenplanung'}>
                                                     <PiBookOpenText size={30} color="#00748f" />
                                                 </Link>
                                             </Tooltip>

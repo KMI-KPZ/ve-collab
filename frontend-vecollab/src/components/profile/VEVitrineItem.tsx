@@ -9,7 +9,7 @@ interface Props {
 
 export default function VEVitrineItem({ title, excerpt, _id, date }: Props) {
     return (
-        <Link href={`/startingWizard/generalInformation/projectName?plannerId=${_id}`}>
+        <Link href={`/ve-designer/name?plannerId=${_id}`}>
             <li
                 className={
                     'py-4 px-1 border border-white rounded-xl hover:border hover:border-ve-collab-orange'

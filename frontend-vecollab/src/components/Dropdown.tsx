@@ -48,7 +48,7 @@ export default function MyDropdown({
 
     return (
         <div className="inline relative" ref={wrapperRef}>
-            <button className="p-2" onClick={() => setOpen(!open)}>
+            <button className="p-2" type="button" onClick={() => setOpen(!open)}>
                 {icon}
             </button>
 

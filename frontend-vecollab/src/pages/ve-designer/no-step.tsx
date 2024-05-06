@@ -32,7 +32,7 @@ export default function NoStep() {
         }
         // router is loaded, but still no plan ID in the query --> redirect to overview because we can't do anything without an ID
         if (!router.query.plannerId) {
-            router.push('/overviewProjects');
+            router.push('/plans');
             return;
         }
         // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)

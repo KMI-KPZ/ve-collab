@@ -26,7 +26,7 @@ export default function Meeting() {
                     <LoadingAnimation />
                 </div>
             ) : (
-                <JitsiMeeting roomName={router.query.meetingId as string} />
+                <JitsiMeeting roomName={router.query.id as string} />
             )}
         </>
     );

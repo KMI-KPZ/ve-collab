@@ -42,7 +42,7 @@ export interface BackendFileSnippet {
     manually_uploaded: boolean,
 }
 
-export interface BackendSpace {
+export interface BackendGroup {
     _id: string;
     name: string;
     admins: string[];
@@ -56,9 +56,9 @@ export interface BackendSpace {
     space_description: string;
 }
 
-export interface BackendSpaceACLEntry {
+export interface BackendGroupACLEntry {
     username: string,
-    space: string,
+    group: string,
     read_timeline: boolean,
     comment: boolean,
     post: boolean,
@@ -96,6 +96,7 @@ export interface BackendPost {
     files: BackendPostFile[];
     likers: string[];
     pinned: boolean;
+    plans: string;
     space: string;
     tags: string[];
     text: string;

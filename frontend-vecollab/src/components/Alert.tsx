@@ -2,7 +2,7 @@ import { IoMdClose } from 'react-icons/io';
 
 interface Props {
     onClose: () => void;
-    children: JSX.Element;
+    children: string|JSX.Element;
     // TODO may use pro message instead children
 }
 

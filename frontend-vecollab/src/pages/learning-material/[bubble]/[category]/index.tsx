@@ -40,7 +40,7 @@ export default function PageCategorySelected(props: Props) {
         // if there are content nodes, immediately redirect to the first one
         if (props.leafNodes.length > 0) {
             router.push(
-                `/content/${props.bubbleSlug}/${props.categorySlug}/${props.leafNodes[0].text}`
+                `/learning-material/${props.bubbleSlug}/${props.categorySlug}/${props.leafNodes[0].text}`
             );
         }
     }, [router, props]);
@@ -49,7 +49,7 @@ export default function PageCategorySelected(props: Props) {
         <>
             <div className="container mx-auto mb-4 px-5">
                 <div className="mt-4">
-                    <Link href="/content">
+                    <Link href="/learning-material">
                         <div className="flex items-center">
                             <IoMdArrowRoundBack className="mr-2" />
                             <p className="text-ve-collab-orange underline">
@@ -85,7 +85,7 @@ export default function PageCategorySelected(props: Props) {
                                     nicht funktioniert, klicken Sie bitte{' '}
                                     <a
                                         className="underline text-ve-collab-blue"
-                                        href={`/content/${props.bubbleSlug}/${props.categorySlug}/${props.leafNodes[0].text}`}
+                                        href={`/learning-material/${props.bubbleSlug}/${props.categorySlug}/${props.leafNodes[0].text}`}
                                     >
                                         hier
                                     </a>

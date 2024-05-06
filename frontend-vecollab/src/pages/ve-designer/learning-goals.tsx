@@ -64,7 +64,7 @@ export default function LearningGoals() {
         }
         // router is loaded, but still no plan ID in the query --> redirect to overview because we can't do anything without an ID
         if (!router.query.plannerId) {
-            router.push('/overviewProjects');
+            router.push('/plans');
             return;
         }
         // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
@@ -212,7 +212,7 @@ export default function LearningGoals() {
                                     <div className={'text-center font-bold text-4xl mb-2 relative'}>
                                         Welche Richtlernziele sollen im VE erreicht werden?
                                         <Tooltip tooltipsText="Mehr zu Richtlernzielen findest du hier in den Selbstlernmaterialien …">
-                                            <Link target="_blank" href={'/content/Potenziale'}>
+                                            <Link target="_blank" href={'/learning-material/top-bubble/Potenziale'}>
                                                 <PiBookOpenText size={30} color="#00748f" />
                                             </Link>
                                         </Tooltip>

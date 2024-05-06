@@ -59,7 +59,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (
     }
 
     const response = await fetchGET(
-        `/etherpad_integration/get_pad_session?plan_id=${context.query.planID}`,
+        `/etherpad_integration/get_pad_session?plan_id=${context.query.id as string}`,
         session.accessToken
     );
 
