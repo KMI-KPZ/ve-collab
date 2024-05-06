@@ -1,6 +1,8 @@
 import json
 
+from resources.material_taxonomy import MaterialTaxonomyResource
 from error_reasons import MISSING_KEY_IN_HTTP_BODY_SLUG
+from exceptions import MbrAPIError
 from handlers.base_handler import BaseHandler, auth_needed
 import util
 
@@ -103,9 +105,7 @@ class MaterialTaxonomyHandler(BaseHandler):
         # validate structure of each node
         # TODO only if dropppable is false, data has to be present
         for node in taxonomy:
-            if not all(
-                key in node for key in ["id", "parent", "droppable", "text"]
-            ):
+            if not all(key in node for key in ["id", "parent", "droppable", "text"]):
                 self.set_status(400)
                 self.write(
                     {
@@ -133,3 +133,97 @@ class MaterialTaxonomyHandler(BaseHandler):
             )
 
         self.write({"success": True})
+
+
+class MBRSyncHandler(BaseHandler):
+    """
+    trigger the synchronization of our metadata with Mein Bildungsraum
+    """
+
+    def get(self):
+        pass
+
+    @auth_needed
+    def post(self):
+        """
+        POST /mbr_sync
+            trigger the synchronization of our metadata with Mein Bildungsraum
+
+            query params:
+                None
+
+            http body:
+                None
+
+            returns:
+                200 OK
+                (successfully triggered synchronization)
+                {"success": True}
+
+                401 Unauthorized
+                (access token is not valid)
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                (you are not an admin)
+                {"success": False,
+                 "reason": "insufficient_permission"}
+        """
+
+        # abort if user is not an admin
+        if not self.is_current_user_lionet_admin():
+            self.set_status(403)
+            self.write(
+                {
+                    "success": False,
+                    "reason": "insufficient_permission",
+                }
+            )
+            return
+
+        # trigger synchronization
+        with util.get_mongodb() as db:
+            tax = MaterialTaxonomyResource(db)
+            try:
+                tax.sync_metadata_to_mbr()
+            except MbrAPIError as e:
+                print(e.response)
+
+        self.write({"success": True})
+
+
+class MBRTestHandler(BaseHandler):
+
+    @auth_needed
+    def get(self):
+        if not self.is_current_user_lionet_admin():
+            self.set_status(403)
+            self.write(
+                {
+                    "success": False,
+                    "reason": "insufficient_permission",
+                }
+            )
+            return
+
+        with util.get_mongodb() as db:
+            tax = MaterialTaxonomyResource(db)
+            our_taxonomy = tax.get_our_taxonomy()
+            our_taxonomy_material_nodes = tax.get_our_taxonomy_material_nodes()
+            access_token = tax.acquire_mein_bildungsraum_access_token()
+            source_id = tax.get_mbr_source_id()
+            #tax.sync_metadata_to_mbr()
+            our_metadata = tax.get_our_metadata_from_mbr()
+            self.serialize_and_write(
+                {
+                    "our_taxonomy": our_taxonomy,
+                    "our_taxonomy_material_nodes": our_taxonomy_material_nodes,
+                    "access_token": access_token,
+                    "source_id": source_id,
+                    "our_metadata": our_metadata,
+                }
+            )
+
+    def post(self):
+        pass

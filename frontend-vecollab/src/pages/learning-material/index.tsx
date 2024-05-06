@@ -48,11 +48,11 @@ export default function PageCategoryNotSelected(props: Props) {
                     <Image fill src={blueBackground} alt={''} />
                     <div className={'absolute top-10 bottom-10 left-20 right-20'}>
                         <h1 className={'text-6xl text-white font-bold text-center'}>{title}</h1>
-                        <p className={'relative top-5 text-base text-white'}> {text}</p>
+                        <p className={'relative top-5 text-base text-white text-center'}> {text}</p>
                         <br />
-                        <p className={'relative top-5 text-base text-white'}> {text2}</p>
+                        <p className={'relative top-5 text-base text-white text-center'}> {text2}</p>
                         <br />
-                        <p className={'relative top-5 text-base text-white'}> {text3}</p>
+                        <p className={'relative top-5 text-base text-white text-center'}> {text3}</p>
                     </div>
                     {isUserAdmin && (
                         <div className="absolute top-5 right-5">
