@@ -2,10 +2,12 @@ import { IoMdClose } from 'react-icons/io';
 
 interface Props {
     onClose: () => void;
-    children: JSX.Element;
+    children: string|JSX.Element;
+    // TODO may use pro message instead children
 }
 
 /*
+TODO: add type: success/info/warning/error
 render a dialog modal with variable content
 both the "X" in top right corner and clicking anywhere outside the dialog close it.
 control structures need to be added from outside:

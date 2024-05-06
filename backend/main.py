@@ -35,7 +35,6 @@ from handlers.network.permissions import (
     SpaceACLHandler,
 )
 from handlers.network.post import *
-from handlers.network.render import *
 from handlers.network.search import SearchHandler
 from handlers.network.space import SpaceHandler
 from handlers.network.timeline import *
@@ -88,15 +87,10 @@ def make_app(cookie_secret: str, debug: bool = False):
 
     return tornado.web.Application(
         [
-            (r"/", MainRedirectHandler),
             (r"/login", LoginHandler),
             (r"/login/callback", LoginCallbackHandler),
             (r"/logout", LogoutHandler),
-            (r"/main", MainHandler),
             (r"/health", HealthCheckHandler),
-            (r"/acl", ACLHandler),
-            (r"/myprofile", MyProfileHandler),
-            (r"/profile/(.+)", ProfileHandler),
             (r"/posts", PostHandler),
             (r"/comment", CommentHandler),
             (r"/like", LikePostHandler),
@@ -105,8 +99,6 @@ def make_app(cookie_secret: str, debug: bool = False):
             (r"/follow", FollowHandler),
             (r"/updates", NewPostsSinceTimestampHandler),
             (r"/spaceadministration/(.+)", SpaceHandler),
-            (r"/space/(.+)", SpaceRenderHandler),
-            (r"/spaces", SpaceOverviewHandler),
             (r"/timeline", TimelineHandler),
             (r"/timeline/space/(.+)", SpaceTimelineHandler),
             (r"/timeline/user/(.+)", UserTimelineHandler),
@@ -119,7 +111,6 @@ def make_app(cookie_secret: str, debug: bool = False):
             (r"/global_acl/(.+)", GlobalACLHandler),
             (r"/space_acl/(.+)", SpaceACLHandler),
             (r"/search", SearchHandler),
-            (r"/template", TemplateHandler),
             (r"/wordpress/posts", WordpressCollectionHandler),
             (r"/wordpress/posts/([0-9]+)", WordpressPostHandler),
             (r"/planner/(.+)", VEPlanHandler),
@@ -406,15 +397,6 @@ def init_default_pictures():
                     metadata={"uploader": "system"},
                 )
                 logger.info("default_group_pic created")
-        if not fs.exists("logo.png"):
-            with open("assets/logo.png", "rb") as fp:
-                fs.put(
-                    fp.read(),
-                    _id="logo.png",
-                    content_type="image/png",
-                    metadata={"uploader": "system"},
-                )
-                logger.info("logo created")
 
 
 def create_log_directory():
