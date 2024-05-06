@@ -64,7 +64,7 @@ export default function Stage({ fineStep }: Props) {
                 <div className="mt-4 flex">
                     <div className="w-1/6 flex items-center">
                         <label htmlFor="workload" className="px-2 py-2">
-                            Workload (in Stunden)
+                            Zeitumfang (in Stunden)
                         </label>
                     </div>
                     <div className="w-5/6">
@@ -109,7 +109,7 @@ export default function Stage({ fineStep }: Props) {
                 <div className="mt-4 flex">
                     <div className="w-1/6 flex items-center">
                         <label htmlFor="learning_goal" className="px-2 py-2">
-                            Groblernziel(e)
+                            Lernziel(e) dieser Etappe
                         </label>
                     </div>
                     <div className="w-5/6">
