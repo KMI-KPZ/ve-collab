@@ -7,6 +7,7 @@ import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
 
+// Error page for the case that the user tries to access the fine planning without having set any steps
 NoStep.auth = true;
 export default function NoStep() {
     const { data: session, status } = useSession();
