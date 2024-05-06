@@ -3,7 +3,7 @@ import { useSession } from 'next-auth/react';
 import router from 'next/router';
 
 interface Props {
-    label: string;
+    label: string|JSX.Element;
     className?: string;
 }
 export default function ButtonNewPlan({ label, className }: Props) {
