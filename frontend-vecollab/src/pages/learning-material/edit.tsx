@@ -18,9 +18,26 @@ import { useSession } from 'next-auth/react';
 import SuccessAlert from '@/components/SuccessAlert';
 import LoadingAnimation from '@/components/LoadingAnimation';
 
+export type Metadata = {
+    name: string;
+    description?: string;
+    keywords?: string[];
+    creator?: {
+        type?: 'Person' | 'Organisation';
+        name?: string;
+        title?: string;
+        uri?: string;
+        affiliation?: string;
+        affiliationUri?: string;
+    };
+    date?: string;
+};
+
 export type CustomData = {
     description: string;
     url: string;
+    metadata?: Metadata;
+    mbr_id?: string;
 };
 
 export type NodeModel<T = unknown> = {
@@ -226,6 +243,20 @@ export default function Edit() {
         setTreeData(newTree);
     };
 
+    function triggerMBRSync() {
+        // TODO confirmation dialog before actually syncing
+
+        fetchPOST('/mbr_sync', {}, session?.accessToken);
+
+        // render success message that disappears after 2 seconds
+        setSuccessPopupOpen(true);
+        setTimeout(() => {
+            setSuccessPopupOpen((successPopupOpen) => false);
+        }, 2000);
+    }
+
+    console.log(treeData);
+
     return (
         <>
             <div className="flex justify-center">
@@ -256,32 +287,44 @@ export default function Edit() {
                                             backend={MultiBackend}
                                             options={getBackendOptions()}
                                         >
-                                            <div className="flex px-1">
+                                            <div className="flex px-1 justify-between">
+                                                <div className="flex">
+                                                    <button
+                                                        className="flex justify-center items-center bg-ve-collab-orange rounded-md px-2 py-1 mx-2 text-white"
+                                                        onClick={handleSaveToBackend}
+                                                    >
+                                                        Änderungen speichern
+                                                    </button>
+                                                    <button
+                                                        className="flex justify-center items-center border border-ve-collab-orange rounded-md px-2 py-1 mx-2 text-ve-collab-orange"
+                                                        onClick={(e) =>
+                                                            handleSubmit({
+                                                                parent: 0,
+                                                                droppable: true,
+                                                                text: 'neue Ebene',
+                                                            })
+                                                        }
+                                                    >
+                                                        <RxPlus />
+                                                        <div className="mx-1">
+                                                            neue Hierarchieebene
+                                                        </div>
+                                                    </button>
+                                                    <button
+                                                        className="flex justify-center items-center border border-ve-collab-orange rounded-md px-2 py-1 mx-2 text-ve-collab-orange"
+                                                        onClick={handleOpenMaterialDialog}
+                                                    >
+                                                        <RxPlus />
+                                                        <div className="mx-1">neuer Lehrinhalt</div>
+                                                    </button>
+                                                </div>
                                                 <button
                                                     className="flex justify-center items-center bg-ve-collab-orange rounded-md px-2 py-1 mx-2 text-white"
-                                                    onClick={handleSaveToBackend}
+                                                    onClick={(e) => {
+                                                        triggerMBRSync();
+                                                    }}
                                                 >
-                                                    Änderungen speichern
-                                                </button>
-                                                <button
-                                                    className="flex justify-center items-center border border-ve-collab-orange rounded-md px-2 py-1 mx-2 text-ve-collab-orange"
-                                                    onClick={(e) =>
-                                                        handleSubmit({
-                                                            parent: 0,
-                                                            droppable: true,
-                                                            text: 'neue Ebene',
-                                                        })
-                                                    }
-                                                >
-                                                    <RxPlus />
-                                                    <div className="mx-1">neue Hierarchieebene</div>
-                                                </button>
-                                                <button
-                                                    className="flex justify-center items-center border border-ve-collab-orange rounded-md px-2 py-1 mx-2 text-ve-collab-orange"
-                                                    onClick={handleOpenMaterialDialog}
-                                                >
-                                                    <RxPlus />
-                                                    <div className="mx-1">neuer Lehrinhalt</div>
+                                                    Metadaten mit MeinBildungsraum synchronisieren
                                                 </button>
                                             </div>
                                             <div className="h-[3/4] px-1 mx-2 my-1">

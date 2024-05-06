@@ -33,19 +33,16 @@ const GETfetcher = (relativeUrl: string, accessToken?: string) =>
     });
 
 const POSTfetcher = (relativeUrl: string, data?: Record<string, any>, accessToken?: string) =>
-    fetchPOST(relativeUrl, data, accessToken)
-    .then((res) => {
-        return res
+    fetchPOST(relativeUrl, data, accessToken).then((res) => {
+        return res;
     });
 
 export function useIsGlobalAdmin(accessToken: string): boolean {
-    const { data } = useSWR(
-        [`/admin_check`, accessToken]
-        ,
-        ([url, token]) => GETfetcher(url, token)
+    const { data } = useSWR([`/admin_check`, accessToken], ([url, token]) =>
+        GETfetcher(url, token)
     );
 
-    return data?.is_admin || false
+    return data?.is_admin || false;
 }
 
 export function useGetProfileSnippets(usernames?: string[]): {
@@ -69,7 +66,7 @@ export function useGetProfileSnippets(usernames?: string[]): {
 }
 
 export function useGetAvailablePlans(accessToken: string): {
-    data: PlanPreview[]
+    data: PlanPreview[];
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;
@@ -269,8 +266,7 @@ export function useGetGroup(
     mutate: KeyedMutator<any>;
 } {
     const { data, error, isLoading, mutate } = useSWR(
-        groupId
-            ? [`/spaceadministration/info?id=${groupId}`, accessToken] : null,
+        groupId ? [`/spaceadministration/info?id=${groupId}`, accessToken] : null,
         ([url, token]) => GETfetcher(url, token)
     );
     return {
@@ -353,14 +349,17 @@ export function useGetMyGroupRequests(accessToken: string): {
     };
 }
 
-export function useGetMyGroupACLEntry(accessToken: string, groupId?: string): {
+export function useGetMyGroupACLEntry(
+    accessToken: string,
+    groupId?: string
+): {
     data: BackendGroupACLEntry;
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;
 } {
     const { data, error, isLoading, mutate } = useSWR(
-        groupId ? [`/space_acl/get?space=${groupId}` , accessToken] : null,
+        groupId ? [`/space_acl/get?space=${groupId}`, accessToken] : null,
         ([url, token]) => GETfetcher(url, token)
     );
     return {
@@ -377,27 +376,24 @@ export function useGetTimeline(
     limit?: number,
     group?: string,
     user?: string
- ): {
+): {
     data: BackendPost[];
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;
 } {
-    let endpointUrl = "/timeline"
+    let endpointUrl = '/timeline';
     if (group) {
-        endpointUrl += `/space/${group}`
+        endpointUrl += `/space/${group}`;
+    } else if (user) {
+        endpointUrl += `/user/${user}`;
+    } else {
+        endpointUrl += `/you`;
     }
-    else if (user) {
-        endpointUrl += `/user/${user}`
-    }
-    else {
-        endpointUrl += `/you`
-    }
-    endpointUrl += `?to=${toDate}&limit=${limit}`
+    endpointUrl += `?to=${toDate}&limit=${limit}`;
 
-    const { data, error, isLoading, mutate } = useSWR(
-        [endpointUrl, accessToken],
-        ([url, token]) => GETfetcher(url, token)
+    const { data, error, isLoading, mutate } = useSWR([endpointUrl, accessToken], ([url, token]) =>
+        GETfetcher(url, token)
     );
 
     return {
@@ -405,24 +401,21 @@ export function useGetTimeline(
         isLoading,
         error,
         mutate,
-    }
+    };
 }
 
 export function useGetPinnedPosts(
     accessToken: string,
     group: string,
     limit?: number
- ): {
+): {
     data: BackendPost[];
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;
 } {
     const { data, error, isLoading, mutate } = useSWR(
-        group ?
-            [`/timeline/space/${group}?limit=${limit || 3}`, accessToken]
-            : null
-        ,
+        group ? [`/timeline/space/${group}?limit=${limit || 3}`, accessToken] : null,
         ([url, token]) => GETfetcher(url, token)
     );
 
@@ -431,22 +424,20 @@ export function useGetPinnedPosts(
         isLoading,
         error,
         mutate,
-    }
+    };
 }
 
 export function useGetPost(
     accessToken: string,
     post_id: string
- ): {
+): {
     data: BackendPost;
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;
 } {
     const { data, error, isLoading, mutate } = useSWR(
-        post_id
-            ? [`/posts?post_id=${post_id}`, accessToken]
-            : null,
+        post_id ? [`/posts?post_id=${post_id}`, accessToken] : null,
         ([url, token]) => GETfetcher(url, token)
     );
 
@@ -455,9 +446,8 @@ export function useGetPost(
         isLoading,
         error,
         mutate,
-    }
+    };
 }
-
 
 export async function fetchGET(relativeUrl: string, accessToken?: string) {
     const headers: { Authorization?: string } = {};
@@ -485,7 +475,7 @@ export async function fetchPOST(
     relativeUrl: string,
     payload?: Record<string, any>,
     accessToken?: string,
-    asFormData: boolean=false
+    asFormData: boolean = false
 ) {
     const headers: { Authorization?: string } = {};
     if (accessToken) {
@@ -494,7 +484,7 @@ export async function fetchPOST(
 
     function getFormData(payload: any) {
         const formData = new FormData();
-        Object.keys(payload).forEach(key => formData.append(key, payload[key]));
+        Object.keys(payload).forEach((key) => formData.append(key, payload[key]));
         return formData;
     }
 
@@ -502,9 +492,7 @@ export async function fetchPOST(
         let backendResponse = await fetch(BACKEND_BASE_URL + relativeUrl, {
             method: 'POST',
             headers,
-            body: asFormData
-                ? getFormData(payload)
-                : JSON.stringify(payload),
+            body: asFormData ? getFormData(payload) : JSON.stringify(payload),
         });
         if (backendResponse.status === 401) {
             console.log('forced new signIn by api call');
@@ -592,4 +580,17 @@ export async function getMaterialNodesOfNodeByText(nodeText: string): Promise<IM
     const taxonomy = await fetchTaxonomy();
     const nodeId = taxonomy.find((node: INode) => node.text === nodeText)?.id;
     return taxonomy.filter((node: INode) => node.parent === nodeId) as IMaterialNode[];
+}
+
+export async function getMaterialNodePath(
+    nodeId: number
+): Promise<{ bubble: ITopLevelNode; category: INode; material: IMaterialNode }> {
+    const taxonomy = await fetchTaxonomy();
+    const materialNode = taxonomy.find((node: INode) => node.id === nodeId) as IMaterialNode;
+    const categoryNode = taxonomy.find((node: INode) => node.id === materialNode.parent) as INode;
+    const bubbleNode = taxonomy.find(
+        (node: INode) => node.id === categoryNode.parent
+    ) as ITopLevelNode;
+
+    return { bubble: bubbleNode, category: categoryNode, material: materialNode };
 }
