@@ -11,12 +11,14 @@ interface Props {
     headerBarMessageEvents: any[];
     notificationEvents: Notification[];
     toggleChatWindow(value?: boolean): void
+    toggleNotifWindow(value?: boolean): void
 }
 export default function LayoutSection({
     children,
     notificationEvents,
     headerBarMessageEvents,
-    toggleChatWindow
+    toggleChatWindow,
+    toggleNotifWindow
 }: Props): JSX.Element {
     const { data: session, status } = useSession();
 
@@ -33,6 +35,7 @@ export default function LayoutSection({
                 notificationEvents={notificationEvents}
                 headerBarMessageEvents={headerBarMessageEvents}
                 toggleChatWindow={toggleChatWindow}
+                toggleNotifWindow={toggleNotifWindow}
             />
             <main>
                 {!isLoading && excludedFromMatching && <ExcludedFromMatchingBanner />}

@@ -789,7 +789,7 @@ class Institution:
         If no `_id` is given, a "new" `Institution` is meant, resulting in a fresh `_id` being
         created.
         However, initializing this class does not interact with the actual resources
-        in the database since it is simply a model; to get Institutions with the
+        in the database since it is simply a model; to get Lectures with the
         actual data in them, use the `VEPlanResource` class.
         """
 

@@ -1,8 +1,8 @@
 import AuthenticatedImage from '../AuthenticatedImage';
-import { RxDotsVertical, RxTrash } from 'react-icons/rx';
+import { RxTrash } from 'react-icons/rx';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { fetchDELETE, fetchGET, fetchPOST, useGetPinnedPosts, useGetSpace } from '@/lib/backend';
+import { fetchDELETE, fetchGET, fetchPOST, useGetGroup } from '@/lib/backend';
 import { ChangeEvent, useEffect, useState } from 'react';
 import Dialog from '../profile/Dialog';
 import Tabs from '../profile/Tabs';
@@ -17,17 +17,17 @@ import Dropdown from '../Dropdown';
 
 interface Props {
     userIsAdmin: () => boolean;
-    toggleShowPinnedPosts: () => void
 }
 
-export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Props) {
+export default function GroupHeader({ userIsAdmin }: Props) {
     const { data: session, status } = useSession();
     const router = useRouter();
+    const { groupId } = router.query;
 
     const [toggleJoinable, setToggleJoinable] = useState(true);
     const [toggleInvisible, setToggleInvisible] = useState(true);
-    const [spacePicFile, setSpacePicFile] = useState('');
-    const [updatedSpaceDescription, setUpdatedSpaceDescription] = useState('');
+    const [groupPicFile, setGroupPicFile] = useState('');
+    const [updatedDescription, setUpdatedDescription] = useState('');
     const [invitedUser, setInvitedUser] = useState<{ label: string; value: string }>({
         label: '',
         value: '',
@@ -65,19 +65,15 @@ export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Prop
     const [isEditImageDialogOpen, setIsEditImageDialogOpen] = useState(false);
 
     const {
-        data: space,
+        data: group,
         isLoading,
         error,
         mutate,
-    } = useGetSpace(session!.accessToken, router.query.id as string);
-
-    const {
-        data: pinnedPosts
-    } = useGetPinnedPosts(session!.accessToken, space._id)
+    } = useGetGroup(session!.accessToken, groupId as string);
 
     const handleOpenEditDialog = () => {
         setIsEditDialogOpen(true);
-        setUpdatedSpaceDescription(space.space_description);
+        setUpdatedDescription(group.space_description);
     };
 
     const handleCloseEditDialog = () => {
@@ -89,16 +85,16 @@ export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Prop
     };
 
     /*
-    callback that is triggered when the user selects a new space pic in
+    callback that is triggered when the user selects a new group pic in
     the input element. transforms the image to a base64 data uri and sets it
-    as spacePicFile
+    as groupPicFile
     */
-    const onSelectSpacePicFile = (e: ChangeEvent<HTMLInputElement>) => {
+    const onSelectGroupPicFile = (e: ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
             const reader = new FileReader();
             // on load the reader.result is always an image
             reader.addEventListener('load', () => {
-                setSpacePicFile(reader.result as string);
+                setGroupPicFile(reader.result as string);
             });
             reader.readAsDataURL(e.target.files[0]);
         }
@@ -108,23 +104,23 @@ export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Prop
     upload the newly selected and cropped space picture
     to the backend
     */
-    const uploadSpaceImage = (blob: Blob) => {
+    const uploadImage = (blob: Blob) => {
         const reader = new FileReader();
         reader.readAsDataURL(blob);
         reader.onloadend = function () {
             // transform base64 payload via base64 data uri and stripping the
             // pre-information
             var base64dataUri = reader.result as string;
-            const spacePicPayload = base64dataUri.replace(/^data:image\/[a-z]+;base64,/, '');
+            const payload = base64dataUri.replace(/^data:image\/[a-z]+;base64,/, '');
 
             // send to backend and update state with returned _id to be able
             // to retrieve image from uploads endpoint
             fetchPOST(
-                `/spaceadministration/space_information?id=${space._id}`,
+                `/spaceadministration/space_information?id=${group._id}`,
                 {
                     picture: {
                         type: blob.type,
-                        payload: spacePicPayload,
+                        payload,
                     },
                 },
                 session?.accessToken
@@ -134,11 +130,11 @@ export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Prop
         };
     };
 
-    const handleUpdateSpaceDescription = () => {
+    const handleUpdateDescription = () => {
         fetchPOST(
-            `/spaceadministration/space_information?id=${space._id}`,
+            `/spaceadministration/space_information?id=${group._id}`,
             {
-                description: updatedSpaceDescription,
+                description: updatedDescription,
             },
             session?.accessToken
         ).then((data) => {
@@ -148,7 +144,7 @@ export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Prop
 
     const toggleVisibility = () => {
         fetchPOST(
-            `/spaceadministration/toggle_visibility?id=${space._id}`,
+            `/spaceadministration/toggle_visibility?id=${group._id}`,
             {},
             session!.accessToken
         );
@@ -158,7 +154,7 @@ export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Prop
 
     const toggleJoinability = () => {
         fetchPOST(
-            `/spaceadministration/toggle_joinability?id=${space._id}`,
+            `/spaceadministration/toggle_joinability?id=${group._id}`,
             {},
             session!.accessToken
         );
@@ -166,19 +162,19 @@ export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Prop
         mutate();
     };
 
-    const leaveSpace = () => {
-        fetchDELETE(`/spaceadministration/leave?id=${space._id}`, {}, session!.accessToken).then(
+    const leaveGroup = () => {
+        fetchDELETE(`/spaceadministration/leave?id=${group._id}`, {}, session!.accessToken).then(
             (response) => {
                 console.log(response);
                 // TODO error handling
             }
         );
-        router.push('/spaces');
+        router.push('/groups');
     };
 
     function acceptRequest(requestUser: string): void {
         fetchPOST(
-            `/spaceadministration/accept_request?id=${space._id}&user=${requestUser}`,
+            `/spaceadministration/accept_request?id=${group._id}&user=${requestUser}`,
             {},
             session!.accessToken
         ).then((response) => {
@@ -188,7 +184,7 @@ export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Prop
 
     function declineRequest(requestUser: string): void {
         fetchPOST(
-            `/spaceadministration/reject_request?id=${space._id}&user=${requestUser}`,
+            `/spaceadministration/reject_request?id=${group._id}&user=${requestUser}`,
             {},
             session!.accessToken
         ).then((response) => {
@@ -216,9 +212,9 @@ export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Prop
         }
     };
 
-    function inviteUserToSpace(value: string) {
+    function inviteUserToGroup(value: string) {
         fetchPOST(
-            `/spaceadministration/invite?id=${space._id}&user=${value}`,
+            `/spaceadministration/invite?id=${group._id}&user=${value}`,
             {},
             session!.accessToken
         ).then((response) => {
@@ -228,7 +224,7 @@ export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Prop
 
     function revokeInvite(inviteUser: string) {
         fetchPOST(
-            `/spaceadministration/revoke_invite?id=${space._id}&user=${inviteUser}`,
+            `/spaceadministration/revoke_invite?id=${group._id}&user=${inviteUser}`,
             {},
             session!.accessToken
         ).then((response) => {
@@ -253,7 +249,7 @@ export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Prop
 
     function promoteToAdmin() {
         fetchPOST(
-            `/spaceadministration/add_admin?id=${space._id}&user=${chosenPermissionUser.value}`,
+            `/spaceadministration/add_admin?id=${group._id}&user=${chosenPermissionUser.value}`,
             {},
             session?.accessToken
         ).then((data) => {
@@ -263,12 +259,12 @@ export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Prop
 
     useEffect(() => {
         if (!isLoading) {
-            setToggleInvisible(space.invisible);
+            setToggleInvisible(group.invisible);
 
             setSnippetsLoading(true);
             fetchPOST(
                 '/profile_snippets',
-                { usernames: [...space.requests, ...space.invites, ...space.members] },
+                { usernames: [...group.requests, ...group.invites, ...group.members] },
                 session?.accessToken
             ).then((data) => {
                 console.log('get snippets');
@@ -283,13 +279,13 @@ export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Prop
                 setSnippetsLoading(false);
             });
         }
-    }, [isLoading, space, session]);
+    }, [isLoading, group, session]);
 
     useEffect(() => {
         if (chosenPermissionUser.value !== '') {
             setPermissionsLoading(true);
             fetchGET(
-                `/space_acl/get?space=${space._id}&username=${chosenPermissionUser.value}`,
+                `/space_acl/get?space=${group._id}&username=${chosenPermissionUser.value}`,
                 session?.accessToken
             ).then((data) => {
                 console.log(data);
@@ -297,10 +293,10 @@ export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Prop
                 setPermissionsLoading(false);
             });
         }
-    }, [chosenPermissionUser, session, space]);
+    }, [chosenPermissionUser, session, group]);
 
     const handleClickGroupOptions = () => {
-        leaveSpace();
+        leaveGroup();
     }
 
     return (
@@ -316,7 +312,7 @@ export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Prop
                             }
                         >
                             <AuthenticatedImage
-                                imageId={space.space_pic}
+                                imageId={group.space_pic}
                                 alt={'Gruppenbild'}
                                 width={180}
                                 height={180}
@@ -324,13 +320,8 @@ export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Prop
                         </div>
                         <div className={'flex grow items-center mt-6 text-slate-900 font-bold'}>
                             <div className={'text-4xl pr-6'}>
-                                {space.name}
+                                {group.name}
                             </div>
-                            {pinnedPosts.length > 0 && (
-                                <button className='py-2 px-3 rounded-md p-2 border border-gray-800 m-1' onClick={toggleShowPinnedPosts}>
-                                    {pinnedPosts.length} {pinnedPosts.length > 1 ? ("Angeheftete Beiträge") : ("Angehefteter Beitrag")}
-                                </button>
-                            )}
                         </div>
                         <div className={'flex items-center mt-6'}>
                             <div className="mt-2 min-h-[2rem]">
@@ -366,7 +357,7 @@ export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Prop
                                             <div className="w-fit">
                                                 <div className="my-2 rounded-full overflow-hidden w-fit border-black border">
                                                     <AuthenticatedImage
-                                                        imageId={space.space_pic}
+                                                        imageId={group.space_pic}
                                                         alt={'Profilbild'}
                                                         width={180}
                                                         height={180}
@@ -400,18 +391,18 @@ export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Prop
                                                 type="file"
                                                 accept="image/*"
                                                 className="my-2"
-                                                onChange={onSelectSpacePicFile}
+                                                onChange={onSelectGroupPicFile}
                                                 onClick={(e) => {
                                                     e.currentTarget.value = '';
                                                 }}
                                             />
 
-                                            {spacePicFile !== '' ? (
+                                            {groupPicFile !== '' ? (
                                                 <div className="w-[90vw] max-w-[450px] max-h-[85vh]">
                                                     <AvatarEditor
-                                                        sourceImg={spacePicFile}
+                                                        sourceImg={groupPicFile}
                                                         onFinishUpload={(blob) => {
-                                                            uploadSpaceImage(blob);
+                                                            uploadImage(blob);
                                                             handleCloseEditImageDialog();
                                                         }}
                                                     />
@@ -434,10 +425,10 @@ export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Prop
                                                         'w-full border border-[#cccccc] rounded-md px-2 py-[6px]'
                                                     }
                                                     rows={5}
-                                                    placeholder={'Beschreibe diesen Space'}
-                                                    value={updatedSpaceDescription}
+                                                    placeholder={'Beschreibe diese Gruppe'}
+                                                    value={updatedDescription}
                                                     onChange={(e) =>
-                                                        setUpdatedSpaceDescription(e.target.value)
+                                                        setUpdatedDescription(e.target.value)
                                                     }
                                                 ></textarea>
                                                 <button
@@ -446,7 +437,7 @@ export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Prop
                                                     }
                                                     onClick={(e) => {
                                                         e.preventDefault();
-                                                        handleUpdateSpaceDescription();
+                                                        handleUpdateDescription();
                                                     }}
                                                 >
                                                     Speichern
@@ -492,14 +483,14 @@ export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Prop
                                     </div>
                                 </div>
                                 <div tabname="Anfragen">
-                                    {space.requests.length === 0 && (
+                                    {group.requests.length === 0 && (
                                         <div className="mx-4 my-4 text-gray-600">
                                             Keine Anfragen vorhanden
                                         </div>
                                     )}
                                     <div className="divide-y">
                                         {!snippetsLoading &&
-                                            space.requests.map((requestUser, index) => (
+                                            group.requests.map((requestUser, index) => (
                                                 <div
                                                     key={index}
                                                     className="flex py-2 justify-between"
@@ -590,7 +581,7 @@ export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Prop
                                                 }
                                                 onClick={(e) => {
                                                     e.preventDefault();
-                                                    inviteUserToSpace(invitedUser.value);
+                                                    inviteUserToGroup(invitedUser.value);
                                                 }}
                                             >
                                                 Einladen
@@ -601,14 +592,14 @@ export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Prop
                                         <div className={'mb-1 font-bold text-slate-900 text-lg'}>
                                             ausstehende Einladungen
                                         </div>
-                                        {space.invites.length === 0 && (
+                                        {group.invites.length === 0 && (
                                             <div className="mx-4 my-4 text-gray-600">
                                                 Keine ausstehenden Einladungen
                                             </div>
                                         )}
                                         <div className="divide-y">
                                             {!snippetsLoading &&
-                                                space.invites.map((inviteUser, index) => (
+                                                group.invites.map((inviteUser, index) => (
                                                     <div
                                                         key={index}
                                                         className="flex py-2 w-1/3 justify-between"
@@ -673,10 +664,10 @@ export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Prop
                                             <div className="flex">
                                                 <Select
                                                     className="w-3/4"
-                                                    options={space.members
+                                                    options={group.members
                                                         .filter(
                                                             (member: string) =>
-                                                                !space.admins.includes(member)
+                                                                !group.admins.includes(member)
                                                         )
                                                         .map((user: string) => {
                                                             return {
@@ -819,7 +810,7 @@ export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Prop
                                                                     'mb-1 font-bold text-slate-900 text-lg'
                                                                 }
                                                             >
-                                                                Zum Space Admin ernennen
+                                                                Zum Gruppen-Admin ernennen
                                                             </div>
                                                             <div>
                                                                 Achtung: diese Aktion kann nicht
@@ -852,7 +843,7 @@ export default function GroupHeader({ userIsAdmin, toggleShowPinnedPosts }: Prop
                                                 }
                                                 onClick={(e) => {
                                                     e.preventDefault();
-                                                    leaveSpace();
+                                                    leaveGroup();
                                                 }}
                                             >
                                                 {' '}

@@ -1,22 +1,12 @@
 import React from 'react';
-import { fetchPOST } from '@/lib/backend';
-import { useRouter } from 'next/router';
 import Image from 'next/image';
 import blueBackground from '@/images/footer/KAVAQ_Footer_rounded.png';
 import { signIn, useSession } from 'next-auth/react';
 import Timeline from '@/components/network/Timeline';
+import ButtonNewPlan from '@/components/Plannner/ButtonNewPlan';
 
 export default function Home() {
-    const router = useRouter();
-    const { data: session } = useSession();
-
-    const createAndForwardNewPlanner = async () => {
-        const newPlanner = await fetchPOST('/planner/insert_empty', {}, session?.accessToken);
-        await router.push({
-            pathname: '/startingWizard/generalInformation/projectName',
-            query: { plannerId: newPlanner.inserted_id },
-        });
-    };
+    const { data: session, status } = useSession();
 
     return (
         <div className="bg-slate-100">
@@ -41,26 +31,20 @@ export default function Home() {
                     wir zudem den aktiven kollegialen (virtuellen) Austausch.
                 </p>
 
-                {session && (
-                    <>
-                        <button
-                            onClick={createAndForwardNewPlanner}
-                            className="py-4 pr-6 pl-5 m-10 bg-ve-collab-orange rounded-lg text-white"
-                        >
-                            neuen VA planen
-                        </button>
-                        <div className="w-1/2">
-                            <Timeline />
+                {status != 'loading' && (
+                    <> { session
+                        ? <>
+                            <ButtonNewPlan label='Neuen VA planen' />
+                                <div className="w-1/2">
+                                    <Timeline />
+                                </div>
+                        </> : <div
+                            onClick={() => signIn('keycloak')}
+                            className="py-4 pr-6 pl-5 m-10 bg-ve-collab-orange rounded-lg text-white cursor-pointer"
+                            >
+                                Logge dich ein, um einen neuen VA zu planen
                         </div>
-                    </>
-                )}
-                {!session && (
-                    <div
-                        onClick={() => signIn('keycloak')}
-                        className="py-4 pr-6 pl-5 m-10 bg-ve-collab-orange rounded-lg text-white cursor-pointer"
-                    >
-                        Logge dich ein, um einen neuen VA zu planen
-                    </div>
+                    } </>
                 )}
             </div>
         </div>

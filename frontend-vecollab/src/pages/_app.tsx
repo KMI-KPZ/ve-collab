@@ -16,6 +16,7 @@ import { NextComponentType, NextPageContext } from 'next';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import { CookiesProvider } from 'react-cookie';
 import ChatWindow from '@/components/chat/ChatWindow';
+import NotificationsWindow from '@/components/Notifications/NotificationsWindow';
 
 declare type ComponentWithAuth = NextComponentType<NextPageContext, any, any> & {
     auth?: boolean;
@@ -57,6 +58,7 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
     const [notificationEvents, setNotificationEvents] = useState<Notification[]>([]);
     const [messageEvents, setMessageEvents] = useState<any[]>([]);
     const [chatOpen, setChatOpen] = useState<boolean>(false);
+    const [notifOpen, setNotifOpen] = useState<boolean>(false);
 
     // it is a pain:
     // the headerbar has to get a state copy of the messageEvents, because in order to remove the
@@ -118,7 +120,13 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
     }, [notificationEvents, messageEvents]);
 
     const toggleChatWindow = () => {
+        setNotifOpen(false)
         setChatOpen(!chatOpen)
+    }
+
+    const toggleNotifWindow = () => {
+        setChatOpen(false)
+        setNotifOpen(!notifOpen)
     }
 
     return (
@@ -135,17 +143,29 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
                             notificationEvents={notificationEvents}
                             headerBarMessageEvents={messageEventsHeaderBar}
                             toggleChatWindow={toggleChatWindow}
+                            toggleNotifWindow={toggleNotifWindow}
                         >
                             <>
                                 <Auth showLoader={false} autoForward={false}>
-                                    <ChatWindow
-                                        socket={socket}
-                                        messageEvents={messageEvents}
-                                        headerBarMessageEvents={messageEventsHeaderBar}
-                                        setHeaderBarMessageEvents={setMessageEventsHeaderBar}
-                                        open={chatOpen}
-                                        toggleChatWindow={toggleChatWindow}
-                                    />
+                                    <>
+                                        <ChatWindow
+                                            socket={socket}
+                                            messageEvents={messageEvents}
+                                            headerBarMessageEvents={messageEventsHeaderBar}
+                                            setHeaderBarMessageEvents={setMessageEventsHeaderBar}
+                                            open={chatOpen}
+                                            toggleChatWindow={toggleChatWindow}
+                                        />
+                                        <NotificationsWindow
+                                            socket={socket}
+                                            notificationEvents={notificationEvents}
+                                            setNotificationEvents={setNotificationEvents}
+
+
+                                            open={notifOpen}
+                                            toggleNotifWindow={toggleNotifWindow}
+                                        />
+                                    </>
                                 </Auth>
 
                                 {Component.auth ? (
