@@ -437,35 +437,6 @@ export const CustomNode: React.FC<Props> = (props) => {
                                 }
                             />
                         </div>
-                        <div>teaches?</div>
-                        <div>competencyRequired?</div>
-                        <div className="mt-3">weitere automatische:</div>
-                        <ul>
-                            <li>@context: automatisch fix</li>
-                            <li>id: link zum Lehrinhalt</li>
-                            <li>type: automatisch LearningResource</li>
-                            <li>inLanguage: Deutsch (automatisch)</li>
-                            <li>isAccessibleForFree: true (automatisch)</li>
-                            <li>license: cc by nc nd (automatisch)</li>
-                            <li>
-                                learningResourceType:
-                                http://w3id.org/openeduhub/vocabs/new_lrt/4fe167ea-1f40-44b7-8c17-355f256b4fc9
-                                (automatisch fix)
-                            </li>
-                            <li>
-                                audience:
-                                http://purl.org/dcx/lrmi-vocabs/educationalAudienceRole/teacher
-                                (automatisch teacher)
-                            </li>
-                            <li>
-                                educationalLevel: automatisch
-                                https://w3id.org/kim/educationalLevel/level_A (university)
-                            </li>
-                            <li>
-                                interactivityType: automatisch
-                                http://purl.org/dcx/lrmi-vocabs/interactivityType/active (active)
-                            </li>
-                        </ul>
                     </div>
                     <div className="flex w-full mt-5">
                         <button

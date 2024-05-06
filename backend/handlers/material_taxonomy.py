@@ -195,7 +195,18 @@ class MBRSyncHandler(BaseHandler):
 
 class MBRTestHandler(BaseHandler):
 
+    @auth_needed
     def get(self):
+        if not self.is_current_user_lionet_admin():
+            self.set_status(403)
+            self.write(
+                {
+                    "success": False,
+                    "reason": "insufficient_permission",
+                }
+            )
+            return
+
         with util.get_mongodb() as db:
             tax = MaterialTaxonomyResource(db)
             our_taxonomy = tax.get_our_taxonomy()
