@@ -13,6 +13,7 @@ import { useSession } from 'next-auth/react';
 import { fetchGET } from '@/lib/backend';
 import LoadingAnimation from '../LoadingAnimation';
 import { PlanOverview } from '../planSummary/planOverview';
+
 interface Props {
     plan: PlanPreview;
     deleteCallback: (planId: string) => Promise<void>;
@@ -179,7 +180,7 @@ export default function PlannerOverviewItem({ plan, deleteCallback, refetchPlans
         <>
             <div className="basis-1/12 text-center">
                 {/* {isPlanProgressCompleted() ?<MdCheck /> : <></>} */}
-                <span className="rounded-full border p-2">
+                <span className="rounded-full border p-2 whitespace-nowrap">
                     {getCompletedStates()} / {Object.keys(plan.progress).length}
                 </span>
             </div>
