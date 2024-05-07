@@ -192,6 +192,7 @@ class VEPlanHandler(BaseHandler):
                             }
                         ],
                         "learning_goals": ["test"],
+                        "methodical_approach": "test",
                         "audience": [
                             {
                                 "name": "test",
@@ -271,6 +272,7 @@ class VEPlanHandler(BaseHandler):
                             "topic": "<completed|uncompleted|not_started>",
                             "lectures": "<completed|uncompleted|not_started>",
                             "learning_goals": "<completed|uncompleted|not_started>",
+                            "methodical_approach": "<completed|uncompleted|not_started>",
                             "audience": "<completed|uncompleted|not_started>",
                             "languages": "<completed|uncompleted|not_started>",
                             "evaluation": "<completed|uncompleted|not_started>",
@@ -413,6 +415,7 @@ class VEPlanHandler(BaseHandler):
                             }
                         ],
                         "learning_goals": ["test"],
+                        "methodical_approach": "test",
                         "audience": [
                             {
                                 "name": "test",
@@ -492,6 +495,7 @@ class VEPlanHandler(BaseHandler):
                             "topic": "<completed|uncompleted|not_started>",
                             "lectures": "<completed|uncompleted|not_started>",
                             "learning_goals": "<completed|uncompleted|not_started>",
+                            "methodical_approach": "<completed|uncompleted|not_started>",
                             "audience": "<completed|uncompleted|not_started>",
                             "languages": "<completed|uncompleted|not_started>",
                             "evaluation": "<completed|uncompleted|not_started>",

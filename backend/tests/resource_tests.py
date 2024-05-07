@@ -4938,6 +4938,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "topics": ["test", "test"],
             "lectures": [self.lecture.to_dict()],
             "learning_goals": ["test", "test"],
+            "methodical_approach": "test",
             "audience": [self.target_group.to_dict()],
             "languages": ["test", "test"],
             "evaluation": [self.evaluation.to_dict()],
@@ -4975,6 +4976,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "topics": "not_started",
                 "lectures": "not_started",
                 "learning_goals": "not_started",
+                "methodical_approach": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
@@ -5036,6 +5038,9 @@ class PlanResourceTest(BaseResourceTestCase):
                 )
                 self.assertEqual(
                     plan.learning_goals, self.default_plan["learning_goals"]
+                )
+                self.assertEqual(
+                    plan.methodical_approach, self.default_plan["methodical_approach"]
                 )
                 self.assertEqual(
                     [target_group.to_dict() for target_group in plan.audience],
@@ -5111,6 +5116,9 @@ class PlanResourceTest(BaseResourceTestCase):
                 )
                 self.assertEqual(
                     plan.learning_goals, self.default_plan["learning_goals"]
+                )
+                self.assertEqual(
+                    plan.methodical_approach, self.default_plan["methodical_approach"]
                 )
                 self.assertEqual(
                     [target_group.to_dict() for target_group in plan.audience],
@@ -5222,6 +5230,9 @@ class PlanResourceTest(BaseResourceTestCase):
         )
         self.assertEqual(plan.learning_goals, self.default_plan["learning_goals"])
         self.assertEqual(
+            plan.methodical_approach, self.default_plan["methodical_approach"]
+        )
+        self.assertEqual(
             [target_group.to_dict() for target_group in plan.audience],
             self.default_plan["audience"],
         )
@@ -5279,6 +5290,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "topics": ["test"],
                 "lectures": [self.lecture.to_dict()],
                 "learning_goals": ["test", "test"],
+                "methodical_approach": "test",
                 "audience": [self.target_group.to_dict()],
                 "languages": ["test", "test"],
                 "evaluation": [self.evaluation.to_dict()],
@@ -5311,6 +5323,7 @@ class PlanResourceTest(BaseResourceTestCase):
                     "topics": "not_started",
                     "lectures": "not_started",
                     "learning_goals": "not_started",
+                    "methodical_approach": "not_started",
                     "audience": "not_started",
                     "languages": "not_started",
                     "evaluation": "not_started",
@@ -5332,6 +5345,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "topics": ["test"],
                 "lectures": [self.lecture.to_dict()],
                 "learning_goals": ["test", "test"],
+                "methodical_approach": "test",
                 "audience": [self.target_group.to_dict()],
                 "languages": ["test", "test"],
                 "evaluation": [self.evaluation.to_dict()],
@@ -5364,6 +5378,7 @@ class PlanResourceTest(BaseResourceTestCase):
                     "topics": "not_started",
                     "lectures": "not_started",
                     "learning_goals": "not_started",
+                    "methodical_approach": "not_started",
                     "audience": "not_started",
                     "languages": "not_started",
                     "evaluation": "not_started",
@@ -5404,6 +5419,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "topics": ["test"],
             "lectures": [self.lecture.to_dict()],
             "learning_goals": ["test", "test"],
+            "methodical_approach": "test",
             "audience": [self.target_group.to_dict()],
             "languages": ["test", "test"],
             "evaluation": [self.evaluation.to_dict()],
@@ -5436,6 +5452,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "topics": "not_started",
                 "lectures": "not_started",
                 "learning_goals": "not_started",
+                "methodical_approach": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
@@ -5474,6 +5491,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "topics": ["test"],
             "lectures": [self.lecture.to_dict()],
             "learning_goals": ["test", "test"],
+            "methodical_approach": "test",
             "audience": [self.target_group.to_dict()],
             "languages": ["test", "test"],
             "evaluation": [self.evaluation.to_dict()],
@@ -5506,6 +5524,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "topics": "not_started",
                 "lectures": "not_started",
                 "learning_goals": "not_started",
+                "methodical_approach": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
@@ -5686,6 +5705,11 @@ class PlanResourceTest(BaseResourceTestCase):
         )
         self.planner.update_field(
             self.plan_id,
+            "methodical_approach",
+            "updated_methodical_approach",
+        )
+        self.planner.update_field(
+            self.plan_id,
             "formalities",
             [{"username": "test_user", "technology": True, "exam_regulations": True}],
         )
@@ -5725,6 +5749,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(db_state["learning_env"], "updated_learning_env")
         self.assertEqual(db_state["new_content"], True)
         self.assertEqual(db_state["learning_goals"], ["update1", "update2"])
+        self.assertEqual(db_state["methodical_approach"], "updated_methodical_approach")
         self.assertEqual(
             db_state["formalities"],
             [{"username": "test_user", "technology": True, "exam_regulations": True}],
@@ -5775,6 +5800,12 @@ class PlanResourceTest(BaseResourceTestCase):
         )
         self.planner.update_field(
             self.plan_id,
+            "methodical_approach",
+            "updated_methodical_approach",
+            requesting_username="test_user",
+        )
+        self.planner.update_field(
+            self.plan_id,
             "formalities",
             [{"username": "test_user", "technology": True, "exam_regulations": True}],
             requesting_username="test_user",
@@ -5788,6 +5819,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "topics": "not_started",
                 "lectures": "not_started",
                 "learning_goals": "not_started",
+                "methodical_approach": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
@@ -5809,6 +5841,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(db_state["learning_env"], "updated_learning_env")
         self.assertEqual(db_state["new_content"], True)
         self.assertEqual(db_state["learning_goals"], ["update1", "update2"])
+        self.assertEqual(db_state["methodical_approach"], "updated_methodical_approach")
         self.assertEqual(
             db_state["formalities"],
             [{"username": "test_user", "technology": True, "exam_regulations": True}],

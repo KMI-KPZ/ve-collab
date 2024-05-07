@@ -4,32 +4,29 @@ import { signIn, useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
+import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/ve-designer/sideProgressBar';
 import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
-import CreatableSelect from 'react-select/creatable';
-import Link from 'next/link';
 import { Tooltip } from '@/components/Tooltip';
+import Link from 'next/link';
 import { PiBookOpenText } from 'react-icons/pi';
-import { Controller, FormProvider, SubmitHandler, useForm } from 'react-hook-form';
-import SideProgressBarWithReactHookForm from '@/components/VE-designer/SideProgressBarWithReactHookForm';
 import PopupSaveData from '@/components/VE-designer/PopupSaveData';
+import SideProgressBarWithReactHookForm from '@/components/VE-designer/SideProgressBarWithReactHookForm';
 
-export interface FormValues {
-    learningGoals: { value: string; label: string }[];
+interface FormValues {
+    methodicalApproach: string;
 }
 
 const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
-    return formValues.learningGoals.every((goal) => {
-        return goal.value === '' && goal.label === '';
-    });
+    return formValues.methodicalApproach === '';
 };
 
-LearningGoals.auth = true;
-export default function LearningGoals() {
+MethodicalApproach.auth = true;
+export default function MethodicalApproach() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
@@ -52,7 +49,7 @@ export default function LearningGoals() {
     const methods = useForm<FormValues>({
         mode: 'onChange',
         defaultValues: {
-            learningGoals: [],
+            methodicalApproach: '',
         },
     });
 
@@ -72,17 +69,13 @@ export default function LearningGoals() {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
                     setLoading(false);
-                    setSteps(data.plan.steps);
+                    if (data.plan.methodical_approach !== null) {
+                        methods.setValue('methodicalApproach', data.plan.methodical_approach);
+                    }
                     if (data.plan.progress.length !== 0) {
                         setSideMenuStepsProgress(data.plan.progress);
                     }
-                    methods.setValue(
-                        'learningGoals',
-                        data.plan.learning_goals.map((goals: string) => ({
-                            value: goals,
-                            label: goals,
-                        }))
-                    );
+                    setSteps(data.plan.steps);
                 }
             );
         }
@@ -96,15 +89,15 @@ export default function LearningGoals() {
                     update: [
                         {
                             plan_id: router.query.plannerId,
-                            field_name: 'learning_goals',
-                            value: data.learningGoals.map((goal) => goal.value),
+                            field_name: 'methodical_approach',
+                            value: data.methodicalApproach,
                         },
                         {
                             plan_id: router.query.plannerId,
                             field_name: 'progress',
                             value: {
                                 ...sideMenuStepsProgress,
-                                learning_goals: ProgressState.completed,
+                                methodical_approach: ProgressState.completed,
                             },
                         },
                     ],
@@ -122,77 +115,13 @@ export default function LearningGoals() {
         });
     };
 
-    const options: { value: string; label: string }[] = [
-        {
-            value: 'Förderung kritischen Denkens',
-            label: 'Förderung kritischen Denkens',
-        },
-        {
-            value: 'Förderung kreativen Denkens',
-            label: 'Förderung kreativen Denkens',
-        },
-        {
-            value: 'Förderung kollaborativen Arbeitens',
-            label: 'Förderung kollaborativen Arbeitens',
-        },
-        {
-            value: 'Förderung kommunikativer Fähigkeiten',
-            label: 'Förderung kommunikativer Fähigkeiten',
-        },
-        {
-            value: 'Förderung digitaler Kompetenzen',
-            label: 'Förderung digitaler Kompetenzen',
-        },
-        {
-            value: 'Förderung sozialer Kompetenzen',
-            label: 'Förderung sozialer Kompetenzen',
-        },
-        {
-            value: 'Förderung der kulturellen Kompetenz',
-            label: 'Förderung der kulturellen Kompetenz',
-        },
-        {
-            value: 'Förderung der Sprachkompetenz',
-            label: 'Förderung der Sprachkompetenz',
-        },
-        {
-            value: 'Förderung fachlicher Kompetenzen (Wissen, Fertigkeiten)',
-            label: 'Förderung fachlicher Kompetenzen (Wissen, Fertigkeiten)',
-        },
-    ];
-
-    function createableSelect(
-        control: any,
-        name: any,
-        options: { value: string; label: string }[]
-    ): JSX.Element {
-        return (
-            <Controller
-                name={name}
-                render={({ field: { onChange, onBlur, value } }) => (
-                    <CreatableSelect
-                        onChange={onChange}
-                        onBlur={onBlur}
-                        value={value}
-                        options={options}
-                        isClearable={true}
-                        isMulti
-                        closeMenuOnSelect={false}
-                        placeholder="Richtlernziele auswählen oder neue durch Tippen hinzufügen"
-                    />
-                )}
-                control={control}
-            />
-        );
-    }
-
     return (
         <FormProvider {...methods}>
             <PopupSaveData
                 isOpen={isPopupOpen}
                 handleContinue={async () => {
                     await router.push({
-                        pathname: '/ve-designer/methodical-approach',
+                        pathname: '/ve-designer/topics',
                         query: {
                             plannerId: router.query.plannerId,
                         },
@@ -210,15 +139,34 @@ export default function LearningGoals() {
                             <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between">
                                 <div>
                                     <div className={'text-center font-bold text-4xl mb-2 relative'}>
-                                        Welche Richtlernziele sollen im VE erreicht werden?
-                                        <Tooltip tooltipsText="Mehr zu Richtlernzielen findest du hier in den Selbstlernmaterialien …">
-                                            <Link target="_blank" href={'/learning-material/top-bubble/Potenziale'}>
+                                        Welche methodischen Ansätze kommen im VE zum Einsatz?
+                                        <Tooltip tooltipsText="Mehr zu Methodik findest du hier in den Selbstlernmaterialien …">
+                                            <Link
+                                                target="_blank"
+                                                href={'/learning-material'}
+                                            >
                                                 <PiBookOpenText size={30} color="#00748f" />
                                             </Link>
                                         </Tooltip>
                                     </div>
                                     <div className={'text-center mb-20'}>optional</div>
-                                    {createableSelect(methods.control, 'learningGoals', options)}
+                                    <div className="mt-4 flex flex-col justify-center items-center">
+                                        <textarea
+                                            rows={5}
+                                            placeholder="z.B. ..."
+                                            className="border border-gray-300 rounded-lg w-3/4 p-2"
+                                            {...methods.register('methodicalApproach', {
+                                                maxLength: {
+                                                    value: 500,
+                                                    message:
+                                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
+                                                },
+                                            })}
+                                        />
+                                        <p className="text-red-600 pt-2">
+                                            {methods.formState.errors?.methodicalApproach?.message}
+                                        </p>
+                                    </div>
                                 </div>
                                 <div className="flex justify-between w-full max-w-xl">
                                     <div>
@@ -228,7 +176,7 @@ export default function LearningGoals() {
                                             onClick={methods.handleSubmit((data) =>
                                                 combinedSubmitRouteAndUpdate(
                                                     data,
-                                                    '/ve-designer/target-groups'
+                                                    '/ve-designer/learning-goals'
                                                 )
                                             )}
                                         >
@@ -243,7 +191,7 @@ export default function LearningGoals() {
                                                 (data) => {
                                                     combinedSubmitRouteAndUpdate(
                                                         data,
-                                                        '/ve-designer/methodical-approach'
+                                                        '/ve-designer/topics'
                                                     );
                                                 },
                                                 async () => setIsPopupOpen(true)

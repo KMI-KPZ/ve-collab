@@ -1346,6 +1346,7 @@ class VEPlan:
         "topics": list,
         "lectures": list,
         "learning_goals": list,
+        "methodical_approach": (str, type(None)),
         "audience": list,
         "languages": list,
         "evaluation": list,
@@ -1379,6 +1380,7 @@ class VEPlan:
         topics: List[str] = [],
         lectures: List[Lecture] = [],
         learning_goals: List[str] = [],
+        methodical_approach: str = None,
         audience: List[TargetGroup] = [],
         languages: List[str] = [],
         evaluation: List[Evaluation] = [],
@@ -1437,6 +1439,7 @@ class VEPlan:
         self.topics = topics
         self.lectures = lectures
         self.learning_goals = learning_goals
+        self.methodical_approach = methodical_approach
         self.audience = audience
         self.languages = languages
         self.evaluation = evaluation
@@ -1479,6 +1482,7 @@ class VEPlan:
                 "topics": "not_started",
                 "lectures": "not_started",
                 "learning_goals": "not_started",
+                "methodical_approach": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
@@ -1577,6 +1581,7 @@ class VEPlan:
             "topics": self.topics,
             "lectures": [lecture.to_dict() for lecture in self.lectures],
             "learning_goals": self.learning_goals,
+            "methodical_approach": self.methodical_approach,
             "audience": [target_group.to_dict() for target_group in self.audience],
             "languages": self.languages,
             "evaluation": [evaluation.to_dict() for evaluation in self.evaluation],
@@ -1697,6 +1702,7 @@ class VEPlan:
                     }
                 ],
                 "learning_goals": [],
+                "methodical_approach": None,
                 "audience": [
                     {
                         "_id": "object_id_str",
@@ -1779,6 +1785,7 @@ class VEPlan:
                     "topics": "<completed|uncompleted|not_started>",
                     "lectures": "<completed|uncompleted|not_started>",
                     "learning_goals": "<completed|uncompleted|not_started>",
+                    "methodical_approach": "<completed|uncompleted|not_started>",
                     "audience": "<completed|uncompleted|not_started>",
                     "languages": "<completed|uncompleted|not_started>",
                     "evaluation": "<completed|uncompleted|not_started>",

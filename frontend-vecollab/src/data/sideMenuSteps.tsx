@@ -32,6 +32,11 @@ export const sideMenuStepsData: SideMenuStep[] = [
         link: '/ve-designer/learning-goals',
     },
     {
+        text: 'Methodischer Ansatz',
+        id: 'methodical_approach',
+        link: '/ve-designer/methodical-approach',
+    },
+    {
         text: 'Thema/Themen',
         id: 'topics',
         link: '/ve-designer/topics',
