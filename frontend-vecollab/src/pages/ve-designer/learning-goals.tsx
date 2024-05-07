@@ -14,18 +14,26 @@ import CreatableSelect from 'react-select/creatable';
 import Link from 'next/link';
 import { Tooltip } from '@/components/Tooltip';
 import { PiBookOpenText } from 'react-icons/pi';
-import { Controller, FormProvider, SubmitHandler, useForm } from 'react-hook-form';
+import { Controller, FormProvider, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import SideProgressBarWithReactHookForm from '@/components/VE-designer/SideProgressBarWithReactHookForm';
 import PopupSaveData from '@/components/VE-designer/PopupSaveData';
+import WhiteBox from '@/components/Layout/WhiteBox';
+import { BackendProfileSnippetsResponse, BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 
 export interface FormValues {
-    learningGoals: { value: string; label: string }[];
+    majorLearningGoals: { value: string; label: string }[];
+    individualLearningGoals: { username: string; learningGoal: string }[];
 }
 
 const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
-    return formValues.learningGoals.every((goal) => {
-        return goal.value === '' && goal.label === '';
-    });
+    return (
+        formValues.majorLearningGoals.every((goal) => {
+            return goal.value === '' && goal.label === '';
+        }) &&
+        formValues.individualLearningGoals.every((goal) => {
+            return goal.learningGoal === '';
+        })
+    );
 };
 
 LearningGoals.auth = true;
@@ -36,6 +44,9 @@ export default function LearningGoals() {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
+    const [partnerProfileSnippets, setPartnerProfileSnippets] = useState<{
+        [Key: string]: BackendUserSnippet;
+    }>({});
     const [steps, setSteps] = useState<IFineStep[]>([]);
     const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
 
@@ -52,8 +63,14 @@ export default function LearningGoals() {
     const methods = useForm<FormValues>({
         mode: 'onChange',
         defaultValues: {
-            learningGoals: [],
+            majorLearningGoals: [],
+            individualLearningGoals: [],
         },
+    });
+
+    const { fields } = useFieldArray({
+        name: 'individualLearningGoals',
+        control: methods.control,
     });
 
     useEffect(() => {
@@ -71,18 +88,40 @@ export default function LearningGoals() {
         if (session) {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
+                    console.log(data);
                     setLoading(false);
                     setSteps(data.plan.steps);
                     if (data.plan.progress.length !== 0) {
                         setSideMenuStepsProgress(data.plan.progress);
                     }
                     methods.setValue(
-                        'learningGoals',
+                        'majorLearningGoals',
                         data.plan.major_learning_goals.map((goals: string) => ({
                             value: goals,
                             label: goals,
                         }))
                     );
+                    methods.setValue(
+                        'individualLearningGoals',
+                        data.plan.individual_learning_goals.map((goal: any) => ({
+                            username: goal.username,
+                            learningGoal: goal.learning_goal,
+                        }))
+                    );
+
+                    // fetch profile snippets to be able to display the full name instead of username only
+                    fetchPOST(
+                        '/profile_snippets',
+                        { usernames: [...data.plan.partners, data.plan.author] },
+                        session.accessToken
+                    ).then((snippets: BackendProfileSnippetsResponse) => {
+                        let partnerSnippets: { [Key: string]: BackendUserSnippet } = {};
+                        snippets.user_snippets.forEach((element: BackendUserSnippet) => {
+                            partnerSnippets[element.username] = element;
+                        });
+                        setPartnerProfileSnippets(partnerSnippets);
+                        setLoading(false);
+                    });
                 }
             );
         }
@@ -97,14 +136,22 @@ export default function LearningGoals() {
                         {
                             plan_id: router.query.plannerId,
                             field_name: 'major_learning_goals',
-                            value: data.learningGoals.map((goal) => goal.value),
+                            value: data.majorLearningGoals.map((goal) => goal.value),
+                        },
+                        {
+                            plan_id: router.query.plannerId,
+                            field_name: 'individual_learning_goals',
+                            value: data.individualLearningGoals.map((goal) => ({
+                                username: goal.username,
+                                learning_goal: goal.learningGoal,
+                            })),
                         },
                         {
                             plan_id: router.query.plannerId,
                             field_name: 'progress',
                             value: {
                                 ...sideMenuStepsProgress,
-                                major_learning_goals: ProgressState.completed,
+                                learning_goals: ProgressState.completed,
                             },
                         },
                     ],
@@ -210,15 +257,77 @@ export default function LearningGoals() {
                             <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between">
                                 <div>
                                     <div className={'text-center font-bold text-4xl mb-2 relative'}>
-                                        Welche Richtlernziele sollen im VE erreicht werden?
+                                        1. Welche fachlichen Lernziele sollen im VE erreicht werden?
                                         <Tooltip tooltipsText="Mehr zu Richtlernzielen findest du hier in den Selbstlernmaterialien …">
-                                            <Link target="_blank" href={'/learning-material/top-bubble/Potenziale'}>
+                                            <Link
+                                                target="_blank"
+                                                href={'/learning-material/top-bubble/Potenziale'}
+                                            >
                                                 <PiBookOpenText size={30} color="#00748f" />
                                             </Link>
                                         </Tooltip>
                                     </div>
-                                    <div className={'text-center mb-20'}>optional</div>
-                                    {createableSelect(methods.control, 'learningGoals', options)}
+                                    <div className={'text-center mb-4'}>optional</div>
+                                    <div className="flex flex-wrap justify-center">
+                                        {fields.map((individualLearningGoalPerPartner, index) => (
+                                            <div
+                                                key={individualLearningGoalPerPartner.id}
+                                                className="flex justify-center mx-2"
+                                            >
+                                                <WhiteBox className="w-fit h-fit">
+                                                    <div className="flex flex-col">
+                                                        <div className="font-bold text-lg mb-4 text-center">
+                                                            {partnerProfileSnippets[
+                                                                individualLearningGoalPerPartner
+                                                                    .username
+                                                            ]
+                                                                ? partnerProfileSnippets[
+                                                                      individualLearningGoalPerPartner
+                                                                          .username
+                                                                  ].first_name +
+                                                                  ' ' +
+                                                                  partnerProfileSnippets[
+                                                                      individualLearningGoalPerPartner
+                                                                          .username
+                                                                  ].last_name
+                                                                : individualLearningGoalPerPartner.username}
+                                                        </div>
+                                                        <textarea
+                                                            rows={3}
+                                                            className="border border-gray-400 rounded-lg p-2 ml-2 w-96"
+                                                            {...methods.register(
+                                                                `individualLearningGoals.${index}.learningGoal`
+                                                            )}
+                                                            placeholder={
+                                                                'Beschreibe die individuellen Lernziele von ' +
+                                                                individualLearningGoalPerPartner.username
+                                                            }
+                                                        ></textarea>
+                                                    </div>
+                                                </WhiteBox>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="mt-12">
+                                    <div className={'text-center font-bold text-4xl mb-2 relative'}>
+                                        2. Welche weitere übergeordnete Lernziele werden verfolgt?
+                                        <Tooltip tooltipsText="Mehr zu Richtlernzielen findest du hier in den Selbstlernmaterialien …">
+                                            <Link
+                                                target="_blank"
+                                                href={'/learning-material/top-bubble/Potenziale'}
+                                            >
+                                                <PiBookOpenText size={30} color="#00748f" />
+                                            </Link>
+                                        </Tooltip>
+                                    </div>
+                                    <div className={'text-center mb-10'}>optional</div>
+
+                                    {createableSelect(
+                                        methods.control,
+                                        'majorLearningGoals',
+                                        options
+                                    )}
                                 </div>
                                 <div className="flex justify-between w-full max-w-xl">
                                     <div>

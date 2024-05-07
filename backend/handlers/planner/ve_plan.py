@@ -192,6 +192,12 @@ class VEPlanHandler(BaseHandler):
                             }
                         ],
                         "major_learning_goals": ["test"],
+                        "individual_learning_goals": [
+                            {
+                                "username": "username1",
+                                "learning_goal": "test",
+                            }
+                        ],
                         "methodical_approach": "test",
                         "audience": [
                             {
@@ -271,7 +277,7 @@ class VEPlanHandler(BaseHandler):
                             "institutions": "<completed|uncompleted|not_started>",
                             "topic": "<completed|uncompleted|not_started>",
                             "lectures": "<completed|uncompleted|not_started>",
-                            "major_learning_goals": "<completed|uncompleted|not_started>",
+                            "learning_goals": "<completed|uncompleted|not_started>",
                             "methodical_approach": "<completed|uncompleted|not_started>",
                             "audience": "<completed|uncompleted|not_started>",
                             "languages": "<completed|uncompleted|not_started>",
@@ -415,6 +421,12 @@ class VEPlanHandler(BaseHandler):
                             }
                         ],
                         "major_learning_goals": ["test"],
+                        "individual_learning_goals": [
+                            {
+                                "username": "username1",
+                                "learning_goal": "test",
+                            }
+                        ],
                         "methodical_approach": "test",
                         "audience": [
                             {
@@ -494,7 +506,7 @@ class VEPlanHandler(BaseHandler):
                             "institutions": "<completed|uncompleted|not_started>",
                             "topic": "<completed|uncompleted|not_started>",
                             "lectures": "<completed|uncompleted|not_started>",
-                            "major_learning_goals": "<completed|uncompleted|not_started>",
+                            "learning_goals": "<completed|uncompleted|not_started>",
                             "methodical_approach": "<completed|uncompleted|not_started>",
                             "audience": "<completed|uncompleted|not_started>",
                             "languages": "<completed|uncompleted|not_started>",

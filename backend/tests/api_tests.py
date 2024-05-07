@@ -22,6 +22,7 @@ import global_vars
 from main import make_app
 from model import (
     Evaluation,
+    IndividualLearningGoal,
     Institution,
     Lecture,
     PhysicalMobility,
@@ -7655,6 +7656,16 @@ class VEPlanHandlerTest(BaseApiTestCase):
             evaluation_while="test",
             evaluation_after="test",
         )
+    
+    def create_individual_learning_goal(self, name: str = "test") -> IndividualLearningGoal:
+        """
+        convenience method to create an individual learning goal with non-default values
+        """
+
+        return IndividualLearningGoal(
+            username=name,
+            learning_goal="test",
+        )
 
     def default_plan_setup(self):
         # manually set up a VEPlan in the db
@@ -7665,6 +7676,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.lecture = self.create_lecture("test")
         self.physical_mobility = self.create_physical_mobility("test")
         self.evaluation = self.create_evaluation("test")
+        self.individual_learning_goal = self.create_individual_learning_goal("test")
         self.default_plan = {
             "_id": self.plan_id,
             "author": CURRENT_ADMIN.username,
@@ -7678,6 +7690,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "topics": ["test", "test"],
             "lectures": [self.lecture.to_dict()],
             "major_learning_goals": ["test", "test"],
+            "individual_learning_goals": [self.individual_learning_goal.to_dict()],
             "methodical_approach": "test",
             "audience": [self.target_group.to_dict()],
             "languages": ["test", "test"],
@@ -7710,7 +7723,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 "institutions": "not_started",
                 "topics": "not_started",
                 "lectures": "not_started",
-                "major_learning_goals": "not_started",
+                "learning_goals": "not_started",
                 "methodical_approach": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
@@ -7779,6 +7792,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.topics, default_plan.topics)
         self.assertEqual(response_plan.lectures, default_plan.lectures)
         self.assertEqual(response_plan.major_learning_goals, default_plan.major_learning_goals)
+        self.assertEqual(response_plan.individual_learning_goals, default_plan.individual_learning_goals)
         self.assertEqual(response_plan.methodical_approach, default_plan.methodical_approach)
         self.assertEqual(response_plan.audience, default_plan.audience)
         self.assertEqual(response_plan.languages, default_plan.languages)
@@ -7886,6 +7900,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.topics, default_plan.topics)
         self.assertEqual(response_plan.lectures, default_plan.lectures)
         self.assertEqual(response_plan.major_learning_goals, default_plan.major_learning_goals)
+        self.assertEqual(response_plan.individual_learning_goals, default_plan.individual_learning_goals)
         self.assertEqual(response_plan.methodical_approach, default_plan.methodical_approach)
         self.assertEqual(response_plan.audience, default_plan.audience)
         self.assertEqual(response_plan.languages, default_plan.languages)
