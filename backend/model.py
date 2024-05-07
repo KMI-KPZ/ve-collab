@@ -1345,7 +1345,7 @@ class VEPlan:
         "institutions": list,
         "topics": list,
         "lectures": list,
-        "learning_goals": list,
+        "major_learning_goals": list,
         "methodical_approach": (str, type(None)),
         "audience": list,
         "languages": list,
@@ -1379,7 +1379,7 @@ class VEPlan:
         institutions: List[Institution] = [],
         topics: List[str] = [],
         lectures: List[Lecture] = [],
-        learning_goals: List[str] = [],
+        major_learning_goals: List[str] = [],
         methodical_approach: str = None,
         audience: List[TargetGroup] = [],
         languages: List[str] = [],
@@ -1438,7 +1438,7 @@ class VEPlan:
         self.institutions = institutions
         self.topics = topics
         self.lectures = lectures
-        self.learning_goals = learning_goals
+        self.major_learning_goals = major_learning_goals
         self.methodical_approach = methodical_approach
         self.audience = audience
         self.languages = languages
@@ -1481,7 +1481,7 @@ class VEPlan:
                 "institutions": "not_started",
                 "topics": "not_started",
                 "lectures": "not_started",
-                "learning_goals": "not_started",
+                "major_learning_goals": "not_started",
                 "methodical_approach": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
@@ -1580,7 +1580,7 @@ class VEPlan:
             ],
             "topics": self.topics,
             "lectures": [lecture.to_dict() for lecture in self.lectures],
-            "learning_goals": self.learning_goals,
+            "major_learning_goals": self.major_learning_goals,
             "methodical_approach": self.methodical_approach,
             "audience": [target_group.to_dict() for target_group in self.audience],
             "languages": self.languages,
@@ -1701,7 +1701,7 @@ class VEPlan:
                         "participants_amount": 0,
                     }
                 ],
-                "learning_goals": [],
+                "major_learning_goals": [],
                 "methodical_approach": None,
                 "audience": [
                     {
@@ -1784,7 +1784,7 @@ class VEPlan:
                     "institutions": "<completed|uncompleted|not_started>",
                     "topics": "<completed|uncompleted|not_started>",
                     "lectures": "<completed|uncompleted|not_started>",
-                    "learning_goals": "<completed|uncompleted|not_started>",
+                    "major_learning_goals": "<completed|uncompleted|not_started>",
                     "methodical_approach": "<completed|uncompleted|not_started>",
                     "audience": "<completed|uncompleted|not_started>",
                     "languages": "<completed|uncompleted|not_started>",

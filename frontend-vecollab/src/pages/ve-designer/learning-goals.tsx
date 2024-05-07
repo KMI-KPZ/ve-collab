@@ -78,7 +78,7 @@ export default function LearningGoals() {
                     }
                     methods.setValue(
                         'learningGoals',
-                        data.plan.learning_goals.map((goals: string) => ({
+                        data.plan.major_learning_goals.map((goals: string) => ({
                             value: goals,
                             label: goals,
                         }))
@@ -96,7 +96,7 @@ export default function LearningGoals() {
                     update: [
                         {
                             plan_id: router.query.plannerId,
-                            field_name: 'learning_goals',
+                            field_name: 'major_learning_goals',
                             value: data.learningGoals.map((goal) => goal.value),
                         },
                         {
@@ -104,7 +104,7 @@ export default function LearningGoals() {
                             field_name: 'progress',
                             value: {
                                 ...sideMenuStepsProgress,
-                                learning_goals: ProgressState.completed,
+                                major_learning_goals: ProgressState.completed,
                             },
                         },
                     ],

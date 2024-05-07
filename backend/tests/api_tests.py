@@ -7677,7 +7677,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "institutions": [self.institution.to_dict()],
             "topics": ["test", "test"],
             "lectures": [self.lecture.to_dict()],
-            "learning_goals": ["test", "test"],
+            "major_learning_goals": ["test", "test"],
             "methodical_approach": "test",
             "audience": [self.target_group.to_dict()],
             "languages": ["test", "test"],
@@ -7710,7 +7710,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 "institutions": "not_started",
                 "topics": "not_started",
                 "lectures": "not_started",
-                "learning_goals": "not_started",
+                "major_learning_goals": "not_started",
                 "methodical_approach": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
@@ -7778,7 +7778,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.institutions, default_plan.institutions)
         self.assertEqual(response_plan.topics, default_plan.topics)
         self.assertEqual(response_plan.lectures, default_plan.lectures)
-        self.assertEqual(response_plan.learning_goals, default_plan.learning_goals)
+        self.assertEqual(response_plan.major_learning_goals, default_plan.major_learning_goals)
         self.assertEqual(response_plan.methodical_approach, default_plan.methodical_approach)
         self.assertEqual(response_plan.audience, default_plan.audience)
         self.assertEqual(response_plan.languages, default_plan.languages)
@@ -7885,7 +7885,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.institutions, default_plan.institutions)
         self.assertEqual(response_plan.topics, default_plan.topics)
         self.assertEqual(response_plan.lectures, default_plan.lectures)
-        self.assertEqual(response_plan.learning_goals, default_plan.learning_goals)
+        self.assertEqual(response_plan.major_learning_goals, default_plan.major_learning_goals)
         self.assertEqual(response_plan.methodical_approach, default_plan.methodical_approach)
         self.assertEqual(response_plan.audience, default_plan.audience)
         self.assertEqual(response_plan.languages, default_plan.languages)
