@@ -1,37 +1,35 @@
-import { fetchDELETE, useGetAvailablePlans } from '@/lib/backend';
+import { useGetAvailablePlans } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
-import PlannerOverviewItem from '@/components/Plannner/PlannerOverviewItem';
 import Link from 'next/link';
+import { MdKeyboardDoubleArrowRight } from 'react-icons/md';
+import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
+import { PlansOverview } from '@/components/Plannner/PlansOverview';
+import { PlansOverviewFilter } from '@/components/Plannner/PlansOverviewFilter';
 import LoadingAnimation from '@/components/LoadingAnimation';
-import ButtonNewPlan from '@/components/Plannner/ButtonNewPlan';
-import Alert from '@/components/Alert';
-import { MdAdd, MdArrowDownward, MdArrowUpward, MdKeyboardDoubleArrowRight } from 'react-icons/md';
-import { IPlan, PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import { ISideProgressBarStates } from '@/interfaces/ve-designer/sideProgressBar';
+
+export interface IfilterBy {
+    planKey: keyof PlanPreview;
+    /** compare function to compare the plan[planKey].planValue of a plan   */
+    compare: (planValue: string | string[] | boolean | ISideProgressBarStates) => boolean;
+    id?: string;
+}
+
+export interface IsortBy {
+    key: keyof PlanPreview,
+    order: 'ASC'|'DESC'
+}
 
 // authentication is required on this page
 Plans.auth = true;
 export default function Plans() {
     const { data: session } = useSession();
-    const [successPopupOpen, setSuccessPopupOpen] = useState(false);
     const [sortedPlans, setSortedPlans] = useState<PlanPreview[]>([]);
 
-    const [filterBy, setFilterBy] = useState<
-        {
-            planKey: keyof PlanPreview;
-            /** compare function to compare the plan[planKey].planValue of a plan   */
-            compare: (planValue: string | string[] | boolean | ISideProgressBarStates) => boolean;
-            id?: string;
-        }[]
-    >([]);
+    const [filterBy, setFilterBy] = useState<IfilterBy[]>([]);
 
-    const [sortBy, setSortBy1] = useState<
-        {
-            key: keyof PlanPreview,
-            order: 'ASC'|'DESC'
-        }
-    >({key: 'creation_timestamp', order: 'ASC'})
+    const [sortBy, setSortBy] = useState<IsortBy>({key: 'creation_timestamp', order: 'ASC'})
 
     const { data: plans, isLoading, error, mutate } = useGetAvailablePlans(session!.accessToken);
 
@@ -59,27 +57,15 @@ export default function Plans() {
     }, [plans, isLoading, sortBy, filterBy]);
 
     const handleSortBy = (key: keyof PlanPreview) => {
-        setSortBy1(prev => {return {key: key, order: prev.order == 'ASC' ? 'DESC' : 'ASC' }})
+        setSortBy(prev => {
+            return {
+                key: key,
+                order: prev.order == 'ASC' ? 'DESC' : 'ASC'
+            }
+        })
     };
 
-    const deletePlan = async (planId: string) => {
-        const response = await fetchDELETE(
-            `/planner/delete?_id=${planId}`,
-            {},
-            session?.accessToken
-        );
-        if (response.success === true) {
-            mutate(); // refresh plans
-        }
-        setSuccessPopupOpen(true);
-        setTimeout(() => setSuccessPopupOpen(false), 2000);
-    };
-
-    const handleFilterBy = (
-        planKey: keyof PlanPreview,
-        compare: (planValue: string | string[] | boolean | ISideProgressBarStates) => boolean,
-        id?: string
-    ) => {
+    const handleFilterBy = ({planKey, compare, id}: IfilterBy) => {
         if (filterBy.find((f) => f.planKey == planKey)) {
             // update existing filter
             setFilterBy((prev) =>
@@ -89,174 +75,6 @@ export default function Plans() {
             setFilterBy((prev) => [...prev, { id, planKey, compare }]);
         }
     };
-
-    const SortArrow = ({ by }: { by: keyof IPlan }) => {
-        if (by != sortBy.key) return <></>;
-
-        return (
-            <>
-                {sortBy.order == 'DESC' ? (
-                    <MdArrowDownward className="inline m-1 text-gray-500 group-hover:text-gray-700" />
-                ) : (
-                    <MdArrowUpward className="inline m-1 text-gray-500 group-hover:text-gray-700" />
-                )}
-            </>
-        );
-    };
-
-    const Filter = () => {
-        return (
-            <div className="mb-4 flex items-center">
-                <div className="flex flex-rows mr-4 divide-x divide-slate-900">
-                    <div className="px-2">
-                        <button
-                            className={`hover:underline ${
-                                !filterBy.find((f) => f.planKey == 'author') ||
-                                filterBy.find((f) => f.id == 'allAuthors')
-                                    ? 'text-ve-collab-blue underline'
-                                    : ''
-                            }`}
-                            onClick={() =>
-                                handleFilterBy(
-                                    'author',
-                                    planAuthor => true,
-                                    'allAuthors'
-                                )
-                            }
-                        >
-                            Alle
-                        </button>
-                    </div>
-                    <div className="px-2">
-                        <button
-                            className={`hover:underline ${
-                                filterBy.find((f) => f.id == 'iamAuthor')
-                                    ? 'text-ve-collab-blue underline'
-                                    : ''
-                            }`}
-                            onClick={() =>
-                                handleFilterBy(
-                                    'author', planAuthor =>
-                                        (planAuthor as string) ==
-                                        session?.user.preferred_username,
-                                    'iamAuthor'
-                                )
-                            }
-                        >
-                            Eigene
-                        </button>
-                    </div>
-                    <div className="px-2">
-                        <button
-                            className={`hover:underline ${
-                                filterBy.find((f) => f.id == 'otherAuthor')
-                                    ? 'text-ve-collab-blue underline'
-                                    : ''
-                            }`}
-                            onClick={() =>
-                                handleFilterBy(
-                                    'author',
-                                    planAuthor =>
-                                        (planAuthor as string) !=
-                                        session?.user.preferred_username,
-                                    'otherAuthor'
-                                )
-                            }
-                        >
-                            Mit mir geteilte
-                        </button>
-                    </div>
-                </div>
-
-                <div>
-                    <input
-                        className={'border border-[#cccccc] rounded-l px-2 py-1'}
-                        type="text"
-                        placeholder={'Nach Titel filtern ...'}
-                        name="search"
-                        autoComplete="off"
-                        onKeyUp={(event) => {
-                            handleFilterBy('name', planName => {
-                                return (planName as string).toLowerCase()
-                                    .includes(
-                                        (event.target as HTMLInputElement).value.toLowerCase()
-                                    );
-                            });
-                        }}
-                    />
-                </div>
-
-                <div>
-                    <Link href={'/plans'} className='mx-4 py-2 px-5 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20'>
-                        Good Practise Pläne
-                    </Link>
-                </div>
-
-                <div className='ml-auto'>
-                    <ButtonNewPlan
-                        className='ml-4 py-2 px-5 bg-ve-collab-orange rounded-lg text-white'
-                        label={<><MdAdd className='inline' /> Neuen Plan starten</>}
-                    />
-                </div>
-            </div>
-        );
-    }
-
-    const PlansTable = () => {
-        return (
-            <div className="rounded-lg shadow bg-white overflow-scroll md:overflow-auto w-full text-left border-1 border-gray-400">
-                <div className="flex flex-row space-x-3 items-center bg-gray-300 rounded-t-lg text-base font-semibold">
-                    <div className="basis-1/12 text-center">Progress</div>
-                    <div
-                        className="grow p-3 hover:underline hover:cursor-pointer group"
-                        onClick={() => handleSortBy('name')}
-                    >
-                        Name
-                        <SortArrow by="name" />
-                    </div>
-                    <div className="basis-1/6">Autor</div>
-                    <div
-                        className="basis-1/6 hover:underline hover:cursor-pointer group"
-                        onClick={() => handleSortBy('last_modified')}
-                    >
-                        Geändert
-                        <SortArrow by="last_modified" />
-                    </div>
-                    <div
-                        className="basis-1/6 hover:underline hover:cursor-pointer group"
-                        onClick={() => handleSortBy('creation_timestamp')}
-                    >
-                        Erstellt
-                        <SortArrow by="creation_timestamp" />
-                    </div>
-                </div>
-
-                <div>
-                    {isLoading ? (
-                        <div className="m-12">
-                            <LoadingAnimation size="small" /> lade Pläne ...
-                        </div>
-                    ) : sortedPlans.length == 0 ? (
-                        <div className="m-12">Noch keine Pläne erstellt</div>
-                    ) : (
-                        sortedPlans.map((plan, index) => (
-                            <div
-                                key={index}
-                                className="flex flex-row space-x-3 items-center border-b border-bg-gray-300 hover:bg-gray-100"
-                            >
-                                <PlannerOverviewItem
-                                    key={index}
-                                    plan={plan}
-                                    deleteCallback={deletePlan}
-                                    refetchPlansCallback={mutate}
-                                />
-                            </div>
-                        ))
-                    )}
-                </div>
-            </div>
-        );
-    }
 
     return (
         <>
@@ -280,17 +98,25 @@ export default function Plans() {
                         </div>
                     </div>
 
-                    <Filter />
+                    <PlansOverviewFilter
+                        filterBy={filterBy}
+                        filterByCallback={handleFilterBy}
+                    />
 
-                    <PlansTable />
+                    {isLoading ? (
+                        <div className="m-12">
+                            <LoadingAnimation size="small" /> lade Pläne ...
+                        </div>
+                    ) : (
+                        <PlansOverview
+                            plans={sortedPlans}
+                            sortBy={sortBy}
+                            sortByCallback={handleSortBy}
+                            refetchPlansCallback={mutate}
+                    />
+                    )}
                 </div>
             </div>
-
-            {successPopupOpen && (
-                <Alert onClose={() => setSuccessPopupOpen(false)}>
-                    <>Plan gelöscht</>
-                </Alert>
-            )}
         </>
     );
 }
