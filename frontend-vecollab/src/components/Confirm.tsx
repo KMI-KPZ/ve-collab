@@ -14,16 +14,16 @@ import { IoMdClose } from 'react-icons/io';
 
 interface Props {
     message: string
-    handler: (proceed: boolean) => any
+    callback: (proceed: boolean) => any
 }
 
-export default function ConfirmDialog({ message, handler }: Props) {
+export default function ConfirmDialog({ message, callback }: Props) {
 
     useEffect(() => {
         const keyDownHandler = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
                 event.preventDefault();
-                handler(false)
+                callback(false)
             }
         };
 
@@ -32,11 +32,11 @@ export default function ConfirmDialog({ message, handler }: Props) {
         return () => {
             document.removeEventListener('keydown', keyDownHandler);
         };
-    }, [handler]);
+    }, [callback]);
 
     const handleClick = (e: MouseEvent<HTMLElement>, proceed: boolean) => {
         e.stopPropagation()
-        handler(proceed)
+        callback(proceed)
     }
 
     return (
