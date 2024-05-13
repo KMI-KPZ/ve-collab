@@ -151,7 +151,12 @@ export default function PostProcess() {
                                     >
                                         Nach dem VE
                                         <Tooltip tooltipsText="Ausführliche Informationen zur Etappenplanung und verschiedenen Typen und Modellen von VA findest du hier in den Selbstlernmaterialien …">
-                                            <Link target="_blank" href={'/learning-material/left-bubble/Etappenplanung'}>
+                                            <Link
+                                                target="_blank"
+                                                href={
+                                                    '/learning-material/left-bubble/Etappenplanung'
+                                                }
+                                            >
                                                 <FiInfo size={30} color="#00748f" />
                                             </Link>
                                         </Tooltip>
@@ -207,44 +212,13 @@ export default function PostProcess() {
                                         <ol className="mt-3 pt-6 px-6 list-decimal">
                                             <li className="mb-4">
                                                 <p>
-                                                    Passe bitte die tatsächliche Umsetzung im
-                                                    VE-Planer an (Etappenplanung, Aufgabenfolgen,
-                                                    etc.). Nutze die Navigationsleiste oben oder
-                                                    klicke{' '}
-                                                    <Link
-                                                        className="underline text-ve-collab-blue"
-                                                        href={{
-                                                            pathname: '/ve-designer/broadPlanner',
-                                                            query: {
-                                                                plannerId: router.query.plannerId,
-                                                            },
-                                                        }}
-                                                        target="_blank"
-                                                    >
-                                                        hier
-                                                    </Link>
-                                                    , um zurück zur Grobplanung zu gelangen.
-                                                </p>
-                                            </li>
-                                            <li className="mb-4">
-                                                <p>
-                                                    Basierte der VE auf einem bekannten VE-Modell?
-                                                    Wenn ja, auf welchem?
-                                                </p>
-                                                <textarea
-                                                    className="border border-gray-400 rounded-lg w-full p-2 mt-2"
-                                                    rows={5}
-                                                    placeholder="Beschreibe das zugrundeliegende VE-Modell"
-                                                    value={veModel}
-                                                    onChange={(e) => setVeModel(e.target.value)}
-                                                />
-                                            </li>
-                                            <li className="mb-4">
-                                                <p>
                                                     Reflexion: Was hat deiner Meinung nach gut
-                                                    funktioniert? Was würdest du das nächste Mal
-                                                    anders machen? Was waren Herausforderungen und
-                                                    wie bist du damit umgegangen?
+                                                    funktioniert? Was waren Herausforderungen und
+                                                    wie bist du damit umgegangen? Was würdest du das
+                                                    nächste Mal anders machen? Lasse hier deine
+                                                    eigenen Erfahrungen und das Feedback deiner
+                                                    Lernenden einfließen. Falls vorhanden, kannst du
+                                                    eine Datei mit Evaluationsergebnissen hochladen.
                                                 </p>
                                                 <textarea
                                                     className="border border-gray-400 rounded-lg w-full p-2 mt-2"
@@ -252,21 +226,6 @@ export default function PostProcess() {
                                                     placeholder="Beschreibe deine Reflexion"
                                                     value={reflection}
                                                     onChange={(e) => setReflection(e.target.value)}
-                                                />
-                                            </li>
-                                            <li className="mb-4">
-                                                <p>
-                                                    Evaluationsergebnisse / Feedback der
-                                                    Teilnehmenden: Fasse die Ergebnisse hier
-                                                    zusammen. Falls vorhanden, kannst du gerne eine
-                                                    Datei hochladen.
-                                                </p>
-                                                <textarea
-                                                    className="border border-gray-400 rounded-lg w-full p-2 mt-2"
-                                                    rows={5}
-                                                    placeholder="Beschreibe die Evaluation der Teilnehmenden"
-                                                    value={evaluation}
-                                                    onChange={(e) => setEvaluation(e.target.value)}
                                                 />
                                                 {evaluationFile ? (
                                                     <div
@@ -295,6 +254,45 @@ export default function PostProcess() {
                                                     type="file"
                                                     className="my-2"
                                                     onChange={uploadToClient}
+                                                />
+                                            </li>
+                                            <li className="mb-4">
+                                                <p>
+                                                    Bist du (aus didaktischen und / oder
+                                                    organisatorischen Gründen) schon während der
+                                                    Durchführung deines VE vom ursprünglichen Plan
+                                                    abgewichen? Dann passe bitte die tatsächliche
+                                                    Umsetzung im VE-Planer an (Etappenplanung,
+                                                    Lernaktivität, etc.). Nutze die
+                                                    Navigationsleiste oben oder klicke{' '}
+                                                    <Link
+                                                        className="underline text-ve-collab-blue"
+                                                        href={{
+                                                            pathname: '/ve-designer/step-names',
+                                                            query: {
+                                                                plannerId: router.query.plannerId,
+                                                            },
+                                                        }}
+                                                        target="_blank"
+                                                    >
+                                                        hier
+                                                    </Link>
+                                                    , um zurück zur Grobplanung zu gelangen.
+                                                </p>
+                                            </li>
+                                            <li className="mb-4">
+                                                <p>
+                                                    Basierte der VE auf einem bekannten VE-Modell?
+                                                    Wenn ja, auf welchem? (Diese Information hilft
+                                                    uns bei der zukünftigen Verbesserung von
+                                                    VE-Collab)
+                                                </p>
+                                                <textarea
+                                                    className="border border-gray-400 rounded-lg w-full p-2 mt-2"
+                                                    rows={5}
+                                                    placeholder="Beschreibe das zugrundeliegende VE-Modell"
+                                                    value={veModel}
+                                                    onChange={(e) => setVeModel(e.target.value)}
                                                 />
                                             </li>
                                         </ol>
