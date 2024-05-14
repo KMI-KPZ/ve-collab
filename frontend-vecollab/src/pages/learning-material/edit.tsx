@@ -15,8 +15,8 @@ import { CustomDragPreview } from '@/components/learningContent/CustomDragPrevie
 import Dialog from '@/components/profile/Dialog';
 import { fetchGET, fetchPOST, useGetCheckAdminUser } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import SuccessAlert from '@/components/SuccessAlert';
 import LoadingAnimation from '@/components/LoadingAnimation';
+import Alert from '@/components/Alert';
 
 export type Metadata = {
     name: string;
@@ -219,12 +219,7 @@ export default function Edit() {
     const handleSaveToBackend = () => {
         // TODO if possible validate structure to avoid crashing material site
         fetchPOST('/material_taxonomy', { taxonomy: treeData }, session?.accessToken);
-
-        // render success message that disappears after 2 seconds
         setSuccessPopupOpen(true);
-        setTimeout(() => {
-            setSuccessPopupOpen((successPopupOpen) => false);
-        }, 2000);
     };
 
     const handleNodeChange = (id: NodeModel['id'], textUpdate: string, dataUpdate?: CustomData) => {
@@ -247,12 +242,7 @@ export default function Edit() {
         // TODO confirmation dialog before actually syncing
 
         fetchPOST('/mbr_sync', {}, session?.accessToken);
-
-        // render success message that disappears after 2 seconds
         setSuccessPopupOpen(true);
-        setTimeout(() => {
-            setSuccessPopupOpen((successPopupOpen) => false);
-        }, 2000);
     }
 
     console.log(treeData);
@@ -427,7 +417,7 @@ export default function Edit() {
                     </div>
                 </Dialog>
             </div>
-            {successPopupOpen && <SuccessAlert message={'Gespeichert'} />}
+            {successPopupOpen && <Alert message={'Gespeichert'} autoclose={2000} onClose={() => setSuccessPopupOpen(false)} />}
         </>
     );
 }

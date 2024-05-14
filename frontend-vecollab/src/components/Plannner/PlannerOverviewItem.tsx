@@ -256,7 +256,7 @@ export default function PlannerOverviewItem({ plan, refetchPlansCallback }: Prop
             )}
 
             {alert.open !== false && (
-                <Alert autoclose={2000} onClose={() => setAlert({open: false})}>{alert.message}</Alert>
+                <Alert message={alert.message} autoclose={2000} onClose={() => setAlert({open: false})} />
             )}
         </>
     );
