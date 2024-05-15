@@ -6,11 +6,11 @@ interface Props {
         value: string,
         label: string,
         title?: string,
-        icon?: JSX.Element }[];
+        icon?: JSX.Element }[]
+        | JSX.Element[];
     icon?: JSX.Element
     ulClasses?: string,
-    onSelect: (value: string) => void;
-
+    onSelect?: (value: string) => void;
 }
 
 export default function MyDropdown({
@@ -42,7 +42,7 @@ export default function MyDropdown({
     });
 
     const _handleSelect = (value: string) => {
-        onSelect(value)
+        if (onSelect) onSelect(value)
         setOpen(false)
     }
 
@@ -54,17 +54,21 @@ export default function MyDropdown({
 
             {open && (
                 <ul className={`${ulClasses} absolute z-40 right-0 left-auto p-2 rounded-md bg-white shadow border`}>
-                    {options.map((a, i) => (
-                        <li
-                            key={i}
-                            title={a.title}
-                            onClick={() => _handleSelect(a.value)}
-                            className="flex px-2 py-1 items-center hover:cursor-pointer hover:bg-ve-collab-blue/50 rounded-lg"
-                        >
-                            {a.icon}
-                            <span className="mx-2 truncate">{a.label}</span>
-                        </li>
-                    ))}
+                    {options.map((element, i) => (<>
+                        {'value' in element
+                            ? (
+                                <li
+                                    key={i}
+                                    title={element.title}
+                                    onClick={() => _handleSelect(element.value)}
+                                    className="flex px-2 py-1 items-center hover:cursor-pointer hover:bg-ve-collab-blue/50 rounded-lg"
+                                >
+                                    {element.icon}
+                                    <span className="mx-2 truncate">{element.label}</span>
+                                </li>
+                            ) : (element)
+                        }
+                    </>))}
                 </ul>
             )}
         </div>
