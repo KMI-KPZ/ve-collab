@@ -2502,13 +2502,23 @@ class ProfileResourceTest(BaseResourceTestCase):
             print(response.content)
 
     def create_profile(self, username: str, user_id: ObjectId) -> dict:
+        institution_id = ObjectId()
         return {
             "_id": user_id,
             "username": username,
             "role": "guest",
             "follows": [],
             "bio": "test",
-            "institution": "test",
+            "institutions": [
+                {
+                    "_id": institution_id,
+                    "name": "test",
+                    "department": "test",
+                    "school_type": "test",
+                    "country": "test",
+                }
+            ],
+            "chosen_institution_id": institution_id,
             "profile_pic": "default_profile_pic.jpg",
             "first_name": "Test",
             "last_name": "Admin",
@@ -2574,7 +2584,11 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(profile["role"], self.default_profile["role"])
         self.assertEqual(profile["follows"], self.default_profile["follows"])
         self.assertEqual(profile["bio"], self.default_profile["bio"])
-        self.assertEqual(profile["institution"], self.default_profile["institution"])
+        self.assertEqual(profile["institutions"], self.default_profile["institutions"])
+        self.assertEqual(
+            profile["chosen_institution_id"],
+            self.default_profile["chosen_institution_id"],
+        )
         self.assertEqual(profile["profile_pic"], self.default_profile["profile_pic"])
         self.assertEqual(profile["first_name"], self.default_profile["first_name"])
         self.assertEqual(profile["last_name"], self.default_profile["last_name"])
@@ -2624,7 +2638,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertNotIn("role", profile)
         self.assertNotIn("follows", profile)
         self.assertNotIn("bio", profile)
-        self.assertNotIn("institution", profile)
+        self.assertNotIn("institutions", profile)
+        self.assertNotIn("chosen_institution_id", profile)
         self.assertNotIn("profile_pic", profile)
         self.assertNotIn("gender", profile)
         self.assertNotIn("address", profile)
@@ -2720,7 +2735,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(profile["role"], "guest")
         self.assertEqual(profile["follows"], [])
         self.assertEqual(profile["bio"], "")
-        self.assertEqual(profile["institution"], "")
+        self.assertEqual(profile["institutions"], [])
+        self.assertEqual(profile["chosen_institution_id"], "")
         self.assertEqual(profile["profile_pic"], "default_profile_pic.jpg")
         self.assertEqual(profile["first_name"], "Test")
         self.assertEqual(profile["last_name"], "User")
@@ -2774,7 +2790,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(profile["role"], "admin")
         self.assertEqual(profile["follows"], [])
         self.assertEqual(profile["bio"], "")
-        self.assertEqual(profile["institution"], "")
+        self.assertEqual(profile["institutions"], [])
+        self.assertEqual(profile["chosen_institution_id"], "")
         self.assertEqual(profile["profile_pic"], "default_profile_pic.jpg")
         self.assertEqual(profile["first_name"], "Test")
         self.assertEqual(profile["last_name"], "Admin2")
@@ -2828,7 +2845,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(result["role"], "guest")
         self.assertEqual(result["follows"], [])
         self.assertEqual(result["bio"], "")
-        self.assertEqual(result["institution"], "")
+        self.assertEqual(result["institutions"], [])
+        self.assertEqual(result["chosen_institution_id"], "")
         self.assertEqual(result["profile_pic"], "default_profile_pic.jpg")
         self.assertEqual(result["first_name"], "")
         self.assertEqual(result["last_name"], "")
@@ -3062,7 +3080,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(profile["role"], "guest")
         self.assertEqual(profile["follows"], [])
         self.assertEqual(profile["bio"], "")
-        self.assertEqual(profile["institution"], "")
+        self.assertEqual(profile["institutions"], [])
+        self.assertEqual(profile["chosen_institution_id"], "")
         self.assertEqual(profile["profile_pic"], "default_profile_pic.jpg")
         self.assertEqual(profile["first_name"], "")
         self.assertEqual(profile["last_name"], "")
@@ -3236,8 +3255,11 @@ class ProfileResourceTest(BaseResourceTestCase):
         of the supplied users
         """
 
-        # add one more profile
+        # add one more profile, but unset "chosen_institution_id" to test if it is handled correctly:
+        # "institution" in the snippet should be an empty string, even though the profile
+        # contains institutions
         profile1 = self.create_profile("test1", ObjectId())
+        profile1["chosen_institution_id"] = ""
         self.db.profiles.insert_one(profile1)
 
         profile_manager = Profiles(self.db)
@@ -3250,7 +3272,14 @@ class ProfileResourceTest(BaseResourceTestCase):
                 "username": self.default_profile["username"],
                 "first_name": self.default_profile["first_name"],
                 "last_name": self.default_profile["last_name"],
-                "institution": self.default_profile["institution"],
+                "institution": next(
+                    (
+                        inst["name"]
+                        for inst in self.default_profile["institutions"]
+                        if inst["_id"] == self.default_profile["chosen_institution_id"]
+                    ),
+                    None,
+                ),
                 "profile_pic": self.default_profile["profile_pic"],
             },
             snippets,
@@ -3260,7 +3289,7 @@ class ProfileResourceTest(BaseResourceTestCase):
                 "username": profile1["username"],
                 "first_name": profile1["first_name"],
                 "last_name": profile1["last_name"],
-                "institution": profile1["institution"],
+                "institution": "",
                 "profile_pic": profile1["profile_pic"],
             },
             snippets,
@@ -3277,7 +3306,14 @@ class ProfileResourceTest(BaseResourceTestCase):
                 "username": self.default_profile["username"],
                 "first_name": self.default_profile["first_name"],
                 "last_name": self.default_profile["last_name"],
-                "institution": self.default_profile["institution"],
+                "institution": next(
+                    (
+                        inst["name"]
+                        for inst in self.default_profile["institutions"]
+                        if inst["_id"] == self.default_profile["chosen_institution_id"]
+                    ),
+                    None,
+                ),
                 "profile_pic": self.default_profile["profile_pic"],
             },
             snippets,

@@ -183,13 +183,24 @@ class BaseApiTestCase(AsyncHTTPTestCase):
             CURRENT_USER.username: "user",
         }
 
+        current_admin_institution_id = ObjectId()
+
         self.test_profiles = {
             CURRENT_ADMIN.username: {
                 "username": CURRENT_ADMIN.username,
                 "role": self.test_roles[CURRENT_ADMIN.username],
                 "follows": [],
                 "bio": None,
-                "institution": None,
+                "institutions": [
+                    {
+                        "_id": current_admin_institution_id,
+                        "name": "test",
+                        "department": "test",
+                        "school_type": "test",
+                        "country": "test",
+                    }
+                ],
+                "chosen_institution_id": current_admin_institution_id,
                 "profile_pic": "default_profile_pic.jpg",
                 "first_name": None,
                 "last_name": None,
@@ -213,7 +224,16 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                 "role": self.test_roles[CURRENT_USER.username],
                 "follows": [],
                 "bio": None,
-                "institution": None,
+                "institutions": [
+                    {
+                        "_id": ObjectId(),
+                        "name": "test",
+                        "department": "test",
+                        "school_type": "test",
+                        "country": "test",
+                    }
+                ],
+                "chosen_institution_id": "",
                 "profile_pic": "default_profile_pic.jpg",
                 "first_name": None,
                 "last_name": None,
@@ -1456,9 +1476,15 @@ class PostHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(
             response["inserted_post"]["author"]["institution"],
-            db_author_profile["institution"],
+            next(
+                (
+                    inst["name"]
+                    for inst in db_author_profile["institutions"]
+                    if inst["_id"] == db_author_profile["chosen_institution_id"]
+                ),
+                None,
+            ),
         )
-
         # for some odd reason, the ms in the timestamps jitter
         self.assertAlmostEqual(
             datetime.fromisoformat(response["inserted_post"]["creation_date"]),
@@ -2292,7 +2318,14 @@ class CommentHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(
             response["inserted_comment"]["author"]["institution"],
-            db_author_profile["institution"],
+            next(
+                (
+                    inst["name"]
+                    for inst in db_author_profile["institutions"]
+                    if inst["_id"] == db_author_profile["chosen_institution_id"]
+                ),
+                None,
+            ),
         )
 
         db_state = self.db.posts.find_one({"_id": self.post_oid})
@@ -2792,7 +2825,14 @@ class RepostHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(
             response["inserted_repost"]["author"]["institution"],
-            db_author_profile["institution"],
+            next(
+                (
+                    inst["name"]
+                    for inst in db_author_profile["institutions"]
+                    if inst["_id"] == db_author_profile["chosen_institution_id"]
+                ),
+                None,
+            ),
         )
         self.assertIn("repostAuthor", response["inserted_repost"])
         self.assertIn("username", response["inserted_repost"]["repostAuthor"])
@@ -2818,7 +2858,14 @@ class RepostHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(
             response["inserted_repost"]["repostAuthor"]["institution"],
-            db_author_profile["institution"],
+            next(
+                (
+                    inst["name"]
+                    for inst in db_author_profile["institutions"]
+                    if inst["_id"] == db_author_profile["chosen_institution_id"]
+                ),
+                None,
+            ),
         )
 
         db_state = self.db.posts.find_one(
@@ -3720,7 +3767,16 @@ class SearchHandlerTest(BaseApiTestCase):
             "role": "admin",
             "follows": [],
             "bio": "test",
-            "institution": "test",
+            "institutions": [
+                {
+                    "_id": ObjectId(),
+                    "name": "test",
+                    "department": "test",
+                    "school_type": "test",
+                    "country": "test",
+                }
+            ],
+            "chosen_institution_id": "",
             "projects": "test",
             "profile_pic": "test",
             "first_name": "test",
@@ -3945,7 +4001,16 @@ class SpaceHandlerTest(BaseApiTestCase):
                     "role": "admin",
                     "follows": [],
                     "bio": "test",
-                    "institution": "test",
+                    "institutions": [
+                        {
+                            "_id": ObjectId(),
+                            "name": "test",
+                            "department": "test",
+                            "school_type": "test",
+                            "country": "test",
+                        }
+                    ],
+                    "chosen_institution_id": "",
                     "projects": "test",
                     "profile_pic": "test",
                     "first_name": "test",
@@ -9170,7 +9235,16 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 "role": "guest",
                 "follows": [],
                 "bio": "test",
-                "institution": "test",
+                "institutions": [
+                    {
+                        "_id": ObjectId(),
+                        "name": "test",
+                        "department": "test",
+                        "school_type": "test",
+                        "country": "test",
+                    }
+                ],
+                "chosen_institution_id": "",
                 "profile_pic": "default_profile_pic.jpg",
                 "first_name": "Test",
                 "last_name": "Admin",
