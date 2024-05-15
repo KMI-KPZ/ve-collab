@@ -29,7 +29,8 @@ class Profiles:
 
         self.profile_attributes = {
             "bio": (str, type(None)),
-            "institution": (str, type(None)),
+            "institutions": list,
+            "chosen_institution_id": (str, type(None)),
             "first_name": (str, type(None)),
             "last_name": (str, type(None)),
             "gender": (str, type(None)),
@@ -116,7 +117,8 @@ class Profiles:
             "role": "guest",
             "follows": [],
             "bio": "",
-            "institution": "",
+            "institutions": [],
+            "chosen_institution_id": "",
             "profile_pic": "default_profile_pic.jpg",
             "first_name": first_name,
             "last_name": last_name,
@@ -174,7 +176,8 @@ class Profiles:
             "role": "admin",
             "follows": [],
             "bio": "",
-            "institution": "",
+            "institutions": [],
+            "chosen_institution_id": "",
             "profile_pic": "default_profile_pic.jpg",
             "first_name": first_name,
             "last_name": last_name,
@@ -511,6 +514,14 @@ class Profiles:
                     ve_window_entry["plan_id"]
                 )
 
+        # ensure that institutions objects contain an _id field with an ObjectId
+        if "institutions" in updated_profile:
+            for institution in updated_profile["institutions"]:
+                if "_id" not in institution or not institution["_id"] or institution["_id"] == "":
+                    institution["_id"] = ObjectId()
+                else:
+                    institution["_id"] = util.parse_object_id(institution["_id"])
+
         result = self.db.profiles.find_one_and_update(
             {"username": username},
             {
@@ -559,7 +570,8 @@ class Profiles:
                 "username": True,
                 "first_name": True,
                 "last_name": True,
-                "institution": True,
+                "institutions": True,
+                "chosen_institution_id": True,
                 "profile_pic": True,
             },
         )
