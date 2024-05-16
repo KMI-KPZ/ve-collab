@@ -7172,6 +7172,67 @@ class TimelineHandlerTest(BaseApiTestCase):
             {"username": CURRENT_USER.username},
             {"$set": {"profile_pic": "default_profile_pic.jpg"}},
         )
+
+        # create test plan that is referenced in a post
+        self.test_plan_id = ObjectId()
+        self.test_plan = {
+            "_id": self.test_plan_id,
+            "author": CURRENT_ADMIN.username,
+            "read_access": [CURRENT_ADMIN.username],
+            "write_access": [CURRENT_ADMIN.username],
+            "creation_timestamp": datetime.now(),
+            "last_modified": datetime.now(),
+            "name": "test",
+            "partners": [CURRENT_USER.username],
+            "institutions": [],
+            "topics": ["test", "test"],
+            "lectures": [],
+            "learning_goals": ["test", "test"],
+            "audience": [],
+            "languages": ["test", "test"],
+            "evaluation": [],
+            "timestamp_from": datetime.now(),
+            "timestamp_to": datetime.now(),
+            "involved_parties": ["test", "test"],
+            "realization": "test",
+            "physical_mobility": True,
+            "physical_mobilities": [],
+            "learning_env": "test",
+            "new_content": False,
+            "formalities": [
+                {
+                    "username": CURRENT_ADMIN.username,
+                    "technology": False,
+                    "exam_regulations": False,
+                }
+            ],
+            "duration": 10,
+            "workload": 10,
+            "steps": [],
+            "is_good_practise": True,
+            "underlying_ve_model": "test",
+            "reflection": "test",
+            "good_practise_evaluation": "test",
+            "evaluation_file": None,
+            "progress": {
+                "name": "not_started",
+                "institutions": "not_started",
+                "topics": "not_started",
+                "lectures": "not_started",
+                "learning_goals": "not_started",
+                "audience": "not_started",
+                "languages": "not_started",
+                "evaluation": "not_started",
+                "involved_parties": "not_started",
+                "realization": "not_started",
+                "learning_env": "not_started",
+                "new_content": "not_started",
+                "formalities": "not_started",
+                "steps": "not_started",
+            },
+        }
+        self.db.plans.insert_one(self.test_plan)
+
         # 4 test posts, one in space and one normal for admin and for user
         self.post_oids = [ObjectId(), ObjectId(), ObjectId(), ObjectId()]
         self.posts = [
@@ -7195,6 +7256,7 @@ class TimelineHandlerTest(BaseApiTestCase):
                     }
                 ],
                 "likers": [],
+                "plans": [self.test_plan_id],
             },
             {
                 "_id": self.post_oids[1],
@@ -7208,6 +7270,7 @@ class TimelineHandlerTest(BaseApiTestCase):
                 "files": [],
                 "comments": [],
                 "likers": [],
+                "plans": [],
             },
             {
                 "_id": self.post_oids[2],
@@ -7221,6 +7284,7 @@ class TimelineHandlerTest(BaseApiTestCase):
                 "files": [],
                 "comments": [],
                 "likers": [],
+                "plans": [],
             },
             {
                 "_id": self.post_oids[3],
@@ -7234,6 +7298,7 @@ class TimelineHandlerTest(BaseApiTestCase):
                 "files": [],
                 "comments": [],
                 "likers": [],
+                "plans": [],
             },
         ]
         self.db.posts.insert_many(self.posts)
@@ -7263,6 +7328,13 @@ class TimelineHandlerTest(BaseApiTestCase):
                     post["author"]["profile_pic"], "default_profile_pic.jpg"
                 )
 
+    def assert_plan_object_enhanced(self, post: List[dict]):
+        for plan in post["plans"]:
+            self.assertIn("_id", plan)
+            self.assertIn("name", plan)
+            self.assertIn("author", plan)
+            # omit the rest, if some of the args are in, all are in...
+
     def test_get_timeline(self):
         """
         expect: get all 4 test posts in the global timeline, permission is granted
@@ -7277,6 +7349,9 @@ class TimelineHandlerTest(BaseApiTestCase):
 
         # expect the author to be enhanced with the correct profile picture
         self.assert_author_enhanced(response["posts"])
+
+        # first post has a plan attached, expect the plan to be enhanced
+        self.assert_plan_object_enhanced(response["posts"][0])
 
     def test_get_timeline_out_of_range(self):
         """
@@ -7295,6 +7370,32 @@ class TimelineHandlerTest(BaseApiTestCase):
         )
         self.assertIn("posts", response)
         self.assertEqual(response["posts"], [])
+
+    def test_get_timeline_post_with_non_existing_plan(self):
+        """
+        expect: since the plan_id doesnt exist anymore, the post does not include
+        the plan object but the plan_id itself
+        """
+
+        # set an invalid id for the first default plan
+        non_existing_plan_id = ObjectId()
+        self.db.posts.update_one(
+            {"_id": self.post_oids[0]}, {"$set": {"plans": [non_existing_plan_id]}}
+        )
+
+        response = self.base_checks("GET", "/timeline", True, 200)
+        self.assertIn("posts", response)
+
+        # expect every test post to be in the response
+        self.assertEqual(len(response["posts"]), 4)
+
+        # expect the author to be enhanced with the correct profile picture
+        self.assert_author_enhanced(response["posts"])
+
+        # first post has a plan attached, but the plan_id is invalid,
+        # expect the plan_id to be in the response
+        self.assertIn("plans", response["posts"][0])
+        self.assertEqual(response["posts"][0]["plans"], [str(non_existing_plan_id)])
 
     def test_get_timeline_error_insufficient_permission(self):
         """

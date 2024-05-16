@@ -2,13 +2,16 @@ from datetime import datetime, timedelta
 import logging
 from typing import Dict, List, Tuple
 
+from bson import ObjectId
 import dateutil.parser
 
 from handlers.base_handler import BaseHandler, auth_needed
+from model import VEPlan
 from resources.network.acl import ACL
 from resources.network.post import Posts
 from resources.network.profile import Profiles
 from resources.network.space import SpaceDoesntExistError, Spaces
+from resources.planner.ve_plan import VEPlanResource
 import util
 
 logger = logging.getLogger(__name__)
@@ -37,9 +40,10 @@ class BaseTimelineHandler(BaseHandler):
         time_to = dateutil.parser.parse(time_to)
 
         return time_from, time_to
-    
 
-    def _filter_from_profile_snippets(self, username: str, snippets: list[Dict]) -> Dict:
+    def _filter_from_profile_snippets(
+        self, username: str, snippets: list[Dict]
+    ) -> Dict:
         """
         from the list of profile snippets, filter the one with the matching username
         """
@@ -52,14 +56,14 @@ class BaseTimelineHandler(BaseHandler):
     def add_profile_information_to_author(self, posts: List[Dict]) -> List[Dict]:
         """
         modify the "author" key of the post and comments to not only be the username,
-        but a mix of "username", "profile_pic", "first_name", "last_name" and "institution" 
+        but a mix of "username", "profile_pic", "first_name", "last_name" and "institution"
         as a nested dict.
         :returns: the modified posts
         """
 
         with util.get_mongodb() as db:
             profile_manager = Profiles(db)
-            
+
             # collect all usernames that we have to request the profile information for, avoiding duplicates
             usernames_to_request = []
             for post in posts:
@@ -73,22 +77,81 @@ class BaseTimelineHandler(BaseHandler):
                         if comment["author"] not in usernames_to_request:
                             usernames_to_request.append(comment["author"])
 
-            profile_snippets = profile_manager.get_profile_snippets(usernames_to_request)
-            
+            profile_snippets = profile_manager.get_profile_snippets(
+                usernames_to_request
+            )
+
             # replace the author keys with the respecting profile_information
             for post in posts:
-                post["author"] = self._filter_from_profile_snippets(post["author"], profile_snippets)
+                post["author"] = self._filter_from_profile_snippets(
+                    post["author"], profile_snippets
+                )
 
                 # if the post is a repost, we also have to handle their profile pic
                 if "isRepost" in post and post["isRepost"]:
-                    post["repostAuthor"] = self._filter_from_profile_snippets(post["repostAuthor"], profile_snippets)
+                    post["repostAuthor"] = self._filter_from_profile_snippets(
+                        post["repostAuthor"], profile_snippets
+                    )
 
                 # exactly the same procedure for the comments
                 if "comments" in post and post["comments"]:
                     for comment in post["comments"]:
-                        comment["author"] = self._filter_from_profile_snippets(comment["author"], profile_snippets)
+                        comment["author"] = self._filter_from_profile_snippets(
+                            comment["author"], profile_snippets
+                        )
 
             return posts
+
+    def _filter_from_plan_objects(
+        self, plan_id: str | ObjectId, plans: list[VEPlan]
+    ) -> Dict:
+        """
+        from the list of plan objects, filter the one with the matching plan_id,
+        if no matching plan is found, the plan_id is returned back instead
+        """
+
+        plan_id = util.parse_object_id(plan_id)
+
+        for plan in plans:
+            if plan._id == plan_id:
+                return plan
+        return plan_id
+
+    def add_plan_to_posts(self, posts: List[Dict]) -> List[Dict]:
+        """
+        In case posts have plan(s) attached, update the information from only the _id
+        to the full plan object.
+
+        However, if no matching plan is found (e.g. it got deleted), the plan_id is returned back.
+        """
+
+        from pprint import pprint
+        #pprint(posts)
+
+        # collect all plan_ids without duplicates
+        plan_ids = []
+        for post in posts:
+            if "plans" in post and post["plans"] != []:
+                for plan_id in post["plans"]:
+                    if plan_id not in plan_ids:
+                        plan_ids.append(plan_id)
+
+        with util.get_mongodb() as db:
+            plan_manager = VEPlanResource(db)
+            plans = plan_manager.get_bulk_plans(plan_ids)
+
+            # replace the plan_ids with the full plan objects
+            for post in posts:
+                if "plans" in post and post["plans"] != []:
+                    post_plan_ids_copy = post["plans"].copy()
+                    post["plans"] = []
+                    for plan_id in post_plan_ids_copy:
+                        plan = self._filter_from_plan_objects(plan_id, plans)
+                        if isinstance(plan, VEPlan):
+                            plan = plan.to_dict()
+                        post["plans"].append(plan)
+
+        return posts
 
 
 class TimelineHandler(BaseTimelineHandler):
@@ -127,6 +190,9 @@ class TimelineHandler(BaseTimelineHandler):
 
         # serialize post objects to dicts and enhance author information
         posts = self.add_profile_information_to_author(result)
+
+        # add plan information to posts if there are any associated plans with the posts
+        posts = self.add_plan_to_posts(posts)
 
         self.set_status(200)
         self.write(self.json_serialize_response({"success": True, "posts": posts}))
@@ -217,6 +283,10 @@ class SpaceTimelineHandler(BaseTimelineHandler):
         timeline_posts = self.add_profile_information_to_author(timeline_posts)
         pinned_posts = self.add_profile_information_to_author(pinned_posts)
 
+        # add plan information to posts if there are any associated plans with the posts
+        timeline_posts = self.add_plan_to_posts(timeline_posts)
+        pinned_posts = self.add_plan_to_posts(pinned_posts)
+
         self.set_status(200)
         self.write(
             self.json_serialize_response(
@@ -273,6 +343,9 @@ class UserTimelineHandler(BaseTimelineHandler):
 
         posts = self.add_profile_information_to_author(result)
 
+        # add plan information to posts if there are any associated plans with the posts
+        posts = self.add_plan_to_posts(posts)
+
         self.set_status(200)
         self.write(self.json_serialize_response({"success": True, "posts": posts}))
 
@@ -320,6 +393,7 @@ class PersonalTimelineHandler(BaseTimelineHandler):
             )
 
         posts = self.add_profile_information_to_author(result)
+        posts = self.add_plan_to_posts(posts)
 
         self.set_status(200)
         self.write(self.json_serialize_response({"success": True, "posts": posts}))

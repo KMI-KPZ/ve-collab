@@ -90,6 +90,31 @@ class VEPlanResource:
                 raise NoReadAccessError()
 
         return VEPlan.from_dict(result)
+    
+    def get_bulk_plans(self, plan_ids: List[str | ObjectId]) -> List[VEPlan]:
+        """
+        Request multiple plans by specifying their `_id`s in a list.
+
+        The _id can either be an instance of `bson.ObjectId` or a
+        corresponding str-representation.
+
+        Returns a list of `VEPlan` instances.
+
+        In case of a non-existing plan _id, it is simply skipped, meaning that
+        the length of the returned list may be less than the length of the supplied
+        plan_ids list.
+        """
+
+        # if supplied _id is no valid ObjectId, we can also raise the PlanDoesntExistError,
+        # since there logically can't be any matching plan
+        try:
+            plan_ids = [util.parse_object_id(plan_id) for plan_id in plan_ids]
+        except InvalidId:
+            pass
+
+        result = self.db.plans.find({"_id": {"$in": plan_ids}})
+
+        return [VEPlan.from_dict(res) for res in result]
 
     def get_plans_for_user(self, username: str) -> List[VEPlan]:
         """
