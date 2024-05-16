@@ -54,7 +54,7 @@ export default function ConfirmDialog({ message, callback }: Props) {
 
                 <div className='flex flex-col p-2'>
                     <div className='font-bold'>{message}</div>
-                    <div className="ml-auto mt-2">
+                    <div className="m-auto mt-2">
                         <button
                             className="py-2 px-6 m-2 bg-ve-collab-orange rounded-lg text-white"
                             onClick={e => handleClick(e, true)}

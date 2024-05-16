@@ -17,6 +17,7 @@ import LoadingAnimation from '../LoadingAnimation';
 import { RxTrash } from 'react-icons/rx';
 import { IoIosHelp } from 'react-icons/io';
 import { Tooltip } from '../Tooltip';
+import ConfirmDialog from '../Confirm';
 
 interface Props {
     personalInformation: PersonalInformation;
@@ -68,6 +69,8 @@ export default function EditPersonalInformation({
         department: '',
         country: '',
     });
+
+    const [askDeletion, setAskDeletion] = useState<boolean>(false);
 
     /*
     callback that is triggered when the user selects a new profile pic in
@@ -282,12 +285,21 @@ export default function EditPersonalInformation({
                                         className="absolute top-2 right-2"
                                         onClick={(e) => {
                                             e.preventDefault();
-                                            deleteInstitution(index);
+                                            setAskDeletion(true);
                                             e.stopPropagation();
                                         }}
                                     >
                                         <RxTrash />
                                     </button>
+                                    {askDeletion && (
+                                        <ConfirmDialog
+                                            message="Institution wirklich löschen?"
+                                            callback={(proceed) => {
+                                                if (proceed) deleteInstitution(index);
+                                                setAskDeletion(false);
+                                            }}
+                                        />
+                                    )}
                                     <div className="font-bold">{institution.name}</div>
                                     <div>{institution.department}</div>
                                     <div className="text-gray-600">{institution.school_type}</div>
