@@ -3,19 +3,18 @@ import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { Dispatch, SetStateAction, useState } from 'react';
 import AsyncCreatableSelect from 'react-select/async-creatable';
+import { AlertState, AlertTypes } from '../Alert';
 
 interface Props {
     closeDialogCallback: () => void;
     planId: string;
-    setSuccessPopupOpen: Dispatch<SetStateAction<boolean>>;
-    setSuccessMessage: Dispatch<SetStateAction<string>>;
+    setAlert: Dispatch<SetStateAction<AlertState>>;
 }
 
 export default function SharePlanForm({
     closeDialogCallback,
     planId,
-    setSuccessPopupOpen,
-    setSuccessMessage,
+    setAlert,
 }: Props) {
     const { data: session } = useSession();
 
@@ -34,12 +33,7 @@ export default function SharePlanForm({
         };
 
         await fetchPOST('/planner/grant_access', payload, session?.accessToken).then((data) => {
-            // render success message that disappears after 2 seconds
-            setSuccessPopupOpen(true);
-            setSuccessMessage('Plan freigegeben');
-            setTimeout(() => {
-                setSuccessPopupOpen(false);
-            }, 2000);
+            setAlert({message: 'Plan freigegeben'})
         });
     };
 

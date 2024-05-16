@@ -37,6 +37,8 @@ export default function EditProfile({
         birthday: '',
         profilePicId: '',
         languages: [''],
+        institutions: [],
+        chosen_institution_id: '',
     });
     const [veReady, setVeReady] = useState(true);
     const [excludedFromMatching, setExcludedFromMatching] = useState(false);
@@ -113,6 +115,8 @@ export default function EditProfile({
                     birthday: data.profile.birthday,
                     profilePicId: data.profile.profile_pic,
                     languages: data.profile.languages,
+                    institutions: data.profile.institutions,
+                    chosen_institution_id: data.profile.chosen_institution_id,
                 });
                 setVeReady(data.profile.ve_ready);
                 setExcludedFromMatching(data.profile.excluded_from_matching);
@@ -159,6 +163,8 @@ export default function EditProfile({
                 expertise: personalInformation.expertise,
                 birthday: personalInformation.birthday,
                 languages: personalInformation.languages,
+                institutions: personalInformation.institutions,
+                chosen_institution_id: personalInformation.chosen_institution_id,
                 ve_ready: veReady,
                 ve_interests: veInformation.veInterests,
                 ve_contents: veInformation.veContents,
@@ -213,6 +219,8 @@ export default function EditProfile({
                 expertise: personalInformation.expertise,
                 birthday: personalInformation.birthday,
                 languages: personalInformation.languages,
+                institutions: personalInformation.institutions,
+                chosen_institution_id: personalInformation.chosen_institution_id,
             });
             setResearchAndTeachingInformation({
                 researchTags: profile.research_tags,

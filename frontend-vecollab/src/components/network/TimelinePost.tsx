@@ -376,7 +376,7 @@ export default function TimelinePost(
             )}
 
             {askDeletion && (
-                <ConfirmDialog message="Beitrag löschen?" handler={proceed => {
+                <ConfirmDialog message="Beitrag löschen?" callback={proceed => {
                     if (proceed) deletePost()
                     setAskDeletion(false)
                 }} />
