@@ -246,7 +246,6 @@ class VEPlanHandler(BaseHandler):
                                 "workload": 10,
                                 "timestamp_from": "2000-01-01",
                                 "timestamp_to": "2000-01-08",
-                                "learning_env": "test",
                                 "learning_goal": "test",
                                 "tasks": [
                                     {
@@ -475,7 +474,6 @@ class VEPlanHandler(BaseHandler):
                                 "workload": 10,
                                 "timestamp_from": "2000-01-01",
                                 "timestamp_to": "2000-01-08",
-                                "learning_env": "test",
                                 "learning_goal": "test",
                                 "tasks": [
                                     {
@@ -791,7 +789,6 @@ class VEPlanHandler(BaseHandler):
                         "workload": 10,
                         "timestamp_from": "2000-01-01",
                         "timestamp_to": "2000-01-08",
-                        "learning_env": "test",
                         "learning_goal": "test",
                         "tasks": [
                             {

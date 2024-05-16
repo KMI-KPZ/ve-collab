@@ -153,7 +153,6 @@ class BaseResourceTestCase(TestCase):
             workload=10,
             timestamp_from=timestamp_from,
             timestamp_to=timestamp_to,
-            learning_env="test",
             learning_goal="test",
             tasks=[Task()],
             evaluation_tools=["test", "test"],

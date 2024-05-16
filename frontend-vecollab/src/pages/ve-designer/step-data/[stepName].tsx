@@ -51,7 +51,6 @@ export interface IFineStepFrontend {
     timestamp_to: string;
     name: string;
     workload: number;
-    learning_env: string;
     learning_goal: string;
     tasks: ITaskFrontend[];
     evaluation_tools: string[];
@@ -65,7 +64,6 @@ export interface IFineStep {
     timestamp_to: string;
     name: string;
     workload: number;
-    learning_env: string;
     learning_goal: string;
     tasks: ITask[];
     evaluation_tools: string[];
@@ -78,7 +76,6 @@ export const defaultFormValueDataFineStepFrontend: IFineStepFrontend = {
     timestamp_to: '',
     name: '',
     workload: 0,
-    learning_env: '',
     learning_goal: '',
     evaluation_tools: ['', ''],
     tasks: [
@@ -97,7 +94,6 @@ export const defaultFormValueDataFineStepFrontend: IFineStepFrontend = {
 const areAllFormValuesEmpty = (formValues: IFineStepFrontend): boolean => {
     return (
         formValues.workload === 0 &&
-        formValues.learning_env === '' &&
         formValues.learning_goal === '' &&
         formValues.evaluation_tools.every((tool) => {
             return tool === '';
@@ -217,7 +213,6 @@ export default function FinePlanner() {
                 ? {
                       ...data,
                       workload: data.workload,
-                      learning_env: data.learning_env,
                       learning_goal: data.learning_goal,
                       tasks: currentStepTransformBackTools,
                   }
