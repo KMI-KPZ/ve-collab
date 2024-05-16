@@ -63,8 +63,9 @@ export default function Partners() {
 
     const [formalConditions, setFormalConditions] = useState<CheckListPartner[]>([]);
     const [evaluationInfo, setEvaluationInfo] = useState<EvaluationPerPartner[]>([]);
-    const [individualLearningGoals, setIndividualLearningGoals] = useState<{username: string, learning_goal: string}[]>([]);
-    const [author, setAuthor] = useState<string>('');
+    const [individualLearningGoals, setIndividualLearningGoals] = useState<
+        { username: string; learning_goal: string }[]
+    >([]);
 
     // check for session errors and trigger the login flow if necessary
     useEffect(() => {
@@ -108,10 +109,12 @@ export default function Partners() {
                     if (data.plan.evaluation && Array.isArray(data.plan.evaluation)) {
                         setEvaluationInfo(data.plan.evaluation);
                     }
-                    if (data.plan.individual_learning_goals && Array.isArray(data.plan.individual_learning_goals)) {
+                    if (
+                        data.plan.individual_learning_goals &&
+                        Array.isArray(data.plan.individual_learning_goals)
+                    ) {
                         setIndividualLearningGoals(data.plan.individual_learning_goals);
                     }
-                    setAuthor(data.plan.author);
                     if (data.plan.involved_parties.length !== 0) {
                         methods.setValue(
                             'externalParties',
@@ -192,7 +195,7 @@ export default function Partners() {
 
         let updateFormalConditions: CheckListPartner[] = [];
         let updateEvaluationInfo: EvaluationPerPartner[] = [];
-        let updateIndividualLearningGoals: {username: string, learning_goal: string}[] = [];
+        let updateIndividualLearningGoals: { username: string; learning_goal: string }[] = [];
 
         if (partners.length >= 1 && partners[0] !== '') {
             updateFormalConditions = partners.map((partner) => {
@@ -246,38 +249,6 @@ export default function Partners() {
                         learning_goal: '',
                     };
                 }
-            });
-        }
-
-        // sanity check: if the author (i.e. creator of the plan) was not
-        // manually added as a partner by the users, add their formal conditions
-        // entry nonetheless, because otherwise he would not be included on the
-        // formal conditions page, even though he has to fulfill them as well
-        if (!partners.includes(author)) {
-            updateFormalConditions.push({
-                username: author,
-                time: false,
-                format: false,
-                topic: false,
-                goals: false,
-                languages: false,
-                media: false,
-                technicalEquipment: false,
-                evaluation: false,
-                institutionalRequirements: false,
-                dataProtection: false,
-            });
-            updateEvaluationInfo.push({
-                username: author,
-                is_graded: false,
-                task_type: '',
-                assessment_type: '',
-                evaluation_while: '',
-                evaluation_after: '',
-            });
-            updateIndividualLearningGoals.push({
-                username: author,
-                learning_goal: '',
             });
         }
 

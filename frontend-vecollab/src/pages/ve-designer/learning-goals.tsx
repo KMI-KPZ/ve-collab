@@ -21,8 +21,18 @@ import WhiteBox from '@/components/Layout/WhiteBox';
 import { BackendProfileSnippetsResponse, BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 
 export interface FormValues {
-    majorLearningGoals: { value: string; label: string }[];
-    individualLearningGoals: { username: string; learningGoal: string }[];
+    majorLearningGoals: MajorLearningGoals[];
+    individualLearningGoals: IndividualLearningGoal[];
+}
+
+interface MajorLearningGoals {
+    value: string;
+    label: string;
+}
+
+interface IndividualLearningGoal {
+    username: string;
+    learningGoal: string;
 }
 
 const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
@@ -44,9 +54,7 @@ export default function LearningGoals() {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
-    const [partnerProfileSnippets, setPartnerProfileSnippets] = useState<{
-        [Key: string]: BackendUserSnippet;
-    }>({});
+    const [usersFirstLastNames, setUsersFirstLastNames] = useState<BackendUserSnippet[]>([]);
     const [steps, setSteps] = useState<IFineStep[]>([]);
     const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
 
@@ -88,7 +96,6 @@ export default function LearningGoals() {
         if (session) {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
-                    console.log(data);
                     setLoading(false);
                     setSteps(data.plan.steps);
                     if (data.plan.progress.length !== 0) {
@@ -115,11 +122,7 @@ export default function LearningGoals() {
                         { usernames: [...data.plan.partners, data.plan.author] },
                         session.accessToken
                     ).then((snippets: BackendProfileSnippetsResponse) => {
-                        let partnerSnippets: { [Key: string]: BackendUserSnippet } = {};
-                        snippets.user_snippets.forEach((element: BackendUserSnippet) => {
-                            partnerSnippets[element.username] = element;
-                        });
-                        setPartnerProfileSnippets(partnerSnippets);
+                        setUsersFirstLastNames(snippets.user_snippets);
                         setLoading(false);
                     });
                 }
@@ -167,6 +170,17 @@ export default function LearningGoals() {
             pathname: url,
             query: { plannerId: router.query.plannerId },
         });
+    };
+
+    const findPartnerFirstAndLastName = (username: string): string => {
+        const findUser = usersFirstLastNames.find(
+            (backendUserSnippet: BackendUserSnippet) => username === backendUserSnippet.username
+        );
+        if (findUser) {
+            return findUser.first_name + ' ' + findUser.last_name;
+        } else {
+            return username;
+        }
     };
 
     const options: { value: string; label: string }[] = [
@@ -277,20 +291,9 @@ export default function LearningGoals() {
                                                 <WhiteBox className="w-fit h-fit">
                                                     <div className="flex flex-col">
                                                         <div className="font-bold text-lg mb-4 text-center">
-                                                            {partnerProfileSnippets[
-                                                                individualLearningGoalPerPartner
-                                                                    .username
-                                                            ]
-                                                                ? partnerProfileSnippets[
-                                                                      individualLearningGoalPerPartner
-                                                                          .username
-                                                                  ].first_name +
-                                                                  ' ' +
-                                                                  partnerProfileSnippets[
-                                                                      individualLearningGoalPerPartner
-                                                                          .username
-                                                                  ].last_name
-                                                                : individualLearningGoalPerPartner.username}
+                                                            {findPartnerFirstAndLastName(
+                                                                individualLearningGoalPerPartner.username
+                                                            )}
                                                         </div>
                                                         <textarea
                                                             rows={3}
@@ -300,7 +303,9 @@ export default function LearningGoals() {
                                                             )}
                                                             placeholder={
                                                                 'Beschreibe die individuellen Lernziele von ' +
-                                                                individualLearningGoalPerPartner.username
+                                                                findPartnerFirstAndLastName(
+                                                                    individualLearningGoalPerPartner.username
+                                                                )
                                                             }
                                                         ></textarea>
                                                     </div>
