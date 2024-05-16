@@ -320,14 +320,19 @@ export default function FinePlanner() {
                                         >
                                             Feinplanung
                                             <Tooltip tooltipsText="Mehr Aspekte der Feinplanung findest du hier in den Selbstlernmaterialien …">
-                                                <Link target="_blank" href={'/learning-material/left-bubble/Etappenplanung'}>
+                                                <Link
+                                                    target="_blank"
+                                                    href={
+                                                        '/learning-material/left-bubble/Etappenplanung'
+                                                    }
+                                                >
                                                     <PiBookOpenText size={30} color="#00748f" />
                                                 </Link>
                                             </Tooltip>
                                         </div>
                                     </div>
                                     <div className={'text-center mb-20'}>
-                                        erweitere die Informationen zu jeder Etappe
+                                        Beschreibt nun die einzelnen Etappen genauer
                                     </div>
                                     <Stage fineStep={currentFineStep} />
                                 </div>
