@@ -17,8 +17,8 @@ export interface IfilterBy {
 }
 
 export interface IsortBy {
-    key: keyof PlanPreview,
-    order: 'ASC'|'DESC'
+    key: keyof PlanPreview;
+    order: 'ASC' | 'DESC';
 }
 
 // authentication is required on this page
@@ -29,7 +29,7 @@ export default function Plans() {
 
     const [filterBy, setFilterBy] = useState<IfilterBy[]>([]);
 
-    const [sortBy, setSortBy] = useState<IsortBy>({key: 'creation_timestamp', order: 'ASC'})
+    const [sortBy, setSortBy] = useState<IsortBy>({ key: 'creation_timestamp', order: 'ASC' });
 
     const { data: plans, isLoading, error, mutate } = useGetAvailablePlans(session!.accessToken);
 
@@ -51,21 +51,19 @@ export default function Plans() {
             });
         }
 
-        console.log({ sortedPlans });
-
         setSortedPlans([...sortedPlans]);
     }, [plans, isLoading, sortBy, filterBy]);
 
     const handleSortBy = (key: keyof PlanPreview) => {
-        setSortBy(prev => {
+        setSortBy((prev) => {
             return {
                 key: key,
-                order: prev.order == 'ASC' ? 'DESC' : 'ASC'
-            }
-        })
+                order: prev.order == 'ASC' ? 'DESC' : 'ASC',
+            };
+        });
     };
 
-    const handleFilterBy = ({planKey, compare, id}: IfilterBy) => {
+    const handleFilterBy = ({ planKey, compare, id }: IfilterBy) => {
         if (filterBy.find((f) => f.planKey == planKey)) {
             // update existing filter
             setFilterBy((prev) =>
@@ -92,16 +90,16 @@ export default function Plans() {
                             <div>
                                 Noch auf der Suche nach neuen Partner:innen für den nächsten VE?
                             </div>
-                            <Link href={'/matching'} className=' inline-block py-2 px-5 text-ve-collab-blue font-bold'>
-                                <MdKeyboardDoubleArrowRight className='inline' /> zum Matching
+                            <Link
+                                href={'/matching'}
+                                className=" inline-block py-2 px-5 text-ve-collab-blue font-bold"
+                            >
+                                <MdKeyboardDoubleArrowRight className="inline" /> zum Matching
                             </Link>
                         </div>
                     </div>
 
-                    <PlansOverviewFilter
-                        filterBy={filterBy}
-                        filterByCallback={handleFilterBy}
-                    />
+                    <PlansOverviewFilter filterBy={filterBy} filterByCallback={handleFilterBy} />
 
                     {isLoading ? (
                         <div className="m-12">
@@ -113,7 +111,7 @@ export default function Plans() {
                             sortBy={sortBy}
                             sortByCallback={handleSortBy}
                             refetchPlansCallback={mutate}
-                    />
+                        />
                     )}
                 </div>
             </div>
