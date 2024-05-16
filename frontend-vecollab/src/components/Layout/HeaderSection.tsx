@@ -106,7 +106,7 @@ export default function HeaderSection({
                         <span className='text-ve-collab-orange'>VE</span> <span className='text-ve-collab-blue'>Designer</span>
                     </Link>
                 </li>
-                <li className={`!ml-2 relative`}>
+                <li>
                     <button className='relative p-2 rounded-full hover:bg-ve-collab-blue-light ' onClick={e => toggleChatWindow()} title='Chat Fenster öffnen'>
                         <MdOutlineMessage size={20} />
                     </button>
@@ -116,17 +116,20 @@ export default function HeaderSection({
                         </span>
                     )}
                 </li>
-                <li className={`!ml-2 relative`}>
+                <li>
                     <button className='p-2 rounded-full hover:bg-ve-collab-blue-light' onClick={e => toggleNotifWindow()} title='Notifications Fenster öffnen'>
                         <IoMdNotificationsOutline size={20} />
                     </button>
                     {notificationEvents.length > 0 && (
-                        <span className="absolute -ml-4 -mt-2 py-1 px-2 rounded-[50%] bg-blue-400/75 text-xs">
+                        <span className="absolute -ml-4 -mt-2 py-1 px-2 rounded-[50%] bg-blue-500/75 text-xs font-semibold">
                             {notificationEvents.length}
                         </span>
                     )}
                 </li>
-                <li className='!ml-2'>
+                <li className='lg:hidden'>
+                        <Link href={'/search'}><MdSearch size={20} /></Link>
+                </li>
+                <li>
                     <div className='flex items-center font-normal' >
                         <Dropdown
                             options={[
@@ -196,7 +199,7 @@ export default function HeaderSection({
                         Benachrichtigungen
                     </button>
                     {notificationEvents.length > 0 && (
-                        <span className="absolute top-0 right-0 py-1 px-2 rounded-[50%] bg-blue-400/75  font-semibold font-semibold">
+                        <span className="absolute top-0 right-0 py-1 px-2 rounded-[50%] bg-blue-500/75  font-semibold font-semibold">
                             {notificationEvents.length}
                         </span>
                     )}
@@ -243,9 +246,9 @@ export default function HeaderSection({
                             className="duration-300 hover:scale-110"
                         ></Image>
                     </Link>
-                    <form className='mx-10 items-stretch hidden md:flex' onSubmit={e => handleSearchSubmit(e)}>
+                    <form className='mx-4 xl:mx-10 items-stretch hidden lg:flex' onSubmit={e => handleSearchSubmit(e)}>
                         <input
-                                className={'border border-[#cccccc] rounded-l px-2 py-1'}
+                                className={'w-3/4 xl:w-full border border-[#cccccc] rounded-l px-2 py-1'}
                                 type="text"
                                 placeholder={'Suchen ...'}
                                 name='search'
