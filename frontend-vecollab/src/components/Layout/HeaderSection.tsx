@@ -268,7 +268,7 @@ export default function HeaderSection({
                     <li>
                         <Dropdown
                             options={[
-                                <div onClick={() => hideSandwichMenu()}>
+                                <div onClick={() => hideSandwichMenu()} key={0}>
                                     <MenuMobile  />
                                 </div>
                             ]}
