@@ -58,14 +58,6 @@ export default function ViewFinestep({ fineStep }: Props): JSX.Element {
                     </div>
                     <div className="mt-4 flex">
                         <div className="w-1/6 flex items-center">
-                            <p className="font-semibold px-2 py-2 ">digitale Lernumgebung:</p>
-                        </div>
-                        <div className="flex items-center w-fit bg-slate-200 rounded-lg px-3">
-                            {showDataOrEmptySign(fineStep.learning_env)}
-                        </div>
-                    </div>
-                    <div className="mt-4 flex">
-                        <div className="w-1/6 flex items-center">
                             <p className="font-semibold px-2 py-2">Groblernziel(e):</p>
                         </div>
                         <div className="flex items-center w-fit bg-slate-200 rounded-lg px-3">

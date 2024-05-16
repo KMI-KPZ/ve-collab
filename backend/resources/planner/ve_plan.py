@@ -17,7 +17,7 @@ from exceptions import (
     PlanAlreadyExistsError,
     PlanDoesntExistError,
 )
-from model import Institution, Lecture, PhysicalMobility, Step, TargetGroup, VEPlan
+from model import Evaluation, IndividualLearningGoal, Institution, Lecture, PhysicalMobility, Step, TargetGroup, VEPlan
 import util
 
 
@@ -351,6 +351,8 @@ class VEPlanResource:
             "lectures",
             "audience",
             "physical_mobilities",
+            "evaluation",
+            "individual_learning_goals",
             "steps",
         ]:
             value_copy = []
@@ -365,6 +367,8 @@ class VEPlanResource:
                 "lectures": Lecture,
                 "audience": TargetGroup,
                 "physical_mobilities": PhysicalMobility,
+                "evaluation": Evaluation,
+                "individual_learning_goals": IndividualLearningGoal,
                 "steps": Step,
             }
 

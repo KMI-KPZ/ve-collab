@@ -54,6 +54,20 @@ const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
     });
 };
 
+const emptyCheckListPartner: CheckListPartner = {
+    username: '',
+    time: false,
+    format: false,
+    topic: false,
+    goals: false,
+    languages: false,
+    media: false,
+    technicalEquipment: false,
+    evaluation: false,
+    institutionalRequirements: false,
+    dataProtection: false,
+};
+
 Checklist.auth = true;
 export default function Checklist() {
     const router = useRouter();
@@ -62,30 +76,15 @@ export default function Checklist() {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
-    const [partnerProfileSnippets, setPartnerProfileSnippets] = useState<{
-        [Key: string]: BackendUserSnippet;
-    }>({});
     const [steps, setSteps] = useState<IFineStep[]>([]);
     const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
+
+    const [usersFirstLastNames, setUsersFirstLastNames] = useState<BackendUserSnippet[]>([]);
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
         defaultValues: {
-            checklist: [
-                {
-                    username: 'loading...',
-                    time: false,
-                    format: false,
-                    topic: false,
-                    goals: false,
-                    languages: false,
-                    media: false,
-                    technicalEquipment: false,
-                    evaluation: false,
-                    institutionalRequirements: false,
-                    dataProtection: false,
-                },
-            ],
+            checklist: [emptyCheckListPartner],
         },
     });
 
@@ -127,17 +126,24 @@ export default function Checklist() {
                         { usernames: [...data.plan.partners, data.plan.author] },
                         session.accessToken
                     ).then((snippets: BackendProfileSnippetsResponse) => {
-                        let partnerSnippets: { [Key: string]: BackendUserSnippet } = {};
-                        snippets.user_snippets.forEach((element: BackendUserSnippet) => {
-                            partnerSnippets[element.username] = element;
-                        });
-                        setPartnerProfileSnippets(partnerSnippets);
+                        setUsersFirstLastNames(snippets.user_snippets);
                         setLoading(false);
                     });
                 }
             );
         }
     }, [session, status, router, methods]);
+
+    const findPartnerFirstAndLastName = (username: string): string => {
+        const findUser = usersFirstLastNames.find(
+            (backendUserSnippet: BackendUserSnippet) => username === backendUserSnippet.username
+        );
+        if (findUser) {
+            return findUser.first_name + ' ' + findUser.last_name;
+        } else {
+            return username;
+        }
+    };
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         if (!areAllFormValuesEmpty(data)) {
@@ -178,11 +184,7 @@ export default function Checklist() {
             <div key={userCheckForm.id} className="flex justify-center">
                 <div className="w-4/5 space-y-3 py-8 flex flex-col">
                     <div className="flex justify-start items-center font-bold text-lg mb-4">
-                        {partnerProfileSnippets[userCheckForm.username]
-                            ? partnerProfileSnippets[userCheckForm.username].first_name +
-                              ' ' +
-                              partnerProfileSnippets[userCheckForm.username].last_name
-                            : userCheckForm.username}
+                        {findPartnerFirstAndLastName(userCheckForm.username)}
                     </div>
                     <div className="flex justify-start items-center">
                         <input

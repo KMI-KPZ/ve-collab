@@ -85,29 +85,6 @@ export default function Stage({ fineStep }: Props) {
                 </div>
                 <div className="mt-4 flex">
                     <div className="w-1/6 flex items-center">
-                        <label htmlFor="learning_env" className="px-2 py-2">
-                            digitale Lernumgebung
-                        </label>
-                    </div>
-                    <div className="w-5/6">
-                        <textarea
-                            rows={5}
-                            {...register(`learning_env`, {
-                                maxLength: {
-                                    value: 500,
-                                    message: 'Bitte nicht mehr als 500 Zeichen.',
-                                },
-                            })}
-                            placeholder="Struktur und Inhalte der ausgewählten Umgebung (LMS, social Media, kooperatives Dokument usw.)"
-                            className="border border-gray-400 rounded-lg w-full p-2"
-                        />
-                        <p className="text-red-600 pt-2">
-                            {formState.errors?.learning_env?.message}
-                        </p>
-                    </div>
-                </div>
-                <div className="mt-4 flex">
-                    <div className="w-1/6 flex items-center">
                         <label htmlFor="learning_goal" className="px-2 py-2">
                             Lernziel(e) dieser Etappe
                         </label>
