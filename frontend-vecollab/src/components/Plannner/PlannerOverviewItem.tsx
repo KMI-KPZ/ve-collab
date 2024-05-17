@@ -179,7 +179,7 @@ export default function PlannerOverviewItem({ plan, refetchPlansCallback }: Prop
         if (response.success === true) {
             refetchPlansCallback(); // refresh plans
         }
-        setAlert({message: 'Plan gelöscht'})
+        setAlert({message: 'Plan gelöscht', autoclose: 2000})
     };
 
     return (
@@ -255,9 +255,7 @@ export default function PlannerOverviewItem({ plan, refetchPlansCallback }: Prop
                 }} />
             )}
 
-            {alert.open !== false && (
-                <Alert message={alert.message} autoclose={2000} onClose={() => setAlert({open: false})} />
-            )}
+            <Alert state={alert} />
         </>
     );
 }

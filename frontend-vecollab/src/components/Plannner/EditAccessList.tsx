@@ -82,7 +82,7 @@ export default function EditAccessList({
                     { ...userSnippets[index], access: access },
                 ];
                 setUserSnippets(copy);
-                setAlert({message: 'Freigabeeinstellung geändert'})
+                setAlert({message: 'Freigabeeinstellung geändert', autoclose: 2000})
             });
         });
     };
@@ -99,7 +99,7 @@ export default function EditAccessList({
             setUserSnippets([
                 ...userSnippets.filter((val, count) => val.preferredUsername !== username),
             ]);
-            setAlert({message: 'Freigabe entzogen'})
+            setAlert({message: 'Freigabe entzogen', autoclose: 2000})
         });
     };
 
