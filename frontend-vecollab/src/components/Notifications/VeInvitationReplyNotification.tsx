@@ -6,8 +6,8 @@ import { RxDotsVertical } from 'react-icons/rx';
 import Dialog from '../profile/Dialog';
 import { fetchPOST } from '@/lib/backend';
 import { Notification } from '@/interfaces/socketio';
-import SuccessAlert from '../SuccessAlert';
 import Timestamp from '@/components/Timestamp';
+import Alert from '../Alert';
 
 interface Props {
     notification: Notification;
@@ -44,11 +44,7 @@ export default function VeInvitationReplyNotification({
         };
         fetchPOST('/planner/grant_access', payload, session?.accessToken).then((response) => {
             if (response.success === true) {
-                // render success message that disappears after 2 seconds
                 setSuccessPopupOpen(true);
-                setTimeout(() => {
-                    setSuccessPopupOpen((successPopupOpen) => false);
-                }, 2000);
             }
         });
     };
@@ -195,7 +191,7 @@ export default function VeInvitationReplyNotification({
                     </div>
                 </div>
             </Dialog>
-            {successPopupOpen && <SuccessAlert message={'Schreibrechte gesetzt'} />}
+            {successPopupOpen && <Alert message='Schreibrechte gesetzt' autoclose={2000} onClose={() => setSuccessPopupOpen(false)} />}
         </>
     );
 }

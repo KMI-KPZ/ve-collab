@@ -3,7 +3,7 @@ import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { Dispatch, SetStateAction, useState } from 'react';
 import AsyncCreatableSelect from 'react-select/async-creatable';
-import { AlertState, AlertTypes } from '../Alert';
+import { AlertState } from '../Alert';
 
 interface Props {
     closeDialogCallback: () => void;
@@ -33,7 +33,7 @@ export default function SharePlanForm({
         };
 
         await fetchPOST('/planner/grant_access', payload, session?.accessToken).then((data) => {
-            setAlert({message: 'Plan freigegeben'})
+            setAlert({message: 'Plan freigegeben', autoclose: 2000})
         });
     };
 
