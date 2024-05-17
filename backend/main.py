@@ -139,7 +139,11 @@ def make_app(cookie_secret: str, debug: bool = False):
             ),
             (r"/uploads/(.*)", GridFSStaticFileHandler, {"path": ""}),
             (r"/socket.io/", socketio.get_tornado_handler(global_vars.socket_io)),
-            (r"/knowledgeworker/(.*)", tornado.web.StaticFileHandler, {"path": "./knowledgeworker_courses", "default_filename": "index.html"}),
+            (
+                r"/knowledgeworker/(.*)",
+                tornado.web.StaticFileHandler,
+                {"path": "./knowledgeworker_courses", "default_filename": "index.html"},
+            ),
         ],
         cookie_secret=cookie_secret,
         template_path="html",
@@ -258,6 +262,7 @@ def create_initial_admin() -> None:
             "inserted admin user '{}' and corresponding ACL rules".format(username)
         )
 
+
 def load_default_taxonomy_if_exists() -> None:
     """
     If the db does not currently hold a taxonomy, load the default taxonomy from the assets folder
@@ -267,12 +272,14 @@ def load_default_taxonomy_if_exists() -> None:
         # db already has one, skip
         if db.material_taxonomy.count_documents({}) > 0:
             return
-        
+
         # db is empty, but no default taxonomy file exists, skip
         if not os.path.isfile("assets/default_taxonomy.json"):
-            logger.warning("tried to load default taxonomy from assets folder, but no file found")
+            logger.warning(
+                "tried to load default taxonomy from assets folder, but no file found"
+            )
             return
-        
+
         # db is empty and default taxonomy file exists, load it
         with open("assets/default_taxonomy.json", "r") as f:
             taxonomy = json.load(f)
