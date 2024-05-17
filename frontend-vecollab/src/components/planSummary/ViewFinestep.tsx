@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { showDataOrEmptySign } from '@/pages/planSummary/[planSummarySlug]';
-import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
+import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
 import iconDropdown from '@/images/icons/planSummary/iconDropdown.png';
 import Image from 'next/image';
+import { showDataOrEmptySign } from './planOverview';
 
 interface Props {
     fineStep: IFineStep;
@@ -54,14 +54,6 @@ export default function ViewFinestep({ fineStep }: Props): JSX.Element {
                         </div>
                         <div className="flex items-center w-fit bg-slate-200 rounded-lg px-3">
                             {showDataOrEmptySign(fineStep.workload) + ' Stunden'}
-                        </div>
-                    </div>
-                    <div className="mt-4 flex">
-                        <div className="w-1/6 flex items-center">
-                            <p className="font-semibold px-2 py-2 ">digitale Lernumgebung:</p>
-                        </div>
-                        <div className="flex items-center w-fit bg-slate-200 rounded-lg px-3">
-                            {showDataOrEmptySign(fineStep.learning_env)}
                         </div>
                     </div>
                     <div className="mt-4 flex">

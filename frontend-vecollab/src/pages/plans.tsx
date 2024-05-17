@@ -1,0 +1,122 @@
+import { useGetAvailablePlans } from '@/lib/backend';
+import { useSession } from 'next-auth/react';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { MdKeyboardDoubleArrowRight } from 'react-icons/md';
+import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
+import { PlansOverview } from '@/components/Plannner/PlansOverview';
+import { PlansOverviewFilter } from '@/components/Plannner/PlansOverviewFilter';
+import LoadingAnimation from '@/components/LoadingAnimation';
+import { ISideProgressBarStates } from '@/interfaces/ve-designer/sideProgressBar';
+
+export interface IfilterBy {
+    planKey: keyof PlanPreview;
+    /** compare function to compare the plan[planKey].planValue of a plan   */
+    compare: (planValue: string | string[] | boolean | ISideProgressBarStates) => boolean;
+    id?: string;
+}
+
+export interface IsortBy {
+    key: keyof PlanPreview,
+    order: 'ASC'|'DESC'
+}
+
+// authentication is required on this page
+Plans.auth = true;
+export default function Plans() {
+    const { data: session } = useSession();
+    const [sortedPlans, setSortedPlans] = useState<PlanPreview[]>([]);
+
+    const [filterBy, setFilterBy] = useState<IfilterBy[]>([]);
+
+    const [sortBy, setSortBy] = useState<IsortBy>({key: 'creation_timestamp', order: 'ASC'})
+
+    const { data: plans, isLoading, error, mutate } = useGetAvailablePlans(session!.accessToken);
+
+    useEffect(() => {
+        if (isLoading) return;
+
+        let sortedPlans = plans.sort((a, b) => {
+            let av = a[sortBy.key]?.toString() || '';
+            let bv = b[sortBy.key]?.toString() || '';
+
+            return sortBy.order == 'DESC' ? av.localeCompare(bv) : bv.localeCompare(av);
+        });
+
+        if (filterBy && filterBy.length) {
+            filterBy.forEach((filter) => {
+                sortedPlans = sortedPlans.filter((p) => {
+                    return p[filter.planKey] && filter.compare(p[filter.planKey]);
+                });
+            });
+        }
+
+        console.log({ sortedPlans });
+
+        setSortedPlans([...sortedPlans]);
+    }, [plans, isLoading, sortBy, filterBy]);
+
+    const handleSortBy = (key: keyof PlanPreview) => {
+        setSortBy(prev => {
+            return {
+                key: key,
+                order: prev.order == 'ASC' ? 'DESC' : 'ASC'
+            }
+        })
+    };
+
+    const handleFilterBy = ({planKey, compare, id}: IfilterBy) => {
+        if (filterBy.find((f) => f.planKey == planKey)) {
+            // update existing filter
+            setFilterBy((prev) =>
+                prev.map((f) => (f.planKey == planKey ? { id, planKey, compare } : f))
+            );
+        } else {
+            setFilterBy((prev) => [...prev, { id, planKey, compare }]);
+        }
+    };
+
+    return (
+        <>
+            <div className="max-w-screen-[1500] min-h-[70vh] bg-pattern-left-blue-small bg-no-repeat">
+                <div className="container mx-auto mb-14 px-5 p-12">
+                    <div className="flex justify-between mb-6">
+                        <div>
+                            <div className={'font-bold text-4xl mb-2'}>Pläne</div>
+                            <div className={'text-gray-500 text-xl'}>
+                                Übersicht Deiner oder mit Dir geteilten Pläne
+                            </div>
+                        </div>
+
+                        <div className="w-1/3 p-2 text-center rounded-lg shadow bg-white">
+                            <div>
+                                Noch auf der Suche nach neuen Partner:innen für den nächsten VE?
+                            </div>
+                            <Link href={'/matching'} className=' inline-block py-2 px-5 text-ve-collab-blue font-bold'>
+                                <MdKeyboardDoubleArrowRight className='inline' /> zum Matching
+                            </Link>
+                        </div>
+                    </div>
+
+                    <PlansOverviewFilter
+                        filterBy={filterBy}
+                        filterByCallback={handleFilterBy}
+                    />
+
+                    {isLoading ? (
+                        <div className="m-12">
+                            <LoadingAnimation size="small" /> lade Pläne ...
+                        </div>
+                    ) : (
+                        <PlansOverview
+                            plans={sortedPlans}
+                            sortBy={sortBy}
+                            sortByCallback={handleSortBy}
+                            refetchPlansCallback={mutate}
+                    />
+                    )}
+                </div>
+            </div>
+        </>
+    );
+}

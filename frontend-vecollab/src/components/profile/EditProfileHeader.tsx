@@ -24,7 +24,7 @@ export default function EditProfileHeader({ orcid, importOrcidProfile }: Props) 
         const provider = 'orcid';
         const clientId = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID;
         const redirectUri = encodeURIComponent(
-            window.location.origin + '/orcidAccountLinkCallback?logout=true&fwd=/editProfile'
+            window.location.origin + '/orcidAccountLinkCallback?logout=true&fwd=/profile/edit'
         );
         const nonce = crypto.randomUUID();
 

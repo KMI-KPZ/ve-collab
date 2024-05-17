@@ -1,2 +1,0 @@
-(this["webpackJsonprre-openKnowledgeworker"]=this["webpackJsonprre-openKnowledgeworker"]||[]).push([[187],{1594:function(e,t,n){"use strict";n.r(t),n.d(t,"altText",(function(){return r}));const r=n(2008).altText},2008:function(e,t,n){"use strict";n.r(t),n.d(t,"altText",(function(){return r}));const r={...{selectors:{getAltText:n(492).a},epics:{},helpers:{},typeGuards:{}},components:{}}}}]);
-//# sourceMappingURL=https://sourcemaps.intern.chemmedia.de/rre-view-openKnowledgeworker/23.7.5296/altText.bf12d449.chunk.js.map

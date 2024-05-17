@@ -37,7 +37,7 @@ export default function DialogUserList({
                                 className="flex cursor-pointer"
                                 onClick={(e) => {
                                     e.preventDefault();
-                                    router.push(`/profile?username=${snippet.preferredUsername}`);
+                                    router.push(`/profile/user/${snippet.preferredUsername}`);
                                     closeCallback();
                                 }}
                             >

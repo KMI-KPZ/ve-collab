@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { showDataOrEmptySign } from '@/pages/planSummary/[planSummarySlug]';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import iconDropdown from '@/images/icons/planSummary/iconDropdown.png';
 import Image from 'next/image';
+import { showDataOrEmptySign } from './planOverview';
+import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 
 interface Props {
     plan: IPlan;
+    partnerProfileSnippets: { [Key: string]: BackendUserSnippet };
 }
-export default function ViewAttributes({ plan }: Props): JSX.Element {
+export default function ViewAttributes({ plan, partnerProfileSnippets }: Props): JSX.Element {
     const [isOpenStepSection, setIsOpenStepSection] = useState<boolean>(false);
     return (
         <>
@@ -31,7 +33,13 @@ export default function ViewAttributes({ plan }: Props): JSX.Element {
                         {plan.partners.length !== 0 ? (
                             plan.partners.map((partner, index) => (
                                 <li className="flex w-fit bg-slate-200 rounded-lg p-2" key={index}>
-                                    {showDataOrEmptySign(partner)}
+                                    {showDataOrEmptySign(
+                                        partnerProfileSnippets[partner]
+                                            ? partnerProfileSnippets[partner].first_name +
+                                                  ' ' +
+                                                  partnerProfileSnippets[partner].last_name
+                                            : partner
+                                    )}
                                 </li>
                             ))
                         ) : (
@@ -104,10 +112,44 @@ export default function ViewAttributes({ plan }: Props): JSX.Element {
                             <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
                         )}
                     </div>
-                    <span className="font-semibold pr-5">Richtlernziele:</span>
+                    <span className="font-semibold pr-5">Lernziele (individuell):</span>
+                    <div className="grid grid-cols-2 col-span-3">
+                        {plan.individual_learning_goals.length !== 0 ? (
+                            plan.individual_learning_goals.map((goalPerPartner, index) => (
+                                <div
+                                    key={index}
+                                    className="grid grid-cols-2 p-5 mr-3 mb-3 bg-slate-200 rounded-lg space-x-2"
+                                >
+                                    <ul className="space-y-1 mr-2">
+                                        <li className="font-medium">Name</li>
+                                        <li className="font-medium">Lernziel</li>
+                                    </ul>
+                                    <ul className="space-y-1">
+                                        <li>
+                                            {showDataOrEmptySign(
+                                                partnerProfileSnippets[goalPerPartner.username]
+                                                    ? partnerProfileSnippets[
+                                                          goalPerPartner.username
+                                                      ].first_name +
+                                                          ' ' +
+                                                          partnerProfileSnippets[
+                                                              goalPerPartner.username
+                                                          ].last_name
+                                                    : goalPerPartner.username
+                                            )}{' '}
+                                        </li>
+                                        <li>{showDataOrEmptySign(goalPerPartner.learning_goal)}</li>
+                                    </ul>
+                                </div>
+                            ))
+                        ) : (
+                            <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
+                        )}
+                    </div>
+                    <span className="font-semibold pr-5">Lernziele (übergeordnet):</span>
                     <ul className="flex flex-col space-y-2 col-span-3">
-                        {plan.learning_goals.length !== 0 ? (
-                            plan.learning_goals.map((goal, index) => (
+                        {plan.major_learning_goals.length !== 0 ? (
+                            plan.major_learning_goals.map((goal, index) => (
                                 <li className="flex w-fit bg-slate-200 rounded-lg p-2" key={index}>
                                     {showDataOrEmptySign(goal)}
                                 </li>
@@ -115,6 +157,12 @@ export default function ViewAttributes({ plan }: Props): JSX.Element {
                         ) : (
                             <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
                         )}
+                    </ul>
+                    <span className="font-semibold pr-5">Methodischer Ansatz</span>
+                    <ul className="flex flex-col space-y-2 col-span-3">
+                        <li className="flex w-fit bg-slate-200 rounded-lg p-2">
+                            {showDataOrEmptySign(plan.methodical_approach)}
+                        </li>
                     </ul>
                     <span className="font-semibold pr-5">Zielgruppen:</span>
                     <div className="grid grid-cols-2 space-y-2 col-span-3">

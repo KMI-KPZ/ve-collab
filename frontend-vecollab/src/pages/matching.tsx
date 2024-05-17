@@ -53,7 +53,7 @@ export default function Matching() {
                                             onClick={(e) => {
                                                 e.preventDefault();
                                                 router.push(
-                                                    `/profile?username=${snippet.username}`
+                                                    `/profile/user/${snippet.username}`
                                                 );
                                             }}
                                         >

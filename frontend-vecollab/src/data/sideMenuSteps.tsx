@@ -1,74 +1,74 @@
-import { SideMenuStep } from '@/interfaces/startingWizard/sideProgressBar';
+import { SideMenuStep } from '@/interfaces/ve-designer/sideProgressBar';
 
 export const sideMenuStepsData: SideMenuStep[] = [
     {
         text: 'Projektname',
         id: 'name',
-        link: '/startingWizard/generalInformation/projectName',
+        link: '/ve-designer/name',
     },
     {
         text: 'Partner',
         id: 'partners',
-        link: '/startingWizard/generalInformation/partners',
-    },
-    {
-        text: 'Externe Beteiligte',
-        id: 'involved_parties',
-        link: '/startingWizard/generalInformation/externalParties',
+        link: '/ve-designer/partners',
     },
     {
         text: 'Institution',
         id: 'institutions',
-        link: '/startingWizard/generalInformation/institutions',
+        link: '/ve-designer/lectures',
     },
     {
         text: 'Lehrveranstaltungen',
         id: 'lectures',
-        link: '/startingWizard/generalInformation/participatingCourses',
+        link: '/ve-designer/participatingCourses',
     },
     {
         text: 'Zielgruppen',
         id: 'audience',
-        link: '/startingWizard/generalInformation/targetGroups',
+        link: '/ve-designer/target-groups',
     },
     {
-        text: 'Richtlernziele',
+        text: 'Lernziele',
         id: 'learning_goals',
-        link: '/startingWizard/generalInformation/globalGoals',
+        link: '/ve-designer/learning-goals',
+    },
+    {
+        text: 'Methodischer Ansatz',
+        id: 'methodical_approach',
+        link: '/ve-designer/methodical-approach',
     },
     {
         text: 'Thema/Themen',
         id: 'topics',
-        link: '/startingWizard/generalInformation/veTopic',
+        link: '/ve-designer/topics',
     },
     {
         text: 'Sprache(n)',
         id: 'languages',
-        link: '/startingWizard/generalInformation/languages',
+        link: '/ve-designer/languages',
     },
     {
         text: 'Bewertung und Evaluation',
         id: 'evaluation',
-        link: '/startingWizard/generalInformation/evaluation',
+        link: '/ve-designer/evaluation',
     },
     {
         text: '(Digitale) Formate',
         id: 'realization',
-        link: '/startingWizard/generalInformation/courseFormat',
+        link: '/ve-designer/teaching-formats',
     },
     {
         text: 'Digitale Lernumgebung',
         id: 'learning_env',
-        link: '/startingWizard/generalInformation/learningPlatform',
+        link: '/ve-designer/learning-environment',
     },
     {
-        text: 'Formale Rahmenbedingungen',
+        text: 'Checkliste',
         id: 'formalities',
-        link: '/startingWizard/generalInformation/formalConditions',
+        link: '/ve-designer/checklist',
     },
     {
         text: 'Etappenplanung',
         id: 'steps',
-        link: '/startingWizard/broadPlanner',
+        link: '/ve-designer/step-names',
     },
 ];

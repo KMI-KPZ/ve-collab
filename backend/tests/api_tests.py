@@ -22,6 +22,7 @@ import global_vars
 from main import make_app
 from model import (
     Evaluation,
+    IndividualLearningGoal,
     Institution,
     Lecture,
     PhysicalMobility,
@@ -140,62 +141,6 @@ def tearDownModule():
         print(response.content)
 
 
-class RenderHandlerTest(AsyncHTTPTestCase):
-    def get_app(self):
-        return make_app(global_vars.cookie_secret)
-
-    def setUp(self) -> None:
-        super().setUp()
-
-        # set test mode to bypass authentication as an admin
-        options.test_admin = True
-
-        self.render_endpoints = [
-            "/",
-            "/main",
-            "/myprofile",
-            "/profile/test",
-            "/space/test",
-            "/spaces",
-            "/template",
-            "/acl",
-        ]
-
-    def fetch_and_assert_is_html(self, endpoint: str):
-        """
-        expect: 200 response, containing a string, with an opening html tag (easy assertion that content is actual html)
-        """
-
-        response = self.fetch(endpoint)
-        content = response.buffer.getvalue().decode()
-        self.assertEqual(response.code, 200)
-        self.assertIsInstance(content, str)
-        self.assertIn("<html", content)
-
-    def fetch_and_assert_is_401_Unauthorized(self, endpoint: str):
-        """
-        expect: 401 Unauthorized code
-        """
-
-        response = self.fetch(endpoint, follow_redirects=False)
-        self.assertEqual(response.code, 401)
-
-    def test_render_handlers_no_login(self):
-        options.test_admin = False
-        options.test_user = False
-        for endpoint in self.render_endpoints:
-            self.fetch_and_assert_is_401_Unauthorized(endpoint)
-
-    def test_render_handlers_success(self):
-        for endpoint in self.render_endpoints:
-            if endpoint == "/":
-                # MainRedirectHandler is special, because also on success case we expect a redirect instead of html render
-                response = self.fetch(endpoint, follow_redirects=False)
-                self.assertEqual(response.code, 302)
-            else:
-                self.fetch_and_assert_is_html(endpoint)
-
-
 class BaseApiTestCase(AsyncHTTPTestCase):
     @classmethod
     def setUpClass(cls):
@@ -239,13 +184,24 @@ class BaseApiTestCase(AsyncHTTPTestCase):
             CURRENT_USER.username: "user",
         }
 
+        current_admin_institution_id = ObjectId()
+
         self.test_profiles = {
             CURRENT_ADMIN.username: {
                 "username": CURRENT_ADMIN.username,
                 "role": self.test_roles[CURRENT_ADMIN.username],
                 "follows": [],
                 "bio": None,
-                "institution": None,
+                "institutions": [
+                    {
+                        "_id": current_admin_institution_id,
+                        "name": "test",
+                        "department": "test",
+                        "school_type": "test",
+                        "country": "test",
+                    }
+                ],
+                "chosen_institution_id": current_admin_institution_id,
                 "profile_pic": "default_profile_pic.jpg",
                 "first_name": None,
                 "last_name": None,
@@ -269,7 +225,16 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                 "role": self.test_roles[CURRENT_USER.username],
                 "follows": [],
                 "bio": None,
-                "institution": None,
+                "institutions": [
+                    {
+                        "_id": ObjectId(),
+                        "name": "test",
+                        "department": "test",
+                        "school_type": "test",
+                        "country": "test",
+                    }
+                ],
+                "chosen_institution_id": "",
                 "profile_pic": "default_profile_pic.jpg",
                 "first_name": None,
                 "last_name": None,
@@ -1251,14 +1216,212 @@ class PostHandlerTest(BaseApiTestCase):
 
         super().tearDown()
 
+    def test_get_post(self):
+        """
+        expect: successfully request a single post by id
+        """
+
+        # create a post
+        post_id = ObjectId()
+        self.db.posts.insert_one(
+            {
+                "_id": post_id,
+                "author": CURRENT_USER.username,
+                "creation_date": datetime.now(),
+                "text": "unittest_test_post",
+                "space": None,
+                "pinned": False,
+                "wordpress_post_id": None,
+                "tags": [],
+                "plans": [],
+                "files": [],
+                "comments": [],
+                "likers": [],
+            },
+        )
+
+        response = self.base_checks(
+            "GET", "/posts?post_id={}".format(str(post_id)), True, 200
+        )
+
+        # expect the post to be in the response
+        self.assertIn("post", response)
+        self.assertEqual(ObjectId(response["post"]["_id"]), post_id)
+
+        # expect author to be enhanced with profile details
+        post = response["post"]
+        self.assertIn("author", post)
+        self.assertIn("username", post["author"])
+        self.assertIn("profile_pic", post["author"])
+        self.assertIn("first_name", post["author"])
+        self.assertIn("last_name", post["author"])
+        self.assertIn("institution", post["author"])
+
+    def test_get_post_error_missing_key(self):
+        """
+        expect: fail message because post_id is missing
+        """
+
+        response = self.base_checks("GET", "/posts", False, 400)
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "post_id")
+
+    def test_get_post_error_post_doesnt_exist(self):
+        """
+        expect: fail message because post doesnt exist
+        """
+
+        response = self.base_checks(
+            "GET", "/posts?post_id={}".format(str(ObjectId())), False, 409
+        )
+        self.assertEqual(response["reason"], POST_DOESNT_EXIST_ERROR)
+
+    def test_get_post_error_space_doesnt_exist(self):
+        """
+        expect: fail message because space that post belongs to doesnt exist
+        """
+
+        # create a post in a space that doesnt exist
+        post_id = ObjectId()
+        self.db.posts.insert_one(
+            {
+                "_id": post_id,
+                "author": CURRENT_USER.username,
+                "creation_date": datetime.now(),
+                "text": "unittest_test_post",
+                "space": ObjectId(),
+                "pinned": False,
+                "wordpress_post_id": None,
+                "tags": [],
+                "plans": [],
+                "files": [],
+                "comments": [],
+                "likers": [],
+            },
+        )
+
+        response = self.base_checks(
+            "GET", "/posts?post_id={}".format(str(post_id)), False, 409
+        )
+        self.assertEqual(response["reason"], SPACE_DOESNT_EXIST_ERROR)
+
+    def test_get_post_error_insufficient_permission_no_space_member(self):
+        """
+        expect: fail message because user is not a member of the space
+        """
+
+        # create a space
+        space_id = ObjectId()
+        self.db.spaces.insert_one(
+            {
+                "_id": space_id,
+                "name": "post_space_test",
+                "invisible": False,
+                "joinable": False,
+                "members": [CURRENT_USER.username],
+                "admins": [CURRENT_USER.username],
+                "invites": [],
+                "requests": [],
+                "files": [],
+            }
+        )
+
+        # create a post in the space
+        post_id = ObjectId()
+        self.db.posts.insert_one(
+            {
+                "_id": post_id,
+                "author": CURRENT_USER.username,
+                "creation_date": datetime.now(),
+                "text": "unittest_test_post",
+                "space": space_id,
+                "pinned": False,
+                "wordpress_post_id": None,
+                "tags": [],
+                "plans": [],
+                "files": [],
+                "comments": [],
+                "likers": [],
+            },
+        )
+
+        response = self.base_checks(
+            "GET", "/posts?post_id={}".format(str(post_id)), False, 403
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_get_post_error_insufficient_permission_no_read_access(self):
+        """
+        expect: fail message because user has no read_timeline right in the space
+        """
+
+        # create a space
+        space_id = ObjectId()
+        self.db.spaces.insert_one(
+            {
+                "_id": space_id,
+                "name": "post_space_test",
+                "invisible": False,
+                "joinable": False,
+                "members": [CURRENT_ADMIN.username, CURRENT_USER.username],
+                "admins": [CURRENT_USER.username],
+                "invites": [],
+                "requests": [],
+                "files": [],
+            }
+        )
+
+        # create the acl entry for the user in the space
+        self.db.space_acl.insert_one(
+            {
+                "username": CURRENT_ADMIN.username,
+                "space": space_id,
+                "join_space": True,
+                "read_timeline": False,
+                "post": False,
+                "comment": False,
+                "read_wiki": False,
+                "write_wiki": False,
+                "read_files": True,
+                "write_files": False,
+            }
+        )
+
+        # create a post in the space
+        post_id = ObjectId()
+        self.db.posts.insert_one(
+            {
+                "_id": post_id,
+                "author": CURRENT_USER.username,
+                "creation_date": datetime.now(),
+                "text": "unittest_test_post",
+                "space": space_id,
+                "pinned": False,
+                "wordpress_post_id": None,
+                "tags": [],
+                "plans": [],
+                "files": [],
+                "comments": [],
+                "likers": [],
+            },
+        )
+
+        response = self.base_checks(
+            "GET", "/posts?post_id={}".format(str(post_id)), False, 403
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
     def test_post_create_post(self):
         """
         expect: successfully create a new post
         """
 
+        plan_id1 = ObjectId()
+        plan_id2 = ObjectId()
+
         request_json = {
             "text": "unittest_test_post",
             "tags": json.dumps(["tag1", "tag2"]),
+            "plans": json.dumps([str(plan_id1), str(plan_id2)]),
         }
 
         request = MultipartEncoder(fields=request_json)
@@ -1285,6 +1448,7 @@ class PostHandlerTest(BaseApiTestCase):
         self.assertEqual(ObjectId(response["inserted_post"]["_id"]), db_state["_id"])
         self.assertEqual(response["inserted_post"]["text"], db_state["text"])
         self.assertEqual(response["inserted_post"]["tags"], db_state["tags"])
+        self.assertEqual(response["inserted_post"]["plans"], db_state["plans"])
         # the author has enhanced profile information to check for
         self.assertIn("author", response["inserted_post"])
         self.assertIn("username", response["inserted_post"]["author"])
@@ -1313,9 +1477,15 @@ class PostHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(
             response["inserted_post"]["author"]["institution"],
-            db_author_profile["institution"],
+            next(
+                (
+                    inst["name"]
+                    for inst in db_author_profile["institutions"]
+                    if inst["_id"] == db_author_profile["chosen_institution_id"]
+                ),
+                None,
+            ),
         )
-
         # for some odd reason, the ms in the timestamps jitter
         self.assertAlmostEqual(
             datetime.fromisoformat(response["inserted_post"]["creation_date"]),
@@ -1339,6 +1509,7 @@ class PostHandlerTest(BaseApiTestCase):
             "pinned",
             "wordpress_post_id",
             "tags",
+            "plans",
             "files",
         ]
         self.assertTrue(all(key in db_state for key in expected_keys))
@@ -1348,6 +1519,7 @@ class PostHandlerTest(BaseApiTestCase):
         self.assertFalse(db_state["pinned"])
         self.assertIsNone(db_state["wordpress_post_id"])
         self.assertEqual(db_state["tags"], json.loads(request_json["tags"]))
+        self.assertEqual(db_state["plans"], json.loads(request_json["plans"]))
         self.assertEqual(db_state["files"], [])
 
     def test_post_create_post_space(self):
@@ -1358,6 +1530,7 @@ class PostHandlerTest(BaseApiTestCase):
         request_json = {
             "text": "unittest_test_post",
             "tags": json.dumps(["tag1", "tag2"]),
+            "plans": json.dumps([]),
             "space": str(self.test_space_id),
         }
 
@@ -1389,6 +1562,7 @@ class PostHandlerTest(BaseApiTestCase):
             "pinned",
             "wordpress_post_id",
             "tags",
+            "plans",
             "files",
         ]
         self.assertTrue(all(key in db_state for key in expected_keys))
@@ -1398,6 +1572,7 @@ class PostHandlerTest(BaseApiTestCase):
         self.assertFalse(db_state["pinned"])
         self.assertIsNone(db_state["wordpress_post_id"])
         self.assertEqual(db_state["tags"], json.loads(request_json["tags"]))
+        self.assertEqual(db_state["plans"], json.loads(request_json["plans"]))
         self.assertEqual(db_state["files"], [])
 
     def test_post_create_post_space_with_file(self):
@@ -1413,6 +1588,7 @@ class PostHandlerTest(BaseApiTestCase):
         request_json = {
             "text": "unittest_test_post",
             "tags": json.dumps(["tag1", "tag2"]),
+            "plans": json.dumps([]),
             "space": str(self.test_space_id),
             "file_amount": "1",
             "file0": (self.test_file_name, file, "text/plain"),
@@ -1451,6 +1627,7 @@ class PostHandlerTest(BaseApiTestCase):
             "pinned",
             "wordpress_post_id",
             "tags",
+            "plans",
             "files",
         ]
         self.assertTrue(all(key in db_state for key in expected_keys))
@@ -1460,6 +1637,7 @@ class PostHandlerTest(BaseApiTestCase):
         self.assertFalse(db_state["pinned"])
         self.assertIsNone(db_state["wordpress_post_id"])
         self.assertEqual(db_state["tags"], json.loads(request_json["tags"]))
+        self.assertEqual(db_state["plans"], json.loads(request_json["plans"]))
         self.assertEqual(
             db_state["files"],
             [
@@ -1557,6 +1735,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
+                "plans": [],
                 "files": [],
             }
         )
@@ -1602,6 +1781,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
+                "plans": [],
                 "files": [],
             }
         )
@@ -1652,6 +1832,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
+                "plans": [],
                 "files": [],
             }
         )
@@ -1694,6 +1875,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
+                "plans": [],
                 "files": [],
             }
         )
@@ -1736,6 +1918,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
+                "plans": [],
                 "files": [],
             }
         )
@@ -1784,6 +1967,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
+                "plans": [],
                 "files": [],
             }
         )
@@ -1810,6 +1994,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
+                "plans": [],
                 "files": [],
             }
         )
@@ -1841,6 +2026,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
+                "plans": [],
                 "files": [],
             }
         )
@@ -1867,6 +2053,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
+                "plans": [],
                 "files": [],
             }
         )
@@ -1905,6 +2092,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
+                "plans": [],
                 "files": [],
             }
         )
@@ -1944,6 +2132,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
+                "plans": [],
                 "files": [
                     {
                         "file_id": _id,
@@ -2012,6 +2201,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
+                "plans": [],
                 "files": [],
             }
         )
@@ -2044,6 +2234,7 @@ class PostHandlerTest(BaseApiTestCase):
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
+                "plans": [],
                 "files": [],
             }
         )
@@ -2071,6 +2262,7 @@ class CommentHandlerTest(BaseApiTestCase):
                 "pinned": False,
                 "wordpress_post_id": None,
                 "tags": [],
+                "plans": [],
                 "files": [],
             }
         )
@@ -2127,7 +2319,14 @@ class CommentHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(
             response["inserted_comment"]["author"]["institution"],
-            db_author_profile["institution"],
+            next(
+                (
+                    inst["name"]
+                    for inst in db_author_profile["institutions"]
+                    if inst["_id"] == db_author_profile["chosen_institution_id"]
+                ),
+                None,
+            ),
         )
 
         db_state = self.db.posts.find_one({"_id": self.post_oid})
@@ -2627,7 +2826,14 @@ class RepostHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(
             response["inserted_repost"]["author"]["institution"],
-            db_author_profile["institution"],
+            next(
+                (
+                    inst["name"]
+                    for inst in db_author_profile["institutions"]
+                    if inst["_id"] == db_author_profile["chosen_institution_id"]
+                ),
+                None,
+            ),
         )
         self.assertIn("repostAuthor", response["inserted_repost"])
         self.assertIn("username", response["inserted_repost"]["repostAuthor"])
@@ -2653,7 +2859,14 @@ class RepostHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(
             response["inserted_repost"]["repostAuthor"]["institution"],
-            db_author_profile["institution"],
+            next(
+                (
+                    inst["name"]
+                    for inst in db_author_profile["institutions"]
+                    if inst["_id"] == db_author_profile["chosen_institution_id"]
+                ),
+                None,
+            ),
         )
 
         db_state = self.db.posts.find_one(
@@ -3555,7 +3768,16 @@ class SearchHandlerTest(BaseApiTestCase):
             "role": "admin",
             "follows": [],
             "bio": "test",
-            "institution": "test",
+            "institutions": [
+                {
+                    "_id": ObjectId(),
+                    "name": "test",
+                    "department": "test",
+                    "school_type": "test",
+                    "country": "test",
+                }
+            ],
+            "chosen_institution_id": "",
             "projects": "test",
             "profile_pic": "test",
             "first_name": "test",
@@ -3780,7 +4002,16 @@ class SpaceHandlerTest(BaseApiTestCase):
                     "role": "admin",
                     "follows": [],
                     "bio": "test",
-                    "institution": "test",
+                    "institutions": [
+                        {
+                            "_id": ObjectId(),
+                            "name": "test",
+                            "department": "test",
+                            "school_type": "test",
+                            "country": "test",
+                        }
+                    ],
+                    "chosen_institution_id": "",
                     "projects": "test",
                     "profile_pic": "test",
                     "first_name": "test",
@@ -7419,7 +7650,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
             workload=10,
             timestamp_from=timestamp_from,
             timestamp_to=timestamp_to,
-            learning_env="test",
             learning_goal="test",
             tasks=[Task()],
             evaluation_tools=["test", "test"],
@@ -7490,6 +7720,16 @@ class VEPlanHandlerTest(BaseApiTestCase):
             evaluation_while="test",
             evaluation_after="test",
         )
+    
+    def create_individual_learning_goal(self, name: str = "test") -> IndividualLearningGoal:
+        """
+        convenience method to create an individual learning goal with non-default values
+        """
+
+        return IndividualLearningGoal(
+            username=name,
+            learning_goal="test",
+        )
 
     def default_plan_setup(self):
         # manually set up a VEPlan in the db
@@ -7500,6 +7740,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.lecture = self.create_lecture("test")
         self.physical_mobility = self.create_physical_mobility("test")
         self.evaluation = self.create_evaluation("test")
+        self.individual_learning_goal = self.create_individual_learning_goal("test")
         self.default_plan = {
             "_id": self.plan_id,
             "author": CURRENT_ADMIN.username,
@@ -7512,7 +7753,9 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "institutions": [self.institution.to_dict()],
             "topics": ["test", "test"],
             "lectures": [self.lecture.to_dict()],
-            "learning_goals": ["test", "test"],
+            "major_learning_goals": ["test", "test"],
+            "individual_learning_goals": [self.individual_learning_goal.to_dict()],
+            "methodical_approach": "test",
             "audience": [self.target_group.to_dict()],
             "languages": ["test", "test"],
             "evaluation": [self.evaluation.to_dict()],
@@ -7545,6 +7788,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 "topics": "not_started",
                 "lectures": "not_started",
                 "learning_goals": "not_started",
+                "methodical_approach": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
@@ -7611,7 +7855,9 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.institutions, default_plan.institutions)
         self.assertEqual(response_plan.topics, default_plan.topics)
         self.assertEqual(response_plan.lectures, default_plan.lectures)
-        self.assertEqual(response_plan.learning_goals, default_plan.learning_goals)
+        self.assertEqual(response_plan.major_learning_goals, default_plan.major_learning_goals)
+        self.assertEqual(response_plan.individual_learning_goals, default_plan.individual_learning_goals)
+        self.assertEqual(response_plan.methodical_approach, default_plan.methodical_approach)
         self.assertEqual(response_plan.audience, default_plan.audience)
         self.assertEqual(response_plan.languages, default_plan.languages)
         self.assertEqual(response_plan.evaluation, default_plan.evaluation)
@@ -7717,7 +7963,9 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.institutions, default_plan.institutions)
         self.assertEqual(response_plan.topics, default_plan.topics)
         self.assertEqual(response_plan.lectures, default_plan.lectures)
-        self.assertEqual(response_plan.learning_goals, default_plan.learning_goals)
+        self.assertEqual(response_plan.major_learning_goals, default_plan.major_learning_goals)
+        self.assertEqual(response_plan.individual_learning_goals, default_plan.individual_learning_goals)
+        self.assertEqual(response_plan.methodical_approach, default_plan.methodical_approach)
         self.assertEqual(response_plan.audience, default_plan.audience)
         self.assertEqual(response_plan.languages, default_plan.languages)
         self.assertEqual(response_plan.evaluation, default_plan.evaluation)
@@ -8363,7 +8611,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "timestamp_from": None,
                     "timestamp_to": None,
                     "duration": None,
-                    "learning_env": None,
                     "learning_goal": None,
                     "tasks": [],
                     "evaluation_tools": [],
@@ -8377,7 +8624,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "timestamp_from": None,
                     "timestamp_to": None,
                     "duration": None,
-                    "learning_env": None,
                     "learning_goal": None,
                     "tasks": [],
                     "evaluation_tools": [],
@@ -8412,7 +8658,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "timestamp_from": None,
                     "timestamp_to": None,
                     "duration": None,
-                    "learning_env": None,
                     "learning_goal": None,
                     "tasks": [
                         Task(title="test").to_dict(),
@@ -9005,7 +9250,16 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 "role": "guest",
                 "follows": [],
                 "bio": "test",
-                "institution": "test",
+                "institutions": [
+                    {
+                        "_id": ObjectId(),
+                        "name": "test",
+                        "department": "test",
+                        "school_type": "test",
+                        "country": "test",
+                    }
+                ],
+                "chosen_institution_id": "",
                 "profile_pic": "default_profile_pic.jpg",
                 "first_name": "Test",
                 "last_name": "Admin",

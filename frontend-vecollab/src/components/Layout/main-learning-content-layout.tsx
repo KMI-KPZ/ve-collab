@@ -6,6 +6,7 @@ interface Props {
     contentChildren: JSX.Element | JSX.Element[];
     prevNode?: IMaterialNode | null;
     nextNode?: IMaterialNode | null;
+    bubbleSlug?: string;
     categorySlug?: string;
 }
 
@@ -14,6 +15,7 @@ export default function MainLearningContentLayout({
     contentChildren,
     prevNode,
     nextNode,
+    bubbleSlug,
     categorySlug,
 }: Props) {
     return (
@@ -25,12 +27,14 @@ export default function MainLearningContentLayout({
                 <ul className={'h-screen overflow-y-auto content-scrollbar'}>{previewChildren}</ul>
             </div>
             <div className={'w-3/4'}>
-                <div className={'mt-10 overflow-y-auto overflow-x-clip content-scrollbar'}>{contentChildren}</div>
+                <div className={'mt-10 overflow-y-auto overflow-x-clip content-scrollbar'}>
+                    {contentChildren}
+                </div>
                 <div className="flex mx-4 my-10">
                     {prevNode && (
                         <Link
                             className="mr-auto"
-                            href={`/content/${categorySlug}/${prevNode.text}`}
+                            href={`/learning-material/${bubbleSlug}/${categorySlug}/${prevNode.text}`}
                         >
                             <button
                                 className={'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'}
@@ -42,7 +46,7 @@ export default function MainLearningContentLayout({
                     {nextNode && (
                         <Link
                             className="ml-auto"
-                            href={`/content/${categorySlug}/${nextNode.text}`}
+                            href={`/learning-material/${bubbleSlug}/${categorySlug}/${nextNode.text}`}
                         >
                             <button
                                 className={'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'}

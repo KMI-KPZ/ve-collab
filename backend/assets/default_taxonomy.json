@@ -1,6 +1,90 @@
 {
     "taxonomy": [
         {
+            "parent": 33,
+            "droppable": true,
+            "text": "Interaktion und kollaboratives Arbeiten",
+            "id": 17
+        },
+        {
+            "parent": 33,
+            "droppable": true,
+            "text": "kulturelle Aspekte",
+            "id": 19
+        },
+        {
+            "parent": 33,
+            "droppable": true,
+            "text": "sprachliche Aspekte",
+            "id": 20
+        },
+        {
+            "parent": 32,
+            "droppable": true,
+            "text": "Digitale Medien und Werkzeuge",
+            "id": 18
+        },
+        {
+            "parent": 32,
+            "droppable": true,
+            "text": "Datenschutz und Urheberrecht",
+            "id": 16
+        },
+        {
+            "parent": 31,
+            "droppable": true,
+            "text": "Partnersuche",
+            "id": 13
+        },
+        {
+            "parent": 31,
+            "droppable": true,
+            "text": "Rahmenbedingungen",
+            "id": 14
+        },
+        {
+            "parent": 31,
+            "droppable": true,
+            "text": "Etappenplanung",
+            "id": 15
+        },
+        {
+            "parent": 31,
+            "droppable": true,
+            "text": "Feinplanung",
+            "id": 28
+        },
+        {
+            "parent": 31,
+            "droppable": true,
+            "text": "Evaluation",
+            "id": 29
+        },
+        {
+            "id": 8,
+            "parent": 30,
+            "droppable": true,
+            "text": "Einf\u00fchrung"
+        },
+        {
+            "parent": 30,
+            "droppable": true,
+            "text": "Potenziale",
+            "id": 11
+        },
+        {
+            "id": 1,
+            "parent": 30,
+            "droppable": true,
+            "text": "Herausforderungen"
+        },
+        {
+            "parent": 30,
+            "droppable": true,
+            "text": "Beispiele aus der Praxis",
+            "id": 12
+        },
+        {
             "parent": 12,
             "droppable": false,
             "text": "VE-Beispiele aus der Praxis",
@@ -81,79 +165,28 @@
             "id": 25
         },
         {
-            "id": 8,
             "parent": 0,
             "droppable": true,
-            "text": "Was ist ein VE",
-            "data": {
-                "slug": "Was%20ist%20ein%20VE"
-            }
+            "text": "top-bubble",
+            "id": 30
         },
         {
             "parent": 0,
             "droppable": true,
-            "text": "Potenziale",
-            "id": 11
-        },
-        {
-            "id": 1,
-            "parent": 0,
-            "droppable": true,
-            "text": "Herausforderungen"
+            "text": "left-bubble",
+            "id": 31
         },
         {
             "parent": 0,
             "droppable": true,
-            "text": "Beispiele aus der Praxis",
-            "id": 12
+            "text": "right-bubble",
+            "id": 32
         },
         {
             "parent": 0,
             "droppable": true,
-            "text": "Partnersuche",
-            "id": 13
-        },
-        {
-            "parent": 0,
-            "droppable": true,
-            "text": "VE-Planung",
-            "id": 14
-        },
-        {
-            "parent": 0,
-            "droppable": true,
-            "text": "Evaluation",
-            "id": 15
-        },
-        {
-            "parent": 0,
-            "droppable": true,
-            "text": "Datenschutz",
-            "id": 16
-        },
-        {
-            "parent": 0,
-            "droppable": true,
-            "text": "Kollaboratives Arbeiten",
-            "id": 17
-        },
-        {
-            "parent": 0,
-            "droppable": true,
-            "text": "Digitale Medien & Werkzeuge",
-            "id": 18
-        },
-        {
-            "parent": 0,
-            "droppable": true,
-            "text": "kulturelle Aspekte",
-            "id": 19
-        },
-        {
-            "parent": 0,
-            "droppable": true,
-            "text": "sprachliche Aspekte",
-            "id": 20
+            "text": "bottom-bubble",
+            "id": 33
         }
     ]
 }

@@ -21,7 +21,11 @@ from handlers.authentication import LoginHandler, LoginCallbackHandler, LogoutHa
 from handlers.db_static_files import GridFSStaticFileHandler
 from handlers.healthcheck import HealthCheckHandler
 from handlers.import_personas import ImportDummyPersonasHandler
-from handlers.material_taxonomy import MaterialTaxonomyHandler
+from handlers.material_taxonomy import (
+    MBRSyncHandler,
+    MBRTestHandler,
+    MaterialTaxonomyHandler,
+)
 from handlers.network.chat import RoomHandler
 from handlers.network.follow import FollowHandler
 from handlers.network.notifications import NotificationHandler
@@ -31,7 +35,6 @@ from handlers.network.permissions import (
     SpaceACLHandler,
 )
 from handlers.network.post import *
-from handlers.network.render import *
 from handlers.network.search import SearchHandler
 from handlers.network.space import SpaceHandler
 from handlers.network.timeline import *
@@ -84,15 +87,10 @@ def make_app(cookie_secret: str, debug: bool = False):
 
     return tornado.web.Application(
         [
-            (r"/", MainRedirectHandler),
             (r"/login", LoginHandler),
             (r"/login/callback", LoginCallbackHandler),
             (r"/logout", LogoutHandler),
-            (r"/main", MainHandler),
             (r"/health", HealthCheckHandler),
-            (r"/acl", ACLHandler),
-            (r"/myprofile", MyProfileHandler),
-            (r"/profile/(.+)", ProfileHandler),
             (r"/posts", PostHandler),
             (r"/comment", CommentHandler),
             (r"/like", LikePostHandler),
@@ -101,8 +99,6 @@ def make_app(cookie_secret: str, debug: bool = False):
             (r"/follow", FollowHandler),
             (r"/updates", NewPostsSinceTimestampHandler),
             (r"/spaceadministration/(.+)", SpaceHandler),
-            (r"/space/(.+)", SpaceRenderHandler),
-            (r"/spaces", SpaceOverviewHandler),
             (r"/timeline", TimelineHandler),
             (r"/timeline/space/(.+)", SpaceTimelineHandler),
             (r"/timeline/user/(.+)", UserTimelineHandler),
@@ -115,7 +111,6 @@ def make_app(cookie_secret: str, debug: bool = False):
             (r"/global_acl/(.+)", GlobalACLHandler),
             (r"/space_acl/(.+)", SpaceACLHandler),
             (r"/search", SearchHandler),
-            (r"/template", TemplateHandler),
             (r"/wordpress/posts", WordpressCollectionHandler),
             (r"/wordpress/posts/([0-9]+)", WordpressPostHandler),
             (r"/planner/(.+)", VEPlanHandler),
@@ -129,6 +124,8 @@ def make_app(cookie_secret: str, debug: bool = False):
             (r"/material_taxonomy", MaterialTaxonomyHandler),
             (r"/import_personas", ImportDummyPersonasHandler),
             (r"/admin_check", AdminCheckHandler),
+            (r"/mbr_sync", MBRSyncHandler),
+            (r"/mbr_test", MBRTestHandler),
             (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
             (r"/assets/(.*)", tornado.web.StaticFileHandler, {"path": "./assets/"}),
             (r"/html/(.*)", tornado.web.StaticFileHandler, {"path": "./html/"}),
@@ -139,7 +136,11 @@ def make_app(cookie_secret: str, debug: bool = False):
             ),
             (r"/uploads/(.*)", GridFSStaticFileHandler, {"path": ""}),
             (r"/socket.io/", socketio.get_tornado_handler(global_vars.socket_io)),
-            (r"/knowledgeworker/(.*)", tornado.web.StaticFileHandler, {"path": "./knowledgeworker_courses", "default_filename": "index.html"}),
+            (
+                r"/knowledgeworker/(.*)",
+                tornado.web.StaticFileHandler,
+                {"path": "./knowledgeworker_courses", "default_filename": "index.html"},
+            ),
         ],
         cookie_secret=cookie_secret,
         template_path="html",
@@ -258,6 +259,7 @@ def create_initial_admin() -> None:
             "inserted admin user '{}' and corresponding ACL rules".format(username)
         )
 
+
 def load_default_taxonomy_if_exists() -> None:
     """
     If the db does not currently hold a taxonomy, load the default taxonomy from the assets folder
@@ -267,12 +269,14 @@ def load_default_taxonomy_if_exists() -> None:
         # db already has one, skip
         if db.material_taxonomy.count_documents({}) > 0:
             return
-        
+
         # db is empty, but no default taxonomy file exists, skip
         if not os.path.isfile("assets/default_taxonomy.json"):
-            logger.warning("tried to load default taxonomy from assets folder, but no file found")
+            logger.warning(
+                "tried to load default taxonomy from assets folder, but no file found"
+            )
             return
-        
+
         # db is empty and default taxonomy file exists, load it
         with open("assets/default_taxonomy.json", "r") as f:
             taxonomy = json.load(f)
@@ -304,6 +308,11 @@ def set_global_vars() -> None:
         "ELASTICSEARCH_BASE_URL",
         "ELASTICSEARCH_PASSWORD",
         "DUMMY_PERSONAS_PASSCODE",
+        "MBR_TOKEN_ENDPOINT",
+        "MBR_CLIENT_ID",
+        "MBR_CLIENT_SECRET",
+        "MBR_METADATA_BASE_ENDPOINT",
+        "MBR_METADATA_SOURCE_SLUG",
     ]
 
     for key in expected_env_keys:
@@ -325,6 +334,11 @@ def set_global_vars() -> None:
     global_vars.elasticsearch_username = os.getenv("ELASTICSEARCH_USERNAME", "elastic")
     global_vars.elasticsearch_password = os.getenv("ELASTICSEARCH_PASSWORD")
     global_vars.dummy_personas_passcode = os.getenv("DUMMY_PERSONAS_PASSCODE")
+    global_vars.mbr_token_endpoint = os.getenv("MBR_TOKEN_ENDPOINT")
+    global_vars.mbr_client_id = os.getenv("MBR_CLIENT_ID")
+    global_vars.mbr_client_secret = os.getenv("MBR_CLIENT_SECRET")
+    global_vars.mbr_metadata_base_endpoint = os.getenv("MBR_METADATA_BASE_ENDPOINT")
+    global_vars.mbr_metadata_source_slug = os.getenv("MBR_METADATA_SOURCE_SLUG")
     global_vars.keycloak_base_url = os.getenv("KEYCLOAK_BASE_URL")
     global_vars.keycloak_realm = os.getenv("KEYCLOAK_REALM")
     global_vars.keycloak_client_id = os.getenv("KEYCLOAK_CLIENT_ID")
@@ -383,15 +397,6 @@ def init_default_pictures():
                     metadata={"uploader": "system"},
                 )
                 logger.info("default_group_pic created")
-        if not fs.exists("logo.png"):
-            with open("assets/logo.png", "rb") as fp:
-                fs.put(
-                    fp.read(),
-                    _id="logo.png",
-                    content_type="image/png",
-                    metadata={"uploader": "system"},
-                )
-                logger.info("logo created")
 
 
 def create_log_directory():

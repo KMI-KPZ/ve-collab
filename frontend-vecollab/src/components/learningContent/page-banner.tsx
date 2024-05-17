@@ -51,7 +51,7 @@ export default function PageBanner({ topLevelNodes }: Props) {
                     <div className="absolute top-5 right-5">
                         <Link
                             className={'bg-ve-collab-orange text-white rounded-lg px-4 py-2'}
-                            href={'/content/edit'}
+                            href={'/learning-material/edit'}
                         >
                             Bearbeiten
                         </Link>
