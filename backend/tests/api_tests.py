@@ -8124,6 +8124,39 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], PLAN_ALREADY_EXISTS_ERROR)
 
+    def test_post_insert_empty_plan(self):
+        """
+        expect: successfully insert a new plan with no attributes set
+        except for the automations on partners, author, evaluation,
+        individual_learning_goals and formalities
+        """
+
+        response = self.base_checks(
+            "POST", "/planner/insert_empty", True, 200, body=self.json_serialize({"name": "test_plan"})
+        )
+        self.assertIn("inserted_id", response)
+
+        # expect plan to be in the db
+        db_state = self.db.plans.find_one({"_id": ObjectId(response["inserted_id"])})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["author"], CURRENT_ADMIN.username)
+        self.assertIsNotNone(db_state["creation_timestamp"])
+        self.assertIsNotNone(db_state["last_modified"])
+        self.assertEqual(db_state["creation_timestamp"], db_state["last_modified"])
+        self.assertEqual(db_state["name"], "test_plan")
+
+        # expect automations
+        self.assertEqual(db_state["partners"], [CURRENT_ADMIN.username])
+        self.assertIsNotNone(db_state["evaluation"])
+        self.assertEqual(len(db_state["evaluation"]), 1)
+        self.assertEqual(db_state["evaluation"][0]["username"], CURRENT_ADMIN.username)
+        self.assertIsNotNone(db_state["individual_learning_goals"])
+        self.assertEqual(len(db_state["individual_learning_goals"]), 1)
+        self.assertEqual(db_state["individual_learning_goals"][0]["username"], CURRENT_ADMIN.username)
+        self.assertIsNotNone(db_state["formalities"])
+        self.assertEqual(len(db_state["formalities"]), 1)
+        self.assertEqual(db_state["formalities"][0]["username"], CURRENT_ADMIN.username)
+
     def test_post_update_plan(self):
         """
         expect: successfully overwrite a plan

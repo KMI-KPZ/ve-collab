@@ -26,7 +26,7 @@ from exceptions import (
     PlanDoesntExistError,
 )
 from handlers.base_handler import auth_needed, BaseHandler
-from model import Step, VEPlan
+from model import Evaluation, IndividualLearningGoal, Step, VEPlan
 from resources.network.profile import Profiles
 from resources.planner.etherpad_integration import EtherpadResouce
 from resources.planner.ve_plan import VEPlanResource
@@ -348,6 +348,9 @@ class VEPlanHandler(BaseHandler):
             Insert an fresh empty plan into the db and return its _id to work with further.
             This endpoint is usually used by the plan to initiate a new planning process by
             a user.
+            The only automation that is already applied is that the author is added to the
+            `partners` field an in-turn the partners-dependent fields `evaluation`,
+            `individual_learning_goals` and `formalities` are also initiated (empty) for the author.
 
             query params:
                 None
@@ -974,7 +977,15 @@ class VEPlanHandler(BaseHandler):
                 else:
                     optional_name = None
 
-                plan = VEPlan(name=optional_name)
+                plan = VEPlan(
+                    name=optional_name,
+                    partners=[self.current_user.username],
+                    evaluation=[Evaluation(username=self.current_user.username)],
+                    individual_learning_goals=[
+                        IndividualLearningGoal(username=self.current_user.username)
+                    ],
+                    formalities=[{"username": self.current_user.username}],
+                )
 
                 self.insert_plan(db, plan)
                 return
