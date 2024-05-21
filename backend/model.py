@@ -144,7 +144,7 @@ class Task:
         "learning_goal": (str, type(None)),
         "task_formulation": (str, type(None)),
         "work_mode": (str, type(None)),
-        "description": (str, type(None)),
+        "notes": (str, type(None)),
         "tools": list,
         "media": list,
     }
@@ -156,7 +156,7 @@ class Task:
         learning_goal: str = None,
         task_formulation: str = None,
         work_mode: str = None,
-        description: str = None,
+        notes: str = None,
         tools: List[str] = [],
         media: List[str] = [],
     ) -> None:
@@ -186,7 +186,7 @@ class Task:
         self.learning_goal = learning_goal
         self.task_formulation = task_formulation
         self.work_mode = work_mode
-        self.description = description
+        self.notes = notes
         self.tools = tools
         self.media = media
 
@@ -213,7 +213,7 @@ class Task:
             "learning_goal": self.learning_goal,
             "task_formulation": self.task_formulation,
             "work_mode": self.work_mode,
-            "description": self.description,
+            "notes": self.notes,
             "tools": self.tools,
             "media": self.media,
         }
@@ -224,9 +224,9 @@ class Task:
         initialize a `Task`-object from a dictionary (`params`).
         All of the followings keys have to be present in the dict:
         `"title"`, `learning_goal`, `task_formulation`, `work_mode`,
-        `"description"`, `"tools"`, `media`.
+        `"notes"`, `"tools"`, `media`.
         However values are not required, any attributes may be
-        initialized with None (title/description/learning_goal/task_formulation/work_mode)
+        initialized with None (title/notes/learning_goal/task_formulation/work_mode)
         or [] (tools/media).
 
         Optionally, a `"_id"` may be supplied, conveying the semantics that this Task

@@ -253,7 +253,7 @@ class VEPlanHandler(BaseHandler):
                                         "learning_goal": "test",
                                         "task_formulation": "test",
                                         "work_mode": "test",
-                                        "description": "test",
+                                        "notes": "test",
                                         "tools": ["test"],
                                         "media": ["test"]
                                     }
@@ -484,7 +484,7 @@ class VEPlanHandler(BaseHandler):
                                         "learning_goal": "test",
                                         "task_formulation": "test",
                                         "work_mode": "test",
-                                        "description": "test",
+                                        "notes": "test",
                                         "tools": ["test"],
                                         "media": ["test"]
                                     }
@@ -799,7 +799,7 @@ class VEPlanHandler(BaseHandler):
                                 "learning_goal": "test",
                                 "task_formulation": "test",
                                 "work_mode": "test",
-                                "description": "test",
+                                "notes": "test",
                                 "tools": ["test"],
                                 "media": ["test"]
                             }

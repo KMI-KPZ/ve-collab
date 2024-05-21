@@ -202,7 +202,7 @@ class TaskModelTest(TestCase):
         self.assertEqual(task.learning_goal, None)
         self.assertEqual(task.task_formulation, None)
         self.assertEqual(task.work_mode, None)
-        self.assertEqual(task.description, None)
+        self.assertEqual(task.notes, None)
         self.assertEqual(task.tools, [])
         self.assertEqual(task.media, [])
         self.assertIsInstance(task._id, ObjectId)
@@ -221,7 +221,7 @@ class TaskModelTest(TestCase):
             learning_goal=dummy_val,
             task_formulation=dummy_val,
             work_mode=dummy_val,
-            description=dummy_val,
+            notes=dummy_val,
             tools=[dummy_val],
             media=[dummy_val],
         )
@@ -230,7 +230,7 @@ class TaskModelTest(TestCase):
         self.assertEqual(task.learning_goal, dummy_val)
         self.assertEqual(task.task_formulation, dummy_val)
         self.assertEqual(task.work_mode, dummy_val)
-        self.assertEqual(task.description, dummy_val)
+        self.assertEqual(task.notes, dummy_val)
         self.assertEqual(task.tools, [dummy_val])
         self.assertEqual(task.media, [dummy_val])
         self.assertEqual(task._id, _id)
@@ -241,7 +241,7 @@ class TaskModelTest(TestCase):
             learning_goal=dummy_val,
             task_formulation=dummy_val,
             work_mode=dummy_val,
-            description=dummy_val,
+            notes=dummy_val,
             tools=[dummy_val],
             media=[dummy_val],
         )
@@ -249,7 +249,7 @@ class TaskModelTest(TestCase):
         self.assertEqual(task.learning_goal, dummy_val)
         self.assertEqual(task.task_formulation, dummy_val)
         self.assertEqual(task.work_mode, dummy_val)
-        self.assertEqual(task.description, dummy_val)
+        self.assertEqual(task.notes, dummy_val)
         self.assertEqual(task.tools, [dummy_val])
         self.assertEqual(task.media, [dummy_val])
         self.assertIsInstance(task._id, ObjectId)
@@ -265,7 +265,7 @@ class TaskModelTest(TestCase):
         self.assertIn("learning_goal", task)
         self.assertIn("task_formulation", task)
         self.assertIn("work_mode", task)
-        self.assertIn("description", task)
+        self.assertIn("notes", task)
         self.assertIn("tools", task)
         self.assertIn("media", task)
         self.assertIn("_id", task)
@@ -273,7 +273,7 @@ class TaskModelTest(TestCase):
         self.assertEqual(task["learning_goal"], None)
         self.assertEqual(task["task_formulation"], None)
         self.assertEqual(task["work_mode"], None)
-        self.assertEqual(task["description"], None)
+        self.assertEqual(task["notes"], None)
         self.assertEqual(task["tools"], [])
         self.assertEqual(task["media"], [])
         self.assertIsInstance(task["_id"], ObjectId)
@@ -290,7 +290,7 @@ class TaskModelTest(TestCase):
             "learning_goal": "test",
             "task_formulation": "test",
             "work_mode": "test",
-            "description": "test",
+            "notes": "test",
             "tools": ["test"],
             "media": ["test"],
         }
@@ -299,7 +299,7 @@ class TaskModelTest(TestCase):
         self.assertEqual(task.learning_goal, "test")
         self.assertEqual(task.task_formulation, "test")
         self.assertEqual(task.work_mode, "test")
-        self.assertEqual(task.description, "test")
+        self.assertEqual(task.notes, "test")
         self.assertEqual(task.tools, ["test"])
         self.assertEqual(task.media, ["test"])
         self.assertEqual(task._id, _id)
@@ -310,7 +310,7 @@ class TaskModelTest(TestCase):
             "learning_goal": "test",
             "task_formulation": "test",
             "work_mode": "test",
-            "description": "test",
+            "notes": "test",
             "tools": ["test"],
             "media": ["test"],
         }
@@ -319,7 +319,7 @@ class TaskModelTest(TestCase):
         self.assertEqual(task.learning_goal, "test")
         self.assertEqual(task.task_formulation, "test")
         self.assertEqual(task.work_mode, "test")
-        self.assertEqual(task.description, "test")
+        self.assertEqual(task.notes, "test")
         self.assertEqual(task.tools, ["test"])
         self.assertEqual(task.media, ["test"])
         self.assertIsInstance(task._id, ObjectId)
@@ -345,7 +345,7 @@ class TaskModelTest(TestCase):
             "learning_goal": "test",
             "task_formulation": "test",
             "work_mode": "test",
-            "description": "test",
+            "notes": "test",
             "tools": ["test"],
             "media": ["test"],
         }
@@ -363,7 +363,7 @@ class TaskModelTest(TestCase):
             "learning_goal": "test",
             "task_formulation": "test",
             "work_mode": "test",
-            "description": "test",
+            "notes": "test",
             "tools": ["test"],
             "media": ["test"],
         }
@@ -389,9 +389,9 @@ class TaskModelTest(TestCase):
         self.assertRaises(TypeError, Task.from_dict, task_dict)
         task_dict["work_mode"] = "test"
 
-        task_dict["description"] = 1
+        task_dict["notes"] = 1
         self.assertRaises(TypeError, Task.from_dict, task_dict)
-        task_dict["description"] = "test"
+        task_dict["notes"] = "test"
 
         task_dict["tools"] = dict()
         self.assertRaises(TypeError, Task.from_dict, task_dict)

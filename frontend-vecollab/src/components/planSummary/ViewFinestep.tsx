@@ -90,8 +90,8 @@ export default function ViewFinestep({ fineStep }: Props): JSX.Element {
                                     <span>{showDataOrEmptySign(task.work_mode)}</span>
                                 </div>
                                 <div className="flex space-x-8">
-                                    <span className="w-1/4 font-medium">Beschreibung</span>
-                                    <span>{showDataOrEmptySign(task.description)}</span>
+                                    <span className="w-1/4 font-medium">Notizen</span>
+                                    <span>{showDataOrEmptySign(task.notes)}</span>
                                 </div>
                                 <div className="flex space-x-8">
                                     <span className="w-1/4 font-medium">Tools</span>

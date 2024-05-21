@@ -147,14 +147,14 @@ export default function Tasks({ taskIndex }: Props) {
             </div>
             <div className="mt-2 flex">
                 <div className="w-1/6 flex items-center">
-                    <label htmlFor="description" className="px-2 py-2">
-                        Beschreibung
+                    <label htmlFor="notes" className="px-2 py-2">
+                        Notizen
                     </label>
                 </div>
                 <div className="w-5/6">
                     <textarea
                         rows={3}
-                        {...register(`tasks.${taskIndex}.description`, {
+                        {...register(`tasks.${taskIndex}.notes`, {
                             maxLength: {
                                 value: 500,
                                 message: 'Bitte nicht mehr als 500 Zeichen.',
@@ -164,7 +164,7 @@ export default function Tasks({ taskIndex }: Props) {
                         className="border border-gray-400 rounded-lg w-full p-2"
                     />
                     <p className="text-red-600 pt-2">
-                        {formState.errors?.tasks?.[taskIndex]?.description?.message}
+                        {formState.errors?.tasks?.[taskIndex]?.notes?.message}
                     </p>
                 </div>
             </div>
