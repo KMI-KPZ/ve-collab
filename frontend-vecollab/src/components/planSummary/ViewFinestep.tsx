@@ -74,14 +74,6 @@ export default function ViewFinestep({ fineStep }: Props): JSX.Element {
                                 key={taskIndex}
                             >
                                 <div className="flex space-x-8">
-                                    <span className="w-1/4 font-medium">Titel</span>
-                                    <span>{showDataOrEmptySign(task.title)}</span>
-                                </div>
-                                <div className="flex space-x-8">
-                                    <span className="w-1/4 font-medium">Feinlernziele</span>
-                                    <span>{showDataOrEmptySign(task.learning_goal)}</span>
-                                </div>
-                                <div className="flex space-x-8">
                                     <span className="w-1/4 font-medium">Aufgabenstellung</span>
                                     <span>{showDataOrEmptySign(task.task_formulation)}</span>
                                 </div>

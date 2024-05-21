@@ -11,8 +11,6 @@ interface Props {
 }
 
 export const defaultValueTask: ITaskFrontend = {
-    title: '',
-    learning_goal: '',
     task_formulation: '',
     work_mode: '',
     notes: '',

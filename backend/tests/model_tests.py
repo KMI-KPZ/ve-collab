@@ -198,8 +198,6 @@ class TaskModelTest(TestCase):
         expect: successful creation of a minimal Task object
         """
         task = Task()
-        self.assertEqual(task.title, None)
-        self.assertEqual(task.learning_goal, None)
         self.assertEqual(task.task_formulation, None)
         self.assertEqual(task.work_mode, None)
         self.assertEqual(task.notes, None)
@@ -217,8 +215,6 @@ class TaskModelTest(TestCase):
         dummy_val = "test"
         task = Task(
             _id=_id,
-            title=dummy_val,
-            learning_goal=dummy_val,
             task_formulation=dummy_val,
             work_mode=dummy_val,
             notes=dummy_val,
@@ -226,8 +222,6 @@ class TaskModelTest(TestCase):
             materials=[dummy_val],
         )
 
-        self.assertEqual(task.title, dummy_val)
-        self.assertEqual(task.learning_goal, dummy_val)
         self.assertEqual(task.task_formulation, dummy_val)
         self.assertEqual(task.work_mode, dummy_val)
         self.assertEqual(task.notes, dummy_val)
@@ -237,16 +231,13 @@ class TaskModelTest(TestCase):
 
         # test again, without supplying and _id
         task = Task(
-            title=dummy_val,
-            learning_goal=dummy_val,
             task_formulation=dummy_val,
             work_mode=dummy_val,
             notes=dummy_val,
             tools=[dummy_val],
             materials=[dummy_val],
         )
-        self.assertEqual(task.title, dummy_val)
-        self.assertEqual(task.learning_goal, dummy_val)
+
         self.assertEqual(task.task_formulation, dummy_val)
         self.assertEqual(task.work_mode, dummy_val)
         self.assertEqual(task.notes, dummy_val)
@@ -261,16 +252,12 @@ class TaskModelTest(TestCase):
         """
 
         task = Task().to_dict()
-        self.assertIn("title", task)
-        self.assertIn("learning_goal", task)
         self.assertIn("task_formulation", task)
         self.assertIn("work_mode", task)
         self.assertIn("notes", task)
         self.assertIn("tools", task)
         self.assertIn("materials", task)
         self.assertIn("_id", task)
-        self.assertEqual(task["title"], None)
-        self.assertEqual(task["learning_goal"], None)
         self.assertEqual(task["task_formulation"], None)
         self.assertEqual(task["work_mode"], None)
         self.assertEqual(task["notes"], None)
@@ -286,8 +273,6 @@ class TaskModelTest(TestCase):
         _id = ObjectId()
         task_dict = {
             "_id": _id,
-            "title": "test",
-            "learning_goal": "test",
             "task_formulation": "test",
             "work_mode": "test",
             "notes": "test",
@@ -295,8 +280,6 @@ class TaskModelTest(TestCase):
             "materials": ["test"],
         }
         task = Task.from_dict(task_dict)
-        self.assertEqual(task.title, "test")
-        self.assertEqual(task.learning_goal, "test")
         self.assertEqual(task.task_formulation, "test")
         self.assertEqual(task.work_mode, "test")
         self.assertEqual(task.notes, "test")
@@ -306,8 +289,6 @@ class TaskModelTest(TestCase):
 
         # test again, without supplying an _id
         task_dict = {
-            "title": "test",
-            "learning_goal": "test",
             "task_formulation": "test",
             "work_mode": "test",
             "notes": "test",
@@ -315,8 +296,6 @@ class TaskModelTest(TestCase):
             "materials": ["test"],
         }
         task = Task.from_dict(task_dict)
-        self.assertEqual(task.title, "test")
-        self.assertEqual(task.learning_goal, "test")
         self.assertEqual(task.task_formulation, "test")
         self.assertEqual(task.work_mode, "test")
         self.assertEqual(task.notes, "test")
@@ -338,12 +317,10 @@ class TaskModelTest(TestCase):
         a required key
         """
 
-        # title is missing
+        # task_formulation is missing
         _id = ObjectId()
         task_dict = {
             "_id": _id,
-            "learning_goal": "test",
-            "task_formulation": "test",
             "work_mode": "test",
             "notes": "test",
             "tools": ["test"],
@@ -359,8 +336,6 @@ class TaskModelTest(TestCase):
 
         task_dict = {
             "_id": ObjectId(),
-            "title": "test",
-            "learning_goal": "test",
             "task_formulation": "test",
             "work_mode": "test",
             "notes": "test",
@@ -372,14 +347,6 @@ class TaskModelTest(TestCase):
         task_dict["_id"] = 1
         self.assertRaises(TypeError, Task.from_dict, task_dict)
         task_dict["_id"] = ObjectId()
-
-        task_dict["title"] = 1
-        self.assertRaises(TypeError, Task.from_dict, task_dict)
-        task_dict["title"] = "test"
-
-        task_dict["learning_goal"] = 1
-        self.assertRaises(TypeError, Task.from_dict, task_dict)
-        task_dict["learning_goal"] = "test"
 
         task_dict["task_formulation"] = 1
         self.assertRaises(TypeError, Task.from_dict, task_dict)
@@ -665,14 +632,18 @@ class StepModelTest(TestCase):
 
     def test_check_unique_tasks(self):
         """
-        expect: the check for unique task titles work, i.e. returns False if a step
-        has duplicate task titles
+        expect: the check for unique tasks work, i.e. returns False if a step
+        has duplicate tasks (determined by their task_formulations)
         """
         self.assertTrue(
-            Step._check_unique_task_titles([Task(title="test1"), Task(title="test2")])
+            Step._check_unique_tasks(
+                [Task(task_formulation="test1"), Task(task_formulation="test2")]
+            )
         )
         self.assertFalse(
-            Step._check_unique_task_titles([Task(title="test"), Task(title="test")])
+            Step._check_unique_tasks(
+                [Task(task_formulation="test"), Task(task_formulation="test")]
+            )
         )
 
 

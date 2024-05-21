@@ -140,8 +140,6 @@ class Task:
     # when initializing a task from a dict using 'Task.from_dict()',
     # this lookup allows to check for the correct types
     EXPECTED_DICT_ENTRIES = {
-        "title": (str, type(None)),
-        "learning_goal": (str, type(None)),
         "task_formulation": (str, type(None)),
         "work_mode": (str, type(None)),
         "notes": (str, type(None)),
@@ -152,8 +150,6 @@ class Task:
     def __init__(
         self,
         _id: str | ObjectId = None,
-        title: str = None,
-        learning_goal: str = None,
         task_formulation: str = None,
         work_mode: str = None,
         notes: str = None,
@@ -182,8 +178,6 @@ class Task:
         # creating a fresh ID
         self._id = util.parse_object_id(_id) if _id != None else ObjectId()
 
-        self.title = title
-        self.learning_goal = learning_goal
         self.task_formulation = task_formulation
         self.work_mode = work_mode
         self.notes = notes
@@ -209,8 +203,6 @@ class Task:
 
         return {
             "_id": self._id,
-            "title": self.title,
-            "learning_goal": self.learning_goal,
             "task_formulation": self.task_formulation,
             "work_mode": self.work_mode,
             "notes": self.notes,
@@ -223,10 +215,9 @@ class Task:
         """
         initialize a `Task`-object from a dictionary (`params`).
         All of the followings keys have to be present in the dict:
-        `"title"`, `learning_goal`, `task_formulation`, `work_mode`,
-        `"notes"`, `"tools"`, `materials`.
+        `task_formulation`, `work_mode`, `"notes"`, `"tools"`, `materials`.
         However values are not required, any attributes may be
-        initialized with None (title/notes/learning_goal/task_formulation/work_mode)
+        initialized with None (notes/task_formulation/work_mode)
         or [] (tools/materials).
 
         Optionally, a `"_id"` may be supplied, conveying the semantics that this Task
@@ -378,8 +369,8 @@ class Step:
         self.learning_goal = learning_goal
         self.tasks = tasks
 
-        # ensure that tasks have unique titles
-        if not self._check_unique_task_titles(self.tasks):
+        # ensure that tasks are unique by their task formulation
+        if not self._check_unique_tasks(self.tasks):
             raise NonUniqueTasksError
 
         self.evaluation_tools = evaluation_tools
@@ -420,17 +411,17 @@ class Step:
         }
 
     @classmethod
-    def _check_unique_task_titles(cls, tasks: List[Task]) -> bool:
+    def _check_unique_tasks(cls, tasks: List[Task]) -> bool:
         """
-        assert that the title-attributes of the tasks in the given list are unique
+        assert that the task_formulation-attributes of the tasks in the given list are unique
         and return True if so, False otherwise.
         """
 
         seen_set = set()
         for task in tasks:
-            if task.title in seen_set:
+            if task.task_formulation in seen_set:
                 return False
-            seen_set.add(task.title)
+            seen_set.add(task.task_formulation)
         return True
 
     @classmethod
@@ -446,7 +437,7 @@ class Step:
 
         If tasks are supplied, they have to be in a list of dictionary-representations
         that are parseable by `Task.from_dict()`. Additionally, those tasks have to have
-        unique `"title"`-attributes within this step.
+        unique `"task-formulation"`-attributes within this step.
 
         The `attachments`-key is a list containing ObjectId's which are
         references to files that are stored separately in GridFS.
@@ -458,7 +449,7 @@ class Step:
 
         Raises `MissingKeyError` if any of the required keys is missing in the `params`-dict.
 
-        Raises `NonUniqueTasksError` if the titles of tasks are not unique to each other.
+        Raises `NonUniqueTasksError` if the tasks are not unique to each other.
 
         Usage example::
 
@@ -532,7 +523,7 @@ class Step:
         # build tasks objects, asserting that the names of the tasks are unique,
         # gotta do this manually, since __dict__.update doesn't initialize nested objects
         tasks = [Task.from_dict(task) for task in params["tasks"]]
-        if not cls._check_unique_task_titles(tasks):
+        if not cls._check_unique_tasks(tasks):
             raise NonUniqueTasksError
         del params["tasks"]
 
@@ -1793,7 +1784,7 @@ class VEPlan:
         Raises `NonUniqueStepsError` if the names of the steps in the `steps`-list are not
         unique to each other.
 
-        Raises `NonUniqueTasksError` if the titles of tasks in the steps are not unique to
+        Raises `NonUniqueTasksError` if the tasks in the steps are not unique to
         each other.
 
         Usage example::
@@ -1888,8 +1879,6 @@ class VEPlan:
                         "tasks": [
                             {
                                 "_id": "object_id_str",
-                                "title": None,
-                                "learning_goal": None,
                                 "task_formulation": None,
                                 "work_mode": None,
                                 "description": None,

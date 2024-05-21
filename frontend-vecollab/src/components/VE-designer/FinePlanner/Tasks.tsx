@@ -57,52 +57,6 @@ export default function Tasks({ taskIndex }: Props) {
         <div className={'px-4 pt-4 pb-12 my-4 mx-2 bg-slate-200 rounded-3xl shadow-2xl'}>
             <div className="mt-2 flex">
                 <div className="w-1/6 flex items-center">
-                    <label htmlFor="title" className="px-2 py-2">
-                        Titel
-                    </label>
-                </div>
-                <div className="w-5/6">
-                    <input
-                        type="text"
-                        {...register(`tasks.${taskIndex}.title`, {
-                            maxLength: {
-                                value: 100,
-                                message: 'Bitte nicht mehr als 100 Zeichen.',
-                            },
-                        })}
-                        placeholder="Aufgabentitel"
-                        className="border border-gray-400 rounded-lg w-full p-2"
-                    />
-                    <p className="text-red-600 pt-2">
-                        {formState.errors?.tasks?.[taskIndex]?.title?.message}
-                    </p>
-                </div>
-            </div>
-            <div className="mt-2 flex">
-                <div className="w-1/6 flex items-center">
-                    <label htmlFor="learning_goal" className="px-2 py-2">
-                        Feinlernziel(e)
-                    </label>
-                </div>
-                <div className="w-5/6">
-                    <textarea
-                        rows={3}
-                        {...register(`tasks.${taskIndex}.learning_goal`, {
-                            maxLength: {
-                                value: 500,
-                                message: 'Bitte nicht mehr als 500 Zeichen.',
-                            },
-                        })}
-                        placeholder="Welche Lernziele werden mit der Aufgabe verfolgt?"
-                        className="border border-gray-400 rounded-lg w-full p-2"
-                    />
-                    <p className="text-red-600 pt-2">
-                        {formState.errors?.tasks?.[taskIndex]?.learning_goal?.message}
-                    </p>
-                </div>
-            </div>
-            <div className="mt-2 flex">
-                <div className="w-1/6 flex items-center">
                     <label htmlFor="task_formulation" className="px-2 py-2">
                         Aufgaben-stellung
                     </label>

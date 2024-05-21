@@ -19,8 +19,6 @@ import Link from 'next/link';
 import { PiBookOpenText } from 'react-icons/pi';
 
 export interface ITask {
-    title: string;
-    learning_goal: string;
     task_formulation: string;
     work_mode: string;
     notes: string;
@@ -29,8 +27,6 @@ export interface ITask {
 }
 
 export interface ITaskFrontend {
-    title: string;
-    learning_goal: string;
     task_formulation: string;
     work_mode: string;
     notes: string;
@@ -80,8 +76,6 @@ export const defaultFormValueDataFineStepFrontend: IFineStepFrontend = {
     evaluation_tools: ['', ''],
     tasks: [
         {
-            title: '',
-            learning_goal: '',
             task_formulation: '',
             work_mode: '',
             notes: '',
@@ -100,8 +94,6 @@ const areAllFormValuesEmpty = (formValues: IFineStepFrontend): boolean => {
         }) &&
         formValues.tasks.every((task) => {
             return (
-                task.title === '' &&
-                task.learning_goal === '' &&
                 task.task_formulation === '' &&
                 task.work_mode === '' &&
                 task.notes === '' &&

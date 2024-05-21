@@ -6198,7 +6198,7 @@ class PlanResourceTest(BaseResourceTestCase):
         """
 
         step = Step(name="test").to_dict()
-        step["tasks"] = [Task(title="test").to_dict(), Task(title="test").to_dict()]
+        step["tasks"] = [Task(task_formulation="test").to_dict(), Task(task_formulation="test").to_dict()]
 
         self.assertRaises(
             NonUniqueTasksError,
